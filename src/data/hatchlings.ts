@@ -4,6 +4,7 @@ import { line2, line3, type HatchlingDef } from './playableLines'
 import { SEASON_ONE_EGGS } from './seasonOneEggs'
 import { SEASON_ONE_KITS } from './seasonOneKits'
 import { GA_FAMILIES_B } from './gaFamiliesB'
+import { GA_FAMILIES_A } from './gaFamiliesA'
 import { STARTER_IDS, STARTERS, type StarterId } from './starters'
 
 export const HATCHLINGS = {
@@ -716,6 +717,7 @@ export const HATCHLINGS = {
   ...SEASON_ONE_EGGS,
   ...SEASON_ONE_KITS,
   ...GA_FAMILIES_B,
+  ...GA_FAMILIES_A,
 } as const satisfies Record<string, HatchlingDef>
 
 export type HatchlingId = keyof typeof HATCHLINGS

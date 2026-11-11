@@ -1,5 +1,6 @@
 import { TYPE_COLORS } from '../data/types'
 import { burst } from './effects'
+import { gaKitACast } from './gaKitASystem'
 import { nextStacks, type StackEvent } from './kitRules'
 import { stampWard, wardHolder } from './moveKit'
 import { MOVES, moveStats, type CastStats, type MoveDef, type MoveId } from './moves'
@@ -36,6 +37,7 @@ export const afterCast = (g: Game, owned: OwnedMove) => {
   const def: MoveDef = MOVES[owned.id]
   if (def.stacks) owned.stacks = nextStacks(def.stacks, owned.stacks ?? 0, 'cast')
   owned.walkedAt = g.player.walked
+  gaKitACast(g)
 }
 
 const ownedOf = (g: Game, w: MoveWindow) => g.player.moves.find((m) => m.id === w.move)

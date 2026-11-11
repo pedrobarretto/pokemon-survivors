@@ -6,6 +6,7 @@ import { playableDex, type PlayableId } from './hatchlings'
 import type { MegaId } from './megas'
 import type { EvolutionStage } from './starters'
 import type { PokeType } from './types'
+import { GA_BRANCHES_A } from './gaFamiliesA'
 
 /**
  * Branching evolutions: a family whose evolution can go more than one way
@@ -164,6 +165,7 @@ export const BRANCHES = {
     bonus: { maxHp: 75, armor: 1, regen: 0.3, might: 0.14 },
     moves: ['earthquake', 'gyroBall', 'flashCannon', 'solarBeam'],
   },
+  ...GA_BRANCHES_A,
 } as const satisfies Record<string, BranchDef>
 
 export type BranchId = keyof typeof BRANCHES

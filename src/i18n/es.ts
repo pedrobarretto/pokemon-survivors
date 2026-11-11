@@ -3,6 +3,7 @@ import { realmBookEs as realmBook } from './realmStamps/es'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
+import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -2365,6 +2366,7 @@ export const es: Messages = {
       manectric: 'los enemigos a menos de 80 px pierden 30% de su velocidad, velocidad +12, movimientos +20% y recargas −5%. El especial pasa a ser Wild Charge.',
       altaria: 'movimientos de Normal y Hada +30%, movimientos de Dragón +20%, HP +30 y regenera 1 HP/s. El especial pasa a ser Hyper Voice.',
       banette: 'recargas −20%, +10% de probabilidad de estado en cada movimiento y movimientos +15%. El especial pasa a ser Phantom Force, una embestida en cadena que suelta un anillo de sombras en cada aterrizaje.',
+      ...GA_FAMILIES_A_WORDS.es.megas,
       glalie: 'movimientos de Normal y Hielo +30% y movimientos +25%. El especial pasa a ser Sheer Cold.',
       salamence: 'movimientos de Normal y Volador +30%, velocidad +12 y movimientos +25%. El especial pasa a ser Double-Edge.',
     },
@@ -3125,6 +3127,7 @@ export const es: Messages = {
     ...SEASON_ONE_EGGS_WORDS.es.moves,
     ...SEASON_ONE_KITS_WORDS.es.moves,
     ...GA_FAMILIES_B_WORDS.es.moves,
+    ...GA_FAMILIES_A_WORDS.es.moves,
     leechSeed: {
       description: 'Lanza semillas a los enemigos más cercanos. La semilla absorbe PS con el tiempo y te cura; cuando el enemigo es derrotado, salta a otros dos.',
       upgrades: [
@@ -5598,6 +5601,7 @@ export const es: Messages = {
     ...SEASON_ONE_EGGS_WORDS.es.blurbs,
     ...SEASON_ONE_KITS_WORDS.es.blurbs,
     ...GA_FAMILIES_B_WORDS.es.blurbs,
+    ...GA_FAMILIES_A_WORDS.es.blurbs,
     bulbasaur: 'Equilibrado. Regenera vida.',
     charmander: 'Ofensivo. Más daño, menos vida.',
     squirtle: 'Defensivo. Más vida y defensa.',

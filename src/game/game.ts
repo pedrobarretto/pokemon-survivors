@@ -25,6 +25,8 @@ import { createSeasonKit } from './seasonOneKitRules'
 import { updateSeasonKit } from './seasonOneKitSystem'
 import { createKitB } from './gaKitBRules'
 import { updateKitB } from './gaKitBSystem'
+import { createGaKitA } from './gaKitARules'
+import { updateGaKitA } from './gaKitASystem'
 import { FRESH_LEVELUPS } from './learnsets'
 import { DEFAULT_DIFFICULTY, type Difficulty } from './difficulty'
 import { updateBosses, updateHazards } from './bosses'
@@ -112,7 +114,8 @@ export const playerRadius = (dex: number, legend: boolean) => {
 const kitField = (starter: PlayableId) => {
   const kit = createSeasonKit(starter)
   const kitB = createKitB(starter)
-  return { ...(kit && { kit }), ...(kitB && { kitB }) }
+  const kitA = createGaKitA(starter)
+  return { ...(kit && { kit }), ...(kitB && { kitB }), ...(kitA && { kitA }) }
 }
 
 /** What the save brings into a run besides the Poké Mart ranks. */
@@ -886,6 +889,7 @@ export const stepMoves = (g: Game, input: StepInput, dt: number) => {
   updateMoveKit(g, dt)
   updateSeasonKit(g, dt)
   updateKitB(g, dt)
+  updateGaKitA(g, dt)
   updateSignatures(g, dt)
   updateShopTms(g, dt)
   updateLegendary(g)

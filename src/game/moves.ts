@@ -20,6 +20,7 @@ import { SKETCH_MOVES } from './sketch'
 import { SEASON_ONE_EGG_MOVES } from './seasonOneEggMoves'
 import { SEASON_ONE_KIT_MOVES } from './seasonOneKitMoves'
 import { GA_KIT_B_MOVES } from './gaKitBMoves'
+import { GA_KIT_A_MOVES } from './gaKitAMoves'
 import { TM_MOVES } from './tmMoves'
 import { SHOP_TM_MOVES } from './shopTmMoves'
 import { VERB_EVOLVED_MOVES } from './verbEvolutions'
@@ -2308,6 +2309,7 @@ export const MOVES = {
   ...SEASON_ONE_EGG_MOVES,
   ...SEASON_ONE_KIT_MOVES,
   ...GA_KIT_B_MOVES,
+  ...GA_KIT_A_MOVES,
 } as const satisfies Record<string, MoveDef>
 
 export type MoveId = keyof typeof MOVES

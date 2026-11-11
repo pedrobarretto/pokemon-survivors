@@ -7,8 +7,8 @@ import type { SafariEntry, SafariRarity } from '../realm/games/safari.rules'
  * over the regular egg families, plus the one Safari-only family it shelters.
  */
 
-/** The families only the Safari brings. */
-export const SAFARI_ONLY = ['mimikyu', 'morpeko', 'tandemaus'] as const satisfies readonly HatchlingId[]
+/** The families only the Safari brings: Lapras swims in the cove alone. */
+export const SAFARI_ONLY = ['mimikyu', 'morpeko', 'tandemaus', 'lapras'] as const satisfies readonly HatchlingId[]
 
 /**
  * Regular egg families the Safari leaves out because their shiny is someone's
@@ -25,7 +25,7 @@ export const SAFARI_HABITATS = {
   meadow: { types: ['normal', 'flying', 'grass', 'bug', 'fairy'], only: 'tandemaus' },
   marsh: { types: ['ghost', 'dark', 'poison', 'psychic'], only: 'mimikyu' },
   ridge: { types: ['electric', 'rock', 'ground', 'steel', 'fighting', 'fire', 'dragon'], only: 'morpeko' },
-  cove: { types: ['water', 'ice'], only: 'tandemaus' },
+  cove: { types: ['water', 'ice'], only: 'lapras' },
 } as const satisfies Record<string, { types: readonly string[]; only: (typeof SAFARI_ONLY)[number] }>
 
 export type SafariHabitat = keyof typeof SAFARI_HABITATS
@@ -45,7 +45,7 @@ const rarityOf = (id: HatchlingId): SafariRarity => {
 /** A family as the Safari weighs it (the guarantee can bring one from outside the week's pool). */
 export const safariEntry = (id: HatchlingId): SafariEntry<HatchlingId> => ({ family: id, rarity: rarityOf(id), types: typesOf(id) })
 
-/** Every family a Safari can hold, in the dex's order: the regular eggs' and the Safari-only three. */
+/** Every family a Safari can hold, in the dex's order: the regular eggs' and the Safari-only four. */
 export const SAFARI_FAMILIES: readonly HatchlingId[] = [...REGULAR, ...SAFARI_ONLY]
 
 /** Who can turn up in a habitat's tall grass. */

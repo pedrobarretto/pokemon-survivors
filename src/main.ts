@@ -98,6 +98,7 @@ import { announceMap } from './ui/mapSign'
 import { MAP_ARCHETYPE_IDS, type MapArchetypeId } from './data/mapArchetypes'
 import { PLACES } from './data/places'
 import { kitDevTools } from './game/kitDev'
+import { gaKitADevTools } from './game/gaKitADev'
 import { eggMoveDevTools } from './game/eggMovesDev'
 import { learnDevTools } from './game/learnDev'
 import { tmDevTools } from './game/tmDev'
@@ -5277,6 +5278,7 @@ if (import.meta.env.DEV) {
       ...seasonFindDevTools(() => run?.game, devLandmark),
       ...levelUpDevTools(() => run?.game),
       ...kitDevTools(() => run?.game),
+      ...gaKitADevTools(() => run?.game),
       ...eggMoveDevTools(() => run?.game),
       ...learnDevTools(() => run?.game),
       ...tmDevTools(() => run?.game),

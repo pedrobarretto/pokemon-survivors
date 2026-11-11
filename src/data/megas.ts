@@ -347,6 +347,18 @@ export const MEGAS = {
     stats: { cooldown: -0.2, statusChance: 0.1, might: 0.15 },
     special: 'phantomForce',
   },
+  sableye: {
+    line: 'sableye',
+    name: 'Mega Sableye',
+    stone: 'Sablenite',
+    form: 'mega',
+    colors: ['#5848a0', '#c8b8f8', '#e83858'],
+    ability: 'Magic Bounce',
+    // Its gem's mirror sends shots back and its hoard bursts sooner (`gaKitASystem.ts`).
+    effect: { kind: 'stats' },
+    stats: { armor: 3, maxHp: 40, might: 0.1 },
+    special: 'poltergeist',
+  },
   glalie: {
     line: 'snorunt',
     name: 'Mega Glalie',

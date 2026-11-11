@@ -3,6 +3,7 @@ import { realmBookEn as realmBook } from './realmStamps/en'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
+import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -2363,6 +2364,7 @@ export const en: Messages = {
       manectric: 'foes within 80 px lose 30% of their speed, speed +12, moves +20% and cooldowns −5%. The special becomes Wild Charge.',
       altaria: 'Normal and Fairy moves +30%, Dragon moves +20%, HP +30 and 1 HP/s regen. The special becomes Hyper Voice.',
       banette: 'cooldowns −20%, +10% condition chance on every move and moves +15%. The special becomes Phantom Force, a chain dash that bursts a ring of shadows on every landing.',
+      ...GA_FAMILIES_A_WORDS.en.megas,
       glalie: 'Normal and Ice moves +30% and moves +25%. The special becomes Sheer Cold.',
       salamence: 'Normal and Flying moves +30%, speed +12 and moves +25%. The special becomes Double-Edge.',
     },
@@ -3123,6 +3125,7 @@ export const en: Messages = {
     ...SEASON_ONE_EGGS_WORDS.en.moves,
     ...SEASON_ONE_KITS_WORDS.en.moves,
     ...GA_FAMILIES_B_WORDS.en.moves,
+    ...GA_FAMILIES_A_WORDS.en.moves,
     leechSeed: {
       description: 'Lobs seeds at the nearest foes. A seed drains HP over time and heals you; when the foe faints, it jumps to two neighbors.',
       upgrades: [
@@ -5596,6 +5599,7 @@ export const en: Messages = {
     ...SEASON_ONE_EGGS_WORDS.en.blurbs,
     ...SEASON_ONE_KITS_WORDS.en.blurbs,
     ...GA_FAMILIES_B_WORDS.en.blurbs,
+    ...GA_FAMILIES_A_WORDS.en.blurbs,
     bulbasaur: 'Balanced. Regenerates HP.',
     charmander: 'Offensive. More damage, less HP.',
     squirtle: 'Defensive. More HP and defense.',

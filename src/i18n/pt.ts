@@ -4,6 +4,7 @@ import { realmBookPt as realmBook } from './realmStamps/pt'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
+import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -2693,6 +2694,7 @@ export const pt = {
       manectric: 'inimigos a até 80 px perdem 30% da velocidade, velocidade +12, golpes +20% e recargas −5%. O especial vira Wild Charge.',
       altaria: 'golpes Normal e Fada +30%, golpes Dragão +20%, HP +30 e regenera 1 HP/s. O especial vira Hyper Voice.',
       banette: 'recargas −20%, +10% de chance de condição em todo golpe e golpes +15%. O especial vira Phantom Force, uma investida em cadeia que solta um anel de sombras a cada pouso.',
+      ...GA_FAMILIES_A_WORDS.pt.megas,
       glalie: 'golpes Normal e Gelo +30% e golpes +25%. O especial vira Sheer Cold.',
       salamence: 'golpes Normal e Voador +30%, velocidade +12 e golpes +25%. O especial vira Double-Edge.',
     } satisfies Record<MegaId, string>,
@@ -3496,6 +3498,7 @@ export const pt = {
     ...SEASON_ONE_EGGS_WORDS.pt.moves,
     ...SEASON_ONE_KITS_WORDS.pt.moves,
     ...GA_FAMILIES_B_WORDS.pt.moves,
+    ...GA_FAMILIES_A_WORDS.pt.moves,
     leechSeed: {
       description: 'Arremessa sementes nos inimigos mais próximos. A semente suga HP com o tempo e cura você; quando o inimigo cai, ela pula para dois vizinhos.',
       upgrades: [
@@ -5969,6 +5972,7 @@ export const pt = {
     ...SEASON_ONE_EGGS_WORDS.pt.blurbs,
     ...SEASON_ONE_KITS_WORDS.pt.blurbs,
     ...GA_FAMILIES_B_WORDS.pt.blurbs,
+    ...GA_FAMILIES_A_WORDS.pt.blurbs,
     bulbasaur: 'Equilibrado. Regenera vida.',
     charmander: 'Ofensivo. Mais dano, menos vida.',
     squirtle: 'Defensivo. Mais vida e defesa.',

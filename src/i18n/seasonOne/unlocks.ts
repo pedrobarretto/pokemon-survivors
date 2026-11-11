@@ -5,12 +5,12 @@
  */
 type UnlockWords = {
   /** The partner select's locked card. */
-  where: Record<'mankey' | 'goomy' | 'tatsugiri' | 'wishiwashi' | 'rotom' | 'castform' | 'mimikyu' | 'morpeko' | 'tandemaus', string>
+  where: Record<'mankey' | 'goomy' | 'tatsugiri' | 'wishiwashi' | 'rotom' | 'castform' | 'mimikyu' | 'morpeko' | 'tandemaus' | 'lapras' | 'spiritomb', string>
   /** The locked card of the five fossil families. */
   fossilBlurb: string
   /** Why the family came, in the gift box. */
   way: Record<'find' | 'research' | 'fishing' | 'safari' | 'dig', string>
-  find: { rotom: string; castformSighted: string; castformFound: string; castformGone: string }
+  find: { rotom: string; castformSighted: string; castformFound: string; castformGone: string; spiritomb: string }
   research: {
     tab: string
     intro: string
@@ -35,6 +35,8 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       wishiwashi: 'Morde o anzol *longe do píer*, na pesca do Poké Realm. Precisa de conta.',
       rotom: 'Tem algo morando numa *TV velha*, dentro de uma casa abandonada. Quando ela chiar, fique por perto.',
       castform: 'Às vezes flutua pelo mapa quando o *tempo fecha*. Alcance antes que suma.',
+      lapras: 'Só na *Zona Safári*, na semana da Enseada, no Bosque das Bases do Poké Realm. Precisa de conta.',
+      spiritomb: 'Desperte o *Odd Keystone* no Cemitério e derrote o Spiritomb que sai dele.',
     },
     fossilBlurb: 'Choca do *Ovo Fóssil* (cave as paredes do Subterrâneo atrás de Old Amber) ou é restaurado na *Escavação* do Poké Realm, na Trilha. Precisa de conta.',
     way: { find: 'Por um encontro no mapa', research: 'Por concluir uma Pesquisa', fishing: 'Pela sua pescaria', safari: 'Pela sua captura na Zona Safári', dig: 'Da Escavação' },
@@ -43,6 +45,7 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       castformSighted: 'Um *Castform* está flutuando por perto!',
       castformFound: 'Você alcançou o *Castform*! Ele espera na caixa de presentes.',
       castformGone: 'O Castform sumiu com o vento.',
+      spiritomb: 'Os espíritos do *Spiritomb* agora são seus! Ele espera na caixa de presentes.',
     },
     research: {
       tab: 'Pesquisa',
@@ -66,6 +69,8 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       wishiwashi: 'Bites the hook *far from the pier*, fishing in the Poké Realm. Needs an account.',
       rotom: 'Something lives in an *old TV*, inside an abandoned cottage. When it crackles, stay close.',
       castform: 'Sometimes drifts across the map when the *weather turns*. Reach it before it’s gone.',
+      lapras: 'Only in the *Safari Zone*, on the Cove’s week, in the Poké Realm’s Secret Base Grove. Needs an account.',
+      spiritomb: 'Wake the *Odd Keystone* in the Graveyard and beat the Spiritomb that breaks out.',
     },
     fossilBlurb: 'Hatches from the *Fossil Egg* (dig the Underground’s walls for Old Amber) or gets restored at the *Mine Dig* on the Poké Realm’s Trail. Needs an account.',
     way: { find: 'For an encounter on the map', research: 'For finishing a Research', fishing: 'For your fishing', safari: 'For your catch in the Safari Zone', dig: 'From the Mine Dig' },
@@ -74,6 +79,7 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       castformSighted: 'A *Castform* is drifting nearby!',
       castformFound: 'You reached the *Castform*! It’s waiting in your gift box.',
       castformGone: 'The Castform drifted away.',
+      spiritomb: '*Spiritomb*’s spirits are yours now! It’s waiting in your gift box.',
     },
     research: {
       tab: 'Research',
@@ -97,6 +103,8 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       wishiwashi: 'Pica el anzuelo *lejos del muelle*, pescando en el Poké Realm. Necesita una cuenta.',
       rotom: 'Algo vive en un *televisor viejo*, dentro de una casa abandonada. Cuando chisporrotee, quédate cerca.',
       castform: 'A veces flota por el mapa cuando *cambia el clima*. Alcánzalo antes de que se vaya.',
+      lapras: 'Solo en la *Zona Safari*, en la semana de la Ensenada, en la Arboleda de Bases del Poké Realm. Necesitas una cuenta.',
+      spiritomb: 'Despierta la *Odd Keystone* en el Cementerio y vence al Spiritomb que sale de ella.',
     },
     fossilBlurb: 'Nace del *Huevo Fósil* (excava las paredes del Subsuelo en busca de Old Amber) o se restaura en la *Excavación* del Poké Realm, en el Sendero. Requiere cuenta.',
     way: { find: 'Por un encuentro en el mapa', research: 'Por completar una Investigación', fishing: 'Por tu pesca', safari: 'Por tu captura en la Zona Safari', dig: 'De la Excavación' },
@@ -105,6 +113,7 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       castformSighted: '¡Un *Castform* flota cerca!',
       castformFound: '¡Alcanzaste al *Castform*! Te espera en la caja de regalos.',
       castformGone: 'El Castform se fue con el viento.',
+      spiritomb: '¡Los espíritus de *Spiritomb* ahora son tuyos! Te espera en la caja de regalos.',
     },
     research: {
       tab: 'Investigación',
@@ -128,6 +137,8 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       wishiwashi: 'Mord à l’hameçon *loin du ponton*, à la pêche du Poké Realm. Un compte est nécessaire.',
       rotom: 'Quelque chose vit dans une *vieille télé*, au fond d’une maison abandonnée. Quand elle grésille, reste près d’elle.',
       castform: 'Flotte parfois sur la carte quand le *temps se gâte*. Rejoins-le avant qu’il disparaisse.',
+      lapras: 'Seulement au *Parc Safari*, la semaine de la Crique, au Bosquet des Bases du Poké Realm. Compte requis.',
+      spiritomb: 'Réveille la *Odd Keystone* au Cimetière et bats le Spiritomb qui en sort.',
     },
     fossilBlurb: 'Éclot de l’*Œuf Fossile* (creuse les parois du Souterrain pour trouver de l’Old Amber) ou restauré à l’*Excavation* du Poké Realm, sur le Sentier. Compte requis.',
     way: { find: 'Pour une rencontre sur la carte', research: 'Pour avoir terminé une Recherche', fishing: 'Pour ta pêche', safari: 'Pour ta capture au Parc Safari', dig: 'De l’Excavation' },
@@ -136,6 +147,7 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       castformSighted: 'Un *Castform* flotte tout près !',
       castformFound: 'Tu as rejoint le *Castform* ! Il t’attend dans la boîte à cadeaux.',
       castformGone: 'Le Castform s’est envolé.',
+      spiritomb: 'Les esprits de *Spiritomb* sont à toi ! Il t’attend dans la boîte à cadeaux.',
     },
     research: {
       tab: 'Recherche',
@@ -159,6 +171,8 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       wishiwashi: '在 Poké Realm 釣魚時，會在*離碼頭很遠*的地方上鉤。需要帳號。',
       rotom: '廢棄小屋裡的*舊電視*住著什麼東西。電視發出雜音時，請待在旁邊。',
       castform: '*天氣變化*時，偶爾會飄過地圖。要在它消失前追上。',
+      lapras: '只在 Poké Realm 秘密基地樹林的*狩獵地帶*出現，限海灣週。需要帳號。',
+      spiritomb: '在墓地喚醒*楔石*，打倒從中出現的 Spiritomb。',
     },
     fossilBlurb: '由*化石蛋*孵化（在地下通道挖掘牆壁尋找 Old Amber），或在 Poké Realm 步道的*礦坑挖掘*復原。需要帳號。',
     way: { find: '獎勵你在地圖上的邂逅', research: '獎勵你完成研究', fishing: '獎勵你的釣魚成果', safari: '獎勵你在狩獵地帶的捕捉', dig: '來自礦坑挖掘' },
@@ -167,6 +181,7 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       castformSighted: '有隻 *Castform* 在附近飄著！',
       castformFound: '你追上了 *Castform*！牠在禮物箱等你。',
       castformGone: 'Castform 隨風飄走了。',
+      spiritomb: '*Spiritomb* 的靈魂現在屬於你了！牠在禮物箱等你。',
     },
     research: {
       tab: '研究',

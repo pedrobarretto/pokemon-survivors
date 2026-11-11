@@ -36,6 +36,7 @@ import type { Enemy, Game, Pickup, Player } from './types'
 import * as dm from '../engine/dmath'
 import type { BiomeId } from '../data/biomes'
 import { biomeAt } from './biomeMap'
+import { GA_KIT } from './gaKitARules'
 
 /**
  * Terrain on the map: each world cell deterministically holds at most one
@@ -560,10 +561,17 @@ const hovers = (g: Game) => playerTypes(g).includes('flying') || abilityImmune(g
 /** The acting player's ways across the terrain (the pause menu lists them). */
 export const crossings = (g: Game): Crossing[] => CROSSINGS.filter((c) => (c === 'hover' ? hovers(g) : playerTypes(g).includes(CROSSING_TYPE[c])))
 
+/** Co-op: a Lapras afloat within reach carries the acting player across the water (`GA_KIT.ferry`). */
+const ferried = (g: Game) => {
+  if (g.coop === null) return false
+  const p = g.player
+  return g.players.some((q) => q !== p && q.kitA?.kind === 'ferry' && q.kitA.afloat && dm.sq(q.x - p.x) + dm.sq(q.y - p.y) <= dm.sq(GA_KIT.ferry.carry))
+}
+
 /** The acting player's walking pace on `ground`: slowed wading, faster surfing (Water) or skating (Ice) on the open map. */
 export const groundPace = (g: Game, ground: Ground) => {
   if (ground === 'water') {
-    const water = playerTypes(g).includes('water')
+    const water = playerTypes(g).includes('water') || ferried(g)
     if (!ownWay(g)) return water || abilityImmune(g, 'terrain') ? 1 : TERRAIN.waterPace
     return water ? TERRAIN.surfPace : hovers(g) ? 1 : TERRAIN.waterPace
   }

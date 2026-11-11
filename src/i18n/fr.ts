@@ -3,6 +3,7 @@ import { realmBookFr as realmBook } from './realmStamps/fr'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
+import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -2361,6 +2362,7 @@ export const fr: Messages = {
       manectric: 'les ennemis à moins de 80 px perdent 30% de leur vitesse, vitesse +12, capacités +20% et recharges −5%. L’attaque spéciale devient Wild Charge.',
       altaria: 'capacités Normal et Fée +30%, capacités Dragon +20%, PV +30 et régénère 1 PV/s. L’attaque spéciale devient Hyper Voice.',
       banette: 'recharges −20%, +10% de chance d’altération sur chaque capacité et capacités +15%. L’attaque spéciale devient Phantom Force, une ruée en chaîne qui libère un anneau d’ombres à chaque atterrissage.',
+      ...GA_FAMILIES_A_WORDS.fr.megas,
       glalie: 'capacités Normal et Glace +30% et capacités +25%. L’attaque spéciale devient Sheer Cold.',
       salamence: 'capacités Normal et Vol +30%, vitesse +12 et capacités +25%. L’attaque spéciale devient Double-Edge.',
     },
@@ -3120,6 +3122,7 @@ export const fr: Messages = {
     ...SEASON_ONE_EGGS_WORDS.fr.moves,
     ...SEASON_ONE_KITS_WORDS.fr.moves,
     ...GA_FAMILIES_B_WORDS.fr.moves,
+    ...GA_FAMILIES_A_WORDS.fr.moves,
     leechSeed: {
       description: 'Lance des graines sur les ennemis les plus proches. Une graine draine les PV avec le temps et te soigne ; quand l’ennemi est vaincu, elle saute sur deux voisins.',
       upgrades: [
@@ -5592,6 +5595,7 @@ export const fr: Messages = {
     ...SEASON_ONE_EGGS_WORDS.fr.blurbs,
     ...SEASON_ONE_KITS_WORDS.fr.blurbs,
     ...GA_FAMILIES_B_WORDS.fr.blurbs,
+    ...GA_FAMILIES_A_WORDS.fr.blurbs,
     bulbasaur: 'Équilibré. Régénère ses PV.',
     charmander: 'Offensif. Plus de dégâts, moins de PV.',
     squirtle: 'Défensif. Plus de PV et de défense.',

@@ -24814,6 +24814,27 @@
           2,
           8
         ]
+      },
+      "Fly": {
+        "frameWidth": 40,
+        "frameHeight": 64,
+        "durations": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
       }
     },
     "portrait": true,
@@ -24851,6 +24872,27 @@
           "durations": [
             2,
             8
+          ]
+        },
+        "Fly": {
+          "frameWidth": 40,
+          "frameHeight": 64,
+          "durations": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
           ]
         }
       },
@@ -25823,7 +25865,82 @@
         "bodyH": 23,
         "footY": 5
       }
-    }
+    },
+    "forms": {
+      "mega": {
+        "anims": {
+          "Walk": {
+            "frameWidth": 32,
+            "frameHeight": 56,
+            "durations": [
+              6,
+              8,
+              6,
+              8
+            ]
+          },
+          "Idle": {
+            "frameWidth": 40,
+            "frameHeight": 56,
+            "durations": [
+              40,
+              20
+            ]
+          },
+          "Hurt": {
+            "frameWidth": 56,
+            "frameHeight": 72,
+            "durations": [
+              2,
+              8
+            ]
+          }
+        },
+        "body": {
+          "bodyW": 21,
+          "bodyH": 31,
+          "footY": 9
+        },
+        "shiny": {
+          "anims": {
+            "Walk": {
+              "frameWidth": 32,
+              "frameHeight": 56,
+              "durations": [
+                6,
+                8,
+                6,
+                8
+              ]
+            },
+            "Idle": {
+              "frameWidth": 40,
+              "frameHeight": 56,
+              "durations": [
+                40,
+                20
+              ]
+            },
+            "Hurt": {
+              "frameWidth": 56,
+              "frameHeight": 72,
+              "durations": [
+                2,
+                8
+              ]
+            }
+          },
+          "body": {
+            "bodyW": 21,
+            "bodyH": 31,
+            "footY": 9
+          }
+        }
+      }
+    },
+    "formCries": [
+      "mega"
+    ]
   },
   "303": {
     "anims": {
@@ -65871,6 +65988,14 @@
           2,
           8
         ]
+      },
+      "Fly": {
+        "frameWidth": 32,
+        "frameHeight": 40,
+        "durations": [
+          6,
+          6
+        ]
       }
     },
     "portrait": true,
@@ -65910,6 +66035,14 @@
           "durations": [
             2,
             8
+          ]
+        },
+        "Fly": {
+          "frameWidth": 32,
+          "frameHeight": 40,
+          "durations": [
+            6,
+            6
           ]
         }
       },
@@ -65952,6 +66085,23 @@
           2,
           8
         ]
+      },
+      "Fly": {
+        "frameWidth": 32,
+        "frameHeight": 56,
+        "durations": [
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          2,
+          1
+        ]
       }
     },
     "portrait": true,
@@ -65991,6 +66141,23 @@
           "durations": [
             2,
             8
+          ]
+        },
+        "Fly": {
+          "frameWidth": 32,
+          "frameHeight": 56,
+          "durations": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            2,
+            1
           ]
         }
       },
@@ -66033,6 +66200,23 @@
           2,
           8
         ]
+      },
+      "Fly": {
+        "frameWidth": 40,
+        "frameHeight": 64,
+        "durations": [
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          2,
+          1
+        ]
       }
     },
     "portrait": true,
@@ -66072,6 +66256,23 @@
           "durations": [
             2,
             8
+          ]
+        },
+        "Fly": {
+          "frameWidth": 40,
+          "frameHeight": 64,
+          "durations": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            2,
+            1
           ]
         }
       },

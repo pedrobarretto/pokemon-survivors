@@ -38,6 +38,7 @@ import { inPlay } from './players'
 import { knockOut, strikeAvatar, tickAvatar, wildDown } from './versusCombat'
 import { seasonKitBlocks, seasonKitHolds, seasonKitHurt, seasonKitKill } from './seasonOneKitSystem'
 import { kitBBlocks, kitBHurt, kitBKill } from './gaKitBSystem'
+import { gaKitAHolds, gaKitAHurt, gaKitAKill, gaKitATaken } from './gaKitASystem'
 import * as dm from '../engine/dmath'
 
 const TEXT_COLORS = { super: '#ffd830', normal: '#ffffff', weak: '#a8a8b8', warded: '#88b8f8' } as const
@@ -190,6 +191,7 @@ export const killEnemy = (g: Game, e: Enemy, source?: DamageSource | null) => {
   abilityKill(g, e)
   seasonKitKill(g, e)
   kitBKill(g, source)
+  gaKitAKill(g, e)
   const big = e.boss || e.shiny
   burst(g, e.x, e.y - e.radius, { colors: ['#ffffff', '#f8f8c8', '#c8d8f8'], count: big ? 60 : 8, speed: big ? 160 : 70, ttl: 0.45 })
   g.events.push({ kind: 'kill', boss: e.boss })
@@ -275,7 +277,7 @@ export const hurtPlayer = (
   const mods = runMods(g)
   // Air Lock: the weather boosts no foe's hit.
   const weather = abilityImmune(g, 'weather') ? 1 : weatherPower(weatherHere(g), types)
-  const dmg = armored(taken * mods.enemyDamage * weather * domainHarm(g, from !== undefined) * p.stats.damageTaken, p.stats.armor)
+  const dmg = armored(gaKitATaken(g, taken, types) * mods.enemyDamage * weather * domainHarm(g, from !== undefined) * p.stats.damageTaken, p.stats.armor)
   p.hp -= dmg
   p.record.taken += dmg
   p.record.hits++
@@ -291,6 +293,7 @@ export const hurtPlayer = (
   moveEvent(g, null, 'hurt')
   seasonKitHurt(g, dmg)
   kitBHurt(g)
+  gaKitAHurt(g)
   // A small shove keeps the player from being body-blocked into a death spiral.
   if (from) {
     const away = dirTo(from.x, from.y, p.x, p.y)
@@ -304,7 +307,7 @@ export const hurtPlayer = (
   if (g.rift.arena && (g.coop === null || !teammateStanding(g))) return fallInArena(g)
   if (g.place.inside && (g.coop === null || !teammateStanding(g))) return fallInPlace(g)
   // Sturdy holds before a Max Revive (the Bag's), which goes before a held Revive.
-  if (!seasonKitHolds(g) && !abilityHolds(g) && !tryMaxRevive(g) && !tryRevive(g)) {
+  if (!seasonKitHolds(g) && !gaKitAHolds(g) && !abilityHolds(g) && !tryMaxRevive(g) && !tryRevive(g)) {
     // Versus: knocked out until the respawn, by nobody (the wild, a boss's shot).
     if (p.versus) return knockOut(g, p, -1)
     if (g.coop !== null) return faint(g, from?.kind ?? null, hit)
