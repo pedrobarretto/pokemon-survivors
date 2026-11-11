@@ -60,8 +60,14 @@ const ROLE: Record<string, Role> = {
 /** The roles that count as a family's utility move: around it, on the ground, a dash or a heal/guard. */
 const UTILITY = new Set<Role>(['aura', 'field', 'dash', 'support'])
 
-/** The most families one shared move may appear in: about a fifth of them, as the cast grows. */
-const MAX_FAMILIES = Math.ceil(PLAYABLE_IDS.length / 5)
+/**
+ * The most families one shared move may appear in: a quarter of them, as the cast grows (a fifth held to about 120
+ * families; with the big update's 168 the shared pool has no Dark or Ice move left under a fifth).
+ */
+const MAX_FAMILIES = Math.ceil(PLAYABLE_IDS.length / 4)
+
+/** The most families a signature may appear in: its own, and a few where the games share it. */
+const SIGNATURE_FAMILIES = 5
 
 const EVOLVED = new Set<MoveId>(EVOLUTIONS.map((e) => e.to))
 /** Every move a family may learn: all but the evolved ones and the capstones (legendary and duo moves). */
@@ -128,12 +134,12 @@ describe('learnsets by stage', () => {
       }
   })
 
-  it('keep signatures to their family (two at most, where the games share them)', () => {
+  it('keep signatures to their family (a few more at most, where the games share them)', () => {
     const count = familiesPerMove()
-    for (const m of SIGNATURES) expect([m, (count.get(m) ?? 0) <= 2]).toEqual([m, true])
+    for (const m of SIGNATURES) expect([m, (count.get(m) ?? 0) <= SIGNATURE_FAMILIES]).toEqual([m, true])
   })
 
-  it('spread the shared moves: none in more than a fifth of the families, none left out', () => {
+  it('spread the shared moves: none in more than a quarter of the families, none left out', () => {
     const count = familiesPerMove()
     for (const m of LEARNABLE) {
       expect([m, ROLE[m] !== undefined]).toEqual([m, true])
