@@ -59,11 +59,10 @@ export const drawRegionalGround = (ctx: Ctx, a: Attack, t: number) => {
       if (a.age < 0) return
       // A bubbling violet pool: it fades in as the glob lands, darkens at the rim, pops bubbles.
       const k = Math.min(1, a.age / 0.15) * fadeOut(a, 0.5)
-      ctx.globalAlpha = k * 0.75
-      blitEllipse(ctx, r, Math.max(2, Math.round(r * 0.5)), '#582878', a.x, a.y)
+      ctx.globalAlpha = k
+      blitEllipse(ctx, r, Math.max(2, Math.round(r * 0.5)), '#482060', a.x, a.y)
       blitEllipse(ctx, Math.round(r * 0.82), Math.max(2, Math.round(r * 0.38)), '#8838b0', a.x, a.y)
       blitEllipse(ctx, Math.round(r * 0.45), Math.max(1, Math.round(r * 0.2)), '#b860d8', a.x - r * 0.15, a.y - r * 0.06)
-      ctx.globalAlpha = k
       const bubbles = detail.lean ? 2 : 4
       for (let i = 0; i < bubbles; i++) {
         const phase = (t * 1.6 + hash2(a.id, i)) % 1
