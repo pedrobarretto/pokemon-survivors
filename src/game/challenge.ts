@@ -4,6 +4,7 @@ import { isExclusiveFamily, PLAYABLE_IDS, type PlayableId } from '../data/hatchl
 import { SEASON_ONE } from '../data/seasons'
 import { SEASON_ONE_EGGS } from '../data/seasonOneEggs'
 import { SEASON_ONE_KITS } from '../data/seasonOneKits'
+import { GA_FAMILIES_B } from '../data/gaFamiliesB'
 import { brasiliaDay, dayNumber, msSinceDayStart, previousDay, type DayKey } from './day'
 import type { Difficulty } from './difficulty'
 import { NO_RANKS, UPGRADE_IDS } from './meta'
@@ -46,7 +47,7 @@ export type Challenge = { day: DayKey; seed: number; starter: PlayableId; diffic
  * Egg's; they also joined after the draw began: leaving them out keeps every
  * day's Pokémon where it was).
  */
-const OLD_POOL = PLAYABLE_IDS.filter((id) => !isExclusiveFamily(id) && !(id in SEASON_ONE_EGGS) && !(id in SEASON_ONE_KITS))
+const OLD_POOL = PLAYABLE_IDS.filter((id) => !isExclusiveFamily(id) && !(id in SEASON_ONE_EGGS) && !(id in SEASON_ONE_KITS) && !(id in GA_FAMILIES_B))
 
 /** The pool from Temporada 1 on, with its new egg families. */
 const SEASON_POOL = PLAYABLE_IDS.filter((id) => !isExclusiveFamily(id))

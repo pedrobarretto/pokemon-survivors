@@ -23,6 +23,8 @@ import { healPlayer } from './combat'
 import { createDexLog } from './dex'
 import { createSeasonKit } from './seasonOneKitRules'
 import { updateSeasonKit } from './seasonOneKitSystem'
+import { createKitB } from './gaKitBRules'
+import { updateKitB } from './gaKitBSystem'
 import { FRESH_LEVELUPS } from './learnsets'
 import { DEFAULT_DIFFICULTY, type Difficulty } from './difficulty'
 import { updateBosses, updateHazards } from './bosses'
@@ -109,7 +111,8 @@ export const playerRadius = (dex: number, legend: boolean) => {
 /** `Player.kit` for a family with a mechanic of its own; nothing at all for anyone else, so their state hashes the same (`createSeasonKit`). */
 const kitField = (starter: PlayableId) => {
   const kit = createSeasonKit(starter)
-  return kit ? { kit } : {}
+  const kitB = createKitB(starter)
+  return { ...(kit && { kit }), ...(kitB && { kitB }) }
 }
 
 /** What the save brings into a run besides the Poké Mart ranks. */
@@ -882,6 +885,7 @@ export const stepPlayer = (g: Game, input: StepInput, dt: number) => {
 export const stepMoves = (g: Game, input: StepInput, dt: number) => {
   updateMoveKit(g, dt)
   updateSeasonKit(g, dt)
+  updateKitB(g, dt)
   updateSignatures(g, dt)
   updateShopTms(g, dt)
   updateLegendary(g)

@@ -3,7 +3,7 @@
 // Usage: npm run credits
 import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { DEX, FORMS, HANDMADE_SHINIES, pad } from './dex.mjs'
+import { DEX, FORMS, HANDMADE_SHINIES, RECOLORED_SHINIES, pad } from './dex.mjs'
 
 const ROOT = new URL('..', import.meta.url).pathname
 const MANIFEST = join(ROOT, 'src/data/sprites.generated.json')
@@ -56,7 +56,9 @@ const rows = DEX.flatMap((dex) => {
       ...(handmade ? [`| ${dex} | ${entry.name} (${name}, shiny) | ${handmade} | — |`] : []),
     ]
   })
-  return [row(entry.name, entry), ...(shiny ? [row(`${entry.name} (shiny)`, shiny)] : []), ...forms]
+  // A shiny we recolored from the species' own sheets (`RECOLORED_SHINIES`) is its artist's work, recolored.
+  const recolored = manifest[dex]?.shiny && RECOLORED_SHINIES[dex] ? [`| ${dex} | ${entry.name} (shiny) | ${artists(entry.sprite_credit)} (recolored to the line's shiny palette) | — |`] : []
+  return [row(entry.name, entry), ...(shiny && recolored.length === 0 ? [row(`${entry.name} (shiny)`, shiny)] : []), ...recolored, ...forms]
 })
 
 const md = `# Credits

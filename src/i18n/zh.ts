@@ -2,6 +2,7 @@ import type { DexRegion } from '../data/nationalDex'
 import { realmBookZh as realmBook } from './realmStamps/zh'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
+import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -2320,6 +2321,7 @@ export const zh: Messages = {
     how: (stone, seconds, recharge) =>
       `擊敗裂縫中的傳說寶可夢即可獲得 ${stone}。在最終進化型態時，可超級進化 ${seconds} 秒（充能 ${recharge} 秒）：`,
     effects: {
+      ...GA_FAMILIES_B_WORDS.zh.megas,
       venusaur: 'HP+50、護甲+3、每秒回復1 HP。必殺技變為 Petal Blizzard。',
       charizardX: '招式+30%、速度+8、護甲+1。必殺技變為 Dragon Flare，在藍色龍焰中衝刺。',
       charizardY: '讓陽光變成大晴天（裂縫外），火屬性招式×1.5；招式+25%、範圍+15%。必殺技變為 Heat Wave。',
@@ -3117,6 +3119,7 @@ export const zh: Messages = {
   moves: {
     ...SEASON_ONE_EGGS_WORDS.zh.moves,
     ...SEASON_ONE_KITS_WORDS.zh.moves,
+    ...GA_FAMILIES_B_WORDS.zh.moves,
     leechSeed: {
       description: '向最近的敵人拋出種子。種子會隨時間吸取HP並回復你；敵人倒下時，種子會跳到附近的兩個敵人身上。',
       upgrades: [
@@ -5588,6 +5591,7 @@ export const zh: Messages = {
   blurbs: {
     ...SEASON_ONE_EGGS_WORDS.zh.blurbs,
     ...SEASON_ONE_KITS_WORDS.zh.blurbs,
+    ...GA_FAMILIES_B_WORDS.zh.blurbs,
     bulbasaur: '平衡型。會回復HP。',
     charmander: '進攻型。傷害較高，HP較低。',
     squirtle: '防禦型。HP與防禦較高。',

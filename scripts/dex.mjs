@@ -14,6 +14,14 @@ export const STARTERS = [
   810, 811, 812, 813, 814, 815, 816, 817, 818, // Galar
   906, 907, 908, 909, 910, 911, 912, 913, 914, // Paldea
 ]
+/**
+ * A Grande Atualização's second batch of families (src/data/gaFamiliesB.ts), whole lines: Onix, Happiny,
+ * Clauncher, Fletchling, Golett, Nacli, Inkay, Skorupi, Snover, Tynamo, Dewpider, Duraludon, Bounsweet, Sandile and Stufful's.
+ */
+export const GA_FAMILIES_B = [
+  95, 208, 440, 113, 242, 692, 693, 661, 662, 663, 622, 623, 932, 933, 934, 686, 687, 451, 452, 459, 460, 602, 603, 604, 751, 752, 884, 1018, 761, 762, 763,
+  551, 552, 553, 759, 760,
+]
 /** Families that hatch from eggs (src/data/hatchlings.ts), whole lines. Some also roam the horde. */
 export const HATCHLINGS = [
   172, 25, 26, 66, 67, 68, 133, 197, 175, 176, 468, 363, 364, 365, 396, 397, 398, 406, 315, 407, 744, 745, 736, 737, 738, // common
@@ -38,6 +46,7 @@ export const HATCHLINGS = [
   408, 409, 410, 411, 566, 567, 696, 697, 698, 699, // fossils
   56, 57, 979, 624, 625, 983, 704, 705, 706, 746, 924, 925, 963, 964, 877, 479, 351, 554, 555, 767, 768, 778, 978, 977,
   77, 78, 10162, 10163, // Ponyta's line and its Galarian form's (`REGIONAL`)
+  ...GA_FAMILIES_B,
 ]
 export const HORDE = Object.values(roster).map((s) => s.dex)
 /** Horde species with a behavior trait (`src/data/enemies.ts`), plus Nidoqueen's summons. */
@@ -84,7 +93,7 @@ export const EMOTE_ANIMS = ['Hop', 'Rotate', 'Sleep', 'Charge', 'Pose']
  */
 export const FLYERS = new Set([
   16, 17, 18, 21, 22, 227, 276, 277, 333, 334, 396, 397, 398, // the sky's flock
-  6, 41, 42, 123, 130, 149, 169, 176, 373, 468, 714, 715, 722, 723, 566, 567, // player forms
+  6, 41, 42, 123, 130, 149, 169, 176, 373, 468, 714, 715, 722, 723, 566, 567, 661, 662, 663, // player forms
 ])
 /** Species that can roll shiny: the player lines, regular enemies, rift legendaries, places' bosses, the hidden zones' Audino and the companions (Pumpkaboo for Gold supporters). */
 /** Legendaries that can also roll shiny as wave bosses (the trios, Mewtwo, the mythicals) and Arceus, for the Legend mode's captures. */
@@ -127,6 +136,8 @@ export const FORMS = {
   362: { mega: '0001' },
   448: { mega: '0001' },
   475: { mega: '0001' },
+  208: { mega: '0001' }, // Mega Steelix (src/data/gaFamiliesB.ts)
+  604: { mega: '0001' }, // Mega Eelektross
   // Legend mode's forms: Primal Reversion, Mega Rayquaza, the Latis', Mewtwo Y's and Darkrai's Megas, Deoxys' formes.
   150: { megaY: '0002' },
   380: { mega: '0001' },
@@ -145,6 +156,17 @@ export const FORMS = {
  */
 export const HANDMADE_SHINIES = {
   248: { mega: 'JFain (shared on Discord as @JaiFain)' },
+}
+
+/**
+ * Species shinies SpriteCollab doesn't have yet, made by `scripts/fetch-assets.mjs` from the species' own sheets by
+ * swapping these colors (the palette its line's official shinies use), into `public/assets/pokemon/<dex>/shiny/`
+ * (Walk, Idle and Hurt; the portrait stays the normal one). Credited in CREDITS.md as a recolor of the sheets' artist.
+ * Drop an entry once SpriteCollab publishes that shiny.
+ */
+export const RECOLORED_SHINIES = {
+  // Naclstack: the salt turns orange, as on shiny Nacli and Garganacl; the rock keeps its browns.
+  933: { '#ffffff': '#ffd5a0', '#e8e6e6': '#f9be74', '#cacaca': '#d89f64', '#8b7f79': '#c0753f' },
 }
 
 /**
@@ -201,6 +223,8 @@ export const FORM_CRIES = {
   491: { mega: 'darkrai-mega' },
   500: { mega: 'emboar-mega' },
   652: { mega: 'chesnaught-mega' },
+  208: { mega: 'steelix-mega' },
+  604: { mega: 'eelektross-mega' },
   655: { mega: 'delphox-mega' },
   658: { mega: 'greninja-mega' },
 }

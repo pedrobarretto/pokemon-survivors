@@ -4,7 +4,8 @@
 import { mkdir, readFile, writeFile, access } from 'node:fs/promises'
 import { join } from 'node:path'
 import { measureBody } from './body.mjs'
-import { DEX, EMOTIONS, FLYERS, FORM_CRIES, FORM_PORTRAITS, FORMS, HANDMADE_SHINIES, SHINY, pad, shinyPath } from './dex.mjs'
+import { DEX, EMOTIONS, FLYERS, FORM_CRIES, FORM_PORTRAITS, FORMS, HANDMADE_SHINIES, RECOLORED_SHINIES, SHINY, pad, shinyPath } from './dex.mjs'
+import { readPng, writePng } from './png.mjs'
 
 const ROOT = new URL('..', import.meta.url).pathname
 const OUT = join(ROOT, 'public/assets/pokemon')
@@ -108,6 +109,24 @@ const handmadeShiny = async (form, dir) => {
   return { anims: form.anims, body: await measureBody(join(dir, 'Walk.png'), walk.frameWidth, walk.frameHeight) }
 }
 
+/** A species shiny made by swapping colors on its normal sheets (`RECOLORED_SHINIES`): same frames, no portrait of its own. */
+const recoloredShiny = async (normal, dir, colors) => {
+  await mkdir(join(dir, 'shiny'), { recursive: true })
+  const swap = new Map(Object.entries(colors).map(([from, to]) => [parseInt(from.slice(1), 16), parseInt(to.slice(1), 16)]))
+  for (const name of Object.keys(normal.anims)) {
+    const { width, height, rgba } = await readPng(join(dir, `${name}.png`))
+    for (let i = 0; i < rgba.length; i += 4) {
+      const to = swap.get((rgba[i] << 16) | (rgba[i + 1] << 8) | rgba[i + 2])
+      if (rgba[i + 3] === 0 || to === undefined) continue
+      rgba[i] = to >> 16
+      rgba[i + 1] = (to >> 8) & 255
+      rgba[i + 2] = to & 255
+    }
+    await writeFile(join(dir, 'shiny', `${name}.png`), writePng(width, height, rgba))
+  }
+  return { anims: normal.anims, portrait: false, ...(normal.body && { body: normal.body }) }
+}
+
 /**
  * An alternate form (`FORMS`), with its portrait where `FORM_PORTRAITS` asks, and, for species that can roll shiny,
  * its shiny under `<id>/0001` (or the hand-made one in `HANDMADE_SHINIES` while SpriteCollab has none).
@@ -143,12 +162,14 @@ const fetchEmotions = async (dex, dir) => {
 
 const fetchSpecies = async (dex) => {
   const dir = join(OUT, String(dex))
-  const [normal, shiny, cry] = await Promise.all([
+  let [normal, shiny, cry] = await Promise.all([
     fetchVariant(dex, '', dir),
     SHINY.has(dex) ? fetchVariant(dex, shinyPath(dex), join(dir, 'shiny')) : null,
     mkdir(dir, { recursive: true }).then(() => download(`${CRIES}/${dex}.ogg`, join(dir, 'cry.ogg'))),
   ])
   if (!normal) throw new Error(`#${dex}: missing AnimData.xml`)
+  const recolor = !shiny && SHINY.has(dex) && RECOLORED_SHINIES[dex]
+  if (recolor) shiny = await recoloredShiny(normal, dir, recolor)
   const forms = FORMS[dex] && Object.fromEntries(await Promise.all(Object.entries(FORMS[dex]).map(([key, id]) => fetchForm(dex, key, id, dir))))
   const formCries = await fetchFormCries(dex, dir)
   const emotions = await fetchEmotions(dex, dir)
