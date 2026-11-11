@@ -32,11 +32,11 @@ export const drawGaKitAGround = (ctx: Ctx, a: Attack, t: number) => {
     // Tea spilled on the grass: a dark brew with a thin edge, a ripple turning in it and a glint; the Antique Form's twinkles gold.
     const ry = Math.max(3, Math.round(r * 0.5))
     ctx.globalAlpha = 0.75 * fade
-    blitEllipse(ctx, r, ry, '#2a1006', a.x, a.y)
-    blitEllipse(ctx, r - 1, ry - 1, '#6a2a0c', a.x, a.y)
-    blitEllipse(ctx, Math.max(1, r - 4), Math.max(1, ry - 2), '#843814', a.x + 1, a.y + 1)
+    blitEllipse(ctx, r, ry, '#4a1c06', a.x, a.y)
+    ctx.globalAlpha = 0.55 * fade
+    blitEllipse(ctx, r - 1, ry - 1, '#b0581c', a.x, a.y)
     ctx.globalAlpha = fade
-    dashedRing(ctx, a.x, a.y, Math.max(2, r * 0.55), Math.floor(t * 4) + a.id, ['#b86030'], 0.35, ry / r)
+    dashedRing(ctx, a.x, a.y, Math.max(2, r * 0.55), Math.floor(t * 4) + a.id, ['#f0a050'], 0.35, ry / r)
     ctx.fillStyle = '#f0c890'
     ctx.fillRect(Math.round(a.x - r * 0.4), Math.round(a.y - ry * 0.4), 3, 1)
     if (a.flip) {
@@ -91,7 +91,7 @@ export const drawGaKitAAttack = (ctx: Ctx, a: Attack, t: number) => {
       return
     case 'gaGuillotine':
       ctx.globalAlpha = fadeOut(a, 0.12)
-      blitRotated(ctx, GA_KIT_A_FX.guillotine(), a.x, a.y, facing(a) + 0.5, 3)
+      blitRotated(ctx, GA_KIT_A_FX.guillotine(), a.x, a.y, facing(a) - Math.PI / 4, 2)
       ctx.globalAlpha = 1
       return
     case 'gaClaw':
@@ -120,7 +120,7 @@ export const drawGaKitAAttack = (ctx: Ctx, a: Attack, t: number) => {
       return
     }
     case 'gaGem':
-      blitRotated(ctx, (a.id % 2 === 0 ? GA_KIT_A_FX.gem[0]! : GA_KIT_A_FX.gem[1]!)(), a.x, a.y, Math.round(t * 8) * (Math.PI / 4))
+      blitCentered(ctx, (a.id % 2 === 0 ? GA_KIT_A_FX.gem[0]! : GA_KIT_A_FX.gem[1]!)(), a.x, a.y + (Math.floor(t * 8 + a.id) % 2))
       return
     case 'gaWisp':
       blitCentered(ctx, GA_KIT_A_FX.wisp[Math.floor((t * 8 + a.id) % 2)]!(), a.x, a.y + Math.round(Math.sin(t * 6 + a.id) * 1.5))
@@ -231,14 +231,18 @@ export const drawGaKitAPlayer = (ctx: Ctx, g: Game, t: number) => {
       return
     case 'mischief':
       // The hair coiled into muscle: a dark and pink crackle around the body while it lasts.
-      if (k.left > 0) dashedRing(ctx, p.x, p.y - 12, 18 + (Math.floor(t * 8) % 2), Math.floor(t * 14), ['#f878b0', '#401828'], 0.6, 0.9)
+      if (k.left > 0) {
+        const pulse = Math.floor(t * 8) % 2
+        dashedRing(ctx, p.x, p.y - 12, 20 + pulse, Math.floor(t * 14), ['#f878b0', '#401828', '#ffffff'], 0.9, 0.9)
+        dashedRing(ctx, p.x, p.y - 12, 15 - pulse, -Math.floor(t * 10), ['#c05878'], 0.6, 0.9)
+      }
       return
     case 'dance': return drawPips(ctx, p.x, y, k.stacks, atStage(GA_KIT.dance.cap, p.stage), '#9878f0')
     case 'hunt': return k.stacks > 0 ? drawPips(ctx, p.x, y, k.stacks, atStage(GA_KIT.hunt.cap, p.stage), '#a8c8f0') : undefined
     case 'hoard':
       drawMeter(ctx, p.x, y, k.gems / (p.mega.active > 0 && p.mega.stone === 'sableye' ? GA_KIT.hoard.megaNeed : GA_KIT.hoard.need), '#f85878', false)
       // Mega Sableye's gem turns in front of it, catching shots.
-      if (p.mega.active > 0 && p.mega.stone === 'sableye') blitRotated(ctx, GA_KIT_A_FX.gem[0]!(), p.x + Math.cos(t * 3) * 10, p.y - 12, Math.floor(t * 6) * (Math.PI / 4), 2)
+      if (p.mega.active > 0 && p.mega.stone === 'sableye') blitCentered(ctx, GA_KIT_A_FX.gem[0]!(), p.x + Math.round(Math.cos(t * 3) * 12), p.y - 14)
       return
     case 'spirits': return k.wisps > 0 ? drawPips(ctx, p.x, y, k.wisps, 9, '#a8f0c8') : undefined
     case 'sacs': return drawPips(ctx, p.x, y, k.sacs, GA_KIT.sacs.need, '#c060e0')
@@ -253,7 +257,11 @@ export const drawGaKitAPlayer = (ctx: Ctx, g: Game, t: number) => {
       }
       return
     case 'heat':
-      if (k.vent > 0 && !detail.lean) blitCentered(ctx, GA_KIT_A_FX.steam(), p.x + Math.round(Math.sin(t * 9) * 6), p.y - 26 - Math.floor((t * 12) % 6))
+      // Venting: the arm cannons smoke and the body glows hot while the cooldowns slow.
+      if (k.vent > 0) {
+        dashedRing(ctx, p.x, p.y - 12, 17 + (Math.floor(t * 10) % 2), Math.floor(t * 12), ['#f87838', '#f8d048'], 0.5, 0.9)
+        if (!detail.lean) for (const side of [-1, 1]) blitCentered(ctx, GA_KIT_A_FX.steam(), p.x + side * 12, p.y - 20 - Math.floor((t * 14 + (side > 0 ? 3 : 0)) % 8))
+      }
       return
     case 'shell': {
       if (!k.shed || !shellOut(p.stage, p.branch)) return
