@@ -2,7 +2,8 @@ import { HATCHLINGS } from '../data/hatchlings'
 import { LEGENDS } from '../data/legends'
 import { BAG_ITEMS, EVO_ITEMS } from '../data/shop'
 import { giftInbox, nextGift, openGift } from '../account'
-import { playSfx } from '../engine/audio'
+import { playCry, playSfx } from '../engine/audio'
+import { blitEllipse, context2d } from '../engine/pixelart'
 import type { Input } from '../engine/input'
 import type { Hatch } from '../game/eggs'
 import type { Gift, StyleRef } from '../game/gifts'
@@ -11,7 +12,7 @@ import { formatDay, formatPokeDollars, formatPokeDollarsShort, t } from '../i18n
 import { bagIcon, coinIcon, eggIcon, giftIcon, itemArt, medalIcon, ribbonIcon, sparkleIcon } from '../render/art'
 import { styleThumb } from '../render/card'
 import { frameArtUrl, frameIcon, titleMark, wallpaperUrl } from '../render/cosmetics'
-import { portraitUrl } from '../render/sprites'
+import { cryUrl, drawPokemon, loadedSprites, loadSpecies, portraitUrl } from '../render/sprites'
 import { h, later, rich } from './dom'
 import { hint, menu, type Screen } from './screens'
 
@@ -144,6 +145,9 @@ export const giftScreen = (root: HTMLElement, input: Input, actions: GiftScreenA
   let busy = false
   let closed = false
 
+  /** A legend that came as a gift stands on a lit stage, alive (`tick`), instead of a portrait. */
+  let stage: { canvas: HTMLCanvasElement; dex: number } | null = null
+
   const show = (gift: Gift, body: readonly (HTMLElement | false)[], buttons: readonly Action[], opening = true) => {
     const m = t().gifts
     const why = reasonLine(gift)
@@ -204,7 +208,17 @@ export const giftScreen = (root: HTMLElement, input: Input, actions: GiftScreenA
     playSfx('unlock')
     const line = contentLine(gift)
     const left = giftInbox().length
-    const prize = h('div', { class: 'gift-prize' }, h('span', { class: 'gift-burst', 'aria-hidden': 'true' }), h('img', { src: line.src, alt: '' }))
+    stage = null
+    const c = gift.content
+    let shown: HTMLElement = h('img', { src: line.src, alt: '' })
+    if (c.kind === 'legend') {
+      const dex = LEGENDS[c.legend].line[0].dex
+      stage = { canvas: h('canvas', { class: 'gift-stage', width: STAGE.w, height: STAGE.h, 'aria-hidden': 'true' }), dex }
+      shown = stage.canvas
+      void loadSpecies(dex)
+      playCry(cryUrl(dex), 0.5)
+    }
+    const prize = h('div', { class: c.kind === 'legend' ? 'gift-prize gift-legend' : 'gift-prize' }, h('span', { class: 'gift-burst', 'aria-hidden': 'true' }), shown)
     const buttons: Action[] = [
       ...(gift.content.kind === 'shinyPick' ? [{ label: m.pickNow, run: () => (dispose(), later(actions.pick)) }] : []),
       left > 0 ? { label: m.next(left), run: closedBox } : { label: m.ok, run: close },
@@ -229,7 +243,33 @@ export const giftScreen = (root: HTMLElement, input: Input, actions: GiftScreenA
     later(actions.close)
   }
 
+  /** The legend's stage: a pool of gold light, sparkles winking round it, and the legend at twice its size when it fits. */
+  const tick = (time: number) => {
+    if (!stage || !stage.canvas.isConnected) return
+    const ctx = context2d(stage.canvas)
+    const { w, h: height } = STAGE
+    ctx.clearRect(0, 0, w, height)
+    blitEllipse(ctx, 40, 9, 'rgba(248,208,72,0.35)', w / 2, height - 12)
+    blitEllipse(ctx, 26, 6, 'rgba(255,244,192,0.55)', w / 2, height - 12)
+    for (let i = 0; i < 8; i++) {
+      if (Math.floor(time * 3 + i * 1.7) % 4 === 0) continue
+      const a = (i / 8) * Math.PI * 2 + time * 0.4
+      const x = Math.round(w / 2 + Math.cos(a) * 46)
+      const y = Math.round(height / 2 - 4 + Math.sin(a) * 30)
+      ctx.fillStyle = '#fff4c0'
+      ctx.fillRect(x, y - 1, 1, 3)
+      ctx.fillRect(x - 1, y, 3, 1)
+    }
+    const s = loadedSprites(stage.dex)
+    if (!s) return
+    const scale = Math.max(s.bodyW, s.bodyH) * 2 <= height - 16 ? 2 : 1
+    drawPokemon(ctx, s, 'Idle', 0, time, w / 2, height - 12, { scale })
+  }
+
   root.append(el)
   closedBox()
-  return { el, dispose }
+  return { el, dispose, tick }
 }
+
+/** The legend gift's stage canvas, px (shown at twice that, `.gift-stage`). */
+const STAGE = { w: 112, h: 96 } as const
