@@ -1,5 +1,7 @@
 import type { Dir8 } from '../engine/math'
 import { hash2 } from '../engine/rng'
+import { context2d, createCanvas } from '../engine/pixelart'
+import { toIconUrl } from './art'
 import { drawPokemon, frameEdges, loadSpecies, type AnimName, type SpeciesSprites } from './sprites'
 
 /**
@@ -107,3 +109,23 @@ export const standingCanvas = (dex: number, shadow: boolean, w = 56, h = 52) => 
   }).catch(() => {})
   return canvas
 }
+
+/** A Shadow's mark for the DOM (the PC box, the Pokédex): a violet flame. */
+const FLAME_ICON = ['....1.....', '...121....', '...1221...', '..12321.1.', '..123321.1', '.1234321.1', '.12344321.', '1233443321', '1223443221', '.11222211.']
+const FLAME_COLORS: Record<string, string> = { 1: '#1c0828', 2: '#4a1478', 3: '#7a2cc0', 4: '#ead0ff' }
+
+const markSprite = (rows: readonly string[], colors: Record<string, string>) => {
+  const c = createCanvas(rows[0]!.length, rows.length)
+  const ctx = context2d(c)
+  rows.forEach((row, y) => [...row].forEach((ch, x) => {
+    if (ch === '.') return
+    ctx.fillStyle = colors[ch]!
+    ctx.fillRect(x, y, 1, 1)
+  }))
+  return c
+}
+
+export const shadowIcon = () => toIconUrl('rocket:shadow', () => markSprite(FLAME_ICON, FLAME_COLORS))
+
+/** A Purified Pokémon's mark for the DOM: the lotus beside the HP bar in runs. */
+export const purifiedIcon = () => toIconUrl('rocket:purified', () => markSprite(['..1.1..', '.12121.', '1213121', '1233321', '.11111.'], { 1: '#584870', 2: '#ffffff', 3: '#f8a8d0' }))

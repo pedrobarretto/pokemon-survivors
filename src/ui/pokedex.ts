@@ -6,6 +6,18 @@ import { dexCounts, dexStatus, type DexStatus } from '../game/dex'
 import { isLegend } from '../data/legends'
 import { gameDex, type DexEntry } from '../site/pokedex'
 import { PICKUPS, pokeballIcon, sparkleIcon, trophyIcon } from '../render/art'
+import { purifiedIcon, shadowIcon } from '../render/shadowAura'
+import { PLAYABLE, type PlayableId } from '../data/hatchlings'
+
+/** Whether the save owns `dex`'s family as a Shadow or a Purified Pokémon (`game/shadow.ts`), by its first form's number. */
+const variantOf = (dex: number): 'shadow' | 'purified' | null => {
+  const owned = loadSave().shadows
+  for (const id of Object.keys(owned) as PlayableId[]) {
+    const e = owned[id]
+    if (e && Object.hasOwn(PLAYABLE, id) && PLAYABLE[id].line[0].dex === dex) return e.purified ? 'purified' : 'shadow'
+  }
+  return null
+}
 import { cryUrl, drawPokemon, hasShiny, loadedSprites, loadSpecies, portraitUrl } from '../render/sprites'
 import { locale, t } from '../i18n'
 import { h, later } from './dom'
@@ -85,6 +97,7 @@ export const pokedexScreen = (root: HTMLElement, input: Input, onClose: () => vo
       h('small', {}, e.dex),
       s.caught && h('img', { class: 'dex-mark', src: s.shiny ? sparkleIcon() : pokeballIcon(), alt: '' }),
       clear && h('img', { class: 'dex-clear', src: trophyIcon(clear), alt: '', title: m.clearedOn(levels[clear]) }),
+      variantOf(e.dex) && h('img', { class: 'dex-variant', src: variantOf(e.dex) === 'purified' ? purifiedIcon() : shadowIcon(), alt: '' }),
     )
     cell.addEventListener('click', () => (setZone('grid'), inspect(i, true)))
     return cell
@@ -140,6 +153,8 @@ export const pokedexScreen = (root: HTMLElement, input: Input, onClose: () => vo
       s.seen && row(m.owned, s.caught ? m.yes : m.no),
       s.seen && e.source.kind === 'starter' && (clear ? row(m.clear, h('img', { class: 'dex-clear-icon', src: trophyIcon(clear), alt: '' }), levels[clear]) : row(m.clear, m.no)),
       s.shiny && h('span', { class: 'tag tag-shiny' }, h('img', { src: sparkleIcon(), alt: '' }), m.shiny),
+      variantOf(e.dex) === 'shadow' && h('span', { class: 'tag tag-shadow' }, h('img', { src: shadowIcon(), alt: '' }), t().rocket.shadow.tag),
+      variantOf(e.dex) === 'purified' && h('span', { class: 'tag tag-purified' }, h('img', { src: purifiedIcon(), alt: '' }), t().rocket.shadow.purifiedTag),
     ]
     facts.replaceChildren(...lines.filter((line) => line !== false))
   }

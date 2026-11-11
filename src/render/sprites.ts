@@ -974,6 +974,9 @@ const pendingSprites = (dex: Dex): SpeciesSprites => {
 }
 
 /** An alternate form's sprites if loaded; otherwise starts (once) loading them and returns undefined. */
+/** A species' form sheets once loaded (asking for them when the manifest has them), else undefined: menus that show a form (Shadow Mewtwo). */
+export const loadedFormSprites = (dex: Dex, form: FormKey) => formSprites(dex, false, form)
+
 const formSprites = (dex: Dex, shiny: boolean, form: FormKey) => {
   const s = cache.get(cacheKey(dex, shiny, form))
   if (!s && manifestVariant(dex, shiny, form)) ask(dex, shiny, form)
