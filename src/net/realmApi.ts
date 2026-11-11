@@ -10,6 +10,7 @@ import type { DigPrize, DigTreasureId } from '../data/digTreasures'
 import type { Gift, GiftContent, GiftReason } from '../game/gifts'
 import type { SafariCatch, SafariTurn } from '../realm/games/safari.rules'
 import type { DigCell, DigHint, DigPattern, DigPowers, DigTreasure } from '../realm/games/dig.rules'
+import type { SweepView } from '../realm/games/corner.rules'
 
 /**
  * The Poké Realm's API (game → `server/`, Clerk-authenticated like the rest).
@@ -50,6 +51,17 @@ import type { DigCell, DigHint, DigPattern, DigPowers, DigTreasure } from '../re
  *   comes back uncharged. 402 `funds`, 403 `profile`/`banned`/`cap`, 409 `nosave`/`stale`, 429 past the route's limit.
  * - `POST /realm/claw/drop` (auth) `{ id, x, y }`: the API decides the credit (`realm/games/claw.rules.ts`). `ClawDropped`;
  *   the same drop again answers the same. 404 for a credit that isn't this player's.
+ * - `GET /realm/corner` (auth): `CornerState`, the Rocket Game Corner as the player sees it: tokens, today's counts, the
+ *   Koffing Sweep round left open and the once-only prizes taken. 403 `profile` without a @handle.
+ * - `POST /realm/corner/buy` (auth) `{ pack, base }`: tokens for ₽ out of the stored save at revision `base`
+ *   (`CORNER.packs`, `CORNER.buyDaily`). `CornerBought` with `{ save, revision }`. 402 `funds`, 403 `cap`, 409 `nosave`/`stale`.
+ * - `POST /realm/corner/spin` (auth) `{ bet, nonce }`: a spin, rolled here (`realm/games/corner.rules.ts`). `CornerSpun`;
+ *   the same `nonce` again answers the same. 403 `tokens`/`cap`.
+ * - `POST /realm/corner/sweep/start` (auth): a Koffing Sweep board (the one left open comes back). `CornerSwept`. 403 `cap`.
+ * - `POST /realm/corner/sweep/flip` (auth) `{ id, at }` and `/sweep/bank` `{ id }`: a tile turned, or the pot banked.
+ *   `CornerSwept`; a tile already up or a round over answers its view again.
+ * - `POST /realm/corner/redeem` (auth) `{ prize }`: a prize for tokens (`data/rocketCorner.ts`), sent as a gift.
+ *   `CornerRedeemed`. 403 `tokens`/`owned`.
  * - `GET /realm/boards/:game?period=day|week` (public; signed in adds the player's line): `GameBoard`
  *   (`realm/boards.ts`), the game's best of the Brasília day or week, from the claims. Cached a few seconds.
  *
@@ -164,6 +176,22 @@ export type ClawInserted = { play: ClawPlay; used: number }
 
 /** What a drop came to: the plush it went for (its place in `prizes`), the grip, whether it held and every plush's misses after it. */
 export type ClawDropped = { target: number; grip: number; won: boolean; family: PlushFamily; misses: number[] }
+
+/** The Rocket Game Corner for this account: tokens held, what today bought and won, spins and boards played, the board left open and the once-only prizes taken. */
+export type CornerState = { tokens: number; bought: number; won: number; spins: number; rounds: number; level: number; sweep: CornerSweep | null; taken: string[] }
+
+export type CornerBought = { tokens: number; bought: number }
+
+/** A spin: where the three reels stopped, what it paid (after the day's cap) and the tokens after it. */
+export type CornerSpun = { stops: [number, number, number]; paid: number; tokens: number; won: number; spins: number }
+
+/** A Koffing Sweep round as its player sees it (`SweepView`), and what banking it paid. */
+export type CornerSweep = { id: string } & SweepView
+
+export type CornerSwept = { sweep: CornerSweep; paid: number; tokens: number; won: number; rounds: number; level: number }
+
+/** A prize taken: the tokens left and the gift sent (applied on the next sync, like any gift). */
+export type CornerRedeemed = { tokens: number; gift: Gift | null }
 
 /** The Pokémon being faced, known once the grass has given it away. */
 export type SafariEncounterView = { family: HatchlingId; shiny: boolean; calm: number; sure: boolean }

@@ -37,9 +37,13 @@ export type SpotKind =
   | 'cabinet'
   /** The arcade's prize counter: what the games' trophies are. */
   | 'prizes'
+  /** The Rocket Game Corner (`data/rocketCorner.ts`): Meowth's token machine, the prize counter and the poster that hides the way to the Hideout. */
+  | 'tokens'
+  | 'rocketPrizes'
+  | 'poster'
 
 /** The town's rooms (their shapes are `REALM_ROOMS`). */
-export const TOWN_ROOMS = ['plaza', 'pier', 'cafe', 'trail', 'arcade'] as const
+export const TOWN_ROOMS = ['plaza', 'pier', 'cafe', 'trail', 'arcade', 'gameCorner'] as const
 
 export type TownRoomId = (typeof TOWN_ROOMS)[number]
 
@@ -119,7 +123,10 @@ export const REALM_ROOMS = {
       rect(331, 112, 14, 10),
       rect(352, 108, 34, 14),
       rect(170, 100, 52, 12),
-      rect(432, 98, 32, 10),
+      // The Rocket Game Corner's building on the north-east, its double door the way in.
+      rect(412, 62, 116, 50),
+      rect(414, 108, 44, 12),
+      rect(482, 108, 44, 12),
       rect(106, 206, 88, 26),
       rect(446, 206, 88, 26),
       oval(320, 300, 42, 18),
@@ -133,13 +140,14 @@ export const REALM_ROOMS = {
       oval(436, 390, 40, 20),
       post(28, 236),
       post(612, 236),
-      ...[trunk(40, 104), trunk(92, 64), shrub(128, 120), trunk(600, 104), trunk(548, 64), shrub(512, 120), trunk(44, 400), trunk(36, 470), shrub(92, 462)],
+      ...[trunk(40, 104), trunk(92, 64), shrub(128, 120), trunk(600, 104), trunk(560, 58), trunk(44, 400), trunk(36, 470), shrub(92, 462)],
       ...[trunk(600, 404), trunk(604, 474), shrub(548, 466)],
     ],
     doors: [
       { at: { x: 0, y: 236, w: 10, h: 40 }, to: 'trail', spawn: { x: 600, y: 256 } },
       { at: { x: 630, y: 236, w: 10, h: 40 }, to: 'pier', spawn: { x: 40, y: 256 } },
       { at: { x: 308, y: 108, w: 26, h: 10 }, to: 'cafe', spawn: { x: 200, y: 272 } },
+      { at: { x: 458, y: 112, w: 24, h: 8 }, to: 'gameCorner', spawn: { x: 200, y: 272 } },
     ],
     spots: [
       { kind: 'coopPortal', at: { x: 150, y: 252 }, reach: 28 },
@@ -294,6 +302,41 @@ export const REALM_ROOMS = {
       // Last in the list: a stamp's deed names a bench by its index here, and players already hold `bench:arcade:5`.
       { kind: 'cabinet', at: { x: 52, y: 160 }, reach: 18, games: ['claw'] },
       { kind: 'cabinet', at: { x: 52, y: 206 }, reach: 18, games: ['claw'] },
+    ],
+  },
+  /**
+   * The Rocket Game Corner (its door on the plaza's north-east): five slot
+   * machines along the back wall, Team Rocket's poster beside them (it hides
+   * the way to the Hideout), the prize counter on the east with Meowth by the
+   * till, the token machine by the west wall and two Koffing Sweep tables in
+   * the middle.
+   */
+  gameCorner: {
+    w: 400,
+    h: 300,
+    spawn: { x: 200, y: 272 },
+    solid: [
+      rect(0, 0, 400, 64),
+      ...[40, 72, 104, 136, 168].map((x) => rect(x - 12, 84, 24, 16)),
+      rect(278, 64, 88, 56),
+      oval(268, 110, 9, 5),
+      rect(10, 152, 26, 22),
+      ...[150, 250].map((x) => rect(x - 24, 194, 48, 18)),
+      oval(40, 236, 9, 4),
+      oval(360, 240, 9, 4),
+      oval(22, 92, 9, 5),
+      oval(22, 292, 9, 5),
+      oval(378, 292, 9, 5),
+      rect(0, 64, 6, 236),
+      rect(394, 64, 6, 236),
+    ],
+    doors: [{ at: { x: 170, y: 290, w: 60, h: 10 }, to: 'plaza', spawn: { x: 470, y: 140 } }],
+    spots: [
+      ...[40, 72, 104, 136, 168].map((x) => ({ kind: 'cabinet' as const, at: { x, y: 114 }, reach: 14, games: ['slots'] })),
+      { kind: 'poster', at: { x: 214, y: 80 }, reach: 18 },
+      { kind: 'rocketPrizes', at: { x: 322, y: 134 }, reach: 22 },
+      { kind: 'tokens', at: { x: 46, y: 166 }, reach: 18 },
+      ...[150, 250].map((x) => ({ kind: 'cabinet' as const, at: { x, y: 226 }, reach: 18, games: ['sweep'] })),
     ],
   },
 } as const satisfies Record<TownRoomId, TownRoom>

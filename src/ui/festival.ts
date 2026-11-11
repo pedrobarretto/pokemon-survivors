@@ -64,6 +64,8 @@ const rewardName = (c: GiftContent): string => {
       return m.shiny(HATCHLINGS[c.family].name)
     case 'family':
       return HATCHLINGS[c.family].name
+    case 'shadow':
+      return t().rocket.shadow.name(HATCHLINGS[c.family].name)
     case 'evoItem':
       return EVO_ITEMS[c.item].name
     case 'legend':

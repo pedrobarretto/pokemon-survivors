@@ -2,6 +2,7 @@ import { realmBookFr as realmBook } from './realmStamps/fr'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
+import { ROCKET_WORDS } from './rocket/words'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -726,7 +727,7 @@ export const fr: Messages = {
       offline: 'Impossible de charger les villes. Tu peux quand même entrer.',
       back: 'Retour',
     },
-    rooms: { plaza: 'Place', pier: 'Jetée', cafe: 'Café', trail: 'Bosquet des bases', arcade: "Salle d'arcade" },
+    rooms: { plaza: 'Place', pier: 'Jetée', cafe: 'Café', trail: 'Bosquet des bases', arcade: "Salle d'arcade", gameCorner: ROCKET_WORDS.fr.corner.name },
     base: (handle: string) => `Base de @${handle}`,
     status: {
       connecting: 'Connexion…',
@@ -794,6 +795,9 @@ export const fr: Messages = {
       gameTable: 'Table de jeux',
       cabinet: 'Borne d\'arcade',
       prizes: 'Prix',
+      tokens: ROCKET_WORDS.fr.corner.spots.tokens,
+      rocketPrizes: ROCKET_WORDS.fr.corner.spots.prizes,
+      poster: ROCKET_WORDS.fr.corner.spots.poster,
     },
     use: 'Utiliser',
     pieces: {
@@ -1545,7 +1549,7 @@ export const fr: Messages = {
       wallpaper: 'Fond d’écran de la Boîte PC.',
     },
     styles: {
-      frame: { classic: 'Classique', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Ambassadeur', supporter: 'Soutien', pumpkin: 'Citrouille', spectral: 'Spectral', regular: 'Habitué', kecleon: 'Kecleon doré', meowth: 'Meowth', lantern: 'Lanterne', creator: 'Créateur', grotto: 'Grotte Cachée', stampFrame: 'Estampes', era1: 'Ère 1', era1Champion: 'Couronne de l’Ère 1' },
+      frame: { classic: 'Classique', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Ambassadeur', supporter: 'Soutien', pumpkin: 'Citrouille', spectral: 'Spectral', regular: 'Habitué', kecleon: 'Kecleon doré', meowth: 'Meowth', lantern: 'Lanterne', creator: 'Créateur', grotto: 'Grotte Cachée', stampFrame: 'Estampes', era1: 'Ère 1', era1Champion: 'Couronne de l’Ère 1', rocket: ROCKET_WORDS.fr.frame },
       background: { night: 'Nuit étoilée', meadow: 'Route 1', forest: 'Forêt de Jade', cave: 'Mont Sélénite', snow: 'Mont Argenté', tower: 'Tour Pokémon de Lavanville', supporter: 'Ciel doré', halloween: 'Nuit des Sorcières', friendship: 'Amitié', era1Champion: 'Trône de l’Ère 1' },
       wallpaper: { classic: 'Classique', forest: 'Feuilles', cave: 'Cailloux', snow: 'Flocons', tower: 'Petits fantômes', supporter: 'Étoiles dorées', haunted: 'Maison hantée', secretBase: 'Base Secrète' },
     },
@@ -2947,7 +2951,7 @@ export const fr: Messages = {
     noTitle: 'aucun',
     titleTag: 'TITRE',
     equipped: 'AFFICHE',
-    giftTitles: { ambassador: 'A amené 3 amis dans le jeu', supporter: 'A soutenu le projet par un don', pumpkinKing: 'A rempli le bocal de bonbons de la Nuit des Sorcières', exorcist: 'A battu tous les boss de la Chasse aux Fantômes', vipCustomer: 'A réuni 30 tampons sur la carte de fidélité de Kecleon', tycoon: 'A fait de la boutique de Kecleon un Grand Magasin', patron: 'A donné ₽50 000 ou plus à un Festival de la Place', ogSupporter: 'A soutenu le jeu avant Patreon', arenaPoke: 'A fini une saison classée de l’Arène en Poké Ball', arenaGreat: 'A atteint Great Ball lors d’une saison classée de l’Arène', arenaUltra: 'A atteint Ultra Ball lors d’une saison classée de l’Arène', arenaMaster: 'A atteint Master Ball lors d’une saison classée de l’Arène', creator: 'Fait des vidéos et des lives de Pokémon Survivors', friendLegend: 'A amené 10 amis dans le jeu', stampCollector: 'A réuni 30 Estampes dans le Poké Realm', era1Legend: 'A fini en haut d’un classement de l’Ère 1', era1Champion: 'A fini n° 1 d’un classement de l’Ère 1' },
+    giftTitles: { ambassador: 'A amené 3 amis dans le jeu', supporter: 'A soutenu le projet par un don', pumpkinKing: 'A rempli le bocal de bonbons de la Nuit des Sorcières', exorcist: 'A battu tous les boss de la Chasse aux Fantômes', vipCustomer: 'A réuni 30 tampons sur la carte de fidélité de Kecleon', tycoon: 'A fait de la boutique de Kecleon un Grand Magasin', patron: 'A donné ₽50 000 ou plus à un Festival de la Place', ogSupporter: 'A soutenu le jeu avant Patreon', arenaPoke: 'A fini une saison classée de l’Arène en Poké Ball', arenaGreat: 'A atteint Great Ball lors d’une saison classée de l’Arène', arenaUltra: 'A atteint Ultra Ball lors d’une saison classée de l’Arène', arenaMaster: 'A atteint Master Ball lors d’une saison classée de l’Arène', creator: 'Fait des vidéos et des lives de Pokémon Survivors', friendLegend: 'A amené 10 amis dans le jeu', stampCollector: 'A réuni 30 Estampes dans le Poké Realm', era1Legend: 'A fini en haut d’un classement de l’Ère 1', era1Champion: 'A fini n° 1 d’un classement de l’Ère 1', ...ROCKET_WORDS.fr.giftTitles },
     newMedals: 'Nouvelles médailles',
     names: {
       firstRun: 'Premiers pas',
@@ -3049,6 +3053,7 @@ export const fr: Messages = {
       stampCollector: 'Collectionneur d’Estampes',
       era1Legend: 'Légende de l’Ère 1',
       era1Champion: 'Champion(ne) de l’Ère 1',
+      ...ROCKET_WORDS.fr.titles,
     },
     goals: {
       runs: (n) => (n === '1' ? 'Joue une partie' : `Joue ${n} parties`),
@@ -6391,6 +6396,7 @@ export const fr: Messages = {
     },
   },
   seasonUnlocks: SEASON_ONE_UNLOCKS_WORDS.fr,
+  rocket: ROCKET_WORDS.fr,
   minigames: {
     claw: SEASON_ONE_CLAW_WORDS.fr.words,
     safari: SEASON_ONE_SAFARI_WORDS.fr.words,
@@ -6406,8 +6412,10 @@ export const fr: Messages = {
       claw: SEASON_ONE_CLAW_WORDS.fr.game,
       safari: SEASON_ONE_SAFARI_WORDS.fr.game,
       dig: SEASON_ONE_DIG_WORDS.fr.game,
+      slots: { name: ROCKET_WORDS.fr.slots.name, blurb: ROCKET_WORDS.fr.slots.blurb },
+      sweep: { name: ROCKET_WORDS.fr.sweep.name, blurb: ROCKET_WORDS.fr.sweep.blurb },
     },
-    feats: { fishing: { feebas: 'J\'ai pêché un Feebas !', shinyGyarados: 'J\'ai pêché un Gyarados shiny !!', wishiwashi: 'J\'ai pêché un Wishiwashi !', bigHaul: 'Une pêche à 300 points !' }, berryCatch: { flawless: 'Une Pluie de Baies sans perdre une vie !', goldRush: 'Trois baies dorées en une manche !', combo50: 'Un combo de 50 baies !' }, whackDiglett: { combo30: 'Un combo de 30 coups !', dugtrio: '5 Dugtrio tapés en une manche !' }, fourInRow: {}, typeDuel: { perfectDuel: 'Duel parfait, sans perdre une manche !' }, claw: SEASON_ONE_CLAW_WORDS.fr.feats, safari: SEASON_ONE_SAFARI_WORDS.fr.feats, dig: SEASON_ONE_DIG_WORDS.fr.feats },
+    feats: { fishing: { feebas: 'J\'ai pêché un Feebas !', shinyGyarados: 'J\'ai pêché un Gyarados shiny !!', wishiwashi: 'J\'ai pêché un Wishiwashi !', bigHaul: 'Une pêche à 300 points !' }, berryCatch: { flawless: 'Une Pluie de Baies sans perdre une vie !', goldRush: 'Trois baies dorées en une manche !', combo50: 'Un combo de 50 baies !' }, whackDiglett: { combo30: 'Un combo de 30 coups !', dugtrio: '5 Dugtrio tapés en une manche !' }, fourInRow: {}, typeDuel: { perfectDuel: 'Duel parfait, sans perdre une manche !' }, claw: SEASON_ONE_CLAW_WORDS.fr.feats, safari: SEASON_ONE_SAFARI_WORDS.fr.feats, dig: SEASON_ONE_DIG_WORDS.fr.feats, slots: ROCKET_WORDS.fr.feats.slots, sweep: ROCKET_WORDS.fr.feats.sweep },
     duel: {
       pick: 'Choisis une carte',
       play: 'Jouer',

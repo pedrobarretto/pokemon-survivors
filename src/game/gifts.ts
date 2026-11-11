@@ -21,6 +21,7 @@ import { mergeRibbons, parseRibbon, type Ribbon } from './ribbons'
 import { isSupporterTier, type SupporterTier } from './supporters'
 import { grantShinyPick } from './shinyPicks'
 import { equipStyle, grantStyle, parseStyle, type StyleSave } from './style'
+import { grantShadow } from './shadow'
 
 /**
  * Presente Misterioso (Mystery Gift): the API keeps an inbox per player
@@ -55,6 +56,8 @@ export type GiftContent =
   | { kind: 'legend'; legend: LegendId }
   /** An evolution item owned for good (`data/shop.ts`), found outside the shop (a stone dug up at the mine). One already owned pays `EVO_ITEM_REPEAT`. */
   | { kind: 'evoItem'; item: EvoItemId }
+  /** A Shadow Pokémon (`game/shadow.ts`), from the Rocket Game Corner's counter: a family not owned yet hatches too, with its scene. A Shadow owned already changes nothing. */
+  | { kind: 'shadow'; family: HatchlingId }
 
 export type GiftKind = GiftContent['kind']
 
@@ -98,6 +101,8 @@ export type GiftReason =
   | { kind: 'season'; way: 'find' | 'research' | 'fishing' | 'safari' | 'dig' }
   /** The Era 1 Hall da Fama (`game/era1.ts`): the tier, and the board and place that earned it. Sent by the API from its own boards. */
   | { kind: 'era1'; tier: Era1Tier; rank: number; side: Era1Side; difficulty: Difficulty }
+  /** Team Rocket's Game Corner prize counter (`data/rocketCorner.ts`): sent by the API, which took the tokens. */
+  | { kind: 'rocket' }
 
 export type Gift = { id: string; content: GiftContent; reason: GiftReason | null }
 
@@ -169,6 +174,8 @@ export const parseGiftContent = (v: unknown): GiftContent | null => {
       return isLegend(v.legend) ? { kind: 'legend', legend: v.legend } : null
     case 'evoItem':
       return isOneOf(v.item, EVO_ITEM_IDS) ? { kind: 'evoItem', item: v.item } : null
+    case 'shadow':
+      return isOneOf(v.family, HATCHLING_IDS) ? { kind: 'shadow', family: v.family } : null
     default:
       return null
   }
@@ -192,6 +199,7 @@ const parseReason = (v: unknown): GiftReason | null => {
   if (v.kind === 'arenaSeason' && isOneOf(v.tier, TIER_IDS)) return { kind: 'arenaSeason', season: wholeNumber(v.season), tier: v.tier }
   if (v.kind === 'hiddenZone' && isOneOf(v.zone, HIDDEN_PLACE_IDS)) return { kind: 'hiddenZone', zone: v.zone }
   if (v.kind === 'season' && (v.way === 'find' || v.way === 'research' || v.way === 'fishing' || v.way === 'safari' || v.way === 'dig')) return { kind: 'season', way: v.way }
+  if (v.kind === 'rocket') return { kind: 'rocket' }
   if (v.kind === 'era1' && isOneOf(v.tier, ERA1_TIERS) && isEra1Side(v.side) && isDifficulty(v.difficulty)) return { kind: 'era1', tier: v.tier, rank: wholeNumber(v.rank), side: v.side, difficulty: v.difficulty }
   return null
 }
@@ -286,6 +294,11 @@ const give = (save: Save, content: GiftContent, id: string): { save: Save; hatch
       return { save: { ...save, legends: captureByGift(save.legends, content.legend) }, hatch: null }
     case 'evoItem':
       return { save: save.evo.includes(content.item) ? { ...save, wallet: save.wallet + EVO_ITEM_REPEAT } : { ...save, evo: [...save.evo, content.item] }, hatch: null }
+    case 'shadow': {
+      // A family not owned yet comes along, hatched (with no ₽ for a duplicate: the Shadow is the prize).
+      const hatched = save.hatched[content.family] === undefined ? familyHatch(save, content.family) : { save, hatch: null }
+      return { save: { ...hatched.save, shadows: grantShadow(hatched.save.shadows, content.family) }, hatch: hatched.hatch }
+    }
   }
 }
 

@@ -86,6 +86,15 @@ export const TOWN_ART = {
   claw2: 'realm/arcade/claw-2',
   jukebox: 'furniture/jukebox',
   mine: 'realm/mine',
+  /** The Rocket Game Corner: its building on the plaza and its pieces inside (`realm/corner/`). */
+  gameCorner: 'realm/game-corner',
+  slotRed: 'realm/corner/slot-red',
+  slotPurple: 'realm/corner/slot-purple',
+  sweepTable: 'realm/corner/sweep-table',
+  tokenMachine: 'realm/corner/token-machine',
+  cornerCounter: 'realm/corner/prize-counter',
+  cornerShelf: 'realm/corner/prize-shelf',
+  rocketPoster: 'realm/corner/poster',
 } as const satisfies Record<string, string>
 
 export type TownArt = keyof typeof TOWN_ART
@@ -135,8 +144,9 @@ type Path = { kind: 'path'; points: readonly Point[]; r: number }
 export type Surface =
   | Path
   | { kind: 'paving' | 'dirt' | 'sand' | 'water' | 'boards' | 'floor' | 'mat'; shape: Shape; pool?: true }
-  | { kind: 'wall'; h: number; windows: readonly number[]; neon?: true }
-  | { kind: 'carpet'; shape: Shape }
+  | { kind: 'wall'; h: number; windows: readonly number[]; neon?: true; casino?: true }
+  /** `casino`: the Game Corner's, red with gold coins and diamonds instead of the arcade's night blue. */
+  | { kind: 'carpet'; shape: Shape; casino?: true }
   /** A round rug woven as a Poké Ball (its top red, its bottom white, the band and the button dark), lying on the floor. */
   | { kind: 'ballRug'; shape: Shape }
 
@@ -145,6 +155,15 @@ export const PRIZE_CLERK = { dex: 137, x: 264, y: 112, facing: 1 } as const
 
 /** A Pokémon that stands in a room (its SpriteCollab sprite, idling) with its feet at (`x`, `y`), facing `facing`: the trail's host. */
 export type Host = { dex: number; x: number; y: number; facing: Dir8; keeper?: true }
+
+/** The Game Corner's clerk: Meowth, Team Rocket's own talking cat, by the till at the prize counter's west end (the counter's spot is the prizes'). */
+export const CORNER_CLERK = { dex: 52, x: 268, y: 112, facing: 1 } as const
+
+/** Team Rocket's Pokémon lounging in the Game Corner, for show: Koffing by the token machine, Ekans by the door. */
+const CORNER_FIGURES = [
+  { dex: 109, x: 40, y: 238, facing: 1 },
+  { dex: 23, x: 360, y: 242, facing: 7 },
+] as const
 
 /** The grove's host: Sudowoodo, the Pokémon that passes for a tree, keeps the secret bases' grove. */
 export const GROVE_HOST = { dex: 185, x: 556, y: 292, facing: 7 } as const satisfies Host
@@ -177,11 +196,12 @@ const PLAZA: RoomLayout = {
     { kind: 'path', r: 13, points: [{ x: -10, y: 254 }, { x: 40, y: 258 }, { x: 96, y: 264 }] },
     { kind: 'path', r: 13, points: [{ x: 650, y: 254 }, { x: 600, y: 258 }, { x: 544, y: 264 }] },
     { kind: 'path', r: 12, points: [{ x: 320, y: 112 }, { x: 320, y: 146 }] },
+    { kind: 'path', r: 11, points: [{ x: 470, y: 118 }, { x: 466, y: 150 }, { x: 452, y: 172 }] },
   ],
   props: [
     { art: 'cafe', x: 333, y: 124 },
     { art: 'board', x: 196, y: 112 },
-    { art: 'benchW', x: 448, y: 108, flip: true },
+    { art: 'gameCorner', x: 470, y: 122 },
     { art: 'portalCoop', x: 150, y: 236 },
     { art: 'portalArena', x: 490, y: 236 },
     { art: 'fountain', x: 320, y: 318 },
@@ -199,8 +219,7 @@ const PLAZA: RoomLayout = {
     { art: 'tree0', x: 92, y: 64 },
     { art: 'bush', x: 128, y: 120 },
     { art: 'tree1', x: 600, y: 104 },
-    { art: 'tree0', x: 548, y: 64 },
-    { art: 'bush1', x: 512, y: 120 },
+    { art: 'tree0', x: 560, y: 58 },
     { art: 'tree1', x: 44, y: 400 },
     { art: 'tree0', x: 36, y: 470 },
     { art: 'bush', x: 92, y: 462 },
@@ -389,4 +408,38 @@ const ARCADE: RoomLayout = {
   ],
 }
 
-export const TOWN_LAYOUT = { plaza: PLAZA, pier: PIER, cafe: CAFE, trail: TRAIL, arcade: ARCADE } as const satisfies Record<TownRoomId, RoomLayout>
+/**
+ * The Rocket Game Corner (its door on the plaza's north-east): a casino's red
+ * carpet and a black wall lit by red and gold neon, five slot machines along
+ * it, Team Rocket's poster beside them, the prize counter on the east with
+ * its shelf on the wall and Meowth by the till, the token machine by the west
+ * wall, two Koffing Sweep tables in the middle, Koffing and Ekans lounging.
+ */
+const GAME_CORNER: RoomLayout = {
+  indoor: true,
+  ground: [
+    { kind: 'carpet', shape: rect(0, 0, 400, 300), casino: true },
+    { kind: 'mat', shape: rect(176, 286, 48, 14) },
+    { kind: 'wall', h: 64, windows: [], neon: true, casino: true },
+  ],
+  hosts: [CORNER_CLERK],
+  figures: CORNER_FIGURES,
+  props: [
+    { art: 'slotRed', x: 40, y: 100 },
+    { art: 'slotPurple', x: 72, y: 100 },
+    { art: 'slotRed', x: 104, y: 100 },
+    { art: 'slotPurple', x: 136, y: 100 },
+    { art: 'slotRed', x: 168, y: 100 },
+    { art: 'rocketPoster', x: 214, y: 52 },
+    { art: 'cornerShelf', x: 322, y: 60 },
+    { art: 'cornerCounter', x: 322, y: 120 },
+    { art: 'tokenMachine', x: 23, y: 174 },
+    { art: 'sweepTable', x: 150, y: 212 },
+    { art: 'sweepTable', x: 250, y: 212 },
+    { art: 'plant', x: 22, y: 96 },
+    { art: 'plant', x: 22, y: 296 },
+    { art: 'plant', x: 378, y: 296 },
+  ],
+}
+
+export const TOWN_LAYOUT = { plaza: PLAZA, pier: PIER, cafe: CAFE, trail: TRAIL, arcade: ARCADE, gameCorner: GAME_CORNER } as const satisfies Record<TownRoomId, RoomLayout>

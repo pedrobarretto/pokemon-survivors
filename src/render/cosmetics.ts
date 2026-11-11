@@ -87,6 +87,12 @@ const CHARM: BallArt = [
   { 1: '#4a3008', 2: '#f8d030', 3: '#c89028', 4: '#fffbe0', 5: '#a06818' },
 ]
 
+/** A Game Corner token, for the Team Rocket frame's corners: a red coin with a black R on it (1 outline, 2 red, 3 its shade, 4 the shine, 5 the letter). */
+const ROCKET_TOKEN: BallArt = [
+  ['..111..', '.14221.', '1255521', '1252321', '1255321', '.15353.', '..111..'],
+  { 1: '#200808', 2: '#e02828', 3: '#901818', 4: '#ffb0a0', 5: '#181010' },
+]
+
 /** A paper lantern, for the Festival das Lanternas frame's corners (1 outline, 2 the paper, 3 its ribs, 4 the flame, 5 the cap). */
 const LANTERN: BallArt = [
   ['..151..', '.12221.', '1232321', '1224221', '1232321', '.12221.', '..151..'],
@@ -208,6 +214,8 @@ export const CARD_FRAMES = {
   era1: { edge: '#120e26', light: '#f8d878', main: '#22357e', shade: '#c89028', accent: '#f8d030', band: 3, studs: '#f8d030', inner: ['#0a0a1c'], ball: ERA_COIN, crest: ERA_WINGS },
   /** An Era 1 board's #1: a wide gold band set with rubies and a gold line inside it, a ruby in a gold bezel in each corner and the crown for its seal. */
   era1Champion: { edge: '#2a1404', light: '#fff4c0', main: '#e8b030', shade: '#f8d030', accent: '#e02848', band: 3, studs: '#e02848', inner: ['#2a1404'], ball: RUBY, crest: CROWN },
+  /** The Rocket Game Corner's counter (`data/rocketCorner.ts`): Team Rocket's black and red, a gold line and a red token in each corner. */
+  rocket: { edge: '#080808', light: '#f8d030', main: '#202024', shade: '#000000', accent: '#e02828', ball: ROCKET_TOKEN },
 } as const satisfies Record<FrameId, CardFrame>
 
 /** A card's backdrop: sky bands top to bottom (dithered where they meet) and how many stars (fireflies, crystals, snow…). */

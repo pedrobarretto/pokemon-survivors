@@ -22,6 +22,7 @@ import { mergeShinyStarters } from './shinyStarters'
 import { mergeShinyPicks } from './shinyPicks'
 import { mergeCompanions } from './supporters'
 import { mergeShadows } from './shadow'
+import { mergeHideout } from './hideoutPass'
 
 /**
  * Account sync rules, shared by the game and the API (`server/`): how two
@@ -82,6 +83,7 @@ const worth = (s: Save) => s.wallet + totalSpent(s.ranks) + shopInvested(s.shop.
  *   side bought (a union) and the haggle made on either (`mergeCaravan`).
  * - The Desafio do dia attempt: the later day (`base`'s on the same day).
  * - Temporada 1's encounters: a union; its research: each chain at the side further along, the partners a union (`mergeResearch`).
+ * - The Rocket Hideout's pass: the later day it was given and the later it was used, Giovanni's clears the higher (`mergeHideout`).
  * - Shadow Pokémon: a union, purified for good once either side purified, the further heart gauge, `incoming`'s pick (`mergeShadows`).
  */
 export const mergeSaves = (base: Save, incoming: Save): Save => {
@@ -129,6 +131,7 @@ export const mergeSaves = (base: Save, incoming: Save): Save => {
     finds: mergeFinds(base.finds, incoming.finds),
     research: mergeResearch(base.research, incoming.research),
     shadows: mergeShadows(base.shadows, incoming.shadows),
+    hideout: mergeHideout(base.hideout, incoming.hideout),
   }
 }
 

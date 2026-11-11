@@ -77,6 +77,10 @@ import { STAMP_FX_SECONDS, drawStampFx, type StampFx } from '../render/stampFx'
 import { stampArtReady, stampCanvas } from '../render/stampArt'
 import { hasUnseenStamps, openRealmBook } from './realmBook'
 import { openErrandsBoard } from './realmErrands'
+import { openCornerCounter } from './cornerCounter'
+import { loadSave, today, updateSave } from './save'
+import { readPoster } from '../game/hideoutPass'
+import { brasiliaDay } from '../game/day'
 
 /**
  * The Poké Realm's screen (`net/realm.ts`): the city picker, then the town
@@ -187,6 +191,13 @@ const hostSpeaker = (): Speaker => ({
   name: t().realm.spots.host,
   color: '#7a8a2e',
   portrait: () => h('img', { src: portraitUrl(GROVE_HOST.dex), alt: '', width: 40, height: 40 }),
+})
+
+/** Team Rocket's poster in the Game Corner, as a dialogue speaker: Persian's portrait on it. */
+const posterSpeaker = (): Speaker => ({
+  name: t().rocket.corner.spots.poster,
+  color: '#c02830',
+  portrait: () => h('img', { src: portraitUrl(53), alt: '', width: 40, height: 40 }),
 })
 
 /* ---------------- Rooms ---------------- */
@@ -1137,6 +1148,11 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
           return void toast(root, m().counter, 2600, 'realmSpot')
         case 'prizes':
           return boardAt(spot)
+        case 'tokens':
+        case 'rocketPrizes':
+          return openSub((r) => openCornerCounter(r, input, { tab: spot.kind === 'tokens' ? 'tokens' : 'prizes', close: closeSub }))
+        case 'poster':
+          return readTheposter()
         case 'pool':
           return void toast(root, m().pool, 2600, 'realmSpot')
         case 'bench':
@@ -1199,6 +1215,20 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       if (games.length === 0) return
       playSfx('select')
       openSub((r) => openGameBoard(r, games, { close: closeSub, ...(spot?.kind === 'prizes' ? { note: m().prizes } : {}) }))
+    }
+
+    /**
+     * Team Rocket's poster: the switch behind it opens the stairs, and the
+     * save holds a pass for the Hideout's entrance in the next run (one a
+     * Brasília day, `game/hideoutPass.ts`).
+     */
+    function readTheposter() {
+      const w = t().rocket.corner
+      const got = readPoster(loadSave().hideout, brasiliaDay(today()))
+      if (got.got === 'new') updateSave((s) => ({ ...s, hideout: got.save }))
+      const end = got.got === 'new' ? w.hideoutKey : got.got === 'held' ? w.hideoutAgain : w.hideoutTomorrow
+      const lines = [...(got.got === 'new' ? [...w.motto, ...w.poster] : [w.poster[0]!]), end]
+      openSub((r) => dialogue(r, input, { speaker: posterSpeaker(), lines: lines.map((text) => ({ text })), onDone: () => later(closeSub) }))
     }
 
     /** Sudowoodo talks: all about secret bases the first time (`first`), else a line of its hellos. */

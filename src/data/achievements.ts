@@ -127,9 +127,10 @@ export type MedalTitleId = { [K in AchievementId]: (typeof ACHIEVEMENTS)[K] exte
  * the Arena's four for a ranked season's peak tier (`ARENA_REWARDS` in `game/arenaRewards.ts`),
  * the Creator's for making videos of the game (sent from the admin desk, `data/creators.ts`),
  * the Stamp Collector's for 30 Estampas in the Poké Realm (`STAMP_MILESTONES` in `data/realmStamps.ts`),
- * the Era 1 Legend's for a top place on an Era 1 board and the Era 1 Champion's for a #1 (`game/era1.ts`).
+ * the Era 1 Legend's for a top place on an Era 1 board and the Era 1 Champion's for a #1 (`game/era1.ts`),
+ * the Rocket Recruit's from the Rocket Game Corner's counter (`data/rocketCorner.ts`) and the Rocket Buster's for beating Giovanni in the Rocket Hideout (`data/rocketHideout.ts`).
  */
-export const GIFT_TITLES = ['ambassador', 'supporter', 'pumpkinKing', 'exorcist', 'vipCustomer', 'tycoon', 'patron', 'ogSupporter', 'arenaPoke', 'arenaGreat', 'arenaUltra', 'arenaMaster', 'creator', 'friendLegend', 'stampCollector', 'era1Legend', 'era1Champion'] as const
+export const GIFT_TITLES = ['ambassador', 'supporter', 'pumpkinKing', 'exorcist', 'vipCustomer', 'tycoon', 'patron', 'ogSupporter', 'arenaPoke', 'arenaGreat', 'arenaUltra', 'arenaMaster', 'creator', 'friendLegend', 'stampCollector', 'era1Legend', 'era1Champion', 'rocketRecruit', 'rocketBuster'] as const
 
 export type GiftTitleId = (typeof GIFT_TITLES)[number]
 
