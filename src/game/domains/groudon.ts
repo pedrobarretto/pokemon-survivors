@@ -14,9 +14,6 @@ import type { Game } from '../types'
  */
 
 /** Seconds between geysers (two at a time ahead of the player) and between rocks falling by the front. */
-/** Groudon signs its tunnel's geysers and rocks (`Hazard.by`). */
-const GROUDON = harmBy('groudon')
-
 const GEYSER = { every: 2.6, count: 2, radius: 14, delay: 1.2, damage: 10 } as const
 const ROCKFALL = { every: 1.7, radius: 12, delay: 1, damage: 9 } as const
 
@@ -27,7 +24,7 @@ const beat = (age: number, dt: number, every: number) => Math.floor(age / every)
 const strike = (g: Game, x: number, y: number, r: number, delay: number, damage: number, visual: 'fire' | 'rock') => {
   const arena = g.rift.arena
   if (!arena || !onFloor(arena.layout.floor, x - arena.x, y - arena.y, -r * 0.5)) return
-  spawnHazard(g, { kind: 'strike', visual, x, y, r, damage, armAt: delay, disarmAt: delay + 0.15, ttl: delay + 0.45, by: GROUDON })
+  spawnHazard(g, { kind: 'strike', visual, x, y, r, damage, armAt: delay, disarmAt: delay + 0.15, ttl: delay + 0.45, by: harmBy('groudon') })
 }
 
 export const GROUDON_HOOKS: DomainHooks = {

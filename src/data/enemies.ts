@@ -23,6 +23,11 @@ export type EnemyDef = {
   trait?: TraitId
   /** Integer draw scale (and body size) for Pokémon that must loom over the rest, like the reaper. */
   scale?: number
+  /**
+   * Relative odds (0..1] of being drawn into a run's cast against the rest of its tier (`drawRoster`),
+   * from the species' capture rate (`rarityOf` in `data/roster.ts`): Rattata 1, Dratini 0.35. Missing = 1.
+   */
+  rarity?: number
 }
 
 /**

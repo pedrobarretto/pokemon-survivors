@@ -303,25 +303,25 @@ type ScenarioId = keyof typeof SCENARIOS
  * failing test prints.
  */
 const PINNED: Partial<Record<number, Record<ScenarioId, string>>> = {
-  49: {
-    levelUps: '2998·45·12·78f86519',
-    mega: '1892·27·1·2d1d227c',
-    riftFall: '665·0·1·8722c904',
-    alphaHazards: '1002·2·19·4c8862d5',
-    nightBoss: '2093·36·17·04c2b2b6',
-    bag: '989·11·4·ebcf7333',
-    shop: '1526·99·21·aa50721c',
-    shopTms2: '1787·49·18·57c9b8dd',
-    evoGate: '1487·55·24·83509745',
-    porygonGate: '2074·69·37·77df1acd',
-    sketch: '1210·21·1·1d792b71',
-    legend: '1487·99·14·4ccd28a1',
-    waveLegend: '1998·22·17·db5ba4c3',
+  50: {
+    levelUps: '2998·48·12·992153f5',
+    mega: '1892·32·2·4007bb5c',
+    riftFall: '699·0·1·902f6819',
+    alphaHazards: '1002·14·19·4bf56689',
+    nightBoss: '2093·29·17·e019850e',
+    bag: '1136·35·4·0ae27062',
+    shop: '1526·80·19·6d7bb2b4',
+    shopTms2: '1787·44·18·4e830a52',
+    evoGate: '1487·53·25·adc8d42d',
+    porygonGate: '2074·66·37·fa6d2a84',
+    sketch: '1210·11·1·073f299d',
+    legend: '1183·60·14·a9ffe2b3',
+    waveLegend: '1998·22·17·382109ef',
     cave: '2188·16·12·d2d47594',
     grotto: '2782·23·18·bb75df4d',
     underground: '3084·28·30·bb9ad367',
-    magicGuard: '1188·47·19·824b6342',
-    endlessCeiling: '845·0·26·41a089de',
+    magicGuard: '1188·40·19·bc21fb73',
+    endlessCeiling: '839·0·26·85b960f7',
   },
 }
 

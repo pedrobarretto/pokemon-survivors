@@ -1,6 +1,6 @@
 import { pick, weightedPick, type Rng } from '../engine/rng'
 import { ENEMIES, type EnemyDef, type EnemyId } from '../data/enemies'
-import { BIOMES, type BiomeId } from '../data/biomes'
+import { BIOME_IDS, BIOMES, type BiomeId } from '../data/biomes'
 import type { Tier } from '../data/roster'
 import { isSummoner, SUMMONS } from '../data/traits'
 import { bossKit } from '../data/bosses'
@@ -71,6 +71,23 @@ export const hasTrait = (id: EnemyId) => TRAITED.has(id)
 /** Draw odds of a spitter whose type has its own spit flavor (`hasFlavor`). */
 const FLAVOR_ODDS = 3
 
+/**
+ * Draw odds of a stage's new species that is at home in a biome (`BIOMES[id].affinity`)
+ * none of the stage's cast so far is at home in: a cast spreads over the map's
+ * biomes, so wherever a player walks the horde has someone from there to lean
+ * on (`pickSpawn`), Ice in the snow and Ghost in the tower, without more species.
+ */
+export const SPREAD_ODDS = 2.5
+
+/** The biomes a species is at home in, one bit per `BIOME_IDS` entry. */
+const homesOf = (types: readonly PokeType[]) =>
+  BIOME_IDS.reduce((mask, biome, i) => (BIOMES[biome].affinity.some((t: PokeType) => types.includes(t)) ? mask | (1 << i) : mask), 0)
+
+const HOMES = new Map(TIERED.map(([id, def]) => [id, homesOf(def.types)]))
+
+/** Draw odds of a species against the rest of its tier (`EnemyDef.rarity`). */
+const rarity = (def: EnemyDef) => def.rarity ?? 1
+
 const isFlyer = (def: EnemyDef) => def.types.includes('flying')
 
 /**
@@ -102,8 +119,8 @@ export const pickSpawn = (rng: Rng, pool: StagePool, traitsAlive: number, biome:
 }
 
 /** Weighted pick of one entry; when every weight is 0 they all count the same. */
-const drawOne = (rng: Rng, entries: readonly Entry[], weight: (def: EnemyDef) => number): EnemyId => {
-  const weighted = entries.map(([id, def]) => [id, Math.max(0, weight(def))] as const)
+const drawOne = (rng: Rng, entries: readonly Entry[], weight: (def: EnemyDef, id: EnemyId) => number): EnemyId => {
+  const weighted = entries.map(([id, def]) => [id, Math.max(0, weight(def, id))] as const)
   const total = weighted.reduce((sum, [, w]) => sum + w, 0)
   return weightedPick(rng, total > 0 ? weighted : weighted.map(([id]) => [id, 1] as const))
 }
@@ -139,8 +156,9 @@ export const drawRoster = (rng: Rng, { weight = () => 1, stages = STAGES, events
       TIERED.filter(([id]) => !used.has(id) && (traits || !hasTrait(id))),
     )
   }
-  const draw = (entries: readonly Entry[], stage: number) => {
-    const id = drawOne(rng, entries, (def) => weight(def, stage) * (def.trait ? TRAIT_ODDS : 1))
+  /** `covered`: the biomes (`homesOf`) the stage's cast is already at home in. */
+  const draw = (entries: readonly Entry[], stage: number, covered = -1) => {
+    const id = drawOne(rng, entries, (def, id) => weight(def, stage) * (def.trait ? TRAIT_ODDS : 1) * rarity(def) * ((HOMES.get(id) ?? 0) & ~covered ? SPREAD_ODDS : 1))
     used.add(id)
     return id
   }
@@ -157,9 +175,11 @@ export const drawRoster = (rng: Rng, { weight = () => 1, stages = STAGES, events
       carried.unshift(id)
     }
     let traitRoom = i >= TRAIT_FROM ? TRAIT_CAP - carried.filter(hasTrait).length : 0
+    let covered = carried.reduce((mask, id) => mask | (HOMES.get(id) ?? 0), 0)
     const fresh = open.map((tier) => {
-      const id = draw(ofTier(tier, traitRoom > 0), i)
+      const id = draw(ofTier(tier, traitRoom > 0), i, covered)
       if (hasTrait(id)) traitRoom--
+      covered |= HOMES.get(id) ?? 0
       return id
     })
     previous = [...carried, ...fresh]
@@ -203,7 +223,7 @@ export const drawRoster = (rng: Rng, { weight = () => 1, stages = STAGES, events
     const cast = new Set([...carried, ...fresh])
     const open = ofTier(Math.min(...stage.cast) as Tier, false).filter(([id]) => !cast.has(id))
     if (open.length === 0) return null
-    const id = drawOne(rng, open, (def) => weight(def, i) * (hasFlavor(def.types) ? FLAVOR_ODDS : 1))
+    const id = drawOne(rng, open, (def) => weight(def, i) * rarity(def) * (hasFlavor(def.types) ? FLAVOR_ODDS : 1))
     used.add(id)
     return id
   })

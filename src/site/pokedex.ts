@@ -180,7 +180,11 @@ export const gameDex = (): DexEntry[] => {
  * met in a run, so never counted in game).
  */
 export const pokedex = (): DexEntry[] => {
-  return [...gameDex(), ...SPECIAL_COMPANION_IDS.map(companionEntry), ...cameoEntries(), ...lobbyEntries(), ...summonEntries()].sort(byDex)
+  const game = gameDex()
+  const listed = new Set(game.map((e) => e.dex))
+  // Leavanny roams the horde too: its wild card stands for the tailor's.
+  const extras = [...SPECIAL_COMPANION_IDS.map(companionEntry), ...cameoEntries(), ...lobbyEntries(), ...summonEntries()].filter((e) => !listed.has(e.dex))
+  return [...game, ...extras].sort(byDex)
 }
 
 /* ---------------- When a wild Pokémon shows up ---------------- */
