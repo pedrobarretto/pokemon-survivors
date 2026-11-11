@@ -49,7 +49,7 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         zh: '42 種阿羅拉、伽勒爾、洗翠和帕底亞的地區形態，加上「旅行」：每週一換一個地區，還有該地區的旅行蛋。',
       },
       {
-        pt: 'A Equipe Rocket chegou ao Poké Realm: Game Corner com caça-níquel e prêmios exclusivos, Pokémon Sombra e o Esconderijo com o Mewtwo Sombrio.',
+        pt: 'A Equipe Rocket chegou ao Poké Realm: Game Corner com caça-níquel e prêmios exclusivos, Pokémon Sombrios e o Esconderijo com o Mewtwo Sombrio.',
         en: 'Team Rocket has come to the Poké Realm: a Game Corner with slots and exclusive prizes, Shadow Pokémon and the Hideout with Shadow Mewtwo.',
         es: 'El Team Rocket llegó al Poké Realm: Casino con tragaperras y premios exclusivos, Pokémon Oscuros y el Escondite con Mewtwo Oscuro.',
         fr: 'La Team Rocket débarque dans le Poké Realm : une Salle de jeux avec machines à sous et lots exclusifs, des Pokémon Obscurs et le Repaire avec Mewtwo Obscur.',
@@ -213,7 +213,7 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             es: 'Premios exclusivos: Ditto, que copia al enemigo; Absol, que presagia desastres; Gimmighoul, que se vuelve Gholdengo con 999 monedas; y Mawile, que muerde a quien llega por la espalda. Absol y Mawile tienen Mega.',
           },
           {
-            pt: 'Pokémon Sombra: mais dano dado e recebido, com uma aura violeta. Ande com eles nas partidas para purificá-los.',
+            pt: 'Pokémon Sombrios: mais dano dado e recebido, com uma aura violeta. Ande com eles nas partidas para purificá-los.',
             en: 'Shadow Pokémon: more damage dealt and taken, with a violet aura. Walk with them in your runs to purify them.',
             es: 'Pokémon Oscuros: más daño hecho y recibido, con un aura violeta. Camina con ellos en tus partidas para purificarlos.',
           },
