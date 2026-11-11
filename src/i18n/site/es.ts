@@ -160,7 +160,7 @@ export const siteEs: SiteMessages = {
     starter: (name: string, types: readonly string[], region: string, count: number) =>
       `${name} es uno de los ${count} iniciales de Pokémon Survivors, de tipo ${list(types)}, de la región de ${region}.`,
     egg: (name: string, types: readonly string[]) => `${name} es una de las familias que salen de huevos en Pokémon Survivors, de tipo ${list(types)}.`,
-    legend: (name: string, types: readonly string[], count: number) => `${name} es uno de los ${count} legendarios de Pokémon Survivors, de tipo ${list(types)}.`,
+    legend: (name: string, types: readonly string[], count: number) => `${name} es una de las ${count} leyendas jugables de Pokémon Survivors (legendarios, singulares y Ultraentes), de tipo ${list(types)}.`,
     eventLegend: (name: string, types: readonly string[]) => `${name} es el legendario del evento Noche de Brujas 2026 en Pokémon Survivors, de tipo ${list(types)}.`,
     faq: 'Preguntas frecuentes',
     unlockQ: (name: string) => `¿Cómo desbloquear a ${name} en Pokémon Survivors?`,
@@ -548,7 +548,7 @@ export const siteEs: SiteMessages = {
     },
     legends: {
       paragraphs: (m: { count: number; awaken: readonly number[] }) => [
-        `Los ${m.count} legendarios del juego se pueden capturar y jugar en el Modo Legendario. Para capturar uno, véncelo como jefe, en cualquier modo: en cada victoria antes de la captura se escapa de la Poké Ball y el juego lleva la cuenta (Kyogre se escapó… 2/3); en la victoria que la completa, queda capturado y aparece en la pestaña Legendarios de la selección de compañero. Vencer a uno shiny en la victoria de la captura, o en cualquier victoria después, desbloquea su forma shiny.`,
+        `Las ${m.count} leyendas del juego (legendarios, singulares y Ultraentes) se pueden capturar y jugar en el Modo Legendario. La tabla de abajo dice cómo capturar cada una; la mayoría se captura venciéndola como jefe, en cualquier modo: en cada victoria antes de la captura se escapa de la Poké Ball y el juego lleva la cuenta (Kyogre se escapó… 2/3); en la victoria que la completa, queda capturado y aparece en la pestaña Legendarios de la selección de compañero. Vencer a uno shiny en la victoria de la captura, o en cualquier victoria después, desbloquea su forma shiny.`,
         `En el Modo Legendario el legendario no evoluciona: despierta en el Nv ${m.awaken[0]} y en el Nv ${m.awaken[1]} (Habilidad, fuerza y una carga de Olvidar; Kyogre y Groudon se vuelven Primigenios, Rayquaza se vuelve Mega), empieza con su movimiento legendario y una habilidad innata siempre activa, y la horda viene más dura (Presión), solo de Pokémon evolucionados, sin formas básicas ni la horda del día. Latias, Latios y Mewtwo megaevolucionan con la Mega Stone y el botón MEGA, como los demás, y el especial de Deoxys cambia su Forma (Normal, Ataque, Defensa, Velocidad). La partida dura lo mismo de siempre, las tres dificultades siguen valiendo y el modo tiene su propio ranking, separado por dificultad: en el ranking, la fila Estándar | Legendario cambia de tabla.`,
         'Los legendarios del mapa (el trío de la partida, el mítico raro junto a Mewtwo, Mewtwo al final y Arceus en el modo infinito) llegan con una entrada y una tarjeta de título y pelean en tres fases, hasta un golpe supremo con un lugar seguro marcado. Cuando caen, la captura sucede ahí mismo, en una escena rápida; los de las grietas, al final de su dominio. Un legendario nunca se enfrenta a sí mismo: las grietas, el trío y el mítico se saltan al que juegas, y un Mewtwo se mide con el Mewtwo Clon al final.',
       ],
@@ -1042,8 +1042,8 @@ export const siteEs: SiteMessages = {
       ['Dónde se juega', 'Navegador en PC y celular, en vertical u horizontal. Se instala como app.', 'Navegador en PC y celular, en horizontal. Se instala como app.'],
       ['Cuenta', 'Opcional: el modo solo no pide registro. Con cuenta, guardas en la nube, entras al ranking, juegas co-op y entras al Poké Realm.', 'Opcional: invitado o cuenta (nombre y contraseña, o Google). Con cuenta, guardas en la nube, entras al ranking y juegas co-op.'],
       ['Cómo ataca', `Todos los movimientos atacan solos, hasta ${f.moves} a la vez.`, 'Eliges el movimiento activo (teclas 1 a 4). Cada legendario vencido deja fusionar movimientos en un solo hueco.'],
-      ['Pokémon jugables', `${f.starters} iniciales con su línea evolutiva completa, más ${f.eggs} familias que salen de huevos y ${f.legends} legendarios en el Modo Legendario.`, '966 Pokémon de las 9 generaciones.'],
-      ['Cómo se desbloquean', 'Huevos que eclosionan con los pasos que das en las partidas. Los legendarios se capturan venciéndolos como jefes.', 'Gacha por región, con tickets que ganas jugando.'],
+      ['Pokémon jugables', `${f.starters} iniciales con su línea evolutiva completa, más ${f.eggs} familias (de huevos, de la Zona Safari y de premios) y ${f.legends} leyendas en el Modo Legendario, Ultraentes incluidos.`, '966 Pokémon de las 9 generaciones.'],
+      ['Cómo se desbloquean', 'Huevos que eclosionan con los pasos que das en las partidas, la Zona Safari (con ₽ ganados jugando) y premios. Los legendarios se capturan venciéndolos como jefes o por caminos propios.', 'Gacha por región, con tickets que ganas jugando.'],
       ['Partida', `${f.minutes} minutos hasta Mewtwo, con jefes legendarios y grietas épicas en el camino. Después, modo sin fin hasta Arceus.`, 'Hordas por tiempo, con grietas que llevan a una arena contra un legendario.'],
       ['Co-op', `En línea, hasta ${f.players} jugadores. Sala por enlace, código o lista de amigos.`, 'En línea, hasta 4 jugadores. Sala invitando a amigos.'],
       ['Otros modos', 'La Arena, un MOBA 4v4 y 3v3 estilo Pokémon Unite, y el Poké Realm, una ciudad en línea con bases secretas para decorar y minijuegos.', 'No: las partidas, solo o en co-op.'],
@@ -1066,8 +1066,8 @@ export const siteEs: SiteMessages = {
       title: 'Juega Pokémon Survivors si…',
       items: (f) => [
         `quieres una partida con principio, medio y final: ${f.minutes} minutos hasta Mewtwo y después el modo sin fin contra Arceus;`,
-        'te gusta armar builds: movimientos que se dividen en dos caminos en el Nv 4 y el Nv 7, Habilidades, objetos, movimientos dúo y Megaevolución;',
-        `quieres jugar con los legendarios: captura los ${f.legends} venciéndolos como jefes y juega con ellos en el Modo Legendario;`,
+        'te gusta armar builds: movimientos que se dividen en dos caminos en el Nv 4 y el Nv 7, Habilidades, objetos, movimientos dúo, Megaevolución y Teracristal;',
+        `quieres jugar con los legendarios: captura las ${f.legends} leyendas, venciéndolas como jefes o por sus caminos, y juega con ellas en el Modo Legendario;`,
         'quieres encontrar a otros entrenadores en una ciudad en línea, decorar tu base secreta y jugar minijuegos;',
         'quieres jugar con el celular en vertical, con una mano;',
         'quieres un ranking en el que el servidor verifica las mejores partidas;',
@@ -1096,7 +1096,7 @@ export const siteEs: SiteMessages = {
         },
         {
           q: '¿Cuál es mejor?',
-          a: `Depende de lo que busques. PokéSurvivor tiene más Pokémon (966) y un gacha para coleccionar. Pokémon Survivors tiene partidas de ${f.minutes} minutos con jefes legendarios, legendarios jugables, Megaevolución, movimientos que se dividen en caminos y un ranking verificado por el servidor. Los dos son gratis: puedes jugar a ambos.`,
+          a: `Depende de lo que busques. PokéSurvivor tiene más Pokémon (966) y un gacha para coleccionar. Pokémon Survivors tiene partidas de ${f.minutes} minutos con jefes legendarios, legendarios jugables, Megaevolución, Teracristal, movimientos que se dividen en caminos y un ranking verificado por el servidor. Los dos son gratis: puedes jugar a ambos.`,
         },
         {
           q: '¿Los dos son gratis y oficiales?',
@@ -1130,10 +1130,10 @@ export const siteEs: SiteMessages = {
         plays: 'Navegador, PC y celular',
         style: 'Survivors-like',
         coop: 'Hasta 4 en línea',
-        roster: (f) => `${f.starters} iniciales, ${f.eggs} familias de huevos, ${f.legends} legendarios`,
+        roster: (f) => `${f.starters} iniciales, ${f.eggs} familias, ${f.legends} leyendas`,
         about: (f) => [
-          `Elige uno de los ${f.starters} iniciales de Kanto a Paldea y sobrevive ${f.minutes} minutos de hordas: todos tus movimientos atacan solos, eliges movimientos y objetos en cada nivel y evolucionas a mitad de partida, hasta enfrentar a Mewtwo. Jefes legendarios, grietas épicas al dominio de cada legendario, Megaevolución y un modo sin fin contra Arceus.`,
-          `Los huevos traen ${f.eggs} familias más, los legendarios que vences quedan jugables en el Modo Legendario el co-op en línea junta hasta ${f.players} jugadores, la Arena es un MOBA estilo Pokémon Unite y el Poké Realm es una ciudad en línea con bases secretas y minijuegos. En ${f.languages} idiomas, con código abierto (MIT).`,
+          `Elige uno de los ${f.starters} iniciales de Kanto a Paldea y sobrevive ${f.minutes} minutos de hordas: todos tus movimientos atacan solos, eliges movimientos y objetos en cada nivel y evolucionas a mitad de partida, hasta enfrentar a Mewtwo. Jefes legendarios, grietas épicas al dominio de cada legendario, Megaevolución, Teracristal con Teraincursiones y un modo sin fin contra Arceus.`,
+          `Los huevos, la Zona Safari y los premios traen ${f.eggs} familias más, las leyendas que capturas quedan jugables en el Modo Legendario, el co-op en línea junta hasta ${f.players} jugadores, la Arena es un MOBA estilo Pokémon Unite y el Poké Realm es una ciudad en línea con bases secretas y minijuegos. En ${f.languages} idiomas, con código abierto (MIT).`,
         ],
         bestFor: 'partidas cortas con jefes, builds variadas y legendarios jugables, en PC o con el celular en vertical.',
       },

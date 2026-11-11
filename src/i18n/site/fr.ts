@@ -161,7 +161,7 @@ export const siteFr: SiteMessages = {
     starter: (name: string, types: readonly string[], region: string, count: number) =>
       `${name} est l’un des ${count} starters de Pokémon Survivors, de type ${list(types)}, originaire de la région de ${region}.`,
     egg: (name: string, types: readonly string[]) => `${name} est l’une des familles qui éclosent des œufs dans Pokémon Survivors, de type ${list(types)}.`,
-    legend: (name: string, types: readonly string[], count: number) => `${name} est l’un des ${count} légendaires de Pokémon Survivors, de type ${list(types)}.`,
+    legend: (name: string, types: readonly string[], count: number) => `${name} est l’une des ${count} légendes jouables de Pokémon Survivors (légendaires, fabuleux et Ultra-Chimères), de type ${list(types)}.`,
     eventLegend: (name: string, types: readonly string[]) => `${name} est le légendaire de l’événement Nuit des Sorcières 2026 de Pokémon Survivors, de type ${list(types)}.`,
     faq: 'FAQ',
     unlockQ: (name: string) => `Comment débloquer ${name} dans Pokémon Survivors ?`,
@@ -545,7 +545,7 @@ export const siteFr: SiteMessages = {
     },
     legends: {
       paragraphs: (m: { count: number; awaken: readonly number[] }) => [
-        `Les ${m.count} légendaires du jeu peuvent tous être capturés et joués en Mode Légendaire. Pour en capturer un, bats-le en tant que boss, dans n’importe quel mode : à chaque victoire avant la capture, il s’échappe de la Poké Ball et le jeu tient le compte (Kyogre s’est échappé… 2/3) ; à la victoire qui complète le compte, il est capturé et apparaît dans l’onglet Légendaires du choix du partenaire. En battre un chromatique lors de la victoire de capture, ou de n’importe quelle victoire après, débloque sa forme chromatique.`,
+        `Les ${m.count} légendes du jeu (légendaires, fabuleux et Ultra-Chimères) peuvent toutes être capturées et jouées en Mode Légendaire. Le tableau ci-dessous dit comment capturer chacune ; la plupart se capturent en les battant en tant que boss, dans n’importe quel mode : à chaque victoire avant la capture, il s’échappe de la Poké Ball et le jeu tient le compte (Kyogre s’est échappé… 2/3) ; à la victoire qui complète le compte, il est capturé et apparaît dans l’onglet Légendaires du choix du partenaire. En battre un chromatique lors de la victoire de capture, ou de n’importe quelle victoire après, débloque sa forme chromatique.`,
         `En Mode Légendaire, le légendaire n’évolue pas : il s’éveille au Nv ${m.awaken[0]} et au Nv ${m.awaken[1]} (un Talent, de la puissance et une charge d’Oublier ; Kyogre et Groudon passent en Primo-Résurgence, Rayquaza méga-évolue), commence avec sa capacité légendaire et un talent inné toujours actif, et la horde arrive plus coriace (Pression), uniquement des Pokémon évolués, sans formes de base ni apparition massive du jour. Latias, Latios et Mewtwo méga-évoluent avec la Méga-Gemme et le bouton MEGA, comme tout le monde, et l’attaque spéciale de Deoxys change sa Forme (Normale, Attaque, Défense, Vitesse). Une partie dure toujours aussi longtemps, les trois difficultés s’appliquent toujours et le mode a son propre classement, séparé par difficulté : dans les classements, la ligne Standard | Légendaire change de tableau.`,
         'Les légendaires sur la carte (le trio de la partie, le fabuleux rare aux côtés de Mewtwo, Mewtwo à la fin et Arceus en mode sans fin) font leur entrée avec un écran titre et combattent en trois phases, jusqu’à une attaque ultime avec une zone sûre marquée. Quand l’un d’eux tombe, la capture se joue sur place dans une courte scène ; les légendaires de faille sont capturés à la fin de leur domaine. Un légendaire ne s’affronte jamais lui-même : les failles, le trio et le fabuleux sautent celui que tu joues, et un Mewtwo affronte le Clone de Mewtwo à la fin.',
       ],
@@ -1039,8 +1039,8 @@ export const siteFr: SiteMessages = {
       ['Où jouer', 'Navigateur sur PC et mobile, en portrait ou en paysage. S’installe comme une app.', 'Navigateur sur PC et mobile, en paysage. S’installe comme une app.'],
       ['Compte', 'Facultatif : le solo ne demande aucune inscription. Un compte ajoute la sauvegarde en ligne, le classement, la coop et le Poké Realm.', 'Facultatif : invité ou compte (nom et mot de passe, ou Google). Un compte ajoute la sauvegarde en ligne, le classement et la coop.'],
       ['Comment on attaque', `Toutes les capacités attaquent seules, jusqu’à ${f.moves} à la fois.`, 'Vous choisissez la capacité active (touches 1 à 4). Chaque légendaire vaincu permet de fusionner des capacités dans un seul emplacement.'],
-      ['Pokémon jouables', `${f.starters} starters avec leur lignée d’évolution complète, plus ${f.eggs} familles qui éclosent d’œufs et ${f.legends} légendaires en mode Légende.`, '966 Pokémon des 9 générations.'],
-      ['Comment on les débloque', 'Des œufs qui éclosent avec les pas faits en partie. Les légendaires se capturent en les battant comme boss.', 'Un gacha par région, avec des tickets gagnés en jouant.'],
+      ['Pokémon jouables', `${f.starters} starters avec leur lignée d’évolution complète, plus ${f.eggs} familles (d’œufs, du Parc Safari et de lots) et ${f.legends} légendes en mode Légende, Ultra-Chimères comprises.`, '966 Pokémon des 9 générations.'],
+      ['Comment on les débloque', 'Des œufs qui éclosent avec les pas faits en partie, le Parc Safari (avec des ₽ gagnés en jouant) et des lots. Les légendaires se capturent en les battant comme boss ou par leurs propres chemins.', 'Un gacha par région, avec des tickets gagnés en jouant.'],
       ['Une partie', `${f.minutes} minutes jusqu’à Mewtwo, avec des boss légendaires et des failles épiques en route. Ensuite, un mode sans fin jusqu’à Arceus.`, 'Des hordes chronométrées, avec des failles qui mènent à une arène contre un légendaire.'],
       ['Coop', `En ligne, jusqu’à ${f.players} joueurs. Salon par lien, code ou liste d’amis.`, 'En ligne, jusqu’à 4 joueurs. Salon sur invitation d’amis.'],
       ['Autres modes', 'L’Arène, un MOBA 4v4 et 3v3 façon Pokémon Unite, et le Poké Realm, une ville en ligne avec des bases secrètes à meubler et des mini-jeux.', 'Non : les parties, en solo ou en coop.'],
@@ -1063,8 +1063,8 @@ export const siteFr: SiteMessages = {
       title: 'Jouez à Pokémon Survivors si vous…',
       items: (f) => [
         `voulez une partie avec un début, un milieu et une fin : ${f.minutes} minutes jusqu’à Mewtwo, puis le mode sans fin contre Arceus ;`,
-        'aimez construire un build : des capacités qui bifurquent en deux voies au Nv 4 et au Nv 7, des talents, des objets, des capacités duo et la Méga-Évolution ;',
-        `voulez jouer les légendaires : capturez les ${f.legends} en les battant comme boss et jouez-les en mode Légende ;`,
+        'aimez construire un build : des capacités qui bifurquent en deux voies au Nv 4 et au Nv 7, des talents, des objets, des capacités duo, la Méga-Évolution et la Téracristallisation ;',
+        `voulez jouer les légendaires : capturez les ${f.legends} légendes, en les battant comme boss ou par leurs propres chemins, et jouez-les en mode Légende ;`,
         'voulez retrouver d’autres dresseurs dans une ville en ligne, meubler votre base secrète et jouer à des mini-jeux ;',
         'voulez jouer sur mobile tenu en portrait, d’une seule main ;',
         'voulez un classement où le serveur vérifie les meilleures parties ;',
@@ -1093,7 +1093,7 @@ export const siteFr: SiteMessages = {
         },
         {
           q: 'Lequel est le meilleur ?',
-          a: `Ça dépend de ce que vous cherchez. PokéSurvivor a plus de Pokémon (966) et un gacha pour les collectionner. Pokémon Survivors a des parties de ${f.minutes} minutes avec des boss légendaires, des légendaires jouables, la Méga-Évolution, des capacités qui bifurquent et un classement vérifié par le serveur. Les deux sont gratuits : vous pouvez jouer aux deux.`,
+          a: `Ça dépend de ce que vous cherchez. PokéSurvivor a plus de Pokémon (966) et un gacha pour les collectionner. Pokémon Survivors a des parties de ${f.minutes} minutes avec des boss légendaires, des légendaires jouables, la Méga-Évolution, la Téracristallisation, des capacités qui bifurquent et un classement vérifié par le serveur. Les deux sont gratuits : vous pouvez jouer aux deux.`,
         },
         {
           q: 'Les deux sont-ils gratuits et officiels ?',
@@ -1127,10 +1127,10 @@ export const siteFr: SiteMessages = {
         plays: 'Navigateur, PC et mobile',
         style: 'Survivors-like',
         coop: 'Jusqu’à 4 en ligne',
-        roster: (f) => `${f.starters} starters, ${f.eggs} familles d’œufs, ${f.legends} légendaires`,
+        roster: (f) => `${f.starters} starters, ${f.eggs} familles, ${f.legends} légendes`,
         about: (f) => [
-          `Choisissez l’un des ${f.starters} starters, de Kanto à Paldea, et survivez ${f.minutes} minutes de hordes : toutes vos capacités attaquent seules, vous choisissez capacités et objets à chaque niveau et évoluez en pleine partie, jusqu’à affronter Mewtwo. Boss légendaires, failles épiques vers le domaine de chaque légendaire, Méga-Évolution et un mode sans fin contre Arceus.`,
-          `Les œufs font éclore ${f.eggs} familles de plus, les légendaires battus deviennent jouables en mode Légende, la coop en ligne réunit jusqu’à ${f.players} joueurs, l’Arène est un MOBA façon Pokémon Unite et le Poké Realm une ville en ligne avec des bases secrètes et des mini-jeux. En ${f.languages} langues, en code ouvert (MIT).`,
+          `Choisissez l’un des ${f.starters} starters, de Kanto à Paldea, et survivez ${f.minutes} minutes de hordes : toutes vos capacités attaquent seules, vous choisissez capacités et objets à chaque niveau et évoluez en pleine partie, jusqu’à affronter Mewtwo. Boss légendaires, failles épiques vers le domaine de chaque légendaire, Méga-Évolution, Téracristallisation avec des Raids Téracristal et un mode sans fin contre Arceus.`,
+          `Les œufs, le Parc Safari et les lots débloquent ${f.eggs} familles de plus, les légendes capturées deviennent jouables en mode Légende, la coop en ligne réunit jusqu’à ${f.players} joueurs, l’Arène est un MOBA façon Pokémon Unite et le Poké Realm une ville en ligne avec des bases secrètes et des mini-jeux. En ${f.languages} langues, en code ouvert (MIT).`,
         ],
         bestFor: 'des parties courtes avec des boss, des builds variés et des légendaires jouables, sur PC ou sur mobile en portrait.',
       },

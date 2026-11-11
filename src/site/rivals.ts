@@ -1,6 +1,6 @@
 import { COOP } from '../data/coop'
 import { HATCHLING_IDS } from '../data/hatchlings'
-import { REGULAR_LEGENDS } from '../data/legends'
+import { LEGEND_IDS } from '../data/legends'
 import { STARTER_IDS } from '../data/starters'
 import { RUN_LENGTH } from '../data/waves'
 import { MAX_MOVES } from '../game/leveling'
@@ -32,8 +32,10 @@ export type RivalId = keyof typeof RIVALS
 /** Our side of the comparison, from the game's data, so the copy follows the game. */
 export const OURS = {
   starters: STARTER_IDS.length,
+  /** Every playable family past the starters: from eggs, the Safari Zone, encounters and prizes. */
   eggs: HATCHLING_IDS.length,
-  legends: REGULAR_LEGENDS.length,
+  /** Every playable legend: legendaries, mythicals and Ultra Beasts. */
+  legends: LEGEND_IDS.length,
   players: COOP.maxPlayers,
   moves: MAX_MOVES,
   minutes: RUN_LENGTH / 60,

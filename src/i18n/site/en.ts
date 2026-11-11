@@ -160,7 +160,7 @@ export const siteEn: SiteMessages = {
     starter: (name: string, types: readonly string[], region: string, count: number) =>
       `${name} is one of the ${count} starters in Pokémon Survivors, a ${list(types)} type from the ${region} region.`,
     egg: (name: string, types: readonly string[]) => `${name} is one of the families that hatch from eggs in Pokémon Survivors, a ${list(types)} type.`,
-    legend: (name: string, types: readonly string[], count: number) => `${name} is one of the ${count} legendaries in Pokémon Survivors, a ${list(types)} type.`,
+    legend: (name: string, types: readonly string[], count: number) => `${name} is one of the ${count} playable legends in Pokémon Survivors (legendaries, mythicals and Ultra Beasts), a ${list(types)} type.`,
     eventLegend: (name: string, types: readonly string[]) => `${name} is the Halloween Night 2026 event legend in Pokémon Survivors, a ${list(types)} type.`,
     faq: 'FAQ',
     unlockQ: (name: string) => `How do you unlock ${name} in Pokémon Survivors?`,
@@ -544,7 +544,7 @@ export const siteEn: SiteMessages = {
     },
     legends: {
       paragraphs: (m: { count: number; awaken: readonly number[] }) => [
-        `All ${m.count} legendaries in the game can be caught and played in Legend Mode. To catch one, beat it as a boss, in any mode: every win before the catch, it breaks free of the Poké Ball and the game keeps count (Kyogre broke free… 2/3); on the win that completes it, it's caught and shows up in the Legendaries tab of the partner select. Beating a shiny one on the catching win, or on any win after, unlocks its shiny.`,
+        `All ${m.count} legends in the game (legendaries, mythicals and Ultra Beasts) can be caught and played in Legend Mode. The table below says how to catch each one; most are caught by beating them as a boss, in any mode: every win before the catch, it breaks free of the Poké Ball and the game keeps count (Kyogre broke free… 2/3); on the win that completes it, it's caught and shows up in the Legendaries tab of the partner select. Beating a shiny one on the catching win, or on any win after, unlocks its shiny.`,
         `In Legend Mode the legendary doesn't evolve: it awakens at Lv ${m.awaken[0]} and Lv ${m.awaken[1]} (an Ability, power and a Forget charge; Kyogre and Groudon turn Primal, Rayquaza turns Mega), starts with its legendary move and an innate ability that's always on, and the horde comes tougher (Pressure), all evolved Pokémon, with no basic forms and no outbreak of the day. Latias, Latios and Mewtwo Mega Evolve with the Mega Stone and the MEGA button, like everyone else, and Deoxys's special swaps its Forme (Normal, Attack, Defense, Speed). A run lasts as long as ever, all three difficulties still apply and the mode has its own ranking, split by difficulty: on the rankings, the Standard | Legendary row switches boards.`,
         'The legendaries on the map (the run’s trio, the rare mythical beside Mewtwo, Mewtwo at the end and Arceus in endless mode) make an entrance with a title card and fight in three phases, building to an ultimate with a marked safe spot. When one falls, the capture plays right there in a quick scene; rift legendaries are caught at the end of their domain. A legendary never faces itself: the rifts, the trio and the mythical skip the one you play, and a Mewtwo takes on the Mewtwo Clone at the end.',
       ],
@@ -1038,8 +1038,8 @@ export const siteEn: SiteMessages = {
       ['Where to play', 'Browser on PC and phone, portrait or landscape. Installs as an app.', 'Browser on PC and phone, landscape. Installs as an app.'],
       ['Account', 'Optional: solo play needs no sign-up. An account adds cloud saves, the rankings, co-op and the Poké Realm.', 'Optional: guest or account (name and password, or Google). An account adds cloud saves, the rankings and co-op.'],
       ['How you attack', `Every move fires on its own, up to ${f.moves} at once.`, 'You pick the active move (keys 1 to 4). Each legendary beaten lets you fuse moves into one slot.'],
-      ['Playable Pokémon', `${f.starters} starters with their full evolution lines, plus ${f.eggs} families that hatch from eggs and ${f.legends} legendaries in Legend Mode.`, '966 Pokémon from all 9 generations.'],
-      ['How you unlock Pokémon', 'Eggs that hatch with the steps you take in runs. Legendaries are caught by beating them as bosses.', 'A gacha per region, with tickets earned by playing.'],
+      ['Playable Pokémon', `${f.starters} starters with their full evolution lines, plus ${f.eggs} families (from eggs, the Safari Zone and prizes) and ${f.legends} legends in Legend Mode, Ultra Beasts included.`, '966 Pokémon from all 9 generations.'],
+      ['How you unlock Pokémon', 'Eggs that hatch with the steps you take in runs, the Safari Zone (with ₽ earned by playing) and prizes. Legendaries are caught by beating them as bosses or along roads of their own.', 'A gacha per region, with tickets earned by playing.'],
       ['A run', `${f.minutes} minutes up to Mewtwo, with legendary bosses and epic rifts on the way. Then an endless mode until Arceus.`, 'Timed hordes, with rifts that lead to an arena against a legendary.'],
       ['Co-op', `Online, up to ${f.players} players. Rooms by link, code or friends list.`, 'Online, up to 4 players. Rooms by inviting friends.'],
       ['Other modes', 'The Arena, a 4v4 and 3v3 Pokémon Unite–style MOBA, and the Poké Realm, an online town with secret bases to furnish and mini games.', 'No: the runs, solo or in co-op.'],
@@ -1062,8 +1062,8 @@ export const siteEn: SiteMessages = {
       title: 'Play Pokémon Survivors if you…',
       items: (f) => [
         `want a run with a beginning, middle and end: ${f.minutes} minutes up to Mewtwo, then the endless mode against Arceus;`,
-        'like theorycrafting: moves that fork into two paths at Lv 4 and Lv 7, Abilities, items, duo moves and Mega Evolution;',
-        `want to play as the legendaries: catch all ${f.legends} by beating them as bosses and play them in Legend Mode;`,
+        'like theorycrafting: moves that fork into two paths at Lv 4 and Lv 7, Abilities, items, duo moves, Mega Evolution and Terastal;',
+        `want to play as the legendaries: catch all ${f.legends} legends, beating them as bosses or along their own roads, and play them in Legend Mode;`,
         'want to meet other trainers in an online town, furnish your own secret base and play mini games;',
         'want to play on your phone held upright, one-handed;',
         'want a ranking where the top runs are checked by the server;',
@@ -1092,7 +1092,7 @@ export const siteEn: SiteMessages = {
         },
         {
           q: 'Which one is better?',
-          a: `It depends on what you want. PokéSurvivor has more Pokémon (966) and a gacha to collect them. Pokémon Survivors has ${f.minutes}-minute runs with legendary bosses, playable legendaries, Mega Evolution, moves that fork into paths and a server-checked ranking. Both are free, so you can play both.`,
+          a: `It depends on what you want. PokéSurvivor has more Pokémon (966) and a gacha to collect them. Pokémon Survivors has ${f.minutes}-minute runs with legendary bosses, playable legendaries, Mega Evolution, Terastal, moves that fork into paths and a server-checked ranking. Both are free, so you can play both.`,
         },
         {
           q: 'Are both free and official?',
@@ -1126,10 +1126,10 @@ export const siteEn: SiteMessages = {
         plays: 'Browser, PC and phone',
         style: 'Survivors-like',
         coop: 'Up to 4 online',
-        roster: (f) => `${f.starters} starters, ${f.eggs} egg families, ${f.legends} legendaries`,
+        roster: (f) => `${f.starters} starters, ${f.eggs} families, ${f.legends} legends`,
         about: (f) => [
-          `Pick one of ${f.starters} starters from Kanto to Paldea and survive ${f.minutes} minutes of hordes: every move attacks on its own, you pick moves and items each level and evolve mid-run, until you face Mewtwo. Legendary bosses, epic rifts into each legendary's domain, Mega Evolution and an endless mode against Arceus.`,
-          `Eggs hatch ${f.eggs} more families, the legendaries you beat become playable in Legend Mode, online co-op brings up to ${f.players} players together, the Arena is a Pokémon Unite–style MOBA and the Poké Realm is an online town with secret bases and mini games. In ${f.languages} languages, open source (MIT).`,
+          `Pick one of ${f.starters} starters from Kanto to Paldea and survive ${f.minutes} minutes of hordes: every move attacks on its own, you pick moves and items each level and evolve mid-run, until you face Mewtwo. Legendary bosses, epic rifts into each legendary's domain, Mega Evolution, Terastal with Tera Raids and an endless mode against Arceus.`,
+          `Eggs, the Safari Zone and prizes unlock ${f.eggs} more families, the legends you catch become playable in Legend Mode, online co-op brings up to ${f.players} players together, the Arena is a Pokémon Unite–style MOBA and the Poké Realm is an online town with secret bases and mini games. In ${f.languages} languages, open source (MIT).`,
         ],
         bestFor: 'short runs with bosses, varied builds and playable legendaries, on PC or on a phone held upright.',
       },

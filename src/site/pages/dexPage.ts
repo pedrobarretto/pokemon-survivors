@@ -1,6 +1,6 @@
 import { branchesAt, branchesOf, branchStage } from '../../data/branches'
 import { HATCHLINGS, isHatchling, isStarter, PLAYABLE, type PlayableId } from '../../data/hatchlings'
-import { legendEvent, LEGENDS, REGULAR_LEGENDS, type LegendId, type LegendUnlock } from '../../data/legends'
+import { LEGEND_IDS, legendEvent, LEGENDS, type LegendId, type LegendUnlock } from '../../data/legends'
 import { MEGAS, megasOf } from '../../data/megas'
 import { STARTER_IDS, type PlayableDef } from '../../data/starters'
 import { formLine } from '../../game/branch'
@@ -91,7 +91,7 @@ const intro = (page: DexPage, m: SiteMessages, locale: Locale) => {
   const base = page.entries[0]!
   const blurb = MESSAGES[locale].blurbs[page.id]
   if (page.kind === 'legend') {
-    const what = legendEvent(page.id) ? m.dexPage.eventLegend(base.name, typesOf(base, m)) : m.dexPage.legend(base.name, typesOf(base, m), REGULAR_LEGENDS.length)
+    const what = legendEvent(page.id) ? m.dexPage.eventLegend(base.name, typesOf(base, m)) : m.dexPage.legend(base.name, typesOf(base, m), LEGEND_IDS.length)
     return `${what} ${blurb}`
   }
   const what = isStarter(page.id) ? m.dexPage.starter(base.name, typesOf(base, m), base.region.name, STARTER_IDS.length) : m.dexPage.egg(base.name, typesOf(base, m))

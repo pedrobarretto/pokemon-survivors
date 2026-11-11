@@ -200,7 +200,7 @@ export const sitePt = {
     starter: (name: string, types: readonly string[], region: string, count: number) =>
       `${name} é um dos ${count} iniciais do Pokémon Survivors, do tipo ${list(types)}, da região de ${region}.`,
     egg: (name: string, types: readonly string[]) => `${name} é uma das famílias que saem dos ovos no Pokémon Survivors, do tipo ${list(types)}.`,
-    legend: (name: string, types: readonly string[], count: number) => `${name} é um dos ${count} lendários do Pokémon Survivors, do tipo ${list(types)}.`,
+    legend: (name: string, types: readonly string[], count: number) => `${name} é uma das ${count} lendas jogáveis do Pokémon Survivors (lendários, míticos e Ultracriaturas), do tipo ${list(types)}.`,
     eventLegend: (name: string, types: readonly string[]) => `${name} é a lenda de evento da Noite das Bruxas 2026 no Pokémon Survivors, do tipo ${list(types)}.`,
     faq: 'Perguntas frequentes',
     unlockQ: (name: string) => `Como liberar ${name} no Pokémon Survivors?`,
@@ -597,7 +597,7 @@ export const sitePt = {
     },
     legends: {
       paragraphs: (m: { count: number; awaken: readonly number[] }) => [
-        `Os ${m.count} lendários do jogo podem ser capturados e jogados no Modo Lendário. Para capturar um, vença-o como chefe, em qualquer modo: a cada vitória antes da captura ele escapa da Poké Ball e o jogo conta (Kyogre escapou… 2/3); na vitória que fecha a conta, ele é capturado e aparece na aba Lendários da seleção de parceiro. Vencer um shiny na vitória da captura, ou em qualquer vitória depois, libera a forma shiny.`,
+        `As ${m.count} lendas do jogo (lendários, míticos e Ultracriaturas) podem ser capturadas e jogadas no Modo Lendário. A tabela abaixo diz como capturar cada uma; a maioria se captura vencendo-a como chefe, em qualquer modo: a cada vitória antes da captura ele escapa da Poké Ball e o jogo conta (Kyogre escapou… 2/3); na vitória que fecha a conta, ele é capturado e aparece na aba Lendários da seleção de parceiro. Vencer um shiny na vitória da captura, ou em qualquer vitória depois, libera a forma shiny.`,
         `No Modo Lendário o lendário não evolui: ele desperta no Nv ${m.awaken[0]} e no Nv ${m.awaken[1]} (Habilidade, força e uma carga de Esquecer; Kyogre e Groudon viram Primal, Rayquaza vira Mega), começa com o golpe lendário e uma habilidade inata sempre ativa, e a horda vem mais forte (Pressão), só de Pokémon evoluídos, sem formas básicas nem o surto do dia. Latias, Latios e Mewtwo Mega Evoluem com a Mega Stone e o botão MEGA, como os outros, e o especial do Deoxys troca de Forma (Normal, Ataque, Defesa, Velocidade). A partida tem o mesmo tempo de sempre, as três dificuldades continuam valendo e o modo tem um ranking só dele, separado por dificuldade: no ranking, a linha Padrão | Lendário troca de quadro.`,
         'Os lendários do mapa (o trio sorteado da partida, o mítico raro junto do Mewtwo, o Mewtwo no final e o Arceus no modo sem fim) chegam com uma entrada e um card de título e lutam em três fases, até um golpe supremo com um lugar seguro marcado. Quando caem, a captura acontece ali mesmo, numa cena rápida; os das fendas, no fim do domínio. Um lendário nunca enfrenta a si mesmo: as fendas, o trio e o mítico pulam quem você joga, e um Mewtwo enfrenta o Mewtwo Clone no final.',
       ],
@@ -1097,8 +1097,8 @@ export const sitePt = {
       ['Onde joga', 'Navegador no PC e no celular, em pé ou deitado. Instala como app.', 'Navegador no PC e no celular, deitado. Instala como app.'],
       ['Conta', 'Opcional: o solo não pede cadastro. Com conta, salva na nuvem, entra no ranking, joga co-op e entra no Poké Realm.', 'Opcional: convidado ou conta (nome e senha ou Google). Com conta, salva na nuvem, entra no ranking e joga co-op.'],
       ['Como ataca', `Todos os golpes atacam sozinhos, até ${f.moves} ao mesmo tempo.`, 'Você escolhe o golpe ativo (teclas 1 a 4). Cada lendário vencido deixa unir golpes num só espaço.'],
-      ['Pokémon jogáveis', `${f.starters} iniciais com a linha evolutiva completa, mais ${f.eggs} famílias que saem de ovos e ${f.legends} lendários no Modo Lendário.`, '966 Pokémon das 9 gerações.'],
-      ['Como libera Pokémon', 'Ovos que chocam com os passos dados nas partidas. Lendários são capturados vencendo-os como chefes.', 'Gacha por região, com tickets ganhos jogando.'],
+      ['Pokémon jogáveis', `${f.starters} iniciais com a linha evolutiva completa, mais ${f.eggs} famílias (de ovos, da Zona Safári e de prêmios) e ${f.legends} lendas no Modo Lendário, Ultracriaturas incluídas.`, '966 Pokémon das 9 gerações.'],
+      ['Como libera Pokémon', 'Ovos que chocam com os passos dados nas partidas, a Zona Safári (com ₽ ganhos jogando) e prêmios. Lendários são capturados vencendo-os como chefes ou por caminhos próprios.', 'Gacha por região, com tickets ganhos jogando.'],
       ['Partida', `${f.minutes} minutos até Mewtwo, com chefes lendários e fendas épicas no caminho. Depois, modo sem fim até Arceus.`, 'Hordas por tempo, com fendas que levam a uma arena contra um lendário.'],
       ['Co-op', `Online, até ${f.players} jogadores. Sala por link, código ou lista de amigos.`, 'Online, até 4 jogadores. Sala com convite aos amigos.'],
       ['Outros modos', 'A Arena, um MOBA 4v4 e 3v3 estilo Pokémon Unite, e o Poké Realm, uma cidade online com bases secretas para decorar e mini games.', 'Não: as partidas, sozinho ou em co-op.'],
@@ -1121,8 +1121,8 @@ export const sitePt = {
       title: 'Jogue o Pokémon Survivors se você…',
       items: (f: OurFacts) => [
         `quer uma partida com começo, meio e fim: ${f.minutes} minutos até Mewtwo, depois o modo sem fim contra Arceus;`,
-        'gosta de montar build: golpes que se dividem em dois caminhos no Nv 4 e no Nv 7, Habilidades, itens, golpes em dupla e Mega Evolução;',
-        `quer jogar com os lendários: capture os ${f.legends} vencendo-os como chefes e jogue com eles no Modo Lendário;`,
+        'gosta de montar build: golpes que se dividem em dois caminhos no Nv 4 e no Nv 7, Habilidades, itens, golpes em dupla, Mega Evolução e Terastal;',
+        `quer jogar com os lendários: capture as ${f.legends} lendas, vencendo-as como chefes ou pelos seus caminhos, e jogue com elas no Modo Lendário;`,
         'quer encontrar outros treinadores numa cidade online, decorar a sua base secreta e jogar mini games;',
         'quer jogar no celular em pé, com uma mão;',
         'quer um ranking em que as partidas do topo são conferidas pelo servidor;',
@@ -1151,7 +1151,7 @@ export const sitePt = {
         },
         {
           q: 'Qual é melhor?',
-          a: `Depende do que você procura. O PokéSurvivor tem mais Pokémon (966) e um gacha para colecionar. O Pokémon Survivors tem partidas de ${f.minutes} minutos com chefes lendários, lendários jogáveis, Mega Evolução, golpes que se dividem em caminhos e um ranking conferido no servidor. Os dois são grátis: dá para jogar os dois.`,
+          a: `Depende do que você procura. O PokéSurvivor tem mais Pokémon (966) e um gacha para colecionar. O Pokémon Survivors tem partidas de ${f.minutes} minutos com chefes lendários, lendários jogáveis, Mega Evolução, Terastal, golpes que se dividem em caminhos e um ranking conferido no servidor. Os dois são grátis: dá para jogar os dois.`,
         },
         {
           q: 'Os dois são grátis e oficiais?',
@@ -1185,10 +1185,10 @@ export const sitePt = {
         plays: 'Navegador, PC e celular',
         style: 'Survivors-like',
         coop: 'Até 4 online',
-        roster: (f: OurFacts) => `${f.starters} iniciais, ${f.eggs} famílias de ovos, ${f.legends} lendários`,
+        roster: (f: OurFacts) => `${f.starters} iniciais, ${f.eggs} famílias, ${f.legends} lendas`,
         about: (f: OurFacts) => [
-          `Escolha um dos ${f.starters} iniciais de Kanto a Paldea e sobreviva ${f.minutes} minutos de hordas: todos os seus golpes atacam sozinhos, você aprende golpes e itens a cada nível e evolui no meio da partida, até enfrentar Mewtwo. Chefes lendários, fendas épicas com o domínio de cada lendário, Mega Evolução e um modo sem fim contra Arceus.`,
-          `Ovos chocam mais ${f.eggs} famílias, os lendários vencidos ficam jogáveis no Modo Lendário, o co-op online junta até ${f.players} jogadores, a Arena é um MOBA estilo Pokémon Unite e o Poké Realm é uma cidade online com bases secretas e mini games. Em ${f.languages} idiomas, com código aberto (MIT).`,
+          `Escolha um dos ${f.starters} iniciais de Kanto a Paldea e sobreviva ${f.minutes} minutos de hordas: todos os seus golpes atacam sozinhos, você aprende golpes e itens a cada nível e evolui no meio da partida, até enfrentar Mewtwo. Chefes lendários, fendas épicas com o domínio de cada lendário, Mega Evolução, Terastal com Raides Tera e um modo sem fim contra Arceus.`,
+          `Ovos, a Zona Safári e prêmios liberam mais ${f.eggs} famílias, as lendas capturadas ficam jogáveis no Modo Lendário, o co-op online junta até ${f.players} jogadores, a Arena é um MOBA estilo Pokémon Unite e o Poké Realm é uma cidade online com bases secretas e mini games. Em ${f.languages} idiomas, com código aberto (MIT).`,
         ],
         bestFor: 'quem quer partidas curtas com chefes, builds variadas e lendários jogáveis, no PC ou no celular em pé.',
       },
