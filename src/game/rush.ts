@@ -183,9 +183,11 @@ export const updateRush = (g: Game, dt: number) => {
 /**
  * How far from the view's edges the player always stays while the screen
  * frames the ring's legend too, px (the HUD sits on top); a phone held upright
- * keeps it higher (`tall`), over the news line (`.toasts.focus`).
+ * keeps it higher (`tall`), over the news line (`.toasts.focus`), and a
+ * short one lets it nearer the bottom (`edge`) so the legend's feet stay
+ * `legend` px under the top, clear of the HUD.
  */
-const FRAME = { side: 44, top: 96, bottom: 48, tall: 84 } as const
+const FRAME = { side: 44, top: 96, bottom: 48, tall: 84, legend: 100, edge: 28 } as const
 
 /**
  * The rush's camera (`followPlayers`' frame): on the middle of the player and
@@ -204,6 +206,8 @@ export const rushCamera = (g: Game, dt: number) => {
   if (at) {
     x = Math.max(p.x - (w - FRAME.side), Math.min(p.x - FRAME.side, (p.x + at.x) / 2 - w / 2))
     y = Math.max(p.y - (h - (h > w ? FRAME.tall : FRAME.bottom)), Math.min(p.y - FRAME.top, (p.y + at.y) / 2 - h / 2 - 24))
+    // A short screen (a phone on its side) keeps the legend's feet `legend` px under its top, clear of the HUD, letting the player nearer the bottom (`edge`).
+    y = Math.max(p.y - (h - FRAME.edge), Math.min(y, at.y - FRAME.legend))
   }
   const k = 1 - dm.exp(-5 * dt)
   aimScreen(g, p, p.screen.x + (x - p.screen.x) * k, p.screen.y + (y - p.screen.y) * k)
