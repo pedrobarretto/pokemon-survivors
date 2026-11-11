@@ -4,6 +4,8 @@ import { isSpecialCompanion, type SpecialCompanionId } from '../data/companions'
 import { FESTIVALS, type FestivalId } from '../data/festivals'
 import { HIDDEN_PLACE_IDS, type HiddenPlaceId } from '../data/places'
 import { isLegend, LEGEND_IDS, legendFestival, type LegendId } from '../data/legends'
+import { isDifficulty, type Difficulty } from './difficulty'
+import { ERA1_TIERS, isEra1Side, type Era1Side, type Era1Tier } from './era1'
 import { parseTitle } from './achievements'
 import { HATCHLING_IDS, HATCHLINGS, type HatchlingId } from '../data/hatchlings'
 import { STYLE_SLOTS, styleIds, stylePrice, type StyleId, type StyleSlot } from '../data/style'
@@ -64,7 +66,7 @@ export type GiftKind = GiftContent['kind']
  * candy jar and Caça aos Fantasmas, supporting the game on the Noite das Bruxas,
  * the Kecleon Shop's loyalty card and Department Store, or a Festival da
  * Praça's pot reaching a milestone or making the player a Mecenas,
- * being an OG Supporter, an Arena season's peak tier, or finding a hidden zone.
+ * being an OG Supporter, an Arena season's peak tier, finding a hidden zone, or a top place in the Era 1 Hall da Fama.
  */
 export type GiftReason =
   | { kind: 'welcome'; from: string | null }
@@ -94,6 +96,8 @@ export type GiftReason =
   | { kind: 'hiddenZone'; zone: HiddenPlaceId }
   /** A family found outside an egg (`game/seasonOneUnlocks.ts`): an encounter or research, made by the game too, or a mini game's catch (fishing, the Safari, the Escavação), sent by the API. */
   | { kind: 'season'; way: 'find' | 'research' | 'fishing' | 'safari' | 'dig' }
+  /** The Era 1 Hall da Fama (`game/era1.ts`): the tier, and the board and place that earned it. Sent by the API from its own boards. */
+  | { kind: 'era1'; tier: Era1Tier; rank: number; side: Era1Side; difficulty: Difficulty }
 
 export type Gift = { id: string; content: GiftContent; reason: GiftReason | null }
 
@@ -188,6 +192,7 @@ const parseReason = (v: unknown): GiftReason | null => {
   if (v.kind === 'arenaSeason' && isOneOf(v.tier, TIER_IDS)) return { kind: 'arenaSeason', season: wholeNumber(v.season), tier: v.tier }
   if (v.kind === 'hiddenZone' && isOneOf(v.zone, HIDDEN_PLACE_IDS)) return { kind: 'hiddenZone', zone: v.zone }
   if (v.kind === 'season' && (v.way === 'find' || v.way === 'research' || v.way === 'fishing' || v.way === 'safari' || v.way === 'dig')) return { kind: 'season', way: v.way }
+  if (v.kind === 'era1' && isOneOf(v.tier, ERA1_TIERS) && isEra1Side(v.side) && isDifficulty(v.difficulty)) return { kind: 'era1', tier: v.tier, rank: wholeNumber(v.rank), side: v.side, difficulty: v.difficulty }
   return null
 }
 

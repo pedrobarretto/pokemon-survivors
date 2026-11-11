@@ -276,8 +276,8 @@ export type BoardEntry = ProfileName & {
   bag?: BagItem[]
 }
 
-/** The top of a board, plus the asking player's own line (null if they're not on it). */
-export type Board = { entries: BoardEntry[]; me: BoardEntry | null }
+/** The top of a board, plus the asking player's own line (null if they're not on it), and how many players it holds (missing from an older API). */
+export type Board = { entries: BoardEntry[]; me: BoardEntry | null; total?: number }
 
 /** Where a run's player stands on its difficulty's boards, after it. Null on a board they're not on. */
 export type RunRanks = Record<(typeof LIVE_PERIODS)[number], number | null>

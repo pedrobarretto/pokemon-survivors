@@ -1,4 +1,5 @@
 import { context2d, createCanvas, fromStrings } from '../engine/pixelart'
+import type { TitleId } from '../data/achievements'
 import type { BackgroundId, FrameId, WallpaperId } from '../data/style'
 
 /**
@@ -13,12 +14,30 @@ import type { BackgroundId, FrameId, WallpaperId } from '../data/style'
 export type BallArt = readonly [rows: readonly string[], palette: Readonly<Record<string, string>>]
 
 /**
- * A card's border, outside in: `edge` line, `light` line, `main` band (2 px),
- * `shade` line. `accent` dots the corners, unless a `ball` sits there. With
- * `lower`, the band's lower half takes that color and a dark line splits
- * them on the sides, like a Poké Ball's two halves.
+ * A card's border, outside in: `edge` line, `light` line, `main` band (2 px,
+ * or `band`), `edge` and `shade` lines. `accent` dots the corners, unless a
+ * `ball` sits there (any size; `mirror` flips it into each corner, for an
+ * art drawn for the top left). With `lower`, the band's lower half takes that
+ * color and a dark line splits them on the sides, like a Poké Ball's two
+ * halves. The rarest frames add `studs` (small rivets of that color along
+ * the band), `inner` (more lines inside the shade, outside in) and a `crest`,
+ * the frame's seal: in a card's header between the logo and the date, on top
+ * of a small swatch.
  */
-export type CardFrame = { edge: string; light: string; main: string; shade: string; accent: string; lower?: string; ball?: BallArt }
+export type CardFrame = {
+  edge: string
+  light: string
+  main: string
+  shade: string
+  accent: string
+  lower?: string
+  ball?: BallArt
+  mirror?: true
+  band?: number
+  studs?: string
+  inner?: readonly string[]
+  crest?: BallArt
+}
 
 /** A ball's rows: 2 the top half, 5 its marks, 3 the bottom half, 4 the button. */
 const ball = (top: string, marks: string): BallArt => [
@@ -86,6 +105,76 @@ const LEAF: BallArt = [
   { 1: '#0c2408', 2: '#69b84c', 3: '#2e7424', 4: '#c8f0a0', 5: '#f8f8ff' },
 ]
 
+/** Era 1's coin, for its frame's corners: gold with a navy "I" (1 outline, 2 gold, 3 its shade, 4 the shine, 5 the numeral). */
+const ERA_COIN: BallArt = [
+  ['..11111..', '.1422221.', '142555221', '122252221', '122252221', '122252221', '123555321', '.1333331.', '..11111..'],
+  { 1: '#2a1808', 2: '#f8d030', 3: '#c08820', 4: '#fff4c0', 5: '#22357e' },
+]
+
+/** Era 1's coin spreading gold wings, hung at the top of its frame (same palette as the coin). */
+const ERA_WINGS: BallArt = [
+  [
+    '...............111...............',
+    '.............1144411.............',
+    '...........11444242211...........',
+    '111........14255555221........111',
+    '12211111..1422255522221..11111221',
+    '.1222222114422255522233112222221.',
+    '..12222224442225552223332222221..',
+    '.1222222244222255522223322222221.',
+    '..13333334442225552223333333331..',
+    '...122222442222555222333222221...',
+    '....1333311222255522231133331....',
+    '.....1111..12255555231..1111.....',
+    '...........11233233311...........',
+    '.............1133311.............',
+    '...............111...............',
+  ],
+  ERA_COIN[1],
+]
+
+/** The Era 1 Champion's ruby, cut and set in a gold bezel, for its frame's corners (1 outline, 2 gold, 3 its shade, 4 the shine, 5 ruby, 6 its shade, 7 its light, 8 the glint). */
+const RUBY: BallArt = [
+  [
+    '...11111...',
+    '..1422221..',
+    '.141111121.',
+    '14177555121',
+    '12178555121',
+    '12155556121',
+    '12155566131',
+    '12156666131',
+    '.121111131.',
+    '..1333331..',
+    '...11111...',
+  ],
+  { 1: '#2a1404', 2: '#f8d030', 3: '#b87818', 4: '#fff4c0', 5: '#e02848', 6: '#8a0c28', 7: '#ff9cb0', 8: '#ffffff' },
+]
+
+/** The Era 1 Champion's crown, pearls on its points and rubies on its band, hung at the top of its frame (1 outline, 2 gold, 3 its shade, 4 the shine, 5 ruby, 7 its light, 8 pearl). */
+const CROWN: BallArt = [
+  [
+    '..............1..............',
+    '.............481.............',
+    '............18881............',
+    '....1........181........1....',
+    '...481........1........481...',
+    '..18881......141......18881..',
+    '...181......12431......181...',
+    '....1......1224331......1....',
+    '...141....122223331....141...',
+    '..12431..12222233331..12431..',
+    '..1243311422222333331122431..',
+    '..1223332432222333333222231..',
+    '.111111111111111111111111111.',
+    '.122227222222272222222722221.',
+    '.122255522822555228225552221.',
+    '.133335333333353333333533331.',
+    '.111111111111111111111111111.',
+  ],
+  { 1: '#2a1404', 2: '#f8d030', 3: '#b87818', 4: '#fff4c0', 5: '#e02848', 7: '#ff9cb0', 8: '#f8f8f8' },
+]
+
 export const CARD_FRAMES = {
   /** The game's own dialog box: dark line, paper, blue. */
   classic: { edge: '#283040', light: '#f8f8f8', main: '#6878a8', shade: '#101830', accent: '#ffcb05' },
@@ -115,6 +204,10 @@ export const CARD_FRAMES = {
   grotto: { edge: '#0c2010', light: '#f8ecc8', main: '#3c8c34', shade: '#143c18', accent: '#f0a0b8', ball: LEAF },
   /** 12 Estampas in the Poké Realm (`STAMP_MILESTONES`): a stamp book's indigo cover, paper light and red stamps in the corners. */
   stampFrame: { edge: '#1c1430', light: '#f8ecc8', main: '#6a58c0', shade: '#2a2058', accent: '#e04040', ball: STAMP },
+  /** A top place on an Era 1 board (`game/era1.ts`): a wide royal navy band between gold lines, gold rivets, an "I" coin in each corner and a winged one for its seal. */
+  era1: { edge: '#120e26', light: '#f8d878', main: '#22357e', shade: '#c89028', accent: '#f8d030', band: 3, studs: '#f8d030', inner: ['#0a0a1c'], ball: ERA_COIN, crest: ERA_WINGS },
+  /** An Era 1 board's #1: a wide gold band set with rubies and a gold line inside it, a ruby in a gold bezel in each corner and the crown for its seal. */
+  era1Champion: { edge: '#2a1404', light: '#fff4c0', main: '#e8b030', shade: '#f8d030', accent: '#e02848', band: 3, studs: '#e02848', inner: ['#2a1404'], ball: RUBY, crest: CROWN },
 } as const satisfies Record<FrameId, CardFrame>
 
 /** A card's backdrop: sky bands top to bottom (dithered where they meet) and how many stars (fireflies, crystals, snow…). */
@@ -134,6 +227,8 @@ export const CARD_BACKGROUNDS = {
   halloween: { sky: ['#0c0614', '#180a24', '#26102e', '#3a1430', '#5a2028'], stars: 80, starColors: ['#ffa030', '#ffffff', '#c080ff', '#ff6020'] },
   /** Bringing 10 friends (`game/referral.ts`): a rose dusk with pink and gold stars, the Ambassador frame's colors. */
   friendship: { sky: ['#140818', '#220c26', '#341232', '#481a3a', '#5c2440'], stars: 100, starColors: ['#f8a0c8', '#f8e098', '#ffffff', '#e05888'] },
+  /** An Era 1 board's #1 (`game/era1.ts`): a throne room's dusk, royal purple into ruby, thick with gold stars. */
+  era1Champion: { sky: ['#0a0614', '#140a24', '#200e30', '#30143a', '#461c40'], stars: 130, starColors: ['#f8d030', '#fff4b0', '#ffffff', '#e02848'] },
 } as const satisfies Record<BackgroundId, CardBackground>
 
 /** What a card wears. */
@@ -332,7 +427,8 @@ export const frameIcon = (id: FrameId) => {
   let url = frameIcons.get(id)
   if (!url) {
     const f: CardFrame = CARD_FRAMES[id]
-    const canvas = createCanvas(7, 7)
+    const size = f.ball?.[0].length ?? 7
+    const canvas = createCanvas(size, size)
     const ctx = context2d(canvas)
     if (f.ball) ctx.drawImage(fromStrings(f.ball[0], f.ball[1]), 0, 0)
     else
@@ -344,6 +440,26 @@ export const frameIcon = (id: FrameId) => {
   }
   return url
 }
+
+const artUrls = new Map<BallArt, string>()
+
+/** A piece of frame art (a corner's ball, a crest) as a data URL, for the screens that show it bigger (the Hall, the Trainer Card). */
+export const frameArtUrl = (art: BallArt) => {
+  let url = artUrls.get(art)
+  if (!url) {
+    const sprite = fromStrings(art[0], art[1])
+    const canvas = createCanvas(sprite.width, sprite.height)
+    context2d(canvas).drawImage(sprite, 0, 0)
+    artUrls.set(art, (url = canvas.toDataURL()))
+  }
+  return url
+}
+
+/** The Era 1 marks: the winged coin and the coin of a top place (`era1`), the Champion's crown and ruby (`era1Champion`). */
+export const ERA1_MARKS = { hall: ERA_WINGS, coin: ERA_COIN, champion: CROWN, ruby: RUBY } as const satisfies Record<string, BallArt>
+
+/** The mark an Era 1 title wears in the ★'s place (the share cards, the Trainer Card): the Champion's ruby, the Legend's coin. */
+export const titleMark = (title: TitleId | null): BallArt | null => (title === 'era1Champion' ? RUBY : title === 'era1Legend' ? ERA_COIN : null)
 
 const wallpaperUrls = new Map<WallpaperId, string>()
 

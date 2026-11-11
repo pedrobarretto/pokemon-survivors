@@ -1351,6 +1351,16 @@ export const es: Messages = {
     coopHint: '↑ ↓ entrenador · ← → período · Q E dificultad · M modo · T equipo · F amigos · ENTER perfil · ESC volver',
     coopChallengeHint: '↑ ↓ entrenador · ← → día · Q E tabla · M modo · T equipo · F amigos · ENTER perfil · ESC volver',
     team: (names) => `Equipo: ${names}`,
+    hall: {
+      kicker: 'Salón de la Fama',
+      closed: (date) => `Los récords de antes de la Temporada 1. Cerrados el ${date}, se quedan aquí para siempre.`,
+      open: (date) => `La Era 1 cierra el ${date}, cuando abre la Temporada 1. Los récords hasta entonces se quedan aquí para siempre.`,
+      reward: (top) => `El n.º 1 de cada ranking gana el título *Campeón(a) de la Era 1*, un marco y un cielo propios. Hasta el ${top}.º: *Leyenda de la Era 1* y su marco.`,
+      coopReward: (top) => `Los ${top} primeros equipos de cada ranking: *Leyenda de la Era 1* y su marco.`,
+      thin: (n) => (n === 0 ? 'Menos de 10 en este ranking: no da recompensa.' : `Pocos jugadores en este ranking: la recompensa llega hasta el ${n}.º.`),
+      tags: { champion: 'Campeón(a)', hall: 'Leyenda' },
+    },
+    seasonSoon: (date) => `La Temporada 1 abre el ${date}. Hasta entonces, los récords entran en la Era 1.`,
   },
 
   profile: {
@@ -1536,8 +1546,8 @@ export const es: Messages = {
       wallpaper: 'Fondo de pantalla de la Caja del PC.',
     },
     styles: {
-      frame: { classic: 'Clásico', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embajador(a)', supporter: 'Apoyo', pumpkin: 'Calabaza', spectral: 'Espectral', regular: 'Cliente frecuente', kecleon: 'Kecleon Dorado', meowth: 'Meowth', lantern: 'Linterna', creator: 'Creador(a)', grotto: 'Gruta Oculta', stampFrame: 'Estampas' },
-      background: { night: 'Noche estrellada', meadow: 'Ruta 1', forest: 'Bosque Verde', cave: 'Mt. Moon', snow: 'Monte Plateado', tower: 'Torre Lavanda', supporter: 'Cielo dorado', halloween: 'Noche de Brujas', friendship: 'Amistad' },
+      frame: { classic: 'Clásico', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embajador(a)', supporter: 'Apoyo', pumpkin: 'Calabaza', spectral: 'Espectral', regular: 'Cliente frecuente', kecleon: 'Kecleon Dorado', meowth: 'Meowth', lantern: 'Linterna', creator: 'Creador(a)', grotto: 'Gruta Oculta', stampFrame: 'Estampas', era1: 'Era 1', era1Champion: 'Corona de la Era 1' },
+      background: { night: 'Noche estrellada', meadow: 'Ruta 1', forest: 'Bosque Verde', cave: 'Mt. Moon', snow: 'Monte Plateado', tower: 'Torre Lavanda', supporter: 'Cielo dorado', halloween: 'Noche de Brujas', friendship: 'Amistad', era1Champion: 'Trono de la Era 1' },
       wallpaper: { classic: 'Clásico', forest: 'Hojas', cave: 'Piedritas', snow: 'Copos de nieve', tower: 'Fantasmitas', supporter: 'Estrellas doradas', haunted: 'Casa Embrujada', secretBase: 'Base Secreta' },
     },
   },
@@ -2029,6 +2039,7 @@ export const es: Messages = {
     patron: (festival) => `Por ser Mecenas del ${festival} ♥`,
     og: 'Por apoyar el juego desde el principio ♥',
     arenaSeason: (season) => `Por tu mejor marca en la temporada ${season} de la Arena`,
+    era1: (rank, board) => `#${rank} en el Salón de la Fama de la Era 1 · ${board}`,
     hiddenZone: { grotto: 'Por encontrar la Gruta Oculta', underground: 'Por encontrar el Subsuelo' },
   },
 
@@ -2938,7 +2949,7 @@ export const es: Messages = {
     noTitle: 'ninguno',
     titleTag: 'TÍTULO',
     equipped: 'EN USO',
-    giftTitles: { ambassador: 'Ha traído 3 amigos al juego', supporter: 'Apoyó el proyecto con una donación', pumpkinKing: 'Llenó el frasco de dulces de la Noche de Brujas', exorcist: 'Venció a todos los jefes de la Cacería de Fantasmas', vipCustomer: 'Juntó 30 sellos en la tarjeta de cliente de Kecleon', tycoon: 'Convirtió la tienda de Kecleon en Gran Almacén', patron: 'Donó ₽50.000 o más en un Festival de la Plaza', ogSupporter: 'Apoyó el juego antes de Patreon', arenaPoke: 'Terminó una temporada clasificatoria de la Arena en Poké Ball', arenaGreat: 'Llegó a Great Ball en una temporada clasificatoria de la Arena', arenaUltra: 'Llegó a Ultra Ball en una temporada clasificatoria de la Arena', arenaMaster: 'Llegó a Master Ball en una temporada clasificatoria de la Arena', creator: 'Hace videos y directos de Pokémon Survivors', friendLegend: 'Ha traído 10 amigos al juego', stampCollector: 'Reunió 30 Estampas en el Poké Realm' },
+    giftTitles: { ambassador: 'Ha traído 3 amigos al juego', supporter: 'Apoyó el proyecto con una donación', pumpkinKing: 'Llenó el frasco de dulces de la Noche de Brujas', exorcist: 'Venció a todos los jefes de la Cacería de Fantasmas', vipCustomer: 'Juntó 30 sellos en la tarjeta de cliente de Kecleon', tycoon: 'Convirtió la tienda de Kecleon en Gran Almacén', patron: 'Donó ₽50.000 o más en un Festival de la Plaza', ogSupporter: 'Apoyó el juego antes de Patreon', arenaPoke: 'Terminó una temporada clasificatoria de la Arena en Poké Ball', arenaGreat: 'Llegó a Great Ball en una temporada clasificatoria de la Arena', arenaUltra: 'Llegó a Ultra Ball en una temporada clasificatoria de la Arena', arenaMaster: 'Llegó a Master Ball en una temporada clasificatoria de la Arena', creator: 'Hace videos y directos de Pokémon Survivors', friendLegend: 'Ha traído 10 amigos al juego', stampCollector: 'Reunió 30 Estampas en el Poké Realm', era1Legend: 'Quedó en lo más alto de un ranking de la Era 1', era1Champion: 'Fue el n.º 1 de un ranking de la Era 1' },
     newMedals: 'Nuevas medallas',
     names: {
       firstRun: 'Primeros pasos',
@@ -3038,6 +3049,8 @@ export const es: Messages = {
       creator: 'Creador(a) de Contenido',
       friendLegend: 'Leyenda de la Amistad',
       stampCollector: 'Coleccionista de Estampas',
+      era1Legend: 'Leyenda de la Era 1',
+      era1Champion: 'Campeón(a) de la Era 1',
     },
     goals: {
       runs: (n) => (n === '1' ? 'Juega una partida' : `Juega ${n} partidas`),

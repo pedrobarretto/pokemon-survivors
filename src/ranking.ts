@@ -15,6 +15,7 @@ import { locale } from './i18n'
 import { timeoutSignal } from './net/timeout'
 import { TEAM_SIZE_KEYS, type CoopBoard, type CoopBoardEntry, type CoopChallengeBoard, type TeamSize } from './game/coopBoard'
 import { fakeCoopBoard, fakeCoopChallengeBoard } from './coopBoardFakes'
+import { fakeEra1Board, fakeEra1CoopBoard } from './era1Fakes'
 
 /**
  * Ranked runs and the public side of accounts (boards, profiles, follows),
@@ -587,6 +588,7 @@ const knownProfile = (p: PublicProfile): PublicProfile => ({
 
 /** A board, or null when the API can't be reached. Friends boards need an account. */
 export const fetchBoard = async (f: BoardFilter): Promise<Board | null> => {
+  if (era1Faked !== null && f.period === 'era1') return fakeEra1Board(f.mode, era1Faked)
   const params = new URLSearchParams({ period: f.period, ...(f.mode === 'legend' ? { mode: f.mode } : {}), ...(f.starter ? { starter: f.starter } : {}), ...(f.friends ? { friends: '1' } : {}) })
   const { body } = await read(`/boards/${f.difficulty}?${params}`, await sessionToken())
   // Our own API: a quick look at the shape is enough, past the Pokémon the screens draw.
@@ -597,6 +599,13 @@ export const fetchBoard = async (f: BoardFilter): Promise<Board | null> => {
 export const fetchChallengeBoard = async (day: DayKey, friends = false): Promise<ChallengeBoard | null> => {
   const { body } = await read(`/challenge/${day}${friends ? '?friends=1' : ''}`, await sessionToken())
   return isRecord(body) && Array.isArray(body.entries) && typeof body.total === 'number' ? knownBoard(body as ChallengeBoard) : null
+}
+
+/** Dev: the Era 1 boards answer made-up ones of this many players (`era1Fakes.ts`, `ps.era1('fake')`); null asks the API. */
+let era1Faked: number | null = null
+
+export const fakeEra1Boards = (field: number | null) => {
+  era1Faked = field
 }
 
 /* ---------------- Co-op boards ---------------- */
@@ -626,6 +635,7 @@ const knownCoopBoard = <B extends CoopBoard | CoopChallengeBoard>(body: unknown)
 
 /** A co-op board (`GET /coop/boards/:difficulty`), or null when the API can't be reached. Guests read the public ones; friends needs an account. */
 export const fetchCoopBoard = async (f: CoopBoardFilter): Promise<CoopBoard | null> => {
+  if (era1Faked !== null && f.period === 'era1') return fakeEra1CoopBoard(f.size, f.difficulty, era1Faked)
   if (coopFaked) return fakeCoopBoard(f.size, f.difficulty, f.period)
   const params = new URLSearchParams({ size: TEAM_SIZE_KEYS[f.size], period: f.period, ...(f.friends ? { friends: '1' } : {}) })
   const { body } = await read(`/coop/boards/${f.difficulty}?${params}`, await sessionToken())

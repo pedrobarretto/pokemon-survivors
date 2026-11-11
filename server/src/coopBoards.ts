@@ -1,8 +1,12 @@
 import { SEASON_ONE } from '../../src/data/seasons'
 import type { BranchId } from '../../src/data/branches'
 import type { PlayableId } from '../../src/data/hatchlings'
+import { DIFFICULTY_IDS, type Difficulty } from '../../src/game/difficulty'
+import { ERA1, type Era1Standing } from '../../src/game/era1'
 import {
   coopChallengeCounts,
+  TEAM_SIZE_KEYS,
+  TEAM_SIZES,
   dailyCoopChallenge,
   isTeamSize,
   parseCoopResult,
@@ -16,7 +20,6 @@ import {
   type TeamSize,
 } from '../../src/game/coopBoard'
 import { brasiliaDay, type DayKey } from '../../src/game/day'
-import type { Difficulty } from '../../src/game/difficulty'
 import { isRecord } from '../../src/game/parse'
 import { BOARD_SIZE, BOARD_TIME_ZONE, type BoardPeriod } from '../../src/game/ranking'
 import type { CoopReport, CoopReportResponse } from '../../src/net/coopReport'
@@ -192,9 +195,27 @@ export const coopBoardStore = (sql: Sql) => {
     /** `GET /coop/boards/:difficulty`: a size and difficulty's regular runs (never the challenge's) of the period, by team. */
     board: async ({ size, difficulty, period, friends, viewer }: CoopBoardQuery): Promise<CoopBoard> => {
       const since = period === 'all' ? sql`and r.ended_at >= ${SEASON_ONE.start}::timestamptz` : period === 'era1' ? sql`and r.ended_at < ${SEASON_ONE.start}::timestamptz` : sql`and r.ended_at >= (date_trunc(${period}, now() at time zone ${BOARD_TIME_ZONE}) at time zone ${BOARD_TIME_ZONE})`
-      const { entries, me } = await read(size, sql`r.challenge is null and r.difficulty = ${difficulty} ${since}`, friends, viewer)
-      return { size, difficulty, period, entries, me }
+      const { entries, me, total } = await read(size, sql`r.challenge is null and r.difficulty = ${difficulty} ${since}`, friends, viewer)
+      return { size, difficulty, period, entries, me, total }
     },
+
+    /**
+     * Each co-op Era 1 board (every team size and difficulty, ranked as `board` lists it) as
+     * `era1Awards` reads it: the members of its teams near the top with their team's place, and
+     * how many teams it holds.
+     */
+    era1Standings: (): Promise<Era1Standing[]> =>
+      Promise.all(
+        TEAM_SIZES.flatMap((size) =>
+          DIFFICULTY_IDS.map(async (difficulty): Promise<Era1Standing> => {
+            const scope = sql`r.challenge is null and r.difficulty = ${difficulty} and r.ended_at < ${SEASON_ONE.start}::timestamptz`
+            const rows = await sql<{ user_id: string; rank: number; total: number }[]>`
+              select m.user_id, b.rank, b.total from (${ranked(size, scope, false, null)}) b join coop_run_members m on m.run_id = b.id
+              where b.rank <= ${ERA1.coopTop} order by b.rank, m.slot`
+            return { board: { side: TEAM_SIZE_KEYS[size], difficulty }, field: rows[0]?.total ?? 0, places: rows.map((r) => ({ userId: r.user_id, rank: r.rank })) }
+          }),
+        ),
+      ),
 
     /** `GET /coop/challenge/:day`: a day's Desafio co-op board for a size, each team's best try. */
     challengeBoard: async (day: DayKey, size: TeamSize, friends: boolean, viewer: string | null): Promise<CoopChallengeBoard> => {

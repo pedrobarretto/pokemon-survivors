@@ -10,7 +10,7 @@ import { companionForm } from '../game/supporters'
 import { formatDay, formatPokeDollars, formatPokeDollarsShort, t } from '../i18n'
 import { bagIcon, coinIcon, eggIcon, giftIcon, itemArt, medalIcon, ribbonIcon, sparkleIcon } from '../render/art'
 import { styleThumb } from '../render/card'
-import { frameIcon, wallpaperUrl } from '../render/cosmetics'
+import { frameArtUrl, frameIcon, titleMark, wallpaperUrl } from '../render/cosmetics'
 import { portraitUrl } from '../render/sprites'
 import { h, later, rich } from './dom'
 import { hint, menu, type Screen } from './screens'
@@ -37,8 +37,10 @@ export const contentLine = (gift: Pick<Gift, 'content'>): { src: string; text: s
       return { src: eggIcon(c.tier), text: m.egg(t().eggs.tiers[c.tier]) }
     case 'coins':
       return { src: coinIcon(2), text: m.coins(formatPokeDollars(c.amount)) }
-    case 'title':
-      return { src: medalIcon('gold'), text: m.newTitle(t().achievements.titles[c.title]) }
+    case 'title': {
+      const mark = titleMark(c.title)
+      return { src: mark ? frameArtUrl(mark) : medalIcon('gold'), text: m.newTitle(t().achievements.titles[c.title]) }
+    }
     case 'style': {
       const names: Readonly<Record<string, string>> = t().mart.styles[c.style.slot]
       return { src: styleIcon(c.style), text: m.style[c.style.slot](names[c.style.id] ?? c.style.id) }
@@ -103,6 +105,11 @@ export const reasonLine = (gift: Gift) => {
       return t().gifts.hiddenZone[r.zone]
     case 'season':
       return t().seasonUnlocks.way[r.way]
+    case 'era1': {
+      const rk = t().ranking
+      const side = r.side === 'standard' || r.side === 'legend' ? rk.modes[r.side] : rk.sizes[r.side]
+      return t().gifts.era1(r.rank, `${side} · ${t().difficulty.names[r.difficulty]}`)
+    }
   }
 }
 

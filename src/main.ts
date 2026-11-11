@@ -115,10 +115,11 @@ import { clearSpot, featureAt, featuresNear, footOf, inSolid, runArchetype, setA
 import { TERRAIN, type SolidKind } from './data/terrain'
 import type { LandmarkId } from './data/landmarks'
 import { dexCounts, dexNews, dexStatus, mergeDex, recordRun, type Pokedex } from './game/dex'
-import { runEarnings, wonRun, type ConvertedEggs } from './game/meta'
+import { runEarnings, wonRun, type ConvertedEggs, type Save } from './game/meta'
+import { equipStyle } from './game/style'
 import { missionStatus, type MissionStatus } from './game/missions'
 import { summarizeRun, type RunSummary } from './game/tally'
-import { parseHandle, rankable, runMode, runResult } from './game/ranking'
+import { isRunMode, parseHandle, rankable, runMode, runResult } from './game/ranking'
 import { rosterSchedule, type Roster } from './game/roster'
 import { parseReplay, recordEvent, recordStep, resimulate, RULES_VERSION, rulesStanding, runRoster, startGame, startRecording, TICK, type Recorder, type ReplayStart } from './game/replay'
 import { gameSpecial } from './game/special'
@@ -148,8 +149,9 @@ import { h, later, rich } from './ui/dom'
 import { setActivePad } from './ui/inputLabels'
 import { watchCursorMode } from './ui/cursorMode'
 import { detectKeyLayout } from './ui/keyLayout'
-import { captureRef, coopBoardsFaked, fakeCoopBoards, flushRuns, onRulesBehind, prefetchRanked, PROFILE_PARAM, rankingEnabled, stageInvite, startRanked, type RankedRun, type RankOutcome } from './ranking'
-import { DISCORD_GIFT, parseGiftContent, type GiftKind, type GiftReason } from './game/gifts'
+import { captureRef, coopBoardsFaked, fakeCoopBoards, fakeEra1Boards, flushRuns, onRulesBehind, prefetchRanked, PROFILE_PARAM, rankingEnabled, stageInvite, startRanked, type RankedRun, type RankOutcome } from './ranking'
+import { applyGift, DISCORD_GIFT, parseGiftContent, type GiftKind, type GiftReason } from './game/gifts'
+import { ERA1_GIFTS, era1Gifts, type Era1Tier } from './game/era1'
 import { giftScreen } from './ui/gifts'
 import { arenaGate, coopGate, playGate, realmGate } from './ui/account'
 import { TOWN_ROOMS, isTownRoomId } from './data/realmMap'
@@ -232,7 +234,7 @@ import { parseHeldVersus, versusReport, type HeldVersus, type VersusLeave } from
 import { ARENA_RANKED, type MatchKind, type QueueKind } from './data/arenaRanked'
 import { arenaResult } from './game/arenaRank'
 import { dailyCoopChallenge, parseTeamSize } from './game/coopBoard'
-import type { Difficulty } from './game/difficulty'
+import { isDifficulty, type Difficulty } from './game/difficulty'
 import type { VersusHud } from './ui/versusHud'
 import { arenaFxEvent, arenaFxStats, playBurst, resetArenaFx } from './render/arenaFx'
 import { lookOf, setLooks, setLooksGame, setLocalLook } from './render/looks'
@@ -4475,6 +4477,53 @@ const devCoopBoard = (cmd?: 'fake' | 'off' | 'open' | 'daily' | 'challenge', siz
 }
 
 /**
+ * Dev: the Era 1 Hall da Fama (`game/era1.ts`, `ui/era1Hall.ts`). `ps.era1('hall')` makes the Era 1 boards answer made-up ones
+ * (`era1Fakes.ts`) and opens the Ranking on its tab: `ps.era1('hall', 'nightmare', 'legend', 12)` a difficulty, a side (`standard`,
+ * `legend`, or `duo`, `trio`, `squad` for co-op) and how many are on the board (12 shows a thin board's shorter cut); `('off')` asks the
+ * API again. `('gift', 'champion' | 'hall')` puts a tier's gifts in the gift box as the API sends them (`era1Gifts`), and
+ * `('wear', 'champion' | 'hall')` owns and wears its title, frame (and the Champion's sky) and opens the Trainer Card (`ps.card()` then
+ * shows the share card); `('wear', 'off')` takes them off. Whether Era 1 reads as closed follows the missions' clock (`ps.date`).
+ */
+const devEra1 = (cmd?: 'hall' | 'off' | 'gift' | 'wear', a?: string, b?: string, field = 240) => {
+  const tier: Era1Tier = a === 'hall' ? 'hall' : 'champion'
+  if (cmd === 'off') {
+    fakeEra1Boards(null)
+    return 'Era 1 boards: the API again'
+  }
+  if (cmd === 'hall') {
+    endRun()
+    fakeEra1Boards(field)
+    const difficulty = isDifficulty(a) ? a : 'normal'
+    const size = parseTeamSize(b)
+    const mode = isRunMode(b) ? b : 'standard'
+    setScreen(rankingScreen(ui, input, () => showTitle({ focus: 'ranking' }), { difficulty, mode, period: 'era1', ...(size ? { coop: { size } } : {}) }))
+    return `Era 1 Hall: ${difficulty}, ${size ? `${size} players` : mode}, ${field} on the board (fake)`
+  }
+  if (cmd === 'gift') {
+    const award = { tier, rank: tier === 'champion' ? 1 : 7, board: { side: 'standard', difficulty: 'nightmare' } } as const
+    return stageGifts(era1Gifts(award).map((g, i) => ({ id: `dev-era1-${tier}-${i}-${Date.now()}`, content: g.content, reason: g.reason })))
+  }
+  if (cmd === 'wear') {
+    updateSave((save) => {
+      if (a === 'off') return { ...save, title: null, style: { ...save.style, equipped: { ...save.style.equipped, frame: 'classic', background: 'night' } } }
+      const owned = ERA1_GIFTS[tier].reduce<Save>((s, content, i) => {
+        const out = applyGift(s, { id: `dev-era1-wear-${tier}-${i}`, content, reason: null })
+        return out.status === 'applied' ? out.save : s
+      }, save)
+      const frame = tier === 'champion' ? 'era1Champion' : 'era1'
+      const style = equipStyle(equipStyle(owned.style, 'frame', frame), 'background', tier === 'champion' ? 'era1Champion' : owned.style.equipped.background)
+      return { ...owned, title: tier === 'champion' ? 'era1Champion' : 'era1Legend', style }
+    })
+    endRun()
+    setScreen(
+      trainerCardScreen(ui, input, { supporters: (back) => supportersScreen(ui, input, { play: (id) => void startRun(id), onClose: back }, null), locker: () => showTitle(), book: null }, () => showTitle()),
+    )
+    return a === 'off' ? 'Era 1: off' : `Era 1: wearing the ${tier}'s title and frame`
+  }
+  return "ps.era1('hall', difficulty?, side?, field?) · ('off') · ('gift', 'champion' | 'hall') · ('wear', 'champion' | 'hall' | 'off')"
+}
+
+/**
  * Dev: lands a sync as if another device of the account played today's
  * challenge (`time` seconds, its official attempt) and earned `coins` ₽, so
  * the lobby shows it without a reload. Returns the save.
@@ -5057,6 +5106,7 @@ if (import.meta.env.DEV) {
       field: devField,
       challenge: devChallenge,
       coopBoard: devCoopBoard,
+      era1: devEra1,
       hall: devHall,
       otherDevice: devOtherDevice,
       dex: () => loadSave().dex,
