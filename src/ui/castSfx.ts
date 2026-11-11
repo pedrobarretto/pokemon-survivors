@@ -30,6 +30,7 @@ export const CAST_SFX: Partial<Record<MoveId, readonly [Sfx, number]>> = {
   yawn: ['yawn', 400],
   iceBeam: ['iceBeam', 250],
   discharge: ['discharge', 250],
+  rotomDischarge: ['discharge', 250],
   heatWave: ['heatWave', 300],
   thunderFang: ['thunderFang', 150],
   lavaPlume: ['lavaPlume', 300],

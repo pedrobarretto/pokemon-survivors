@@ -52,8 +52,8 @@ export const SEASON_ONE_KITS = {
     line: [{ name: 'Morpeko', dex: 877, types: ['electric', 'dark'], bonus: {} }],
   },
   rotom: {
-    name: 'Rotom', color: '#e88048', egg: 'found', stats: { speed: 3, area: 0.06, might: 0.05 }, signature: 'discharge',
-    learnset: [['discharge', 'thunder', 'shockWave', 'hex', 'spiritShackle', 'flashCannon', 'futureSight', 'willOWisp', 'pinMissile']],
+    name: 'Rotom', color: '#e88048', egg: 'found', stats: { speed: 3, area: 0.06, might: 0.05 }, signature: 'rotomDischarge',
+    learnset: [['rotomDischarge', 'thunder', 'shockWave', 'hex', 'spiritShackle', 'flashCannon', 'futureSight', 'willOWisp', 'pinMissile']],
     line: [{ name: 'Rotom', dex: 479, types: ['electric', 'ghost'], bonus: {} }],
   },
   castform: {

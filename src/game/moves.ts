@@ -25,6 +25,7 @@ import { REGIONAL_MOVES } from './regionalMoves'
 import { ROCKET_KIT_MOVES } from './rocketKitMoves'
 import { TM_MOVES } from './tmMoves'
 import { SHOP_TM_MOVES } from './shopTmMoves'
+import { SHOP_TM_MOVES_2 } from './shopTmMoves2'
 import { VERB_EVOLVED_MOVES } from './verbEvolutions'
 import { EGG_MOVES_2 } from './eggMoves2'
 import { DUO_MOVES } from './duoMoves'
@@ -2326,6 +2327,34 @@ export const MOVES = {
 
 export type MoveId = keyof typeof MOVES
 
+/**
+ * Every table `MOVES` is assembled from (and `SHOP_TM_MOVES_2`, which
+ * `SHOP_TM_MOVES` spreads), by name. A spread lets a later table, or a move
+ * written in `MOVES` itself, silently take over an id: `moveTables.test.ts`
+ * holds that each id here is the move `MOVES` keeps. A new table goes here too.
+ */
+export const MOVE_TABLES: Readonly<Record<string, Readonly<Record<string, MoveDef>>>> = {
+  SIGNATURE_MOVES,
+  EGG_MOVES_3,
+  TM_MOVES,
+  SHOP_TM_MOVES,
+  SHOP_TM_MOVES_2,
+  VERB_EVOLVED_MOVES,
+  EGG_MOVES_2,
+  DUO_MOVES,
+  LEGENDARY_MOVES,
+  LEGENDARY_MOVES_2,
+  ULTRA_MOVES,
+  PATH_LEGEND_MOVES,
+  LEGENDARY_MOVES_3,
+  SKETCH_MOVES,
+  SEASON_ONE_EGG_MOVES,
+  SEASON_ONE_KIT_MOVES,
+  GA_KIT_B_MOVES,
+  GA_KIT_A_MOVES,
+  REGIONAL_MOVES,
+  ROCKET_KIT_MOVES,
+}
 
 export const MOVE_IDS = Object.keys(MOVES) as MoveId[]
 

@@ -278,8 +278,8 @@ export const SEASON_ONE_KIT_MOVES = {
     },
   },
 
-  /* Rotom: the appliance it wears (`special.stance`) picks the discharge's type and shape. */
-  discharge: {
+  /* Rotom: the appliance it wears (`special.stance`) picks its Discharge's type and shape (its id apart from the TM's `discharge`). */
+  rotomDischarge: {
     name: 'Discharge',
     type: 'electric',
     base: stats({ damage: 8, cooldown: 1.7, speed: 180, amount: 2, knockback: 28 }),
@@ -295,7 +295,7 @@ export const SEASON_ONE_KIT_MOVES = {
     fire: (g, s) => {
       const stance = g.player.special.stance
       const form = isAppliance(stance) ? appliancePlays[stance] : null
-      const l = look('discharge', form?.type ?? 'electric', form?.visual ?? 'thunder')
+      const l = look('rotomDischarge', form?.type ?? 'electric', form?.visual ?? 'thunder')
       const fired = { ...s, status: form?.status ?? s.status }
       const p = g.player
       switch (stance) {
@@ -338,7 +338,7 @@ export const SEASON_ONE_KIT_MOVES = {
         default:
           fanShots(g, fired, l, aimAngle(g, 220), 0.4, 6, 1.1)
       }
-      cast(g, 'discharge')
+      cast(g, 'rotomDischarge')
     },
   },
 
