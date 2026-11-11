@@ -56,6 +56,7 @@ import { decidePokeball, updatePickups } from './pickups'
 import { rollShiny, SHINY_ODDS, shinyBoost } from './shiny'
 import { updateProps } from './props'
 import { withHoney, withOutbreak } from './outbreak'
+import type { UltraBeast } from '../data/ultraBeasts'
 import { withHaunts } from './halloween'
 import { createTerrain, groundAt, groundPace, slidesOnIce, updateTerrain } from './terrain'
 import { createLandmarkState, createPlayerLandmarks, updateLandmarks, updateTunnel } from './landmarks'
@@ -134,6 +135,8 @@ export type RunOptions = {
   caps?: number
   /** The mythicals' bad-luck protection (`game/mythicalHunt.ts`); the plain odds when absent. */
   mythical?: MythicalHunt
+  /** The Ultra Beast of the week (`game/ultraWeek.ts`): its wormhole comes more often. None when absent. */
+  ultra?: UltraBeast | null
   /** Opens the run on the opening draft (`draftOffers`): three moves of the learnset to pick the second move from. */
   draft?: boolean
 }
@@ -304,6 +307,7 @@ export const createRun = (view: Game['view'], seed: number, setups: readonly Pla
     eggs: { found: [], lucky: options.luckyEgg === true, boost: bag.includes('incense') ? BAG_ITEMS.incense.effect.eggOdds : 1 },
     outbreak: options.outbreak ?? null,
     halloween: options.halloween === true,
+    ultraWeek: options.ultra ?? null,
     mythicalHunt: options.mythical ?? null,
     candies: 0,
     shinyBoost: shinyBoost(Math.max(...setups.map((s) => s.ranks.shinyCharm)), bag.includes('lure')),

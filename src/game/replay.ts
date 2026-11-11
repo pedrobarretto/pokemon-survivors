@@ -15,6 +15,7 @@ import { UPGRADE_IDS, UPGRADES, type Ranks } from './meta'
 import { LEGEND_HORDE } from './legend'
 import { isRecord, wholeNumber } from './parse'
 import { isOutbreakSpecies, withOutbreak } from './outbreak'
+import { isUltraBeast, type UltraBeast } from '../data/ultraBeasts'
 import { withHaunts } from './halloween'
 import { drawRoster } from './roster'
 import type { Game, Player } from './types'
@@ -43,7 +44,7 @@ import { parseHunt, type MythicalHunt } from './mythicalHunt'
  * and run `npm run rules:freeze` so the API keeps the previous rules' simulator
  * for the runs that straddle the deploy (`server/sims/README.md`).
  */
-export const RULES_VERSION = 49
+export const RULES_VERSION = 50
 
 /**
  * How this build stands to a replay's rules: it can judge the `same`; a
@@ -79,6 +80,8 @@ export type ReplayStart = {
   caps?: number
   /** The mythicals' bad-luck protection from the save (`game/mythicalHunt.ts`). The plain odds when absent: co-op, the Desafio do dia, every mythical captured. */
   mythical?: MythicalHunt
+  /** The Ultra Beast of the week (`game/ultraWeek.ts`); the server checks it against the week the run started (`ultraFits`). None when absent. */
+  ultra?: UltraBeast
   /** World px the screen showed at the start: spawns and despawns depend on it. */
   view: { w: number; h: number }
 }
@@ -240,6 +243,7 @@ export const parseReplay = (raw: unknown): Replay | null => {
       evo,
       caps: isWhole(s.caps) ? s.caps : 0,
       ...(mythical ? { mythical } : {}),
+      ...(isUltraBeast(s.ultra) ? { ultra: s.ultra } : {}),
       view,
     },
     moves: raw.moves,
@@ -274,6 +278,7 @@ export const startGame = (start: ReplayStart, view: Game['view'] = { ...start.vi
     evo: start.evo ?? [],
     caps: start.caps ?? 0,
     mythical: start.mythical,
+    ultra: start.ultra ?? null,
   })
 
 const applyEvent = (g: Game, e: ReplayEvent) => {

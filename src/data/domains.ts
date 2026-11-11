@@ -15,6 +15,7 @@ import { DIALGA_DOMAIN } from './domains/dialga'
 import { LATIS_DOMAIN } from './domains/latis'
 import { DEOXYS_DOMAIN } from './domains/deoxys'
 import { DARKRAI_DOMAIN } from './domains/darkrai'
+import { ULTRA_DOMAINS } from './domains/ultra'
 
 /**
  * EPIC RIFTS: a legendary's domain, as data.
@@ -62,6 +63,8 @@ import { DARKRAI_DOMAIN } from './domains/darkrai'
  * - Two legendaries at once: give the domain a `partner` (Latias's Latios).
  * - A rift only an event brings (Darkrai's, `EVENT_RIFTS` in `data/rifts.ts`)
  *   is a domain like any other; it just never comes in `pickLegend`'s draw.
+ * - The Ultra Beasts' domains (`data/domains/ultra.ts`) share one Ultra Space
+ *   plan; an Ultra Wormhole (`game/wormhole.ts`) brings them, not the rifts' draw.
  * - Mechanics the data can't say (Dialga's time skips in its crossing, the
  *   whirlpools set in Lugia's channels, Ho-Oh's tower raining beams) go in a
  *   hook (`DomainHooks`, `game/domainHooks.ts`).
@@ -71,18 +74,21 @@ import { DARKRAI_DOMAIN } from './domains/darkrai'
 
 /** How a legendary's sky looks over the map in its omen and over its domain (`render/legendSky.ts`). */
 export type LegendSky = 'downpour' | 'harshSun' | 'gale' | 'timeWarp' | 'storm' | 'embers' | 'mist' | 'meteors' | 'newMoon'
+  /** An Ultra Wormhole's omen: the sky cracks open in prismatic light (`data/ultraBeasts.ts`). */
+  | 'ultraSpace'
 
-/** How the threat behind the crossing looks (`render/domain.ts`); its rules are the same for every kind. `magma`: lava chasing up a collapsing tunnel; `crumble`: a floor falling away into the sky. */
-export type ThreatKind = 'tide' | 'collapse' | 'fire' | 'void' | 'magma' | 'crumble' | 'storm' | 'time' | 'mist'
+/** How the threat behind the crossing looks (`render/domain.ts`); its rules are the same for every kind. `magma`: lava chasing up a collapsing tunnel; `crumble`: a floor falling away into the sky; `ultra`: an Ultra Wormhole closing behind. */
+export type ThreatKind = 'tide' | 'collapse' | 'fire' | 'void' | 'magma' | 'crumble' | 'storm' | 'time' | 'mist' | 'ultra'
 
 /**
  * How the legendary comes in: out of water (`rise`), down from the sky
  * (`descend`), out of thin air (`materialize`), as time stops around it
  * (`warp`: the world greys out and clock rings close on its spot), streaking
  * in out of invisibility (`swoop`, the Eon duo), or reforming out of a crystal
- * meteor that crashes down (`meteor`, Deoxys).
+ * meteor that crashes down (`meteor`, Deoxys), or out of a small Ultra
+ * Wormhole torn open over its spot (`wormhole`, the Ultra Beasts).
  */
-export type DomainEntrance = 'rise' | 'descend' | 'materialize' | 'warp' | 'swoop' | 'meteor'
+export type DomainEntrance = 'rise' | 'descend' | 'materialize' | 'warp' | 'swoop' | 'meteor' | 'wormhole'
 
 /** What a retinue member (or a summoned add) does besides walking at the player: aims ahead (`runner`), shoots from a distance (`spitter`), or comes in tougher (`elite`). */
 export type RetinueRole = 'runner' | 'spitter' | 'elite'
@@ -163,8 +169,8 @@ export type ArenaTransform = {
 /** A phase of the battle: the boss's side (`BossPhase`) and what it does to the arena. */
 export type DomainPhase = BossPhase & { arena?: readonly ArenaTransform[] }
 
-/** What lies past a domain's floor (`render/domain.ts`): open `space` with drifting motes, `cave` rock, dark volcanic `magma` rock, the open `sky` far above the clouds, or the open `sea`. */
-export type Backdrop = 'space' | 'cave' | 'sky' | 'magma' | 'sea'
+/** What lies past a domain's floor (`render/domain.ts`): open `space` with drifting motes, `cave` rock, dark volcanic `magma` rock, the open `sky` far above the clouds, the open `sea`, or `ultra`: Ultra Space, ribbons of prismatic light streaming past. */
+export type Backdrop = 'space' | 'cave' | 'sky' | 'magma' | 'sea' | 'ultra'
 
 /**
  * A second legendary fighting alongside the domain's own (Latios beside
@@ -234,6 +240,7 @@ export const DOMAINS: Partial<Record<RiftLegend, LegendDomain>> = {
   latias: LATIS_DOMAIN,
   deoxys: DEOXYS_DOMAIN,
   darkrai: DARKRAI_DOMAIN,
+  ...ULTRA_DOMAINS,
 }
 
 /** The domain behind `legend`'s rift, if it has one. */

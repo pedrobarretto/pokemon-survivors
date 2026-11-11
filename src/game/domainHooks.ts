@@ -9,12 +9,13 @@ import { LUGIA_HOOKS } from './lugiaDomain'
 import { LATIS_HOOKS } from './latisHooks'
 import { DEOXYS_HOOKS } from './deoxysHooks'
 import { DARKRAI_HOOKS } from './darkraiDomain'
+import { ULTRA_HOOKS } from './ultraHooks'
 
 /**
  * Mechanics a legendary's domain needs beyond its data (`data/domains.ts`):
  * Dialga's time skips, Lugia's channel whirlpools, Ho-Oh's falling beams and
  * the flames of its rebirth, Latias's mirages, Deoxys's meteor shower,
- * Darkrai's lanterns, Bad Dreams and shadow clones. Each hook
+ * Darkrai's lanterns, Bad Dreams and shadow clones, Buzzwole's muscle pump. Each hook
  * runs inside the simulation, so it must stay deterministic (seeded rng,
  * `engine/dmath`) and never touch the DOM.
  * A legendary's hooks live in their own module, added to `DOMAIN_HOOKS`.
@@ -44,4 +45,5 @@ export const DOMAIN_HOOKS: Partial<Record<RiftLegend, DomainHooks>> = {
   latias: LATIS_HOOKS,
   deoxys: DEOXYS_HOOKS,
   darkrai: DARKRAI_HOOKS,
+  ...ULTRA_HOOKS,
 }

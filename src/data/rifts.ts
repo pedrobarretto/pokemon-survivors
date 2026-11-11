@@ -1,5 +1,6 @@
 import type { Drop } from './consumables'
 import type { EnemyId } from './enemies'
+import { isUltraBeast, perBeast, type UltraBeast } from './ultraBeasts'
 
 /**
  * Legendary rifts: portals that open on the map a few times per run and lead
@@ -19,8 +20,13 @@ export const EVENT_RIFTS = ['darkrai'] as const satisfies readonly EnemyId[]
 
 export type EventRift = (typeof EVENT_RIFTS)[number]
 
-/** Every legendary a rift can lead to: the regular ones and the event ones. */
-export type RiftLegend = (typeof RIFT_LEGENDS)[number] | EventRift
+/**
+ * Every legendary a rift can lead to: the regular ones, the event ones, and
+ * the Ultra Beasts an Ultra Wormhole brings (`data/ultraBeasts.ts`), which
+ * play through the same rift (omen, portal, domain, capture) on a schedule of
+ * their own (`game/wormhole.ts`).
+ */
+export type RiftLegend = (typeof RIFT_LEGENDS)[number] | EventRift | UltraBeast
 
 /**
  * How an event rift takes a rift's place: in a haunted run each omen is
@@ -40,7 +46,25 @@ export type ArenaTheme = {
   motes: string
 }
 
+/** Ultra Space: pale prism glass over a deep violet void, each beast's own glints adrift in it. */
+const ultraSpace = (motes: string): ArenaTheme => ({ floor: ['#b8b0e0', '#c8c0ec', '#5c4c98'], wall: ['#f8f0ff', '#8870d0'], void: '#0a0420', motes })
+
+/** The Ultra Beasts' glints, by the color each one is known by. */
+const ULTRA_MOTES: Record<UltraBeast, string> = {
+  nihilego: '#a8e8f8',
+  buzzwole: '#f86858',
+  pheromosa: '#f8f0e0',
+  xurkitree: '#f8f860',
+  celesteela: '#88f0a8',
+  kartana: '#ffffff',
+  guzzlord: '#b070f0',
+  stakataka: '#c8d0d8',
+  blacephalon: '#f8a0c8',
+  naganadel: '#c888f8',
+}
+
 export const ARENAS: Record<RiftLegend, ArenaTheme> = {
+  ...perBeast((b) => ultraSpace(ULTRA_MOTES[b])),
   /** Whirl Islands: deep-sea stone. */
   lugia: { floor: ['#506890', '#5c78a0', '#2c3c5c'], wall: ['#d8e8f8', '#7890b8'], void: '#0c1428', motes: '#a8c8f8' },
   /** Bell Tower: lacquered gold and red. */
@@ -103,8 +127,8 @@ export const RIFT = {
 /** Items always dropped by a beaten rift legendary, on top of its ₽ and Poké Balls. */
 export const RIFT_ITEMS: readonly Drop[] = ['rareCandy', 'superPotion']
 
-/** Whether a species is one of the rift legendaries (an event rift's included). */
-export const isRiftLegend = (id: EnemyId): id is RiftLegend => RIFT_LEGENDS.some((l) => l === id) || isEventRift(id)
+/** Whether a species is one of the rift legendaries (an event rift's and the Ultra Wormholes' beasts included). */
+export const isRiftLegend = (id: EnemyId): id is RiftLegend => RIFT_LEGENDS.some((l) => l === id) || isEventRift(id) || isUltraBeast(id)
 
 /** Whether a species is an event rift's legendary (`EVENT_RIFTS`). */
 export const isEventRift = (id: string): id is EventRift => EVENT_RIFTS.some((l) => l === id)

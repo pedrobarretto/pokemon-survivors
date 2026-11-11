@@ -6,6 +6,7 @@ import type { WorldHazardState } from './hazards'
 import type { EnemyId } from '../data/enemies'
 import type { BiomeId, WeatherId } from '../data/biomes'
 import type { RiftLegend } from '../data/rifts'
+import type { UltraBeast } from '../data/ultraBeasts'
 import type { BuffId } from '../data/consumables'
 import type { BagItem, EvoItemId } from '../data/shop'
 import type { ItemId } from '../data/items'
@@ -57,6 +58,7 @@ import type { CurseId } from '../data/curses'
 import type { CurseState } from './curses'
 import type { LegendaryVisual } from './legendaryMoves'
 import type { LegendaryVisual2 } from './legendaryMoves2'
+import type { UltraVisual } from './ultraMoves'
 import type { TensionState } from './tension'
 import type { AlphaClock, AlphaState } from './alphas'
 import type { LegendForm, LegendId } from '../data/legends'
@@ -389,6 +391,8 @@ export type Visual =
   | LegendaryVisual
   /** Legendary moves, second batch (`legendaryMoves2.ts`), drawn by `render/legendaryFx2.ts`. */
   | LegendaryVisual2
+  /** The Ultra Beasts' moves (`ultraMoves.ts`), drawn by `render/ultraFx.ts`. */
+  | UltraVisual
   /** Temporada 1's mechanic families, drawn by `render/seasonOneKitFx.ts`. */
   | 'kitCross' | 'kitClaw' | 'dragonPulse' | 'slime' | 'waterPulse' | 'miceBite' | 'auraWheel' | 'zenOrb' | 'commandSlam' | 'orderUp'
 
@@ -880,6 +884,8 @@ export type Game = {
   outbreak: EnemyId | null
   /** Noite das Bruxas (`game/halloween.ts`): the run is haunted, a run input like the outbreak. */
   halloween: boolean
+  /** The Ultra Beast of the week (`game/ultraWeek.ts`), a run input like the outbreak: its Ultra Wormhole comes more often (`drawUltraBeast`). Null without one (co-op, the Dojo). */
+  ultraWeek: UltraBeast | null
   /** The mythicals' bad-luck protection this run plays (`game/mythicalHunt.ts`), null for the plain odds. */
   mythicalHunt: MythicalHunt | null
   /** Candies collected this run (a haunted one), banked into the save's jar at the end. */
