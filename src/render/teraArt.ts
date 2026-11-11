@@ -1,7 +1,7 @@
 import { TERA_TYPES, type TeraType } from '../data/tera'
 import { canvasCache, context2d, createCanvas, fromStrings, readPixels, type PixelSprite } from '../engine/pixelart'
 import { outlined, toIconUrl } from './art'
-import { CROWNS } from './teraCrowns'
+import { CROWNS, SMALL_CROWNS, type CrownSize } from './teraCrowns'
 import { placeFrame, type AnimName, type FramePlace, type Sheet, type SpeciesSprites } from './sprites'
 
 /**
@@ -49,7 +49,7 @@ export const STELLAR = ['#f85858', '#f8a838', '#f8e858', '#58e898', '#58a8f8', '
 /** A crown's art and its white stamp (the glint's), outlined in the ramp's dark. */
 export type CrownArt = { sprite: PixelSprite; shine: HTMLCanvasElement; tipX: number; tipY: number }
 
-const crowns = canvasCache<TeraType, CrownArt>()
+const crowns = canvasCache<`${TeraType}:${CrownSize}`, CrownArt>()
 
 /** The crown's tones (`teraCrowns.ts`): the ramp, a white glint, a deep crevice, the accent and Stellar's seven crystals. */
 const crownColors = (type: TeraType) => {
@@ -60,11 +60,13 @@ const crownColors = (type: TeraType) => {
   return { 1: r[1], 2: r[2], 3: r[3], 4: r[4], w: '#ffffff', d: deep, a: r[5], b: r[6], R, O, Y, G, B, V }
 }
 
-/** A type's crown and its white stamp. */
-export const crownArt = (type: TeraType): CrownArt => {
-  let art = crowns.get(type)
+/** A type's crown (its full size, or the small one for a small head) and its white stamp. */
+export const crownArt = (type: TeraType, size: CrownSize = 'full'): CrownArt => {
+  const key = `${type}:${size}` as const
+  let art = crowns.get(key)
   if (!art) {
-    const sprite = outlined(fromStrings(CROWNS[type], crownColors(type)), TERA_RAMPS[type].o)
+    const rows = (size === 'small' ? SMALL_CROWNS : CROWNS)[type]
+    const sprite = outlined(fromStrings(rows, crownColors(type)), TERA_RAMPS[type].o)
     const shine = createCanvas(sprite.width, sprite.height)
     const s = context2d(shine)
     s.drawImage(sprite, 0, 0)
@@ -72,16 +74,15 @@ export const crownArt = (type: TeraType): CrownArt => {
     s.fillStyle = '#ffffff'
     s.fillRect(0, 0, sprite.width, sprite.height)
     // Its tallest point, where a twinkle catches (the outline shifts it a pixel).
-    const rows = CROWNS[type]
     const top = rows.findIndex((r) => /[^.]/.test(r))
     const cols = [...rows[top]!].flatMap((c, i) => (c === '.' ? [] : [i]))
-    crowns.set(type, (art = { sprite, shine, tipX: cols[cols.length >> 1]! + 1, tipY: top + 1 }))
+    crowns.set(key, (art = { sprite, shine, tipX: cols[cols.length >> 1]! + 1, tipY: top + 1 }))
   }
   return art
 }
 
 /** A type's crown as a sprite. */
-export const crownSprite = (type: TeraType): PixelSprite => crownArt(type).sprite
+export const crownSprite = (type: TeraType, size: CrownSize = 'full'): PixelSprite => crownArt(type, size).sprite
 
 /** A type's crown as an icon (the TERA button, toasts, the den's sign). */
 export const crownIcon = (type: TeraType) => toIconUrl(`crown:${type}`, () => crownSprite(type))
@@ -91,8 +92,10 @@ export const crownIcon = (type: TeraType) => toIconUrl(`crown:${type}`, () => cr
  * its size, a glint sweeping it on the body's beat (`glint` 0..1 while one
  * crosses, else -1) and, now and then, a twinkle on its tallest point.
  */
-export const drawCrown = (ctx: CanvasRenderingContext2D, type: TeraType, cx: number, bottom: number, scale: number, glint: number, t: number) => {
-  const { sprite, shine, tipX, tipY } = crownArt(type)
+export const drawCrown = (
+  ctx: CanvasRenderingContext2D, type: TeraType, cx: number, bottom: number, scale: number, glint: number, t: number, size: CrownSize = 'full',
+) => {
+  const { sprite, shine, tipX, tipY } = crownArt(type, size)
   const w = sprite.width
   const h = sprite.height
   // The outline adds a row under the setting: it hangs below the seat.

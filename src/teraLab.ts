@@ -4,12 +4,13 @@ import { context2d, createCanvas } from './engine/pixelart'
 import { crownSprite, crystalOf, drawGlint, drawTwinkles, TERA_RAMPS } from './render/teraArt'
 import { drawCrystalPokemon } from './render/teraFx'
 import { loadSpecies, type SpeciesSprites } from './render/sprites'
+import type { CrownSize } from './render/teraCrowns'
 import { headSeat, loadWearables } from './render/wearables'
 
 /**
  * Dev: Terastal's gallery (`ps.tera('lab')`), for eyeballing the art and the
  * PR's pictures; never in a build's player paths. `mode: 'crowns'` lays the
- * 19 crowns out as one sheet, `'worn'` puts them on Pokémon (crystal, crowned
+ * 19 crowns out as one sheet (both cuts), `'worn'` puts them on Pokémon (`cut` forces a size) (crystal, crowned
  * on the head rig) in five directions and a few walking frames, and the
  * default shows the crowns over a few Pokémon in crystal next to their own colors.
  */
@@ -18,7 +19,7 @@ const SPECIES = [448, 25, 6, 445, 282, 1024] as const
 
 const SHOWN: readonly TeraType[] = ['water', 'fire', 'grass', 'dragon', 'fairy', 'stellar']
 
-type LabOpts = { scale?: number; species?: readonly number[]; types?: readonly TeraType[]; glint?: number; dpr?: number; mode?: 'crowns' | 'worn' }
+type LabOpts = { scale?: number; species?: readonly number[]; types?: readonly TeraType[]; glint?: number; dpr?: number; mode?: 'crowns' | 'worn'; cut?: CrownSize }
 
 /** Puts a pixel canvas on the page at `k` times, over everything; a click takes it off. */
 const show = (canvas: HTMLCanvasElement, k: number, dpr?: number) => {
@@ -33,11 +34,11 @@ const show = (canvas: HTMLCanvasElement, k: number, dpr?: number) => {
   return { w: canvas.width, h: canvas.height }
 }
 
-/** The 19 crowns in a grid, each on a tile in its type's dark, its name under it. */
+/** The 19 crowns in a grid, each on a tile in its type's dark: the full cut above, the small one (`SMALL_CROWNS`) under it. */
 const crownSheet = (k: number, dpr?: number) => {
   const cols = 7
   const cw = 30
-  const ch = 30
+  const ch = 46
   const canvas = createCanvas(cols * cw + 4, Math.ceil(TERA_TYPES.length / cols) * ch + 4)
   const ctx = context2d(canvas)
   ctx.fillStyle = '#141024'
@@ -48,9 +49,11 @@ const crownSheet = (k: number, dpr?: number) => {
     ctx.fillStyle = TERA_RAMPS[t].o
     ctx.fillRect(x + 1, y + 1, cw - 2, ch - 2)
     const c = crownSprite(t)
-    ctx.drawImage(c, x + Math.floor((cw - c.width) / 2), y + Math.floor((ch - 6 - c.height) / 2) + 1)
+    ctx.drawImage(c, x + Math.floor((cw - c.width) / 2), y + 24 - c.height)
+    const small = crownSprite(t, 'small')
+    ctx.drawImage(small, x + Math.floor((cw - small.width) / 2), y + ch - 4 - small.height)
     ctx.fillStyle = TERA_RAMPS[t][3]
-    ctx.fillRect(x + 4, y + ch - 5, cw - 8, 1)
+    ctx.fillRect(x + 4, y + 26, cw - 8, 1)
   })
   return show(canvas, k, dpr)
 }
@@ -65,7 +68,7 @@ const rigsReady = async (sprites: readonly SpeciesSprites[]) => {
 }
 
 /** Pokémon in crystal under their crowns, seated on the head rig: five directions, then the walk's frames facing south-east. */
-const wornSheet = async (species: readonly number[], types: readonly TeraType[], k: number, dpr?: number) => {
+const wornSheet = async (species: readonly number[], types: readonly TeraType[], k: number, dpr?: number, cut?: CrownSize) => {
   const loaded = (await Promise.all(species.map((dex) => loadSpecies(dex, false, undefined, 'now').catch(() => null)))).filter((s): s is SpeciesSprites => s !== null)
   await rigsReady(loaded)
   const cell = 52
@@ -80,10 +83,10 @@ const wornSheet = async (species: readonly number[], types: readonly TeraType[],
   loaded.forEach((s, row) => {
     const type = types[row % types.length]!
     const feet = 2 + row * cell + cell - 8
-    dirs.forEach((dir, i) => drawCrystalPokemon(ctx, s, type, 'Walk', dir, 0, 2 + i * cell + cell / 2, feet, {}, 1))
+    dirs.forEach((dir, i) => drawCrystalPokemon(ctx, s, type, 'Walk', dir, 0, 2 + i * cell + cell / 2, feet, {}, 1, true, cut))
     const walk = s.anims.Walk
     const total = walk.durations.reduce((a, b) => a + b, 0) / 60
-    for (let f = 0; f < steps; f++) drawCrystalPokemon(ctx, s, type, 'Walk', 1, (total * f) / steps + 0.001, 6 + (dirs.length + f) * cell + cell / 2, feet, {}, 1)
+    for (let f = 0; f < steps; f++) drawCrystalPokemon(ctx, s, type, 'Walk', 1, (total * f) / steps + 0.001, 6 + (dirs.length + f) * cell + cell / 2, feet, {}, 1, true, cut)
   })
   return show(canvas, k, dpr)
 }
@@ -94,7 +97,7 @@ export const openTeraLab = async (opts: LabOpts = {}) => {
   const species = opts.species ?? SPECIES
   const types = opts.types ?? SHOWN
   if (opts.mode === 'crowns') return crownSheet(k, opts.dpr)
-  if (opts.mode === 'worn') return wornSheet(species, types, k, opts.dpr)
+  if (opts.mode === 'worn') return wornSheet(species, types, k, opts.dpr, opts.cut)
   const loaded = await Promise.all(species.map((dex) => loadSpecies(dex, false, undefined, 'now').catch(() => null)))
   const crownW = 24
   const perRow = 10

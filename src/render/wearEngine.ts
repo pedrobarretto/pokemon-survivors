@@ -407,6 +407,22 @@ export const seatOf = (s: SpeciesSprites, anim: AnimName, dir: Dir8, seconds: nu
   return { x: r.seatX * k, y: r.seatY * k, w: r.seatW * k, eyes: r.eyeY0 === RIG_NONE ? null : r.eyeY0 * k }
 }
 
+/**
+ * A variant's skull width (px, on its sprite's scale): the middle of its Walk
+ * rig's seats over the five drawn directions, so it doesn't change as it
+ * turns. Null without a rig. Terastal picks its crown's size by it.
+ */
+export const skullOf = (s: SpeciesSprites) => {
+  const w = wearerOf(s.fitted?.from ?? s)
+  if (!w) return null
+  const seats = w.rig.Walk.rows
+    .slice(0, 5)
+    .map((r) => r[0]?.seatW ?? RIG_NONE)
+    .filter((v) => v !== RIG_NONE)
+    .sort((a, b) => a - b)
+  return seats.length ? seats[seats.length >> 1]! * (s.fitted?.scale ?? 1) : null
+}
+
 /* ---------------- Icons and housekeeping ---------------- */
 
 const icons = new Map<WearableId, HTMLCanvasElement>()

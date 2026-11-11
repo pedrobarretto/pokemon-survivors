@@ -5,7 +5,8 @@ import { TAU, type Dir8 } from '../engine/math'
 import { outlined, toIconUrl } from './art'
 import { detail } from './quality'
 import { crownSprite, crystalAt, drawCrown, drawFacet, drawGlint, drawTwinkles, facetsOf, STELLAR, TERA_RAMPS, type Facets, type Ramp } from './teraArt'
-import { headSeat } from './wearables'
+import { headSeat, skullWidth } from './wearables'
+import type { CrownSize } from './teraCrowns'
 import { drawPokemon, type AnimName, type DrawOpts, type SpeciesSprites } from './sprites'
 import { localPlayer } from '../game/players'
 import type { RaidArena, RaidDen } from '../game/teraRaid'
@@ -112,10 +113,11 @@ const GLINT_TIME = 0.45
  * Draws a player in crystal (its Tera type's) with its crown seated on its
  * head (the head rig's seat, floating over it without a rig), the glint and twinkles on top: in `drawPlayer`'s place while it's
  * Terastallized. False when there's nothing to draw it from (the caller draws
- * it plain). `scale` 2 for a raid's giant.
+ * it plain). `scale` 2 for a raid's giant; `cut` the crown's size, picked by its skull (`crownSize`).
  */
 export const drawCrystalPokemon = (
   ctx: Ctx, s: SpeciesSprites, type: TeraType, anim: AnimName, dir: Dir8, seconds: number, x: number, y: number, opts: DrawOpts, t: number, crown = true,
+  cut: CrownSize = crownSize(s),
 ) => {
   const k = opts.scale ?? 1
   const at = crystalAt(s, anim, dir, seconds, x, y, k, opts.loop ?? true, type)
@@ -135,14 +137,23 @@ export const drawCrystalPokemon = (
     const seat = headSeat(s, anim, dir, seconds, opts.loop ?? true)
     // It sinks into the skull a little, but always leaves a row of the face above the eyes.
     const base = seat && Math.min(seat.y + CROWN_SINK, seat.eyes === null ? Infinity : seat.eyes - 2)
-    if (seat && base !== null) drawCrown(ctx, type, dx + (seat.x + 0.5) * k, dy + base * k, k, phase < 1 ? phase : -1, t)
-    else drawCrown(ctx, type, x, dy + (crystal.top - 3) * k + Math.round(Math.sin(t * 3)) * k, k, phase < 1 ? phase : -1, t)
+    if (seat && base !== null) drawCrown(ctx, type, dx + (seat.x + 0.5) * k, dy + base * k, k, phase < 1 ? phase : -1, t, cut)
+    else drawCrown(ctx, type, x, dy + (crystal.top - 3) * k + Math.round(Math.sin(t * 3)) * k, k, phase < 1 ? phase : -1, t, cut)
   }
   return true
 }
 
 /** Rows of the crown's setting below the seat: it sits into the skull's top rather than on a point of it. */
 const CROWN_SINK = 2
+
+/** A skull narrower than this (px, the head rig's middle seat) wears the small crown: the full one would hang off a Riolu's or a Gardevoir's head. */
+export const SMALL_SKULL = 14
+
+/** The crown a variant wears: small on a small head (`skullWidth`), full otherwise and without a rig. */
+export const crownSize = (s: SpeciesSprites): CrownSize => {
+  const w = skullWidth(s)
+  return w !== null && w < SMALL_SKULL ? 'small' : 'full'
+}
 
 /* ---------------- The transformation ---------------- */
 
@@ -607,7 +618,7 @@ export const drawRaidBoss = (ctx: Ctx, arena: RaidArena, e: Enemy, s: SpeciesSpr
   const r = TERA_RAMPS[arena.raid.tera]
   const bodyH = s.bodyH * 2
   // The giant's top (its crown's, roughly), for the framing (`frameRaid`).
-  raidTop = y - bodyH - crownSprite(arena.raid.tera).height * 2
+  raidTop = y - bodyH - crownSprite(arena.raid.tera, crownSize(s)).height * 2
   const cy = y - bodyH / 2
   if (sh.up) {
     // A dome of crystal round the giant: a rim in the type's light, meridians and a band of facets across it,

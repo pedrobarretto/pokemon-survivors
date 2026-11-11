@@ -69,6 +69,9 @@ export const headSeat = (s: SpeciesSprites, anim: AnimName, dir: Dir8, seconds: 
   return null
 }
 
+/** A variant's skull width from its head rig (`skullOf`); null until the engine and its rig land, or without one. */
+export const skullWidth = (s: SpeciesSprites) => engine?.skullOf(s) ?? null
+
 /** Whether a species (by dex) can wear an item: the locker greys out the ones it can't (`data/wearFits.ts`). */
 export const fitsWearer = (dex: number, id: WearableId) => wears(fitOf(dex), WEARABLES[id].slot, id)
 
