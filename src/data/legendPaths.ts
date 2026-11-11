@@ -98,15 +98,15 @@ export type TrialDef = {
 
 export const TRIALS = {
   // The fist: one dummy, every hit counts. Stay close.
-  fist: { starter: 'machop', moves: [{ id: 'dynamicPunch', level: 3 }, { id: 'machPunch', level: 3 }], dummies: { count: 1 }, goal: { kind: 'damage', need: 2400 }, time: 15 },
+  fist: { starter: 'machop', moves: [{ id: 'dynamicPunch', level: 3 }, { id: 'machPunch', level: 3 }], dummies: { count: 1 }, goal: { kind: 'damage', need: 650 }, time: 15 },
   // The crowd: a pack of ten, only standing among them reaches enough of them.
-  crowd: { starter: 'machop', moves: [{ id: 'dynamicPunch', level: 3 }, { id: 'earthquake', level: 3 }], dummies: { count: 10 }, goal: { kind: 'damage', need: 5200 }, time: 15 },
+  crowd: { starter: 'machop', moves: [{ id: 'dynamicPunch', level: 3 }, { id: 'earthquake', level: 3 }], dummies: { count: 10 }, goal: { kind: 'damage', need: 2500 }, time: 15 },
   // The chase: four dummies circling the yard; land the hits.
-  chase: { starter: 'machop', moves: [{ id: 'machPunch', level: 4 }, { id: 'dynamicPunch', level: 2 }], dummies: { count: 4, move: 'circle' }, goal: { kind: 'hits', need: 30 }, time: 18 },
+  chase: { starter: 'machop', moves: [{ id: 'machPunch', level: 4 }, { id: 'dynamicPunch', level: 2 }], dummies: { count: 4, move: 'circle' }, goal: { kind: 'hits', need: 60 }, time: 18 },
   // The Tower of Darkness: one strike at a time, heavy enough to break armored dummies.
-  dark: { starter: 'kubfu', moves: [{ id: 'wickedBlow', level: 3 }], dummies: { count: 3, hp: 1500, move: 'dodge' }, goal: { kind: 'knockouts', need: 3 }, time: 25 },
+  dark: { starter: 'kubfu', moves: [{ id: 'wickedBlow', level: 3 }], dummies: { count: 3, hp: 420, move: 'dodge' }, goal: { kind: 'knockouts', need: 3 }, time: 25 },
   // The Tower of Waters: blows like a current, many and quick.
-  water: { starter: 'kubfu', moves: [{ id: 'wickedBlow', level: 3 }, { id: 'machPunch', level: 4 }], dummies: { count: 5, move: 'circle' }, goal: { kind: 'hits', need: 45 }, time: 18 },
+  water: { starter: 'kubfu', moves: [{ id: 'wickedBlow', level: 3 }, { id: 'machPunch', level: 4 }], dummies: { count: 5, move: 'circle' }, goal: { kind: 'hits', need: 90 }, time: 18 },
 } as const satisfies Record<string, TrialDef>
 
 export type TrialId = keyof typeof TRIALS

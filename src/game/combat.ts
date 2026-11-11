@@ -18,6 +18,7 @@ import { modKill } from './mods'
 import { awardEgg, dropCoins, dropPickup, dropXp } from './pickups'
 import { bustDisguise, faintCandies, nightBossDown } from './halloween'
 import { faintNuts } from './hexNuts'
+import { trialHit } from './towerTrial'
 import { applyStatus, breakOnHit, hitTakenMult, STATUS_RULES, type StatusKind } from './status'
 import { venomJump, VENOM, VENOM_MOVE } from './seasonOneEggRules'
 import { bonusMult, drainAmount, drainRefill, executes, nearestFoes, SEED_DECAY, SEED_JUMPS, SEED_MIN_TIME, SEED_REACH } from './kitRules'
@@ -58,6 +59,7 @@ export const damageEnemy = (g: Game, e: Enemy, attack: Attack) => {
   e.hp -= dmg
   e.flash = 0.16
   g.player.damageByMove[attack.move] = (g.player.damageByMove[attack.move] ?? 0) + dmg
+  if (g.training !== null) trialHit(g)
   if (breakOnHit(e.status)) shatter(g, e, 'freeze')
 
   // Vines push sideways; everything else pushes away from the hitbox center.

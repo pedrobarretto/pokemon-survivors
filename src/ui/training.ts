@@ -77,6 +77,8 @@ export type TrainingActions = {
   clear: (() => void) | null
   /** Leaves the Dojo, back to the lobby. */
   leave: () => void
+  /** Opens Machoke's Torre (`ui/legendPaths.ts`), whose trials play here. */
+  tower: () => void
   /** Where the player should stand on screen: the middle of the field the panel leaves open, from the screen's center (CSS px). */
   lens: (x: number, y: number) => void
 }
@@ -388,7 +390,7 @@ export const trainingPanel = (root: HTMLElement, g: Game, actions: TrainingActio
     meterEl,
     h('div', { class: 'shop-tabs dojo-tabs' }, ...tabButtons),
     body,
-    h('div', { class: 'dojo-actions' }, saveBtn, clearBtn, h('button', { class: 'btn dojo-leave', type: 'button', onclick: () => actions.leave() }, m().leave)),
+    h('div', { class: 'dojo-actions' }, saveBtn, clearBtn, h('button', { class: 'btn dojo-tower', type: 'button', onclick: () => actions.tower() }, t().paths.names.kubfu), h('button', { class: 'btn dojo-leave', type: 'button', onclick: () => actions.leave() }, m().leave)),
   )
 
   /** Rebuilds the panel around what the player carries now (the meter keeps going). */

@@ -26,6 +26,8 @@ import { ownsShiny, pickShinyForm, playsShiny } from '../game/shinyPicks'
 import { dieIcon, eggIcon, moveIcon, PICKUPS, sparkleIcon, trophyIcon } from '../render/art'
 import { capPips, shopIcon } from './shopIcons'
 import { lockedWhere } from './research'
+import { pathOfLegend, pathSheet } from './legendPaths'
+import type { PathId } from '../data/legendPaths'
 import { cryUrl, drawPokemon, fitSprites, loadedSprites, loadSpecies, portraitUrl, skinSprites, walkSheet } from '../render/sprites'
 import { equip, shownOn, skinsOf, takeOff, wearing } from '../arena/gemShop'
 import { cosmeticPrice, skinFor } from '../data/cosmetics'
@@ -181,6 +183,20 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
     }
     const ev = m.legend.event
     return standing === 'before' ? ev.soon(formatDay(HALLOWEEN.from), formatDay(HALLOWEEN.to)) : standing === 'on' ? ev.live(formatDay(HALLOWEEN.to)) : ev.gone
+  }
+  /** A path legend's locked line (`paths.where`). */
+  const pathWhere = (id: LegendId) => {
+    const where: Partial<Record<LegendId, string>> = m.paths.where
+    return where[id] ?? ''
+  }
+  /** Opens a path's sheet over the select (its keys wait until it closes). */
+  let pathOpen: Screen | null = null
+  const pathButton = (path: PathId) =>
+    h('button', { class: 'partner-more compact partner-path', type: 'button', onclick: () => (playSfx('select'), (pathOpen = pathSheet(root, input, path, { close: () => (pathOpen = null) }))) }, m.paths.open, ' ▸')
+  /** A captured path legend with forms still ahead (Zygarde, Kubfu, Meltan): the way to see where its path stands. */
+  const pathAfter = (id: PlayableId) => {
+    const path = isLegend(id) ? pathOfLegend(id) : null
+    return path === 'zygarde' || path === 'kubfu' || path === 'meltan' ? pathButton(path) : null
   }
   const eventLine = (id: LegendId, withText: boolean) => {
     const badge = legendBadge(id)
@@ -413,6 +429,8 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
       const over = eventStanding(id) === 'after'
       // A festival legend is never fought: no wins to count, only its festival's line.
       const gift = legendFestival(id) !== null
+      // A path legend comes from its path (Regigigas by its temple): its sheet says where it stands.
+      const path = pathOfLegend(id)
       // The last legend (Arceus) names the regular ones it still waits for.
       const missing = legendSource(id) === 'endless' ? stillMissing(save.legends, id) : []
       hero.replaceChildren(
@@ -425,13 +443,15 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
             { class: 'partner-id' },
             h('small', { class: 'partner-dex' }, `#${String(nationalDex(form.dex)).padStart(3, '0')}`),
             h('h3', { class: 'partner-name' }, form.name),
-            !gift && h('p', { class: 'partner-legend-wins' }, m.legend.wins(`${Math.min(save.legends[id] ?? 0, need)}/${need}`)),
-            !over && !gift && h('p', { class: 'partner-blurb locked-blurb' }, rich(m.legend.where[legendSource(id)])),
+            !gift && !path && h('p', { class: 'partner-legend-wins' }, m.legend.wins(`${Math.min(save.legends[id] ?? 0, need)}/${need}`)),
+            !over && !gift && !path && h('p', { class: 'partner-blurb locked-blurb' }, rich(m.legend.where[legendSource(id)])),
+            path && h('p', { class: 'partner-blurb locked-blurb' }, rich(pathWhere(id))),
+            path && pathButton(path),
             missing.length > 0 && h('p', { class: 'partner-blurb locked-blurb' }, m.legend.stillMissing(missing.map((other) => LEGENDS[other].line[0].name))),
             eventLine(id, true),
           ),
         ),
-        ...(over || gift ? [] : [h('p', { class: 'partner-blurb partner-intro' }, m.legend.rule(need), ' ', m.legend.shinyRule)]),
+        ...(over || gift || (path && path !== 'regigigas') ? [] : [h('p', { class: 'partner-blurb partner-intro' }, m.legend.rule(need), ' ', m.legend.shinyRule)]),
       )
       return
     }
@@ -484,7 +504,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
           isLegend(id) && h('p', { class: 'partner-legend-mode' }, m.legend.mode, ' · ', `${m.legend.innate}: ${ABILITIES[LEGENDS[id].innate.ability].name}`),
           isLegend(id) && eventLine(id, false),
           h('p', { class: 'partner-blurb' }, m.blurbs[id]),
-          h('div', { class: 'partner-hero-actions' }, canPick(id) && shinyPicker(shinyOf(id), setShiny), more(true)),
+          h('div', { class: 'partner-hero-actions' }, canPick(id) && shinyPicker(shinyOf(id), setShiny), more(true), pathAfter(id)),
         ),
       ),
       ...[skinsRow(id)].filter((row) => row !== null),
@@ -756,6 +776,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
   const back = () => (playSfx('move'), later(actions.back))
 
   const off = input.onKey((key) => {
+    if (pathOpen) return
     if (sheet?.onKey(key)) return
     if (key === 'KeyX' && !plain) return setDifficulty(DIFFICULTY_IDS[(DIFFICULTY_IDS.indexOf(difficulty) + 1) % DIFFICULTY_IDS.length]!)
     if (key === 'KeyZ') return setShiny(!shinyOf(current()))
@@ -819,5 +840,5 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
     else blitCentered(ctx, PICKUPS.pokeball(), sprite.width / 2, sprite.height / 2 + Math.round(Math.sin(time * 6) * 2))
   }
 
-  return { el, tick, selected: current, dispose: () => (off(), offGems(), clearTimeout(cryTimer), window.removeEventListener('keydown', holdTab), el.remove()) }
+  return { el, tick, selected: current, dispose: () => (off(), offGems(), pathOpen?.dispose(), clearTimeout(cryTimer), window.removeEventListener('keydown', holdTab), el.remove()) }
 }

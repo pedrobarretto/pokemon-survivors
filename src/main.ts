@@ -71,7 +71,11 @@ import { CASTFORM_FIND } from './data/seasonOneUnlocks'
 import { seasonFindDevTools, seasonFindFeedback } from './ui/seasonFinds'
 import { bankNuts, nutFeedback, pathFeedback } from './ui/pathRun'
 import { pathDevTools } from './ui/pathDev'
-import { giantAwake, openForms, templeRun } from './game/legendPaths'
+import { pathSheet } from './ui/legendPaths'
+import { trialHud } from './ui/towerTrial'
+import { startTrial } from './game/towerTrial'
+import { TRIALS, type TrialId } from './data/legendPaths'
+import { clearTrial, giantAwake, kubfuJoined, openForms, templeRun, towerOf } from './game/legendPaths'
 import { FIELD, FIELD_MISSION_KINDS, TOGEPI_DEX, type FieldMissionKind } from './game/fieldMissionRules'
 import { advancePhase, banishOffer, chooseOffer, createGame, offerAbilities, playerDex, rerollOffers, skipLevelUp, step, takeBerryLevelUps } from './game/game'
 import { applyBuild, setDummies, setLens, startTraining } from './game/training'
@@ -477,7 +481,33 @@ type Run = {
 }
 
 /** The shell's side of a Dojo session: its panel, when it began and whether a build was saved, for its `dojo_end`. */
-type DojoRun = { panel: ReturnType<typeof trainingPanel>; startedAt: number; saved: boolean }
+/** The Dojo's panel, or a Torre trial's screen in its place. */
+type DojoPanel = Screen & { refresh?: (clear: (() => void) | null) => void }
+type DojoRun = { panel: DojoPanel; startedAt: number; saved: boolean }
+
+/** Who trains at the Dojo when no trial plays: the Torre's Voltar comes back to them. */
+let dojoPartner: PlayableId = 'charmander'
+
+/** The Torre's sheet over the Dojo, its trials startable. */
+const openTower = () => {
+  const r = run
+  if (!r?.training) return
+  r.overlay?.dispose()
+  r.overlay = pathSheet(ui, input, 'kubfu', { close: () => r.overlay === sheet && (r.overlay = null), start: (id) => void startDojo(TRIALS[id].starter, id) })
+  const sheet = r.overlay
+}
+
+/** A Torre trial won: into the save, and a word on what it brought (Kubfu joining, Urshifu's style). */
+const bankTrial = (id: TrialId) => {
+  const before = loadSave().paths.trials
+  updateSave((s) => ({ ...s, paths: { ...s.paths, trials: clearTrial(s.paths.trials, id) } }))
+  void syncSave()
+  const after = loadSave().paths.trials
+  const m = t().paths.tower
+  const tower = towerOf(after)
+  if (!kubfuJoined(before) && kubfuJoined(after)) news(rich(m.kubfu), 5200, 'dojo')
+  else if (tower && !towerOf(before)) news(rich(m.urshifu(m.styles[tower])), 5200, 'dojo')
+}
 
 /**
  * The shell's side of a co-op run. `r.game` is the runner's (confirmed) game;
@@ -1549,9 +1579,12 @@ const showDojo = (initial: PlayableId = loadSave().partner) => {
  * A Dojo session (`game/training.ts`): a run with the save's upgrades, Bottle
  * Caps and colors but no Bag, TMs or luck of its own, turned into the Dojo, in
  * the family's saved build when it has one, with its panel over it
- * (`ui/training.ts`). Nothing of it is banked, ranked or recorded.
+ * (`ui/training.ts`). Nothing of it is banked, ranked or recorded. With
+ * `trial`, it plays that Torre trial instead (`game/towerTrial.ts`): the
+ * trial's Pokémon and loadout, its screen in the panel's place, and a win
+ * banked into the save (`clearTrial`).
  */
-const startDojo = async (starter: PlayableId) => {
+const startDojo = async (starter: PlayableId, trial: TrialId | null = null) => {
   if (launching) return
   launching = true
   try {
@@ -1568,8 +1601,9 @@ const startDojo = async (starter: PlayableId) => {
     me.luckyShiny = false
     // The dummies stand left of the player, near enough to share the field the panel leaves open (the camera centers the player there: the panel's `lens`).
     startTraining(game, TRAINING.target, TRAINING.counts[0], { x: -1, y: 0, reach: Math.min(TRAINING.reach, Math.round(view.w * 0.28)) })
-    const build = save.builds[starter]
+    const build = trial ? undefined : save.builds[starter]
     if (build) applyBuild(game, build)
+    if (trial) startTrial(game, trial)
     // Opens quietly: no news of the build's ability being picked.
     game.events.length = 0
     await loadRunSheets(familySheets(starter, shiny), [ENEMIES[TRAINING.target].dex])
@@ -1614,10 +1648,16 @@ const startDojo = async (starter: PlayableId) => {
             updateSave((s) => ({ ...s, builds: Object.fromEntries(Object.entries(s.builds).filter(([id]) => id !== starter)) }))
             void syncSave()
             aside(rich(t().training.cleared(name)), 2600, 'dojo')
-            panel.refresh(null)
+            panel.refresh?.(null)
           }
         : null
-    const panel = trainingPanel(ui, game, {
+    if (!trial) dojoPartner = starter
+    const panel: DojoPanel = trial ? trialHud(ui, game, {
+      ended: (won) => (won ? bankTrial(trial) : undefined),
+      retry: () => void startDojo(starter, trial),
+      back: () => void startDojo(dojoPartner, null).then(() => openTower()),
+    }) : trainingPanel(ui, game, {
+      tower: () => openTower(),
       // A species' sheets load before its dummies stand (and it stays loaded while the session lasts).
       dummies: (target, count) => {
         const dex = ENEMIES[target].dex
@@ -1627,7 +1667,7 @@ const startDojo = async (starter: PlayableId) => {
             if (run !== r) return
             if (!r.sprites.always.includes(dex)) r.sprites.always.push(dex)
             setDummies(game, target, count)
-            panel.refresh(forget())
+            panel.refresh?.(forget())
           })
       },
       save: () => {
@@ -1636,7 +1676,7 @@ const startDojo = async (starter: PlayableId) => {
         dojo.saved = true
         playSfx('buy')
         news(rich(t().training.saved(name)), 3600, 'dojo')
-        panel.refresh(forget())
+        panel.refresh?.(forget())
       },
       clear: forget(),
       leave: () => leaveDojo(),
@@ -5294,7 +5334,7 @@ if (import.meta.env.DEV) {
       ...riftDevTools(() => run?.game),
       ...placeDevTools(() => run?.game),
       ...seasonFindDevTools(() => run?.game, devLandmark),
-      ...pathDevTools(() => run?.game),
+      ...pathDevTools(() => run?.game, { menu: (id) => showMenu(id, 'legends'), sheet: (path) => void pathSheet(ui, input, path, { close: () => {} }) }),
       ...levelUpDevTools(() => run?.game),
       ...kitDevTools(() => run?.game),
       ...eggMoveDevTools(() => run?.game),
