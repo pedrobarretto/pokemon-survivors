@@ -168,7 +168,8 @@ export const appearance = (a: Appearance, m: SiteMessages) => {
     case 'reaper':
       return m.pokedex.reaper(clock(a.at))
     case 'place':
-      return a.boss ? m.pokedex.placeBoss(m.pokedex.places[a.place], clock(a.from)) : m.pokedex.place(m.pokedex.places[a.place], clock(a.from))
+      // Spiritomb wakes from the Odd Keystone; the Hideout's lair bosses just live there.
+      return a.boss && a.place === 'graveyard' ? m.pokedex.placeBoss(m.pokedex.places[a.place], clock(a.from)) : m.pokedex.place(m.pokedex.places[a.place], clock(a.from))
     case 'hidden':
       return m.pokedex.lucky(m.pokedex.places[a.place], clock(a.from))
     case 'summoned':

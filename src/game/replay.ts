@@ -44,7 +44,7 @@ import { isShadowVariant, type ShadowVariant } from './shadow'
  * and run `npm run rules:freeze` so the API keeps the previous rules' simulator
  * for the runs that straddle the deploy (`server/sims/README.md`).
  */
-export const RULES_VERSION = 49
+export const RULES_VERSION = 50
 
 /**
  * How this build stands to a replay's rules: it can judge the `same`; a
