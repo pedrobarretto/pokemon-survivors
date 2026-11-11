@@ -65,6 +65,12 @@ import type { LegendaryVisual2 } from './legendaryMoves2'
 import type { UltraVisual } from './ultraMoves'
 import type { PathLegendVisual } from './pathLegendMoves'
 import type { PathNotice, PathRun } from './pathRun'
+import type { LegendaryVisual3 } from './legendaryMoves3'
+import type { QuestState } from './quests'
+import type { RushState } from './rush'
+import type { RoamMoment } from './roamers'
+import type { DuelMoment } from './duels'
+import type { LakeId, SwordId } from '../data/legends'
 import type { TensionState } from './tension'
 import type { AlphaClock, AlphaState } from './alphas'
 import type { LegendForm, LegendId } from '../data/legends'
@@ -285,6 +291,8 @@ export type EnemyBehavior =
    * sits in its hole) until place age `until`, when it ducks away unhurt.
    */
   | { kind: 'shy'; x: number; y: number; leash: number; until: number }
+  /** A roaming lake legend (`roamers.ts`): it walks as `roamStep` says (away from players, or its quirk's way) and never bites. */
+  | { kind: 'roam' }
   /**
    * Versus: the body of the player at `slot` that the rival team's moves hit
    * (`versusCombat.ts`). It never moves or bites on its own: it stands where
@@ -416,6 +424,8 @@ export type Visual =
   | UltraVisual
   /** Legendary moves, third batch (`pathLegendMoves.ts`), drawn by `render/pathLegendFx.ts`. */
   | PathLegendVisual
+  /** Legendary moves, third batch (`legendaryMoves3.ts`), drawn by `render/legendaryFx3.ts`. */
+  | LegendaryVisual3
   /** Temporada 1's mechanic families, drawn by `render/seasonOneKitFx.ts`. */
   | 'kitCross' | 'kitClaw' | 'dragonPulse' | 'slime' | 'waterPulse' | 'miceBite' | 'auraWheel' | 'zenOrb' | 'commandSlam' | 'orderUp'
   /** The second batch's families (`gaKitBMoves.ts`, `gaKitBSystem.ts`), drawn by `render/gaKitBFx.ts`; `kitBHit` is a kit's unseen hitbox. */
@@ -855,6 +865,12 @@ export type GameEvent =
   | { kind: 'awakened'; legend: LegendId; n: number; form: LegendForm | null; changed: boolean }
   /** A legendary boss fell (rift, trio, mythical, Mewtwo, Arceus), once per defeat: the save counts it toward capturing it. */
   | { kind: 'legendBeaten'; legend: EnemyId; shiny: boolean }
+  /** A roaming lake legend (`roamers.ts`): sighted, gone (its HP share `left` is the save's to keep), its memory wipe, or caught. */
+  | { kind: 'roam'; legend: LakeId; moment: RoamMoment; left: number }
+  /** A Sword of Justice's duel (`duels.ts`). */
+  | { kind: 'duel'; sword: SwordId; moment: DuelMoment }
+  /** Hoopa's Rings (`rush.ts`): ring `ring` (from 0) of `rings` opened on `legend`, or its legend went down. */
+  | { kind: 'rush'; moment: 'ring' | 'down'; ring: number; rings: number; legend: EnemyId }
   /** A solo finale rolled its mythical slot: who came, or null. The save counts it (`game/mythicalHunt.ts`). */
   | { kind: 'mythicalRoll'; enemy: EnemyId | null }
   /** A boss with phases moved on to phase `phase` (from 0), or began its ultimate (`move`, the official English name). */
@@ -969,6 +985,10 @@ export type Game = {
   finds: SeasonFinds
   /** The legend paths' side of the run (`pathRun.ts`): Zygarde's pieces to come, Meltan's Hex Nuts, Regigigas's temple. */
   paths: PathRun
+  /** The legends met on the open map this run: a roaming lake legend and a Sword's duel (`quests.ts`). */
+  quests: QuestState
+  /** Hoopa's Rings, the Legend mode's boss rush (`rush.ts`); null in every other run. */
+  rush: RushState | null
   /** Points of interest placed by the event director (`mapEvents.ts`). */
   mapEvents: MapEventsState
   /** Full-screen white flash strength (Explosion), decays to 0. */

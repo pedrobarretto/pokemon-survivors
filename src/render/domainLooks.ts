@@ -7,6 +7,8 @@ import { phasesOf } from '../game/bossFight'
 import { arenaPoint, domainHere } from '../game/domain'
 import { ENCOUNTER, REVEAL_AT } from '../game/domainRules'
 import { timeSkipOf } from '../game/dialgaDomain'
+import { drawPalkiaAir, drawPalkiaGround, drawPalkiaScreen } from './palkia'
+import { formChangeAt, formFlash, formLift } from './legendFx'
 import type { Enemy, Game, Hazard } from '../game/types'
 import { HAZARD_COLORS } from './hazardColors'
 import { dashedRing } from './strokes'
@@ -111,6 +113,13 @@ export const bossLook = (e: Enemy, t: number): BossLook | null => {
     }
     return LOOK
   }
+  const change = formChangeAt(e)
+  if (change >= 0) {
+    // A form change: the new form takes the old one's place in the white (`bossForm`).
+    LOOK.flash = formFlash(change)
+    LOOK.lift = formLift(change)
+    return LOOK
+  }
   if (phase.steer?.kind === 'pass') {
     const rise = f.shift > 0 ? 1 - f.shift / (phase.shift ?? PHASE_SHIFT) : 1
     LOOK.lift = Math.round(rise * (16 + Math.sin(t * 3) * 2))
@@ -180,9 +189,11 @@ const drawFireColumn = (ctx: Ctx, h: Hazard, t: number) => {
   ctx.globalAlpha = 1
 }
 
-/** Ground layer: long strikes' countdown hands, and frozen foes' clock rims in Dialga's stopped time. */
-export const drawDomainGround = (ctx: Ctx, g: Game) => {
+/** Ground layer: long strikes' countdown hands, and Palkia's portals, seams and fold. */
+export const drawDomainGround = (ctx: Ctx, g: Game, t: number) => {
   for (const h of g.hazards) if (h.kind === 'strike' && !h.world && h.armAt >= LONG_STRIKE && h.age < h.armAt) drawStrikeClock(ctx, h)
+  const here = domainHere(g)
+  if (here?.d.legend === 'palkia') drawPalkiaGround(ctx, here.arena, here.d, t)
 }
 
 /** Air layer: fire columns, reborn bosses' flame, the player's shots held by a time stop, and the foes frozen by a time skip. */
@@ -198,6 +209,7 @@ export const drawDomainAir = (ctx: Ctx, g: Game, t: number) => {
     const blink = Math.floor(t * 6) % 2 === 0
     for (const a of g.attacks) if (a.age >= 0) blitRing(ctx, 5, 1, blink ? '#a8f0f8' : '#ffffff', a.x, a.y - 4)
   }
+  if (here.d.legend === 'palkia') drawPalkiaAir(ctx, g, here.d, t)
   const skip = timeSkipOf(here.d)
   if (skip?.skip === 'stop' && !skip.warning) {
     for (const e of g.enemies) if (e.dying < 0 && e.status.stun > 0) blitRing(ctx, Math.round(e.radius + 4), 1, '#a8f0f8', e.x, e.y - e.radius)
@@ -255,6 +267,7 @@ export const drawDomainScreen = (ctx: Ctx, g: Game, camX: number, camY: number, 
       }
     }
   }
+  if (d.legend === 'palkia') drawPalkiaScreen(ctx, g, d, camX, camY, t)
   const skip = timeSkipOf(d)
   if (!skip) return
   if (skip.warning) return closingRings(ctx, Math.round(w / 2), Math.round(h / 2), skip.k, Math.max(w, h) * 0.6, '#d0f8ff')

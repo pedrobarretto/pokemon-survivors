@@ -123,6 +123,14 @@ export const siteEs: SiteMessages = {
     placeBoss: (name: string, from: string) => `Sale de la Piedra Espíritu en ${name}, desde las ${from}`,
     lucky: (name: string, from: string) => `Sale de la hierba o de un hoyo en ${name}, desde las ${from}: tímido, se va rápido y vale mucha EXP`,
     places: { cave: 'la Cueva Oscura', graveyard: 'el Cementerio Embrujado', sky: 'el cielo sobre las nubes (solo para voladores)', grotto: 'la Gruta Oculta, una zona oculta rara', underground: 'el Subsuelo, una zona oculta rara', hideout: 'en el Escondite Rocket, con el pase del cartel del Casino' },
+    roam: (from: string) => `Vaga por el mapa en algunas partidas, desde ${from}: huye cuando te acercas, y la vida que le quitas se guarda entre partidas`,
+    duel: {
+      cobalion: (from: string) => `Espera un duelo en las cuevas y montañas (Mt. Moon, Monte Plateado) en algunas partidas, desde ${from}: prueba de defensa`,
+      terrakion: (from: string) => `Espera un duelo en el desierto y en el volcán en algunas partidas, desde ${from}: prueba de fuerza`,
+      virizion: (from: string) => `Espera un duelo en el bosque y en la Ruta 1 en algunas partidas, desde ${from}: prueba de velocidad`,
+    },
+    rush: 'Vuelve en los Anillos de Hoopa (Modo Legendario) tras capturarlo',
+    rushLast: 'El último de los Anillos de Hoopa (Modo Legendario): vencerlo lo captura',
     reaper: (at: string) => `Segador del modo infinito, desde las ${at}`,
     attacks: 'Ataques',
     nightAttacks: 'Ataques como jefe de la Noche de Brujas',
@@ -554,7 +562,7 @@ export const siteEs: SiteMessages = {
       opensHead: 'Movimiento legendario',
       pressureTitle: 'Dificultades en el Modo Legendario',
       pressure: 'La Presión se suma a cada dificultad: así quedan los multiplicadores del Modo Legendario.',
-      where: { rift: 'Grieta legendaria', trio: 'Trío legendario', mythical: 'Junto a Mewtwo (1 de cada 10, sube tras cada final sin mítico)', finale: 'Jefe final', endless: 'Modo infinito, al final', event: 'Noche de Brujas 2026 (evento)', festival: 'Festival de las Linternas 2026 (premio)', ultra: 'Ultraumbral (uno por partida en solitario)', ultraGift: 'Regalo por capturar a los 10 Ultraentes', path: 'Camino propio (Zygarde Cells, Cosmog, Torre del Dojo, Mystery Box)', temple: 'Un templo en las partidas, tras capturar al trío Regi' },
+      where: { rift: 'Grieta legendaria', trio: 'Trío legendario', mythical: 'Junto a Mewtwo (1 de cada 10, sube tras cada final sin mítico)', finale: 'Jefe final', endless: 'Modo infinito, al final', event: 'Noche de Brujas 2026 (evento)', festival: 'Festival de las Linternas 2026 (premio)', roam: 'Vaga por el mapa (vida guardada entre partidas)', duel: 'Duelo en un bioma que le va', swords: 'Regalo de las tres Espadas de la Justicia', rush: 'Superar los Anillos de Hoopa', ultra: 'Ultraumbral (uno por partida en solitario)', ultraGift: 'Regalo por capturar a los 10 Ultraentes', path: 'Camino propio (Zygarde Cells, Cosmog, Torre del Dojo, Mystery Box)', temple: 'Un templo en las partidas, tras capturar al trío Regi' },
       /** The event legends (`EVENT_LEGENDS`), after the table. */
       eventNote: 'En la Noche de Brujas de 2026 (del 24 de octubre al 2 de noviembre), Darkrai llega como legendario de evento: solo aparece en la grieta de la Pesadilla, que puede tomar el lugar de una grieta en una partida embrujada, y se captura con 2 victorias. Juega con Dark Void, que duerme a las multitudes, y la innata Bad Dreams, que hiere a quien duerme cerca de él. Después del evento vuelve a las sombras, pero quien lo capturó sigue jugando con él. No cuenta para Arceus.',
     },

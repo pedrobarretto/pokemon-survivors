@@ -139,7 +139,7 @@ export type MedalTitleId = { [K in AchievementId]: (typeof ACHIEVEMENTS)[K] exte
  * the Rocket Recruit's from the Rocket Game Corner's counter (`data/rocketCorner.ts`) and the Rocket Buster's for beating Giovanni in the Rocket Hideout (`data/rocketHideout.ts`),
  * the Bug Champion's for winning a week's Concurso de Insetos and the Guarda-Parque's for every Safári habitat's Pokédex (`data/safari.ts`).
  */
-export const GIFT_TITLES = ['ambassador', 'supporter', 'pumpkinKing', 'exorcist', 'vipCustomer', 'tycoon', 'patron', 'ogSupporter', 'arenaPoke', 'arenaGreat', 'arenaUltra', 'arenaMaster', 'creator', 'friendLegend', 'stampCollector', 'era1Legend', 'era1Champion', 'bugChampion', 'safariWarden', 'rocketRecruit', 'rocketBuster', 'kantoDex', 'johtoDex', 'hoennDex', 'sinnohDex', 'unovaDex', 'kalosDex', 'alolaDex', 'galarDex', 'paldeaDex'] as const
+export const GIFT_TITLES = ['ambassador', 'supporter', 'pumpkinKing', 'exorcist', 'vipCustomer', 'tycoon', 'patron', 'ogSupporter', 'arenaPoke', 'arenaGreat', 'arenaUltra', 'arenaMaster', 'creator', 'friendLegend', 'stampCollector', 'era1Legend', 'era1Champion', 'spaceTime', 'bugChampion', 'safariWarden', 'rocketRecruit', 'rocketBuster', 'kantoDex', 'johtoDex', 'hoennDex', 'sinnohDex', 'unovaDex', 'kalosDex', 'alolaDex', 'galarDex', 'paldeaDex'] as const
 
 export type GiftTitleId = (typeof GIFT_TITLES)[number]
 

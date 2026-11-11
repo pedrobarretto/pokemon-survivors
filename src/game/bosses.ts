@@ -53,6 +53,9 @@ const fire = (g: Game, boss: Enemy, written: BossPattern, fight: BossFight | nul
   if (written.kind === 'blast' && fight?.blast) fight.blast.by = by
 }
 
+/** Throws one pattern of `boss` at player `p` outside any fight (a roaming Azelf standing its ground). */
+export const throwPattern = (g: Game, boss: Enemy, pattern: BossPattern, p: Player) => fire(g, boss, pattern, null, p)
+
 /** Launches a boss's attack at player `p`, pressed by its fight's difficulty (`attackCount`, `telegraph`); a rift legendary in the old arena passes no fight. */
 const launch = (g: Game, boss: Enemy, written: BossPattern, fight: BossFight | null, p: Player) => {
   // Judgment takes the plate of the biome its target stands in.
@@ -725,7 +728,8 @@ const enrage = (g: Game, e: Enemy) => {
 export const updateBosses = (g: Game, tick: number) => {
   const reach = bossReach(g)
   for (const e of g.enemies) {
-    if (e.dying >= 0) continue
+    // A roaming lake legend runs, it doesn't fight (its phases are Hoopa's rings', `data/rush.ts`).
+    if (e.dying >= 0 || e.behavior.kind === 'roam') continue
     const phases = phasesOf(e.kind)
     if (e.fight === null && (phases || fightsInStances(e.kind))) {
       e.fight = createFight(g.rng, g.difficulty, { x: e.x, y: e.y })

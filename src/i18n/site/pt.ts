@@ -159,6 +159,14 @@ export const sitePt = {
     placeBoss: (name: string, from: string) => `Desperta da Pedra Peculiar ${name}, a partir de ${from}`,
     lucky: (name: string, from: string) => `Sai da grama ou da toca ${name}, a partir de ${from}: tímido, foge rápido e vale muita EXP`,
     places: { cave: 'na Caverna Escura', graveyard: 'no Cemitério Assombrado', sky: 'no céu, acima das nuvens (só para quem voa)', grotto: 'na Gruta Oculta, uma zona oculta rara', underground: 'no Subterrâneo, uma zona oculta rara', hideout: 'no Esconderijo Rocket, com a passagem do cartaz do Game Corner' } satisfies Record<PlaceId, string>,
+    roam: (from: string) => `Vaga pelo mapa em algumas partidas, a partir de ${from}: foge quando você chega perto, e o HP que você tira fica guardado entre partidas`,
+    duel: {
+      cobalion: (from: string) => `Espera por um duelo nas cavernas e montanhas (Monte Moon, Monte Prateado) em algumas partidas, a partir de ${from}: teste de defesa`,
+      terrakion: (from: string) => `Espera por um duelo no deserto e no vulcão em algumas partidas, a partir de ${from}: teste de força`,
+      virizion: (from: string) => `Espera por um duelo na floresta e na Rota 1 em algumas partidas, a partir de ${from}: teste de velocidade`,
+    },
+    rush: 'Volta nos Anéis de Hoopa (Modo Lendário) depois de capturado',
+    rushLast: 'O último dos Anéis de Hoopa (Modo Lendário): vencê-lo o captura',
     reaper: (at: string) => `Ceifador do modo sem fim, a partir de ${at}`,
     attacks: 'Ataques',
     nightAttacks: 'Ataques como chefe da Noite das Bruxas',
@@ -605,7 +613,7 @@ export const sitePt = {
       opensHead: 'Golpe lendário',
       pressureTitle: 'Dificuldades no Modo Lendário',
       pressure: 'A Pressão soma-se a cada dificuldade: os multiplicadores do Modo Lendário ficam assim.',
-      where: { rift: 'Fenda lendária', trio: 'Trio lendário', mythical: 'Junto do Mewtwo (1 em 10, sobe a cada final sem mítico)', finale: 'Chefe final', endless: 'Modo sem fim, por último', event: 'Noite das Bruxas 2026 (evento)', festival: 'Festival das Lanternas 2026 (prêmio)', ultra: 'Ultrafenda (uma por partida solo)', ultraGift: 'Presente por capturar as 10 Ultracriaturas', path: 'Caminho próprio (Zygarde Cells, Cosmog, Torre do Dojo, Mystery Box)', temple: 'Templo nas partidas, depois de capturar o trio Regi' },
+      where: { rift: 'Fenda lendária', trio: 'Trio lendário', mythical: 'Junto do Mewtwo (1 em 10, sobe a cada final sem mítico)', finale: 'Chefe final', endless: 'Modo sem fim, por último', event: 'Noite das Bruxas 2026 (evento)', festival: 'Festival das Lanternas 2026 (prêmio)', roam: 'Vaga pelo mapa (HP guardado entre partidas)', duel: 'Duelo num bioma que combina', swords: 'Presente das três Espadas da Justiça', rush: 'Vencer os Anéis de Hoopa', ultra: 'Ultrafenda (uma por partida solo)', ultraGift: 'Presente por capturar as 10 Ultracriaturas', path: 'Caminho próprio (Zygarde Cells, Cosmog, Torre do Dojo, Mystery Box)', temple: 'Templo nas partidas, depois de capturar o trio Regi' },
       /** The event legends (`EVENT_LEGENDS`), after the table. */
       eventNote: 'Na Noite das Bruxas de 2026 (24 de outubro a 2 de novembro), o Darkrai chega como lenda de evento: ele só aparece na fenda do Pesadelo, que pode tomar o lugar de uma fenda numa partida assombrada, e é capturado com 2 vitórias. Joga com o Dark Void, que faz as multidões dormirem, e a inata Bad Dreams, que fere quem dorme perto dele. Depois do evento ele volta para as sombras, mas quem o capturou segue jogando com ele. Ele não conta para o Arceus.',
     },

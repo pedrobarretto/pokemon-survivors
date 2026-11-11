@@ -6,8 +6,10 @@ import { entranceShown } from '../game/place'
 import type { Game } from '../game/types'
 import { t } from '../i18n'
 import { h, setText } from './dom'
+import { questPill } from './quests'
+import { rushPill } from './rush'
 
-type Pill = { text: string; kind: 'portal' | 'arena' | 'endless' | 'reaper' | 'place'; urgent: boolean } | null
+type Pill = { text: string; kind: 'portal' | 'arena' | 'endless' | 'reaper' | 'place' | 'quest'; urgent: boolean } | null
 
 /** A place the player is in: the dungeon's floor and wind, the keystone's spirits or the dawn, the wings and the calm, the Audino caught, the glints dug. */
 const insidePill = (g: Game): Pill => {
@@ -61,6 +63,10 @@ const pillFor = (g: Game): Pill => {
     const p = t().places
     return { text: p.hudOpen(p.hudNames[ent.id], formatTime(Math.ceil(ent.left))), kind: 'place', urgent: ent.left < 8 }
   }
+  const rush = rushPill(g)
+  if (rush) return { text: rush, kind: 'quest', urgent: false }
+  const quest = questPill(g)
+  if (quest) return { text: quest.text, kind: 'quest', urgent: quest.urgent }
   const s = g.endless
   if (!s) return null
   if (s.reaperId !== null) return { text: m.hudHunting, kind: 'reaper', urgent: true }

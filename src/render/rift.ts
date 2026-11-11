@@ -179,7 +179,47 @@ const prism: Pattern = (x, y, t) => {
   return hash2(Math.floor(x), Math.floor(y), 5) < 0.012 ? t.wall[0] : tone
 }
 
-export const PATTERNS: Record<FloorPattern, Pattern> = { rings, planks, slabs, basalt, wetRock, jade, sand, craters, garden, prism }
+/**
+ * Folded Space's pearl: nacre slabs in irregular cells (as basalt's, but
+ * larger and smooth), each with its own iridescent tint, a lit rim on its
+ * north-west edge, rose seams between them and a glint of the void's pink here and there.
+ */
+const NACRE = ['#e8e0f4', '#f0e4f0', '#e0e8f4', '#ece8e0'] as const
+const pearl: Pattern = (x, y, t) => {
+  const grout = t.floor[2]
+  const S = 24
+  const gx = Math.floor((x + 400) / S)
+  const gy = Math.floor((y + 400) / S)
+  let d1 = Infinity
+  let d2 = Infinity
+  let id = 0
+  let cx1 = 0
+  let cy1 = 0
+  for (let j = -1; j <= 1; j++) {
+    for (let i = -1; i <= 1; i++) {
+      const cx = (gx + i + 0.2 + hash2(gx + i, gy + j, 11) * 0.6) * S - 400
+      const cy = (gy + j + 0.2 + hash2(gx + i, gy + j, 12) * 0.6) * S - 400
+      const d = Math.hypot(x - cx, y - cy)
+      if (d < d1) {
+        d2 = d1
+        d1 = d
+        id = (gx + i) * 977 + (gy + j)
+        cx1 = cx
+        cy1 = cy
+      } else if (d < d2) d2 = d
+    }
+  }
+  if (d2 - d1 < 1.2) return grout
+  const tone = NACRE[Math.floor(hash2(id, 0, 13) * NACRE.length)]!
+  // The rim catches the light on the side facing up and left, and falls into shade on the other.
+  if (d2 - d1 < 2.6) return (x - cx1) + (y - cy1) < 0 ? '#ffffff' : mix(tone, grout, 0.35)
+  // Soft bands of sheen across each slab.
+  const band = Math.abs(((x * 0.7 + y + hash2(id, 1, 13) * 40 + 400) % 13) - 6.5)
+  const toned = band < 1.2 ? mix(tone, '#f8c8ec', 0.35) : band > 5.6 ? mix(tone, '#c8d0f0', 0.25) : tone
+  return hash2(Math.floor(x), Math.floor(y), 14) > 0.997 ? t.wall[0] : toned
+}
+
+export const PATTERNS: Record<FloorPattern, Pattern> = { rings, planks, slabs, basalt, wetRock, jade, sand, craters, garden, prism, pearl }
 
 /** Inlays drawn over the pattern: the Bell Tower's gold band and the Spear Pillar's clock. */
 const INLAYS: Partial<Record<RiftLegend, (x: number, y: number, t: ArenaTheme) => string | null>> = {
@@ -187,6 +227,14 @@ const INLAYS: Partial<Record<RiftLegend, (x: number, y: number, t: ArenaTheme) =
     let d = 0
     for (let i = 0; i < 4; i++) d = Math.max(d, Math.abs(x * Math.cos((i * Math.PI) / 4) + y * Math.sin((i * Math.PI) / 4)))
     return d > 138 && d < 142 ? t.wall[0] : d >= 142 && d < 143 ? t.wall[1] : null
+  },
+  palkia: (x, y, t) => {
+    // A lens of rose gold in the hall's middle: two rings and the seam of a fold across them.
+    const d = Math.hypot(x, (y - 6) * 1.6)
+    if (d > 44 && d < 47) return t.wall[0]
+    if (d > 47 && d < 48) return t.wall[1]
+    if (d > 28 && d < 30) return t.wall[0]
+    return d < 44 && Math.abs(y - 6 + x * 0.18) < 0.8 ? t.wall[0] : null
   },
   dialga: (x, y, t) => {
     const d = Math.hypot(x, y - 8)
@@ -230,6 +278,7 @@ export const FACES: Record<RiftLegend, Ramp> = {
   deoxys: ['#0c0814', '#1c1428', '#2c2038', '#3c3050'],
   darkrai: ['#040208', '#0c0814', '#181024', '#241a36'],
   ...perBeast(() => ULTRA_FACE),
+  palkia: ['#1c0c2c', '#3c2058', '#5c3c80', '#8060a8'],
 }
 
 const SIZE = 380

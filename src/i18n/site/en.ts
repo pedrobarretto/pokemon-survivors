@@ -123,6 +123,14 @@ export const siteEn: SiteMessages = {
     placeBoss: (name: string, from: string) => `Breaks out of the Odd Keystone in the ${name}, from ${from}`,
     lucky: (name: string, from: string) => `Pops out of the grass or a hole in the ${name}, from ${from}: shy, quick to leave and worth a lot of EXP`,
     places: { cave: 'Dark Cave', graveyard: 'Haunted Graveyard', sky: 'sky above the clouds (Flying types only)', grotto: 'Hidden Grotto, a rare hidden zone', underground: 'Underground, a rare hidden zone', hideout: 'in the Rocket Hideout, with the Game Corner poster’s pass' },
+    roam: (from: string) => `Roams the map in some runs, from ${from}: it flees when you get close, and the HP you take stays taken between runs`,
+    duel: {
+      cobalion: (from: string) => `Waits for a duel in the caves and mountains (Mt. Moon, Mt. Silver) in some runs, from ${from}: a defense test`,
+      terrakion: (from: string) => `Waits for a duel in the desert and on the volcano in some runs, from ${from}: a power test`,
+      virizion: (from: string) => `Waits for a duel in the forest and on Route 1 in some runs, from ${from}: a speed test`,
+    },
+    rush: 'Comes back in Hoopa’s Rings (Legend mode) once caught',
+    rushLast: 'The last of Hoopa’s Rings (Legend mode): beating it catches it',
     reaper: (at: string) => `The endless mode's reaper, from ${at}`,
     attacks: 'Attacks',
     nightAttacks: 'Attacks as a Halloween Night boss',
@@ -550,7 +558,7 @@ export const siteEn: SiteMessages = {
       opensHead: 'Legendary move',
       pressureTitle: 'Difficulties in Legend Mode',
       pressure: 'Pressure stacks on every difficulty: these are Legend Mode’s multipliers.',
-      where: { rift: 'Legendary rift', trio: 'Legendary trio', mythical: 'Beside Mewtwo (1 in 10, rises after each finale without one)', finale: 'Final boss', endless: 'Endless mode, last of all', event: 'Halloween Night 2026 (event)', festival: 'Lantern Festival 2026 (prize)', ultra: 'Ultra Wormhole (one per solo run)', ultraGift: 'Gift for capturing the 10 Ultra Beasts', path: 'Its own path (Zygarde Cells, Cosmog, Dojo Tower, Mystery Box)', temple: 'A temple in runs, after capturing the Regi trio' },
+      where: { rift: 'Legendary rift', trio: 'Legendary trio', mythical: 'Beside Mewtwo (1 in 10, rises after each finale without one)', finale: 'Final boss', endless: 'Endless mode, last of all', event: 'Halloween Night 2026 (event)', festival: 'Lantern Festival 2026 (prize)', roam: 'Roams the map (HP kept between runs)', duel: 'Duel in a biome that suits it', swords: 'Gift of the three Swords of Justice', rush: 'Clear Hoopa’s Rings', ultra: 'Ultra Wormhole (one per solo run)', ultraGift: 'Gift for capturing the 10 Ultra Beasts', path: 'Its own path (Zygarde Cells, Cosmog, Dojo Tower, Mystery Box)', temple: 'A temple in runs, after capturing the Regi trio' },
       /** The event legends (`EVENT_LEGENDS`), after the table. */
       eventNote: 'On Halloween Night 2026 (October 24 to November 2), Darkrai comes as an event legend: it only shows up in the Nightmare rift, which can take a rift\'s place in a haunted run, and 2 wins catch it. It plays with Dark Void, which puts crowds to sleep, and the innate Bad Dreams, which hurts whoever sleeps near it. After the event it returns to the shadows, but whoever caught it keeps playing it. It doesn\'t count toward Arceus.',
     },

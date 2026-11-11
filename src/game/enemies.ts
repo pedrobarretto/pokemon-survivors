@@ -21,6 +21,7 @@ import { actAs, inPlay, nearestPlayer, nearestSeen, onAnyScreen, ownerOf, standi
 import { coopScale } from './coop'
 import { COOP } from '../data/coop'
 import type { DamageSource, Enemy, EnemyBehavior, Game } from './types'
+import { roamStep } from './roamers'
 import * as dm from '../engine/dmath'
 
 const neighbors: number[] = []
@@ -154,6 +155,8 @@ const mateOf = (g: Game, e: Enemy) => {
 const caveNavs: ReturnType<typeof dungeonNav>[] = []
 /** Where a walker heads instead of the player (a dungeon's corridor), reused every tick. */
 const waypoint = { x: 0, y: 0 }
+/** Where a roaming lake legend heads this tick (`roamStep`), reused every tick. */
+const roaming = { x: 0, y: 0 }
 /** Where a boss with phases heads (`steerBoss`), reused every tick. */
 const steering: Steering = { x: 0, y: 0, pace: 1 }
 
@@ -271,6 +274,11 @@ export const updateEnemies = (g: Game, dt: number) => {
       const speed = b.leash <= 0 && home < 2 ? 0 : near || home > b.leash ? pace : pace * 0.45
       vx = frozen ? 0 : dx * speed
       vy = frozen ? 0 : dy * speed
+    } else if (e.behavior.kind === 'roam') {
+      // A roaming lake legend (`roamers.ts`) runs, circles or stands as its quirk says.
+      roamStep(g, e, p, frozen ? 0 : pace, roaming)
+      vx = roaming.x
+      vy = roaming.y
     } else if (e.behavior.kind === 'camp') {
       // Versus's wild: home until hit, then after whoever hit it within its leash; back home it rests and heals.
       const b = e.behavior
@@ -345,7 +353,7 @@ export const updateEnemies = (g: Game, dt: number) => {
       const d = Math.sqrt(d2) || 1
       e.x = p.x + (dx / d) * reach
       e.y = p.y + (dy / d) * reach
-      const attack = e.behavior.kind === 'shy' ? 0 : statusAttack(e.status)
+      const attack = e.behavior.kind === 'shy' || e.behavior.kind === 'roam' ? 0 : statusAttack(e.status)
       // A camp's wild Pokémon bites only the one it turned on.
       if (attack <= 0 || (e.behavior.kind === 'camp' && e.behavior.target !== p.slot)) continue
       const before = actAs(g, p)

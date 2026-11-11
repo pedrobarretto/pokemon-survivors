@@ -1,4 +1,5 @@
 import { mergeAchievements, mergeGiftTitles } from './achievements'
+import { mergeRoamers, mergeRushBest } from './questSave'
 import { mergeAttempts } from './attempt'
 import { mergeClaimedGifts } from './gifts'
 import { mergeClears } from './clears'
@@ -123,6 +124,8 @@ export const mergeSaves = (base: Save, incoming: Save): Save => {
     clears: mergeClears(base.clears, incoming.clears),
     halloween: mergeHalloween(base.halloween, incoming.halloween),
     legends: mergeCaptures(base.legends, incoming.legends),
+    roamers: mergeRoamers(base.roamers, incoming.roamers),
+    rush: mergeRushBest(base.rush, incoming.rush),
     mythicalPity: mergeMythicalPity(base.mythicalPity, incoming.mythicalPity),
     tms: mergeTms(base.tms, incoming.tms),
     evo: mergeEvoItems(base.evo, incoming.evo),

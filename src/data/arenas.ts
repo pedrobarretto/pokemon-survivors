@@ -17,7 +17,7 @@ export type Poly = { kind: 'poly'; pts: readonly Pt[] }
 export type ArenaShape = Circle | Poly
 
 /** Scenery standing in an arena (cover against the legendary's shots). */
-export type ArenaPiece = 'seaRock' | 'redPillar' | 'bell' | 'stalagmite' | 'basalt' | 'jadeStump' | 'column' | 'marbleStump' | 'palm' | 'meteorCrystal' | 'nightSpire' | 'ultraCrystal'
+export type ArenaPiece = 'seaRock' | 'redPillar' | 'bell' | 'stalagmite' | 'basalt' | 'jadeStump' | 'column' | 'marbleStump' | 'palm' | 'meteorCrystal' | 'nightSpire' | 'pearlSpire' | 'pearlPillar' | 'ultraCrystal'
 
 /** What each piece stands on, around its anchor. */
 export const ARENA_FEET: Record<ArenaPiece, Ellipse> = {
@@ -33,12 +33,14 @@ export const ARENA_FEET: Record<ArenaPiece, Ellipse> = {
   meteorCrystal: { x: 0, y: -1, rx: 9, ry: 4 },
   nightSpire: { x: 0, y: -1, rx: 9, ry: 4 },
   ultraCrystal: { x: 0, y: -1, rx: 9, ry: 4 },
+  pearlSpire: { x: 0, y: -1, rx: 9, ry: 4 },
+  pearlPillar: { x: 0, y: 0, rx: 10, ry: 4 },
 }
 
 /** Every few seconds a rule steps the arena (the tide rises, the edge falls), with a warning before. */
 export type ArenaStepRule = { every: number; warn: number; max: number; px: number }
 
-export type FloorPattern = 'rings' | 'planks' | 'wetRock' | 'basalt' | 'jade' | 'slabs' | 'sand' | 'craters' | 'garden' | 'prism'
+export type FloorPattern = 'rings' | 'planks' | 'wetRock' | 'basalt' | 'jade' | 'slabs' | 'sand' | 'craters' | 'garden' | 'pearl' | 'prism'
 
 /**
  * The ground of a closed space (a rift's arena, a place's interior): the floor
@@ -239,7 +241,20 @@ export const ARENA_LAYOUTS: Record<RiftLegend, ArenaLayout> = {
     pattern: 'slabs',
     boss: [0, -60],
     player: [0, 50],
+  },  /** Folded Space without its domain (co-op): a pearl hall with spires to hide behind. */
+  palkia: {
+    floor: [poly([-R, -90], [R, -90], [R, 110], [-R, 110]), circle(0, -90, 70)],
+    solids: [
+      { piece: 'pearlPillar', x: -100, y: -40 },
+      { piece: 'pearlPillar', x: 100, y: -40 },
+      { piece: 'pearlSpire', x: -56, y: 50 },
+      { piece: 'pearlSpire', x: 56, y: 50 },
+    ],
+    pattern: 'pearl',
+    boss: [0, -96],
+    player: [0, 70],
   },
+
 }
 
 /** How far an arena reaches from its center, for culling shots and sizing the floor art. */

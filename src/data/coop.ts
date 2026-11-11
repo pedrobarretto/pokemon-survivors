@@ -89,8 +89,10 @@ export const COOP = {
  * - `domains`: an epic rift's legendary is fought in its old arena
  *   (`data/arenas.ts`), not its domain (`riftDomain`): no omen sky or weather,
  *   no tear, no crossing.
+ * - `quests`: no roaming lake legend and no Sword's duel (`game/quests.ts`):
+ *   their HP and captures are the solo save's.
  */
-export const COOP_LOCKS = { places: true, landmarks: true, domains: true } as const
+export const COOP_LOCKS = { places: true, landmarks: true, domains: true, quests: true } as const
 
 /** Whether co-op leaves `what` out of this run (`COOP_LOCKS`); never solo. */
 export const coopLocked = (g: { coop: object | null }, what: keyof typeof COOP_LOCKS) => g.coop !== null && COOP_LOCKS[what]

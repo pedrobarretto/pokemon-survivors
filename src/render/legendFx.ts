@@ -20,6 +20,7 @@ import { drawPokemon, formOf, sprites } from './sprites'
 import { drawCaptureScene } from './capture'
 import { drawScale } from '../game/alphas'
 import { ARRIVAL, isWaveLegend, type Arrival } from '../data/legendBosses'
+import { PHASE_SHIFT } from '../data/bosses'
 import { ENTRANCE_REVEAL, entranceBeat, LIGHT_CAPTURE } from '../game/legendScene'
 
 type Ctx = CanvasRenderingContext2D
@@ -247,10 +248,31 @@ export const drawBossMarker = (ctx: Ctx, g: Game, camX: number, camY: number, t:
   blitRotated(ctx, here || def.legendary ? ARROW() : BOSS_ARROW(), cx + dx * (k + bob), cy + dy * (k + bob), angle, 2)
 }
 
-/** The sprite form a boss wears in its phase (`BossPhase.form`), if its species has it. */
+/**
+ * How far into its opening a phase that changes the boss's form is (0..1), or
+ * -1 outside one: the old form shows until `FORM_SWAP`, under the white of the
+ * change (`bossLook`).
+ */
+export const formChangeAt = (e: Enemy) => {
+  const f = e.fight
+  const phases = f ? phasesOf(e.kind) : undefined
+  const phase = f && phases?.[f.phase]
+  if (!f || !phases || !phase || f.phase === 0 || f.shift <= 0 || phase.form === phases[f.phase - 1]?.form) return -1
+  return 1 - f.shift / (phase.shift ?? PHASE_SHIFT)
+}
+
+/** The share of a form change's opening when the new form takes the old one's place, in the white of its flash. */
+export const FORM_SWAP = 0.5
+
+/** A form change's look at `k` (`formChangeAt`): the boss whitens into a silhouette, holds white through the swap, and the white fades off it as it settles; it lifts a little meanwhile. */
+export const formFlash = (k: number) => (k < FORM_SWAP ? k / FORM_SWAP : k < FORM_SWAP + 0.12 ? 1 : Math.max(0, 1 - (k - FORM_SWAP - 0.12) / 0.3))
+export const formLift = (k: number) => Math.round(Math.sin(Math.min(1, k / 0.8) * Math.PI) * 8)
+
+/** The sprite form a boss wears in its phase (`BossPhase.form`), if its species has it; through a form change, the old one until `FORM_SWAP`. */
 export const bossForm = (e: Enemy) => {
-  const key = e.fight ? phasesOf(e.kind)?.[e.fight.phase]?.form : undefined
-  return formOf(ENEMIES[e.kind].dex, key)
+  const phases = e.fight ? phasesOf(e.kind) : undefined
+  const at = e.fight ? e.fight.phase - (formChangeAt(e) >= 0 && formChangeAt(e) < FORM_SWAP ? 1 : 0) : 0
+  return formOf(ENEMIES[e.kind].dex, phases?.[at]?.form)
 }
 
 /** How a legendary's entrance colors its rings, the tint it rises out of and the spray off its back. */
@@ -264,6 +286,7 @@ const ENTRANCE_LOOK: Partial<Record<RiftLegend, EntranceLook>> = {
   rayquaza: { ring: '#f8f0a0', tint: '#3c9850', spray: '#ffffff' },
   darkrai: { ring: '#58e8f0', tint: '#140c24', spray: '#58e8f0' },
   ...perBeast((): EntranceLook => ({ ring: '#c8a8f8', tint: '#3c2878', spray: '#f8f0ff' })),
+  palkia: { ring: '#f8b8e8', tint: '#5c2878', spray: '#ffffff' },
 }
 
 /**
@@ -300,6 +323,8 @@ export const drawEntrance = (ctx: Ctx, g: Game, t: number) => {
     meteorIn(ctx, s, x, y, k, t)
   } else if (def.entrance === 'wormhole') {
     wormholeIn(ctx, s, x, y, k, t)
+  } else if (def.entrance === 'rend') {
+    rendIn(ctx, s, x, y, k, t)
   } else if (def.entrance === 'rise') {
     const lift = Math.round((1 - k) * (body + 8))
     ctx.save()
@@ -336,6 +361,38 @@ const swoopIn = (ctx: Ctx, s: ReturnType<typeof sprites>, x: number, y: number, 
   ctx.fillStyle = color
   for (let i = 1; i < 8 && q < 1; i++) ctx.fillRect(Math.round(px + side * i * 9), Math.round(py - 10 + Math.sin(i + t * 9) * 2), 2, 1)
   drawPokemon(ctx, s, 'Walk', side < 0 ? 2 : 6, t, px, py, { alpha: Math.min(1, shown), flash: k < 0.75 ? 0.6 : 1 - (k - 0.75) / 0.25, tint: { color, amount: 0.3 * (1 - k) } })
+}
+
+/**
+ * Palkia's entrance: a seam of light splits the air over its spot, opens
+ * into a lens of torn space with the dark void inside, Palkia steps out of
+ * it, and the tear seals behind it in a flash of pearl.
+ */
+const rendIn = (ctx: Ctx, s: ReturnType<typeof sprites>, x: number, y: number, k: number, t: number) => {
+  const cy = y - Math.round(s.bodyH * 0.55)
+  // Opening (0..0.35), held open while it steps through (0.35..0.8), sealing (0.8..1).
+  const open = Math.min(1, k / 0.35) * Math.min(1, Math.max(0, (1 - k) / 0.2))
+  const rx = Math.max(1, Math.round(4 + open * 10))
+  const ry = Math.max(2, Math.round(10 + open * (s.bodyH * 0.6)))
+  if (open > 0) {
+    blitEllipse(ctx, rx + 3, ry + 3, 'rgba(248,184,232,0.25)', x, cy)
+    blitEllipse(ctx, rx, ry, '#f8b8e8', x, cy)
+    blitEllipse(ctx, Math.max(1, rx - 2), Math.max(1, ry - 2), '#28103c', x, cy)
+    // Shards of space flaking off the tear's rim.
+    ctx.fillStyle = '#ffffff'
+    for (let i = 0; i < 10; i++) {
+      const a = hash2(i, 1, 37) * TAU
+      const r = ((t * 50 + hash2(i, 2, 37) * 30) % 30) * open
+      ctx.fillRect(Math.round(x + Math.cos(a) * (rx + r)), Math.round(cy + Math.sin(a) * (ry * 0.6 + r * 0.4)), 1, 1)
+    }
+  }
+  const step = Math.min(1, Math.max(0, (k - 0.3) / 0.5))
+  if (step > 0) drawPokemon(ctx, s, 'Idle', 0, t, x, y, { alpha: step, flash: 1 - step, tint: { color: '#f8b8e8', amount: 0.5 * (1 - step) } })
+  if (k > 0.8) {
+    ctx.globalAlpha = Math.max(0, 1 - (k - 0.8) / 0.2)
+    blitRing(ctx, Math.round(10 + (k - 0.8) * 200), 1, '#ffffff', x, cy)
+    ctx.globalAlpha = 1
+  }
 }
 
 const CRYSTAL = lazy(() =>

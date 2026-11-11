@@ -118,6 +118,8 @@ export type GiftReason =
   | { kind: 'safariDex'; habitat: string | null }
   /** A legend path's legend (`game/legendPaths.ts`): made by the game, or (Meltan's Mystery Box) sent by the API. */
   | { kind: 'path'; path: PathId }
+  /** A legend's road (`game/questGifts.ts`): all three Swords of Justice captured (Keldeo), or Dialga and Palkia (the title). Made by the game too. */
+  | { kind: 'quest'; way: 'swords' | 'creation' }
 
 export type Gift = { id: string; content: GiftContent; reason: GiftReason | null }
 

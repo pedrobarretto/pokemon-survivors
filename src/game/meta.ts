@@ -1,4 +1,5 @@
 import { chance, type Rng } from '../engine/rng'
+import { NO_ROAMERS, NO_RUSH, parseRoamers, parseRushBest, type Roamers, type RushBest } from './questSave'
 import { ACHIEVEMENTS, MEDAL_EGG, MEDAL_REWARD, type AchievementId, type GiftTitleId, type TitleId } from '../data/achievements'
 import { parseAttempt, type Attempt } from './attempt'
 import { NO_ACHIEVEMENTS, parseAchievements, parseGiftTitles, parseTitle, recordAchievements, recordHatchAchievements, type AchievementsSave } from './achievements'
@@ -170,6 +171,10 @@ export type Save = {
   halloween: HalloweenSave
   /** Wins toward capturing each legend for the Legend mode (`game/capture.ts`); its shiny lives in `shinyStarters`. */
   legends: Captures
+  /** Each roaming lake legend's share of HP left, carried from run to run (`game/questSave.ts`). */
+  roamers: Roamers
+  /** Hoopa's Rings: each level's best time (`game/questSave.ts`). */
+  rush: RushBest
   /** Finales played and how many had been when a mythical last fell (`game/mythicalHunt.ts`). */
   mythicalPity: MythicalPity
   /** The TM case (`game/tmShelf.ts`): TMs bought at the shop, the ones armed for the next runs and the TM moves runs ever taught. */
@@ -239,6 +244,8 @@ export const EMPTY_SAVE: Save = {
   clears: {},
   halloween: NO_HALLOWEEN,
   legends: NO_CAPTURES,
+  roamers: NO_ROAMERS,
+  rush: NO_RUSH,
   mythicalPity: NO_MYTHICAL_PITY,
   tms: NO_TMS,
   evo: [],
@@ -320,6 +327,8 @@ export const parseSaveData = (json: unknown): Save => {
     clears: mergeClears(pastClears(achievements.lifetime), parseClears(data.clears)),
     halloween: parseHalloween(data.halloween),
     legends: parseCaptures(data.legends),
+    roamers: parseRoamers(data.roamers),
+    rush: parseRushBest(data.rush),
     mythicalPity: parseMythicalPity(data.mythicalPity),
     tms: parseTms(data.tms),
     evo: parseEvoItems(data.evo),

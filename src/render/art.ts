@@ -32,6 +32,7 @@ import { LEGENDARY_ICONS } from './legendaryArt'
 import { LEGENDARY_ICONS_2 } from './legendaryArt2'
 import { ULTRA_ICONS } from './ultraArt'
 import { PATH_LEGEND_ICONS } from './pathLegendArt'
+import { LEGENDARY_ICONS_3 } from './legendaryFx3'
 import * as TE from './typeEvolvedArt'
 
 /**
@@ -710,6 +711,7 @@ const MOVE_ICON_ART: Record<MoveId, () => PixelSprite> = {
   ...LEGENDARY_ICONS_2,
   ...ULTRA_ICONS,
   ...PATH_LEGEND_ICONS,
+  ...LEGENDARY_ICONS_3,
   ember: () => FX.ember()[0]!,
   fireSpin: () => FX.flame()[0]!,
   waterGun: () => FX.water(),

@@ -9,6 +9,7 @@ import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { ROCKET_WORDS } from './rocket/words'
 import { ULTRA_WORDS } from './ultra'
 import { LEGEND_PATHS_WORDS } from './legendPaths'
+import { QUEST_WORDS } from './quests'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -2466,6 +2467,7 @@ export const en: Messages = {
     ...SEASON_ONE_KITS_WORDS.en.abilities,
     ...ULTRA_WORDS.en.abilities,
     ...LEGEND_PATHS_WORDS.en.abilities,
+    ...QUEST_WORDS.en.abilities,
     overgrow: 'Under 1/3 HP, Grass moves deal +50%.',
     blaze: 'Under 1/3 HP, Fire moves deal +50%.',
     torrent: 'Under 1/3 HP, Water moves deal +50%.',
@@ -2767,6 +2769,20 @@ export const en: Messages = {
         phases: ['Time warps! During Roar of Time your attacks freeze in mid-air.', 'Time speeds up! Dialga keeps getting faster.'],
         cues: { stop: 'Time stopped!', forward: 'Time skipped ahead!', rewind: 'Time rewound!' },
       },
+      palkia: {
+        place: 'Folded Space',
+        epithet: 'Lord of Space',
+        omen: 'Space begins to fold…',
+        crossing: 'Space is closing in! Cross the gaps through the twin portals!',
+        phases: ['Space bends! The hall’s edges meet: walk out one side and come back in the other.', 'Origin Forme! Space folds and the hall’s walls close in.'],
+        cues: {
+          twist: 'Space twisted! The portals lead back!',
+          thrownBack: 'Thrown back!',
+          swap: '*Palkia* swapped places with you!',
+          fold: 'The walls of space are closing in!',
+          dialga: '*Palkia* senses *Dialga*’s time on you… and roars louder!',
+        },
+      },
       latias: {
         place: 'Southern Island',
         epithet: 'The Eon Duo',
@@ -2996,7 +3012,7 @@ export const en: Messages = {
     noTitle: 'none',
     titleTag: 'TITLE',
     equipped: 'SHOWN',
-    giftTitles: { ambassador: 'Brought 3 friends to the game', supporter: 'Supported the project with a donation', pumpkinKing: 'Filled the Halloween Night candy jar', exorcist: 'Beat every Ghost Hunt boss', vipCustomer: "Collected 30 stamps on Kecleon's loyalty card", tycoon: "Grew Kecleon's shop into a Department Store", patron: 'Gave ₽50,000 or more to a Plaza Festival', ogSupporter: 'Supported the game before Patreon', arenaPoke: 'Finished an Arena ranked season in Poké Ball', arenaGreat: 'Reached Great Ball in an Arena ranked season', arenaUltra: 'Reached Ultra Ball in an Arena ranked season', arenaMaster: 'Reached Master Ball in an Arena ranked season', creator: 'Makes videos and streams of Pokémon Survivors', friendLegend: 'Brought 10 friends to the game', stampCollector: 'Collected 30 Stamps in the Poké Realm', era1Legend: 'Finished near the top of an Era 1 board', era1Champion: 'Finished #1 on an Era 1 board', bugChampion: 'Won a week of the Bug-Catching Contest', safariWarden: 'Filled the Pokédex of every Safari Zone habitat', ...ROCKET_WORDS.en.giftTitles, kantoDex: 'Saw every Pokémon from Kanto in the Pokédex', johtoDex: 'Saw every Pokémon from Johto in the Pokédex', hoennDex: 'Saw every Pokémon from Hoenn in the Pokédex', sinnohDex: 'Saw every Pokémon from Sinnoh in the Pokédex', unovaDex: 'Saw every Pokémon from Unova in the Pokédex', kalosDex: 'Saw every Pokémon from Kalos in the Pokédex', alolaDex: 'Saw every Pokémon from Alola in the Pokédex', galarDex: 'Saw every Pokémon from Galar in the Pokédex', paldeaDex: 'Saw every Pokémon from Paldea in the Pokédex' },
+    giftTitles: { ambassador: 'Brought 3 friends to the game', supporter: 'Supported the project with a donation', pumpkinKing: 'Filled the Halloween Night candy jar', exorcist: 'Beat every Ghost Hunt boss', vipCustomer: "Collected 30 stamps on Kecleon's loyalty card", tycoon: "Grew Kecleon's shop into a Department Store", patron: 'Gave ₽50,000 or more to a Plaza Festival', ogSupporter: 'Supported the game before Patreon', arenaPoke: 'Finished an Arena ranked season in Poké Ball', arenaGreat: 'Reached Great Ball in an Arena ranked season', arenaUltra: 'Reached Ultra Ball in an Arena ranked season', arenaMaster: 'Reached Master Ball in an Arena ranked season', creator: 'Makes videos and streams of Pokémon Survivors', friendLegend: 'Brought 10 friends to the game', stampCollector: 'Collected 30 Stamps in the Poké Realm', era1Legend: 'Finished near the top of an Era 1 board', era1Champion: 'Finished #1 on an Era 1 board', spaceTime: 'Caught Dialga and Palkia', bugChampion: 'Won a week of the Bug-Catching Contest', safariWarden: 'Filled the Pokédex of every Safari Zone habitat', ...ROCKET_WORDS.en.giftTitles, kantoDex: 'Saw every Pokémon from Kanto in the Pokédex', johtoDex: 'Saw every Pokémon from Johto in the Pokédex', hoennDex: 'Saw every Pokémon from Hoenn in the Pokédex', sinnohDex: 'Saw every Pokémon from Sinnoh in the Pokédex', unovaDex: 'Saw every Pokémon from Unova in the Pokédex', kalosDex: 'Saw every Pokémon from Kalos in the Pokédex', alolaDex: 'Saw every Pokémon from Alola in the Pokédex', galarDex: 'Saw every Pokémon from Galar in the Pokédex', paldeaDex: 'Saw every Pokémon from Paldea in the Pokédex' },
     newMedals: 'New medals',
     names: {
       ...TERA_WORDS.en.achievementNames,
@@ -3112,6 +3128,7 @@ export const en: Messages = {
       ...ROCKET_WORDS.en.titles,
       bugChampion: 'Bug Champion',
       safariWarden: 'Park Ranger',
+      spaceTime: 'Master of Time and Space',
     },
     goals: {
       ...TERA_WORDS.en.goals,
@@ -3162,6 +3179,7 @@ export const en: Messages = {
     ...ROCKET_FAMILY_WORDS.en.moves,
     ...ULTRA_WORDS.en.moves,
     ...LEGEND_PATHS_WORDS.en.moves,
+    ...QUEST_WORDS.en.moves,
     leechSeed: {
       description: 'Lobs seeds at the nearest foes. A seed drains HP over time and heals you; when the foe faints, it jumps to two neighbors.',
       upgrades: [
@@ -5640,6 +5658,7 @@ export const en: Messages = {
     ...ROCKET_FAMILY_WORDS.en.blurbs,
     ...ULTRA_WORDS.en.blurbs,
     ...LEGEND_PATHS_WORDS.en.blurbs,
+    ...QUEST_WORDS.en.blurbs,
     bulbasaur: 'Balanced. Regenerates HP.',
     charmander: 'Offensive. More damage, less HP.',
     squirtle: 'Defensive. More HP and defense.',
@@ -6357,6 +6376,7 @@ export const en: Messages = {
       ultraGift: 'Comes as a Mystery Gift once you capture all 10 Ultra Beasts.',
       path: LEGEND_PATHS_WORDS.en.paths.where.zygarde,
       temple: LEGEND_PATHS_WORDS.en.paths.where.regigigas,
+      ...QUEST_WORDS.en.where,
     },
     rule: (need: number) => (need === 1 ? 'Beat it once as a boss in a solo run, in any mode, to catch it. Co-op wins don’t count.' : `Beat it ${need} times as a boss in a solo run, in any mode, to catch it. Co-op wins don’t count.`),
     shinyRule: 'Beating a shiny one on the catching win, or after, unlocks its shiny.',
@@ -6372,6 +6392,7 @@ export const en: Messages = {
       gone: (festival) => `The _${festival}_ is over. Whoever received her keeps playing her.`,
     },
   },
+  quests: QUEST_WORDS.en.ui,
   legends: {
     epithets: {
       articuno: 'Bird of Eternal Ice',

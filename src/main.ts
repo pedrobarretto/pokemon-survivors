@@ -27,6 +27,11 @@ import { partnerOf } from './data/domains'
 import { captureOutcome, setCaptureOutcome } from './render/capture'
 import { captureByGift, captureOutcome as savedCapture, isCaptured } from './game/capture'
 import { hideoutCleared, holdsPass, usePass } from './game/hideoutPass'
+import { bankRoamer, wildOf } from './game/questSave'
+import { questNews } from './ui/quests'
+import { rushEnd, rushRingLine } from './ui/rush'
+import { rushLineup, startRush } from './game/rush'
+import { recordRush } from './game/questSave'
 import { domainLines } from './ui/riftTitle'
 import { isWaveLegend, LEGEND_THEME } from './data/legendBosses'
 import { ENEMIES, type EnemyDef, type EnemyId } from './data/enemies'
@@ -37,7 +42,7 @@ import { REGIONS, STARTERS } from './data/starters'
 import { nextIsOfficial } from './game/attempt'
 import { challengeStart, type Challenge } from './game/challenge'
 import { HATCHLING_IDS, HATCHLINGS, PLAYABLE, PLAYABLE_IDS, type HatchlingId, type PlayableId } from './data/hatchlings'
-import { isLegend, type LegendId } from './data/legends'
+import { isLegend, LEGEND_IDS, type LegendId } from './data/legends'
 import { accountHandle, accountState, accountsEnabled, accountUserId, backFromSignIn, giftInbox, onAccountChange, signIn, stageGifts, stageSyncedSave, startAccount, syncSave } from './account'
 import { devCandyGoal, onCandyGoal, startCandyGoal } from './candyGoal'
 import { devFestival, festivalView, startFestival } from './festival'
@@ -102,6 +107,8 @@ import { legendDevTools } from './game/legendDev'
 import { bankCapture, captureDevTools, showCapture } from './ui/capture'
 import { riftDevTools } from './game/riftDev'
 import { ultraDevTools } from './ui/ultraDev'
+import { questDevTools } from './game/questDev'
+import { rushDevTools } from './game/rushDev'
 import { placeDevTools } from './game/placeDev'
 import { placeFeedback } from './ui/places'
 import { landmarkFeedback } from './ui/landmarks'
@@ -218,7 +225,7 @@ import { creditsLine, supportersScreen } from './ui/supporters'
 import type { PollKind } from './data/supporters'
 import { fakeWall, knownTier, linkedPoll, patreonReturn, stageSupporterStatus, watchSupporterStatus } from './supporters'
 import { suggestionsScreen } from './ui/suggestions'
-import { banner, clearToasts, readRunToasts, runToast, tickToasts, toast, type ToastTone } from './ui/toasts'
+import { banner, clearToasts, focusToasts, readRunToasts, runToast, tickToasts, toast, type ToastTone } from './ui/toasts'
 import { bugReportForm, crashPrompt } from './ui/bugReport'
 import { localPlayer, phaseOf } from './game/players'
 import { activeCoopClient, addBots, arenaClient, botsTalk, tabBotLook, arenaQueueDeps, bankCoopRun, botStates, buildRefusal, closeArenaClient, coopClient, coopEventFor, openArenaClient, coopNetPayload, coopUrl, lastCoopNet, linkedRoom, linkRoom, markBuildReload, removeBots, reportCoopNet, reportHeal, setCoopUrl, setCoopVpsUrl, setBotRelays, surrenderBots, type CoopNetOutcome } from './coopShell'
@@ -489,7 +496,12 @@ type Run = {
   coop: CoopRun | null
   /** A Dojo session (`game/training.ts`): never banked, ranked nor reported as a run (null otherwise). */
   training: DojoRun | null
+  /** Hoopa's Rings (`game/rush.ts`): never banked, ranked nor reported as a run either (null otherwise). */
+  rush: RushRun | null
 }
+
+/** The shell's side of a rush: its level and Pokémon (for Try again), and whether its end was banked (a record, Hoopa caught). */
+type RushRun = { difficulty: Difficulty; starter: PlayableId; banked: { record: boolean; caught: boolean } | null }
 
 /** The shell's side of a Dojo session: its panel, when it began and whether a build was saved, for its `dojo_end`. */
 /** The Dojo's panel, or a Torre trial's screen in its place. */
@@ -915,6 +927,7 @@ const showMenu = (initial: PlayableId = loadSave().partner, tab?: 'legends') => 
     incubator: () => showIncubator(() => showMenu(select.selected())),
     // A skin not owned yet: the Boutique's Skins on it, then back here on the same Pokémon.
     boutique: (skin) => showBoutique('skins', () => showMenu(select.selected()), null, skin),
+    rush: (id, difficulty) => setTimeout(() => void startRushRun(id, difficulty), 250),
   }, initial, tab ? { tab } : undefined)
   setScreen(select)
 }
@@ -1092,6 +1105,12 @@ const bankHatchery = (r: Run) => {
  * Quitting keeps coins but forfeits the survival bonus, unless Mewtwo already
  * fell (victory or endless). Every species seen or defeated counts either way.
  */
+/** A roaming lake legend's HP taken this run stays taken (`bankRoamer`), whether it fled, fell or is still about as the run ends. */
+const bankRoamerHp = (g: Game) => {
+  const roam = g.quests.roam
+  if (roam && g.coop === null) updateSave((s) => ({ ...s, roamers: bankRoamer(s.roamers, roam.legend, roam.left) }))
+}
+
 const bankRun = (r: Run, withBonus: boolean) => {
   const g = r.game
   const total = withBonus ? runEarnings(g).total : g.coins
@@ -1101,6 +1120,7 @@ const bankRun = (r: Run, withBonus: boolean) => {
   r.candies = Math.max(r.candies, g.candies)
   r.nuts = bankNuts(ui, g, r.nuts)
   bankHatchery(r)
+  bankRoamerHp(g)
   // Merged into the stored Pokédex, which an account sync may have grown during the run.
   updateSave((save) => ({ ...save, dex: mergeDex(save.dex, recordRun(r.dexBase, g.dexLog)) }))
 }
@@ -1225,6 +1245,7 @@ const endRun = () => {
   if (!run) return
   if (run.coop) return endCoopRun(run, run.coop)
   if (run.training) return endDojo(run, run.training)
+  if (run.rush) return endRushRun(run)
   bankRun(run, wonRun(run.game))
   reportRun(run)
   rankRun(run)
@@ -1515,6 +1536,7 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
     ultra,
     // The legend paths: the forms the save opened for this legend, and Regigigas's temple for the Regi trio's captor.
     ...pathStart(save, starter, plan.seed),
+    wild: wildOf(save),
     view: { w: view.w, h: view.h },
   }
   // Created like a replay is re-simulated (the roster drawn ahead is the same one).
@@ -1559,6 +1581,7 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
     sprites: { needs: castNeeds(game.roster, EXTRAS), always: [...familyDex(starter), playerDex(game), ENEMIES[plan.outbreak].dex] },
     coop: null,
     training: null,
+    rush: null,
   }
   if (run.companion) run.sprites.always.push(run.companion.dex)
   wearOwnLook()
@@ -1574,6 +1597,14 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
 /** A run's news that warns or asks for something (a boss, a rift's omen, a hazard): it shows unless the "Avisos na partida" setting says Nenhum. */
 const news = (content: HTMLElement | string, ms?: number, key: string | null = null) => runToast(ui, 'important', content, ms, key)
 /** A run's minor news (a drop, a berry, a shiny spotted, a milestone the screen already shows): only at Todos. */
+/** A roaming legend's or a duel's moment: its sound and cry, and its line on the news (`questNews`). */
+const showQuest = (e: Extract<GameEvent, { kind: 'roam' | 'duel' }>) => {
+  const q = questNews(e)
+  if (q.sfx) playSfx(q.sfx)
+  if (q.cry !== null) playCry(cryUrl(q.cry), 0.8)
+  return q.line ? news(rich(q.line), q.ms) : undefined
+}
+
 const aside = (content: HTMLElement | string, ms?: number, key: string | null = null, tone: ToastTone | null = null) => runToast(ui, 'minor', content, ms, key, tone)
 
 /** The run's first toasts: safe mode coming on after a crash, the challenge it plays, the day's outbreak, then each bag item it used and each TM it armed. */
@@ -1682,6 +1713,7 @@ const startDojo = async (starter: PlayableId, trial: TrialId | null = null) => {
       sprites: { needs: [], always: [...familyDex(starter), ENEMIES[TRAINING.target].dex] },
       coop: null,
       training: null,
+      rush: null,
     }
     if (r.companion) r.sprites.always.push(r.companion.dex)
     wearOwnLook()
@@ -1737,6 +1769,106 @@ const startDojo = async (starter: PlayableId, trial: TrialId | null = null) => {
   } finally {
     launching = false
   }
+}
+
+/**
+ * Hoopa's Rings (`game/rush.ts`) with `starter` at `difficulty`: a run with no
+ * horde whose rings bring back the save's captured legends. Like the Dojo it's
+ * never banked, ranked nor reported: only its end touches the save (the best
+ * time, `bankRush`, and Hoopa's capture through `legendBeaten`).
+ */
+const startRushRun = async (starter: PlayableId, difficulty: Difficulty) => {
+  if (launching) return
+  const save = loadSave()
+  const lineup = rushLineup(LEGEND_IDS.filter((id) => isCaptured(save.legends, id)), difficulty, Date.now())
+  if (!lineup) return
+  launching = true
+  try {
+    setScreen(null)
+    endRun()
+    const loading = loadingScreen()
+    ui.append(loading)
+    const shiny = playsShiny(save, starter)
+    const game = createGame(starter, view, Date.now(), save.ranks, undefined, { shiny, difficulty, caps: capLevel(save.caps, starter), forms: openForms(save.paths, starter) })
+    const me = localPlayer(game)
+    me.shiny = shiny
+    me.luckyShiny = false
+    startRush(game, difficulty, lineup, save.builds[starter] ?? null)
+    const dexes = lineup.map((id) => ENEMIES[id].dex)
+    await loadRunSheets(familySheets(starter, shiny), dexes)
+    loading.remove()
+    const start: ReplayStart = { seed: 0, starter, difficulty, ranks: save.ranks, shiny, luckyEgg: false, outbreak: null, halloween: false, bag: [], view: { ...view } }
+    const r: Run = {
+      game,
+      hud: runHud(game),
+      overlay: null,
+      shown: null,
+      closeText: null,
+      paid: 0,
+      candies: 0,
+      nuts: 0,
+      mythical: null,
+      reported: true,
+      missionsBefore: [],
+      recorded: null,
+      unlocked: [],
+      reward: 0,
+      rewardEggs: 0,
+      rewardItems: [],
+      hatchery: { steps: 0, eggs: 0 },
+      convertedEggs: { full: [], cap: [] },
+      dexBase: save.dex,
+      recorder: startRecording(start),
+      ranked: null,
+      rank: null,
+      bestBefore: 0,
+      challenge: null,
+      companion: runCompanion(me),
+      sprites: { needs: [], always: [...familyDex(starter), ...dexes] },
+      coop: null,
+      training: null,
+      rush: { difficulty, starter, banked: null },
+    }
+    if (r.companion) r.sprites.always.push(r.companion.dex)
+    wearOwnLook()
+    run = r
+    syncSprites()
+    resetMemoryPeaks()
+    resetRunFrames(frames)
+    awaitFirstFrame()
+    aside(rich(save.builds[starter] ? t().quests.rush.build(PLAYABLE[starter].name) : t().quests.rush.noBuild), 3200, 'rush')
+  } finally {
+    launching = false
+  }
+}
+
+/** A rush's end into the save, once: a cleared one's time (`recordRush`); Hoopa's capture came through `legendBeaten` already. */
+const bankRush = (g: Game, rush: RushRun) => {
+  if (g.phase !== 'victory') return { record: false, caught: false }
+  const before = loadSave()
+  const { best, record } = recordRush(before.rush, rush.difficulty, Math.round(g.time))
+  updateSave((s) => ({ ...s, rush: best }))
+  void syncSave()
+  // The first clear, at any level, is the one that caught Hoopa.
+  return { record, caught: Object.keys(before.rush).length === 0 }
+}
+
+/** Leaves Hoopa's Rings for the Lendários tab. */
+const leaveRush = () => {
+  const starter = run?.rush?.starter
+  endRun()
+  showMenu(starter ?? loadSave().partner, 'legends')
+}
+
+/** Ends a rush: no banking, ranking or missions; its looks and HUD go. */
+const endRushRun = (r: Run) => {
+  r.overlay?.dispose()
+  r.closeText?.()
+  r.hud.dispose()
+  clearToasts(ui)
+  takeOffLooks()
+  run = null
+  syncRunWatch()
 }
 
 /** Leaves the Dojo for the lobby (the panel's Sair, the pause menu's quit). */
@@ -1881,13 +2013,19 @@ const syncOverlay = (r: Run) => {
         // Only from the pause: a late press must never flip a level-up to playing (unrecorded) or end the run under it.
         // A fresh canvas too: the player's way out of a world that stopped drawing behind the pause (`freshCanvas`).
         resume: () => g.phase === 'paused' && ((g.phase = 'playing'), freshCanvas()),
-        quit: () => g.phase === 'paused' && (r.training ? leaveDojo() : afterRun(() => showMenu())),
+        quit: () => g.phase === 'paused' && (r.training ? leaveDojo() : r.rush ? leaveRush() : afterRun(() => showMenu())),
         settings: (back) => runSettings(r, back),
         report: bugReportsEnabled ? (back) => bugReportForm(ui, input, back) : null,
       })
       break
     case 'gameover':
     case 'victory':
+      if (r.rush) {
+        const rush = r.rush
+        rush.banked ??= bankRush(g, rush)
+        r.overlay = rushEnd(ui, input, g, { ...rush.banked, again: () => void startRushRun(rush.starter, rush.difficulty), leave: () => leaveRush() })
+        break
+      }
       if (c?.versus) {
         // The match's last toasts would sit over the results.
         clearToasts(ui)
@@ -2232,6 +2370,16 @@ const handleEvent = (r: Run, e: GameEvent) => {
     // Banked toward capturing it right away (`ui/capture.ts`), so the capture scene reads it.
     case 'legendBeaten':
       return bankCapture(e.legend, e.shiny, g.endless !== null)
+    case 'roam':
+      if (e.moment === 'fled' || e.moment === 'caught') bankRoamerHp(g)
+      return showQuest(e)
+    case 'duel':
+      return showQuest(e)
+    case 'rush':
+      if (e.moment === 'down') return
+      playSfx(e.legend === 'hoopa' ? 'legendary' : 'boss')
+      playCry(cryUrl(ENEMIES[e.legend].dex), 0.8)
+      return news(rich(rushRingLine(e.ring, e.rings, e.legend)), 2600)
     // The Desafio do dia plays the same for everyone: its finales don't count toward the protection.
     case 'mythicalRoll':
       r.mythical = e.enemy ?? 'none'
@@ -2418,6 +2566,11 @@ const handleEvent = (r: Run, e: GameEvent) => {
     case 'riftTitle':
       playSfx('legendary')
       playCry(cryUrl(ENEMIES[e.enemy].dex), 0.9)
+      // Palkia knows its twin: a player who captured Dialga hears it once the title card is down.
+      if (e.enemy === 'palkia' && isCaptured(loadSave().legends, 'dialga')) {
+        const line = domainLines('palkia')?.cues?.dialga
+        if (line) window.setTimeout(() => news(rich(line), 3600), 2600)
+      }
       return flashScreen(ui)
     case 'bossPhase': {
       const def = ENEMIES[e.enemy]
@@ -2444,6 +2597,8 @@ const handleEvent = (r: Run, e: GameEvent) => {
       return aside(rich(t().rifts.escaped(name)), 3200)
     }
     case 'domainCue': {
+      // Palkia's portals: a whoosh as a player goes through one.
+      if (e.cue === 'warp' || e.cue === 'thrownBack' || e.cue === 'swap') playSfx('whoosh')
       const line = domainLines(e.enemy)?.cues?.[e.cue]
       return line ? news(rich(line), 1600) : undefined
     }
@@ -2932,6 +3087,7 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
     },
     coop: c,
     training: null,
+    rush: null,
   }
   syncSprites()
   resetMemoryPeaks()
@@ -4110,7 +4266,8 @@ const frame = (now: number) => {
     if (run === r) {
       syncOverlay(r)
       r.training?.panel.tick?.(t)
-      // Toasts and banners wait out menus, level-ups and evolutions with their clocks stopped.
+      // Toasts and banners wait out menus, level-ups and evolutions with their clocks stopped; a fight that needs its boss in view (a rift's legend, Hoopa's rings, a Sword's duel) takes them one at a time, off the top.
+      focusToasts(ui, g.rush !== null || g.quests.duel?.stage === 'dueling' || g.rift.arena?.domain?.act === 'battle')
       tickToasts(ui, dt, g.phase !== 'playing')
       // Redraw only when the simulation advanced: halves the work on 120 Hz phones and
       // idles the GPU while a menu is open over a frozen frame (but for `HELD_BACK` and `HELD_KEEP`).
@@ -5551,6 +5708,8 @@ if (import.meta.env.DEV) {
       ball: (n = 1) => withRun((g) => Array.from({ length: n }, (_, i) => dropPickup(g, localPlayer(g).x + 20 + i * 6, localPlayer(g).y, 'pokeball'))),
       ...riftDevTools(() => run?.game),
       ...ultraDevTools(() => run?.game, () => showMenu(loadSave().partner, 'legends')),
+      ...questDevTools(() => run?.game),
+      ...rushDevTools(() => run?.game, (difficulty) => void startRushRun(loadSave().partner, difficulty), () => showMenu(loadSave().partner, 'legends')),
       ...placeDevTools(() => run?.game),
       ...seasonFindDevTools(() => run?.game, devLandmark),
       ...travelDevTools(),

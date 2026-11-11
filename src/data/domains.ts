@@ -16,6 +16,7 @@ import { LATIS_DOMAIN } from './domains/latis'
 import { DEOXYS_DOMAIN } from './domains/deoxys'
 import { DARKRAI_DOMAIN } from './domains/darkrai'
 import { ULTRA_DOMAINS } from './domains/ultra'
+import { PALKIA_DOMAIN } from './domains/palkia'
 
 /**
  * EPIC RIFTS: a legendary's domain, as data.
@@ -76,19 +77,22 @@ import { ULTRA_DOMAINS } from './domains/ultra'
 export type LegendSky = 'downpour' | 'harshSun' | 'gale' | 'timeWarp' | 'storm' | 'embers' | 'mist' | 'meteors' | 'newMoon'
   /** An Ultra Wormhole's omen: the sky cracks open in prismatic light (`data/ultraBeasts.ts`). */
   | 'ultraSpace'
+  /** Palkia's Folded Space: rose-violet folds drifting across the sky. */
+  | 'foldedSpace'
 
-/** How the threat behind the crossing looks (`render/domain.ts`); its rules are the same for every kind. `magma`: lava chasing up a collapsing tunnel; `crumble`: a floor falling away into the sky; `ultra`: an Ultra Wormhole closing behind. */
-export type ThreatKind = 'tide' | 'collapse' | 'fire' | 'void' | 'magma' | 'crumble' | 'storm' | 'time' | 'mist' | 'ultra'
+/** How the threat behind the crossing looks (`render/domain.ts`); its rules are the same for every kind. `magma`: lava chasing up a collapsing tunnel; `crumble`: a floor falling away into the sky; `ultra`: an Ultra Wormhole closing behind; `fold`: space folding up behind the player, torn at its edge. */
+export type ThreatKind = 'tide' | 'collapse' | 'fire' | 'void' | 'magma' | 'crumble' | 'storm' | 'time' | 'mist' | 'ultra' | 'fold'
 
 /**
  * How the legendary comes in: out of water (`rise`), down from the sky
  * (`descend`), out of thin air (`materialize`), as time stops around it
  * (`warp`: the world greys out and clock rings close on its spot), streaking
- * in out of invisibility (`swoop`, the Eon duo), or reforming out of a crystal
- * meteor that crashes down (`meteor`, Deoxys), or out of a small Ultra
- * Wormhole torn open over its spot (`wormhole`, the Ultra Beasts).
+ * in out of invisibility (`swoop`, the Eon duo), reforming out of a crystal
+ * meteor that crashes down (`meteor`, Deoxys), out of a small Ultra
+ * Wormhole torn open over its spot (`wormhole`, the Ultra Beasts), or tearing
+ * space open and stepping through the tear (`rend`, Palkia).
  */
-export type DomainEntrance = 'rise' | 'descend' | 'materialize' | 'warp' | 'swoop' | 'meteor' | 'wormhole'
+export type DomainEntrance = 'rise' | 'descend' | 'materialize' | 'warp' | 'swoop' | 'meteor' | 'wormhole' | 'rend'
 
 /** What a retinue member (or a summoned add) does besides walking at the player: aims ahead (`runner`), shoots from a distance (`spitter`), or comes in tougher (`elite`). */
 export type RetinueRole = 'runner' | 'spitter' | 'elite'
@@ -138,6 +142,12 @@ export type Crossing = FloorPlan & {
   retinue: Retinue
   /** What plays while crossing (the battle plays the domain's `music`). */
   theme: ThemeId
+  /**
+   * Twin portals across gaps the floor doesn't bridge (Palkia's): stepping
+   * into `from` comes out at `to`. The domain's hooks play them
+   * (`game/palkiaDomain.ts`); the crossing's floor checks walk through them.
+   */
+  portals?: readonly { from: Pt; to: Pt }[]
 }
 
 export type DomainArena = FloorPlan & {
@@ -241,6 +251,7 @@ export const DOMAINS: Partial<Record<RiftLegend, LegendDomain>> = {
   deoxys: DEOXYS_DOMAIN,
   darkrai: DARKRAI_DOMAIN,
   ...ULTRA_DOMAINS,
+  palkia: PALKIA_DOMAIN,
 }
 
 /** The domain behind `legend`'s rift, if it has one. */

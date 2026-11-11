@@ -9,6 +9,7 @@ import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { ROCKET_WORDS } from './rocket/words'
 import { ULTRA_WORDS } from './ultra'
 import { LEGEND_PATHS_WORDS } from './legendPaths'
+import { QUEST_WORDS } from './quests'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -2464,6 +2465,7 @@ export const zh: Messages = {
     ...SEASON_ONE_KITS_WORDS.zh.abilities,
     ...ULTRA_WORDS.zh.abilities,
     ...LEGEND_PATHS_WORDS.zh.abilities,
+    ...QUEST_WORDS.zh.abilities,
     overgrow: 'HP低於1/3時，草屬性招式傷害+50%。',
     blaze: 'HP低於1/3時，火屬性招式傷害+50%。',
     torrent: 'HP低於1/3時，水屬性招式傷害+50%。',
@@ -2765,6 +2767,20 @@ export const zh: Messages = {
         phases: ['時間扭曲了！Roar of Time 期間，你的攻擊會凍結在半空中。', '時間加速了！Dialga 越來越快。'],
         cues: { stop: '時間停止了！', forward: '時間快轉了！', rewind: '時間倒流了！' },
       },
+      palkia: {
+        place: '摺疊空間',
+        epithet: '空間之主',
+        omen: '空間開始摺疊…',
+        crossing: '空間正在閉合！穿過雙生傳送門越過裂縫！',
+        phases: ['空間彎曲了！大廳的兩側相連：從一邊走出，就會從另一邊回來。', '起源形態！空間摺疊，大廳的牆壁向內收攏。'],
+        cues: {
+          twist: '空間扭轉了！傳送門會把你送回去！',
+          thrownBack: '被送回去了！',
+          swap: '*Palkia* 和你交換了位置！',
+          fold: '空間之牆正在收攏！',
+          dialga: '*Palkia* 在你身上感受到 *Dialga* 的時間…咆哮得更響了！',
+        },
+      },
       latias: {
         place: '南方孤島',
         epithet: '無限雙子',
@@ -2994,7 +3010,7 @@ export const zh: Messages = {
     noTitle: '無',
     titleTag: '稱號',
     equipped: '展示中',
-    giftTitles: { ambassador: '邀請了3位好友加入遊戲', supporter: '透過贊助支持本專案', pumpkinKing: '裝滿了女巫之夜的糖果罐', exorcist: '擊敗了所有捉鬼行動的首領', vipCustomer: '在 Kecleon 集點卡上集滿30個印章', tycoon: '把 Kecleon 的商店經營成百貨公司', patron: '在廣場祭典中捐出 ₽50,000 以上', ogSupporter: '在 Patreon 之前就贊助了遊戲', arenaPoke: '以 Poké Ball 段位結束一個競技場排位賽季', arenaGreat: '在競技場排位賽季中達到 Great Ball', arenaUltra: '在競技場排位賽季中達到 Ultra Ball', arenaMaster: '在競技場排位賽季中達到 Master Ball', creator: '製作 Pokémon Survivors 的影片和直播', friendLegend: '邀請了10位好友加入遊戲', stampCollector: '在 Poké Realm 收集了30枚印章', era1Legend: '在第一紀元排行榜名列前茅', era1Champion: '在第一紀元排行榜奪得第一', bugChampion: '贏得一週的捕蟲大會', safariWarden: '完成狩獵地帶所有棲地的圖鑑', ...ROCKET_WORDS.zh.giftTitles, kantoDex: '在圖鑑中看過關都的所有寶可夢', johtoDex: '在圖鑑中看過城都的所有寶可夢', hoennDex: '在圖鑑中看過豐緣的所有寶可夢', sinnohDex: '在圖鑑中看過神奧的所有寶可夢', unovaDex: '在圖鑑中看過合眾的所有寶可夢', kalosDex: '在圖鑑中看過卡洛斯的所有寶可夢', alolaDex: '在圖鑑中看過阿羅拉的所有寶可夢', galarDex: '在圖鑑中看過伽勒爾的所有寶可夢', paldeaDex: '在圖鑑中看過帕底亞的所有寶可夢' },
+    giftTitles: { ambassador: '邀請了3位好友加入遊戲', supporter: '透過贊助支持本專案', pumpkinKing: '裝滿了女巫之夜的糖果罐', exorcist: '擊敗了所有捉鬼行動的首領', vipCustomer: '在 Kecleon 集點卡上集滿30個印章', tycoon: '把 Kecleon 的商店經營成百貨公司', patron: '在廣場祭典中捐出 ₽50,000 以上', ogSupporter: '在 Patreon 之前就贊助了遊戲', arenaPoke: '以 Poké Ball 段位結束一個競技場排位賽季', arenaGreat: '在競技場排位賽季中達到 Great Ball', arenaUltra: '在競技場排位賽季中達到 Ultra Ball', arenaMaster: '在競技場排位賽季中達到 Master Ball', creator: '製作 Pokémon Survivors 的影片和直播', friendLegend: '邀請了10位好友加入遊戲', stampCollector: '在 Poké Realm 收集了30枚印章', era1Legend: '在第一紀元排行榜名列前茅', era1Champion: '在第一紀元排行榜奪得第一', spaceTime: '捕捉了 Dialga 與 Palkia', bugChampion: '贏得一週的捕蟲大會', safariWarden: '完成狩獵地帶所有棲地的圖鑑', ...ROCKET_WORDS.zh.giftTitles, kantoDex: '在圖鑑中看過關都的所有寶可夢', johtoDex: '在圖鑑中看過城都的所有寶可夢', hoennDex: '在圖鑑中看過豐緣的所有寶可夢', sinnohDex: '在圖鑑中看過神奧的所有寶可夢', unovaDex: '在圖鑑中看過合眾的所有寶可夢', kalosDex: '在圖鑑中看過卡洛斯的所有寶可夢', alolaDex: '在圖鑑中看過阿羅拉的所有寶可夢', galarDex: '在圖鑑中看過伽勒爾的所有寶可夢', paldeaDex: '在圖鑑中看過帕底亞的所有寶可夢' },
     newMedals: '新獎牌',
     names: {
       ...TERA_WORDS.zh.achievementNames,
@@ -3110,6 +3126,7 @@ export const zh: Messages = {
       ...ROCKET_WORDS.zh.titles,
       bugChampion: '捕蟲冠軍',
       safariWarden: '園區巡守員',
+      spaceTime: '時間與空間之主',
     },
     goals: {
       ...TERA_WORDS.zh.goals,
@@ -3159,6 +3176,7 @@ export const zh: Messages = {
     ...ROCKET_FAMILY_WORDS.zh.moves,
     ...ULTRA_WORDS.zh.moves,
     ...LEGEND_PATHS_WORDS.zh.moves,
+    ...QUEST_WORDS.zh.moves,
     leechSeed: {
       description: '向最近的敵人拋出種子。種子會隨時間吸取HP並回復你；敵人倒下時，種子會跳到附近的兩個敵人身上。',
       upgrades: [
@@ -5636,6 +5654,7 @@ export const zh: Messages = {
     ...ROCKET_FAMILY_WORDS.zh.blurbs,
     ...ULTRA_WORDS.zh.blurbs,
     ...LEGEND_PATHS_WORDS.zh.blurbs,
+    ...QUEST_WORDS.zh.blurbs,
     bulbasaur: '平衡型。會回復HP。',
     charmander: '進攻型。傷害較高，HP較低。',
     squirtle: '防禦型。HP與防禦較高。',
@@ -6353,6 +6372,7 @@ export const zh: Messages = {
       ultraGift: '收服全部10隻究極異獸後，以神秘禮物送達。',
       path: LEGEND_PATHS_WORDS.zh.paths.where.zygarde,
       temple: LEGEND_PATHS_WORDS.zh.paths.where.regigigas,
+      ...QUEST_WORDS.zh.where,
     },
     rule: (need: number) => (need === 1 ? '在任何模式的單人遊戲中以首領身分擊敗它1次，即可收服。合作模式的勝利不計。' : `在任何模式的單人遊戲中以首領身分擊敗它${need}次，即可收服。合作模式的勝利不計。`),
     shinyRule: '在收服的那場勝利或之後擊敗異色個體，即可解鎖它的異色。',
@@ -6368,6 +6388,7 @@ export const zh: Messages = {
       gone: (festival) => `_${festival}_已經結束。已收到的玩家仍可繼續使用牠。`,
     },
   },
+  quests: QUEST_WORDS.zh.ui,
   legends: {
     epithets: {
       articuno: '永恆寒冰之鳥',

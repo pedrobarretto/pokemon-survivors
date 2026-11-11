@@ -36,6 +36,7 @@ export { TICK } from './tick'
 import { TICK } from './tick'
 import { parseHunt, type MythicalHunt } from './mythicalHunt'
 import { isShadowVariant, type ShadowVariant } from './shadow'
+import { parseWild, type WildStart } from './quests'
 
 /**
  * Version of the rules a replay plays by. Bump it with any change that makes
@@ -95,6 +96,8 @@ export type ReplayStart = {
   forms?: readonly PathFormId[]
   /** The run brings Regigigas's temple (`templeRun` in `game/legendPaths.ts`). Not when absent. */
   temple?: boolean
+  /** The legends the save still has to catch on the open map (`game/quests.ts`): none when absent (co-op, the Desafio do dia, all caught). */
+  wild?: WildStart
   /** World px the screen showed at the start: spawns and despawns depend on it. */
   view: { w: number; h: number }
 }
@@ -250,6 +253,8 @@ export const parseReplay = (raw: unknown): Replay | null => {
   if (mythical === null) return null
   const forms = parseForms(s.forms, s.starter)
   if (forms === null) return null
+  const wild = s.wild === undefined ? undefined : parseWild(s.wild)
+  if (wild === null) return null
   return {
     rules: isWhole(raw.rules) && raw.rules > 0 ? raw.rules : 1,
     start: {
@@ -272,6 +277,7 @@ export const parseReplay = (raw: unknown): Replay | null => {
       ...(isUltraBeast(s.ultra) ? { ultra: s.ultra } : {}),
       ...(forms.length > 0 ? { forms } : {}),
       ...(s.temple === true ? { temple: true } : {}),
+      ...(wild ? { wild } : {}),
       view,
     },
     moves: raw.moves,
@@ -312,6 +318,7 @@ export const startGame = (start: ReplayStart, view: Game['view'] = { ...start.vi
     ultra: start.ultra ?? null,
     forms: start.forms ?? [],
     temple: start.temple === true,
+    wild: start.wild,
   })
 
 const applyEvent = (g: Game, e: ReplayEvent) => {

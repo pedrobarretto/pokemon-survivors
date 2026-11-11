@@ -10,6 +10,7 @@ import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { ROCKET_WORDS } from './rocket/words'
 import { ULTRA_WORDS } from './ultra'
 import { LEGEND_PATHS_WORDS } from './legendPaths'
+import { QUEST_WORDS } from './quests'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -2802,6 +2803,7 @@ export const pt = {
     ...SEASON_ONE_KITS_WORDS.pt.abilities,
     ...ULTRA_WORDS.pt.abilities,
     ...LEGEND_PATHS_WORDS.pt.abilities,
+    ...QUEST_WORDS.pt.abilities,
     overgrow: 'Com menos de 1/3 do HP, golpes de Planta causam +50%.',
     blaze: 'Com menos de 1/3 do HP, golpes de Fogo causam +50%.',
     torrent: 'Com menos de 1/3 do HP, golpes de Água causam +50%.',
@@ -3119,6 +3121,20 @@ export const pt = {
         phases: ['O tempo se distorce! No Roar of Time, seus golpes congelam no ar.', 'O tempo acelera! Dialga fica cada vez mais rápido.'],
         cues: { stop: 'O tempo parou!', forward: 'O tempo saltou para frente!', rewind: 'O tempo voltou!' },
       },
+      palkia: {
+        place: 'Espaço Dobrado',
+        epithet: 'Senhor do Espaço',
+        omen: 'O espaço começa a se dobrar…',
+        crossing: 'O espaço está se fechando! Atravesse as fendas pelos portais gêmeos!',
+        phases: ['O espaço se curva! As bordas do salão se tocam: saia por um lado e volte pelo outro.', 'Forma Origem! O espaço se dobra e as paredes do salão se fecham.'],
+        cues: {
+          twist: 'O espaço se torceu! Os portais levam para trás!',
+          thrownBack: 'Jogado para trás!',
+          swap: '*Palkia* trocou de lugar com você!',
+          fold: 'As paredes do espaço se fecham!',
+          dialga: '*Palkia* sente em você o tempo de *Dialga*… e ruge mais alto!',
+        },
+      },
       latias: {
         place: 'Ilha do Sul',
         epithet: 'Dupla Eon',
@@ -3369,7 +3385,7 @@ export const pt = {
     titleTag: 'TÍTULO',
     equipped: 'EM USO',
     /** Titles that come as a Mystery Gift, with how they were earned. */
-    giftTitles: { ambassador: 'Trouxe 3 amigos para o jogo', supporter: 'Apoiou o projeto com uma doação', pumpkinKing: 'Encheu o pote de doces da Noite das Bruxas', exorcist: 'Venceu todos os chefes da Caça aos Fantasmas', vipCustomer: 'Juntou 30 carimbos no cartão fidelidade do Kecleon', tycoon: 'Transformou a loja do Kecleon em Loja de Departamento', patron: 'Doou ₽50.000 ou mais num Festival da Praça', ogSupporter: 'Apoiou o jogo antes do Patreon', arenaPoke: 'Fechou uma temporada ranqueada da Arena em Poké Ball', arenaGreat: 'Chegou a Great Ball numa temporada ranqueada da Arena', arenaUltra: 'Chegou a Ultra Ball numa temporada ranqueada da Arena', arenaMaster: 'Chegou a Master Ball numa temporada ranqueada da Arena', creator: 'Faz vídeos e lives de Pokémon Survivors', friendLegend: 'Trouxe 10 amigos para o jogo', stampCollector: 'Juntou 30 Estampas no Poké Realm', era1Legend: 'Ficou no topo de um quadro da Era 1', era1Champion: 'Foi o nº 1 de um quadro da Era 1', bugChampion: 'Venceu uma semana do Concurso de Insetos', safariWarden: 'Completou a Pokédex de todos os habitats da Zona Safári', ...ROCKET_WORDS.pt.giftTitles, kantoDex: 'Viu todos os Pokémon de Kanto no Pokédex', johtoDex: 'Viu todos os Pokémon de Johto no Pokédex', hoennDex: 'Viu todos os Pokémon de Hoenn no Pokédex', sinnohDex: 'Viu todos os Pokémon de Sinnoh no Pokédex', unovaDex: 'Viu todos os Pokémon de Unova no Pokédex', kalosDex: 'Viu todos os Pokémon de Kalos no Pokédex', alolaDex: 'Viu todos os Pokémon de Alola no Pokédex', galarDex: 'Viu todos os Pokémon de Galar no Pokédex', paldeaDex: 'Viu todos os Pokémon de Paldea no Pokédex' } satisfies Record<GiftTitleId, string>,
+    giftTitles: { ambassador: 'Trouxe 3 amigos para o jogo', supporter: 'Apoiou o projeto com uma doação', pumpkinKing: 'Encheu o pote de doces da Noite das Bruxas', exorcist: 'Venceu todos os chefes da Caça aos Fantasmas', vipCustomer: 'Juntou 30 carimbos no cartão fidelidade do Kecleon', tycoon: 'Transformou a loja do Kecleon em Loja de Departamento', patron: 'Doou ₽50.000 ou mais num Festival da Praça', ogSupporter: 'Apoiou o jogo antes do Patreon', arenaPoke: 'Fechou uma temporada ranqueada da Arena em Poké Ball', arenaGreat: 'Chegou a Great Ball numa temporada ranqueada da Arena', arenaUltra: 'Chegou a Ultra Ball numa temporada ranqueada da Arena', arenaMaster: 'Chegou a Master Ball numa temporada ranqueada da Arena', creator: 'Faz vídeos e lives de Pokémon Survivors', friendLegend: 'Trouxe 10 amigos para o jogo', stampCollector: 'Juntou 30 Estampas no Poké Realm', era1Legend: 'Ficou no topo de um quadro da Era 1', era1Champion: 'Foi o nº 1 de um quadro da Era 1', spaceTime: 'Capturou Dialga e Palkia', bugChampion: 'Venceu uma semana do Concurso de Insetos', safariWarden: 'Completou a Pokédex de todos os habitats da Zona Safári', ...ROCKET_WORDS.pt.giftTitles, kantoDex: 'Viu todos os Pokémon de Kanto no Pokédex', johtoDex: 'Viu todos os Pokémon de Johto no Pokédex', hoennDex: 'Viu todos os Pokémon de Hoenn no Pokédex', sinnohDex: 'Viu todos os Pokémon de Sinnoh no Pokédex', unovaDex: 'Viu todos os Pokémon de Unova no Pokédex', kalosDex: 'Viu todos os Pokémon de Kalos no Pokédex', alolaDex: 'Viu todos os Pokémon de Alola no Pokédex', galarDex: 'Viu todos os Pokémon de Galar no Pokédex', paldeaDex: 'Viu todos os Pokémon de Paldea no Pokédex' } satisfies Record<GiftTitleId, string>,
     newMedals: 'Novas medalhas',
     names: {
       ...TERA_WORDS.pt.achievementNames,
@@ -3485,6 +3501,7 @@ export const pt = {
       ...ROCKET_WORDS.pt.titles,
       bugChampion: 'Campeão(ã) dos Insetos',
       safariWarden: 'Guarda-Parque',
+      spaceTime: 'Mestre do Tempo e do Espaço',
     } satisfies Record<TitleId, string>,
     goals: {
       ...TERA_WORDS.pt.goals,
@@ -3535,6 +3552,7 @@ export const pt = {
     ...ROCKET_FAMILY_WORDS.pt.moves,
     ...ULTRA_WORDS.pt.moves,
     ...LEGEND_PATHS_WORDS.pt.moves,
+    ...QUEST_WORDS.pt.moves,
     leechSeed: {
       description: 'Arremessa sementes nos inimigos mais próximos. A semente suga HP com o tempo e cura você; quando o inimigo cai, ela pula para dois vizinhos.',
       upgrades: [
@@ -6013,6 +6031,7 @@ export const pt = {
     ...ROCKET_FAMILY_WORDS.pt.blurbs,
     ...ULTRA_WORDS.pt.blurbs,
     ...LEGEND_PATHS_WORDS.pt.blurbs,
+    ...QUEST_WORDS.pt.blurbs,
     bulbasaur: 'Equilibrado. Regenera vida.',
     charmander: 'Ofensivo. Mais dano, menos vida.',
     squirtle: 'Defensivo. Mais vida e defesa.',
@@ -6785,6 +6804,7 @@ export const pt = {
       ultraGift: 'Chega como Presente Misterioso quando você capturar as 10 Ultracriaturas.',
       path: LEGEND_PATHS_WORDS.pt.paths.where.zygarde,
       temple: LEGEND_PATHS_WORDS.pt.paths.where.regigigas,
+      ...QUEST_WORDS.pt.where,
     },
     rule: (need: number) => (need === 1 ? 'Para capturar, vença este lendário 1 vez como chefe, numa partida solo, em qualquer modo. Vitórias no co-op não contam.' : `Para capturar, vença este lendário ${need} vezes como chefe, numa partida solo, em qualquer modo. Vitórias no co-op não contam.`),
     shinyRule: 'Vencer um shiny na vitória da captura, ou depois, libera a forma shiny.',
@@ -6803,6 +6823,7 @@ export const pt = {
     },
   },
   /** Wave legendaries on the map (`data/legendBosses.ts`): the epithet on each one's title card, and a line per phase after the first. */
+  quests: QUEST_WORDS.pt.ui,
   legends: {
     epithets: {
       articuno: 'Ave do Gelo Eterno',

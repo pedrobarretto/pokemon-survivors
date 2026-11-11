@@ -44,6 +44,8 @@ import {
   type RollOptions,
 } from './leveling'
 import { createMapEvents, updateMapEvents } from './mapEvents'
+import { createQuests, updateQuests, type WildStart } from './quests'
+import { rushCamera, updateRush } from './rush'
 import { createCurseState } from './curses'
 import { curseCast, decideCurse, updateCurses } from './curseSystem'
 import { updateDuos } from './duoMoves'
@@ -151,6 +153,8 @@ export type RunOptions = {
   mythical?: MythicalHunt
   /** The Ultra Beast of the week (`game/ultraWeek.ts`): its wormhole comes more often. None when absent. */
   ultra?: UltraBeast | null
+  /** The legends the save still has to catch on the open map (`game/quests.ts`); none when absent. */
+  wild?: WildStart
   /** Opens the run on the opening draft (`draftOffers`): three moves of the learnset to pick the second move from. */
   draft?: boolean
   /** The day whose Tera Raid the late den holds (`raidOfDay`); the run draws its own there when absent. */
@@ -333,6 +337,8 @@ export const createRun = (view: Game['view'], seed: number, setups: readonly Pla
     landmarks: createLandmarkState(),
     finds: createSeasonFinds(seed),
     paths: createPathRun(seed, options.temple === true && !coop),
+    quests: createQuests(seed, options.wild, coop),
+    rush: null,
     tutors: 0,
     endless: null,
     tally: createTally(),
@@ -997,6 +1003,7 @@ export const stepTeam = (g: Game, inputs: readonly StepInput[], dt: number) => {
   if (updatePlaceFall(g, dt)) return
   if (hitstopHolds(g, dt)) return
   if (g.training !== null) return stepTraining(g, inputs, dt)
+  if (g.rush !== null) return stepRush(g, inputs, dt)
 
   // The run clock stops inside a rift (`clockRuns`); `now` never does.
   g.now += dt
@@ -1048,6 +1055,7 @@ export const stepTeam = (g: Game, inputs: readonly StepInput[], dt: number) => {
     updateProps(g, dt)
     updateMapEvents(g, dt)
   }
+  updateQuests(g, dt)
   updatePickups(g, dt)
   updateConsumables(g, dt)
   updateEffects(g, dt)
@@ -1097,6 +1105,41 @@ const stepTraining = (g: Game, inputs: readonly StepInput[], dt: number) => {
   updateEffects(g, dt)
   updateTraining(g, dt)
   followPlayers(g, dt, trainingCamera)
+}
+
+/**
+ * Hoopa's Rings' tick (`rush.ts`): the players and their moves against the
+ * ring's legend and its attacks, and the rings themselves. No horde, map
+ * events, weather or level-ups; the clock counts the rush.
+ */
+const stepRush = (g: Game, inputs: readonly StepInput[], dt: number) => {
+  g.now += dt
+  g.time += dt
+  const actor = g.player
+  for (const p of g.players) {
+    g.player = p
+    stepPlayer(g, inputs[p.slot] ?? STILL, dt)
+  }
+  g.player = actor
+  rebuildGrid(g)
+  updateEnemies(g, dt)
+  updateBosses(g, dt)
+  updateHazards(g, dt)
+  updateStatuses(g, dt)
+  rebuildGrid(g)
+  for (const p of g.players) {
+    g.player = p
+    stepMoves(g, inputs[p.slot] ?? STILL, dt)
+  }
+  g.player = actor
+  updateAttacks(g, dt)
+  updateVerbEvolved(g, dt)
+  updateTerrain(g, dt)
+  updatePickups(g, dt)
+  updateConsumables(g, dt)
+  updateEffects(g, dt)
+  updateRush(g, dt)
+  followPlayers(g, dt, rushCamera)
 }
 
 /**

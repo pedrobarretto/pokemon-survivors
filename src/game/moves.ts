@@ -32,6 +32,7 @@ import { LEGENDARY_MOVES } from './legendaryMoves'
 import { LEGENDARY_MOVES_2 } from './legendaryMoves2'
 import { ULTRA_MOVES } from './ultraMoves'
 import { PATH_LEGEND_MOVES } from './pathLegendMoves'
+import { LEGENDARY_MOVES_3 } from './legendaryMoves3'
 import { beatOf } from './signatureRules'
 import { stacksOf } from './kitRules'
 import * as dm from '../engine/dmath'
@@ -2311,6 +2312,8 @@ export const MOVES = {
   ...ULTRA_MOVES,
   /* ---------- Legendary moves, third batch: the path legends (`pathLegendMoves.ts`) ---------- */
   ...PATH_LEGEND_MOVES,
+  /* ---------- Legendary moves, third batch: Palkia, the lake trio, the Swords of Justice, Keldeo and Hoopa (`legendaryMoves3.ts`) ---------- */
+  ...LEGENDARY_MOVES_3,
   /* ---------- Smeargle's Sketch, the Kecleon Egg's signature (`sketch.ts`) ---------- */
   ...SKETCH_MOVES,
   ...SEASON_ONE_EGG_MOVES,
@@ -2322,6 +2325,7 @@ export const MOVES = {
 } as const satisfies Record<string, MoveDef>
 
 export type MoveId = keyof typeof MOVES
+
 
 export const MOVE_IDS = Object.keys(MOVES) as MoveId[]
 

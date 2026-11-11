@@ -8,10 +8,12 @@ import { megasOf } from '../data/megas'
 import { bodyOf } from '../data/bodies'
 import { DIFFICULTY_IDS, type Difficulty } from '../game/difficulty'
 import { incubatorSlots, isReady } from '../game/eggs'
-import { giftLegend, isLegend, isUltraLegend, legendEvent, legendFestival, legendPath, LEGENDS, REGULAR_LEGENDS, type LegendId } from '../data/legends'
+import { giftLegend, isLakeLegend, isLegend, isUltraLegend, LEGEND_IDS, legendEvent, legendFestival, legendPath, LEGENDS, REGULAR_LEGENDS, type LegendId } from '../data/legends'
 import { ULTRA_BEASTS } from '../data/ultraBeasts'
 import { ultraCaptured } from '../game/ultraGifts'
 import { beastBallIcon } from '../render/ultraArt'
+import { RUSH } from '../data/rush'
+import { openRushSheet, rushBanner, rushPool } from './rush'
 import { HALLOWEEN } from '../data/halloween'
 import { brasiliaDay } from '../game/day'
 import { claimOpen, festivalById, festivalEnd, shownLegends } from '../game/festival'
@@ -19,7 +21,7 @@ import { halloweenStanding } from '../game/halloween'
 import { festivalIcon } from './festival'
 import { eventLegendIcon } from '../render/halloweenArt'
 import { ABILITIES } from '../data/abilities'
-import { canPlay, capturedCount, isCaptured, legendSource, stillMissing, winsNeeded } from '../game/capture'
+import { canPlay, capturedCount, isCaptured, legendSource, questSource, stillMissing, winsNeeded } from '../game/capture'
 import { armBlock, armedItems, armItem, BAG_ITEM_IDS, bagCount, type BagItem } from '../game/bag'
 import { SHOP_LEVELS } from '../data/shop'
 import { capLevel } from '../game/evoItems'
@@ -98,6 +100,8 @@ type SelectActions = {
   incubator: () => void
   /** The Boutique's Skins on a skin not owned yet (the skins row); without it (co-op, the Dojo) the row doesn't show. */
   boutique?: (skin: SkinId) => void
+  /** Hoopa's Rings with the Pokémon selected, at a level (the Lendários tab's banner, H); without it (co-op, the Dojo) the banner doesn't show. */
+  rush?: (id: PlayableId, difficulty: Difficulty) => void
 }
 
 /**
@@ -379,9 +383,30 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
     m.ultra.heading,
     h('small', {}, `${capturedCount(save.legends, ultraLegendIds)}/${ultraLegendIds.length}`),
   )
+  /** Hoopa's Rings (`ui/rush.ts`): its level sheet over this screen, which holds its keys while it's open. */
+  let rushSheet: Screen | null = null
+  const captured = LEGEND_IDS.filter((id) => isCaptured(save.legends, id))
+  const openRush = () => {
+    const start = actions.rush
+    if (!start || rushSheet || rushPool(captured).length < RUSH.min) return playSfx('denied')
+    playSfx('select')
+    rushSheet = openRushSheet(root, input, {
+      captured,
+      best: save.rush,
+      start: (difficulty) => {
+        const id = current()
+        if (!unlocked(id)) return playSfx('denied')
+        picked = true
+        start(id, difficulty)
+      },
+      close: () => (rushSheet = null),
+    })
+  }
+  const rushRow = actions.rush && !plain ? rushBanner(rushPool(captured).length, openRush) : null
   const legendsPane = h(
     'div',
     { class: 'partner-legends' },
+    rushRow,
     h('div', { class: 'partner-legend-scroll' }, legendGrid, ultraLegendIds.length > 0 && ultraHead, ultraLegendIds.length > 0 && ultraGrid),
     h('p', { class: 'partner-legend-note' }, rich(opts.dojo ? m.training.legendNote : m.legend.selectNote)),
   )
@@ -485,6 +510,9 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
       const path = pathOfLegend(id)
       // The last legend (Arceus) names the regular ones it still waits for.
       const missing = legendSource(id) === 'endless' ? stillMissing(save.legends, id) : []
+      // A legend caught its own way (`questSource`) says how instead of counting wins; a roamer shows the HP it has left.
+      const quest = questSource(id)
+      const roamLeft = legendSource(id) === 'roam' && isLakeLegend(id) ? (save.roamers[id] ?? 1) : null
       hero.replaceChildren(
         h(
           'div',
@@ -495,7 +523,8 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
             { class: 'partner-id' },
             h('small', { class: 'partner-dex' }, `#${String(nationalDex(form.dex)).padStart(3, '0')}`),
             h('h3', { class: 'partner-name' }, form.name),
-            !gift && !path && h('p', { class: 'partner-legend-wins' }, m.legend.wins(`${Math.min(save.legends[id] ?? 0, need)}/${need}`)),
+            !gift && !path && !quest && h('p', { class: 'partner-legend-wins' }, m.legend.wins(`${Math.min(save.legends[id] ?? 0, need)}/${need}`)),
+            roamLeft !== null && h('p', { class: 'partner-legend-wins' }, t().quests.roam.hpLeft(Math.max(1, Math.round(roamLeft * 100)))),
             !over && !gift && !path && h('p', { class: 'partner-blurb locked-blurb' }, rich(m.legend.where[legendSource(id)])),
             path && h('p', { class: 'partner-blurb locked-blurb' }, rich(pathWhere(id))),
             path && pathButton(path),
@@ -506,7 +535,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
             eventLine(id, true),
           ),
         ),
-        ...(over || gift || (path && path !== 'regigigas') ? [] : [h('p', { class: 'partner-blurb partner-intro' }, m.legend.rule(need), ' ', m.legend.shinyRule)]),
+        ...(over || gift || quest || (path && path !== 'regigigas') ? [] : [h('p', { class: 'partner-blurb partner-intro' }, m.legend.rule(need), ' ', m.legend.shinyRule)]),
       )
       return
     }
@@ -838,6 +867,8 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
 
   const off = input.onKey((key) => {
     if (pathOpen) return
+    if (rushSheet) return
+    if (key === 'KeyH' && rushRow) return openRush()
     if (sheet?.onKey(key)) return
     if (key === 'KeyX' && !plain) return setDifficulty(DIFFICULTY_IDS[(DIFFICULTY_IDS.indexOf(difficulty) + 1) % DIFFICULTY_IDS.length]!)
     if (key === 'KeyZ') return setShiny(!shinyOf(current()))
@@ -906,5 +937,5 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
     else blitCentered(ctx, PICKUPS.pokeball(), sprite.width / 2, sprite.height / 2 + Math.round(Math.sin(time * 6) * 2))
   }
 
-  return { el, tick, selected: current, dispose: () => (off(), offGems(), pathOpen?.dispose(), clearTimeout(cryTimer), window.removeEventListener('keydown', holdTab), el.remove()) }
+  return { el, tick, selected: current, dispose: () => (off(), offGems(), pathOpen?.dispose(), clearTimeout(cryTimer), window.removeEventListener('keydown', holdTab), rushSheet?.dispose(), el.remove()) }
 }

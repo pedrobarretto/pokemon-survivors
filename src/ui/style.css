@@ -3456,6 +3456,28 @@ button {
   display: none;
 }
 
+/* A fight that needs its boss in view (`focusToasts`): one line at a time, off the top where the boss and its bar are. */
+.toasts.focus {
+  top: auto;
+  bottom: calc(24px + var(--safe-b));
+  max-height: none;
+}
+
+@media (max-width: 759px) and (orientation: portrait) {
+  /* Over the status box and the special button; the rush's camera keeps the Pokémon above it (`rushCamera`). */
+  .toasts.focus {
+    bottom: calc(112px + var(--safe-b));
+  }
+}
+
+@media (max-height: 500px) {
+  /* A phone on its side keeps the right column, clear of the middle. */
+  .toasts.focus {
+    top: calc(80px + var(--safe-t));
+    bottom: auto;
+  }
+}
+
 .toast {
   width: max-content;
   max-width: 100%;
@@ -8043,6 +8065,20 @@ button {
   animation: gift-pop 0.4s steps(4) both;
 }
 
+/* A legend that came as a gift: alive on its lit stage (`giftScreen`'s tick), the burst behind it. */
+.gift-prize.gift-legend {
+  width: 224px;
+  height: 192px;
+}
+
+.gift-stage {
+  position: relative;
+  width: 224px;
+  height: 192px;
+  image-rendering: pixelated;
+  animation: gift-pop 0.4s steps(4) both;
+}
+
 .gift-burst {
   position: absolute;
   inset: -8px;
@@ -9050,6 +9086,185 @@ button {
 
 .rift-pill.rift-place {
   color: color-mix(in srgb, #1c6c78 var(--dk-lift, 100%), #fff);
+}
+
+/* A roaming lake legend about, or a Sword of Justice's duel (`ui/quests.ts`). */
+.rift-pill.rift-quest {
+  color: color-mix(in srgb, #2c6098 var(--dk-lift, 100%), #fff);
+}
+
+/* A Sword of Justice's duel (`createDuelCard` in `ui/quests.ts`): the test in the Sword's color, its goal, its clock draining. */
+.duel-card {
+  --sword: #3868b8;
+  --sword-lit: #78a8f0;
+  position: absolute;
+  top: 98px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(360px, calc(100 * var(--vw) - 32px));
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+  padding: 7px 12px 9px;
+  text-shadow: none;
+  pointer-events: none;
+}
+
+.duel-card[data-sword='terrakion'] {
+  --sword: #b0581c;
+  --sword-lit: #f0a050;
+}
+
+.duel-card[data-sword='virizion'] {
+  --sword: #2a8a34;
+  --sword-lit: #70d060;
+}
+
+.duel-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 20px;
+  color: color-mix(in srgb, var(--sword) var(--dk-lift, 100%), #fff);
+}
+
+.duel-icon {
+  width: 24px;
+  height: 24px;
+  image-rendering: pixelated;
+}
+
+.duel-goal {
+  font-family: var(--body);
+  font-size: 18px;
+  line-height: 1;
+  text-align: center;
+}
+
+.duel-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.duel-tag {
+  font-size: 13px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  background: var(--kit-tinta);
+  color: #f8f0c8;
+}
+
+.duel-bar,
+.duel-hp {
+  position: relative;
+  flex: 1;
+  height: 12px;
+  background: #202030;
+  border: 3px solid var(--kit-tinta);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.duel-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(var(--sword-lit) 0 40%, var(--sword) 40%);
+}
+
+.duel-clock {
+  min-width: 3.2em;
+  font-size: 16px;
+  text-align: right;
+  color: color-mix(in srgb, var(--sword) var(--dk-lift, 100%), #fff);
+}
+
+.duel-card.urgent .duel-fill {
+  background: linear-gradient(#f87070 0 40%, #d02838 40%);
+}
+
+.duel-card.urgent .duel-clock {
+  animation: rift-pulse 0.5s steps(2) infinite;
+}
+
+/* Cobalion's test: the player's HP against the line it mustn't fall under. */
+.duel-hp-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(#90e890 0 40%, #38b048 40%);
+}
+
+.duel-row.low .duel-hp-fill {
+  background: linear-gradient(#f8d070 0 40%, #e09020 40%);
+}
+
+.duel-floor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--floor, 30%);
+  width: 3px;
+  margin-left: -1px;
+  background: #f83030;
+  box-shadow: 0 0 0 1px #101018;
+}
+
+/* Virizion's test: the leaves stepped on so far. */
+.duel-leaves {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.duel-leaves img {
+  width: 22px;
+  height: 22px;
+  image-rendering: pixelated;
+}
+
+@media (max-width: 600px) {
+  .duel-card {
+    top: 108px;
+    gap: 4px;
+    padding: 5px 10px 7px;
+  }
+  .duel-head {
+    font-size: 16px;
+  }
+  .duel-goal {
+    font-size: 15px;
+  }
+  .duel-clock {
+    font-size: 13px;
+  }
+  .duel-leaves img {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-height: 500px) {
+  /* A phone on its side: the left column, under the moves, mirroring the news on the right; the middle stays clear. */
+  .duel-card {
+    top: calc(96px + var(--safe-t));
+    left: max(8px, env(safe-area-inset-left));
+    transform: none;
+    width: min(250px, 32 * var(--vw));
+    gap: 3px;
+    padding: 4px 10px 6px;
+  }
+  .duel-head {
+    font-size: 15px;
+  }
+  .duel-goal {
+    font-size: 14px;
+  }
+  .duel-bar,
+  .duel-hp {
+    height: 10px;
+  }
 }
 
 /* Mystery Dungeon's floor card: black, the dungeon's name and its floor. */
@@ -31782,4 +31997,126 @@ span.arena-hub-face {
   width: 14px;
   height: 14px;
   image-rendering: pixelated;
+}
+
+/* ---------------- Hoopa's Rings (`ui/rush.ts`) ---------------- */
+
+/* The banner atop the Lendários tab: Hoopa's ring, the rush's name and a line, Hoopa's portrait. */
+.rush-banner {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 56px;
+  padding: 6px 10px 7px 8px;
+  text-align: left;
+  cursor: pointer;
+  background: linear-gradient(90deg, color-mix(in srgb, #f8d048 22%, var(--kit-paper)), var(--kit-paper) 70%);
+}
+
+.rush-banner.locked {
+  cursor: default;
+  background: var(--kit-paper);
+}
+
+.rush-banner.locked > img {
+  filter: grayscale(1) brightness(0.8);
+}
+
+.rush-banner-icon,
+.rush-level-icon {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  image-rendering: pixelated;
+}
+
+.rush-banner-text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rush-banner-text b {
+  font-family: var(--kit-title);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1;
+  color: color-mix(in srgb, #8a4cc0 var(--dk-lift, 100%), #fff);
+}
+
+.rush-banner-text small {
+  font-family: var(--kit-body);
+  font-size: 17px;
+  line-height: 1.05;
+  color: var(--kit-ink-2);
+}
+
+/* A level's line names who comes and the best time: it wraps instead of cutting off. */
+.lobby-sheet-row:has(.rush-level-icon) .lobby-sheet-text small {
+  white-space: normal;
+}
+
+.rush-banner-hoopa {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  image-rendering: pixelated;
+  border: 2px solid var(--kit-tinta);
+  border-radius: 6px;
+  background: #e8d8f8;
+}
+
+/* The level sheet: its line under the title, the levels tinted like the difficulty, a check on the ones cleared. */
+.rush-sheet-blurb {
+  margin: 0 4px 8px;
+  font-family: var(--kit-body);
+  font-size: 18px;
+  line-height: 1.15;
+  color: #dce0f8;
+}
+
+.rush-level-icon.hard {
+  filter: hue-rotate(-40deg) saturate(1.3);
+}
+
+.rush-level-icon.nightmare {
+  filter: hue-rotate(200deg) saturate(1.4) brightness(0.85);
+}
+
+.rush-cleared {
+  flex: none;
+  font-size: 22px;
+  color: #2c9848;
+}
+
+/* The end screen: Hoopa's portrait over the title. */
+.rush-end .dialog {
+  text-align: center;
+}
+
+.rush-end-hoopa {
+  display: block;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 6px;
+  image-rendering: pixelated;
+  border: 2px solid var(--kit-tinta);
+  border-radius: 8px;
+  background: #e8d8f8;
+}
+
+.rush-end-line {
+  margin: 6px 0;
+  font-size: 19px;
+}
+
+.rush-end-record {
+  margin: 4px 0;
+  font-family: var(--title);
+  font-size: 20px;
+  color: #c08810;
 }

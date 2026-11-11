@@ -2,6 +2,8 @@ import type { Difficulty } from '../game/difficulty'
 import { DOMAIN_PHASES, type RetinueRole } from './domains'
 import { WAVE_LEGEND_PHASES } from './legendBosses'
 import { PERSIAN_PATTERNS, SHADOW_MEWTWO_PHASES } from './rocketHideout'
+import { SWORD_PHASES } from './quests'
+import { RUSH_PHASES } from './rush'
 import type { EnemyId } from './enemies'
 
 /** How an enemy hazard looks (and sounds when it lands). */
@@ -13,6 +15,8 @@ export type HazardVisual =
   | SpitVisual
   /** The Eon duo's colors: Latias's red Mist Ball, Latios's blue Luster Purge (both Psychic). */
   | 'mist' | 'luster'
+  /** Palkia's Spacial Rend: tears in space, pearl and pink (Dragon). */
+  | 'space'
 
 export type SpitVisual = 'fireball' | 'bubble' | 'sludge' | 'spark' | 'seed' | 'orb'
 
@@ -211,13 +215,17 @@ export const PHASE_SHIFT = 1.8
 
 /**
  * Bosses that fight in phases, each with its own patterns, ultimate and look:
- * the rift legendaries with a domain (`data/domains.ts`), and any wave boss
- * given phases here.
+ * the rift legendaries with a domain (`data/domains.ts`), the wave legendaries
+ * (`data/legendBosses.ts`), the Swords of Justice (`data/quests.ts`), the
+ * legends only Hoopa's rings bring and Hoopa itself (`data/rush.ts`), and any
+ * wave boss given phases here.
  */
 export const BOSS_PHASES: Partial<Record<EnemyId, readonly BossPhase[]>> = {
   ...DOMAIN_PHASES,
   ...WAVE_LEGEND_PHASES,
   shadowMewtwo: SHADOW_MEWTWO_PHASES,
+  ...SWORD_PHASES,
+  ...RUSH_PHASES,
 }
 
 /** Every attack a boss has, across its phases (ultimates' steps included), for the guide and the Pokédex. */
@@ -479,6 +487,12 @@ export const BOSS_PATTERNS: Partial<Record<EnemyId, readonly BossPattern[]>> = {
     { kind: 'ring', every: 3.4, count: 14, speed: 72, radius: 5, damage: 20, visual: 'shadow' },
     { kind: 'volley', every: 4.4, count: 3, arc: 0.6, speed: 86, windup: 1, radius: 7, damage: 10, visual: 'shadow', sleep: 1.1 },
     { kind: 'strikes', every: 4, target: 'player', count: 4, spread: 60, radius: 15, delay: 1.1, damage: 20, visual: 'shadow' },
+  ],
+  /** Palkia (its old arena, in co-op): Spacial Rend tears across the hall, Aqua Tail rings and Hydro Pump on the player. */
+  palkia: [
+    { kind: 'beam', every: 4.6, source: 'edge', count: 3, spread: 60, windup: 1.2, duration: 0.45, width: 11, length: 420, damage: 22, visual: 'space' },
+    { kind: 'ring', every: 3.6, count: 16, speed: 60, radius: 5, damage: 18, visual: 'water' },
+    { kind: 'strikes', every: 4.2, target: 'player', count: 3, spread: 50, radius: 16, delay: 1.1, damage: 22, visual: 'water' },
   ],
   /** Spiritomb, the graveyard's boss (`data/places.ts`): Shadow Ball rings, Hex on the player and Dark Pulse around itself. */
   spiritomb: [

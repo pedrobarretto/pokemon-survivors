@@ -417,13 +417,39 @@ export const setMarkerInsets = (next: MarkerInsets) => {
 export const markerInsets = () => inset
 
 /**
+ * An arrow on the screen edge pointing at (x, y) (world px), `icon` in its
+ * disc and arrow `arrow` of the set; nothing while the spot is on screen.
+ * `seed` sets its bob apart from the others'.
+ */
+export const drawEdgeMarker = (ctx: Ctx, g: Game, t: number, x: number, y: number, icon: CanvasImageSource & { width: number; height: number }, arrow: number, seed: number) => {
+  const { w, h } = g.view
+  const cx = w / 2
+  const cy = h / 2
+  const sx = x - g.camera.x
+  const sy = y - 8 - g.camera.y
+  if (sx > 4 && sx < w - 4 && sy > 4 && sy < h - 4) return
+  const dx = sx - cx
+  const dy = sy - cy
+  const kx = dx === 0 ? Infinity : (cx - inset.side) / Math.abs(dx)
+  const ky = dy === 0 ? Infinity : (dy > 0 ? h - inset.bottom - cy : cy - inset.top) / Math.abs(dy)
+  const k = Math.min(kx, ky)
+  const angle = Math.atan2(dy, dx)
+  const bob = Math.round(Math.sin(t * 6 + seed) * 1.5)
+  const ax = cx + dx * k + Math.cos(angle) * (6 + bob)
+  const ay = cy + dy * k + Math.sin(angle) * (6 + bob)
+  const ix = cx + dx * k - Math.cos(angle) * 7
+  const iy = cy + dy * k - Math.sin(angle) * 7
+  blitEllipse(ctx, 8, 8, 'rgba(16,24,48,0.7)', ix, iy)
+  blitRing(ctx, 8, 1, '#f8f8f8', ix, iy)
+  blitCentered(ctx, icon, ix, iy)
+  blitRotated(ctx, ART().arrows[arrow]!, ax, ay, angle)
+}
+
+/**
  * Screen layer: an arrow on the screen edge for every important event that's
  * off-screen, with its icon, pointing the way.
  */
 export const drawMapEventMarkers = (ctx: Ctx, g: Game, t: number) => {
-  const { w, h } = g.view
-  const cx = w / 2
-  const cy = h / 2
   for (const ev of g.mapEvents.list) {
     const marker = MARKER[ev.kind]
     if (ev.gone >= 0 || !marker || !MAP_EVENTS[ev.kind].marker) continue
@@ -431,24 +457,7 @@ export const drawMapEventMarkers = (ctx: Ctx, g: Game, t: number) => {
     if (ev.kind === 'regiTemple' && ev.state.out) continue
     // A mission points at where to go next (the nearest ball, Togepi's nest).
     const at = isMission(ev) ? missionSpot(g, ev) : ev
-    const sx = at.x - g.camera.x
-    const sy = at.y - 8 - g.camera.y
-    if (sx > 4 && sx < w - 4 && sy > 4 && sy < h - 4) continue
-    const dx = sx - cx
-    const dy = sy - cy
-    const kx = dx === 0 ? Infinity : (cx - inset.side) / Math.abs(dx)
-    const ky = dy === 0 ? Infinity : (dy > 0 ? h - inset.bottom - cy : cy - inset.top) / Math.abs(dy)
-    const k = Math.min(kx, ky)
-    const angle = Math.atan2(dy, dx)
-    const bob = Math.round(Math.sin(t * 6 + ev.id) * 1.5)
-    const ax = cx + dx * k + Math.cos(angle) * (6 + bob)
-    const ay = cy + dy * k + Math.sin(angle) * (6 + bob)
     const icon = ev.kind === 'altar' ? consumableSprite(ev.state.buff) : marker.icon()
-    const ix = cx + dx * k - Math.cos(angle) * 7
-    const iy = cy + dy * k - Math.sin(angle) * 7
-    blitEllipse(ctx, 8, 8, 'rgba(16,24,48,0.7)', ix, iy)
-    blitRing(ctx, 8, 1, '#f8f8f8', ix, iy)
-    blitCentered(ctx, icon, ix, iy)
-    blitRotated(ctx, ART().arrows[marker.arrow]!, ax, ay, angle)
+    drawEdgeMarker(ctx, g, t, at.x, at.y, icon, marker.arrow, ev.id)
   }
 }

@@ -485,6 +485,7 @@ const THREATS: Record<ThreatKind, { body: string; edge: string; foam: string }> 
   crumble: { body: 'rgba(44,84,152,0.94)', edge: '#2c4c34', foam: '#f8e070' },
   mist: { body: 'rgba(236,224,244,0.9)', edge: '#f8c8e0', foam: '#ffffff' },
   ultra: { body: 'rgba(14,6,36,0.95)', edge: '#c8a8f8', foam: '#ffffff' },
+  fold: { body: 'rgba(28,8,44,0.92)', edge: '#e070c8', foam: '#f8d0f0' },
 }
 
 /** What rides a threat's band besides its bubbles: crust and rubble on the magma, tiles tumbling into the sky. */
@@ -523,6 +524,29 @@ const drawThreatExtra = (ctx: Ctx, kind: ThreatKind, top: number, w: number, h: 
       const y = Math.round(top - 26 + k * 40)
       ctx.fillStyle = PRISM[i % PRISM.length]!
       ctx.fillRect(x, y, 1, 3 - Math.floor(k * 2))
+    }
+    return
+  }
+  if (kind === 'fold') {
+    // Space creasing as it folds up: bright seams zigzag across the band and slabs of pearl tip into it.
+    for (let i = 0; i < 5; i++) {
+      const y0 = top + 10 + i * 16 + Math.round(Math.sin(t * 1.3 + i) * 3)
+      if (y0 > h) break
+      ctx.fillStyle = i % 2 === 0 ? '#f8b8e8' : '#b070d8'
+      for (let x = 0; x < w; x += 2) {
+        const zig = Math.abs((((x + t * (14 + i * 5)) % 24) + 24) % 24 - 12) / 3
+        ctx.fillRect(x, Math.round(y0 + zig), 2, 1)
+      }
+    }
+    for (let i = 0; i < 10; i++) {
+      const k = (t * 0.6 + hash2(i, 1, 57)) % 1
+      const x = Math.round(hash2(i, 2, 57) * w)
+      const y = Math.round(top + 2 + k * 60)
+      const s = Math.max(1, Math.round((1 - k) * 6))
+      ctx.fillStyle = '#dcd4ec'
+      ctx.fillRect(x, y, s + 1, s)
+      ctx.fillStyle = '#9c88b8'
+      ctx.fillRect(x, y + s, s + 1, 1)
     }
     return
   }

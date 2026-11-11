@@ -120,7 +120,13 @@ export const ULTRA_BEASTS = [793, 794, 795, 796, 797, 798, 799, 803, 804, 805, 8
  * Regigigas, which wakes for the Regi trio's captor. All playable in Legend mode, and all can be shiny.
  */
 export const LEGEND_PATHS = [718, 789, 790, 791, 792, 891, 892, 808, 809, 486]
-export const DEX = [...new Set([...STARTERS, ...HATCHLINGS, ...ROCKET_FAMILIES, ...ROCKET_CAST, ...HORDE, ...TRAITS, ...BOSSES, ...CRITTERS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...CAMEOS, ...FESTIVAL_LEGENDS, ...REAPER, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...COMPANIONS, ...HALLOWEEN_BOSSES, ...SHOPKEEPERS, ...TERA_LEGENDS, ...ULTRA_BEASTS, ...LEGEND_PATHS])]
+/**
+ * The legends with a road of their own (`QUEST_LEGENDS` in src/data/legends.ts): Palkia's rift (and its Origin Forme),
+ * the roaming lake trio (Uxie, Mesprit, Azelf), the Swords of Justice (Cobalion, Terrakion, Virizion) and their
+ * Keldeo, and Hoopa of the ring rush (and Hoopa Unbound). All playable in Legend mode, all able to roll shiny.
+ */
+export const QUEST_LEGENDS = [484, 480, 481, 482, 638, 639, 640, 647, 720]
+export const DEX = [...new Set([...STARTERS, ...HATCHLINGS, ...ROCKET_FAMILIES, ...ROCKET_CAST, ...HORDE, ...TRAITS, ...BOSSES, ...CRITTERS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...CAMEOS, ...FESTIVAL_LEGENDS, ...REAPER, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...COMPANIONS, ...HALLOWEEN_BOSSES, ...SHOPKEEPERS, ...TERA_LEGENDS, ...ULTRA_BEASTS, ...LEGEND_PATHS, ...QUEST_LEGENDS])]
 /**
  * The Arena's emotes (`emote` in src/data/arenaEffects.ts, `EMOTE_ANIMS` there too): extra SpriteCollab
  * animations, only for the species the Arena plays (the starters' lines) and only their front row
@@ -142,11 +148,11 @@ export const FLYERS = new Set([
 export const SHINY_LEGENDS = [144, 145, 146, 150, 151, 243, 244, 245, 251, 377, 378, 379, 385, 493]
 /**
  * Every species a player can be: the starters' and the hatchlings' whole lines (branches included) and the Legend
- * mode's 25 (the rift, event and festival legends, the trios, the mythicals, Mewtwo and Arceus). The species whose
+ * mode's legends (the rift, event, festival and quest legends, the trios, the mythicals, Mewtwo and Arceus). The species whose
  * wearables `npm run rig` fits, with their `FORMS` (`render/wearFit.test.ts` keeps them in sync with `PLAYABLE`).
  */
-export const PLAYERS = [...new Set([...STARTERS, ...HATCHLINGS, ...ROCKET_FAMILIES, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...SHINY_LEGENDS, ...TERA_LEGENDS, ...ULTRA_BEASTS, ...LEGEND_PATHS])]
-export const SHINY = new Set([...STARTERS, ...HATCHLINGS, ...ROCKET_FAMILIES, ...HORDE, ...TRAITS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...SHINY_LEGENDS, ...COMPANIONS, ...ULTRA_BEASTS, ...TERA_LEGENDS, ...LEGEND_PATHS])
+export const PLAYERS = [...new Set([...STARTERS, ...HATCHLINGS, ...ROCKET_FAMILIES, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...SHINY_LEGENDS, ...TERA_LEGENDS, ...ULTRA_BEASTS, ...LEGEND_PATHS, ...QUEST_LEGENDS])]
+export const SHINY = new Set([...STARTERS, ...HATCHLINGS, ...ROCKET_FAMILIES, ...HORDE, ...TRAITS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...SHINY_LEGENDS, ...COMPANIONS, ...ULTRA_BEASTS, ...TERA_LEGENDS, ...LEGEND_PATHS, ...QUEST_LEGENDS])
 
 /**
  * Alternate formes the game draws, by key, mapped to their SpriteCollab form id
@@ -198,6 +204,8 @@ export const FORMS = {
   // The legend paths' formes (src/data/legendPaths.ts): Zygarde's 10% and Complete (its 50% is the species' own), Urshifu's Rapid Strike Style.
   718: { ten: '0001', complete: '0002' },
   892: { rapid: '0001' },
+  484: { origin: '0001' }, // Palkia's Origin Forme (its rift's last phase, its second awakening)
+  720: { unbound: '0001' }, // Hoopa Unbound (its second awakening, the ring rush's last ring)
 }
 
 /**
@@ -289,6 +297,8 @@ export const FORM_CRIES = {
   491: { mega: 'darkrai-mega' },
   718: { ten: 'zygarde-10', complete: 'zygarde-complete' },
   892: { rapid: 'urshifu-rapid-strike' },
+  484: { origin: 'palkia-origin' },
+  720: { unbound: 'hoopa-unbound' },
   500: { mega: 'emboar-mega' },
   652: { mega: 'chesnaught-mega' },
   208: { mega: 'steelix-mega' },

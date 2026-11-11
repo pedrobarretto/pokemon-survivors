@@ -88,11 +88,14 @@ const riftCameo = (g: Game): Dex[] => {
   return cameo ? [cameo.dex] : []
 }
 
-/** A place's dwellers (the ones its pool has now) once its entrance opens, Spiritomb with the graveyard's, a hidden zone's own, and the reaper as its hunt nears in the endless mode. */
+/** A place's dwellers (the ones its pool has now) once its entrance opens, Spiritomb with the graveyard's, a hidden zone's own, the run's roaming lake legend and Sword while they may still come (`game/quests.ts`), and the reaper as its hunt nears in the endless mode. */
 const visitors = (g: Game): Dex[] => {
   const place = g.place.inside?.id ?? g.place.entrance?.id
   const raidBoss = g.raid.den?.raid.boss ?? g.raid.arena?.raid.boss
+  const { roam, duel } = g.quests
   return [
+    ...(roam && !roam.caught ? [ENEMIES[roam.legend].dex] : []),
+    ...(duel && duel.stage !== 'done' ? [ENEMIES[duel.sword].dex] : []),
     ...(place ? placePool(place, g.time).map(([id]) => ENEMIES[id].dex) : []),
     ...(place === 'graveyard' ? [ENEMIES[GRAVEYARD.boss].dex] : []),
     // The Rocket Hideout's lair bosses: Giovanni's Persian and Mewtwo.
@@ -137,8 +140,9 @@ export const playerForms = (g: Game): Variant[] =>
 /**
  * The rift's sheets beyond its legendary's normal colors: from the omen, the form
  * it starts its battle in; inside, its shiny colors when it is shiny; and in the
- * battle, the form of every phased boss's phase and of the next one, so a phase's
- * form is ready when the phase comes instead of all of them at the crossing.
+ * battle, the form of every phased boss's phase, of the one before (its form
+ * change shows the old form a moment) and of the next one, so a phase's form is
+ * ready when the phase comes instead of all of them at the crossing.
  */
 export const bossForms = (g: Game): Variant[] => {
   const shiny = g.rift.arena?.shiny ?? false
@@ -150,7 +154,7 @@ export const bossForms = (g: Game): Variant[] => {
   const fights = g.enemies.flatMap((e) => {
     const phases = e.fight ? phasesOf(e.kind) : null
     if (!phases || !e.fight) return []
-    const forms = [phases[e.fight.phase]?.form, phases[e.fight.phase + 1]?.form]
+    const forms = [phases[e.fight.phase - 1]?.form, phases[e.fight.phase]?.form, phases[e.fight.phase + 1]?.form]
     return forms.flatMap((form) => (form ? [{ dex: ENEMIES[e.kind].dex, shiny: e.shiny, form }] : []))
   })
   // Shadow Mewtwo wears SpriteCollab's Shadow sheets from the Hideout's door on (`data/rocketHideout.ts`).
