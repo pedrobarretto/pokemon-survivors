@@ -32145,3 +32145,235 @@ span.arena-hub-face {
   font-size: 20px;
   color: #c08810;
 }
+
+/* ---------- Largar item (`ui/itemSwap.ts`) ---------- */
+
+/* The pause menu's held items are buttons: a tap asks to let one go. */
+.loadout-row.drop-row {
+  /* The padding and border hang outside the column, so the icons line up with the moves'. */
+  width: calc(100% + 16px);
+  margin: 0 -8px;
+  min-height: 34px;
+  padding: 2px 6px;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: none;
+  border: 2px solid transparent;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+/* A finger's worth: the whole row is the target (the × only marks it). */
+@media (pointer: coarse) {
+  .loadout-row.drop-row {
+    min-height: 44px;
+  }
+}
+
+/* A phone held upright: the moves and the items come first, so dropping one needs no scrolling; the ability, the map and the stats follow. */
+@media (max-width: 600px) {
+  .pause-grid {
+    display: contents;
+  }
+  .pause-column {
+    order: -1;
+  }
+}
+
+/* A phone on its side: the loadout (stats | moves and items) before the ability and the map. */
+@media (max-height: 500px) {
+  .pause-body > .pause-ability,
+  .pause-body > .pause-map {
+    order: 1;
+  }
+}
+
+.loadout-row.drop-row:hover,
+.loadout-row.drop-row:focus-visible {
+  border-color: var(--dk-line, #c8d0e0);
+  background: var(--dk-surface-1, #f4f6fb);
+}
+
+.loadout-row .drop-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  font-family: var(--title);
+  font-size: 16px;
+  line-height: 1;
+  color: var(--dk-ink-3, #808898);
+  border: 2px solid currentColor;
+  border-radius: 3px;
+}
+
+.loadout-row.drop-row:hover .drop-mark {
+  color: color-mix(in srgb, #c03030 var(--dk-lift, 100%), #fff);
+}
+
+.drop-hint {
+  margin: 4px 0 0;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--dk-ink-3, #808898);
+}
+
+/* A full build's new-item card: swap it in. */
+.tag-swap {
+  color: color-mix(in srgb, #2878c8 var(--dk-lift, 100%), #fff);
+}
+
+.offer.offer-swap {
+  border-style: dashed;
+}
+
+.swap-note {
+  color: color-mix(in srgb, #2868b0 var(--dk-lift, 100%), #fff);
+}
+
+.item-swap .swap-box {
+  max-width: min(460px, 94vw);
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  border-color: #2878c8;
+  box-shadow: 0 0 0 2px #10284a, 0 0 22px rgba(40, 120, 200, 0.35);
+}
+
+.swap-incoming,
+.swap-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+}
+
+.swap-incoming {
+  align-self: center;
+  padding: 6px 14px 6px 8px;
+  background: var(--dk-wash-blue, #e8f0ff);
+  border: 2px solid #2878c8;
+  border-radius: 3px;
+}
+
+.swap-icon {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  image-rendering: pixelated;
+}
+
+.swap-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.swap-body b {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  white-space: nowrap;
+  font-weight: normal;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.swap-pair {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--dk-ink-3, #707088);
+}
+
+.swap-pair.ready {
+  color: color-mix(in srgb, #2868b0 var(--dk-lift, 100%), #fff);
+}
+
+.swap-pair img {
+  width: 16px;
+  height: 16px;
+  image-rendering: pixelated;
+}
+
+.swap-prompt,
+.swap-note {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.05;
+  text-align: center;
+  color: var(--dk-ink-2, #505870);
+}
+
+.item-swap .swap-note,
+.drop-confirm .swap-note {
+  font-size: 15px;
+  color: var(--dk-ink-3, #808898);
+}
+
+.swap-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.swap-row {
+  min-width: 0;
+  min-height: 48px;
+  padding: 6px 8px;
+  font: inherit;
+  color: inherit;
+  background: var(--dk-surface-0, #fff);
+  border: 2px solid var(--dk-line, #c8d0e0);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.swap-row.selected,
+.swap-row:hover {
+  border-color: #c03030;
+  background: var(--dk-wash-red, #fff0f0);
+}
+
+.drop-confirm .dialog {
+  max-width: min(420px, 94vw);
+  align-items: center;
+}
+
+.drop-confirm .swap-note {
+  max-width: 34ch;
+}
+
+/* A phone held upright: one item a row. On its side: the note and the hint go so the six fit. */
+@media (max-width: 420px) {
+  .swap-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .item-swap .swap-box {
+    padding: 8px 14px;
+    gap: 5px;
+  }
+  .item-swap .swap-box {
+    max-width: min(600px, 94vw);
+  }
+  .swap-row {
+    min-height: 44px;
+    padding: 4px 8px;
+  }
+  .swap-incoming {
+    padding: 4px 12px 4px 6px;
+  }
+  .item-swap .swap-note,
+  .item-swap .hint,
+  .swap-prompt {
+    display: none;
+  }
+}

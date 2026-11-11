@@ -360,7 +360,7 @@ const PERSONAL: ReadonlySet<GameEvent['kind']> = new Set<GameEvent['kind']>([
   'cast', 'moveSound', 'heal', 'hurt', 'special', 'stance', 'megaChoice', 'megaStone', 'megaStart', 'mega', 'megaEnd', 'megaReady',
   'teraShard', 'teraReady', 'teraStart', 'tera', 'teraEnd', 'stellarStrike', 'stellarPulse', 'raidFall',
   'shinyPlayer', 'evolve', 'branchChoice', 'ability', 'evolved', 'moveEvolved', 'duoFused', 'curse', 'pokeball', 'shinyOffer',
-  'tm', 'tmLearned', 'tmMastered', 'banish', 'consumable', 'revive', 'riftFall', 'guard',
+  'tm', 'tmLearned', 'tmMastered', 'banish', 'itemDropped', 'consumable', 'revive', 'riftFall', 'guard',
   'evoItem', 'evoHeld', 'maxRevive', 'stolen', 'awaken', 'awakened', 'biome',
 ])
 

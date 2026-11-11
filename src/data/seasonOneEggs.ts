@@ -40,7 +40,8 @@ export const SEASON_ONE_EGGS = {
   },
   ponyta: {
     name: 'Ponyta', color: '#f09838', egg: 'common', stats: { speed: 6, maxHp: -5 }, signature: 'flareBlitz',
-    learnset: [['flareBlitz', 'ember', 'flameWheel', 'willOWisp'], ['fireSpin', 'pyroBall', 'wildCharge', 'solarBeam', 'machPunch']],
+    // Built around a player's list (High Horsepower, Low Kick, Horn Drill, Morning Sun and Bounce are `gallopMoves.ts`; Flamethrower is Ember's evolution).
+    learnset: [['flareBlitz', 'ember', 'bounce', 'lowKick', 'morningSun'], ['highHorsepower', 'hornDrill', 'wildCharge', 'flameWheel', 'fireSpin']],
     line: line2(['Ponyta', 77, ['fire']], ['Rapidash', 78, ['fire']], { maxHp: 45, speed: 4, might: 0.22 }),
   },
   ponytaGalar: {

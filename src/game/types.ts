@@ -186,6 +186,8 @@ export type Player = {
   banished: Set<MoveId>
   /** Items forgotten this run, apart from the moves: Metronome is both, and forgetting one must leave the other. */
   banishedItems: Set<ItemId>
+  /** Items let go this run (`dropItem` in `itemDrop.ts`), each kept out of the offers until the player reaches `until`. */
+  dropped: Array<{ id: ItemId; until: number }>
   /** Mods of the move being cast right now (`updateMoves`), stamped on every hitbox it spawns; 0 otherwise. */
   castMods: number
   damageByMove: Partial<Record<DamageSource, number>>
@@ -438,6 +440,8 @@ export type Visual =
   | 'metalClaw' | 'shellSlam' | 'shellShot' | 'obstructGuard' | 'obstructX' | 'leekJoust' | 'chloroblast' | 'barb' | 'toxicGlob' | 'toxicPool' | 'bullCharge' | 'bitterMalice'
   /** The Rocket Game Corner's prize families, drawn by `render/rocketKitFx.ts`. */
   | 'transformSplash' | 'razorWind' | 'omenFall' | 'coinRain' | 'viseGrip' | 'deceiverBite'
+  /** Ponyta's gallop batch (`gallopMoves.ts`), drawn by `render/gallopFx.ts`. */
+  | 'gallopQuake' | 'gallopPillar' | 'lowKick' | 'axeKick' | 'axeRing' | 'hornDrill' | 'hornBlow' | 'hyperLance' | 'morningSun' | 'revivalFlare' | 'bounceLand' | 'skyDive'
 
 /** What dealt the damage, for the results screen: a move, the special or the ability (Rough Skin, Magic Bounce). */
 export type DamageSource = MoveId | 'special' | 'ability'
@@ -787,6 +791,8 @@ export type GameEvent =
   | { kind: 'shinyOffer' }
   /** A level-up card was forgotten (Esquecer) and its slot drawn again. */
   | { kind: 'banish' }
+  /** A held item was let go (`dropItem`). */
+  | { kind: 'itemDropped'; id: ItemId }
   | { kind: 'moveEvolved'; from: MoveId; to: MoveId }
   /** Two moves fused into a duo move. */
   | { kind: 'duoFused'; from: readonly [MoveId, MoveId]; to: MoveId }

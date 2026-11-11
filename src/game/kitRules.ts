@@ -22,12 +22,17 @@ export type BonusWhen =
   | 'lowHp'
   /** Flying type, or a leaper mid-jump. */
   | 'flying'
+  /** At least `HEAVY_MASS` (Snorlax, Golem, the Alphas, every boss): Low Kick's weight. */
+  | 'heavy'
   | 'elite' | 'boss'
 
 /** ×`mult` damage on hits against foes matching `when`. Several bonuses multiply. `stamp`: a branch's mod put it there (Hunter, Cruel; `stampMods`), so it's added once. */
 export type DamageBonus = { when: BonusWhen; mult: number; stamp?: 'hunter' | 'cruel' }
 
 export const NO_BONUS: readonly DamageBonus[] = []
+
+/** Mass from which a foe counts as `heavy` (regular foes weigh about 1). */
+export const HEAVY_MASS = 1.5
 
 /** HP fraction under which a foe counts as `lowHp`. */
 export const LOW_HP = 0.5
@@ -45,6 +50,7 @@ export const bonusApplies = (when: BonusWhen, e: Enemy): boolean => {
     case 'chilled': return st.slow.time > 0 || st.freeze.time > 0
     case 'lowHp': return e.hp < e.maxHp * LOW_HP
     case 'flying': return e.types.includes('flying') || isAirborne(e)
+    case 'heavy': return e.mass >= HEAVY_MASS
     case 'elite': return e.elite
     case 'boss': return e.boss
   }

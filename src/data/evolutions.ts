@@ -71,6 +71,12 @@ export const EVOLUTIONS = [
   { from: 'uTurn', item: 'quickClaw', to: 'firstImpression' },
   { from: 'dragonTail', item: 'dragonFang', to: 'breakingSwipe' },
   { from: 'sheerCold', item: 'neverMeltIce', to: 'glacialLance' },
+  // Ponyta's gallop batch (`gallopMoves.ts`).
+  { from: 'highHorsepower', item: 'choiceScarf', to: 'headlongRush' },
+  { from: 'lowKick', item: 'muscleBand', to: 'axeKick' },
+  { from: 'hornDrill', item: 'kingsRock', to: 'hyperDrill' },
+  { from: 'morningSun', item: 'lightClay', to: 'revivalBlessing' },
+  { from: 'bounce', item: 'sharpBeak', to: 'skyDrop' },
 ] as const satisfies readonly MoveEvolution[]
 
 /** The egg families' first batch of signature moves (#106, inline in `MOVES`). */

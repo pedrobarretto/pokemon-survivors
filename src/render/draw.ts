@@ -63,6 +63,7 @@ import { drawKitBAir, drawKitBAttack, drawKitBGround, kitBPlayerLook } from './g
 import { drawGaKitAAttack, drawGaKitAGround, drawGaKitAPlayer, drawGaKitAPlayerGround } from './gaKitAFx'
 import { drawRegionalAttack, drawRegionalGround } from './regionalFx'
 import { drawRocketKitAttack, drawRocketKitPlayer } from './rocketKitFx'
+import { drawGallopAir, drawGallopAttack, gallopLift } from './gallopFx'
 import { drawPurifiedMark, drawShadowAura } from './shadowAura'
 import { drawEgg2Attack, drawEgg2Ground } from './eggMove2Fx'
 import { drawVerbAir, drawVerbGround, drawVerbPlayerAir, drawVerbPlayerGround } from './verbFx'
@@ -294,6 +295,7 @@ const drawAttack = (ctx: Ctx, a: Attack, t: number) => {
       drawGaKitAAttack(ctx, a, t)
       drawRegionalAttack(ctx, a, t)
       drawRocketKitAttack(ctx, a, t)
+      drawGallopAttack(ctx, a, t)
       drawEgg2Attack(ctx, a, t)
       drawSignatureAttack(ctx, a, t)
       drawTypeEvolvedAttack(ctx, a, t)
@@ -669,7 +671,8 @@ const drawPlayer = (ctx: Ctx, g: Game, calm: boolean) => {
   const faded = !fresh && (calm ? p.iframes > 0 && localPlayer(g).special.active <= 0 : blink)
   // Versus: in tall grass, the viewer's team draws see-through (`grassAlpha`); a Ghost type slipping through a tree or a rock (`phasingNow`) too.
   const alpha = (egg ? egg.alpha : p.hidden ? 0.3 : faded && mega.flash === 0 ? (calm ? 0.65 : 0.45) : phasingNow(g, p) ? 0.55 : 1) * grassAlpha(g, viewer, p)
-  const feet = p.y - (egg?.lift ?? 0)
+  // Bounce's hops lift the sprite as it is, worn look and all (`gallopLift`).
+  const feet = p.y - (egg?.lift ?? gallopLift(g, p))
   // Arena: an emote plays its own sheet, facing the camera (`render/arenaFx.ts`).
   const emote = p.versus ? arenaEmote(g, p) : null
   // The seat's look (its worn cosmetics) dressed into the sprite, in every mode. The rig only covers each
@@ -1234,6 +1237,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
       for (const a of v.attacks) if (a.age >= 0 && visible(a.x, a.y, 200)) drawAttack(into, a, t)
       drawImpacts(into, g.now, (owner) => g.coop === null || (side.side === 'own') === (owner === me.slot))
       drawVerbAir(into, v, t, visible)
+      drawGallopAir(into, v, visible)
       drawTmAir(into, v, t, visible)
       drawShopTmAir(into, v, t, visible)
       drawShopTm2Air(into, v, t, visible)

@@ -51,6 +51,8 @@ import { deathCause } from './deathCause'
 import { abilityMark } from './abilityMark'
 import { teamBuilds } from './teamHud'
 import type { SaveCard } from './onboarding'
+import { confirmDrop } from './itemSwap'
+import { needsSwap } from '../game/itemDrop'
 
 export type Screen = {
   el: HTMLElement
@@ -325,6 +327,8 @@ const fillCard = (g: Game, button: HTMLElement, offer: Offer, i: number) => {
   const recipes = offerRecipes(g, offer)
   const rarity = rarityOf(offer)
   const build = followsBuild(g, offer)
+  // Every slot taken: a new item's card is a swap (`needsSwap`), which asks which item goes.
+  const swap = needsSwap(localPlayer(g), offer)
   // A move the evolution just unlocked, while it still comes up more often: tagged with the form that learns it.
   const fresh =
     offer.kind === 'move' && localPlayer(g).freshMoves > 0 && !localPlayer(g).moves.some((m) => m.id === offer.id) && unlockedAt(localPlayer(g).starter, localPlayer(g).branch, localPlayer(g).stage).includes(offer.id)
@@ -340,6 +344,7 @@ const fillCard = (g: Game, button: HTMLElement, offer: Offer, i: number) => {
     !canBanish(offer) && 'offer-keep',
     fresh && 'offer-fresh',
     build && 'offer-build',
+    swap && 'offer-swap',
   ]
   button.className = classes.filter(Boolean).join(' ')
   button.style.setProperty('--i', String(i))
@@ -378,8 +383,10 @@ const fillCard = (g: Game, button: HTMLElement, offer: Offer, i: number) => {
         fresh && h('span', { class: 'tag tag-fresh' }, m.freshTag(playerForm(g).name)),
         rarity && h('span', { class: `tag tag-${rarity}` }, rarity === 'rare' ? m.rare : m.shiny),
         build && buildTag(),
+        swap && h('span', { class: 'tag tag-swap' }, t().itemDrop.swapTag),
       ),
       h('div', { class: 'offer-desc' }, v.desc),
+      swap && h('div', { class: 'offer-note swap-note' }, t().itemDrop.swapNote),
       rarity === 'shiny' && h('div', { class: 'offer-note' }, m.shinyNote),
       offer.kind === 'duo' && h('div', { class: 'offer-note duo-note' }, t().duo.frees),
       recipes.length > 0 && h('div', { class: 'evo-recipes' }, ...recipes),
@@ -592,13 +599,16 @@ const moveList = (g: Game) =>
     }),
   )
 
-const itemList = (g: Game) =>
+/** The held items; with `drop`, each is a button that asks to let it go (Largar item). */
+const itemList = (g: Game, drop?: (index: number) => void) =>
   h(
     'div',
-    { class: 'loadout-list' },
-    ...localPlayer(g).items.map((i) =>
-      h('div', { class: 'loadout-row' }, h('img', { src: itemIcon(i.id), alt: '' }), ITEMS[i.id].name, levelTag(i.level, ITEMS[i.id].levels.length)),
-    ),
+    { class: drop ? 'loadout-list droppable' : 'loadout-list' },
+    ...localPlayer(g).items.map((i, index) => {
+      const parts = [h('img', { src: itemIcon(i.id), alt: '' }), ITEMS[i.id].name, levelTag(i.level, ITEMS[i.id].levels.length)] as const
+      if (!drop) return h('div', { class: 'loadout-row' }, ...parts)
+      return h('button', { class: 'loadout-row drop-row', type: 'button', title: t().itemDrop.dropTitle, onclick: () => drop(index) }, ...parts, h('span', { class: 'drop-mark', 'aria-hidden': 'true' }, '×'))
+    }),
     ...localPlayer(g).curses.held.map((id) =>
       h('div', { class: 'loadout-row cursed', title: t().curses[id].downside }, h('img', { src: curseIcon(id), alt: '' }), CURSES[id].name, h('span', { class: 'tag tag-curse' }, t().curse.label)),
     ),
@@ -737,6 +747,8 @@ type PauseActions = {
   coop?: { sound: () => boolean; soundOn: boolean }
   /** An Arena match: proposes the team's surrender (or gives up, alone with bots), once confirmed. */
   surrender?: () => void
+  /** Largar item: lets go of the held item at `index`, once confirmed (`dropItem`; recorded, or a tick entry in co-op). */
+  drop?: (index: number) => void
 }
 
 export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: PauseActions): Screen => {
@@ -790,6 +802,25 @@ export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: Pau
     }, focus)
   }
 
+  /** Largar item: "Largar X?" first; yes lets it go and the menu redraws (co-op's once the entry comes back, see the watch below). */
+  const askDrop = (index: number) => {
+    const drop = actions.drop
+    if (!drop || sub) return
+    later(() =>
+      openSub((back) => {
+        const dialog = confirmDrop(root, input, g, index, (yes) => {
+          dialog?.dispose()
+          if (yes) {
+            playSfx('item')
+            drop(index)
+          }
+          back()
+        })
+        return dialog ?? { el: h('div', {}), dispose: () => {} }
+      }, nav?.index ?? 0),
+    )
+  }
+
   /** `opening` plays the pop-in; redraws after closing the settings don't. */
   const render = (focus: number, opening: boolean) => {
     const m = t().pause
@@ -827,11 +858,12 @@ export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: Pau
         coop && h('p', { class: 'pause-note' }, g.versus ? t().versus.menu.note : cm.note),
         // A match has no difficulty: everyone plays the same.
         !g.versus && difficultyTag(g.difficulty),
-        abilityPanel(g),
-        !g.versus && mapPanel(g),
         h(
           'div',
           { class: 'pause-body' },
+          // In the body, so they scroll with it: a phone held upright puts the loadout first (style.css), above them.
+          abilityPanel(g),
+          !g.versus && mapPanel(g),
           // A match keeps running behind the menu: your moves and your team's builds, not the run's whole sheet.
           g.versus
             ? pauseSection(m.movesTitle, moveList(g))
@@ -839,7 +871,7 @@ export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: Pau
                 'div',
                 { class: 'pause-grid' },
                 pauseSection(m.statsTitle, statTable(g)),
-                h('div', { class: 'pause-column' }, pauseSection(m.movesTitle, moveList(g)), pauseSection(m.itemsTitle, itemList(g))),
+                h('div', { class: 'pause-column' }, pauseSection(m.movesTitle, moveList(g)), pauseSection(m.itemsTitle, itemList(g, actions.drop && askDrop)), actions.drop && localPlayer(g).items.length > 0 && h('p', { class: 'drop-hint' }, t().itemDrop.pauseHint)),
               ),
           !g.versus && pauseSection(m.damageTitle, damagePanel(g)),
           builds && pauseSection(cm.builds, builds),
@@ -855,8 +887,20 @@ export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: Pau
   render(0, true)
   // Esc inside the settings (or the report) only closes them.
   const offEsc = input.onKey((k) => k === 'Escape' && !sub && actions.resume())
+  // The held items can change under the menu (a co-op drop lands a few ticks after it's sent): it redraws when they do.
+  const itemsKey = () => localPlayer(g).items.map((i) => `${i.id}:${i.level}`).join()
+  let shownItems = itemsKey()
+  const watch = actions.drop
+    ? setInterval(() => {
+        if (!el.isConnected) return clearInterval(watch)
+        const now = itemsKey()
+        if (now === shownItems || sub) return
+        shownItems = now
+        render(nav?.index ?? 0, false)
+      }, 120)
+    : undefined
   root.append(el)
-  return { el, dispose: () => (sub?.dispose(), nav?.off(), offEsc(), el.remove()) }
+  return { el, dispose: () => (sub?.dispose(), nav?.off(), offEsc(), clearInterval(watch), el.remove()) }
 }
 
 /* ---------------- Results ---------------- */

@@ -55,6 +55,7 @@ const ROLE: Record<string, Role> = {
   clangingScales: 'wave', dualChop: 'strike', sing: 'wave', beatUp: 'strike', hornAttack: 'strike', shadowSneak: 'shot', ominousWind: 'aura', poisonJab: 'strike',
   teatime: 'field', falseSurrender: 'strike', nuzzle: 'dash', steelWing: 'arc', thunderPunch: 'strike', flameBurst: 'shot', bugBite: 'strike',
   transform: 'strike', razorWind: 'shot', makeItRain: 'field', viseGrip: 'arc',
+  highHorsepower: 'beam', lowKick: 'arc', hornDrill: 'strike', morningSun: 'support', bounce: 'aura',
   sketch: 'random', fieryDance: 'aura', overdrive: 'wave', gigatonHammer: 'strike', bitterBlade: 'arc', leechLife: 'strike', fireFang: 'strike', furySwipes: 'strike', heavySlam: 'dash', bulldoze: 'wave', perishSong: 'support', chargeBeam: 'beam', moonblast: 'shot', frostBreath: 'cone', avalanche: 'field',
 }
 /** The roles that count as a family's utility move: around it, on the ground, a dash or a heal/guard. */

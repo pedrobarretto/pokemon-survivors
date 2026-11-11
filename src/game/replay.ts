@@ -11,6 +11,7 @@ import { parseEvoItems } from './evoItems'
 import { parseTmList, type ShelfTm } from './tmShelf'
 import { isDifficulty, type Difficulty } from './difficulty'
 import { continueEndless } from './endlessSystem'
+import { dropItem } from './itemDrop'
 import { banishOffer, chooseOffer, createGame, rerollOffers, skipLevelUp, step } from './game'
 import { UPGRADE_IDS, UPGRADES, type Ranks } from './meta'
 import { LEGEND_HORDE } from './legend'
@@ -106,6 +107,7 @@ export type ReplayStart = {
  * What the shell did to the run at a tick (before that tick's step): the
  * special attack, the Mega button, the TERA button, a manual lunge (Quick Attack), a level-up pick (index into the offers;
  * a fork's branch is a second pick), a reroll or skip, forgetting a card (Esquecer, index into the offers),
+ * letting go of a held item (Largar item, index into the items: from the pause menu, or before a swap card's pick),
  * going on into endless mode, and a new screen size (rotation, resize).
  */
 /** The buttons a run steps with (`StepInput`). */
@@ -113,7 +115,7 @@ type Press = 'special' | 'mega' | 'tera' | 'lunge'
 
 export type ReplayEvent =
   | readonly [tick: number, kind: Press | 'reroll' | 'skip' | 'endless']
-  | readonly [tick: number, kind: 'offer' | 'banish', index: number]
+  | readonly [tick: number, kind: 'offer' | 'banish' | 'drop', index: number]
   | readonly [tick: number, kind: 'view', w: number, h: number]
 
 /**
@@ -202,7 +204,7 @@ export const parseView = (w: unknown, h: unknown) =>
 export const parseEvent = (raw: unknown): ReplayEvent | null => {
   if (!Array.isArray(raw) || !isWhole(raw[0])) return null
   const [tick, kind, a, b] = raw
-  if (kind === 'offer' || kind === 'banish') return isWhole(a) && a < 8 ? [tick, kind, a] : null
+  if (kind === 'offer' || kind === 'banish' || kind === 'drop') return isWhole(a) && a < 8 ? [tick, kind, a] : null
   if (kind === 'view') {
     const view = parseView(a, b)
     return view ? [tick, kind, view.w, view.h] : null
@@ -336,6 +338,8 @@ const applyEvent = (g: Game, e: ReplayEvent) => {
     }
     case 'banish':
       return banishOffer(g, e[2])
+    case 'drop':
+      return dropItem(g, e[2])
     case 'reroll':
       return rerollOffers(g)
     case 'skip':

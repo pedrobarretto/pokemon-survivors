@@ -425,6 +425,8 @@ describe('replays', () => {
     const maxed = (g: Game) => {
       g.player.moves = (['ember', 'fireSpin', 'swift', 'iceShard', 'sludgeBomb', 'gust'] as const).map((id) => ({ id, level: maxMoveLevel(id), cooldown: 0, path: 0 }))
       g.player.items = ITEM_IDS.slice(0, 6).map((id) => ({ id, level: ITEMS[id].levels.length }))
+      // Their pair items rest, or they'd come as swap cards (`swapItems`).
+      g.player.dropped = (['charcoal', 'silkScarf', 'neverMeltIce', 'poisonBarb', 'sharpBeak'] as const).map((id) => ({ id, until: 999 }))
       Object.assign(g, { phase: 'playing' })
       Object.assign(g.player, { phase: 'playing', pendingLevelUps: 0, offers: [] })
       recomputeStats(g)
