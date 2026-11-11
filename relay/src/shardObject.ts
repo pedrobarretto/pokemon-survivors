@@ -238,6 +238,11 @@ export class ShardObject extends DurableObject<Env> {
     return null
   }
 
+  /** A lobby's probe (`GET /probe/<region>/health`): answers at once, touching nothing. */
+  async probe(): Promise<{ ok: true }> {
+    return { ok: true }
+  }
+
   async fetch(request: Request): Promise<Response> {
     if (request.headers.get('Upgrade') !== 'websocket') return new Response('Expected a WebSocket', { status: 426 })
     const code = parseRoomCode(/^\/rooms\/([^/]+)\/ws$/.exec(new URL(request.url).pathname)?.[1])

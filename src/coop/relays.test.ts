@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createCoopClient } from './client'
-import { MOVE_MARGIN_MS, NEAR_RTT_MS, groupHome, measureRelay, pickHome, relayFor, type RelayProbe } from './relays'
+import { MOVE_MARGIN_MS, NEAR_RTT_MS, groupHome, measureRelay, pickHome, placeOf, relayFor, type RelayProbe } from './relays'
 
 const CF = 'https://cf.test'
 const SA = 'https://sa.test'
@@ -52,7 +52,7 @@ describe('relays', () => {
     expect(groupHome('cf', homes, [{ cf: 140, sa: 8 }, { cf: 150, sa: 150 - MOVE_MARGIN_MS }])).toBe('sa')
     // Someone far from São Paulo (the lab: one host in Brazil, two in Spain): it stays.
     expect(groupHome('cf', homes, [{ cf: 120, sa: 5 }, { cf: 30, sa: 230 }, { cf: 30, sa: 230 }])).toBeNull()
-    // A São Paulo room has nowhere better: a Cloudflare room elsewhere can't be measured.
+    // A São Paulo room without the Cloudflare probes has nowhere better.
     expect(groupHome('sa', homes, [{ cf: 5, sa: 200 }])).toBeNull()
   })
 
@@ -67,6 +67,26 @@ describe('relays', () => {
     expect(groupHome('cf', homes, [{ sa: 8 }, { cf: 150, sa: 30 }])).toBeNull()
     // A relay this build lacks is never a candidate.
     expect(groupHome('cf', [], [{ cf: 140, sa: 8 }, { cf: 150, sa: 30 }])).toBeNull()
+  })
+
+  it('moves a group spread over continents to Cloudflare in between, only when everyone probed it', () => {
+    const sites = ['sa', 'cf:enam', 'cf:apac'] as const
+    // A Brazilian host's São Paulo room with a Singaporean: the US east coast is the best worst round trip.
+    const br = { sa: 10, 'cf:enam': 130, 'cf:apac': 340 }
+    const sg = { sa: 350, 'cf:enam': 230, 'cf:apac': 25 }
+    expect(groupHome('sa', sites, [br, sg])).toBe('cf:enam')
+    // The same pair in the Singaporean's Cloudflare room (its pings say 340 for the Brazilian).
+    expect(groupHome('cf', sites, [{ ...br, cf: 340 }, { ...sg, cf: 25 }])).toBe('cf:enam')
+    // A Brazilian group stays in São Paulo, and a Cloudflare room's own region never beats it by the margin.
+    expect(groupHome('sa', sites, [br, { ...br, sa: 30 }])).toBeNull()
+    expect(groupHome('cf', sites, [{ ...sg, cf: 30 }, { ...sg, cf: 20 }])).toBeNull()
+    // A client before the probes (no `cf:` round trips): only the VPS relays are candidates.
+    expect(groupHome('sa', sites, [br, { sa: 350 }])).toBeNull()
+  })
+
+  it('makes a moved room on the relay and in the region its site names', () => {
+    expect(placeOf('sa')).toEqual({ home: 'sa', region: 'auto' })
+    expect(placeOf('cf:enam')).toEqual({ home: 'cf', region: 'enam' })
   })
 
   it('never moves a room to a full relay', () => {
