@@ -4990,8 +4990,15 @@ if (import.meta.env.DEV) {
        * session, `ps.safari('catch')` makes every ball hold and `ps.safari('flee')` every ball break and its Pokémon run (`'real'` back to the dice), `ps.safari('dry', 3)` sets the sessions
        * without a new family and `ps.safari('used', 2)` the sessions used today. `ps.safari('habitat', 'marsh')` holds a preserve, `ps.safari('meet', 'mimikyu')` makes that the next encounter
        * (`('meet', 'mimikyu', true)` shiny), `ps.safari('grass')` sets the grass off now and `ps.safari('phase')` prints where the game is.
+       * `ps.safari('hour', 'night')` holds a time of day (`dawn`, `day`, `dusk`, `night`; null back to the clock), `ps.safari('contest', true)` holds the
+       * Concurso de Insetos open (false closed, null back to the calendar), `ps.safari('dex', 'marsh')` fills a habitat's Pokédex but for one (`('dex', 'marsh', 'all')`,
+       * `'half'`, `'empty'`), `ps.safari('sneakup')` sets the partner just behind the first wanderer, sneaking (`('sneakup', 'front')` where it looks), and `ps.safari('stalk')` meets it now.
        */
-      safari: async (what?: 'sure' | 'catch' | 'flee' | 'real' | 'dry' | 'used' | 'habitat' | 'meet' | 'grass' | 'phase', arg?: number | string | null, shiny?: boolean) => {
+      safari: async (
+        what?: 'sure' | 'catch' | 'flee' | 'real' | 'dry' | 'used' | 'habitat' | 'meet' | 'grass' | 'phase' | 'hour' | 'contest' | 'dex' | 'sneakup' | 'stalk',
+        arg?: number | string | boolean | null,
+        shiny?: boolean | string,
+      ) => {
         await devRealm('fake')
         if (what === undefined) return devMinigame('safari')
         const { stageSafari } = await import('./realm/safariApi')
@@ -5002,8 +5009,13 @@ if (import.meta.env.DEV) {
         if (what === 'used') return stageSafari({ used: typeof arg === 'number' ? arg : 0 })
         if (what === 'habitat') return stageSafari({ habitat: isSafariHabitat(arg) ? arg : null })
         if (what === 'meet') return stageSafari({ next: typeof arg === 'string' && (HATCHLING_IDS as readonly string[]).includes(arg) ? (arg as HatchlingId) : null, shiny: shiny === true })
+        if (what === 'hour') return stageSafari({ daypart: arg === 'dawn' || arg === 'day' || arg === 'dusk' || arg === 'night' ? arg : null })
+        if (what === 'contest') return stageSafari({ contest: typeof arg === 'boolean' ? arg : null })
+        if (what === 'dex') return isSafariHabitat(arg) ? stageSafari({ dex: { habitat: arg, fill: shiny === 'all' || shiny === 'empty' || shiny === 'half' ? shiny : 'almost' } }) : null
+        if (what === 'sneakup') return safariDev.run?.sneakUp(arg === 'front')
+        if (what === 'stalk') return safariDev.run?.stalk()
         if (what === 'grass') return safariDev.run?.rustle()
-        if (what === 'phase') return { game: safariDev.run?.phase() ?? null, battle: safariDev.run?.battle() ?? null }
+        if (what === 'phase') return { game: safariDev.run?.phase() ?? null, battle: safariDev.run?.battle() ?? null, wanderers: safariDev.run?.wanderers() ?? null }
         return stageSafari({ catches: what === 'catch', flees: what === 'flee' })
       },
       /**

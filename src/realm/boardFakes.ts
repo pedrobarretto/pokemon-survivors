@@ -19,9 +19,10 @@ const HANDLES = [
 /** Trainers on the fake day's board and the week's. */
 const COUNT: Record<GameBoardPeriod, number> = { day: 9, week: HANDLES.length }
 
-/** The fake leader's score: a strong solo round, or a dozen wins at a table. */
+/** The fake leader's score: a strong solo round (the Concurso de Insetos's best bug), or a dozen wins at a table. */
 const topOf = (game: MinigameId) => {
   const def = MINIGAMES[game]
+  if (game === 'safari') return 236
   return def.kind === 'solo' ? Math.round(def.maxScore * (game === 'fishing' ? 0.31 : 0.4)) : 12
 }
 

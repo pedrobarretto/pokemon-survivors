@@ -8,8 +8,8 @@ import { formatPokeDollars, t } from '../../i18n'
 import type { SafariActed, SafariSession } from '../../net/realmApi'
 import { cryUrl, drawPokemon, loadSpecies, sprites } from '../../render/sprites'
 import { burst, drawFx, stepFx, type Particle, type Popup } from './arcadeKit'
-import type { SafariAction } from './safari.rules'
-import { drawGrassWipe, paintBackdrop, paintPlatform, type SafariTheme } from './safariArt'
+import type { SafariAction, SafariDaypart, SafariMood } from './safari.rules'
+import { ANGER_COLORS, ANGER_ROWS, BAIT_COLORS, BAIT_ROWS, LIGHTS, ROCK_COLORS, ROCK_ROWS, drawGrassWipe, paintBackdrop, paintNightSky, paintPlatform, sceneAt, type SafariTheme } from './safariArt'
 
 /**
  * One encounter on the Zona Safári's battle screen: the whole scene, flat
@@ -17,14 +17,17 @@ import { drawGrassWipe, paintBackdrop, paintPlatform, type SafariTheme } from '.
  * at the sprites' own pixel size (`Grid`) and blown up by a whole factor, so it
  * reads as one pixel grid. The API has already decided everything: this waits
  * for its answer before any ball settles. Words go through `host`, DOM over
- * the canvas in five languages.
+ * the canvas in five languages. A rock hits it on the head and leaves it
+ * angry (the mark pulses, it stamps); bait lands at its feet and it eats
+ * (crumbs fly). At dusk and at night the backdrop takes the hour's colors and
+ * fireflies drift over it.
  */
 
 /** CSS px the partner's panel takes above the band, for placing what must stay clear of it. */
 const PANEL_CLEAR = 74
 
-/** The solid bottom band's height in CSS px: three rows of commands upright, two sideways. */
-export const bandPx = (wide: boolean) => (wide ? 112 : 160)
+/** The solid bottom band's height in CSS px: the message over two rows of commands upright, beside them sideways. */
+export const bandPx = (wide: boolean) => (wide ? 112 : 176)
 
 /** How a canvas splits between the scene and the band. */
 export type BattleLayout = { W: number; H: number; wide: boolean; sceneH: number; k: number }
@@ -68,9 +71,12 @@ const BALL_COLORS = { o: '#20242c', g: '#58a040', d: '#2e6a34', y: '#d0b850', w:
 const BERRY_ROWS = ['...g...', '..gg...', '.rrrrr.', 'rrprrrr', 'rrrrrrd', 'rrrrrrd', '.rrrrd.', '..rrd..'] as const
 const BERRY_COLORS = { g: '#3e8a38', r: '#e0486a', p: '#ffb8c8', d: '#a82c50' } as const
 
-const TIMES = { open: 0.55, silhouette: 0.35, flash: 0.22, sendOut: 0.55, fly: 0.62, recoil: 0.16, absorb: 0.52, drop: 0.62, settle: 0.32, wobble: 0.62, wobbleRest: 0.34, click: 1.15, breakOut: 0.5, toss: 0.55, eat: 1.5, flee: 0.85, away: 0.7, sceneRise: 0.8, calmed: 0.9, repeat: 1.5 } as const
+const TIMES = { open: 0.55, silhouette: 0.35, flash: 0.22, sendOut: 0.55, fly: 0.62, recoil: 0.16, absorb: 0.52, drop: 0.62, settle: 0.32, wobble: 0.62, wobbleRest: 0.34, click: 1.15, breakOut: 0.5, toss: 0.55, eat: 1.5, bonk: 1.1, nibble: 1.4, flee: 0.85, away: 0.7, sceneRise: 0.8, calmed: 0.9, repeat: 1.5 } as const
 
-type Phase = 'open' | 'silhouette' | 'flash' | 'sendOut' | 'menu' | 'fly' | 'recoil' | 'absorb' | 'drop' | 'settle' | 'wait' | 'wobble' | 'click' | 'repeat' | 'breakOut' | 'toss' | 'eat' | 'calmed' | 'flee' | 'away' | 'scene' | 'done'
+type Phase = 'open' | 'silhouette' | 'flash' | 'sendOut' | 'menu' | 'fly' | 'recoil' | 'absorb' | 'drop' | 'settle' | 'wait' | 'wobble' | 'click' | 'repeat' | 'breakOut' | 'toss' | 'eat' | 'bonk' | 'nibble' | 'calmed' | 'flee' | 'away' | 'scene' | 'done'
+
+/** What was thrown on a `toss`: a berry, a rock or bait. */
+type Thrown = 'berry' | 'rock' | 'bait'
 
 /** What the battle needs from the shell: words, the menu, the API and how it ended. */
 export type BattleHost = {
@@ -79,6 +85,8 @@ export type BattleHost = {
   menu: (on: boolean) => void
   panels: (show: boolean) => void
   calm: (n: number) => void
+  /** The wild one's mood changed: angry or eating for `turns`, or over. */
+  mood: (mood: SafariMood | null, turns: number) => void
   send: (action: SafariAction, then: (got: SafariActed) => void) => void
   /** A catch came back: lands the gift; answers how it was received. */
   land: (got: SafariActed) => { fresh: boolean; refund: number; shiny: boolean }
@@ -98,8 +106,10 @@ export type Battle = ReturnType<typeof createBattle>
  * Starts a battle. `session` must hold the encounter. `resumed`: picked up from
  * a session left open, so nothing plays before the menu.
  */
-export const createBattle = (opts: { habitat: SafariHabitat; theme: SafariTheme; family: HatchlingId; shiny: boolean; session: SafariSession; partnerDex: number; partnerShiny: boolean; host: BattleHost; resumed: boolean }) => {
+export const createBattle = (opts: { habitat: SafariHabitat; theme: SafariTheme; daypart: SafariDaypart; family: HatchlingId; shiny: boolean; session: SafariSession; partnerDex: number; partnerShiny: boolean; host: BattleHost; resumed: boolean }) => {
   const { theme, family, shiny, partnerDex, partnerShiny, host } = opts
+  const light = LIGHTS[opts.daypart]
+  const scene = sceneAt(theme.scene, opts.daypart)
   const form = safariForm(family)
   const m = () => t().minigames.safari
   const name = form.name
@@ -115,6 +125,9 @@ export const createBattle = (opts: { habitat: SafariHabitat; theme: SafariTheme;
   let squash = 0
   let wildHidden = false
   let berry: { x: number; y: number } | null = null
+  let thrown: Thrown = 'berry'
+  /** The mood showing on the wild one: what the API's last answer left it in. */
+  let mood: SafariMood | null = opts.session.encounter?.mood ?? null
   let sceneShiny = false
   const parts: Particle[] = []
   const pops: Popup[] = []
@@ -128,6 +141,11 @@ export const createBattle = (opts: { habitat: SafariHabitat; theme: SafariTheme;
   let nearPlatform: HTMLCanvasElement | null = null
   const ballArt = fromStrings(BALL_ROWS, BALL_COLORS)
   const berryArt = fromStrings(BERRY_ROWS, BERRY_COLORS)
+  const rockArt = fromStrings(ROCK_ROWS, ROCK_COLORS)
+  const baitArt = fromStrings(BAIT_ROWS, BAIT_COLORS)
+  const angerArt = fromStrings(ANGER_ROWS, ANGER_COLORS)
+  /** Fireflies over a dusk or night backdrop: a fixed pool, each drifting on its own phase. */
+  const flies = light?.fireflies ? Array.from({ length: 9 }, (_, i) => ({ x: (i * 0.37 + 0.11) % 1, y: 0.18 + ((i * 0.29) % 0.5), p: i * 1.9 })) : []
 
   void loadSpecies(form.dex, shiny).catch(() => {})
   void loadSpecies(partnerDex, partnerShiny).catch(() => {})
@@ -149,15 +167,22 @@ export const createBattle = (opts: { habitat: SafariHabitat; theme: SafariTheme;
     grid = gridOf(L, tallest)
     for (const c of [art, backdrop, farPlatform, nearPlatform]) if (c) c.width = 0
     art = createCanvas(grid.w, grid.h)
-    backdrop = paintBackdrop(grid.w, grid.h, theme.scene)
-    farPlatform = paintPlatform(grid.farRx, Math.max(3, Math.round(grid.farRx * 0.3)), theme.scene)
-    nearPlatform = paintPlatform(grid.nearRx, Math.max(4, Math.round(grid.nearRx * 0.3)), theme.scene)
+    backdrop = paintBackdrop(grid.w, grid.h, scene)
+    if (light?.stars) paintNightSky(context2d(backdrop), grid.w, grid.h)
+    farPlatform = paintPlatform(grid.farRx, Math.max(3, Math.round(grid.farRx * 0.3)), scene)
+    nearPlatform = paintPlatform(grid.nearRx, Math.max(4, Math.round(grid.nearRx * 0.3)), scene)
     return grid
   }
 
   const toMenu = () => {
     go('menu')
-    host.say(m().what(name))
+    // A turn may have worn its mood off: say so once, then the question.
+    const now = opts.session.encounter?.mood ?? null
+    const wore = mood !== null && now === null
+    const was = mood
+    mood = now
+    host.mood(now, opts.session.encounter?.moodTurns ?? 0)
+    host.say(wore && was ? `${m().moodOver[was](name)} ${m().what(name)}` : m().what(name))
     host.panels(true)
     host.menu(true)
   }
@@ -190,7 +215,21 @@ export const createBattle = (opts: { habitat: SafariHabitat; theme: SafariTheme;
   }
 
   const giveBerry = () => {
-    if (phase === 'menu' && opts.session.berries > 0) playerAct({ kind: 'berry' }, m().gave(name), 'safariThrow', 'toss')
+    if (phase !== 'menu' || opts.session.berries === 0) return
+    thrown = 'berry'
+    playerAct({ kind: 'berry' }, m().gave(name), 'safariThrow', 'toss')
+  }
+
+  const throwRock = () => {
+    if (phase !== 'menu') return
+    thrown = 'rock'
+    playerAct({ kind: 'rock' }, m().threwRock(name), 'safariThrow', 'toss')
+  }
+
+  const throwBait = () => {
+    if (phase !== 'menu') return
+    thrown = 'bait'
+    playerAct({ kind: 'bait' }, m().threwBait(name), 'safariThrow', 'toss')
   }
 
   const run = () => {
@@ -223,6 +262,12 @@ export const createBattle = (opts: { habitat: SafariHabitat; theme: SafariTheme;
   }
 
   const landCatch = (got: SafariActed) => {
+    // A contest's catch only scores: the entry keeps its best when it ends.
+    if (opts.session.mode === 'contest' && got.turn.kind === 'ball') {
+      host.say(m().contest.scored(name, got.turn.score))
+      go('repeat')
+      return
+    }
     const out = host.land(got)
     if (out.fresh) {
       sceneShiny = out.shiny
@@ -264,7 +309,8 @@ export const createBattle = (opts: { habitat: SafariHabitat; theme: SafariTheme;
             playSfx('shiny')
             puff(A, A.wild.x, target.y, ['#ffffff', '#fff0a0', '#a8f0ff', '#ffb8e8'], 34, 95, 30)
           }
-          host.say(opts.session.encounter?.sure ? m().wildSure(name) : shiny ? m().wildShiny(name) : m().wild(name))
+          const e = opts.session.encounter
+          host.say(e?.sure ? m().wildSure(name) : shiny ? m().wildShiny(name) : e?.stalked ? m().stalked(name) : m().wild(name))
           host.panels(true)
         }
         break
@@ -374,17 +420,56 @@ export const createBattle = (opts: { habitat: SafariHabitat; theme: SafariTheme;
         }
         break
       case 'toss': {
+        // A rock flies at its head; a berry and bait land at its feet.
         const k = Math.min(1, phaseT / TIMES.toss)
-        ballX = start.x + (A.wild.x - 10 - start.x) * k
-        ballY = start.y + (A.wild.y - 2 - start.y) * k - Math.sin(k * Math.PI) * Math.round(A.h * 0.24)
-        if (phaseT >= TIMES.toss && reply?.turn.kind === 'berry') {
+        const to = thrown === 'rock' ? { x: A.wild.x - 2, y: target.y - 4 } : { x: A.wild.x - 10, y: A.wild.y - 2 }
+        ballX = start.x + (to.x - start.x) * k
+        ballY = start.y + (to.y - start.y) * k - Math.sin(k * Math.PI) * Math.round(A.h * (thrown === 'rock' ? 0.18 : 0.24))
+        if (phaseT < TIMES.toss || !reply) break
+        if (reply.turn.kind === 'berry') {
           berry = { x: A.wild.x - 10, y: A.wild.y - 2 }
           host.say(m().eating(name))
           playSfx('safariMunch')
           go('eat')
+        } else if (reply.turn.kind === 'rock') {
+          playSfx('thud')
+          flash = 0.35
+          puff(A, to.x, to.y, ['#ffffff', '#c8d0dc', '#f8e080'], 14, 90, 160)
+          mood = 'angry'
+          if (!reply.turn.fled) host.mood('angry', reply.turn.turns)
+          host.say(m().angry(name))
+          go('bonk')
+        } else if (reply.turn.kind === 'bait') {
+          berry = { x: A.wild.x - 10, y: A.wild.y - 2 }
+          playSfx('safariMunch')
+          mood = 'eating'
+          if (!reply.turn.fled) host.mood('eating', reply.turn.turns)
+          host.say(m().eatingBait(name))
+          go('nibble')
         }
         break
       }
+      case 'bonk':
+        if (reply?.turn.kind !== 'rock') break
+        if (phaseT >= TIMES.bonk && host.typed()) {
+          if (reply.turn.fled) startFlee(A)
+          else if (opts.session.over) finish()
+          else toMenu()
+        }
+        break
+      case 'nibble':
+        if (reply?.turn.kind !== 'bait') break
+        if (Math.floor(phaseT * 5) !== Math.floor((phaseT - dt) * 5)) {
+          playSfx('safariMunch', 160)
+          puff(A, A.wild.x - 9, A.wild.y - 3, [BAIT_COLORS.t, BAIT_COLORS.y], 3, 34, 220)
+        }
+        if (phaseT >= TIMES.nibble && host.typed()) {
+          berry = null
+          if (reply.turn.fled) startFlee(A)
+          else if (opts.session.over) finish()
+          else toMenu()
+        }
+        break
       case 'eat':
         if (reply?.turn.kind !== 'berry') break
         if (Math.floor(phaseT * 4) !== Math.floor((phaseT - dt) * 4)) {
@@ -442,8 +527,21 @@ export const createBattle = (opts: { habitat: SafariHabitat; theme: SafariTheme;
       drawPokemon(g, s, 'Walk', 2, clock * 2.2, x + k * k * (A.w + 20 - A.wild.x), y - Math.abs(Math.sin(k * 12)) * 3)
       return
     }
-    const bob = phase === 'eat' ? Math.round(Math.abs(Math.sin(phaseT * 11)) * 2) : 0
-    drawPokemon(g, s, 'Idle', dir, clock, x, y - bob, sil ? { tint: { color: '#141c28', amount: 1 } } : { flash: phase === 'breakOut' ? Math.max(0, 1 - phaseT / 0.25) : 0 })
+    // Eating bobs its head down to the food; anger stamps (a hop) and shakes now and then.
+    const eating = phase === 'eat' || phase === 'nibble' || (mood === 'eating' && phase === 'menu')
+    const bob = eating ? Math.round(Math.abs(Math.sin(phaseT * 11)) * 2) : 0
+    const stomp = phase === 'bonk' ? Math.round(Math.abs(Math.sin(Math.min(1, phaseT / 0.6) * Math.PI * 3)) * 3 * (1 - Math.min(1, phaseT / 0.9))) : 0
+    const shake = mood === 'angry' && (phase === 'menu' || phase === 'bonk') && Math.floor(clock * 2.5) % 3 === 0 ? (Math.floor(clock * 30) % 2 === 0 ? 1 : -1) : 0
+    drawPokemon(g, s, 'Idle', dir, clock, x + shake, y - bob - stomp, sil ? { tint: { color: '#141c28', amount: 1 } } : { flash: phase === 'breakOut' ? Math.max(0, 1 - phaseT / 0.25) : phase === 'bonk' ? Math.max(0, 1 - phaseT / 0.18) : 0 })
+    if (mood === 'angry' && !sil) {
+      // The mark pulses: a beat on, a beat smaller.
+      const big = Math.floor(clock * 3) % 2 === 0
+      // Beside its head, kept inside the scene for a tall one.
+      const ax = x + Math.round(s.bodyH * 0.3) + 4
+      const ay = Math.max(5, y - Math.round(s.bodyH) + 2)
+      if (big) g.drawImage(angerArt, ax - 3, ay - 3)
+      else g.drawImage(angerArt, 1, 1, 5, 5, ax - 2, ay - 2, 5, 5)
+    }
   }
 
   const drawNear = (g: CanvasRenderingContext2D, A: Grid, ox: number) => {
@@ -565,11 +663,40 @@ export const createBattle = (opts: { habitat: SafariHabitat; theme: SafariTheme;
       }
       drawBall(c, ballX + ox, ballY, tilt, 0)
     }
-    if ((phase === 'toss' && phaseT < TIMES.toss) || berry) {
-      const bx = berry ? berry.x : ballX
-      const by = berry ? berry.y : ballY
-      const cut = berry ? Math.round(Math.min(1, phaseT / TIMES.eat) * berryArt.height) : 0
-      if (cut < berryArt.height) c.drawImage(berryArt, 0, cut, berryArt.width, berryArt.height - cut, Math.round(bx - berryArt.width / 2) + ox, Math.round(by - berryArt.height / 2) + cut, berryArt.width, berryArt.height - cut)
+    if (phase === 'toss' && phaseT < TIMES.toss) {
+      const piece = thrown === 'rock' ? rockArt : thrown === 'bait' ? baitArt : berryArt
+      c.save()
+      c.translate(Math.round(ballX) + ox, Math.round(ballY))
+      if (thrown === 'rock') c.rotate(Math.floor(phaseT * 14) * (Math.PI / 2))
+      c.drawImage(piece, -Math.floor(piece.width / 2), -Math.floor(piece.height / 2))
+      c.restore()
+    } else if (berry) {
+      // What's left of the food shrinks from the top as it's eaten.
+      const piece = phase === 'nibble' ? baitArt : berryArt
+      const cut = Math.round(Math.min(1, phaseT / (phase === 'nibble' ? TIMES.nibble : TIMES.eat)) * piece.height)
+      if (cut < piece.height) c.drawImage(piece, 0, cut, piece.width, piece.height - cut, Math.round(berry.x - piece.width / 2) + ox, Math.round(berry.y - piece.height / 2) + cut, piece.width, piece.height - cut)
+    }
+    // A rock bouncing off its head.
+    const target = { y: A.wild.y - Math.max(8, Math.round(wild().bodyH * 0.55)) }
+    if (phase === 'bonk' && phaseT < 0.45) {
+      const k = phaseT / 0.45
+      c.drawImage(rockArt, Math.round(A.wild.x - 8 - k * 10) + ox, Math.round(target.y - 6 - Math.sin(k * Math.PI) * 8 + k * k * 18))
+    }
+
+    for (const f of flies) {
+      const fx = Math.round(((f.x + Math.sin(clock * 0.3 + f.p) * 0.05) % 1) * A.w)
+      const fy = Math.round(A.h * (f.y + Math.sin(clock * 0.7 + f.p) * 0.04))
+      const glow = Math.sin(clock * 2.2 + f.p)
+      if (glow < -0.2) continue
+      c.fillStyle = glow > 0.6 ? '#f8ffa0' : '#b8e868'
+      c.fillRect(fx, fy, 1, 1)
+      if (glow > 0.85) {
+        c.fillStyle = '#7c9a40'
+        c.fillRect(fx - 1, fy, 1, 1)
+        c.fillRect(fx + 1, fy, 1, 1)
+        c.fillRect(fx, fy - 1, 1, 1)
+        c.fillRect(fx, fy + 1, 1, 1)
+      }
     }
 
     if (phase === 'scene') drawFreshScene(c, A)
@@ -596,6 +723,8 @@ export const createBattle = (opts: { habitat: SafariHabitat; theme: SafariTheme;
     draw,
     throwBall,
     giveBerry,
+    throwRock,
+    throwBait,
     run,
     phase: () => phase,
     /** The new family's scene was acknowledged. */

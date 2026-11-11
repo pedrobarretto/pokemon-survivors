@@ -1,4 +1,5 @@
 import type { SafariHabitat } from '../../data/safari'
+import type { SafariDaypart } from './safari.rules'
 import { MAP_H, MAP_W, TERRAIN, TILE } from '../../data/safariMaps'
 import { createCanvas, context2d } from '../../engine/pixelart'
 import { tileAt, vertexAt, type SafariWorld } from './safariWorld'
@@ -379,4 +380,137 @@ export const paintPlatform = (rx: number, ry: number, scene: SafariScene) => {
   oval(rx, ry, scene.platform[1])
   oval(rx - 2, ry - 1, scene.platform[0])
   return c
+}
+
+/* ---------------- Rock, bait and the moods they bring ---------------- */
+
+/** A throwing rock at scene resolution: grey stone, a lit top and a dark crack. */
+export const ROCK_ROWS = ['..oooo..', '.oglllo.', 'ogglllgo', 'ogggglgo', 'odggdggo', 'oddgggdo', '.oddddo.', '..oooo..'] as const
+export const ROCK_COLORS = { o: '#20242c', g: '#9098a8', l: '#c8d0dc', d: '#5c6474' } as const
+
+/** Bait: a brown pellet of pressed grain with crumbs of seed in it. */
+export const BAIT_ROWS = ['..ooo..', '.obyto.', 'obttbto', 'otbytbo', 'obtttbo', '.obtbo.', '..ooo..'] as const
+export const BAIT_COLORS = { o: '#2c1c10', b: '#a86c34', t: '#d09050', y: '#f4d878' } as const
+
+/** The anger mark that pulses by an angry Pokémon's head: four red hooks around a gap. */
+export const ANGER_ROWS = ['.rr.rr.', 'rddrddr', 'rd...dr', '.......', 'rd...dr', 'rddrddr', '.rr.rr.'] as const
+export const ANGER_COLORS = { r: '#f04848', d: '#a01828' } as const
+
+/** A small four-point sparkle: the chain's mark. */
+const SPARK_ROWS = ['...y...', '...w...', '..ywy..', 'ywwwwwy', '..ywy..', '...w...', '...y...'] as const
+const SPARK_COLORS = { y: '#f8c030', w: '#fff8d8' } as const
+
+const SUN_ROWS = ['...y...', '.y.y.y.', '..ooo..', 'yyoooyy', '..ooo..', '.y.y.y.', '...y...'] as const
+const SUN_COLORS = { y: '#f8c030', o: '#f8e070' } as const
+const MOON_ROWS = ['..mmm..', '.mmd...', 'mmd....', 'mmd....', 'mmd....', '.mmd...', '..mmm..'] as const
+const MOON_COLORS = { m: '#f8f0c0', d: '#c8b878' } as const
+const DUSK_ROWS = ['.......', '.......', '..ooo..', '.ooooo.', 'ooooooo', 'hhhhhhh', '.h.h.h.'] as const
+const DUSK_COLORS = { o: '#f08848', h: '#e0b0a0' } as const
+/** Two footprints, for the sneak toggle. */
+const STEP_ROWS = ['.oo....', 'oooo...', 'oooo...', '.oo..oo', '....oooo', '....oooo', '.....oo.'] as const
+const STEP_COLORS = { o: '#283040' } as const
+/** A bug net for the Concurso de Insetos's button and board. */
+const NET_ROWS = [
+  '...oooooo.',
+  '..owmwmwmo',
+  '.owmwmwmwo',
+  '.omwmwmwmo',
+  '.owmwmwmwo',
+  '..owmwmwo.',
+  '..obooooo.',
+  '.obo......',
+  'obo.......',
+  'oo........',
+] as const
+const NET_COLORS = { o: '#283040', w: '#f8f8f8', m: '#b8c8d8', b: '#c08040' } as const
+
+const iconUrls = new Map<string, string>()
+
+/** An icon of these rows as an image URL, made once, `scale` times its size so the browser never smooths it. */
+const iconUrl = (key: string, rows: readonly string[], colors: Readonly<Record<string, string>>, scale = 4) => {
+  const had = iconUrls.get(key)
+  if (had) return had
+  const w = Math.max(...rows.map((r) => r.length))
+  const c = createCanvas(w * scale, rows.length * scale)
+  const g = context2d(c)
+  rows.forEach((row, y) => {
+    for (let x = 0; x < row.length; x++) {
+      const color = colors[row[x]!]
+      if (!color) continue
+      g.fillStyle = color
+      g.fillRect(x * scale, y * scale, scale, scale)
+    }
+  })
+  const url = c.toDataURL()
+  c.width = c.height = 0
+  iconUrls.set(key, url)
+  return url
+}
+
+export const ICONS = {
+  rock: () => iconUrl('rock', ROCK_ROWS, ROCK_COLORS),
+  bait: () => iconUrl('bait', BAIT_ROWS, BAIT_COLORS),
+  spark: () => iconUrl('spark', SPARK_ROWS, SPARK_COLORS),
+  sun: () => iconUrl('sun', SUN_ROWS, SUN_COLORS),
+  moon: () => iconUrl('moon', MOON_ROWS, MOON_COLORS),
+  dusk: () => iconUrl('dusk', DUSK_ROWS, DUSK_COLORS),
+  step: () => iconUrl('step', STEP_ROWS, STEP_COLORS),
+  net: () => iconUrl('net', NET_ROWS, NET_COLORS),
+} as const
+
+/* ---------------- The time of day ---------------- */
+
+/**
+ * How a time of day tints a habitat: the map takes `wash` multiplied over it
+ * (one flat color, so every pixel keeps its edge), the battle backdrop's flat
+ * bands are mixed toward `sky`, `ground` by `amount`, and night adds stars, a
+ * moon and fireflies. Day is untouched.
+ */
+export type SafariLight = { wash: string; sky: readonly [string, string]; mix: string; amount: number; stars: boolean; moon: boolean; fireflies: boolean; lamps: boolean }
+
+export const LIGHTS: Record<SafariDaypart, SafariLight | null> = {
+  day: null,
+  dawn: { wash: '#e8c8e0', sky: ['#a8a0d8', '#f4c8b8'], mix: '#c09ac0', amount: 0.22, stars: false, moon: false, fireflies: false, lamps: false },
+  dusk: { wash: '#f0b088', sky: ['#7c5498', '#f09868'], mix: '#c06850', amount: 0.3, stars: false, moon: false, fireflies: true, lamps: true },
+  night: { wash: '#5a68b0', sky: ['#141c3c', '#26305c'], mix: '#1c2450', amount: 0.55, stars: true, moon: true, fireflies: true, lamps: true },
+}
+
+const hexMix = (a: string, b: string, k: number) => {
+  const [ar, ag, ab] = rgb(a)
+  const [br, bg, bb] = rgb(b)
+  const c = (x: number, y: number) => Math.round(x + (y - x) * k).toString(16).padStart(2, '0')
+  return `#${c(ar, br)}${c(ag, bg)}${c(ab, bb)}`
+}
+
+/** A backdrop's colors at a time of day: still flat bands, the sky the hour's and the rest mixed toward its shade. */
+export const sceneAt = (scene: SafariScene, part: SafariDaypart): SafariScene => {
+  const light = LIGHTS[part]
+  if (!light) return scene
+  const k = light.amount
+  const m = (c: string) => hexMix(c, light.mix, k)
+  return { ...scene, sky: light.sky, far: hexMix(scene.far, light.mix, Math.min(1, k + 0.15)), ground: [m(scene.ground[0]), m(scene.ground[1])], platform: [m(scene.platform[0]), m(scene.platform[1])] }
+}
+
+/** Night's sky over a painted backdrop: a fixed scatter of stars over its upper band and a moon in its corner. */
+export const paintNightSky = (g: CanvasRenderingContext2D, w: number, h: number) => {
+  const top = Math.round(h * 0.42)
+  for (let i = 0; i < 40; i++) {
+    const x = (i * 53 + 7) % w
+    const y = (i * 29 + 3) % top
+    g.fillStyle = i % 5 === 0 ? '#fff8d0' : '#a8b8e8'
+    g.fillRect(x, y, 1, 1)
+  }
+  const cx = w - Math.max(10, Math.round(w * 0.12))
+  const cy = Math.max(7, Math.round(h * 0.12))
+  for (let y = -4; y <= 4; y++) {
+    const half = Math.round(Math.sqrt(Math.max(0, 20.25 - y * y)))
+    g.fillStyle = '#f8f0c0'
+    g.fillRect(cx - half, cy + y, half * 2, 1)
+  }
+  // The moon's shadow side, for a crescent.
+  for (let y = -3; y <= 3; y++) {
+    const half = Math.round(Math.sqrt(Math.max(0, 12.25 - y * y)))
+    g.fillStyle = LIGHTS.night!.sky[0]
+    g.fillRect(cx - half + 3, cy + y - 1, half * 2, 1)
+  }
 }

@@ -410,6 +410,11 @@ export const fakeStampsTo = (fn: ((stamps: readonly StampId[]) => void) | null) 
 }
 
 /** Faking: what the API's own games settled (`realm/gameDeeds.ts`, from the claw's, the Safári's and the Escavação's fakes), counted on the faked book and told to the town. */
+/** Faked: puts a score the API scored itself on a game's fake boards (the Concurso de Insetos's best), kept if it's the best. */
+export const fakeBoardScore = (game: MinigameId, score: number) => {
+  if (fake) fake.games.board[game] = Math.max(fake.games.board[game] ?? 0, score)
+}
+
 export const fakeGameDeeds = (deeds: ReadonlyMap<Deed, number>) => {
   if (!fake || deeds.size === 0) return
   const earned = fakeDeed(fake, deeds, Date.now())
