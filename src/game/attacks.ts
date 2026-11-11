@@ -11,7 +11,7 @@ import { movesOnItsOwn } from './enemies'
 import { inDoorway } from './rift'
 import { atCaveChest } from './cave'
 import { inStandRing } from './mapEvents'
-import { spawnAttack } from './spawn'
+import { dropPatch, spawnAttack } from './spawn'
 import { typeEvolvedTrail } from './typeEvolutions'
 import { ownerOf } from './players'
 import { isAlly } from './versusRules'
@@ -191,7 +191,7 @@ const dropTrail = (g: Game, a: Attack, t: Trailer) => {
   t.acc += p.walked - t.walked
   t.walked = p.walked
   for (; t.acc >= t.every; t.acc -= t.every) {
-    spawnAttack(g, {
+    dropPatch(g, {
       move: a.move, type: a.type, visual: t.visual, x: p.x + range(g.rng, -2, 2), y: p.y + range(g.rng, -2, 2),
       shape: { kind: 'circle', r: t.r }, motion: { kind: 'static' },
       damage: a.damage * t.share, knockback: 0, hitInterval: t.hitInterval, ttl: t.ttl, status: a.status,

@@ -577,6 +577,8 @@ export type Attack = {
   memo: number
   /** Arena only: a lasting effect (an aura, a trail: a hitbox with no end) that its casts hold `VERSUS_KIT.persist` s at a time (`holdLasting`). */
   lasting?: true
+  /** A patch of ground a trail left (`dropPatch`): a move keeps only so many alive at once. */
+  ground?: true
 }
 
 /** Enemy-owned hitbox that hurts the player (boss attacks). */
