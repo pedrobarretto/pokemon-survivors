@@ -30261,7 +30261,7 @@ span.arena-hub-face {
   color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
-/* The mini games' sheets: the tokens line, the paytable. */
+/* The mini games' sheets: the tokens line. */
 .corner-tokens {
   display: flex;
   align-items: center;
@@ -30272,32 +30272,62 @@ span.arena-hub-face {
   image-rendering: pixelated;
 }
 
-.corner-paytable {
-  display: grid;
-  gap: 4px;
-  font-size: 18px;
-}
-
-.corner-paytable span {
+/* Giovanni's lines in the Hideout (`ui/places.ts`): off the top, where the boss and its bar stand, over the partner's card at the bottom left. */
+.giovanni-speech {
+  position: absolute;
+  z-index: 30;
+  bottom: calc(150px + env(safe-area-inset-bottom));
+  left: 16px;
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 10px;
+  width: min(420px, 42vw);
+  padding: 10px 14px;
+  pointer-events: none;
+  animation: toast-in 0.2s steps(4) both;
+  transition: opacity 0.4s steps(4);
 }
 
-.corner-paytable img {
-  width: 22px;
-  height: 22px;
+.giovanni-speech.out {
+  opacity: 0;
+}
+
+.giovanni-speech img {
+  flex: none;
+  width: 40px;
+  height: 40px;
   image-rendering: pixelated;
 }
 
-.corner-paytable b {
-  margin-left: auto;
-  font-family: var(--title);
-  font-size: 13px;
+.giovanni-speech p {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.2;
 }
 
-.corner-paytable .corner-oran {
-  gap: 6px;
+@media (max-height: 520px) {
+  .giovanni-speech {
+    bottom: calc(118px + env(safe-area-inset-bottom));
+    gap: 8px;
+    width: min(320px, 38vw);
+    padding: 6px 10px;
+  }
+
+  .giovanni-speech img {
+    width: 28px;
+    height: 28px;
+  }
+
+  .giovanni-speech p {
+    font-size: 14px;
+  }
+}
+
+@media (orientation: portrait) {
+  .giovanni-speech {
+    right: 16px;
+    width: auto;
+  }
 }
 
 /* ---------------- Shadow Pokémon (`ui/shadowPick.ts`) ---------------- */

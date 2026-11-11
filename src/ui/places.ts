@@ -13,6 +13,21 @@ import { banner, runToast } from './toasts'
 const SPIRITOMB_DEX = ENEMIES[GRAVEYARD.boss].dex
 
 /** Sounds, toasts and banners for whatever just happened at a place (the dungeon's floor card is the HUD's, `ui/placeCard.ts`). */
+/**
+ * Giovanni's line, in a box of its own away from the top of the screen
+ * (where the boss stands and its bar and the toasts are): over the partner's
+ * card at the bottom left. A new line replaces the last.
+ */
+const giovanniSays = (root: HTMLElement, line: string, ms: number) => {
+  root.querySelector('.giovanni-speech')?.remove()
+  const el = h('div', { class: 'giovanni-speech box', role: 'status' }, h('img', { src: portraitUrl(53), alt: '' }), h('p', {}, h('b', {}, 'Giovanni'), ` ${line}`))
+  root.append(el)
+  setTimeout(() => {
+    el.classList.add('out')
+    setTimeout(() => el.remove(), 400)
+  }, ms)
+}
+
 export const placeFeedback = (root: HTMLElement, place: PlaceId, notice: PlaceNotice) => {
   const m = t().places
   switch (notice.kind) {
@@ -63,7 +78,7 @@ export const placeFeedback = (root: HTMLElement, place: PlaceId, notice: PlaceNo
       const line = t().rocket.hideout.giovanni[notice.line]
       if (notice.line === 'persian') playCry(cryUrl(53), 0.7)
       if (notice.line === 'mewtwo') (playSfx('legendary'), playCry(cryUrl(150), 0.8), flashScreen(root))
-      return runToast(root, 'important', h('span', { class: 'item-toast giovanni-line' }, h('img', { src: portraitUrl(53), alt: '' }), h('span', {}, h('b', {}, 'Giovanni'), ` ${line}`)), notice.line === 'defeat' ? 5200 : 3800, 'giovanni')
+      return giovanniSays(root, line, notice.line === 'defeat' ? 5200 : 3800)
     }
     case 'wind':
       playSfx(notice.level >= 3 ? 'quake' : 'tick')

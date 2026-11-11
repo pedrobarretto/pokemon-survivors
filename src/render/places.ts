@@ -13,6 +13,8 @@ import { dashedRing } from './strokes'
 import { bodyOf } from '../data/bodies'
 import { ENEMIES, type EnemyDef } from '../data/enemies'
 import { drawFoundMark, drawHiddenEntrance, drawHiddenGround, hiddenIconSprite } from './hiddenZones'
+import { bakeLair, drawLairLife, LAIR_DARK } from './hideoutLair'
+import { HIDEOUT } from '../data/rocketHideout'
 
 type Ctx = CanvasRenderingContext2D
 
@@ -299,6 +301,9 @@ export const dropPlaceFloor = () => {
   baked = null
 }
 
+/** The Hideout's last room, Giovanni's (no stairs further down): Team Rocket's HQ, not a cave (`render/hideoutLair.ts`). */
+const inLair = (inside: PlaceInterior) => inside.id === 'hideout' && inside.state.stairs === null
+
 const bakedFloor = (inside: PlaceInterior) => {
   if (baked?.layout === inside.layout) return baked
   if (inside.id === 'graveyard') {
@@ -306,6 +311,8 @@ const bakedFloor = (inside: PlaceInterior) => {
     baked = { layout: inside.layout, floor: both.floor, fence: both.fence }
   } else if (inside.id === 'grotto') {
     baked = { layout: inside.layout, floor: bakeGrotto(inside.layout.floor), fence: null }
+  } else if (inLair(inside)) {
+    baked = { layout: inside.layout, floor: bakeLair(HIDEOUT.lair.r), fence: null }
   } else {
     baked = { layout: inside.layout, floor: bakeCave(inside.layout.floor, inside.id === 'underground' ? UNDERGROUND_GROUND : inside.id === 'hideout' ? HIDEOUT_GROUND : CAVE_GROUND), fence: null }
   }
@@ -407,8 +414,8 @@ export const drawPlaceFloor = (ctx: Ctx, inside: PlaceInterior, camX: number, ca
     const tile = CANOPY_TILE()
     const size = tile.width
     for (let y = -(((camY % size) + size) % size); y < h; y += size) for (let x = -(((camX % size) + size) % size); x < w; x += size) ctx.drawImage(tile, x, y)
-  } else if (inside.id === 'graveyard') {
-    ctx.fillStyle = '#17121f'
+  } else if (inside.id === 'graveyard' || inLair(inside)) {
+    ctx.fillStyle = inside.id === 'graveyard' ? '#17121f' : LAIR_DARK
     ctx.fillRect(0, 0, w, h)
   } else {
     // Rock all around, lined up with the bake's (room coordinates).
@@ -462,7 +469,7 @@ export const drawPlaceGround = (ctx: Ctx, g: Game, t: number) => {
       ctx.fillStyle = '#ffffff'
       if (k < 10) ctx.fillRect(Math.round(x - 5 + k), Math.round(y - 4 + k * 0.9), 2, 1)
     }
-    if (inside.id === 'hideout') return
+    if (inside.id === 'hideout') return s.stairs === null ? drawLairLife(ctx, inside.x, inside.y, HIDEOUT.lair.r, t) : undefined
     const c = inside.state.chest
     if (c && !c.open && c.progress > 0) chargeArc(ctx, inside.x + c.x, inside.y + c.y, 24, c.progress)
     return

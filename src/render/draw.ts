@@ -647,9 +647,8 @@ const drawPlayer = (ctx: Ctx, g: Game, calm: boolean) => {
   // variant's own Walk, Idle and Hurt (a Mega with sheets has its own; `render/wearFit.ts` checks the sheet),
   // so the moments that swap or reshape the Pokémon draw it bare: an emote's sheet, a Mega's transformation
   // and a move's own look (Fly, Dig, a lunge).
-  // Ditto Transformed wears another species' sheets, which the rig never measured.
-  const copied = p.rocket?.kind === 'transform' && p.rocket.dex !== 0
-  const bare = emote !== null || egg !== null || p.mega.intro > 0 || copied
+  // Ditto Transformed wears another species' sheets: dressed by that species' rig when a player can be it (`rigSheet`), bare otherwise.
+  const bare = emote !== null || egg !== null || p.mega.intro > 0
   const look = bare ? null : shownLook(g, p.slot)
   // A Shadow Pokémon burns with its aura (`render/shadowAura.ts`), unless its sheets are SpriteCollab's own Shadow ones.
   if (p.variant === 'shadow' && alpha >= 0.5 && !wearsShadowSheets(g)) drawShadowAura(ctx, s, anim, emote ? 0 : p.dir, emote ? emote.seconds : p.animTime, p.x, feet, g.now, calm || detail.lean)
