@@ -1,4 +1,5 @@
 import { RAID, RAID_BOSSES, RAID_STARS, RAID_WEEK, type RaidBoss, type RaidPick, type RaidStars, type TeraType } from '../data/tera'
+import { momentBusy } from './legendMoments'
 import type { FloorPlan } from '../data/arenas'
 import { circle } from '../data/arenas'
 import { POKE_TYPES, type PokeType } from '../data/types'
@@ -183,7 +184,7 @@ export const raidCamera = (g: Game, dt: number) => {
 const raidDue = (g: Game) => {
   const s = g.raid
   if (g.time < s.nextAt || s.den || s.arena) return false
-  if (g.rift.omen || g.rift.portal || g.rift.arena || g.place.inside || g.place.entrance?.open || g.legendScene) return false
+  if (momentBusy(g, 'raid', ['roam']) || g.place.inside || g.place.entrance?.open || g.legendScene) return false
   if (g.bossId !== null && (g.endless !== null || g.time < s.nextAt + RAID.bossWait)) return false
   return g.endless !== null || g.time + RAID.openTime < RUN_LENGTH
 }

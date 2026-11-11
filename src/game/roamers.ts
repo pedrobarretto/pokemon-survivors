@@ -1,4 +1,5 @@
 import { dir8, dirTo, TAU } from '../engine/math'
+import { momentBusy } from './legendMoments'
 import { createRng, hash2, range } from '../engine/rng'
 import { ENEMIES } from '../data/enemies'
 import type { LakeId } from '../data/legends'
@@ -85,8 +86,8 @@ export const roamerShown = (g: Game) => {
   return r !== null && roamerBody(g) !== null && g.time >= r.hidden
 }
 
-/** A visit can start: the open map, no boss on it, no scene, not in endless mode's reaper hunt. */
-const canVisit = (g: Game) => roomOf(g) === null && g.bossId === null && g.legendScene === null && g.rift.omen === null && g.rift.portal === null
+/** A visit can start: the open map, no boss on it, no scene, no other legend moment under way (a rift on its way, a Tera den, a Sword's duel, the temple waking). */
+const canVisit = (g: Game) => roomOf(g) === null && g.bossId === null && g.legendScene === null && !momentBusy(g, 'roam')
 
 const appear = (g: Game, r: RoamState) => {
   const rng = drawOf(r)

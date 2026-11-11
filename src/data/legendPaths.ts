@@ -140,6 +140,8 @@ export const REGIGIGAS = {
   at: [240, 540],
   distance: 210,
   wake: 46,
+  /** Seconds the temple takes to rise out of the ground, the ground rumbling; it can't be woken before. */
+  rise: 2.4,
 } as const
 
 /* ---------------- The forms the paths open ---------------- */

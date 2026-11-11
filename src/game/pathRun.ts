@@ -1,4 +1,5 @@
 import { dirTo, TAU, type Vec } from '../engine/math'
+import { momentBusy } from './legendMoments'
 import { createRng, hash2 } from '../engine/rng'
 import { REGIGIGAS, ZYGARDE } from '../data/legendPaths'
 import { burst, shakeScreen } from './effects'
@@ -86,7 +87,8 @@ export const updatePathRun = (g: Game, spawn: Spawn) => {
     } else piece.at = g.time + 1
   }
   if (s.temple !== null && g.time >= s.temple) {
-    const at = spotNear(g, Math.floor(g.time) * 4 + 2, [REGIGIGAS.distance, REGIGIGAS.distance + 40])
+    // It rises on a quiet map: never during a boss fight, a scene or another legend moment (a rift, a den, a Sword, a roamer).
+    const at = g.bossId !== null || g.legendScene !== null || momentBusy(g, 'temple') ? null : spotNear(g, Math.floor(g.time) * 4 + 2, [REGIGIGAS.distance, REGIGIGAS.distance + 40])
     if (at) {
       s.temple = null
       spawn(g, 'regiTemple', at.x, at.y)
@@ -137,8 +139,8 @@ export const ZYGARDE_CORE_EVENT = pieceEvent(true) as MapEventDef<'zygardeCore'>
 /** The temple on the map: whether it's waking (the seconds since the player stepped up, -1 asleep), whether it told of the boss still there, and whether the giant has stepped out of it. */
 export type TempleEvent = { waking: number; told: boolean; out: boolean }
 
-/** Seconds the temple takes to rise out of the ground, the ground rumbling; it can't be woken before. */
-export const TEMPLE_RISE = 2.4
+/** Seconds the temple takes to rise out of the ground (`REGIGIGAS.rise`). */
+export const TEMPLE_RISE = REGIGIGAS.rise
 
 /** Seconds from the player stepping up to Regigigas rising: the temple shakes, the three Regi marks light up one by one. */
 export const TEMPLE_WAKE = 1.8
@@ -163,8 +165,8 @@ export const REGI_TEMPLE_EVENT: MapEventDef<'regiTemple'> = {
     }
     if (s.waking < 0) {
       if (playerWithin(g, ev.x, ev.y, REGIGIGAS.wake, true) === null) return
-      // Another boss on the field keeps it asleep: it wakes once that fight is over.
-      if (g.bossId !== null || teamLegend(g)?.id === 'regigigas') {
+      // Another boss on the field (or a rift, a den, a Sword's duel under way) keeps it asleep: it wakes once that's over.
+      if (g.bossId !== null || teamLegend(g)?.id === 'regigigas' || momentBusy(g, 'temple', ['roam'])) {
         if (!s.told) notify(g, { kind: 'temple', moment: 'silent' })
         s.told = true
         return

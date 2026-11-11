@@ -1,4 +1,5 @@
 import { dirTo, TAU } from '../engine/math'
+import { momentBusy } from './legendMoments'
 import { range } from '../engine/rng'
 import { ENEMIES } from '../data/enemies'
 import type { SwordId } from '../data/legends'
@@ -69,8 +70,8 @@ const bossSoon = (g: Game, s: number) => {
   return false
 }
 
-/** A duel may be offered or start: the open map, no boss or legendary scene, no rift on its way. */
-const calm = (g: Game) => roomOf(g) === null && g.bossId === null && g.legendScene === null && g.rift.omen === null && g.rift.portal === null
+/** A duel may be offered or start: the open map, no boss or legendary scene, no other legend moment under way (a rift on its way, a Tera den, a roamer, the temple waking). */
+const calm = (g: Game) => roomOf(g) === null && g.bossId === null && g.legendScene === null && !momentBusy(g, 'duel')
 
 const show = (g: Game, d: DuelState) => {
   const p = g.player

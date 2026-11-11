@@ -1,4 +1,5 @@
 import { TAU } from '../engine/math'
+import { momentBusy } from './legendMoments'
 import { range } from '../engine/rng'
 import { EVENT_RIFT, isEventRift, RIFT, type RiftLegend } from '../data/rifts'
 import { enterDomain } from './domain'
@@ -88,7 +89,8 @@ export const updateRiftPortal = (g: Game, dt: number) => {
   if (!portal) {
     // The endless mode picks up its own cadence once the run's slots are used.
     if (g.endless && rift.nextAt === Infinity) rift.nextAt = g.time + RIFT.endlessFirst
-    const state = { time: g.time, busy: rift.arena !== null || g.raid.den !== null, bossAlive: g.bossId !== null, endless: g.endless !== null }
+    // Another legend moment under way (a den, a Sword's duel, the temple waking) holds the omen; a roamer's visit doesn't.
+    const state = { time: g.time, busy: rift.arena !== null || momentBusy(g, 'rift', ['roam']), bossAlive: g.bossId !== null, endless: g.endless !== null }
     if (riftDue({ ...state, nextAt: rift.nextAt })) startOmen(g)
     else if (wormholeDue({ ...state, at: rift.wormholeAt })) startWormhole(g)
     return
