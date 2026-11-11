@@ -2,7 +2,7 @@ import { decodeSnapshot, deflate, restore, snapshot, stateHash } from '../game/s
 import { diffStates } from '../game/stateDiff'
 import { PLAYABLE_IDS } from '../data/hatchlings'
 import { LEGEND_IDS } from '../data/legends'
-import { startScenario, tickScenario, type Scenario } from './scenario'
+import { forkDriver, startScenario, tickScenario, type Driver, type Scenario } from './scenario'
 import { startCoopScenario, tickCoopScenario, type CoopScenario } from './coopScenario'
 import { createVersusGame, type VersusLoadout } from '../game/versus'
 import type { ArenaFormat } from '../data/arenaFormats'
@@ -199,6 +199,17 @@ const RIFT_HAND = 180
 /** The late-game run `npm run determinism -- late` plays: one that reaches deep into endless mode without stalling in a rift. */
 export const LATE_SCENARIO: Scenario = { seed: 4242, starter: 'charmander', difficulty: 'normal', maxRanks: true }
 
+/** One more tick of `d` as the late bench plays it: a rift the bot stays in past `RIFT_HAND` collapses. */
+const lateTicker = (d: Driver) => {
+  let riftAt = -1
+  return () => {
+    if (!d.g.rift.arena) riftAt = -1
+    else if (riftAt < 0) riftAt = d.g.now
+    else if (d.g.now - riftAt > RIFT_HAND) exitArena(d.g, 'collapse')
+    return tickScenario(d)
+  }
+}
+
 /**
  * What a long endless run costs to simulate: plays `s` on into endless mode
  * and, at each of `minutes` (run clock), the mean ms per tick over the minute
@@ -211,13 +222,7 @@ export const lateBench = (s: Scenario, minutes: readonly number[]) => {
   // Inside a rift the run clock stops: past `RIFT_HAND`, the cap keeps a bot stuck elsewhere from playing forever.
   const cap = (last * 1.5 + 10) * 60
   const rows = []
-  let riftAt = -1
-  const tick = () => {
-    if (!d.g.rift.arena) riftAt = -1
-    else if (riftAt < 0) riftAt = d.g.now
-    else if (d.g.now - riftAt > RIFT_HAND) exitArena(d.g, 'collapse')
-    return tickScenario(d)
-  }
+  const tick = lateTicker(d)
   for (const m of [...minutes].sort((a, b) => a - b)) {
     while (d.g.time < (m - 1) * 60 && d.g.now < cap && tick());
     let spent = 0
@@ -254,4 +259,33 @@ export const lateBench = (s: Scenario, minutes: readonly number[]) => {
     if (d.over || d.g.now >= cap) break
   }
   return rows
+}
+
+/**
+ * A game restored from a snapshot against the one it came from: plays `s` to
+ * `minute`, restores a copy (the co-op join's path) and steps both on for
+ * `ticks`, one tick each in turn (so a busy host slows both alike), timing
+ * each and counting the ticks where their hashes agree (all of them, or the
+ * restore broke co-op).
+ */
+export const restoreBench = (s: Scenario, minute: number, ticks: number) => {
+  const d = startScenario(s)
+  const tickD = lateTicker(d)
+  // Out of any rift first, so both copies' rift hands start alike.
+  while ((d.g.time < minute * 60 || d.g.rift.arena) && tickD());
+  const r = forkDriver(d, restore(snapshot(d.g)))
+  const tickR = lateTicker(r)
+  let original = 0
+  let restored = 0
+  let same = 0
+  for (let i = 0; i < ticks; i++) {
+    let t = performance.now()
+    tickD()
+    original += performance.now() - t
+    t = performance.now()
+    tickR()
+    restored += performance.now() - t
+    if (stateHash(d.g) === stateHash(r.g)) same++
+  }
+  return { minute, enemies: d.g.enemies.length, originalMs: +(original / ticks).toFixed(3), restoredMs: +(restored / ticks).toFixed(3), sameHash: `${same}/${ticks}` }
 }
