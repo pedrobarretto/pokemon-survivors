@@ -44,7 +44,7 @@ export const ULTRA_ICONS: Record<UltraMoveId, () => PixelSprite> = {
     { 1: '#401010', 2: '#e84838', 3: '#f8a090' },
   ),
   // Pheromosa's streak.
-  pheromosaLunge: icon(
+  skitterSmack: icon(
     ['.......11', '.....1121', '...112221', '.1122221.', '1222221..', '.1122221.', '...112221', '.....1121', '.......11'],
     { 1: '#8890a8', 2: '#f8f8ff' },
   ),
@@ -84,7 +84,7 @@ export const ULTRA_ICONS: Record<UltraMoveId, () => PixelSprite> = {
     { 1: '#401860', 2: '#c888f8', 3: '#f8f0ff' },
   ),
   // Poipole's needle, venom dripping.
-  poipoleJab: icon(
+  poisonTail: icon(
     ['....1....', '...121...', '...121...', '...121...', '..12321..', '..12221..', '...121...', '....1....', '..4...4..', '.444.444.'],
     { 1: '#401848', 2: '#c060c8', 3: '#f8d0f8', 4: '#a8e838' },
   ),

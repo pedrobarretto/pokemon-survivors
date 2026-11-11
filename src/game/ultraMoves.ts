@@ -119,8 +119,8 @@ export const ULTRA_MOVES = {
   },
 
   /* Pheromosa */
-  pheromosaLunge: {
-    name: 'Lunge',
+  skitterSmack: {
+    name: 'Skitter Smack',
     type: 'bug',
     legendary: true,
     base: stats({ damage: 34, cooldown: 1.6, amount: 2, speed: LUNGE.speed, knockback: 60 }),
@@ -141,12 +141,12 @@ export const ULTRA_MOVES = {
         const angle = foe ? dm.atan2(foe.y - (p.y - 8), foe.x - p.x) : aimAt(g, 240) + (i - (s.amount - 1) / 2) * 0.5
         const v = fromAngle(angle, s.speed)
         spawnAttack(g, {
-          ...look('pheromosaLunge', 'bug', 'lungeStreak'), x: p.x, y: p.y - 8,
+          ...look('skitterSmack', 'bug', 'lungeStreak'), x: p.x, y: p.y - 8,
           shape: { kind: 'circle', r: LUNGE.r * s.area }, motion: { kind: 'linear', vx: v.x, vy: v.y },
           damage: s.damage, knockback: s.knockback, status: s.status, ttl: LUNGE.ttl, age: -i * 0.06,
         })
       }
-      cast(g, 'pheromosaLunge')
+      cast(g, 'skitterSmack')
     },
   },
 
@@ -436,8 +436,8 @@ export const ULTRA_MOVES = {
   },
 
   /* Poipole */
-  poipoleJab: {
-    name: 'Poison Jab',
+  poisonTail: {
+    name: 'Poison Tail',
     type: 'poison',
     legendary: true,
     base: stats({ damage: 18, cooldown: 1.1, amount: 3, knockback: 50 }),
@@ -457,12 +457,12 @@ export const ULTRA_MOVES = {
         const sway = (i % 2 ? 1 : -1) * 0.25 * (i > 0 ? 1 : 0)
         const o = fromAngle(angle + sway, JAB.ahead)
         spawnAttack(g, {
-          ...look('poipoleJab', 'poison', 'jab'), x: p.x + o.x, y: p.y - 8 + o.y,
+          ...look('poisonTail', 'poison', 'jab'), x: p.x + o.x, y: p.y - 8 + o.y,
           shape: { kind: 'circle', r: JAB.r * s.area }, motion: { kind: 'follow', ox: o.x, oy: o.y - 8 },
           damage: s.damage, knockback: s.knockback, status: s.status, ttl: 0.14, activeUntil: 0.06, age: -i * JAB.gap, memo: angle + sway,
         })
       }
-      cast(g, 'poipoleJab')
+      cast(g, 'poisonTail')
     },
   },
 } as const satisfies Record<string, MoveDef>

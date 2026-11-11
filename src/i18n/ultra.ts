@@ -52,7 +52,7 @@ const pt: UltraWords = {
       description: 'Buzzwole soca o inimigo mais perto. Cada golpe que acerta o infla: o próximo bate 12% mais forte e mais largo, até 6 vezes. Levar dano desinfla.',
       upgrades: ['+12 de dano', '+15% de área', fork('Soco explosivo', 'Os que caem explodem; +12 de dano', 'Bomba de músculos', 'Seus golpes te curam; recarga 0.25s mais rápida'), 'Recarga 0.25s mais rápida e +12 de dano'],
     },
-    pheromosaLunge: {
+    skitterSmack: {
       description: 'Imagens de Pheromosa cruzam os inimigos mais perto mais rápido do que o olho vê, atravessando todos no caminho. Pode enfraquecer: o inimigo causa 25% menos dano.',
       upgrades: ['+8 de dano', '+1 investida', fork('Graça cruel', '+30% de chance de enfraquecer; +4 de dano', 'Caçadora', 'Mais dano em chefes e elites; +10 de dano'), 'Recarga 0.35s mais rápida e +8 de dano'],
     },
@@ -84,7 +84,7 @@ const pt: UltraWords = {
       description: 'Naganadel dispara ferrões que perseguem os inimigos mais perto; um inimigo nocauteado por um deles o deixa afiado: +15% de dano por 5s.',
       upgrades: ['+6 de dano', '+2 ferrões', fork('Ferrão perfurante', 'Atravessa +1 inimigo; +4 de dano', 'Ferrão duplo', 'Divide-se em dois no primeiro acerto; +6 de dano'), 'Recarga 0.25s mais rápida e +6 de dano'],
     },
-    poipoleJab: {
+    poisonTail: {
       description: 'Poipole crava sua agulha de veneno no inimigo mais perto, várias vezes seguidas, e pode envenenar.',
       upgrades: ['+5 de dano', '+1 golpe', fork('Veneno forte', '+30% de chance de envenenar; +25% de dano do veneno', 'Agulha sedenta', 'Seus golpes te curam; +6 de dano'), 'Recarga 0.2s mais rápida e +5 de dano'],
     },
@@ -206,7 +206,7 @@ const en: UltraWords = {
       description: 'Buzzwole punches the nearest foe. Every blow that lands pumps it up: the next hits 12% harder and wider, up to 6 times. Getting hurt deflates it.',
       upgrades: ['+12 damage', '+15% area', fork('Blast punch', 'Fainted foes explode; +12 damage', 'Muscle pump', 'Its hits heal you; 0.25s faster cooldown'), '0.25s faster cooldown and +12 damage'],
     },
-    pheromosaLunge: {
+    skitterSmack: {
       description: 'Pheromosa\'s afterimages streak through the nearest foes faster than the eye can follow, through everything in the way. It can weaken: the foe deals 25% less damage.',
       upgrades: ['+8 damage', '+1 lunge', fork('Cruel grace', '+30% weaken chance; +4 damage', 'Huntress', 'More damage to bosses and elites; +10 damage'), '0.35s faster cooldown and +8 damage'],
     },
@@ -238,7 +238,7 @@ const en: UltraWords = {
       description: 'Naganadel fires stingers that home in on the nearest foes; a foe one finishes off sharpens it: +15% damage for 5s.',
       upgrades: ['+6 damage', '+2 stingers', fork('Piercing stinger', 'Goes through +1 foe; +4 damage', 'Twin stinger', 'Splits in two on its first hit; +6 damage'), '0.25s faster cooldown and +6 damage'],
     },
-    poipoleJab: {
+    poisonTail: {
       description: 'Poipole jabs its venom needle into the nearest foe several times in a row, and can poison.',
       upgrades: ['+5 damage', '+1 jab', fork('Strong venom', '+30% poison chance; +25% poison damage', 'Thirsty needle', 'Its hits heal you; +6 damage'), '0.2s faster cooldown and +5 damage'],
     },
@@ -360,7 +360,7 @@ const es: UltraWords = {
       description: 'Buzzwole golpea al enemigo más cercano. Cada golpe que acierta lo infla: el siguiente pega un 12% más fuerte y más amplio, hasta 6 veces. Recibir daño lo desinfla.',
       upgrades: ['+12 de daño', '+15% de área', fork('Puño explosivo', 'Los que caen explotan; +12 de daño', 'Bomba muscular', 'Sus golpes te curan; recarga 0.25s más rápida'), 'Recarga 0.25s más rápida y +12 de daño'],
     },
-    pheromosaLunge: {
+    skitterSmack: {
       description: 'Las imágenes de Pheromosa cruzan a los enemigos más cercanos más rápido de lo que ve el ojo, atravesando todo a su paso. Puede debilitar: el enemigo hace un 25% menos de daño.',
       upgrades: ['+8 de daño', '+1 embestida', fork('Gracia cruel', '+30% de probabilidad de debilitar; +4 de daño', 'Cazadora', 'Más daño a jefes y élites; +10 de daño'), 'Recarga 0.35s más rápida y +8 de daño'],
     },
@@ -392,7 +392,7 @@ const es: UltraWords = {
       description: 'Naganadel dispara aguijones que persiguen a los enemigos más cercanos; un enemigo que uno remata lo afila: +15% de daño durante 5s.',
       upgrades: ['+6 de daño', '+2 aguijones', fork('Aguijón perforante', 'Atraviesa +1 enemigo; +4 de daño', 'Aguijón doble', 'Se divide en dos al primer golpe; +6 de daño'), 'Recarga 0.25s más rápida y +6 de daño'],
     },
-    poipoleJab: {
+    poisonTail: {
       description: 'Poipole clava su aguja de veneno en el enemigo más cercano varias veces seguidas, y puede envenenar.',
       upgrades: ['+5 de daño', '+1 pinchazo', fork('Veneno fuerte', '+30% de probabilidad de envenenar; +25% de daño del veneno', 'Aguja sedienta', 'Sus golpes te curan; +6 de daño'), 'Recarga 0.2s más rápida y +5 de daño'],
     },
@@ -514,7 +514,7 @@ const fr: UltraWords = {
       description: 'Buzzwole frappe l’ennemi le plus proche. Chaque coup qui touche le gonfle : le suivant frappe 12% plus fort et plus large, jusqu’à 6 fois. Être blessé le dégonfle.',
       upgrades: ['+12 dégâts', '+15% de zone', fork('Poing explosif', 'Les ennemis vaincus explosent ; +12 dégâts', 'Gonflette', 'Ses coups te soignent ; recharge −0.25s'), 'Recharge −0.25s et +12 dégâts'],
     },
-    pheromosaLunge: {
+    skitterSmack: {
       description: 'Les images de Pheromosa traversent les ennemis les plus proches plus vite que l’œil, et tout ce qui se trouve sur leur chemin. Peut affaiblir : l’ennemi inflige 25% de dégâts en moins.',
       upgrades: ['+8 dégâts', '+1 assaut', fork('Grâce cruelle', '+30% de chance d’affaiblir ; +4 dégâts', 'Chasseresse', 'Plus de dégâts aux boss et élites ; +10 dégâts'), 'Recharge −0.35s et +8 dégâts'],
     },
@@ -546,7 +546,7 @@ const fr: UltraWords = {
       description: 'Naganadel tire des dards qui traquent les ennemis les plus proches ; un ennemi qu’un dard achève l’aiguise : +15% de dégâts pendant 5s.',
       upgrades: ['+6 dégâts', '+2 dards', fork('Dard perçant', 'Traverse +1 ennemi ; +4 dégâts', 'Dard double', 'Se divise en deux au premier coup ; +6 dégâts'), 'Recharge −0.25s et +6 dégâts'],
     },
-    poipoleJab: {
+    poisonTail: {
       description: 'Poipole plante son aiguille venimeuse dans l’ennemi le plus proche plusieurs fois de suite, et peut empoisonner.',
       upgrades: ['+5 dégâts', '+1 piqûre', fork('Venin puissant', '+30% de chance d’empoisonner ; +25% de dégâts du poison', 'Aiguille assoiffée', 'Ses coups te soignent ; +6 dégâts'), 'Recharge −0.2s et +5 dégâts'],
     },
@@ -668,7 +668,7 @@ const zh: UltraWords = {
       description: 'Buzzwole揮拳打向最近的敵人。每命中一拳肌肉就更膨脹：下一拳傷害+12%且範圍更大，最多6層。受到傷害就會消退。',
       upgrades: ['傷害+12', '範圍+15%', fork('爆裂拳', '被擊倒的敵人會爆炸；傷害+12', '肌肉充血', '攻擊會治療你；冷卻縮短0.25秒'), '冷卻縮短0.25秒，傷害+12'],
     },
-    pheromosaLunge: {
+    skitterSmack: {
       description: 'Pheromosa的殘影以肉眼跟不上的速度穿過最近的敵人，貫穿路上所有對手。可能使敵人虛弱：造成的傷害減少25%。',
       upgrades: ['傷害+8', '突進+1', fork('殘酷優雅', '虛弱機率+30%；傷害+4', '女獵手', '對首領與精英傷害更高；傷害+10'), '冷卻縮短0.35秒，傷害+8'],
     },
@@ -700,7 +700,7 @@ const zh: UltraWords = {
       description: 'Naganadel射出會追蹤最近敵人的毒針；被毒針擊倒的敵人會讓它更加銳利：5秒內傷害+15%。',
       upgrades: ['傷害+6', '毒針+2', fork('貫穿毒針', '多貫穿1名敵人；傷害+4', '雙重毒針', '首次命中時一分為二；傷害+6'), '冷卻縮短0.25秒，傷害+6'],
     },
-    poipoleJab: {
+    poisonTail: {
       description: 'Poipole用毒針連續刺向最近的敵人，還可能使其中毒。',
       upgrades: ['傷害+5', '刺擊+1', fork('劇毒', '中毒機率+30%；毒傷+25%', '飢渴毒針', '攻擊會治療你；傷害+6'), '冷卻縮短0.2秒，傷害+5'],
     },

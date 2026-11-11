@@ -45,7 +45,7 @@ export const LEGENDARY_MOVE_OF = {
   // The Ultra Beasts' (`game/ultraMoves.ts`): Blacephalon's own Mind Blown, and a move each is known by.
   nihilego: 'acidSpray',
   buzzwole: 'powerUpPunch',
-  pheromosa: 'pheromosaLunge',
+  pheromosa: 'skitterSmack',
   xurkitree: 'tailGlow',
   celesteela: 'autotomize',
   kartana: 'guillotine',
@@ -53,7 +53,7 @@ export const LEGENDARY_MOVE_OF = {
   stakataka: 'wideGuard',
   blacephalon: 'mindBlown',
   naganadel: 'fellStinger',
-  poipole: 'poipoleJab',
+  poipole: 'poisonTail',
 } as const satisfies Record<LegendId, LegendaryMoveId | LegendaryMove2Id | UltraMoveId>
 
 export type LegendaryId = keyof typeof LEGENDARY_MOVE_OF
