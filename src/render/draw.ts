@@ -62,6 +62,8 @@ import { drawVerbEvolvedAir, drawVerbEvolvedGround } from './verbEvolvedFx'
 import { drawDuoAir, drawDuoGround } from './duoFx'
 import { drawAncientAura, drawLegendaryAir, drawLegendaryGround, drawStoppedFoes } from './legendaryFx'
 import { drawHeatAura, drawIronDefense, drawLegendary2Air, drawLegendary2Ground } from './legendaryFx2'
+import { drawPathLegendAir, drawPathLegendGround } from './pathLegendFx'
+import { PATH_ART } from './pathLegendArt'
 import { drawSignatureAttack, drawSignatureGround, drawSignaturePlayer } from './signatureFx'
 import { drawTraitAir, drawTraitGround, traitLift, traitTint } from './traits'
 import { bolt, dashedRing } from './strokes'
@@ -709,6 +711,10 @@ const drawPickups = (ctx: Ctx, g: Game, t: number, visible: (x: number, y: numbe
       drawEvoItem(ctx, k, k.x, k.y + bob, t)
       continue
     }
+    if (k.kind === 'hexNut') {
+      blitCentered(ctx, PATH_ART.nut(), k.x, k.y + bob)
+      continue
+    }
     const sprite =
       k.kind === 'xp' ? candies[xpTier(k.value)]!
       : k.kind === 'coin' ? coins[coinTier(k.value)]!
@@ -733,7 +739,7 @@ const drawEvolution = (ctx: Ctx, g: Game, t: number, calm: boolean) => {
   const cx = Math.round(w / 2)
   const cy = Math.round(h / 2 + 24)
   // A legend's awakening plays the same scene on itself, landing in its form; the big ones at 1×.
-  const look = evo.awakening ? awakeningLook(g, evo.from, evo.form) : null
+  const look = evo.awakening ? awakeningLook(g, evo.from, evo.to, evo.form) : null
   const from = look?.before ?? sprites(evo.from, localPlayer(g).shiny)
   const to = look?.after ?? sprites(evo.to, localPlayer(g).shiny)
   const scale = look?.scale ?? 2
@@ -1013,6 +1019,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
       drawDuoGround(into, v, t)
       drawLegendaryGround(into, v, t)
       drawLegendary2Ground(into, v, t)
+      drawPathLegendGround(into, v, t)
     })
   }
   for (const hz of g.hazards) if (hz.kind === 'beam') drawBeamGround(ctx, hz)
@@ -1155,6 +1162,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
       drawDuoAir(into, v, t, visible)
       drawLegendaryAir(into, v, t, visible)
       drawLegendary2Air(into, v, t, visible)
+      drawPathLegendAir(into, v, t, visible)
       drawDrainVines(into, v, t)
     })
   }

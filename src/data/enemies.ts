@@ -87,6 +87,8 @@ export const ENEMIES = {
   celebi: { dex: 251, name: 'Celebi', types: ['psychic', 'grass'], ...MYTHICAL },
   jirachi: { dex: 385, name: 'Jirachi', types: ['steel', 'psychic'], ...MYTHICAL },
   mewtwo: { dex: 150, name: 'Mewtwo', types: ['psychic'], hp: 22000, speed: 62, damage: 45, xp: 0, mass: 50, boss: true, legendary: true },
+  // The Regi trio's maker, out of its temple (`game/pathRun.ts`): above the last trio slot, as it wakes from 4:00 on.
+  regigigas: { dex: 486, name: 'Regigigas', types: ['normal'], hp: 13000, speed: 44, damage: 34, xp: 300, mass: 60, boss: true, legendary: true },
   // Rift legendaries (`data/rifts.ts`): HP and contact damage are their 3:30 values, scaled by `riftScale`.
   lugia: { dex: 249, name: 'Lugia', types: ['psychic', 'flying'], hp: 3400, speed: 56, damage: 28, xp: 0, mass: 40, boss: true, legendary: true },
   hoOh: { dex: 250, name: 'Ho-Oh', types: ['fire', 'flying'], hp: 3400, speed: 56, damage: 30, xp: 0, mass: 40, boss: true, legendary: true },

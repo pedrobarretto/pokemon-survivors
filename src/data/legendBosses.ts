@@ -23,7 +23,7 @@ import { pin } from './domains/kit'
 
 /** The legendaries this module gives phases (rift legendaries have theirs in `data/domains`). */
 export const WAVE_LEGENDS = [
-  'articuno', 'zapdos', 'moltres', 'raikou', 'entei', 'suicune', 'regirock', 'regice', 'registeel', 'mew', 'celebi', 'jirachi', 'mewtwo', 'arceus',
+  'articuno', 'zapdos', 'moltres', 'raikou', 'entei', 'suicune', 'regirock', 'regice', 'registeel', 'mew', 'celebi', 'jirachi', 'mewtwo', 'arceus', 'regigigas',
 ] as const satisfies readonly EnemyId[]
 export type WaveLegend = (typeof WAVE_LEGENDS)[number]
 
@@ -59,6 +59,7 @@ export const ARRIVAL = {
   regirock: 'rise', regice: 'rise', registeel: 'rise',
   mew: 'materialize', celebi: 'materialize', jirachi: 'descend',
   mewtwo: 'materialize', arceus: 'descend',
+  regigigas: 'rise',
 } as const satisfies Record<WaveLegend, Arrival>
 
 /** The theme each one plays while it's the boss on the HP bar (`data/music.ts`): one per trio, Mewtwo's finale (the mythicals come with it), and Arceus's. */
@@ -68,6 +69,7 @@ export const LEGEND_THEME = {
   regirock: 'regis', regice: 'regis', registeel: 'regis',
   mew: 'mewtwo', celebi: 'mewtwo', jirachi: 'mewtwo', mewtwo: 'mewtwo',
   arceus: 'arceus',
+  regigigas: 'regis',
 } as const satisfies Record<WaveLegend, ThemeId>
 
 /**
@@ -948,7 +950,71 @@ const arceus: readonly BossPhase[] = [
   },
 ]
 
+
+/* ---------------- Regigigas, out of its temple (`game/pathRun.ts`) ---------------- */
+
+const regigigas: readonly BossPhase[] = [
+  {
+    // Slow Start: it wakes sluggish, every blow long in coming.
+    below: TRIO[0],
+    haste: 0.6,
+    patterns: [
+      pin('slam', 20),
+      { stance: 'close', kind: 'strikes', every: 4.8, target: 'self', count: 1, spread: 0, radius: 54, delay: 1.7, damage: 24, visual: 'slam' },
+      { stance: 'ranged', kind: 'strikes', every: 4.4, target: 'player', count: 3, spread: 50, radius: 14, delay: 1.5, damage: 20, visual: 'slam' },
+      { far: 130, kind: 'volley', every: 6, count: 3, arc: 0.45, speed: 95, windup: 1.3, radius: 6, damage: 20, visual: 'rock' },
+      { from: 'nightmare', stance: 'close', kind: 'ring', every: 5, count: 10, speed: 60, radius: 5, damage: 18, visual: 'rock' },
+    ],
+  },
+  {
+    // Awake, it calls on the three it made: Regirock's stones, Regice's cold and Registeel's steel.
+    below: TRIO[1],
+    shift: SHIFT,
+    open: OPEN,
+    patterns: [
+      pin('slam', 22),
+      { stance: 'ranged', kind: 'strikes', every: 3.6, target: 'player', count: 4, spread: 56, radius: 12, delay: 1.1, damage: 20, visual: 'rock' },
+      closing('ice', 18, 18, 1.1, 9, 112, 56),
+      { stance: 'ranged', kind: 'beam', every: 6.5, source: 'boss', count: 3, spread: 0.45, windup: 1.1, duration: 0.5, width: 10, length: 300, damage: 20, visual: 'steel' },
+      { stance: 'close', kind: 'strikes', every: 4.2, target: 'self', count: 1, spread: 0, radius: 52, delay: 1.3, damage: 24, visual: 'slam' },
+      { below: 0.5, kind: 'cage', every: 12, radius: 72, count: 20, size: 9, windup: 1.1, ttl: 3.4, damage: 14, visual: 'rock' },
+    ],
+    ultimate: {
+      move: 'Giga Impact',
+      first: 1.5,
+      every: 18,
+      steps: [
+        { at: 0, pattern: dive('slam', 0, 30) },
+        { at: 2.4, pattern: { kind: 'ring', every: 0, count: 18, speed: 80, radius: 6, damage: 20, visual: 'rock' } },
+      ],
+    },
+  },
+  {
+    // Crush Grip: its hand closes over the field, and only the shelters it leaves keep the player from its grasp.
+    below: TRIO[2],
+    shift: SHIFT,
+    open: OPEN,
+    patterns: [
+      pin('slam', 22),
+      { kind: 'cage', every: 11, radius: 70, count: 22, size: 9, windup: 1.1, ttl: 3.4, damage: 16, visual: 'steel' },
+      { stance: 'ranged', ...lances('steel', 3, 1.2, 20, 0, 16), every: 6.5 },
+      { stance: 'close', kind: 'strikes', every: 4, target: 'self', count: 1, spread: 0, radius: 54, delay: 1.2, damage: 26, visual: 'slam' },
+      { stance: 'ranged', kind: 'ring', every: 4, count: 14, speed: 70, radius: 5, damage: 20, visual: 'ice' },
+      { from: 'nightmare', far: 120, kind: 'volley', every: 4.4, count: 5, arc: 0.7, speed: 120, windup: 0.9, radius: 6, damage: 20, visual: 'rock' },
+    ],
+    ultimate: {
+      move: 'Crush Grip',
+      first: 1.5,
+      every: 18,
+      steps: [
+        { at: 0, pattern: { kind: 'blast', every: 0, windup: 2.4, damage: 50, safe: 'spots', spots: 3, visual: 'slam' } },
+        { at: 2.6, pattern: { kind: 'strikes', every: 0, target: 'player', count: 7, spread: 90, radius: 16, delay: 1.1, damage: 30, visual: 'slam' } },
+      ],
+    },
+  },
+]
+
 /** The phases of every wave legendary, for `BOSS_PHASES`. */
 export const WAVE_LEGEND_PHASES = {
-  articuno, zapdos, moltres, raikou, entei, suicune, regirock, regice, registeel, mew, celebi, jirachi, mewtwo, arceus,
+  articuno, zapdos, moltres, raikou, entei, suicune, regirock, regice, registeel, mew, celebi, jirachi, mewtwo, arceus, regigigas,
 } as const satisfies Record<WaveLegend, readonly BossPhase[]>

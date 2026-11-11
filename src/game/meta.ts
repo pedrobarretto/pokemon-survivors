@@ -19,6 +19,7 @@ import { parseCaravan, type CaravanSave } from './caravan'
 import { parseBuilds, type Builds } from './builds'
 import type { FindId } from '../data/seasonOneUnlocks'
 import { NO_RESEARCH, parseFinds, parseResearch, recordResearch, type ResearchSave } from './seasonOneUnlocks'
+import { NO_PATHS, parsePaths, recordCosmog, type PathsSave } from './legendPaths'
 import type { EvoItemId } from '../data/shop'
 import { isRecord, wholeNumber } from './parse'
 import { parseRibbons, type Ribbon } from './ribbons'
@@ -185,6 +186,8 @@ export type Save = {
   finds: readonly FindId[]
   /** Temporada 1's research chains (`game/seasonOneUnlocks.ts`), tracked from run results. */
   research: ResearchSave
+  /** The legend paths (`game/legendPaths.ts`): the Zygarde Cube, Cosmog, the Torre's trials and Meltan's Hex Nuts. */
+  paths: PathsSave
 }
 
 /** The branch each branching family took in its latest run that got there. */
@@ -240,6 +243,7 @@ export const EMPTY_SAVE: Save = {
   builds: {},
   finds: [],
   research: NO_RESEARCH,
+  paths: NO_PATHS,
 }
 
 /** Brings any older save shape up to the current version. Add a case per schema bump. */
@@ -317,6 +321,7 @@ export const parseSaveData = (json: unknown): Save => {
     builds: parseBuilds(data.builds),
     finds: parseFinds(data.finds),
     research: parseResearch(data.research),
+    paths: parsePaths(data.paths),
   }
 }
 
@@ -440,14 +445,23 @@ const settle = (save: Save, m: Progress, a: Medals, eggRoom: number) => {
 
 /**
  * Records a run (or what changed since `before`, the snapshot already recorded
- * for it) into the missions, lifetime records, clears, the Caça aos Fantasmas
- * and the TM shelf's list of TMs found in runs, and pays the rewards. `save`
+ * for it) into the missions, lifetime records, clears, the Caça aos Fantasmas,
+ * the TM shelf's list of TMs found in runs and Cosmog (by the hour of `date`
+ * on the device's clock, `recordCosmog`), and pays the rewards. `save`
  * already has the run's Pokédex log; `eggRoom` is how many reward eggs the run
  * can still take (`EGGS.perRun` minus the eggs it found or got already).
  */
 export const recordRun = (save: Save, summary: RunSummary, before: RunSummary | null, date: Date, eggRoom: number = EGGS.perRun) => {
   const m = recordMissions(save.missions, summary, before, date)
-  const ticked = { ...save, clears: addClear(save.clears, summary), halloween: recordHunt(save.halloween, summary.nightBosses), tms: learnTms(save.tms, summary.tms), research: recordResearch(save.research, summary, before) }
+  const cosmog = recordCosmog(save.paths.cosmog, { time: summary.time, victory: summary.victory, rift: summary.legends.length > 0 }, date.getHours(), before === null)
+  const ticked = {
+    ...save,
+    clears: addClear(save.clears, summary),
+    halloween: recordHunt(save.halloween, summary.nightBosses),
+    tms: learnTms(save.tms, summary.tms),
+    research: recordResearch(save.research, summary, before),
+    paths: { ...save.paths, cosmog },
+  }
   return settle(ticked, m, recordAchievements(save.achievements, summary, before, m.completed.length, save.dex), eggRoom)
 }
 

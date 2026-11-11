@@ -17,6 +17,7 @@ import { coinDrops } from './meta'
 import { modKill } from './mods'
 import { awardEgg, dropCoins, dropPickup, dropXp } from './pickups'
 import { bustDisguise, faintCandies, nightBossDown } from './halloween'
+import { faintNuts } from './hexNuts'
 import { applyStatus, breakOnHit, hitTakenMult, STATUS_RULES, type StatusKind } from './status'
 import { venomJump, VENOM, VENOM_MOVE } from './seasonOneEggRules'
 import { bonusMult, drainAmount, drainRefill, executes, nearestFoes, SEED_DECAY, SEED_JUMPS, SEED_MIN_TIME, SEED_REACH } from './kitRules'
@@ -206,6 +207,7 @@ export const killEnemy = (g: Game, e: Enemy, source?: DamageSource | null) => {
   if (e.weight > 1) g.player.record.folded += e.weight - 1
   dropCoins(g, e.x, e.y, coinDrops(g.rng, e, g.endless !== null))
   faintCandies(g, e, odds)
+  faintNuts(g, e)
   if (e.shiny) dropPickup(g, e.x + 6, e.y, 'pokeball')
   if (e.alpha) {
     alphaDown(g, e)

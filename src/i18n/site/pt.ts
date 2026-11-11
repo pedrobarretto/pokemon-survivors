@@ -138,6 +138,7 @@ export const sitePt = {
     night: (at: string, percent: number) => `Chefe da Noite das Bruxas em ${at}, nas partidas assombradas do evento (${n(percent)}% de chance)`,
     rift: (from: string) => `No seu domínio, atrás de uma fenda lendária, a partir de ${from} (opcional)`,
     eventRift: (from: string) => `Só na Noite das Bruxas 2026: numa partida assombrada, a fenda do Pesadelo pode tomar o lugar de uma fenda, a partir de ${from} (opcional)`,
+    temple: (from: string, until: string) => `Desperta no templo que surge entre ${from} e ${until}, só nas partidas de quem capturou Regirock, Regice e Registeel`,
     /** `name` comes with its preposition (`places`). */
     place: (name: string, from: string) => `Vive ${name}, a partir de ${from} (lugar opcional)`,
     placeBoss: (name: string, from: string) => `Desperta da Pedra Peculiar ${name}, a partir de ${from}`,
@@ -584,7 +585,7 @@ export const sitePt = {
       opensHead: 'Golpe lendário',
       pressureTitle: 'Dificuldades no Modo Lendário',
       pressure: 'A Pressão soma-se a cada dificuldade: os multiplicadores do Modo Lendário ficam assim.',
-      where: { rift: 'Fenda lendária', trio: 'Trio lendário', mythical: 'Junto do Mewtwo (1 em 10, sobe a cada final sem mítico)', finale: 'Chefe final', endless: 'Modo sem fim, por último', event: 'Noite das Bruxas 2026 (evento)', festival: 'Festival das Lanternas 2026 (prêmio)' },
+      where: { rift: 'Fenda lendária', trio: 'Trio lendário', mythical: 'Junto do Mewtwo (1 em 10, sobe a cada final sem mítico)', finale: 'Chefe final', endless: 'Modo sem fim, por último', event: 'Noite das Bruxas 2026 (evento)', festival: 'Festival das Lanternas 2026 (prêmio)', path: 'Caminho próprio (Zygarde Cells, Cosmog, Torre do Dojo, Mystery Box)', temple: 'Templo nas partidas, depois de capturar o trio Regi' },
       /** The event legends (`EVENT_LEGENDS`), after the table. */
       eventNote: 'Na Noite das Bruxas de 2026 (24 de outubro a 2 de novembro), o Darkrai chega como lenda de evento: ele só aparece na fenda do Pesadelo, que pode tomar o lugar de uma fenda numa partida assombrada, e é capturado com 2 vitórias. Joga com o Dark Void, que faz as multidões dormirem, e a inata Bad Dreams, que fere quem dorme perto dele. Depois do evento ele volta para as sombras, mas quem o capturou segue jogando com ele. Ele não conta para o Arceus.',
     },

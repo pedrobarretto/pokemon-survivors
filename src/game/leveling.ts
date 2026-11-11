@@ -265,7 +265,7 @@ export const recomputeStats = (g: Game) => {
   const before = p.stats.maxHp
   const deltas = applyDeltas(BASE_STATS, [
     ...starterDeltas(p.starter, p.stage, p.branch),
-    ...(p.legend ? awakeningDeltas(p.legend.id, p.legend.awakened) : []),
+    ...(p.legend ? awakeningDeltas(p.legend.id, p.legend.awakened, p.legend.forms) : []),
     ...rankDeltas(p.ranks),
     ...p.items.flatMap((i) => ITEMS[i.id].levels.slice(0, i.level)),
     ...buffDeltas(p.buffs),

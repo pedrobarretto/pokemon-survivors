@@ -9,6 +9,7 @@ import { openAlphaPrize } from './alphas'
 import { grantStone } from './mega'
 import { collectTm } from './tms'
 import { collectCandy } from './halloween'
+import { collectNut } from './hexNuts'
 import { collectEvoItem } from './evoGate'
 import { inPlay, onAnyScreen, setPhase } from './players'
 import { coopScale } from './coop'
@@ -38,7 +39,7 @@ const PULL_SPEED = 420
 /** How fast (1/s) a pulled pickup's velocity turns toward the player. */
 const PULL_STEER = 7
 
-type PickupKind = Exclude<Pickup['kind'], 'xp' | 'coin' | 'consumable' | 'megaStone' | 'tm' | 'treat' | 'evoItem'>
+type PickupKind = Exclude<Pickup['kind'], 'xp' | 'coin' | 'consumable' | 'megaStone' | 'tm' | 'treat' | 'evoItem' | 'hexNut'>
 
 export const dropPickup = (g: Game, x: number, y: number, kind: PickupKind) => {
   g.pickups.push({ id: g.nextId++, x, y, vx: 0, vy: 0, attracted: false, age: 0, kind })
@@ -175,6 +176,9 @@ const collect = (g: Game, pickup: Pickup) => {
       break
     case 'evoItem':
       collectEvoItem(g, pickup.item)
+      break
+    case 'hexNut':
+      collectNut(g)
       break
   }
 }

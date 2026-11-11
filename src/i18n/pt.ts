@@ -2,6 +2,7 @@ import type { GameModeId } from '../data/gameModes'
 import { realmBookPt as realmBook } from './realmStamps/pt'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
+import { LEGEND_PATHS_WORDS } from './legendPaths'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -2759,6 +2760,7 @@ export const pt = {
   abilities: {
     ...SEASON_ONE_EGGS_WORDS.pt.abilities,
     ...SEASON_ONE_KITS_WORDS.pt.abilities,
+    ...LEGEND_PATHS_WORDS.pt.abilities,
     overgrow: 'Com menos de 1/3 do HP, golpes de Planta causam +50%.',
     blaze: 'Com menos de 1/3 do HP, golpes de Fogo causam +50%.',
     torrent: 'Com menos de 1/3 do HP, golpes de Água causam +50%.',
@@ -3463,6 +3465,7 @@ export const pt = {
   moves: {
     ...SEASON_ONE_EGGS_WORDS.pt.moves,
     ...SEASON_ONE_KITS_WORDS.pt.moves,
+    ...LEGEND_PATHS_WORDS.pt.moves,
     leechSeed: {
       description: 'Arremessa sementes nos inimigos mais próximos. A semente suga HP com o tempo e cura você; quando o inimigo cai, ela pula para dois vizinhos.',
       upgrades: [
@@ -5935,6 +5938,7 @@ export const pt = {
   blurbs: {
     ...SEASON_ONE_EGGS_WORDS.pt.blurbs,
     ...SEASON_ONE_KITS_WORDS.pt.blurbs,
+    ...LEGEND_PATHS_WORDS.pt.blurbs,
     bulbasaur: 'Equilibrado. Regenera vida.',
     charmander: 'Ofensivo. Mais dano, menos vida.',
     squirtle: 'Defensivo. Mais vida e defesa.',
@@ -6700,6 +6704,8 @@ export const pt = {
       endless: 'O último troféu: depois de capturar os outros 22, vença-o no _modo sem fim_.',
       event: 'Só na _Noite das Bruxas_: vença-o na _fenda do Pesadelo_.',
       festival: 'Prêmio do _Festival da Praça_: chega como Presente Misterioso, nunca é enfrentada.',
+      path: LEGEND_PATHS_WORDS.pt.paths.where.zygarde,
+      temple: LEGEND_PATHS_WORDS.pt.paths.where.regigigas,
     },
     rule: (need: number) => (need === 1 ? 'Para capturar, vença este lendário 1 vez como chefe, numa partida solo, em qualquer modo. Vitórias no co-op não contam.' : `Para capturar, vença este lendário ${need} vezes como chefe, numa partida solo, em qualquer modo. Vitórias no co-op não contam.`),
     shinyRule: 'Vencer um shiny na vitória da captura, ou depois, libera a forma shiny.',
@@ -6734,6 +6740,7 @@ export const pt = {
       jirachi: 'Estrela dos Desejos',
       mewtwo: 'Fúria Genética',
       arceus: 'O Primeiro de Todos',
+      regigigas: LEGEND_PATHS_WORDS.pt.epithet,
     } satisfies Record<WaveLegend, string>,
     phases: {
       articuno: ['*Articuno* alça voo! Fuja da _sombra_ dele.', 'Uma nevasca! Corra para um _abrigo de neve_ antes do Snowscape.'],
@@ -6750,6 +6757,7 @@ export const pt = {
       jirachi: ['*Jirachi* se teleporta para cima de você: fuja do _círculo_!', 'Wish! Uma chuva de estrelas: ache os _vãos_.'],
       mewtwo: ['*Mewtwo* libera o poder psíquico! Fuja do _círculo_ do Teleport.', 'Psystrike! Passe pelos _vãos_ e corra para um _abrigo_.'],
       arceus: ['*Arceus* se teleporta para julgar você!', 'Judgment! Só os _abrigos de luz_ te salvam.'],
+      regigigas: LEGEND_PATHS_WORDS.pt.phases,
     } satisfies Record<WaveLegend, readonly [string, string]>,
   },
   /** Co-op in a run (`ui/team*.ts`): the team's cards, its pauses, the spectator, the endless vote and the end screen. */
@@ -6836,6 +6844,7 @@ export const pt = {
   },
   /** Bibarel, the carpentry's carpenter on the plaza's north-east, as the partner walks up: the first visit, then one of these in turn. */
   seasonUnlocks: SEASON_ONE_UNLOCKS_WORDS.pt,
+  paths: LEGEND_PATHS_WORDS.pt.paths,
   minigames: {
     claw: SEASON_ONE_CLAW_WORDS.pt.words,
     safari: SEASON_ONE_SAFARI_WORDS.pt.words,

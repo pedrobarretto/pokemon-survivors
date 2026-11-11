@@ -1,4 +1,4 @@
-import { TAU } from '../engine/math'
+import { TAU, type Vec } from '../engine/math'
 import { chance, range, weightedPick } from '../engine/rng'
 import { ENEMIES, type EnemyDef, type EnemyId } from '../data/enemies'
 import { BOSS_FIGHT, bossCandidates, bossWaveAt, ELITE, EVENTS, FINALE, stageAt, stageIndexAt, type WaveEvent } from '../data/waves'
@@ -77,10 +77,11 @@ export const spawnSwarm = (g: Game, species: EnemyId, count: number, weight = 1)
  * A wave boss arrives off screen: the earlier wave's boss flees (`at` is the
  * wave's time), it takes the HP bar and the shell gets its entrance (a
  * legendary's plays on the map, `legendEntrance`). The dev console's `ps.boss` calls it too.
+ * `where`: it rises there instead (Regigigas, out of its temple).
  */
-export const spawnWaveBoss = (g: Game, enemy: EnemyId, at: number, finale = false) => {
+export const spawnWaveBoss = (g: Game, enemy: EnemyId, at: number, finale = false, where: Vec | null = null) => {
   chaseOffBosses(g, at)
-  const pos = offscreen(g)
+  const pos = where ?? offscreen(g)
   const boss = spawnEnemy(g, enemy, pos.x, pos.y)
   const def: EnemyDef = ENEMIES[enemy]
   g.bossId = boss.id

@@ -261,6 +261,14 @@ export const ABILITIES = {
   multitype: { name: 'Multitype', effects: [{ kind: 'ownType', bonus: 0.2 }] },
   /** Darkrai's: the foes its Dark Void put to sleep (or anything else did) suffer in their dreams. */
   badDreams: { name: 'Bad Dreams', effects: [{ kind: 'nightmare', radius: 120, every: 0.5, damage: 1 }] },
+  /* The path legends' (`data/legendPaths.ts`) */
+  /** Zygarde's: under half HP its Cells gather around it, hardening and mending it. */
+  powerConstruct: { name: 'Power Construct', effects: [{ kind: 'lowHp', stats: { damageTaken: -0.25, regen: 0.8 } }] },
+  fullMetalBody: { name: 'Full Metal Body', effects: [{ kind: 'immune', to: ['terrain'] }, stats({ damageTaken: -0.12 })] },
+  shadowShield: { name: 'Shadow Shield', effects: [{ kind: 'fullHp', stats: { damageTaken: -0.45 } }] },
+  magnetPull: { name: 'Magnet Pull', effects: [stats({ magnet: 30, armor: 1 })] },
+  /** Regigigas's: it starts slow and weak, and grows into its strength over the first minute or so. */
+  slowStart: { name: 'Slow Start', effects: [stats({ might: -0.3, speed: -8 }), { kind: 'timer', every: 12, max: 6, stats: { might: 0.1, speed: 2 } }] },
 } as const satisfies Record<string, AbilityDef>
 
 export type AbilityId = keyof typeof ABILITIES
@@ -400,6 +408,12 @@ export const FAMILY_ABILITIES = {
   arceus: ['moldBreaker', 'magicGuard', 'sturdy'],
   darkrai: ['insomnia', 'unnerve', 'infiltrator'],
   cresselia: ['naturalCure', 'magicGuard', 'synchronize'],
+  zygarde: ['sandVeil', 'moxie', 'unnerve'],
+  solgaleo: ['flashFire', 'solarPower', 'sturdy'],
+  lunala: ['infiltrator', 'cursedBody', 'levitate'],
+  kubfu: ['ironFist', 'steadfast', 'sniper'],
+  meltan: ['heavyMetal', 'pickup', 'lightMetal'],
+  regigigas: ['sturdy', 'guts', 'rockHead'],
   ...SEASON_ONE_EGG_ABILITIES,
   ...SEASON_ONE_KIT_ABILITIES,
 } as const satisfies Record<PlayableId, AbilitySet>

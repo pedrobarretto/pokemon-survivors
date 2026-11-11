@@ -34,6 +34,7 @@ import {
   type TrainingForm,
 } from '../game/training'
 import { formAfter, innateAbility } from '../game/legend'
+import type { PathFormId } from '../data/legendPaths'
 import { MEGAS } from '../data/megas'
 import { isFinalStage, runMegas } from '../game/mega'
 import { megaIcon } from '../render/megaFx'
@@ -94,11 +95,12 @@ const sourceView = (g: Game, source: DamageSource) => {
 const whole = (n: number) => formatNumber(Math.round(n))
 
 /** A form's portrait and name: a legend's awakened form where it has one (and the community goal opened it), else the line's stage. */
-const lookOf = (starter: PlayableId, shiny: boolean, f: TrainingForm) => {
+const lookOf = (starter: PlayableId, shiny: boolean, f: TrainingForm, forms: readonly PathFormId[]) => {
   if (isLegend(starter)) {
     const own = LEGENDS[starter].line[0]
-    const form = formAfter(starter, f.awakened)
-    return form && !formLocked(form) ? { src: formPortraitUrl(own.dex, form.key), name: form.name } : { src: portraitUrl(own.dex, shiny), name: own.name }
+    const form = formAfter(starter, f.awakened, forms)
+    if (!form || formLocked(form)) return { src: portraitUrl(own.dex, shiny), name: own.name }
+    return { src: form.key ? formPortraitUrl(form.dex, form.key) : portraitUrl(form.dex, shiny), name: form.name }
   }
   const form = formAt(starter, f.branch, f.stage)
   return { src: portraitUrl(form.dex, shiny), name: form.name }
@@ -274,7 +276,7 @@ export const trainingPanel = (root: HTMLElement, g: Game, actions: TrainingActio
   const formTab = (): Part[] => {
     const p = me()
     const forms = trainingForms(p.starter).map((f) => {
-      const look = lookOf(p.starter, p.shiny, f)
+      const look = lookOf(p.starter, p.shiny, f, p.legend?.forms ?? [])
       const on = p.stage === f.stage && (f.branch === null || p.branch === f.branch) && (p.legend?.awakened ?? 0) === f.awakened
       return h(
         'button',
@@ -392,7 +394,7 @@ export const trainingPanel = (root: HTMLElement, g: Game, actions: TrainingActio
   /** Rebuilds the panel around what the player carries now (the meter keeps going). */
   function render() {
     const p = me()
-    const look = lookOf(p.starter, p.shiny, { stage: p.stage, branch: p.branch, awakened: p.legend?.awakened ?? 0 })
+    const look = lookOf(p.starter, p.shiny, { stage: p.stage, branch: p.branch, awakened: p.legend?.awakened ?? 0 }, p.legend?.forms ?? [])
     head.replaceChildren(h('img', { src: look.src, alt: '' }), h('b', {}, look.name), h('small', {}, m().title))
     TABS.forEach((k, i) => tabButtons[i]!.classList.toggle('on', k === tab))
     const scroll = body.scrollTop

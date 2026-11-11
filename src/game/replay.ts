@@ -1,6 +1,7 @@
 import type { EnemyId } from '../data/enemies'
 import { PLAYABLE, type PlayableId } from '../data/hatchlings'
 import { isLegend } from '../data/legends'
+import { PATH_FORM_IDS, PATH_FORMS, type PathFormId } from '../data/legendPaths'
 import { createRng } from '../engine/rng'
 import * as dm from '../engine/dmath'
 import type { Vec } from '../engine/math'
@@ -43,7 +44,7 @@ import { parseHunt, type MythicalHunt } from './mythicalHunt'
  * and run `npm run rules:freeze` so the API keeps the previous rules' simulator
  * for the runs that straddle the deploy (`server/sims/README.md`).
  */
-export const RULES_VERSION = 49
+export const RULES_VERSION = 50
 
 /**
  * How this build stands to a replay's rules: it can judge the `same`; a
@@ -79,6 +80,10 @@ export type ReplayStart = {
   caps?: number
   /** The mythicals' bad-luck protection from the save (`game/mythicalHunt.ts`). The plain odds when absent: co-op, the Desafio do dia, every mythical captured. */
   mythical?: MythicalHunt
+  /** The forms the legend's path opened (`openForms` in `game/legendPaths.ts`): only the starter's own, each once. None when absent. */
+  forms?: readonly PathFormId[]
+  /** The run brings Regigigas's temple (`templeRun` in `game/legendPaths.ts`). Not when absent. */
+  temple?: boolean
   /** World px the screen showed at the start: spawns and despawns depend on it. */
   view: { w: number; h: number }
 }
@@ -191,6 +196,14 @@ export const parseEvent = (raw: unknown): ReplayEvent | null => {
   return kind === 'special' || kind === 'mega' || kind === 'lunge' || kind === 'reroll' || kind === 'skip' || kind === 'endless' ? [tick, kind] : null
 }
 
+/** A replay's path forms: known ones of its starter's legend, each once, in table order; null when it names any other. */
+const parseForms = (raw: unknown, starter: string): PathFormId[] | null => {
+  if (raw === undefined) return []
+  if (!Array.isArray(raw)) return null
+  const forms = PATH_FORM_IDS.filter((id) => raw.includes(id) && PATH_FORMS[id].legend === starter)
+  return forms.length === raw.length ? forms : null
+}
+
 /** Whether `moves` is a run-length encoded stick (`[code, count…]`, every count above 0). */
 export const isMoves = (moves: unknown[]): moves is number[] =>
   moves.length % 2 === 0 && moves.every((n, i) => isWhole(n) && (i % 2 === 1 ? n > 0 : n < MOVES.length))
@@ -224,6 +237,8 @@ export const parseReplay = (raw: unknown): Replay | null => {
   if (s.caps !== undefined && (!isWhole(s.caps) || s.caps > MAX_CAPS)) return null
   const mythical = s.mythical === undefined ? undefined : parseHunt(s.mythical)
   if (mythical === null) return null
+  const forms = parseForms(s.forms, s.starter)
+  if (forms === null) return null
   return {
     rules: isWhole(raw.rules) && raw.rules > 0 ? raw.rules : 1,
     start: {
@@ -240,6 +255,8 @@ export const parseReplay = (raw: unknown): Replay | null => {
       evo,
       caps: isWhole(s.caps) ? s.caps : 0,
       ...(mythical ? { mythical } : {}),
+      ...(forms.length > 0 ? { forms } : {}),
+      ...(s.temple === true ? { temple: true } : {}),
       view,
     },
     moves: raw.moves,
@@ -274,6 +291,8 @@ export const startGame = (start: ReplayStart, view: Game['view'] = { ...start.vi
     evo: start.evo ?? [],
     caps: start.caps ?? 0,
     mythical: start.mythical,
+    forms: start.forms ?? [],
+    temple: start.temple === true,
   })
 
 const applyEvent = (g: Game, e: ReplayEvent) => {

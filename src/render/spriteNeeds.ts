@@ -118,9 +118,12 @@ export const playerForms = (g: Game): Variant[] =>
     const dex = playerDex(g)
     const mega = isFinalStage(p.starter, p.stage) ? heldMega(g) : null
     actAs(g, before)
-    const legend = p.legend && p.legend.awakened >= 1 ? formAfter(p.legend.id, 2)?.key : undefined
-    const forms = [...(mega ? [mega.form] : []), ...(legend ? [legend] : []), ...(p.special.stance !== null ? STANCE_NAMES : []), ...(KIT_FORMS[p.kit?.kind ?? 'none'] ?? [])]
-    return [...forms.map((form) => ({ dex, shiny: p.shiny, form })), ...(p.kit?.kind === 'commander' ? [{ dex: DONDOZO, shiny: false }] : [])]
+    // A legend's next look: from its first awakening on, its second's; with a path's forms (Zygarde 50%, Urshifu) from the start.
+    const s = p.legend
+    const next = s && s.awakened < 2 && (s.awakened >= 1 || s.forms.length > 0) ? (formAfter(s.id, s.awakened + 1, s.forms) ?? formAfter(s.id, 2, s.forms)) : null
+    const legend = next ? [{ dex: next.dex, shiny: p.shiny, ...(next.key && { form: next.key }) }] : []
+    const forms = [...(mega ? [mega.form] : []), ...(p.special.stance !== null ? STANCE_NAMES : []), ...(KIT_FORMS[p.kit?.kind ?? 'none'] ?? [])]
+    return [...forms.map((form) => ({ dex, shiny: p.shiny, form })), ...legend, ...(p.kit?.kind === 'commander' ? [{ dex: DONDOZO, shiny: false }] : [])]
   })
 
 /**

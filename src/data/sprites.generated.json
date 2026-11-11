@@ -39524,6 +39524,91 @@
       }
     }
   },
+  "486": {
+    "anims": {
+      "Walk": {
+        "frameWidth": 48,
+        "frameHeight": 72,
+        "durations": [
+          8,
+          12,
+          8,
+          12
+        ]
+      },
+      "Idle": {
+        "frameWidth": 64,
+        "frameHeight": 88,
+        "durations": [
+          60,
+          12,
+          4,
+          4,
+          4,
+          4,
+          4,
+          20
+        ]
+      },
+      "Hurt": {
+        "frameWidth": 72,
+        "frameHeight": 80,
+        "durations": [
+          2,
+          8
+        ]
+      }
+    },
+    "portrait": true,
+    "body": {
+      "bodyW": 47,
+      "bodyH": 41,
+      "footY": 7
+    },
+    "cry": true,
+    "shiny": {
+      "anims": {
+        "Walk": {
+          "frameWidth": 48,
+          "frameHeight": 72,
+          "durations": [
+            8,
+            12,
+            8,
+            12
+          ]
+        },
+        "Idle": {
+          "frameWidth": 64,
+          "frameHeight": 88,
+          "durations": [
+            60,
+            12,
+            4,
+            4,
+            4,
+            4,
+            4,
+            20
+          ]
+        },
+        "Hurt": {
+          "frameWidth": 72,
+          "frameHeight": 80,
+          "durations": [
+            2,
+            8
+          ]
+        }
+      },
+      "portrait": true,
+      "body": {
+        "bodyW": 47,
+        "bodyH": 41,
+        "footY": 7
+      }
+    }
+  },
   "488": {
     "anims": {
       "Walk": {
@@ -47106,6 +47191,265 @@
       }
     }
   },
+  "718": {
+    "anims": {
+      "Walk": {
+        "frameWidth": 64,
+        "frameHeight": 80,
+        "durations": [
+          10,
+          12,
+          10,
+          12
+        ]
+      },
+      "Idle": {
+        "frameWidth": 56,
+        "frameHeight": 80,
+        "durations": [
+          40,
+          13,
+          13,
+          13
+        ]
+      },
+      "Hurt": {
+        "frameWidth": 64,
+        "frameHeight": 88,
+        "durations": [
+          2,
+          8
+        ]
+      }
+    },
+    "portrait": true,
+    "body": {
+      "bodyW": 45,
+      "bodyH": 44,
+      "footY": 7
+    },
+    "cry": true,
+    "shiny": {
+      "anims": {
+        "Walk": {
+          "frameWidth": 64,
+          "frameHeight": 80,
+          "durations": [
+            10,
+            12,
+            10,
+            12
+          ]
+        },
+        "Idle": {
+          "frameWidth": 56,
+          "frameHeight": 80,
+          "durations": [
+            40,
+            13,
+            13,
+            13
+          ]
+        },
+        "Hurt": {
+          "frameWidth": 64,
+          "frameHeight": 88,
+          "durations": [
+            2,
+            8
+          ]
+        }
+      },
+      "portrait": true,
+      "body": {
+        "bodyW": 45,
+        "bodyH": 44,
+        "footY": 7
+      }
+    },
+    "forms": {
+      "ten": {
+        "anims": {
+          "Walk": {
+            "frameWidth": 40,
+            "frameHeight": 40,
+            "durations": [
+              8,
+              12,
+              8,
+              12
+            ]
+          },
+          "Idle": {
+            "frameWidth": 40,
+            "frameHeight": 40,
+            "durations": [
+              60,
+              10,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              10
+            ]
+          },
+          "Hurt": {
+            "frameWidth": 40,
+            "frameHeight": 56,
+            "durations": [
+              2,
+              8
+            ]
+          }
+        },
+        "body": {
+          "bodyW": 25,
+          "bodyH": 27,
+          "footY": 7
+        },
+        "shiny": {
+          "anims": {
+            "Walk": {
+              "frameWidth": 40,
+              "frameHeight": 40,
+              "durations": [
+                8,
+                12,
+                8,
+                12
+              ]
+            },
+            "Idle": {
+              "frameWidth": 40,
+              "frameHeight": 40,
+              "durations": [
+                60,
+                10,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                10
+              ]
+            },
+            "Hurt": {
+              "frameWidth": 40,
+              "frameHeight": 56,
+              "durations": [
+                2,
+                8
+              ]
+            }
+          },
+          "body": {
+            "bodyW": 25,
+            "bodyH": 27,
+            "footY": 7
+          }
+        }
+      },
+      "complete": {
+        "anims": {
+          "Walk": {
+            "frameWidth": 88,
+            "frameHeight": 104,
+            "durations": [
+              8,
+              12,
+              8,
+              12
+            ]
+          },
+          "Idle": {
+            "frameWidth": 88,
+            "frameHeight": 112,
+            "durations": [
+              60,
+              12,
+              4,
+              4,
+              4,
+              4,
+              4,
+              20
+            ]
+          },
+          "Hurt": {
+            "frameWidth": 96,
+            "frameHeight": 112,
+            "durations": [
+              2,
+              8
+            ]
+          }
+        },
+        "body": {
+          "bodyW": 73,
+          "bodyH": 57,
+          "footY": 7
+        },
+        "shiny": {
+          "anims": {
+            "Walk": {
+              "frameWidth": 88,
+              "frameHeight": 104,
+              "durations": [
+                8,
+                12,
+                8,
+                12
+              ]
+            },
+            "Idle": {
+              "frameWidth": 88,
+              "frameHeight": 112,
+              "durations": [
+                60,
+                12,
+                4,
+                4,
+                4,
+                4,
+                4,
+                20
+              ]
+            },
+            "Hurt": {
+              "frameWidth": 96,
+              "frameHeight": 112,
+              "durations": [
+                2,
+                8
+              ]
+            }
+          },
+          "body": {
+            "bodyW": 73,
+            "bodyH": 57,
+            "footY": 7
+          }
+        }
+      }
+    },
+    "formCries": [
+      "ten",
+      "complete"
+    ]
+  },
   "722": {
     "anims": {
       "Walk": {
@@ -49960,6 +50304,520 @@
       "body": {
         "bodyW": 15,
         "bodyH": 22,
+        "footY": 6
+      }
+    }
+  },
+  "789": {
+    "anims": {
+      "Walk": {
+        "frameWidth": 32,
+        "frameHeight": 40,
+        "durations": [
+          4,
+          8,
+          8,
+          8,
+          8,
+          8,
+          4
+        ]
+      },
+      "Idle": {
+        "frameWidth": 32,
+        "frameHeight": 48,
+        "durations": [
+          24,
+          8,
+          8,
+          24,
+          8,
+          8
+        ]
+      },
+      "Hurt": {
+        "frameWidth": 48,
+        "frameHeight": 64,
+        "durations": [
+          2,
+          8
+        ]
+      }
+    },
+    "portrait": true,
+    "body": {
+      "bodyW": 25,
+      "bodyH": 23,
+      "footY": 2
+    },
+    "cry": true,
+    "shiny": {
+      "anims": {
+        "Walk": {
+          "frameWidth": 32,
+          "frameHeight": 40,
+          "durations": [
+            4,
+            8,
+            8,
+            8,
+            8,
+            8,
+            4
+          ]
+        },
+        "Idle": {
+          "frameWidth": 32,
+          "frameHeight": 48,
+          "durations": [
+            24,
+            8,
+            8,
+            24,
+            8,
+            8
+          ]
+        },
+        "Hurt": {
+          "frameWidth": 48,
+          "frameHeight": 64,
+          "durations": [
+            2,
+            8
+          ]
+        }
+      },
+      "portrait": true,
+      "body": {
+        "bodyW": 25,
+        "bodyH": 23,
+        "footY": 2
+      }
+    }
+  },
+  "790": {
+    "anims": {
+      "Walk": {
+        "frameWidth": 32,
+        "frameHeight": 48,
+        "durations": [
+          6,
+          6,
+          5,
+          5,
+          6,
+          6,
+          6,
+          5,
+          5,
+          6
+        ]
+      },
+      "Idle": {
+        "frameWidth": 24,
+        "frameHeight": 40,
+        "durations": [
+          20,
+          8,
+          20,
+          8
+        ]
+      },
+      "Hurt": {
+        "frameWidth": 40,
+        "frameHeight": 56,
+        "durations": [
+          2,
+          8
+        ]
+      }
+    },
+    "portrait": true,
+    "body": {
+      "bodyW": 21,
+      "bodyH": 19,
+      "footY": 2
+    },
+    "cry": true,
+    "shiny": {
+      "anims": {
+        "Walk": {
+          "frameWidth": 32,
+          "frameHeight": 48,
+          "durations": [
+            6,
+            6,
+            5,
+            5,
+            6,
+            6,
+            6,
+            5,
+            5,
+            6
+          ]
+        },
+        "Idle": {
+          "frameWidth": 24,
+          "frameHeight": 40,
+          "durations": [
+            20,
+            8,
+            20,
+            8
+          ]
+        },
+        "Hurt": {
+          "frameWidth": 40,
+          "frameHeight": 56,
+          "durations": [
+            2,
+            8
+          ]
+        }
+      },
+      "portrait": true,
+      "body": {
+        "bodyW": 21,
+        "bodyH": 19,
+        "footY": 2
+      }
+    }
+  },
+  "791": {
+    "anims": {
+      "Walk": {
+        "frameWidth": 48,
+        "frameHeight": 72,
+        "durations": [
+          10,
+          10,
+          10,
+          10
+        ]
+      },
+      "Idle": {
+        "frameWidth": 48,
+        "frameHeight": 72,
+        "durations": [
+          60,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          12
+        ]
+      },
+      "Hurt": {
+        "frameWidth": 48,
+        "frameHeight": 72,
+        "durations": [
+          2,
+          8
+        ]
+      }
+    },
+    "portrait": true,
+    "body": {
+      "bodyW": 31,
+      "bodyH": 43,
+      "footY": 7
+    },
+    "cry": true,
+    "shiny": {
+      "anims": {
+        "Walk": {
+          "frameWidth": 48,
+          "frameHeight": 72,
+          "durations": [
+            10,
+            10,
+            10,
+            10
+          ]
+        },
+        "Idle": {
+          "frameWidth": 48,
+          "frameHeight": 72,
+          "durations": [
+            60,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            12
+          ]
+        },
+        "Hurt": {
+          "frameWidth": 48,
+          "frameHeight": 72,
+          "durations": [
+            2,
+            8
+          ]
+        }
+      },
+      "portrait": true,
+      "body": {
+        "bodyW": 31,
+        "bodyH": 43,
+        "footY": 7
+      }
+    }
+  },
+  "792": {
+    "anims": {
+      "Walk": {
+        "frameWidth": 80,
+        "frameHeight": 104,
+        "durations": [
+          8,
+          12,
+          8,
+          12
+        ]
+      },
+      "Idle": {
+        "frameWidth": 80,
+        "frameHeight": 96,
+        "durations": [
+          12,
+          14,
+          12,
+          14
+        ]
+      },
+      "Hurt": {
+        "frameWidth": 64,
+        "frameHeight": 104,
+        "durations": [
+          2,
+          8
+        ]
+      }
+    },
+    "portrait": true,
+    "body": {
+      "bodyW": 73,
+      "bodyH": 40,
+      "footY": -1
+    },
+    "cry": true,
+    "shiny": {
+      "anims": {
+        "Walk": {
+          "frameWidth": 80,
+          "frameHeight": 104,
+          "durations": [
+            8,
+            12,
+            8,
+            12
+          ]
+        },
+        "Idle": {
+          "frameWidth": 80,
+          "frameHeight": 96,
+          "durations": [
+            12,
+            14,
+            12,
+            14
+          ]
+        },
+        "Hurt": {
+          "frameWidth": 64,
+          "frameHeight": 104,
+          "durations": [
+            2,
+            8
+          ]
+        }
+      },
+      "portrait": true,
+      "body": {
+        "bodyW": 73,
+        "bodyH": 40,
+        "footY": -1
+      }
+    }
+  },
+  "808": {
+    "anims": {
+      "Walk": {
+        "frameWidth": 32,
+        "frameHeight": 32,
+        "durations": [
+          8,
+          6,
+          8,
+          10,
+          6,
+          6,
+          6,
+          8,
+          6,
+          8,
+          10,
+          6,
+          6,
+          6
+        ]
+      },
+      "Idle": {
+        "frameWidth": 24,
+        "frameHeight": 32,
+        "durations": [
+          30,
+          20
+        ]
+      },
+      "Hurt": {
+        "frameWidth": 48,
+        "frameHeight": 48,
+        "durations": [
+          2,
+          8
+        ]
+      }
+    },
+    "portrait": true,
+    "body": {
+      "bodyW": 14,
+      "bodyH": 19,
+      "footY": 5
+    },
+    "cry": true,
+    "shiny": {
+      "anims": {
+        "Walk": {
+          "frameWidth": 32,
+          "frameHeight": 32,
+          "durations": [
+            8,
+            6,
+            8,
+            10,
+            6,
+            6,
+            6,
+            8,
+            6,
+            8,
+            10,
+            6,
+            6,
+            6
+          ]
+        },
+        "Idle": {
+          "frameWidth": 24,
+          "frameHeight": 32,
+          "durations": [
+            30,
+            20
+          ]
+        },
+        "Hurt": {
+          "frameWidth": 48,
+          "frameHeight": 48,
+          "durations": [
+            2,
+            8
+          ]
+        }
+      },
+      "portrait": true,
+      "body": {
+        "bodyW": 14,
+        "bodyH": 19,
+        "footY": 5
+      }
+    }
+  },
+  "809": {
+    "anims": {
+      "Walk": {
+        "frameWidth": 64,
+        "frameHeight": 56,
+        "durations": [
+          10,
+          12,
+          10,
+          12
+        ]
+      },
+      "Idle": {
+        "frameWidth": 56,
+        "frameHeight": 64,
+        "durations": [
+          40,
+          1,
+          4,
+          2,
+          3,
+          4,
+          3
+        ]
+      },
+      "Hurt": {
+        "frameWidth": 56,
+        "frameHeight": 72,
+        "durations": [
+          2,
+          8
+        ]
+      }
+    },
+    "portrait": true,
+    "body": {
+      "bodyW": 50,
+      "bodyH": 32,
+      "footY": 6
+    },
+    "cry": true,
+    "shiny": {
+      "anims": {
+        "Walk": {
+          "frameWidth": 64,
+          "frameHeight": 56,
+          "durations": [
+            10,
+            12,
+            10,
+            12
+          ]
+        },
+        "Idle": {
+          "frameWidth": 56,
+          "frameHeight": 64,
+          "durations": [
+            40,
+            1,
+            4,
+            2,
+            3,
+            4,
+            3
+          ]
+        },
+        "Hurt": {
+          "frameWidth": 56,
+          "frameHeight": 72,
+          "durations": [
+            2,
+            8
+          ]
+        }
+      },
+      "portrait": true,
+      "body": {
+        "bodyW": 50,
+        "bodyH": 32,
         "footY": 6
       }
     }
@@ -53222,6 +54080,239 @@
         "footY": 4
       }
     }
+  },
+  "891": {
+    "anims": {
+      "Walk": {
+        "frameWidth": 24,
+        "frameHeight": 40,
+        "durations": [
+          8,
+          8,
+          8,
+          8
+        ]
+      },
+      "Idle": {
+        "frameWidth": 24,
+        "frameHeight": 48,
+        "durations": [
+          40,
+          4,
+          4,
+          4
+        ]
+      },
+      "Hurt": {
+        "frameWidth": 48,
+        "frameHeight": 56,
+        "durations": [
+          2,
+          8
+        ]
+      }
+    },
+    "portrait": true,
+    "body": {
+      "bodyW": 15,
+      "bodyH": 24,
+      "footY": 5
+    },
+    "cry": true,
+    "shiny": {
+      "anims": {
+        "Walk": {
+          "frameWidth": 24,
+          "frameHeight": 40,
+          "durations": [
+            8,
+            8,
+            8,
+            8
+          ]
+        },
+        "Idle": {
+          "frameWidth": 24,
+          "frameHeight": 48,
+          "durations": [
+            40,
+            4,
+            4,
+            4
+          ]
+        },
+        "Hurt": {
+          "frameWidth": 48,
+          "frameHeight": 56,
+          "durations": [
+            2,
+            8
+          ]
+        }
+      },
+      "portrait": true,
+      "body": {
+        "bodyW": 15,
+        "bodyH": 24,
+        "footY": 5
+      }
+    }
+  },
+  "892": {
+    "anims": {
+      "Walk": {
+        "frameWidth": 32,
+        "frameHeight": 56,
+        "durations": [
+          8,
+          10,
+          8,
+          10
+        ]
+      },
+      "Idle": {
+        "frameWidth": 32,
+        "frameHeight": 64,
+        "durations": [
+          10,
+          10,
+          10,
+          10
+        ]
+      },
+      "Hurt": {
+        "frameWidth": 48,
+        "frameHeight": 72,
+        "durations": [
+          2,
+          8
+        ]
+      }
+    },
+    "portrait": true,
+    "body": {
+      "bodyW": 29,
+      "bodyH": 34,
+      "footY": 6
+    },
+    "cry": true,
+    "shiny": {
+      "anims": {
+        "Walk": {
+          "frameWidth": 32,
+          "frameHeight": 56,
+          "durations": [
+            8,
+            10,
+            8,
+            10
+          ]
+        },
+        "Idle": {
+          "frameWidth": 32,
+          "frameHeight": 64,
+          "durations": [
+            10,
+            10,
+            10,
+            10
+          ]
+        },
+        "Hurt": {
+          "frameWidth": 48,
+          "frameHeight": 72,
+          "durations": [
+            2,
+            8
+          ]
+        }
+      },
+      "portrait": true,
+      "body": {
+        "bodyW": 29,
+        "bodyH": 34,
+        "footY": 6
+      }
+    },
+    "forms": {
+      "rapid": {
+        "anims": {
+          "Walk": {
+            "frameWidth": 32,
+            "frameHeight": 56,
+            "durations": [
+              8,
+              10,
+              8,
+              10
+            ]
+          },
+          "Idle": {
+            "frameWidth": 40,
+            "frameHeight": 56,
+            "durations": [
+              12,
+              12,
+              12,
+              12
+            ]
+          },
+          "Hurt": {
+            "frameWidth": 48,
+            "frameHeight": 72,
+            "durations": [
+              2,
+              8
+            ]
+          }
+        },
+        "body": {
+          "bodyW": 29,
+          "bodyH": 34,
+          "footY": 6
+        },
+        "shiny": {
+          "anims": {
+            "Walk": {
+              "frameWidth": 32,
+              "frameHeight": 56,
+              "durations": [
+                8,
+                10,
+                8,
+                10
+              ]
+            },
+            "Idle": {
+              "frameWidth": 40,
+              "frameHeight": 56,
+              "durations": [
+                12,
+                12,
+                12,
+                12
+              ]
+            },
+            "Hurt": {
+              "frameWidth": 48,
+              "frameHeight": 72,
+              "durations": [
+                2,
+                8
+              ]
+            }
+          },
+          "body": {
+            "bodyW": 29,
+            "bodyH": 34,
+            "footY": 6
+          }
+        }
+      }
+    },
+    "formCries": [
+      "rapid"
+    ]
   },
   "900": {
     "anims": {

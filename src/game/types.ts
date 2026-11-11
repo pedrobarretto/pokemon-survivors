@@ -57,6 +57,8 @@ import type { CurseId } from '../data/curses'
 import type { CurseState } from './curses'
 import type { LegendaryVisual } from './legendaryMoves'
 import type { LegendaryVisual2 } from './legendaryMoves2'
+import type { PathLegendVisual } from './pathLegendMoves'
+import type { PathNotice, PathRun } from './pathRun'
 import type { TensionState } from './tension'
 import type { AlphaClock, AlphaState } from './alphas'
 import type { LegendForm, LegendId } from '../data/legends'
@@ -389,6 +391,8 @@ export type Visual =
   | LegendaryVisual
   /** Legendary moves, second batch (`legendaryMoves2.ts`), drawn by `render/legendaryFx2.ts`. */
   | LegendaryVisual2
+  /** Legendary moves, third batch (`pathLegendMoves.ts`), drawn by `render/pathLegendFx.ts`. */
+  | PathLegendVisual
   /** Temporada 1's mechanic families, drawn by `render/seasonOneKitFx.ts`. */
   | 'kitCross' | 'kitClaw' | 'dragonPulse' | 'slime' | 'waterPulse' | 'miceBite' | 'auraWheel' | 'zenOrb' | 'commandSlam' | 'orderUp'
 
@@ -588,7 +592,7 @@ export type Pickup = {
   to?: number
   /** Co-op: dropped for this slot alone (their Mega Stone, legendary TM, a boss's TM or Poké Ball); unset means anyone's. */
   owner?: number
-} & ({ kind: 'xp'; value: number } | { kind: 'coin'; value: number } | { kind: 'berry' } | { kind: 'pokeball' } | { kind: 'megaStone'; mega: MegaId } | { kind: 'consumable'; item: ConsumableId } | { kind: 'tm'; move: MoveId; source: TmSource } | { kind: 'alphaPrize' } | { kind: 'treat' } | { kind: 'evoItem'; item: EvoItemId })
+} & ({ kind: 'xp'; value: number } | { kind: 'coin'; value: number } | { kind: 'berry' } | { kind: 'pokeball' } | { kind: 'megaStone'; mega: MegaId } | { kind: 'consumable'; item: ConsumableId } | { kind: 'tm'; move: MoveId; source: TmSource } | { kind: 'alphaPrize' } | { kind: 'treat' } | { kind: 'evoItem'; item: EvoItemId } | { kind: 'hexNut' })
 
 export type Particle = {
   x: number
@@ -761,6 +765,10 @@ export type GameEvent =
   | { kind: 'landmark'; landmark: LandmarkId; moment: LandmarkMoment }
   /** A Temporada 1 map encounter (`seasonOneFinds.ts`): the shell banks a `found` one. */
   | { kind: 'seasonFind'; find: FindId; moment: FindMoment }
+  /** A legend path's moment in a run (`pathRun.ts`): a Zygarde piece, Regigigas's temple. */
+  | { kind: 'path'; notice: PathNotice }
+  /** A Hex Nut picked up in Meltan's run (`pathRun.ts`). */
+  | { kind: 'hexNut' }
   /** Something happened at a place: its entrance, the way in and out, what goes on inside (`place.ts`). */
   | { kind: 'place'; place: PlaceId; notice: PlaceNotice }
   /** A foe shattered: an execute, or a frozen foe's ice broken by a hit. */
@@ -787,7 +795,8 @@ export type GameEvent =
   | { kind: 'hazardIntro' }
   /** Legend mode (`legend.ts`): an awakening (`n`, 1 or 2) started, or landed, maybe in its `form` (Primal Kyogre). */
   | { kind: 'awaken'; legend: LegendId; n: number }
-  | { kind: 'awakened'; legend: LegendId; n: number; form: LegendForm | null }
+  /** A legend's awakening landed: `form` its asset form now, `changed` when it took a new look (a form, another species: Urshifu, Melmetal). */
+  | { kind: 'awakened'; legend: LegendId; n: number; form: LegendForm | null; changed: boolean }
   /** A legendary boss fell (rift, trio, mythical, Mewtwo, Arceus), once per defeat: the save counts it toward capturing it. */
   | { kind: 'legendBeaten'; legend: EnemyId; shiny: boolean }
   /** A solo finale rolled its mythical slot: who came, or null. The save counts it (`game/mythicalHunt.ts`). */
@@ -839,6 +848,7 @@ export type GameEvent =
 export type Buff = { id: BuffId; left: number; total: number }
 
 /** An evolution's scene: dex `from` → `to`. A legend's awakening (`awakening`: 1 or 2) plays it too, landing in its `form` where it takes one. */
+/** An evolution under way, `from` and `to` dex; an awakening's (`awakening`: which) lands in `to`'s `form` (none: the species' own sheets). */
 export type Evolution = { from: number; to: number; t: number; awakening?: number; form?: LegendForm }
 
 export type Game = {
@@ -899,6 +909,8 @@ export type Game = {
   landmarks: LandmarkState
   /** Temporada 1's map encounters this run (`seasonOneFinds.ts`). */
   finds: SeasonFinds
+  /** The legend paths' side of the run (`pathRun.ts`): Zygarde's pieces to come, Meltan's Hex Nuts, Regigigas's temple. */
+  paths: PathRun
   /** Points of interest placed by the event director (`mapEvents.ts`). */
   mapEvents: MapEventsState
   /** Full-screen white flash strength (Explosion), decays to 0. */

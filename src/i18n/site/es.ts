@@ -103,6 +103,7 @@ export const siteEs: SiteMessages = {
     night: (at: string, percent: number) => `Jefe de la Noche de Brujas a las ${at}, en las partidas embrujadas del evento (${n(percent)}% de probabilidad)`,
     rift: (from: string) => `En su dominio, detrás de una grieta legendaria, desde las ${from} (opcional)`,
     eventRift: (from: string) => `Solo en la Noche de Brujas 2026: en una partida embrujada, la grieta de la Pesadilla puede tomar el lugar de una grieta, desde las ${from} (opcional)`,
+    temple: (from: string, until: string) => `Despierta en el templo que surge entre las ${from} y las ${until}, solo en las partidas de quien capturó a Regirock, Regice y Registeel`,
     place: (name: string, from: string) => `Vive en ${name}, desde las ${from} (lugar opcional)`,
     placeBoss: (name: string, from: string) => `Sale de la Piedra Espíritu en ${name}, desde las ${from}`,
     lucky: (name: string, from: string) => `Sale de la hierba o de un hoyo en ${name}, desde las ${from}: tímido, se va rápido y vale mucha EXP`,
@@ -535,7 +536,7 @@ export const siteEs: SiteMessages = {
       opensHead: 'Movimiento legendario',
       pressureTitle: 'Dificultades en el Modo Legendario',
       pressure: 'La Presión se suma a cada dificultad: así quedan los multiplicadores del Modo Legendario.',
-      where: { rift: 'Grieta legendaria', trio: 'Trío legendario', mythical: 'Junto a Mewtwo (1 de cada 10, sube tras cada final sin mítico)', finale: 'Jefe final', endless: 'Modo infinito, al final', event: 'Noche de Brujas 2026 (evento)', festival: 'Festival de las Linternas 2026 (premio)' },
+      where: { rift: 'Grieta legendaria', trio: 'Trío legendario', mythical: 'Junto a Mewtwo (1 de cada 10, sube tras cada final sin mítico)', finale: 'Jefe final', endless: 'Modo infinito, al final', event: 'Noche de Brujas 2026 (evento)', festival: 'Festival de las Linternas 2026 (premio)', path: 'Camino propio (Zygarde Cells, Cosmog, Torre del Dojo, Mystery Box)', temple: 'Un templo en las partidas, tras capturar al trío Regi' },
       /** The event legends (`EVENT_LEGENDS`), after the table. */
       eventNote: 'En la Noche de Brujas de 2026 (del 24 de octubre al 2 de noviembre), Darkrai llega como legendario de evento: solo aparece en la grieta de la Pesadilla, que puede tomar el lugar de una grieta en una partida embrujada, y se captura con 2 victorias. Juega con Dark Void, que duerme a las multitudes, y la innata Bad Dreams, que hiere a quien duerme cerca de él. Después del evento vuelve a las sombras, pero quien lo capturó sigue jugando con él. No cuenta para Arceus.',
     },

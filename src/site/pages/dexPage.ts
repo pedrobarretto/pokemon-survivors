@@ -16,7 +16,7 @@ import { dexPaths, ROUTES } from '../routes'
 import { createSpriteCss } from '../spriteCss'
 import { TIER_SNAPSHOT } from '../../data/tierRuns'
 import { currentTierList, winPercent, type FamilyId } from '../tierList'
-import { appearance, card } from './pokedex'
+import { appearance, card, pathNote } from './pokedex'
 
 /** A question and its answer, shown on the page and repeated in its `FAQPage` JSON-LD. */
 type Qa = { q: string; a: string }
@@ -74,10 +74,10 @@ const familyFaq = (id: FamilyId, base: DexEntry, m: SiteMessages, locale: Locale
   ]
 }
 
-const legendFaq = (id: LegendId, entry: DexEntry, m: SiteMessages): Qa[] => {
+const legendFaq = (id: LegendId, entry: DexEntry, m: SiteMessages, locale: Locale): Qa[] => {
   const def = LEGENDS[id]
   const rule: LegendUnlock = def.unlock
-  const unlock = rule.event ? m.pokedex.captureEvent(rule.wins) : rule.last ? m.pokedex.captureLast : m.pokedex.capture(rule.wins)
+  const unlock = rule.path || rule.after ? pathNote(id, locale) : rule.event ? m.pokedex.captureEvent(rule.wins) : rule.last ? m.pokedex.captureLast : m.pokedex.capture(rule.wins)
   const form = 'form' in def ? m.dexPage.awakens(def.form.name) : ''
   const where = entry.source.kind === 'wild' ? appearances(entry.source.id).map((a) => appearance(a, m)) : []
   return [
@@ -129,7 +129,7 @@ export const dexPage = (page: DexPage, locale: Locale) => {
   const base = page.entries[0]!
   const names = page.kind === 'legend' ? [base.name] : namesOf(page, m)
   const css = createSpriteCss()
-  const faq = page.kind === 'legend' ? legendFaq(page.id, base, m) : familyFaq(page.id, base, m, locale)
+  const faq = page.kind === 'legend' ? legendFaq(page.id, base, m, locale) : familyFaq(page.id, base, m, locale)
   const play = page.kind === 'legend' ? m.playCta : m.dexPage.play(base.name)
   const main: Html = html`<div class="page-head">
     <h1>${m.dexPage.h1(names)}</h1>

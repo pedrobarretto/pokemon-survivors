@@ -167,6 +167,8 @@ export const appearance = (a: Appearance, m: SiteMessages) => {
       return m.pokedex.eventRift(clock(a.from))
     case 'reaper':
       return m.pokedex.reaper(clock(a.at))
+    case 'temple':
+      return m.pokedex.temple(clock(a.from), clock(a.until))
     case 'place':
       return a.boss ? m.pokedex.placeBoss(m.pokedex.places[a.place], clock(a.from)) : m.pokedex.place(m.pokedex.places[a.place], clock(a.from))
     case 'hidden':
@@ -319,6 +321,16 @@ const tierOf = (entry: DexEntry) => {
 }
 
 /** One species' card. `page` links its name to the Pokémon's own page: the Pokédex's cards do, that page's own cards don't. */
+/** A path legend's card line: where its path starts (the game's own words, `paths.where`), Cosmog's line how it grows. */
+export const pathNote = (legend: LegendId | null, locale: Locale) => {
+  const words = MESSAGES[locale].paths
+  const where: Partial<Record<LegendId, string>> = words.where
+  return plainText(legend ? (where[legend] ?? '') : words.cosmog.how)
+}
+
+/** The game's light markup (`*bold*`, `_em_`) as plain text. */
+const plainText = (text: string) => text.replace(/[*_]/g, '')
+
 export const card = (entry: DexEntry, locale: Locale, css: SpriteCss, page?: string) => {
   const m = SITE_MESSAGES[locale]
   const { dex, name, slug, sprites, types, role, region } = entry
@@ -337,7 +349,7 @@ export const card = (entry: DexEntry, locale: Locale, css: SpriteCss, page?: str
   </div>
   <h2>${page ? html`<a href="${page}" title="${m.dexPage.page(name)}">${name}</a>` : name}</h2>
   <div class="types">${types.map((t) => typeBadge(t, m))}</div>
-  ${entry.source.kind === 'starter' ? starterBody({ ...entry, source: entry.source }, locale) : entry.source.kind === 'wild' ? wildBody({ ...entry, source: entry.source }, m) : html`<p class="note">${entry.source.kind === 'companion' ? m.pokedex.companionNote : entry.source.kind === 'cameo' ? m.pokedex.cameoNote : entry.source.kind === 'lobby' ? m.pokedex.lobbyNote : entry.source.kind === 'summon' ? m.pokedex.summonNote : m.pokedex.eventNote}</p>`}
+  ${entry.source.kind === 'starter' ? starterBody({ ...entry, source: entry.source }, locale) : entry.source.kind === 'wild' ? wildBody({ ...entry, source: entry.source }, m) : html`<p class="note">${entry.source.kind === 'companion' ? m.pokedex.companionNote : entry.source.kind === 'cameo' ? m.pokedex.cameoNote : entry.source.kind === 'lobby' ? m.pokedex.lobbyNote : entry.source.kind === 'summon' ? m.pokedex.summonNote : entry.source.kind === 'path' ? pathNote(entry.source.legend, locale) : m.pokedex.eventNote}</p>`}
 </article>`
 }
 

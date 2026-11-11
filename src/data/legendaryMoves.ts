@@ -1,5 +1,6 @@
 import type { LegendaryMoveId } from '../game/legendaryMoves'
 import type { LegendaryMove2Id } from '../game/legendaryMoves2'
+import type { PathLegendMoveId } from '../game/pathLegendMoves'
 import type { BiomeId } from './biomes'
 import type { LegendId } from './legends'
 import type { PokeType } from './types'
@@ -40,7 +41,13 @@ export const LEGENDARY_MOVE_OF = {
   arceus: 'judgment',
   darkrai: 'darkVoid',
   cresselia: 'lunarBlessing',
-} as const satisfies Record<LegendId, LegendaryMoveId | LegendaryMove2Id>
+  zygarde: 'coreEnforcer',
+  solgaleo: 'sunsteelStrike',
+  lunala: 'moongeistBeam',
+  kubfu: 'wickedBlow',
+  meltan: 'doubleIronBash',
+  regigigas: 'crushGrip',
+} as const satisfies Record<LegendId, LegendaryMoveId | LegendaryMove2Id | PathLegendMoveId>
 
 export type LegendaryId = keyof typeof LEGENDARY_MOVE_OF
 

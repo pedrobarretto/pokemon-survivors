@@ -3,6 +3,7 @@ import type { StatDelta } from '../game/stats'
 import type { AbilityEffect, AbilityId } from './abilities'
 import type { EnemyId } from './enemies'
 import type { FestivalId } from './festivals'
+import type { PathId } from './legendPaths'
 import { LEGENDARY_MOVE_OF } from './legendaryMoves'
 import type { EvolutionStage, PlayableDef } from './starters'
 import type { PokeType } from './types'
@@ -39,8 +40,16 @@ export const EVENT_LEGENDS = ['darkrai'] as const satisfies readonly EnemyId[]
  */
 export const FESTIVAL_LEGENDS = ['cresselia'] as const
 
-/** Every playable legend: the regular ones, then the event ones, then the festival ones. */
-export const LEGEND_IDS = [...REGULAR_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS] as const
+/**
+ * Path legends (`data/legendPaths.ts`): each the end of a long goal of its
+ * own, like the games' (Zygarde's Cells, Cosmog raised into Solgaleo or
+ * Lunala, Kubfu's towers, Meltan's Mystery Box, Regigigas waking for the
+ * Regi trio's captor). Out of `REGULAR_LEGENDS` too.
+ */
+export const PATH_LEGENDS = ['zygarde', 'solgaleo', 'lunala', 'kubfu', 'meltan', 'regigigas'] as const
+
+/** Every playable legend: the regular ones, then the event ones, the festival ones and the path ones. */
+export const LEGEND_IDS = [...REGULAR_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...PATH_LEGENDS] as const
 
 export type LegendId = (typeof LEGEND_IDS)[number]
 
@@ -48,7 +57,7 @@ export type LegendId = (typeof LEGEND_IDS)[number]
 export const AWAKEN_AT = [12, 28] as const
 
 /** Asset folder of a legend's alternate form (`<dex>/<form>/`), like the Megas'. Deoxys's formes come with its stance. */
-export type LegendForm = 'primal' | 'mega' | 'attack' | 'defense' | 'speed'
+export type LegendForm = 'primal' | 'mega' | 'attack' | 'defense' | 'speed' | 'ten' | 'complete' | 'rapid'
 
 /**
  * The innate: an ability in play from Lv 1, on top of the one picked at the
@@ -66,9 +75,11 @@ export type LegendEvent = 'halloween'
  * regular legend is unlocked (Arceus, the final trophy); `event`: it only
  * shows up while that event runs (Darkrai, the Noite das Bruxas');
  * `festival`: no win ever counts, that festival's milestone gift captures it
- * (Cresselia, the Festival das Lanternas').
+ * (Cresselia, the Festival das Lanternas'); `path`: no win counts either, its
+ * path's gift brings it (`game/legendPaths.ts`); `after`: wins count only once
+ * these legends are captured (Regigigas, for the Regi trio's captor).
  */
-export type LegendUnlock = { wins: number; endless?: true; last?: true; event?: LegendEvent; festival?: FestivalId }
+export type LegendUnlock = { wins: number; endless?: true; last?: true; event?: LegendEvent; festival?: FestivalId; path?: PathId; after?: readonly LegendId[] }
 
 export type LegendDef = Omit<PlayableDef, 'learnset' | 'line'> & {
   /** One list: every move it can learn is there from Lv 1, its legendary move first. */
@@ -397,6 +408,74 @@ export const LEGENDS = {
     innate: { ability: 'levitate' },
     unlock: { wins: 1, festival: 'lanternas' },
   },
+
+  /* ---------- The legend paths (`data/legendPaths.ts`) ---------- */
+  zygarde: {
+    name: 'Zygarde',
+    color: '#58c870',
+    stats: { maxHp: 30, might: 0.18, speed: 6, cooldown: -0.03 },
+    signature: LEGENDARY_MOVE_OF.zygarde,
+    learnset: [[LEGENDARY_MOVE_OF.zygarde, 'dragonBreath', 'dragonTail', 'earthquake', 'crunch', 'stealthRock', 'rockTomb', 'thunder']],
+    line: stage(718, 'Zygarde', ['dragon', 'ground']),
+    awakenings: [{ maxHp: 20, might: 0.1, speed: 2 }, { maxHp: 30, might: 0.2, cooldown: -0.04 }],
+    innate: { ability: 'powerConstruct' },
+    unlock: { wins: 1, path: 'zygarde' },
+  },
+  solgaleo: {
+    name: 'Solgaleo',
+    color: '#f8a830',
+    stats: { maxHp: 45, might: 0.22, armor: 1, speed: 4 },
+    signature: LEGENDARY_MOVE_OF.solgaleo,
+    learnset: [[LEGENDARY_MOVE_OF.solgaleo, 'flashCannon', 'psyshock', 'flameWheel', 'crunch', 'gyroBall', 'solarBeam', 'wildCharge']],
+    line: stage(791, 'Solgaleo', ['psychic', 'steel']),
+    awakenings: [{ maxHp: 25, might: 0.12, armor: 1 }, { maxHp: 40, might: 0.24, area: 0.1 }],
+    innate: { ability: 'fullMetalBody' },
+    unlock: { wins: 1, path: 'cosmog' },
+  },
+  lunala: {
+    name: 'Lunala',
+    color: '#8868d8',
+    stats: { maxHp: 40, might: 0.22, area: 0.1, cooldown: -0.03 },
+    signature: LEGENDARY_MOVE_OF.lunala,
+    learnset: [[LEGENDARY_MOVE_OF.lunala, 'psyshock', 'hex', 'futureSight', 'dreamEater', 'moonblast', 'gust', 'roost']],
+    line: stage(792, 'Lunala', ['psychic', 'ghost']),
+    awakenings: [{ maxHp: 25, might: 0.12, area: 0.05 }, { maxHp: 40, might: 0.24, cooldown: -0.05 }],
+    innate: { ability: 'shadowShield' },
+    unlock: { wins: 1, path: 'cosmog' },
+  },
+  kubfu: {
+    name: 'Kubfu',
+    color: '#c8a070',
+    stats: { maxHp: 30, might: 0.2, speed: 6, specialRecharge: 0.1 },
+    signature: LEGENDARY_MOVE_OF.kubfu,
+    learnset: [[LEGENDARY_MOVE_OF.kubfu, 'machPunch', 'focusPunch', 'dynamicPunch', 'suckerPunch', 'uTurn', 'waterShuriken', 'crunch']],
+    line: stage(891, 'Kubfu', ['fighting']),
+    awakenings: [{ maxHp: 25, might: 0.12, speed: 2 }, { maxHp: 35, might: 0.22, cooldown: -0.04 }],
+    innate: { ability: 'innerFocus' },
+    unlock: { wins: 1, path: 'kubfu' },
+  },
+  meltan: {
+    name: 'Meltan',
+    color: '#c8c8d0',
+    stats: { maxHp: 35, armor: 1, might: 0.15, magnet: 20 },
+    signature: LEGENDARY_MOVE_OF.meltan,
+    learnset: [[LEGENDARY_MOVE_OF.meltan, 'flashCannon', 'thunder', 'shockWave', 'gyroBall', 'heavySlam', 'electroBall', 'discharge']],
+    line: stage(808, 'Meltan', ['steel']),
+    awakenings: [{ maxHp: 25, armor: 1, might: 0.12 }, { maxHp: 35, might: 0.24, area: 0.1 }],
+    innate: { ability: 'magnetPull' },
+    unlock: { wins: 1, path: 'meltan' },
+  },
+  regigigas: {
+    name: 'Regigigas',
+    color: '#d8d0b8',
+    stats: { maxHp: 65, armor: 2, might: 0.25, speed: -3 },
+    signature: LEGENDARY_MOVE_OF.regigigas,
+    learnset: [[LEGENDARY_MOVE_OF.regigigas, 'gigaImpact', 'focusPunch', 'earthquake', 'rockTomb', 'iceShard', 'flashCannon', 'heavySlam']],
+    line: stage(486, 'Regigigas', ['normal']),
+    awakenings: [{ maxHp: 35, armor: 1, might: 0.12 }, { maxHp: 50, might: 0.25, area: 0.1 }],
+    innate: { ability: 'slowStart' },
+    unlock: { wins: 1, after: ['regirock', 'regice', 'registeel'] },
+  },
 } as const satisfies Record<LegendId, LegendDef>
 
 export const isLegend = (id: unknown): id is LegendId => LEGEND_IDS.some((l) => l === id)
@@ -411,6 +490,12 @@ export const legendEvent = (id: LegendId): LegendEvent | null => {
 export const legendFestival = (id: LegendId): FestivalId | null => {
   const unlock: LegendUnlock = LEGENDS[id].unlock
   return unlock.festival ?? null
+}
+
+/** The path whose gift brings a legend, or null for one caught otherwise. */
+export const legendPath = (id: LegendId): PathId | null => {
+  const unlock: LegendUnlock = LEGENDS[id].unlock
+  return unlock.path ?? null
 }
 
 /** The legendary move a legend opens with, which stays its own (it never fuses into a duo); null for every other starter. */

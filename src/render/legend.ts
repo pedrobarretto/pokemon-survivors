@@ -90,9 +90,9 @@ export const drawLegendAura = (ctx: Ctx, g: Game, t: number, calm: boolean) => {
   ctx.globalAlpha = 1
 }
 
-/** The sprites an awakening's scene swaps between (its form's, where it lands in one) and the scale it plays at: big legends at 1×. */
-export const awakeningLook = (g: Game, from: number, form: FormKey | undefined) => {
+/** The sprites an awakening's scene swaps between (the look it lands in: `to`'s `form`, another species' for Urshifu or Melmetal) and the scale it plays at: big legends at 1×. */
+export const awakeningLook = (g: Game, from: number, to: number, form: FormKey | undefined) => {
   const before = sprites(from, g.player.shiny, legendLook(g))
-  const after = sprites(from, g.player.shiny, form ?? legendLook(g))
-  return { before, after, scale: before.bodyW > 40 ? 1 : 2 }
+  const after = sprites(to, g.player.shiny, form)
+  return { before, after, scale: Math.max(before.bodyW, after.bodyW) > 40 ? 1 : 2 }
 }

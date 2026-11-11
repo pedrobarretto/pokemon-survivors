@@ -1,4 +1,4 @@
-import { blitCentered, blitEllipse, blitRing, blitRotated, drawPacked, type PixelSprite } from '../engine/pixelart'
+import { blitCentered, blitEllipse, blitRing, blitRotated, context2d, createCanvas, drawPacked, type PixelSprite } from '../engine/pixelart'
 import { TAU } from '../engine/math'
 import type { BuffId } from '../data/consumables'
 import { MAP_EVENTS, type MapEvent, type MapEventKind, type MapEventOf } from '../game/mapEvents'
@@ -15,6 +15,15 @@ import { isMission } from '../game/fieldMissions'
 import { drawFieldMission, missionIcon, missionSpot } from './fieldMissions'
 import { HURT_TINT } from './flashes'
 import { sceneryArt } from './scenery'
+import { PATH_ART, TEMPLE, TEMPLE_LIGHTS, TEMPLES } from './pathLegendArt'
+import { TEMPLE_WAKE } from '../game/pathRun'
+
+/** The temple shrunk to an arrow's icon: its middle, with the three lights on. */
+const templeIcon = lazy(() => {
+  const canvas = createCanvas(14, 12)
+  context2d(canvas).drawImage(TEMPLES()[3]!, 15, 2, 14, 12, 0, 0, 14, 12)
+  return canvas
+})
 
 /**
  * Map events on the ground (altar, fountain, chest, traps, Meowth, the Move Tutor) and the
@@ -241,6 +250,43 @@ const drawTutor = (ctx: Ctx, ev: MapEventOf<'tutor'>, t: number) => {
   if (ev.gone < 0 && (t + ev.id * 0.3) % 1.6 < 0.2) blitCentered(ctx, SPARKLE()[1]!, ev.x + 7, ev.y - tent.height - 10)
 }
 
+/** A Zygarde Cell or Core: bobbing over its shadow, its glow beating, green motes rising; a Core's eye glints. It blinks out in its last seconds, burrowing. */
+const drawPiece = (ctx: Ctx, ev: MapEventOf<'zygardeCell' | 'zygardeCore'>, t: number, calm: boolean) => {
+  const core = ev.kind === 'zygardeCore'
+  const frames = core ? PATH_ART.core() : PATH_ART.cell()
+  const beat = Math.floor(t * 3 + ev.id) % 2
+  const leaving = ev.gone < 0 && ev.ttl - ev.age < 4 && (calm || Math.floor(t * 10) % 2 === 0)
+  const bob = Math.round(Math.sin(t * 3 + ev.id) * 1.5)
+  groundShadow(ctx, ev.x, ev.y, core ? 7 : 5)
+  dashedRing(ctx, ev.x, ev.y, core ? 11 : 8, t * 2 + ev.id, ['#78e098', '#2f8a48'], 0.4)
+  ctx.globalAlpha *= leaving ? 0.55 : 1
+  const sprite = frames[beat]!
+  ctx.drawImage(sprite, Math.round(ev.x - sprite.width / 2), Math.round(ev.y - sprite.height - 3 + bob))
+  ctx.globalAlpha = ev.gone >= 0 ? Math.max(0, 1 - ev.gone / FADE) : 1
+  if (calm) return
+  for (let i = 0; i < 3; i++) {
+    const k = (t * 0.7 + i / 3 + ev.id * 0.13) % 1
+    ctx.fillStyle = i === 1 ? '#ffffff' : '#78e098'
+    ctx.fillRect(Math.round(ev.x - 5 + i * 5 + Math.sin(t * 2 + i) * 1.5), Math.round(ev.y - 6 - k * 18), 1, k > 0.6 ? 1 : 2)
+  }
+  if (core && (t + ev.id * 0.37) % 1.4 < 0.14) blitCentered(ctx, SPARKLE()[1]!, ev.x + 5, ev.y - sprite.height - 2)
+}
+
+/** Regigigas's temple, its lights coming on one by one as it wakes, dust shaking off it. */
+const drawTemple = (ctx: Ctx, ev: MapEventOf<'regiTemple'>, t: number, calm: boolean) => {
+  const waking = ev.state.waking
+  const lit = waking < 0 ? 0 : Math.min(3, 1 + Math.floor((waking / TEMPLE_WAKE) * 3))
+  const jolt = waking >= 0 && !calm ? Math.round(Math.sin(t * 50) * Math.min(2, 1 + waking)) : 0
+  const sprite = TEMPLES()[lit]!
+  groundShadow(ctx, ev.x, ev.y + 1, 24)
+  ctx.drawImage(sprite, Math.round(ev.x - TEMPLE.w / 2 + jolt), Math.round(ev.y - TEMPLE.h + 2))
+  // Asleep, a faint pulse in its lights' place now and then: something stirs inside.
+  if (waking < 0 && (t + ev.id * 0.2) % 2.4 < 0.2) {
+    ctx.fillStyle = TEMPLE_LIGHTS[Math.floor(t / 2.4) % 3]![0]
+    ctx.fillRect(Math.round(ev.x - 9 + (Math.floor(t / 2.4) % 3) * 8), Math.round(ev.y - TEMPLE.h + 13), 2, 2)
+  }
+}
+
 const near = (g: Game, x: number, y: number, m = 60) =>
   x > g.camera.x - m && x < g.camera.x + g.view.w + m && y > g.camera.y - m && y < g.camera.y + g.view.h + m
 
@@ -254,6 +300,9 @@ const drawEvent = (ctx: Ctx, g: Game, ev: MapEvent, t: number, calm: boolean) =>
     case 'bomb': return drawBomb(ctx, ev, t)
     case 'meowth': return drawMeowth(ctx, ev, t, calm)
     case 'castform': return drawCastform(ctx, ev, t, calm)
+    case 'zygardeCell':
+    case 'zygardeCore': return drawPiece(ctx, ev, t, calm)
+    case 'regiTemple': return drawTemple(ctx, ev, t, calm)
     case 'tutor': return drawTutor(ctx, ev, t)
   }
 }
@@ -280,6 +329,9 @@ const MARKER: Partial<Record<MapEventKind, { arrow: number; icon: () => PixelSpr
   chest: { arrow: 2, icon: () => ART().chest },
   meowth: { arrow: 3, icon: () => PICKUPS.coins()[0]! },
   castform: { arrow: 1, icon: () => ART().drop },
+  zygardeCell: { arrow: 4, icon: () => PATH_ART.cell()[0]! },
+  zygardeCore: { arrow: 4, icon: () => PATH_ART.core()[0]! },
+  regiTemple: { arrow: 2, icon: () => templeIcon() },
   tutor: { arrow: 1, icon: () => tmDisc('#78c0f8') },
   defense: { arrow: 4, icon: () => missionIcon('defense') },
   collect: { arrow: 4, icon: () => missionIcon('collect') },

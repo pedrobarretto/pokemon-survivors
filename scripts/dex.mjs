@@ -70,7 +70,13 @@ export const COMPANIONS = [710]
 export const HALLOWEEN_BOSSES = [778, 354, 302, 426, 429, 229, 94, 609, 711, 709, 430, 477]
 /** The lobby's shopkeepers (render/plaza.ts): Kecleon (and its purple brother, recolored from the same sheets), Leavanny, the Boutique's tailor, and Bibarel, the carpentry's carpenter. */
 export const SHOPKEEPERS = [352, 542, 400]
-export const DEX = [...new Set([...STARTERS, ...HATCHLINGS, ...HORDE, ...TRAITS, ...BOSSES, ...CRITTERS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...CAMEOS, ...FESTIVAL_LEGENDS, ...REAPER, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...COMPANIONS, ...HALLOWEEN_BOSSES, ...SHOPKEEPERS])]
+/**
+ * The legend paths (src/data/legendPaths.ts), each its own long-term goal: Zygarde (its 10%, 50% and Complete
+ * Formes, `FORMS`), Cosmog's line to Solgaleo or Lunala, Kubfu and Urshifu (both styles), Meltan and Melmetal, and
+ * Regigigas, which wakes for the Regi trio's captor. All playable in Legend mode, and all can be shiny.
+ */
+export const LEGEND_PATHS = [718, 789, 790, 791, 792, 891, 892, 808, 809, 486]
+export const DEX = [...new Set([...STARTERS, ...HATCHLINGS, ...HORDE, ...TRAITS, ...BOSSES, ...CRITTERS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...CAMEOS, ...FESTIVAL_LEGENDS, ...REAPER, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...COMPANIONS, ...HALLOWEEN_BOSSES, ...SHOPKEEPERS, ...LEGEND_PATHS])]
 /**
  * The Arena's emotes (`emote` in src/data/arenaEffects.ts, `EMOTE_ANIMS` there too): extra SpriteCollab
  * animations, only for the species the Arena plays (the starters' lines) and only their front row
@@ -94,8 +100,8 @@ export const SHINY_LEGENDS = [144, 145, 146, 150, 151, 243, 244, 245, 251, 377, 
  * mode's 25 (the rift, event and festival legends, the trios, the mythicals, Mewtwo and Arceus). The species whose
  * wearables `npm run rig` fits, with their `FORMS` (`render/wearFit.test.ts` keeps them in sync with `PLAYABLE`).
  */
-export const PLAYERS = [...new Set([...STARTERS, ...HATCHLINGS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...SHINY_LEGENDS])]
-export const SHINY = new Set([...STARTERS, ...HATCHLINGS, ...HORDE, ...TRAITS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...SHINY_LEGENDS, ...COMPANIONS])
+export const PLAYERS = [...new Set([...STARTERS, ...HATCHLINGS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...SHINY_LEGENDS, ...LEGEND_PATHS])]
+export const SHINY = new Set([...STARTERS, ...HATCHLINGS, ...HORDE, ...TRAITS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...SHINY_LEGENDS, ...COMPANIONS, ...LEGEND_PATHS])
 
 /**
  * Alternate formes the game draws, by key, mapped to their SpriteCollab form id
@@ -136,6 +142,9 @@ export const FORMS = {
   384: { mega: '0001' },
   386: { attack: '0001', defense: '0002', speed: '0003' },
   491: { mega: '0002' }, // 0001 is a cutscene sprite
+  // The legend paths' formes (src/data/legendPaths.ts): Zygarde's 10% and Complete (its 50% is the species' own), Urshifu's Rapid Strike Style.
+  718: { ten: '0001', complete: '0002' },
+  892: { rapid: '0001' },
 }
 
 /**
@@ -199,6 +208,8 @@ export const FORM_CRIES = {
   384: { mega: 'rayquaza-mega' },
   386: { attack: 'deoxys-attack', defense: 'deoxys-defense', speed: 'deoxys-speed' },
   491: { mega: 'darkrai-mega' },
+  718: { ten: 'zygarde-10', complete: 'zygarde-complete' },
+  892: { rapid: 'urshifu-rapid-strike' },
   500: { mega: 'emboar-mega' },
   652: { mega: 'chesnaught-mega' },
   655: { mega: 'delphox-mega' },
@@ -225,6 +236,8 @@ export const EMOTIONS = {
   542: ['Normal', 'Happy', 'Joyous', 'Surprised', 'Sigh', 'Inspired', 'Angry'],
   // Bibarel, the carpentry's carpenter (render/plaza.ts): SpriteCollab only has its Normal portrait.
   400: ['Normal'],
+  // Sudowoodo, who tells of the Zygarde Cells (the legend paths, src/data/legendPaths.ts).
+  185: ['Normal', 'Happy', 'Joyous', 'Surprised', 'Sigh', 'Inspired', 'Angry'],
 }
 
 /**
