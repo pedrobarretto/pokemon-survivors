@@ -111,6 +111,26 @@ const BEETLE: BallArt = [
   { 1: '#1c1408', 2: '#f0a820', 3: '#b86c10', 4: '#fff0b0', 5: '#2a1c10' },
 ]
 
+/** The Concurso de Insetos's seal, over its frame's header: the amber beetle with its straw wings open (6 the wings). */
+const BEETLE_WINGS: BallArt = [
+  [
+    '...........1...1...........',
+    '............1.1............',
+    '...........15551...........',
+    '111.......1422241.......111',
+    '1661.....142252241.....1661',
+    '.16611..14252525241..11661.',
+    '..16666114222522241166661..',
+    '...166661422252224166661...',
+    '....1666122525252216661....',
+    '.....11112222222221111.....',
+    '........13222222231........',
+    '.........133333331.........',
+    '..........1111111..........',
+  ],
+  { ...BEETLE[1], 6: '#f4e8a0' },
+]
+
 /** Era 1's coin, for its frame's corners: gold with a navy "I" (1 outline, 2 gold, 3 its shade, 4 the shine, 5 the numeral). */
 const ERA_COIN: BallArt = [
   ['..11111..', '.1422221.', '142555221', '122252221', '122252221', '122252221', '123555321', '.1333331.', '..11111..'],
@@ -214,8 +234,8 @@ export const CARD_FRAMES = {
   era1: { edge: '#120e26', light: '#f8d878', main: '#22357e', shade: '#c89028', accent: '#f8d030', band: 3, studs: '#f8d030', inner: ['#0a0a1c'], ball: ERA_COIN, crest: ERA_WINGS },
   /** An Era 1 board's #1: a wide gold band set with rubies and a gold line inside it, a ruby in a gold bezel in each corner and the crown for its seal. */
   era1Champion: { edge: '#2a1404', light: '#fff4c0', main: '#e8b030', shade: '#f8d030', accent: '#e02848', band: 3, studs: '#e02848', inner: ['#2a1404'], ball: RUBY, crest: CROWN },
-  /** The Concurso de Insetos's podium (`CONTEST_GIFTS`): a meadow-green band between straw lines, an amber beetle in each corner. */
-  bugContest: { edge: '#142008', light: '#f4e8a0', main: '#5c9c2c', shade: '#203c10', accent: '#f0a820', ball: BEETLE },
+  /** The Concurso de Insetos's podium (`CONTEST_GIFTS`): a wide meadow-green band between straw lines, amber rivets, an amber beetle in each corner and the beetle in flight for its seal. */
+  bugContest: { edge: '#142008', light: '#f4e8a0', main: '#5c9c2c', shade: '#203c10', accent: '#f0a820', band: 3, studs: '#f0a820', inner: ['#0c1404'], ball: BEETLE, crest: BEETLE_WINGS },
 } as const satisfies Record<FrameId, CardFrame>
 
 /** A card's backdrop: sky bands top to bottom (dithered where they meet) and how many stars (fireflies, crystals, snow…). */
