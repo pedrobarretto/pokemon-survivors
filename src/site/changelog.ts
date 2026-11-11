@@ -25,31 +25,320 @@ export type ChangelogUpdate = {
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
     date: '2026-11-11',
-    title: { pt: 'Ícones novos da comunidade', en: 'New icons from the community', es: 'Íconos nuevos de la comunidad', fr: 'De nouvelles icônes de la communauté', zh: '社群繪製的新圖示' },
+    title: { pt: 'Temporada 1: Terastal, Pokédex Nacional e lendas novas', en: 'Season 1: Terastal, the National Pokédex and new legends', es: 'Temporada 1: Teracristal, la Pokédex Nacional y leyendas nuevas', fr: 'Saison 1 : Téracristal, le Pokédex National et de nouvelles légendes', zh: '第 1 賽季：太晶化、全國圖鑑和新的傳說' },
     highlights: [
       {
-        pt: 'Ícones novos, desenhados pelos moderadores do nosso Discord: valeu, mods!',
-        en: 'New icons, drawn by our Discord moderators: thanks, mods!',
-        es: 'Íconos nuevos, dibujados por los moderadores de nuestro Discord: ¡gracias, mods!',
-        fr: 'De nouvelles icônes, dessinées par les modérateurs de notre Discord : merci, les modos !',
-        zh: '由 Discord 管理員繪製的新圖示：謝謝各位管理員！',
+        pt: 'Terastal: junte Fragmentos Tera dos chefes, encha o Orbe Tera e vire cristal com uma das 19 coroas. Tem Raide Tera em toda partida, a Raide do dia e o Terapagos.',
+        en: 'Terastal: collect Tera Shards from bosses, fill the Tera Orb and turn to crystal under one of 19 crowns. Every run has a Tera Raid, plus the Raid of the Day and Terapagos.',
+        es: 'Teracristal: junta Teralitos de los jefes, llena el Orbe Tera y vuélvete cristal con una de las 19 coronas. Hay Teraincursión en cada partida, la Incursión del día y Terapagos.',
+        fr: 'Téracristal : récupère des Téra-Éclats sur les boss, remplis l’Orbe Téracristal et deviens cristal sous l’une des 19 couronnes. Un Raid Téracristal dans chaque partie, le Raid du jour et Terapagos.',
+        zh: '太晶化：從頭目身上收集太晶碎塊，集滿太晶珠，戴上 19 種皇冠之一化為結晶。每局都有太晶團體戰，還有每日團體戰和太樂巴戈斯。',
       },
       {
-        pt: 'Pokédex, Ovos, Loja, Ranking, Ideias, Co-op e Convites com cara nova no lobby.',
-        en: 'Pokédex, Eggs, Shop, Ranking, Ideas, Co-op and Invites get a new look in the lobby.',
-        es: 'Pokédex, Huevos, Tienda, Ranking, Ideas, Co-op e Invitaciones con cara nueva en el lobby.',
-        fr: 'Pokédex, Œufs, Boutique, Classement, Idées, Coop et Invitations font peau neuve dans l’accueil.',
-        zh: '大廳的圖鑑、蛋、商店、排行榜、點子、合作和邀請換上新面貌。',
+        pt: 'A Pokédex Nacional chegou: 745 espécies selvagens na horda, 898 Pokémon no jogo e 78 famílias novas para jogar, cada uma com a sua mecânica.',
+        en: 'The National Pokédex is here: 745 wild species in the horde, 898 Pokémon in the game and 78 new families to play, each with a mechanic of its own.',
+        es: 'Llegó la Pokédex Nacional: 745 especies salvajes en la horda, 898 Pokémon en el juego y 78 familias nuevas para jugar, cada una con su mecánica.',
+        fr: 'Le Pokédex National est là : 745 espèces sauvages dans la horde, 898 Pokémon dans le jeu et 78 nouvelles familles jouables, chacune avec sa mécanique.',
+        zh: '全國圖鑑登場：745 種野生寶可夢加入怪潮，遊戲中共有 898 種寶可夢，還有 78 個新的可玩家族，各有獨特機制。',
       },
       {
-        pt: 'Discord, TikTok, YouTube e Instagram também ganharam ícones novos em pixel art.',
-        en: 'Discord, TikTok, YouTube and Instagram got new pixel-art icons too.',
-        es: 'Discord, TikTok, YouTube e Instagram también tienen íconos nuevos en pixel art.',
-        fr: 'Discord, TikTok, YouTube et Instagram ont aussi de nouvelles icônes en pixel art.',
-        zh: 'Discord、TikTok、YouTube 和 Instagram 也換上了新的像素圖示。',
+        pt: '42 formas regionais de Alola, Galar, Hisui e Paldea, com A Viagem: toda segunda uma região nova e o seu Ovo de Viagem.',
+        en: '42 regional forms from Alola, Galar, Hisui and Paldea, with The Trip: a new region every Monday and its Travel Egg.',
+        es: '42 formas regionales de Alola, Galar, Hisui y Paldea, con El Viaje: cada lunes una región nueva y su Huevo de Viaje.',
+        fr: '42 formes régionales d’Alola, Galar, Hisui et Paldea, avec Le Voyage : une nouvelle région chaque lundi et son Œuf de Voyage.',
+        zh: '42 種阿羅拉、伽勒爾、洗翠和帕底亞的地區形態，加上「旅行」：每週一換一個地區，還有該地區的旅行蛋。',
+      },
+      {
+        pt: 'A Equipe Rocket chegou ao Poké Realm: Game Corner com caça-níquel e prêmios exclusivos, Pokémon Sombra e o Esconderijo com o Mewtwo Sombrio.',
+        en: 'Team Rocket has come to the Poké Realm: a Game Corner with slots and exclusive prizes, Shadow Pokémon and the Hideout with Shadow Mewtwo.',
+        es: 'El Team Rocket llegó al Poké Realm: Casino con tragaperras y premios exclusivos, Pokémon Oscuros y el Escondite con Mewtwo Oscuro.',
+        fr: 'La Team Rocket débarque dans le Poké Realm : une Salle de jeux avec machines à sous et lots exclusifs, des Pokémon Obscurs et le Repaire avec Mewtwo Obscur.',
+        zh: '火箭隊來到 Poké Realm：有拉霸機和限定獎品的遊戲城、黑暗寶可夢，以及有黑暗超夢的火箭隊基地。',
+      },
+      {
+        pt: 'Lendas novas: Palkia, 10 Ultracriaturas, o trio dos lagos, as Espadas da Justiça, os Anéis de Hoopa e cinco caminhos lendários, de Zygarde a Regigigas.',
+        en: 'New legends: Palkia, 10 Ultra Beasts, the lake trio, the Swords of Justice, Hoopa’s Rings and five legend paths, from Zygarde to Regigigas.',
+        es: 'Leyendas nuevas: Palkia, 10 Ultraentes, el trío del lago, los Espadachines Místicos, los Anillos de Hoopa y cinco caminos legendarios, de Zygarde a Regigigas.',
+        fr: 'De nouvelles légendes : Palkia, 10 Ultra-Chimères, le trio des lacs, les Épées de la Justice, les Anneaux de Hoopa et cinq chemins légendaires, de Zygarde à Regigigas.',
+        zh: '新的傳說：帕路奇亞、10 隻究極異獸、湖之三神、聖劍士、胡帕的圓環，以及從基格爾德到雷吉奇卡斯的五條傳說之路。',
       },
     ],
     changes: [
+      {
+        title: { pt: 'Temporada 1 e o Hall da Fama da Era 1', en: 'Season 1 and the Era 1 Hall of Fame', es: 'Temporada 1 y el Salón de la Fama de la Era 1', fr: 'Saison 1 et le Panthéon de l’Ère 1', zh: '第 1 賽季與第 1 紀元名人堂' },
+        notes: [
+          {
+            pt: 'Os rankings de partidas ganham temporadas: a aba principal passa a ser Temporada, que abre zerada em 16 de novembro. Nada é apagado: os recordes de antes ficam para sempre na Era 1, um Hall da Fama com pódio próprio.',
+            en: 'The run rankings get seasons: the main tab is now Season, which opens fresh on November 16. Nothing is erased: the records from before stay forever in Era 1, a Hall of Fame with its own podium.',
+            es: 'Los rankings de partidas tienen temporadas: la pestaña principal pasa a ser Temporada, que abre desde cero el 16 de noviembre. No se borra nada: los récords de antes quedan para siempre en la Era 1, un Salón de la Fama con su propio podio.',
+          },
+          {
+            pt: 'O topo da Era 1 ganha recompensa: o nº 1 de cada ranking leva o título Campeão(ã) da Era 1, a moldura Coroa e o céu Trono, e os seguintes do topo levam o título Lenda da Era 1 e a moldura Era 1. Os presentes chegam sozinhos depois da virada.',
+            en: 'Era 1’s top players are rewarded: each ranking’s #1 gets the Era 1 Champion title, the Crown frame and the Throne sky, and the next ones at the top get the Era 1 Legend title and the Era 1 frame. The gifts arrive on their own after the turnover.',
+            es: 'Lo más alto de la Era 1 tiene recompensa: el n.º 1 de cada ranking recibe el título Campeón(a) de la Era 1, el marco Corona y el cielo Trono, y los siguientes en lo alto reciben el título Leyenda de la Era 1 y el marco Era 1. Los regalos llegan solos después del cambio.',
+          },
+          {
+            pt: 'O modo sem fim aperta depois dos 30 minutos: a horda cresce cada vez mais rápido, e as melhores builds agora caem entre 45 e 60 minutos, em vez de durar horas.',
+            en: 'Endless mode tightens after 30 minutes: the horde grows faster and faster, and the best builds now fall between 45 and 60 minutes instead of lasting hours.',
+            es: 'El modo sin fin aprieta después de los 30 minutos: la horda crece cada vez más rápido, y las mejores builds ahora caen entre los 45 y los 60 minutos, en vez de durar horas.',
+          },
+          {
+            pt: 'Ajustes nas builds invencíveis: Magic Guard só reduz pela metade o dano de explosões e poças, Bulletproof protege 40%, reduções de recarga rendem menos depois de 30% e o Iron Head protege menos tempo.',
+            en: 'Tweaks to the unbeatable builds: Magic Guard only halves damage from blasts and pools, Bulletproof blocks 40%, cooldown cuts pay less past 30% and Iron Head guards for less time.',
+            es: 'Ajustes a las builds invencibles: Magic Guard solo reduce a la mitad el daño de explosiones y charcos, Bulletproof protege un 40 %, las reducciones de recarga rinden menos pasado el 30 % y Iron Head protege menos tiempo.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Terastal e Raides Tera', en: 'Terastal and Tera Raids', es: 'Teracristal y Teraincursiones', fr: 'Téracristal et Raids Téracristal', zh: '太晶化與太晶團體戰' },
+        notes: [
+          {
+            pt: 'Todo chefe deixa dois Fragmentos Tera: o tipo dele e um dos tipos do seu Pokémon. Ande até o que você quer para escolher o seu tipo Tera.',
+            en: 'Every boss leaves two Tera Shards: its type and one of your Pokémon’s types. Walk to the one you want to pick your Tera type.',
+            es: 'Cada jefe deja dos Teralitos: su tipo y uno de los tipos de tu Pokémon. Camina hasta el que quieras para elegir tu teratipo.',
+          },
+          {
+            pt: 'O Orbe Tera enche com nocautes e com o tempo. Cheio, aperte TERA (R): o seu Pokémon vira cristal com uma coroa do tipo por 20 segundos, e os golpes daquele tipo batem mais forte. O tipo Astral dá um golpe triplo no primeiro acerto de cada tipo.',
+            en: 'The Tera Orb fills with KOs and with time. Once full, press TERA (R): your Pokémon turns to crystal under its type’s crown for 20 seconds, and moves of that type hit harder. Stellar triples the first hit of each move type.',
+            es: 'El Orbe Tera se llena con derrotas y con el tiempo. Lleno, pulsa TERA (R): tu Pokémon se vuelve cristal con una corona del tipo durante 20 segundos, y los movimientos de ese tipo pegan más fuerte. El tipo Astral triplica el primer golpe de cada tipo.',
+          },
+          {
+            pt: 'São 19 coroas de cristal, uma por tipo mais a Astral, cada uma com o seu formato, assentadas na cabeça do Pokémon (as cabeças pequenas usam uma versão menor). A transformação tem cristal crescendo, estilhaço em câmera lenta e uma faixa de tela inteira.',
+            en: 'There are 19 crystal crowns, one per type plus Stellar, each with its own shape, sitting on the Pokémon’s head (small heads wear a smaller cut). The transformation has the crystal growing, a slow-motion shatter and a full-screen banner.',
+            es: 'Son 19 coronas de cristal, una por tipo más la Astral, cada una con su forma, puestas en la cabeza del Pokémon (las cabezas pequeñas llevan una versión más chica). La transformación tiene cristal creciendo, un estallido en cámara lenta y una franja de pantalla completa.',
+          },
+          {
+            pt: 'Raides Tera: um Covil Tera abre no mapa no meio de cada partida, solo ou co-op. Lá dentro, um chefe gigante de cristal com escudo Tera: quebre o escudo com a fraqueza dele ou com o seu tipo Tera. Mais tarde abre a Raide do dia, igual para todos, e no fim de semana é o Terapagos Astral 7★.',
+            en: 'Tera Raids: a Tera Den opens on the map halfway through every run, solo or co-op. Inside, a giant crystal boss with a Tera shield: break it with its weakness or your Tera type. Later the Raid of the Day opens, the same for everyone, and on weekends it’s a 7★ Stellar Terapagos.',
+            es: 'Teraincursiones: una Guarida Tera se abre en el mapa a mitad de cada partida, solo o en co-op. Dentro, un jefe gigante de cristal con escudo Tera: rómpelo con su debilidad o con tu teratipo. Más tarde se abre la Incursión del día, igual para todos, y el fin de semana es Terapagos Astral 7★.',
+          },
+          {
+            pt: 'Vença a Raide Astral 7★ para capturar o Terapagos e jogar com ele no Modo Lendário: desperta na Forma Terastal e depois na Forma Astral, com o golpe Tera Starstorm.',
+            en: 'Beat the 7★ Stellar Raid to capture Terapagos and play it in Legend mode: it awakens into its Terastal Form and then its Stellar Form, with Tera Starstorm.',
+            es: 'Gana la Incursión Astral 7★ para capturar a Terapagos y jugar con él en el Modo Legendario: despierta en su Forma Teracristal y luego en la Forma Astral, con Astrogénesis.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'A Pokédex Nacional', en: 'The National Pokédex', es: 'La Pokédex Nacional', fr: 'Le Pokédex National', zh: '全國圖鑑' },
+        notes: [
+          {
+            pt: 'A horda passa de 415 para 745 espécies: quase todo Pokémon que existe aparece no mundo. Os raros continuam raros, e cada bioma puxa os seus tipos.',
+            en: 'The horde grows from 415 to 745 species: almost every Pokémon there is shows up in the world. Rare ones stay rare, and each biome pulls in its own types.',
+            es: 'La horda pasa de 415 a 745 especies: casi todos los Pokémon que existen aparecen en el mundo. Los raros siguen siendo raros, y cada bioma atrae sus tipos.',
+          },
+          {
+            pt: 'A Pokédex do jogo agora é a Nacional, por região, de Kanto a Paldea: 898 dos 1.025 Pokémon estão no jogo, mais 42 formas regionais. Complete uma região para ganhar o título de Pesquisador(a) dela, e as nove para a moldura Pokédex Nacional.',
+            en: 'The in-game Pokédex is now the National one, region by region, from Kanto to Paldea: 898 of the 1,025 Pokémon are in the game, plus 42 regional forms. Complete a region to earn its Researcher title, and all nine for the National Pokédex frame.',
+            es: 'La Pokédex del juego ahora es la Nacional, por región, de Kanto a Paldea: 898 de los 1.025 Pokémon están en el juego, más 42 formas regionales. Completa una región para ganar su título de Investigador(a), y las nueve para el marco Pokédex Nacional.',
+          },
+          {
+            pt: 'Os Pokémon que os artistas do SpriteCollab ainda estão desenhando aparecem na Pokédex com um agradecimento e um link para ajudar a desenhar.',
+            en: 'The Pokémon SpriteCollab’s artists are still drawing show in the Pokédex with a thank-you and a link to help draw them.',
+            es: 'Los Pokémon que los artistas de SpriteCollab todavía están dibujando aparecen en la Pokédex con un agradecimiento y un enlace para ayudar a dibujarlos.',
+          },
+          {
+            pt: 'No site, a Pokédex ganhou uma página por região.',
+            en: 'On the website, the Pokédex now has a page per region.',
+            es: 'En el sitio, la Pokédex ahora tiene una página por región.',
+          },
+        ],
+      },
+      {
+        title: { pt: '78 famílias novas', en: '78 new families', es: '78 familias nuevas', fr: '78 nouvelles familles', zh: '78 個新家族' },
+        notes: [
+          {
+            pt: 'Agora são 168 famílias jogáveis: os 27 iniciais e 141 que saem de ovos, da Zona Safári, de encontros no mapa e de prêmios. Cada família nova tem golpe assinatura com caminhos no Nv 4 e 7, três habilidades e uma mecânica própria.',
+            en: 'There are now 168 playable families: the 27 starters and 141 from eggs, the Safari Zone, encounters on the map and prizes. Each new family has a signature move with paths at Lv 4 and 7, three abilities and a mechanic of its own.',
+            es: 'Ahora son 168 familias jugables: los 27 iniciales y 141 que salen de huevos, de la Zona Safari, de encuentros en el mapa y de premios. Cada familia nueva tiene movimiento firma con caminos en el Nv 4 y 7, tres habilidades y una mecánica propia.',
+          },
+          {
+            pt: 'Dos ovos: Snom, Joltik, Salandit, Hatenna, Darumaka, Wimpod, Applin (com Dipplin, Flapple e Appletun), Finizen, Pawniard, Frigibax, Ponyta e Ponyta de Galar. Do novo Ovo Fóssil (o Old Amber): Cranidos, Shieldon, Archen, Tyrunt e Amaura.',
+            en: 'From eggs: Snom, Joltik, Salandit, Hatenna, Darumaka, Wimpod, Applin (with Dipplin, Flapple and Appletun), Finizen, Pawniard, Frigibax, Ponyta and Galarian Ponyta. From the new Fossil Egg (Old Amber): Cranidos, Shieldon, Archen, Tyrunt and Amaura.',
+            es: 'De los huevos: Snom, Joltik, Salandit, Hatenna, Darumaka, Wimpod, Applin (con Dipplin, Flapple y Appletun), Finizen, Pawniard, Frigibax, Ponyta y Ponyta de Galar. Del nuevo Huevo Fósil (el Old Amber): Cranidos, Shieldon, Archen, Tyrunt y Amaura.',
+          },
+          {
+            pt: 'Achados de outro jeito: Rotom na TV velha das casas abandonadas, Castform no tempo fechado, Wishiwashi na pesca do Realm, Mimikyu, Morpeko e Tandemaus na Zona Safári, e Mankey (até Annihilape), Goomy e Tatsugiri pela nova aba Pesquisa das Missões.',
+            en: 'Found other ways: Rotom in the old TV of abandoned houses, Castform in bad weather, Wishiwashi in the Realm’s fishing, Mimikyu, Morpeko and Tandemaus in the Safari Zone, and Mankey (up to Annihilape), Goomy and Tatsugiri through the new Research tab in Missions.',
+            es: 'Encontrados de otra forma: Rotom en la tele vieja de las casas abandonadas, Castform con mal tiempo, Wishiwashi en la pesca del Realm, Mimikyu, Morpeko y Tandemaus en la Zona Safari, y Mankey (hasta Annihilape), Goomy y Tatsugiri en la nueva pestaña Investigación de las Misiones.',
+          },
+          {
+            pt: 'Mais 30 com mecânicas que mudam o jogo: Jangmo-o paga HP pelo Clangorous Soul, Axew acumula Dragon Dance até a Guillotine, Onix arrasta um corpo de pedra que se enrola, Happiny bota Ovos da Sorte que curam até os colegas, Sandile mergulha na areia, Stufful abraça e arremessa inimigos, Ninjask deixa um Shedinja para trás, Lapras leva o time pela água, Sableye come gemas de EXP, Spiritomb junta 108 espíritos e Polteageist serve chá.',
+            en: '30 more with mechanics that change the game: Jangmo-o pays HP for Clangorous Soul, Axew stacks Dragon Dance into Guillotine, Onix drags a stone body that coils up, Happiny lays Lucky Eggs that heal teammates too, Sandile dives into the sand, Stufful hugs and throws foes, Ninjask leaves a Shedinja behind, Lapras ferries the team over water, Sableye eats EXP gems, Spiritomb gathers 108 spirits and Polteageist serves tea.',
+            es: '30 más con mecánicas que cambian el juego: Jangmo-o paga PS por el Clangorous Soul, Axew acumula Dragon Dance hasta la Guillotine, Onix arrastra un cuerpo de piedra que se enrosca, Happiny pone Huevos Suerte que curan hasta a los compañeros, Sandile se sumerge en la arena, Stufful abraza y lanza enemigos, Ninjask deja un Shedinja atrás, Lapras lleva al equipo por el agua, Sableye come gemas de EXP, Spiritomb junta 108 espíritus y Polteageist sirve té.',
+          },
+          {
+            pt: 'E também: Clauncher, Fletchling, Golett, Nacli, Inkay (que evolui de cabeça para baixo), Skorupi, Snover, Tynamo, Dewpider, Duraludon, Bounsweet, Sneasel, Heracross, Croagunk, Sinistea, Impidimp, Pawmi, Rookidee, Elekid e Magby.',
+            en: 'Also: Clauncher, Fletchling, Golett, Nacli, Inkay (which evolves upside down), Skorupi, Snover, Tynamo, Dewpider, Duraludon, Bounsweet, Sneasel, Heracross, Croagunk, Sinistea, Impidimp, Pawmi, Rookidee, Elekid and Magby.',
+            es: 'Y también: Clauncher, Fletchling, Golett, Nacli, Inkay (que evoluciona boca abajo), Skorupi, Snover, Tynamo, Dewpider, Duraludon, Bounsweet, Sneasel, Heracross, Croagunk, Sinistea, Impidimp, Pawmi, Rookidee, Elekid y Magby.',
+          },
+          {
+            pt: 'Megas novas: Mega Steelix, Mega Eelektross, Mega Sableye, Mega Absol e Mega Mawile. Agora são 43 Megas em 38 linhagens.',
+            en: 'New Megas: Mega Steelix, Mega Eelektross, Mega Sableye, Mega Absol and Mega Mawile. That’s 43 Megas across 38 lines now.',
+            es: 'Megas nuevas: Mega Steelix, Mega Eelektross, Mega Sableye, Mega Absol y Mega Mawile. Ahora son 43 Megas en 38 líneas.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Formas regionais e A Viagem', en: 'Regional forms and The Trip', es: 'Formas regionales y El Viaje', fr: 'Formes régionales et Le Voyage', zh: '地區形態與旅行' },
+        notes: [
+          {
+            pt: '42 formas regionais de Alola, Galar, Hisui e Paldea, cada uma jogando do seu jeito: Vulpix e Sandshrew de Alola, Meowth, Slowpoke, Zigzagoon, Corsola e Darumaka de Galar, Growlithe, Zorua, Voltorb e Qwilfish de Hisui, Wooper e Tauros de Paldea e mais. São 18 famílias novas, com golpes e habilidades da região.',
+            en: '42 regional forms from Alola, Galar, Hisui and Paldea, each playing its own way: Alolan Vulpix and Sandshrew, Galarian Meowth, Slowpoke, Zigzagoon, Corsola and Darumaka, Hisuian Growlithe, Zorua, Voltorb and Qwilfish, Paldean Wooper and Tauros, and more. That’s 18 new families, with moves and abilities from their region.',
+            es: '42 formas regionales de Alola, Galar, Hisui y Paldea, cada una jugando a su manera: Vulpix y Sandshrew de Alola, Meowth, Slowpoke, Zigzagoon, Corsola y Darumaka de Galar, Growlithe, Zorua, Voltorb y Qwilfish de Hisui, Wooper y Tauros de Paldea y más. Son 18 familias nuevas, con movimientos y habilidades de su región.',
+          },
+          {
+            pt: 'Evoluções regionais: Pichu, Cubone e Exeggcute podem virar a forma de Alola com a nova Sparkling Stone, e Cyndaquil, Oshawott, Rowlet e Goomy a de Hisui com a Black Augurite. Compre a pedra na prateleira ou ache com um chefe.',
+            en: 'Regional evolutions: Pichu, Cubone and Exeggcute can become their Alolan form with the new Sparkling Stone, and Cyndaquil, Oshawott, Rowlet and Goomy their Hisuian form with the Black Augurite. Buy the stone on the shelf or find it on a boss.',
+            es: 'Evoluciones regionales: Pichu, Cubone y Exeggcute pueden volverse su forma de Alola con la nueva Sparkling Stone, y Cyndaquil, Oshawott, Rowlet y Goomy su forma de Hisui con la Black Augurite. Compra la piedra en el estante o encuéntrala con un jefe.',
+          },
+          {
+            pt: 'A Viagem: toda segunda a viagem vai para a próxima região. O Ovo de Viagem, na Vitrine do Kecleon, só choca famílias da região da semana, e elas também visitam a Zona Safári.',
+            en: 'The Trip: every Monday the trip moves on to the next region. The Travel Egg, in Kecleon’s Showcase, only hatches families from the week’s region, and they visit the Safari Zone too.',
+            es: 'El Viaje: cada lunes el viaje pasa a la siguiente región. El Huevo de Viaje, en la Vitrina de Kecleon, solo eclosiona familias de la región de la semana, y también visitan la Zona Safari.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Equipe Rocket', en: 'Team Rocket', es: 'Team Rocket', fr: 'Team Rocket', zh: '火箭隊' },
+        notes: [
+          {
+            pt: 'O Game Corner da Equipe Rocket abriu no Poké Realm: compre fichas com ₽ (nunca com gemas), jogue o Caça-níqueis e a Caça ao Koffing e troque as fichas por prêmios no balcão do Meowth.',
+            en: 'Team Rocket’s Game Corner has opened in the Poké Realm: buy tokens with ₽ (never gems), play the slots and Koffing Sweep, and trade the tokens for prizes at Meowth’s counter.',
+            es: 'El Casino del Team Rocket abrió en el Poké Realm: compra fichas con ₽ (nunca con gemas), juega a las Tragaperras y a la Caza de Koffing y cambia las fichas por premios en el mostrador de Meowth.',
+          },
+          {
+            pt: 'Prêmios exclusivos: Ditto, que copia o inimigo; Absol, que prevê desastres; Gimmighoul, que vira Gholdengo com 999 moedas; e Mawile, que morde quem chega pelas costas. Absol e Mawile têm Mega.',
+            en: 'Exclusive prizes: Ditto, which copies a foe; Absol, which foresees disaster; Gimmighoul, which becomes Gholdengo at 999 coins; and Mawile, which bites whoever comes from behind. Absol and Mawile have Megas.',
+            es: 'Premios exclusivos: Ditto, que copia al enemigo; Absol, que presagia desastres; Gimmighoul, que se vuelve Gholdengo con 999 monedas; y Mawile, que muerde a quien llega por la espalda. Absol y Mawile tienen Mega.',
+          },
+          {
+            pt: 'Pokémon Sombra: mais dano dado e recebido, com uma aura violeta. Ande com eles nas partidas para purificá-los.',
+            en: 'Shadow Pokémon: more damage dealt and taken, with a violet aura. Walk with them in your runs to purify them.',
+            es: 'Pokémon Oscuros: más daño hecho y recibido, con un aura violeta. Camina con ellos en tus partidas para purificarlos.',
+          },
+          {
+            pt: 'Esconderijo Rocket: o pôster do Game Corner abre o caminho. Desça os andares de recrutas e enfrente o Persian do Giovanni e o Mewtwo Sombrio.',
+            en: 'Rocket Hideout: the Game Corner’s poster opens the way. Go down through the grunts’ floors and face Giovanni’s Persian and Shadow Mewtwo.',
+            es: 'Escondite Rocket: el póster del Casino abre el camino. Baja los pisos de reclutas y enfréntate al Persian de Giovanni y a Mewtwo Oscuro.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Zona Safári, Escavação e Máquina de Pelúcias', en: 'Safari Zone, Mine Dig and the Plush Claw Machine', es: 'Zona Safari, Excavación y Máquina de Peluches', fr: 'Parc Safari, Excavation et Machine à Peluches', zh: '狩獵地帶、礦坑挖掘與玩偶夾娃娃機' },
+        notes: [
+          {
+            pt: 'A Zona Safári abriu na Trilha do Realm: ande pelo capim alto de quatro reservas, encontre Pokémon e jogue Safari Balls, frutas, pedras e iscas. Uma sessão grátis por dia, as outras com ₽, e família repetida devolve ₽. A cada 10 sessões sem família nova, a próxima traz uma garantida.',
+            en: 'The Safari Zone has opened on the Realm’s Trail: walk the tall grass of four reserves, meet Pokémon and throw Safari Balls, berries, rocks and bait. One free session a day, the rest for ₽, and a family you already have pays ₽ back. After 10 sessions without a new family, the next one brings a sure one.',
+            es: 'La Zona Safari abrió en el Sendero del Realm: camina por la hierba alta de cuatro reservas, encuentra Pokémon y lanza Safari Balls, bayas, piedras y cebos. Una sesión gratis al día, las demás con ₽, y una familia repetida devuelve ₽. Cada 10 sesiones sin familia nueva, la siguiente trae una asegurada.',
+          },
+          {
+            pt: 'Dia e noite pelo seu relógio, Pokémon visíveis no capim para chegar de mansinho, corrente de shiny, a Pokédex de cada habitat e o Concurso de Insetos às terças, quintas e sábados, com ranking semanal.',
+            en: 'Day and night by your own clock, Pokémon visible in the grass to sneak up on, a shiny chain, each habitat’s Pokédex and the Bug-Catching Contest on Tuesdays, Thursdays and Saturdays, with a weekly ranking.',
+            es: 'Día y noche según tu reloj, Pokémon visibles en la hierba para acercarte sin que te vean, cadena de shiny, la Pokédex de cada hábitat y el Concurso de Bichos los martes, jueves y sábados, con ranking semanal.',
+          },
+          {
+            pt: 'A Escavação, com o Excadrill: quebre uma parede e tire o que estiver enterrado antes que ela desabe. Fósseis restauram na hora, e às vezes vem uma parede dourada.',
+            en: 'Mine Dig, with Excadrill: break a wall open and pull out what’s buried before it collapses. Fossils are restored on the spot, and sometimes a golden wall turns up.',
+            es: 'La Excavación, con Excadrill: rompe una pared y saca lo enterrado antes de que se derrumbe. Los fósiles se restauran al instante, y a veces aparece una pared dorada.',
+          },
+          {
+            pt: 'A Máquina de Pelúcias no fliperama: mire a garra e leve uma pelúcia para a sua base. Cada erro aproxima a pelúcia da saída, e a décima ficha nela sempre ganha.',
+            en: 'The Plush Claw Machine in the arcade: aim the claw and take a plush home to your base. Every miss nudges the plush toward the chute, and the tenth credit on it always wins.',
+            es: 'La Máquina de Peluches en los recreativos: apunta la garra y llévate un peluche a tu base. Cada fallo acerca el peluche a la salida, y la décima ficha en él siempre gana.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Ultracriaturas', en: 'Ultra Beasts', es: 'Ultraentes', fr: 'Ultra-Chimères', zh: '究極異獸' },
+        notes: [
+          {
+            pt: 'Uma Ultrafenda se abre em toda partida: o céu racha em luz de prisma, você atravessa o Ultraespaço e enfrenta uma das 10 Ultracriaturas, cada uma no seu estilo, até a Beast Ball.',
+            en: 'An Ultra Wormhole opens in every run: the sky cracks with prismatic light, you cross Ultra Space and face one of 10 Ultra Beasts, each in its own style, all the way to the Beast Ball.',
+            es: 'Un Ultraumbral se abre en cada partida: el cielo se agrieta con luz de prisma, cruzas el Ultraespacio y te enfrentas a uno de los 10 Ultraentes, cada uno a su manera, hasta la Ente Ball.',
+          },
+          {
+            pt: 'A Ultracriatura da semana aparece mais vezes, e o lobby mostra qual é. Capture as 10 para jogar com elas no Modo Lendário, com Beast Boost, e ganhe o Poipole de presente.',
+            en: 'The Ultra Beast of the week shows up more often, and the lobby shows which one it is. Capture all 10 to play them in Legend mode, with Beast Boost, and get Poipole as a gift.',
+            es: 'El Ultraente de la semana aparece más seguido, y el lobby muestra cuál es. Captura los 10 para jugar con ellos en el Modo Legendario, con Ultraimpulso, y recibe a Poipole de regalo.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Palkia e as lendas do mapa', en: 'Palkia and the legends of the map', es: 'Palkia y las leyendas del mapa', fr: 'Palkia et les légendes de la carte', zh: '帕路奇亞與地圖上的傳說' },
+        notes: [
+          {
+            pt: 'Palkia tem a sua fenda, o Espaço Dobrado: lajes ligadas por portais gêmeos, um salão que dá a volta, Palkia trocando de lugar com você e a Forma Origem na última fase. Capturado, joga no Modo Lendário com Spacial Rend. Quem tem Dialga e Palkia ganha o título Mestre do Tempo e do Espaço.',
+            en: 'Palkia has its own rift, the Folded Space: slabs linked by twin portals, a hall that wraps around, Palkia swapping places with you and its Origin Forme in the last phase. Once captured, it plays in Legend mode with Spacial Rend. Owning Dialga and Palkia earns the Master of Time and Space title.',
+            es: 'Palkia tiene su grieta, el Espacio Plegado: losas unidas por portales gemelos, una sala que da la vuelta, Palkia cambiando de lugar contigo y su Forma Origen en la última fase. Capturado, se juega en el Modo Legendario con Corte Vacío. Quien tiene a Dialga y Palkia gana el título Maestro del Tiempo y el Espacio.',
+          },
+          {
+            pt: 'Uxie, Mesprit e Azelf vagam pelo mapa e fogem quando você chega perto. O HP que eles perdem fica guardado de uma partida para a outra.',
+            en: 'Uxie, Mesprit and Azelf roam the map and flee when you come close. The HP they lose carries over from one run to the next.',
+            es: 'Uxie, Mesprit y Azelf vagan por el mapa y huyen cuando te acercas. Los PS que pierden se guardan de una partida a otra.',
+          },
+          {
+            pt: 'As Espadas da Justiça esperam no bioma delas com um teste: Cobalion de Defesa, Terrakion de Força e Virizion de Velocidade. Capture as três e o Keldeo chega de presente.',
+            en: 'The Swords of Justice wait in their biomes with a trial: Cobalion of Defense, Terrakion of Strength and Virizion of Speed. Capture all three and Keldeo arrives as a gift.',
+            es: 'Los Espadachines Místicos esperan en su bioma con una prueba: Cobalion de Defensa, Terrakion de Fuerza y Virizion de Velocidad. Captura a los tres y Keldeo llega de regalo.',
+          },
+          {
+            pt: 'Anéis de Hoopa: com 3 lendários capturados, abra o boss rush na aba Lendários. Os anéis trazem os seus lendários, um depois do outro (das aves às Ultracriaturas, Regigigas e Terapagos), e o último anel é o próprio Hoopa. Vença uma vez para capturá-lo.',
+            en: 'Hoopa’s Rings: with 3 legends captured, open the boss rush on the Legends tab. The rings bring back your legends one after another (from the birds to the Ultra Beasts, Regigigas and Terapagos), and the last ring is Hoopa itself. Win once to capture it.',
+            es: 'Anillos de Hoopa: con 3 legendarios capturados, abre el boss rush en la pestaña Legendarios. Los anillos traen a tus legendarios uno tras otro (de las aves a los Ultraentes, Regigigas y Terapagos), y el último anillo es el propio Hoopa. Gana una vez para capturarlo.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Caminhos lendários', en: 'Legend paths', es: 'Caminos legendarios', fr: 'Chemins légendaires', zh: '傳說之路' },
+        notes: [
+          {
+            pt: 'Zygarde: junte Cells e Cores nas partidas e forme o Zygarde 10%, 50% e Complete.',
+            en: 'Zygarde: collect Cells and Cores in your runs and build Zygarde 10%, 50% and Complete.',
+            es: 'Zygarde: junta Cells y Cores en tus partidas y forma a Zygarde 10 %, 50 % y Complete.',
+          },
+          {
+            pt: 'Cosmog: complete a pesquisa estelar e ele flutua ao lado do seu parceiro, crescendo com as suas partidas. Vira Solgaleo se você joga mais de dia, Lunala se joga mais de noite.',
+            en: 'Cosmog: finish the stellar research and it floats beside your partner, growing with your runs. It becomes Solgaleo if you play more by day, Lunala if you play more at night.',
+            es: 'Cosmog: completa la investigación estelar y flota junto a tu compañero, creciendo con tus partidas. Se vuelve Solgaleo si juegas más de día, Lunala si juegas más de noche.',
+          },
+          {
+            pt: 'Kubfu: suba os três andares da Torre do Dojo do Machoke e escolha a Torre da Escuridão ou a das Águas para o seu Urshifu.',
+            en: 'Kubfu: climb the three floors of Machoke’s Dojo Tower and pick the Tower of Darkness or of Waters for your Urshifu.',
+            es: 'Kubfu: sube los tres pisos de la Torre del Dojo de Machoke y elige la Torre de la Oscuridad o la Torre de las Aguas para tu Urshifu.',
+          },
+          {
+            pt: 'Meltan: uma Mystery Box pode aparecer enterrada na Escavação. Junte 400 Hex Nuts nas partidas com ele para o Melmetal.',
+            en: 'Meltan: a Mystery Box may turn up buried in the Mine Dig. Gather 400 Hex Nuts in its runs for Melmetal.',
+            es: 'Meltan: una Mystery Box puede aparecer enterrada en la Excavación. Junta 400 Hex Nuts en sus partidas para Melmetal.',
+          },
+          {
+            pt: 'Regigigas: quem capturou o trio Regi pode encontrar um templo antigo nas partidas, onde o gigante acorda para lutar.',
+            en: 'Regigigas: whoever captured the Regi trio may find an ancient temple in their runs, where the giant wakes up to fight.',
+            es: 'Regigigas: quien capturó al trío Regi puede encontrar un templo antiguo en sus partidas, donde el gigante despierta para luchar.',
+          },
+          {
+            pt: 'Com tudo isso, o Modo Lendário chega a 52 lendários, míticos e Ultracriaturas para jogar.',
+            en: 'With all of this, Legend mode reaches 52 legendaries, mythicals and Ultra Beasts to play.',
+            es: 'Con todo esto, el Modo Legendario llega a 52 legendarios, singulares y Ultraentes para jugar.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Melhorias', en: 'Improvements', es: 'Mejoras', fr: 'Améliorations', zh: '改進' },
+        notes: [
+          {
+            pt: 'Nas lutas contra chefes, os avisos aparecem um de cada vez e fora do topo da tela, e o status do chefe (queimado, envenenado…) fica embaixo dele, sem cobrir o rosto.',
+            en: 'In boss fights, the news comes one at a time and away from the top of the screen, and the boss’s status (burned, poisoned…) sits under it, never over its face.',
+            es: 'En las peleas contra jefes, los avisos aparecen de a uno y fuera de la parte de arriba de la pantalla, y el estado del jefe (quemado, envenenado…) queda debajo de él, sin taparle la cara.',
+          },
+          {
+            pt: 'A bola da captura dos lendários ficou maior e brilha a cada sacudida.',
+            en: 'The ball in legend captures is bigger and glows with each shake.',
+            es: 'La ball de la captura de legendarios es más grande y brilla en cada sacudida.',
+          },
+        ],
+      },
       {
         title: { pt: 'Ícones da comunidade', en: 'Community icons', es: 'Íconos de la comunidad', fr: 'Icônes de la communauté', zh: '社群圖示' },
         notes: [
