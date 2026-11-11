@@ -1886,15 +1886,15 @@ html:not(.js) #donate-account {
 /* The hub's regions: each tile its starters, how much of it the game has and what SpriteCollab is still drawing. */
 .dex-regions {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(min(160px, 100%), 1fr));
+  gap: 12px;
 }
 
 .dex-region-tile {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 16px 18px 18px;
+  padding: 14px 14px 16px;
   color: var(--ink);
   text-decoration: none;
 }
