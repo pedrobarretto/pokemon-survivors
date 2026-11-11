@@ -3,7 +3,7 @@ import { TIER_IDS, type TierId } from '../data/arenaRanked'
 import { isSpecialCompanion, type SpecialCompanionId } from '../data/companions'
 import { FESTIVALS, type FestivalId } from '../data/festivals'
 import { HIDDEN_PLACE_IDS, type HiddenPlaceId } from '../data/places'
-import { isLegend, LEGEND_IDS, legendFestival, type LegendId } from '../data/legends'
+import { giftLegend, isLegend, LEGEND_IDS, legendFestival, type LegendId } from '../data/legends'
 import { isDifficulty, type Difficulty } from './difficulty'
 import { ERA1_TIERS, isEra1Side, type Era1Side, type Era1Tier } from './era1'
 import { parseTitle } from './achievements'
@@ -96,6 +96,8 @@ export type GiftReason =
   | { kind: 'hiddenZone'; zone: HiddenPlaceId }
   /** A family found outside an egg (`game/seasonOneUnlocks.ts`): an encounter or research, made by the game too, or a mini game's catch (fishing, the Safari, the Escavação), sent by the API. */
   | { kind: 'season'; way: 'find' | 'research' | 'fishing' | 'safari' | 'dig' }
+  /** Every Ultra Wormhole's beast captured: Poipole (`game/ultraGifts.ts`), made by the game too. */
+  | { kind: 'ultraBeasts' }
   /** The Era 1 Hall da Fama (`game/era1.ts`): the tier, and the board and place that earned it. Sent by the API from its own boards. */
   | { kind: 'era1'; tier: Era1Tier; rank: number; side: Era1Side; difficulty: Difficulty }
 
@@ -320,8 +322,8 @@ export const mergeClaimedGifts = (a: readonly string[], b: readonly string[]): s
 /**
  * `save` with only the gift-only rewards the API really sent: `given` is
  * every gift of the player (claimed or not). Gift titles, ribbons, shiny
- * tickets, the styles never sold (a `null` price) and the festival legends
- * (Cresselia) can't be earned on the device, so whatever else a save lists
+ * tickets, the styles never sold (a `null` price), the festival legends
+ * (Cresselia) and Poipole (the Ultra Beasts' gift) can't be earned on the device, so whatever else a save lists
  * came from editing it. The equipped title and styles fall back when they go,
  * and so does the companion with the Supporter title. The API runs it on
  * every push.
@@ -335,7 +337,7 @@ export const keepGiven = (save: Save, given: readonly Pick<Gift, 'id' | 'content
   const kept = <S extends StyleSlot>(slot: S, ids: readonly StyleId<S>[]) =>
     ids.filter((id) => stylePrice(slot, id) !== null || styles.some((s) => s.slot === slot && s.id === id))
   const owned = { frame: kept('frame', save.style.owned.frame), background: kept('background', save.style.owned.background), wallpaper: kept('wallpaper', save.style.owned.wallpaper) }
-  const vouched = (id: LegendId) => !legendFestival(id) || contents.some((c) => c.kind === 'legend' && c.legend === id)
+  const vouched = (id: LegendId) => (!legendFestival(id) && !giftLegend(id)) || contents.some((c) => c.kind === 'legend' && c.legend === id)
   const legends: Captures = Object.fromEntries(LEGEND_IDS.flatMap((id) => (save.legends[id] !== undefined && vouched(id) ? [[id, save.legends[id]]] : [])))
   return {
     ...save,

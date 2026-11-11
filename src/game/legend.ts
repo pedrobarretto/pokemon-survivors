@@ -84,7 +84,8 @@ const stages = new Map<string, EvolutionStage>()
 
 /**
  * The stage a legend is in: its single stage, under its form's name and types
- * once the second awakening lands it, and Arceus's typing follows the biome.
+ * once the second awakening lands it, the species it evolves into once its
+ * awakening does (Poipole's Naganadel, `LegendDef.evolve`), and Arceus's typing follows the biome.
  * A form still behind the community goal (`formLocked`) keeps the legend's
  * name; only the screen reads it, so the run plays the same either way.
  * Cached, since `playerForm` asks every tick.
@@ -94,10 +95,11 @@ export const legendStage = (g: Game, s: LegendState): EvolutionStage => {
   const form = formAfter(s.id, s.awakened)
   const locked = formLocked(form)
   const multi = def.innate.ability === 'multitype' ? multitypeOf(g) : null
-  const key = `${s.id}|${form?.key ?? ''}|${multi ?? ''}|${locked ? 'locked' : ''}`
+  const evolved = def.evolve && s.awakened >= def.evolve.at ? def.evolve : null
+  const key = `${s.id}|${form?.key ?? ''}|${multi ?? ''}|${locked ? 'locked' : ''}|${evolved ? 'evolved' : ''}`
   let stage = stages.get(key)
   if (!stage) {
-    const own = def.line[0]
+    const own = evolved ? { ...def.line[0], dex: evolved.dex, name: evolved.name, types: evolved.types } : def.line[0]
     stage = { ...own, name: (!locked && form?.name) || own.name, types: multi ? [multi] : (form?.types ?? own.types) }
     stages.set(key, stage)
   }

@@ -3,19 +3,20 @@ import { runLearnset } from './learnsets'
 import { EVOLUTIONS } from '../data/evolutions'
 import { PLAYABLE_IDS } from '../data/hatchlings'
 import { LEGENDARY_MOVE_OF } from '../data/legendaryMoves'
-import { EVENT_LEGENDS, FESTIVAL_LEGENDS } from '../data/legends'
+import { EVENT_LEGENDS, FESTIVAL_LEGENDS, ULTRA_LEGENDS } from '../data/legends'
 import { RIFT_LEGENDS } from '../data/rifts'
 import { MYTHICALS, TRIOS } from '../data/waves'
 import { LEGENDARY_MOVES, lunarPhase } from './legendaryMoves'
 import { LEGENDARY_MOVES_2 } from './legendaryMoves2'
+import { ULTRA_MOVES } from './ultraMoves'
 import { forkAt, isLegendary, maxMoveLevel, MOVE_IDS, MOVES, type MoveId } from './moves'
 import { SPECIALS } from './special'
 
-const LEGENDARY = Object.keys({ ...LEGENDARY_MOVES, ...LEGENDARY_MOVES_2 }) as MoveId[]
+const LEGENDARY = Object.keys({ ...LEGENDARY_MOVES, ...LEGENDARY_MOVES_2, ...ULTRA_MOVES }) as MoveId[]
 
 describe('legendary moves', () => {
-  it('are taught one each by every legendary: rift, trio, Mewtwo, mythical, Arceus, the event and the festival ones', () => {
-    const legends = [...RIFT_LEGENDS, ...Object.values(TRIOS).flat(), 'mewtwo', ...MYTHICALS, 'arceus', ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS]
+  it('are taught one each by every legendary: rift, trio, Mewtwo, mythical, Arceus, the event, the festival and the Ultra Beasts ones', () => {
+    const legends = [...RIFT_LEGENDS, ...Object.values(TRIOS).flat(), 'mewtwo', ...MYTHICALS, 'arceus', ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...ULTRA_LEGENDS]
     expect(Object.keys(LEGENDARY_MOVE_OF).sort()).toEqual(legends.sort())
     expect([...new Set(Object.values(LEGENDARY_MOVE_OF))].sort()).toEqual([...LEGENDARY].sort())
   })

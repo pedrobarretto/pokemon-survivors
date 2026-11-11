@@ -261,6 +261,8 @@ export const ABILITIES = {
   multitype: { name: 'Multitype', effects: [{ kind: 'ownType', bonus: 0.2 }] },
   /** Darkrai's: the foes its Dark Void put to sleep (or anything else did) suffer in their dreams. */
   badDreams: { name: 'Bad Dreams', effects: [{ kind: 'nightmare', radius: 120, every: 0.5, damage: 1 }] },
+  // The Ultra Beasts' innate: what it raises is each beast's own best stat (`beastBoost` in `data/legends.ts`).
+  beastBoost: { name: 'Beast Boost', effects: [] },
 } as const satisfies Record<string, AbilityDef>
 
 export type AbilityId = keyof typeof ABILITIES
@@ -400,6 +402,17 @@ export const FAMILY_ABILITIES = {
   arceus: ['moldBreaker', 'magicGuard', 'sturdy'],
   darkrai: ['insomnia', 'unnerve', 'infiltrator'],
   cresselia: ['naturalCure', 'magicGuard', 'synchronize'],
+  nihilego: ['levitate', 'poisonPoint', 'magicGuard'],
+  buzzwole: ['ironFist', 'guts', 'hustle'],
+  pheromosa: ['speedBoost', 'quickFeet', 'technician'],
+  xurkitree: ['static', 'voltAbsorb', 'adaptability'],
+  celesteela: ['heavyMetal', 'flashFire', 'sturdy'],
+  kartana: ['sharpness', 'technician', 'sniper'],
+  guzzlord: ['strongJaw', 'thickFat', 'regenerator'],
+  stakataka: ['sturdy', 'heavyMetal', 'rockHead'],
+  blacephalon: ['flashFire', 'cursedBody', 'adaptability'],
+  naganadel: ['poisonPoint', 'infiltrator', 'adaptability'],
+  poipole: ['poisonPoint', 'quickFeet', 'adaptability'],
   ...SEASON_ONE_EGG_ABILITIES,
   ...SEASON_ONE_KIT_ABILITIES,
 } as const satisfies Record<PlayableId, AbilitySet>

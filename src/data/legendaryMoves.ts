@@ -1,5 +1,6 @@
 import type { LegendaryMoveId } from '../game/legendaryMoves'
 import type { LegendaryMove2Id } from '../game/legendaryMoves2'
+import type { UltraMoveId } from '../game/ultraMoves'
 import type { BiomeId } from './biomes'
 import type { LegendId } from './legends'
 import type { PokeType } from './types'
@@ -40,7 +41,19 @@ export const LEGENDARY_MOVE_OF = {
   arceus: 'judgment',
   darkrai: 'darkVoid',
   cresselia: 'lunarBlessing',
-} as const satisfies Record<LegendId, LegendaryMoveId | LegendaryMove2Id>
+  // The Ultra Beasts' (`game/ultraMoves.ts`): Blacephalon's own Mind Blown, and a move each is known by.
+  nihilego: 'acidSpray',
+  buzzwole: 'powerUpPunch',
+  pheromosa: 'lunge',
+  xurkitree: 'tailGlow',
+  celesteela: 'autotomize',
+  kartana: 'guillotine',
+  guzzlord: 'belch',
+  stakataka: 'wideGuard',
+  blacephalon: 'mindBlown',
+  naganadel: 'fellStinger',
+  poipole: 'poisonJab',
+} as const satisfies Record<LegendId, LegendaryMoveId | LegendaryMove2Id | UltraMoveId>
 
 export type LegendaryId = keyof typeof LEGENDARY_MOVE_OF
 

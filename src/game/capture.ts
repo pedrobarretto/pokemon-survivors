@@ -24,14 +24,15 @@ export type Captures = Readonly<Partial<Record<LegendId, number>>>
 
 export const NO_CAPTURES: Captures = {}
 
-/** Where a legend can be beaten: a rift, the trio's wave, the finale's rare guest, the finale itself, the endless mode's reaper, an event's rift; or the festival gift that brings it. */
-export type LegendSource = 'rift' | 'trio' | 'mythical' | 'finale' | 'endless' | 'event' | 'festival'
+/** Where a legend can be beaten: a rift, the trio's wave, the finale's rare guest, the finale itself, the endless mode's reaper, an event's rift, an Ultra Wormhole; or the gift that brings it (a festival's, or Poipole's for the Ultra Beasts). */
+export type LegendSource = 'rift' | 'trio' | 'mythical' | 'finale' | 'endless' | 'event' | 'festival' | 'ultra' | 'ultraGift'
 
 const inList = (list: readonly string[], id: LegendId) => list.includes(id)
 
 export const legendSource = (id: LegendId): LegendSource => {
   const unlock: LegendUnlock = LEGENDS[id].unlock
   if (unlock.festival) return 'festival'
+  if (unlock.ultra) return unlock.ultra === 'gift' ? 'ultraGift' : 'ultra'
   if (unlock.event) return 'event'
   if (unlock.endless) return 'endless'
   if (id === 'mewtwo') return 'finale'
@@ -53,10 +54,10 @@ export const stillMissing = (captures: Captures, id: LegendId): LegendId[] => RE
 
 const othersCaptured = (captures: Captures, id: LegendId) => stillMissing(captures, id).length === 0
 
-/** Whether a win over `id` right now counts toward capturing it: Arceus' only in endless mode, after the other 22; a festival legend's never. */
+/** Whether a win over `id` right now counts toward capturing it: Arceus' only in endless mode, after the other 22; a gift legend's (a festival's, Poipole) never. */
 export const winCounts = (captures: Captures, id: LegendId, endless: boolean) => {
   const unlock: LegendUnlock = LEGENDS[id].unlock
-  return !unlock.festival && (!unlock.endless || endless) && (!unlock.last || othersCaptured(captures, id))
+  return !unlock.festival && unlock.ultra !== 'gift' && (!unlock.endless || endless) && (!unlock.last || othersCaptured(captures, id))
 }
 
 /** The captures with `id` captured, as a gift brings it (a festival legend's milestone gift). */

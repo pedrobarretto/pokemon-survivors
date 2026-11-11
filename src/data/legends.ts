@@ -6,6 +6,7 @@ import type { FestivalId } from './festivals'
 import { LEGENDARY_MOVE_OF } from './legendaryMoves'
 import type { EvolutionStage, PlayableDef } from './starters'
 import type { PokeType } from './types'
+import { ULTRA_BEASTS } from './ultraBeasts'
 
 /**
  * Playable legendaries, played only in the Legend mode (Modo Lendário). A
@@ -39,8 +40,18 @@ export const EVENT_LEGENDS = ['darkrai'] as const satisfies readonly EnemyId[]
  */
 export const FESTIVAL_LEGENDS = ['cresselia'] as const
 
-/** Every playable legend: the regular ones, then the event ones, then the festival ones. */
-export const LEGEND_IDS = [...REGULAR_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS] as const
+/**
+ * The Ultra Beasts (`data/ultraBeasts.ts`): the Ultra Wormholes' ten, each
+ * captured with one win (`LegendUnlock.ultra`), and Poipole, never fought:
+ * capturing the ten brings it as a gift (`game/ultraGifts.ts`), and it
+ * evolves into Naganadel at its first awakening (`LegendDef.evolve`). Out of
+ * `REGULAR_LEGENDS` too; they play in the Legend mode like any legend, under
+ * their own heading on the partner select.
+ */
+export const ULTRA_LEGENDS = [...ULTRA_BEASTS, 'poipole'] as const
+
+/** Every playable legend: the regular ones, then the event ones, the festival ones and the Ultra Beasts. */
+export const LEGEND_IDS = [...REGULAR_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...ULTRA_LEGENDS] as const
 
 export type LegendId = (typeof LEGEND_IDS)[number]
 
@@ -66,9 +77,11 @@ export type LegendEvent = 'halloween'
  * regular legend is unlocked (Arceus, the final trophy); `event`: it only
  * shows up while that event runs (Darkrai, the Noite das Bruxas');
  * `festival`: no win ever counts, that festival's milestone gift captures it
- * (Cresselia, the Festival das Lanternas').
+ * (Cresselia, the Festival das Lanternas'); `ultra`: an Ultra Beast, beaten
+ * out of an Ultra Wormhole (`wormhole`), or a gift for capturing them all
+ * (`gift`, Poipole: no win ever counts).
  */
-export type LegendUnlock = { wins: number; endless?: true; last?: true; event?: LegendEvent; festival?: FestivalId }
+export type LegendUnlock = { wins: number; endless?: true; last?: true; event?: LegendEvent; festival?: FestivalId; ultra?: 'wormhole' | 'gift' }
 
 export type LegendDef = Omit<PlayableDef, 'learnset' | 'line'> & {
   /** One list: every move it can learn is there from Lv 1, its legendary move first. */
@@ -84,6 +97,11 @@ export type LegendDef = Omit<PlayableDef, 'learnset' | 'line'> & {
    */
   form?: { key: LegendForm; name: string; types?: readonly PokeType[]; community?: true }
   unlock: LegendUnlock
+  /**
+   * The species it evolves into at awakening `at` (Poipole into Naganadel), for
+   * good: its own sprite, name and types from then on, where a `form` is a look of the same species.
+   */
+  evolve?: { at: 1 | 2; dex: number; name: string; types: readonly PokeType[] }
 }
 
 const stage = (dex: number, name: string, types: readonly PokeType[]) => [{ dex, name, types, bonus: {} }] as const satisfies LegendDef['line']
@@ -92,6 +110,16 @@ const stage = (dex: number, name: string, types: readonly PokeType[]) => [{ dex,
 const RIFT_WINS = { wins: 3 } as const satisfies LegendUnlock
 /** The finale's mythicals show up in one run in ten, more after finales without one (`MYTHICAL_PITY`): one win does it. */
 const MYTHICAL_WINS = { wins: 1 } as const satisfies LegendUnlock
+
+/** The Ultra Beasts' wins: one, out of an Ultra Wormhole. */
+const WORMHOLE_WINS = { wins: 1, ultra: 'wormhole' } as const satisfies LegendUnlock
+
+/**
+ * Beast Boost, every Ultra Beast's innate: each KO streak raises its best
+ * stat (`best`, a stack every 12 KOs, up to 5); without KOs a stack wears
+ * off every 4 s.
+ */
+const beastBoost = (best: StatDelta): Innate => ({ ability: 'beastBoost', extra: [{ kind: 'onKill', per: 12, max: 5, stats: best, decay: 4 }] })
 
 const chill = { kind: 'aura', radius: 56, every: 1, status: { kind: 'slow', chance: 1, duration: 1.2, power: 0.3 } } as const satisfies AbilityEffect
 
@@ -397,6 +425,130 @@ export const LEGENDS = {
     innate: { ability: 'levitate' },
     unlock: { wins: 1, festival: 'lanternas' },
   },
+  /* ---------- The Ultra Beasts (`data/ultraBeasts.ts`) ---------- */
+  nihilego: {
+    name: 'Nihilego',
+    color: '#a8d8f0',
+    stats: { maxHp: 30, might: 0.18, regen: 0.2, speed: 4 },
+    signature: LEGENDARY_MOVE_OF.nihilego,
+    learnset: [[LEGENDARY_MOVE_OF.nihilego, 'sludgeBomb', 'venoshock', 'rockTomb', 'stealthRock', 'toxicSpikes', 'psyshock', 'hex']],
+    line: stage(793, 'Nihilego', ['rock', 'poison']),
+    awakenings: [{ maxHp: 25, might: 0.12, armor: 1 }, { maxHp: 35, might: 0.22, area: 0.1 }],
+    innate: beastBoost({ armor: 0.4 }),
+    unlock: WORMHOLE_WINS,
+  },
+  buzzwole: {
+    name: 'Buzzwole',
+    color: '#e85848',
+    stats: { maxHp: 45, might: 0.2, armor: 1, speed: 2 },
+    signature: LEGENDARY_MOVE_OF.buzzwole,
+    learnset: [[LEGENDARY_MOVE_OF.buzzwole, 'machPunch', 'leechLife', 'focusPunch', 'earthquake', 'rockTomb', 'uTurn', 'pinMissile']],
+    line: stage(794, 'Buzzwole', ['bug', 'fighting']),
+    awakenings: [{ maxHp: 30, might: 0.12, armor: 1 }, { maxHp: 40, might: 0.24, area: 0.05 }],
+    innate: beastBoost({ might: 0.04 }),
+    unlock: WORMHOLE_WINS,
+  },
+  pheromosa: {
+    name: 'Pheromosa',
+    color: '#f0e8d8',
+    stats: { maxHp: 15, might: 0.2, speed: 10, cooldown: -0.04 },
+    signature: LEGENDARY_MOVE_OF.pheromosa,
+    learnset: [[LEGENDARY_MOVE_OF.pheromosa, 'doubleKick', 'uTurn', 'quickAttack', 'xScissor', 'furyCutter', 'aerialAce', 'pinMissile']],
+    line: stage(795, 'Pheromosa', ['bug', 'fighting']),
+    awakenings: [{ maxHp: 20, might: 0.12, speed: 3 }, { maxHp: 30, might: 0.24, cooldown: -0.05 }],
+    innate: beastBoost({ speed: 2.5 }),
+    unlock: WORMHOLE_WINS,
+  },
+  xurkitree: {
+    name: 'Xurkitree',
+    color: '#f8f060',
+    stats: { maxHp: 25, might: 0.25, area: 0.08 },
+    signature: LEGENDARY_MOVE_OF.xurkitree,
+    learnset: [[LEGENDARY_MOVE_OF.xurkitree, 'shockWave', 'discharge', 'electroweb', 'thunderWave', 'vineWhip', 'thunder', 'electroBall']],
+    line: stage(796, 'Xurkitree', ['electric']),
+    awakenings: [{ maxHp: 25, might: 0.12, area: 0.05 }, { maxHp: 35, might: 0.24, cooldown: -0.05 }],
+    innate: beastBoost({ might: 0.04 }),
+    unlock: WORMHOLE_WINS,
+  },
+  celesteela: {
+    name: 'Celesteela',
+    color: '#68d888',
+    stats: { maxHp: 40, might: 0.18, armor: 1 },
+    signature: LEGENDARY_MOVE_OF.celesteela,
+    learnset: [[LEGENDARY_MOVE_OF.celesteela, 'heavySlam', 'ember', 'leechSeed', 'flashCannon', 'gyroBall', 'ironHead', 'gust']],
+    line: stage(797, 'Celesteela', ['steel', 'flying']),
+    awakenings: [{ maxHp: 30, might: 0.12, armor: 1 }, { maxHp: 40, might: 0.22, area: 0.1 }],
+    innate: beastBoost({ might: 0.035 }),
+    unlock: WORMHOLE_WINS,
+  },
+  kartana: {
+    name: 'Kartana',
+    color: '#f0f0e0',
+    stats: { maxHp: 15, might: 0.3, speed: 6 },
+    signature: LEGENDARY_MOVE_OF.kartana,
+    learnset: [[LEGENDARY_MOVE_OF.kartana, 'leafBlade', 'sacredSword', 'razorLeaf', 'xScissor', 'aerialAce', 'swordsDance', 'nightSlash']],
+    line: stage(798, 'Kartana', ['grass', 'steel']),
+    awakenings: [{ maxHp: 20, might: 0.14, speed: 3 }, { maxHp: 30, might: 0.26, cooldown: -0.05 }],
+    innate: beastBoost({ might: 0.05 }),
+    unlock: WORMHOLE_WINS,
+  },
+  guzzlord: {
+    name: 'Guzzlord',
+    color: '#7048b0',
+    stats: { maxHp: 70, might: 0.15, regen: 0.2, speed: -2 },
+    signature: LEGENDARY_MOVE_OF.guzzlord,
+    learnset: [[LEGENDARY_MOVE_OF.guzzlord, 'crunch', 'dragonTail', 'dragonBreath', 'suckerPunch', 'gigaImpact', 'earthquake', 'snarl']],
+    line: stage(799, 'Guzzlord', ['dark', 'dragon']),
+    awakenings: [{ maxHp: 40, might: 0.1, regen: 0.2 }, { maxHp: 50, might: 0.22, area: 0.1 }],
+    innate: beastBoost({ maxHp: 8 }),
+    unlock: WORMHOLE_WINS,
+  },
+  stakataka: {
+    name: 'Stakataka',
+    color: '#a8b0b8',
+    stats: { maxHp: 40, armor: 2, might: 0.15, speed: -4 },
+    signature: LEGENDARY_MOVE_OF.stakataka,
+    learnset: [[LEGENDARY_MOVE_OF.stakataka, 'rockSlide', 'rockTomb', 'ironDefense', 'ironHead', 'gyroBall', 'stealthRock', 'flashCannon']],
+    line: stage(805, 'Stakataka', ['rock', 'steel']),
+    awakenings: [{ maxHp: 30, armor: 1, might: 0.12 }, { maxHp: 40, might: 0.22, area: 0.1 }],
+    innate: beastBoost({ armor: 0.5 }),
+    unlock: WORMHOLE_WINS,
+  },
+  blacephalon: {
+    name: 'Blacephalon',
+    color: '#f070a0',
+    stats: { maxHp: 20, might: 0.28, area: 0.1, speed: 4 },
+    signature: LEGENDARY_MOVE_OF.blacephalon,
+    learnset: [[LEGENDARY_MOVE_OF.blacephalon, 'ember', 'hex', 'willOWisp', 'fireSpin', 'shadowClaw', 'flameCharge', 'snarl']],
+    line: stage(806, 'Blacephalon', ['fire', 'ghost']),
+    awakenings: [{ maxHp: 20, might: 0.14, area: 0.05 }, { maxHp: 30, might: 0.26, cooldown: -0.05 }],
+    innate: beastBoost({ might: 0.04 }),
+    unlock: WORMHOLE_WINS,
+  },
+  naganadel: {
+    name: 'Naganadel',
+    color: '#a060d8',
+    stats: { maxHp: 30, might: 0.22, speed: 8, projectileSpeed: 0.1 },
+    signature: LEGENDARY_MOVE_OF.naganadel,
+    learnset: [[LEGENDARY_MOVE_OF.naganadel, 'dragonPulse', 'sludgeBomb', 'venoshock', 'dragonBreath', 'crossPoison', 'gust', 'toxicSpikes']],
+    line: stage(804, 'Naganadel', ['poison', 'dragon']),
+    awakenings: [{ maxHp: 25, might: 0.12, speed: 3 }, { maxHp: 35, might: 0.24, cooldown: -0.05 }],
+    innate: beastBoost({ might: 0.035 }),
+    unlock: WORMHOLE_WINS,
+  },
+  /** Poipole: the gift for capturing the ten; it evolves into Naganadel at its first awakening. */
+  poipole: {
+    name: 'Poipole',
+    color: '#c070d0',
+    stats: { maxHp: 20, might: 0.12, speed: 6 },
+    signature: LEGENDARY_MOVE_OF.poipole,
+    learnset: [[LEGENDARY_MOVE_OF.poipole, 'venoshock', 'sludgeBomb', 'toxicSpikes', 'dragonBreath', 'quickAttack', 'gust', 'swift']],
+    line: stage(803, 'Poipole', ['poison']),
+    awakenings: [{ maxHp: 30, might: 0.16, speed: 2 }, { maxHp: 35, might: 0.24, cooldown: -0.05 }],
+    innate: beastBoost({ speed: 2 }),
+    evolve: { at: 1, dex: 804, name: 'Naganadel', types: ['poison', 'dragon'] },
+    unlock: { wins: 1, ultra: 'gift' },
+  },
 } as const satisfies Record<LegendId, LegendDef>
 
 export const isLegend = (id: unknown): id is LegendId => LEGEND_IDS.some((l) => l === id)
@@ -405,6 +557,18 @@ export const isLegend = (id: unknown): id is LegendId => LEGEND_IDS.some((l) => 
 export const legendEvent = (id: LegendId): LegendEvent | null => {
   const unlock: LegendUnlock = LEGENDS[id].unlock
   return unlock.event ?? null
+}
+
+/** Whether a legend is one of the Ultra Beasts (`ULTRA_LEGENDS`). */
+export const isUltraLegend = (id: LegendId) => {
+  const unlock: LegendUnlock = LEGENDS[id].unlock
+  return unlock.ultra !== undefined
+}
+
+/** Whether a legend only ever comes as a gift for capturing the Ultra Beasts (Poipole): no win counts for it. */
+export const giftLegend = (id: LegendId) => {
+  const unlock: LegendUnlock = LEGENDS[id].unlock
+  return unlock.ultra === 'gift'
 }
 
 /** The festival whose milestone gift captures a legend, or null for one caught by winning. */
