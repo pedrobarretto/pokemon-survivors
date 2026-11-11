@@ -5,6 +5,7 @@ import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
 import { SEASON_ONE_DIG_WORDS } from './seasonOne/dig'
+import { REGIONAL_WORDS } from './regional'
 import type { Messages } from './pt'
 import type { Activity } from '../game/friends'
 
@@ -2421,6 +2422,7 @@ export const fr: Messages = {
 
   abilities: {
     ...SEASON_ONE_EGGS_WORDS.fr.abilities,
+    ...REGIONAL_WORDS.fr.abilities,
     ...SEASON_ONE_KITS_WORDS.fr.abilities,
     overgrow: 'Sous 1/3 des PV, les capacités Plante font +50%.',
     blaze: 'Sous 1/3 des PV, les capacités Feu font +50%.',
@@ -2558,7 +2560,7 @@ export const fr: Messages = {
     },
   },
   eggs: {
-    tiers: { common: 'Œuf commun', rare: 'Œuf rare', ultra: 'Œuf ultra rare', friend: 'Œuf de l’Amitié', haunted: 'Œuf Hanté', kecleon: 'Œuf de Kecleon', kecleonShiny: 'Œuf de Kecleon chromatique', fossil: 'Œuf Fossile', found: 'Rencontre' },
+    tiers: { common: 'Œuf commun', rare: 'Œuf rare', ultra: 'Œuf ultra rare', friend: 'Œuf de l’Amitié', haunted: 'Œuf Hanté', kecleon: 'Œuf de Kecleon', kecleonShiny: 'Œuf de Kecleon chromatique', fossil: 'Œuf Fossile', found: 'Rencontre', ...REGIONAL_WORDS.fr.tiers },
     found: (egg) => `Tu as trouvé un *${egg}* ! Il part à l’incubateur.`,
     foundFull: (egg, coins) => `Tu as trouvé un *${egg}* ! L’incubateur est plein, il deviendra donc *${coins}*.`,
     title: 'INCUBATEUR',
@@ -3087,6 +3089,7 @@ export const fr: Messages = {
   },
   moves: {
     ...SEASON_ONE_EGGS_WORDS.fr.moves,
+    ...REGIONAL_WORDS.fr.moves,
     ...SEASON_ONE_KITS_WORDS.fr.moves,
     leechSeed: {
       description: 'Lance des graines sur les ennemis les plus proches. Une graine draine les PV avec le temps et te soigne ; quand l’ennemi est vaincu, elle saute sur deux voisins.',
@@ -5558,6 +5561,7 @@ export const fr: Messages = {
 
   blurbs: {
     ...SEASON_ONE_EGGS_WORDS.fr.blurbs,
+    ...REGIONAL_WORDS.fr.blurbs,
     ...SEASON_ONE_KITS_WORDS.fr.blurbs,
     bulbasaur: 'Équilibré. Régénère ses PV.',
     charmander: 'Offensif. Plus de dégâts, moins de PV.',
@@ -6531,4 +6535,5 @@ export const fr: Messages = {
     first: ['Oh, un nouveau client ! Moi, c\'est Bibarel, le menuisier de la place.', 'Je fabrique des meubles pour les bases secrètes du Poké Realm : chaises, tapis, étagères et quelques pièces très spéciales.', 'Payez en ₽ ou en gemmes. Et qui capture une légende reçoit sa petite poupée pour décorer sa base !'],
     hello: ['Je scie et je ponce, comme toujours. Vous emportez quelque chose ?', 'Du bon bois, des prix honnêtes. Jetez un œil !', 'Une base sans meubles, c\'est juste un trou dans le mur !', 'Je viens de vernir quelques nouvelles pièces.'],
   },
+  travel: REGIONAL_WORDS.fr.travel,
 }

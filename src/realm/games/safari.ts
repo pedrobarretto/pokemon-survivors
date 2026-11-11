@@ -1,5 +1,7 @@
 import { openGift, stageGifts } from '../../account'
-import { PLAYABLE, type HatchlingId } from '../../data/hatchlings'
+import { HATCHLINGS, PLAYABLE, type HatchlingId } from '../../data/hatchlings'
+import { isRegion } from '../../data/regionalForms'
+import { regionOfWeek } from '../../game/travel'
 import { habitatPool, safariEntry, safariForm, type SafariHabitat } from '../../data/safari'
 import { PLAZA, SAFARI_MAPS, TILE } from '../../data/safariMaps'
 import { playSfx } from '../../engine/audio'
@@ -208,7 +210,7 @@ const start = (ctx: SoloCtx): GameRun => {
     const def = SAFARI_MAPS[at]
     const theme = THEMES[at]
     // A few of the week's residents, picked from the map's seed so a week looks the same.
-    const pool = habitatPool(at)
+    const pool = habitatPool(at, session?.week ?? view?.week ?? '')
     const residents = [0, 1, 2, 3].map((i) => safariForm(pool[(def.seed * (i + 2) * 7) % pool.length]!.family).dex)
     field = createField({ habitat: at, world: buildWorld(def), theme, dex, shiny: ctx.shiny, mapSeed: def.seed, residents })
     for (const piece of ['kiosk', 'board']) image(`safari/${piece}`)
@@ -280,8 +282,16 @@ const start = (ctx: SoloCtx): GameRun => {
     const at = session?.habitat ?? view.habitat
     const partner = view.partner
     const partnerTypes = partner ? PLAYABLE[partner].line[0].types : []
-    const rows = shareOf(habitatPool(at), partnerTypes).sort((a, b) => b.share - a.share)
-    const tiers = (['common', 'rare', 'ultra', 'special'] as const).map((rarity) => ({ rarity, rows: rows.filter((r) => r.rarity === rarity) })).filter((tier) => tier.rows.length > 0)
+    const week = session?.week ?? view.week
+    const all = shareOf(habitatPool(at, week), partnerTypes).sort((a, b) => b.share - a.share)
+    // The week's trip's visitors (`game/travel.ts`) get a section of their own, the region's name on it.
+    const visiting = (family: (typeof all)[number]['family']) => isRegion(HATCHLINGS[family].egg)
+    const rows = all.filter((r) => !visiting(r.family))
+    const trip = all.filter((r) => visiting(r.family))
+    const tiers = [
+      ...(['common', 'rare', 'ultra', 'special'] as const).map((rarity) => ({ title: w.tiers[rarity], rows: rows.filter((r) => r.rarity === rarity) })),
+      { title: t().travel.safari(t().travel.regions[regionOfWeek(week)]), rows: trip },
+    ].filter((tier) => tier.rows.length > 0)
     board.replaceChildren(
       h(
         'div',
@@ -295,7 +305,7 @@ const start = (ctx: SoloCtx): GameRun => {
             h(
               'section',
               {},
-              h('h4', {}, w.tiers[tier.rarity]),
+              h('h4', {}, tier.title),
               h(
                 'ul',
                 {},

@@ -6,6 +6,7 @@ import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
 import { SEASON_ONE_DIG_WORDS } from './seasonOne/dig'
+import { REGIONAL_WORDS } from './regional'
 import type { AchievementId, AchievementStat, GiftTitleId, TitleId } from '../data/achievements'
 import type { BiomeId } from '../data/biomes'
 import type { DigFind, HiddenPlaceId, PlaceId, WingId } from '../data/places'
@@ -2758,6 +2759,7 @@ export const pt = {
   /** What each ability does (`ABILITIES`). */
   abilities: {
     ...SEASON_ONE_EGGS_WORDS.pt.abilities,
+    ...REGIONAL_WORDS.pt.abilities,
     ...SEASON_ONE_KITS_WORDS.pt.abilities,
     overgrow: 'Com menos de 1/3 do HP, golpes de Planta causam +50%.',
     blaze: 'Com menos de 1/3 do HP, golpes de Fogo causam +50%.',
@@ -2897,7 +2899,7 @@ export const pt = {
   },
   /** Eggs: the incubator, the hatching scene and the egg box in the Pokémon select. */
   eggs: {
-    tiers: { common: 'Ovo comum', rare: 'Ovo raro', ultra: 'Ovo ultra raro', friend: 'Ovo da Amizade', haunted: 'Ovo Assombrado', kecleon: 'Ovo do Kecleon', kecleonShiny: 'Ovo do Kecleon brilhante', fossil: 'Ovo Fóssil', found: 'Encontro' } satisfies Record<EggTier, string>,
+    tiers: { common: 'Ovo comum', rare: 'Ovo raro', ultra: 'Ovo ultra raro', friend: 'Ovo da Amizade', haunted: 'Ovo Assombrado', kecleon: 'Ovo do Kecleon', kecleonShiny: 'Ovo do Kecleon brilhante', fossil: 'Ovo Fóssil', found: 'Encontro', ...REGIONAL_WORDS.pt.tiers } satisfies Record<EggTier, string>,
     found: (egg: string) => `Você achou um *${egg}*! Ele vai para a incubadora.`,
     /** Found mid-run with no room left in the incubator: it will be paid in ₽ when the run ends. */
     foundFull: (egg: string, coins: string) => `Você achou um *${egg}*! A incubadora está cheia, então ele vai virar *${coins}*.`,
@@ -3462,6 +3464,7 @@ export const pt = {
 
   moves: {
     ...SEASON_ONE_EGGS_WORDS.pt.moves,
+    ...REGIONAL_WORDS.pt.moves,
     ...SEASON_ONE_KITS_WORDS.pt.moves,
     leechSeed: {
       description: 'Arremessa sementes nos inimigos mais próximos. A semente suga HP com o tempo e cura você; quando o inimigo cai, ela pula para dois vizinhos.',
@@ -5934,6 +5937,7 @@ export const pt = {
 
   blurbs: {
     ...SEASON_ONE_EGGS_WORDS.pt.blurbs,
+    ...REGIONAL_WORDS.pt.blurbs,
     ...SEASON_ONE_KITS_WORDS.pt.blurbs,
     bulbasaur: 'Equilibrado. Regenera vida.',
     charmander: 'Ofensivo. Mais dano, menos vida.',
@@ -6983,6 +6987,8 @@ export const pt = {
     first: ['Opa, freguês novo! Eu sou Bibarel, o carpinteiro da praça.', 'Faço móveis para as bases secretas do Poké Realm: cadeiras, tapetes, estantes e umas peças bem especiais.', 'Pague em ₽ ou em gemas. E quem captura uma lenda ganha um bonequinho dela para enfeitar a base!'],
     hello: ['Serrando e lixando, como sempre. Vai levar alguma coisa?', 'Madeira boa, preço justo. Dá uma olhada!', 'Base sem móvel é só um buraco na parede!', 'Acabei de envernizar umas peças novas.'],
   },
+  /** A Viagem (`game/travel.ts`): the Ovo de Viagem's card and the trip of the week. */
+  travel: REGIONAL_WORDS.pt.travel,
 } satisfies ContentTexts & Record<string, unknown>
 
 export type Messages = typeof pt

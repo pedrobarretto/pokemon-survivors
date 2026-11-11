@@ -69,6 +69,7 @@ import { MAP_EVENT_KINDS, MAP_EVENTS, spawnMapEvent, type MapEventKind } from '.
 import { MEOWTH_DEX } from './game/mapEventRules'
 import { CASTFORM_FIND } from './data/seasonOneUnlocks'
 import { seasonFindDevTools, seasonFindFeedback } from './ui/seasonFinds'
+import { travelDevTools } from './ui/travelDev'
 import { FIELD, FIELD_MISSION_KINDS, TOGEPI_DEX, type FieldMissionKind } from './game/fieldMissionRules'
 import { advancePhase, banishOffer, chooseOffer, createGame, offerAbilities, playerDex, rerollOffers, skipLevelUp, step, takeBerryLevelUps } from './game/game'
 import { applyBuild, setDummies, setLens, startTraining } from './game/training'
@@ -5267,6 +5268,7 @@ if (import.meta.env.DEV) {
       ...riftDevTools(() => run?.game),
       ...placeDevTools(() => run?.game),
       ...seasonFindDevTools(() => run?.game, devLandmark),
+      ...travelDevTools(),
       ...levelUpDevTools(() => run?.game),
       ...kitDevTools(() => run?.game),
       ...eggMoveDevTools(() => run?.game),

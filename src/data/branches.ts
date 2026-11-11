@@ -164,14 +164,127 @@ export const BRANCHES = {
     bonus: { maxHp: 75, armor: 1, regen: 0.3, might: 0.14 },
     moves: ['earthquake', 'gyroBall', 'flashCannon', 'solarBeam'],
   },
+
+  /* ---------- Regional forms (`data/regionalForms.ts`): the line's own form stays free, the region's needs its item ---------- */
+  raichu: {
+    line: 'pichu', stage: 2, name: 'Raichu', dex: 26, types: ['electric'],
+    bonus: { maxHp: 35, speed: 4, might: 0.2, area: 0.1 },
+    moves: [],
+  },
+  raichuAlola: {
+    line: 'pichu', stage: 2, name: 'Alolan Raichu', dex: 10100, types: ['electric', 'psychic'],
+    bonus: { maxHp: 30, speed: 8, might: 0.2, area: 0.12, cooldown: -0.04 },
+    moves: ['psyshock', 'waterShuriken'],
+    special: 'expandingForce',
+  },
+  marowak: {
+    line: 'cubone', stage: 1, name: 'Marowak', dex: 105, types: ['ground'],
+    bonus: { maxHp: 50, might: 0.25, armor: 1, area: 0.1 },
+    moves: [],
+  },
+  marowakAlola: {
+    line: 'cubone', stage: 1, name: 'Alolan Marowak', dex: 10115, types: ['fire', 'ghost'],
+    bonus: { maxHp: 50, might: 0.25, armor: 1, area: 0.1, statusDamage: 0.15 },
+    moves: ['spiritShackle', 'fireSpin'],
+    special: 'phantomForce',
+  },
+  exeggutor: {
+    line: 'exeggcute', stage: 1, name: 'Exeggutor', dex: 103, types: ['grass', 'psychic'],
+    bonus: { maxHp: 70, might: 0.25, area: 0.15, armor: 1 },
+    moves: [],
+  },
+  exeggutorAlola: {
+    line: 'exeggcute', stage: 1, name: 'Alolan Exeggutor', dex: 10114, types: ['grass', 'dragon'],
+    bonus: { maxHp: 75, might: 0.25, area: 0.3, armor: 1, speed: -2 },
+    moves: ['dragonTail', 'dragonPulse'],
+    special: 'dracoMeteor',
+  },
+  typhlosion: {
+    line: 'cyndaquil', stage: 2, name: 'Typhlosion', dex: 157, types: ['fire'],
+    bonus: { maxHp: 40, might: 0.18, area: 0.15, speed: 4 },
+    moves: [],
+  },
+  typhlosionHisui: {
+    line: 'cyndaquil', stage: 2, name: 'Hisuian Typhlosion', dex: 10233, types: ['fire', 'ghost'],
+    bonus: { maxHp: 40, might: 0.2, area: 0.15, statusDamage: 0.2 },
+    moves: ['hex', 'spiritShackle'],
+    special: 'astralBarrage',
+  },
+  samurott: {
+    line: 'oshawott', stage: 2, name: 'Samurott', dex: 503, types: ['water'],
+    bonus: { maxHp: 45, might: 0.18, armor: 1, area: 0.1 },
+    moves: [],
+  },
+  samurottHisui: {
+    line: 'oshawott', stage: 2, name: 'Hisuian Samurott', dex: 10236, types: ['water', 'dark'],
+    bonus: { maxHp: 40, might: 0.24, speed: 5, area: 0.05 },
+    moves: ['crunch'],
+    special: 'nightSlash',
+  },
+  decidueye: {
+    line: 'rowlet', stage: 2, name: 'Decidueye', dex: 724, types: ['grass', 'ghost'],
+    bonus: { maxHp: 40, might: 0.18, projectileSpeed: 0.1, amount: 1 },
+    moves: [],
+  },
+  decidueyeHisui: {
+    line: 'rowlet', stage: 2, name: 'Hisuian Decidueye', dex: 10244, types: ['grass', 'fighting'],
+    bonus: { maxHp: 50, might: 0.22, armor: 1, amount: 1 },
+    moves: ['machPunch', 'focusPunch'],
+    special: 'focusBlast',
+  },
+  goodra: {
+    line: 'goomy', stage: 2, name: 'Goodra', dex: 706, types: ['dragon'],
+    bonus: { maxHp: 50, might: 0.24, regen: 0.3 },
+    moves: [],
+  },
+  goodraHisui: {
+    line: 'goomy', stage: 2, name: 'Hisuian Goodra', dex: 10242, types: ['steel', 'dragon'],
+    bonus: { maxHp: 60, armor: 2, might: 0.2, regen: 0.2 },
+    moves: ['ironDefense', 'flashCannon'],
+    special: 'heavySlam',
+  },
+  /* Galarian Slowpoke at Lv 20: Slowbro (the shell bites its arm in the forest) or Slowking (a crown of Galarica in the fog), drawn. */
+  slowbroGalar: {
+    line: 'slowpokeGalar', stage: 1, name: 'Galarian Slowbro', dex: 10165, types: ['poison', 'psychic'],
+    bonus: { maxHp: 60, armor: 1, might: 0.2 },
+    moves: [],
+    favors: { weather: ['rain'], biome: ['forest', 'beach'] },
+  },
+  slowkingGalar: {
+    line: 'slowpokeGalar', stage: 1, name: 'Galarian Slowking', dex: 10172, types: ['poison', 'psychic'],
+    bonus: { maxHp: 50, might: 0.24, area: 0.1, statusDamage: 0.12 },
+    moves: ['willOWisp', 'spiritShackle'],
+    favors: { weather: ['fog'], biome: ['tower', 'cave'] },
+    special: 'expandingForce',
+  },
+
+  /* ---------- Paldean Tauros at Lv 20: its breed shows, drawn, the weather and biome nudging it ---------- */
+  taurosCombat: {
+    line: 'taurosPaldea', stage: 1, free: true, name: 'Paldean Tauros', dex: 10250, types: ['fighting'],
+    bonus: { maxHp: 50, might: 0.26, speed: 4 },
+    moves: [],
+    favors: { biome: ['meadow', 'cave'] },
+  },
+  taurosBlaze: {
+    line: 'taurosPaldea', stage: 1, free: true, name: 'Paldean Tauros (Blaze)', dex: 10251, types: ['fighting', 'fire'],
+    bonus: { maxHp: 45, might: 0.26, speed: 3, statusDamage: 0.12 },
+    moves: ['fireSpin', 'flameWheel'],
+    favors: { weather: ['sun'], biome: ['volcano', 'desert'] },
+  },
+  taurosAqua: {
+    line: 'taurosPaldea', stage: 1, free: true, name: 'Paldean Tauros (Aqua)', dex: 10252, types: ['fighting', 'water'],
+    bonus: { maxHp: 60, armor: 1, might: 0.22, regen: 0.2 },
+    moves: ['waterGun', 'whirlpool'],
+    favors: { weather: ['rain'], biome: ['beach'] },
+  },
 } as const satisfies Record<string, BranchDef>
 
 export type BranchId = keyof typeof BRANCHES
 
 export const BRANCH_IDS = Object.keys(BRANCHES) as BranchId[]
 
-/** The Megas only one branch can reach: Glalie's, Gardevoir's, Gallade's and Scizor's. */
-export const MEGA_BRANCH: Partial<Record<MegaId, BranchId>> = { glalie: 'glalie', gardevoir: 'gardevoir', gallade: 'gallade', scizor: 'scizor' }
+/** The Megas only one branch can reach: Glalie's, Gardevoir's, Gallade's, Scizor's and Raichu's (never the Alolan one). */
+export const MEGA_BRANCH: Partial<Record<MegaId, BranchId>> = { glalie: 'glalie', gardevoir: 'gardevoir', gallade: 'gallade', scizor: 'scizor', raichuX: 'raichu', raichuY: 'raichu' }
 
 /** How much likelier a free branch the run's weather or biome favors is drawn than the others (`evolutionOffers`). */
 export const BRANCH_FAVOR_WEIGHT = 3

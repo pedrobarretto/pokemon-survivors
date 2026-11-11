@@ -7,6 +7,7 @@ import { EGG_MOVE_3_IDS } from '../game/eggMoves3'
 import { SKETCH_MOVE_IDS } from '../game/sketch'
 import { SEASON_ONE_EGG_MOVE_IDS } from '../game/seasonOneEggMoves'
 import { SEASON_ONE_KIT_MOVE_IDS } from '../game/seasonOneKitMoves'
+import { REGIONAL_MOVE_IDS } from '../game/regionalMoves'
 import { isTmMove } from '../game/tmMoves'
 import { isShopTmMove } from '../game/shopTmMoves'
 
@@ -83,7 +84,7 @@ const EGG_SIGNATURES: readonly MoveId[] = [
  */
 export const neverEvolves = (id: MoveId) => {
   const def: MoveDef = MOVES[id]
-  const eggs: readonly MoveId[] = [...EGG_SIGNATURES, ...EGG_MOVE_2_IDS, ...EGG_MOVE_3_IDS, ...SKETCH_MOVE_IDS, ...SEASON_ONE_EGG_MOVE_IDS, ...SEASON_ONE_KIT_MOVE_IDS]
+  const eggs: readonly MoveId[] = [...EGG_SIGNATURES, ...EGG_MOVE_2_IDS, ...EGG_MOVE_3_IDS, ...SKETCH_MOVE_IDS, ...SEASON_ONE_EGG_MOVE_IDS, ...SEASON_ONE_KIT_MOVE_IDS, ...REGIONAL_MOVE_IDS]
   const signature = id in SIGNATURE_MOVES || eggs.includes(id)
   return signature || isTmMove(id) || isShopTmMove(id) || isLegendary(id) || def.duo === true
 }

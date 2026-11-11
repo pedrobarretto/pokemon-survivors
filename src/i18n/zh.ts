@@ -5,6 +5,7 @@ import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
 import { SEASON_ONE_DIG_WORDS } from './seasonOne/dig'
+import { REGIONAL_WORDS } from './regional'
 import type { Messages } from './pt'
 import type { Activity } from '../game/friends'
 
@@ -2421,6 +2422,7 @@ export const zh: Messages = {
 
   abilities: {
     ...SEASON_ONE_EGGS_WORDS.zh.abilities,
+    ...REGIONAL_WORDS.zh.abilities,
     ...SEASON_ONE_KITS_WORDS.zh.abilities,
     overgrow: 'HP低於1/3時，草屬性招式傷害+50%。',
     blaze: 'HP低於1/3時，火屬性招式傷害+50%。',
@@ -2558,7 +2560,7 @@ export const zh: Messages = {
     },
   },
   eggs: {
-    tiers: { common: '普通蛋', rare: '稀有蛋', ultra: '超稀有蛋', friend: '友情蛋', haunted: '鬧鬼蛋', kecleon: 'Kecleon蛋', kecleonShiny: '異色Kecleon蛋', fossil: '化石蛋', found: '邂逅' },
+    tiers: { common: '普通蛋', rare: '稀有蛋', ultra: '超稀有蛋', friend: '友情蛋', haunted: '鬧鬼蛋', kecleon: 'Kecleon蛋', kecleonShiny: '異色Kecleon蛋', fossil: '化石蛋', found: '邂逅', ...REGIONAL_WORDS.zh.tiers },
     found: (egg) => `你找到了一顆*${egg}*！已放進孵化器。`,
     foundFull: (egg, coins) => `你找到了一顆*${egg}*！孵化器已滿，所以會變成*${coins}*。`,
     title: '孵化器',
@@ -3087,6 +3089,7 @@ export const zh: Messages = {
   },
   moves: {
     ...SEASON_ONE_EGGS_WORDS.zh.moves,
+    ...REGIONAL_WORDS.zh.moves,
     ...SEASON_ONE_KITS_WORDS.zh.moves,
     leechSeed: {
       description: '向最近的敵人拋出種子。種子會隨時間吸取HP並回復你；敵人倒下時，種子會跳到附近的兩個敵人身上。',
@@ -5558,6 +5561,7 @@ export const zh: Messages = {
 
   blurbs: {
     ...SEASON_ONE_EGGS_WORDS.zh.blurbs,
+    ...REGIONAL_WORDS.zh.blurbs,
     ...SEASON_ONE_KITS_WORDS.zh.blurbs,
     bulbasaur: '平衡型。會回復HP。',
     charmander: '進攻型。傷害較高，HP較低。',
@@ -6531,4 +6535,5 @@ export const zh: Messages = {
     first: ['哦，新客人！我是 Bibarel，廣場的木匠。', '我替 Poké Realm 的秘密基地做家具：椅子、地毯、書櫃，還有一些很特別的作品。', '可以用 ₽ 或寶石付款。捕捉到傳說寶可夢的人，還能得到它的小玩偶來裝飾基地！'],
     hello: ['一如往常，鋸木頭、磨木頭。要帶點什麼回去嗎？', '好木頭，價格公道。看看吧！', '沒有家具的基地，只是牆上的一個洞！', '我剛替幾件新作品上好亮光漆。'],
   },
+  travel: REGIONAL_WORDS.zh.travel,
 }

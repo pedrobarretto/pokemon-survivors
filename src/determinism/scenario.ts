@@ -4,6 +4,7 @@ import { PLAYABLE_IDS, type PlayableId } from '../data/hatchlings'
 import { REGULAR_LEGENDS } from '../data/legends'
 import { SEASON_ONE_EGGS } from '../data/seasonOneEggs'
 import { SEASON_ONE_KITS } from '../data/seasonOneKits'
+import { REGIONAL_FAMILIES } from '../data/regionalFamilies'
 import { continueEndless } from '../game/endlessSystem'
 import { banishOffer, chooseOffer, rerollOffers, skipLevelUp, step } from '../game/game'
 import { UPGRADE_IDS, UPGRADES, type Ranks } from '../game/meta'
@@ -159,10 +160,11 @@ export const tickScenario = (d: Driver) => {
 
 /**
  * The Pokémon the scenarios draw from: the starters, the hatched families and
- * the regular legends (Legend mode). The event legends stay out so the draw
- * keeps its picks; each plays in the harness's own runs (`harness.ts`).
+ * the regular legends (Legend mode). The event legends, Temporada 1's
+ * families and the regional forms' stay out so the draw keeps its picks; each
+ * event legend plays in the harness's own runs (`harness.ts`).
  */
-const PLAYS: readonly PlayableId[] = [...PLAYABLE_IDS.filter((id) => !(id in SEASON_ONE_EGGS) && !(id in SEASON_ONE_KITS)), ...REGULAR_LEGENDS]
+const PLAYS: readonly PlayableId[] = [...PLAYABLE_IDS.filter((id) => !(id in SEASON_ONE_EGGS) && !(id in SEASON_ONE_KITS) && !(id in REGIONAL_FAMILIES)), ...REGULAR_LEGENDS]
 
 /** What a save brings along, by turns: nothing but the usual Lure and Incense, a full Bag, armed shop TMs and Bottle Caps, evolution items, an Everstone. */
 const SAVES: ReadonlyArray<Partial<Scenario>> = [

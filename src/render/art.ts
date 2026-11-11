@@ -14,6 +14,7 @@ import type { MoveId } from '../game/moves'
 import { EGG_MOVE_ICONS } from './eggMoveArt'
 import { EGG_MOVE_3_ICONS } from './eggMove3Art'
 import { SEASON_ONE_KIT_ICONS } from './seasonOneKitArt'
+import { REGIONAL_ICONS } from './regionalArt'
 import { EGG_MOVE_2_ICONS } from './eggMove2Art'
 import { SIGNATURE_ICONS } from './signatureArt'
 import { TM_ICONS } from './tmArt'
@@ -370,6 +371,23 @@ const KECLEON_EGG = [
   '.1222222211.',
   '..11111111..',
 ]
+/** The Ovo de Viagem: the same shell belted round the middle with a luggage strap, stitched, and a stamp on top. */
+const TRAVEL_EGG = [
+  '....2222....',
+  '...222222...',
+  '..23224422..',
+  '..32224422..',
+  '.2222222222.',
+  '.2222222221.',
+  '444444444444',
+  '434434434434',
+  '444444444444',
+  '222222222221',
+  '222222222221',
+  '122222222211',
+  '.1222222211.',
+  '..11111111..',
+]
 /** The crack that splits the shell, revealed from the middle out as hatching goes on. */
 const EGG_CRACK = ['', '', '', '', '1...1...1...', '.1.1.1.1.1.1', '..1...1...1.']
 
@@ -387,12 +405,17 @@ const EGG_PALETTES = {
   /** The Fossil Egg: old amber with a dark fossil's spots. */
   fossil: { 1: '#a86820', 2: '#e8a838', 3: '#f8d888', 4: '#583818' },
   found: { 1: '#c8b890', 2: '#f8f0d8', 3: '#ffffff', 4: '#c8b890' },
+  /** The Ovo de Viagem, a shell per region with a luggage strap round it (`TRAVEL_EGG`): Alola's sunset, Galar's rose, Hisui's snow, Paldea's gold. */
+  alola: { 1: '#c86030', 2: '#f8c070', 3: '#fff4d8', 4: '#e04878' },
+  galar: { 1: '#782040', 2: '#d05878', 3: '#f8c8d8', 4: '#283868' },
+  hisui: { 1: '#3a5068', 2: '#88a8c8', 3: '#e8f4ff', 4: '#c89840' },
+  paldea: { 1: '#985818', 2: '#f0b030', 3: '#f8e8a8', 4: '#c83028' },
 } as const satisfies Record<EggTier, Palette>
 
-const CRACK_COLORS = { common: '#584830', rare: '#584830', ultra: '#f8f0c0', friend: '#803048', haunted: '#78f0a8', kecleon: '#1c4020', kecleonShiny: '#1c4020', fossil: '#583818', found: '#584830' } as const satisfies Record<EggTier, string>
+const CRACK_COLORS = { common: '#584830', rare: '#584830', ultra: '#f8f0c0', friend: '#803048', haunted: '#78f0a8', kecleon: '#1c4020', kecleonShiny: '#1c4020', fossil: '#583818', found: '#584830', alola: '#7a3018', galar: '#481028', hisui: '#203040', paldea: '#582808' } as const satisfies Record<EggTier, string>
 
 /** The eggs drawn from their own rows instead of `EGG`'s spots. */
-const EGG_ROWS: Partial<Record<EggTier, readonly string[]>> = { kecleon: KECLEON_EGG, kecleonShiny: KECLEON_EGG }
+const EGG_ROWS: Partial<Record<EggTier, readonly string[]>> = { kecleon: KECLEON_EGG, kecleonShiny: KECLEON_EGG, alola: TRAVEL_EGG, galar: TRAVEL_EGG, hisui: TRAVEL_EGG, paldea: TRAVEL_EGG }
 
 /** Memoized sprite per key (one per tier and crack stage). */
 const eggCache = canvasCache<string, PixelSprite>()
@@ -736,6 +759,7 @@ const MOVE_ICON_ART: Record<MoveId, () => PixelSprite> = {
   ...EGG_MOVE_ICONS,
   ...EGG_MOVE_3_ICONS,
   ...SEASON_ONE_KIT_ICONS,
+  ...REGIONAL_ICONS,
   jawLock: () => art([...TE.MAW_TOP, ...TE.MAW_BOTTOM], TE.MAW, '#d8c0e8'),
   superpower: () => art(TE.BIG_FIST, TE.FIST_PAL, '#281010'),
   fissure: () => art(...TE.FISSURE_ICON, '#181818'),

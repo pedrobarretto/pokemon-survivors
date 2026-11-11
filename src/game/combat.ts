@@ -19,6 +19,7 @@ import { awardEgg, dropCoins, dropPickup, dropXp } from './pickups'
 import { bustDisguise, faintCandies, nightBossDown } from './halloween'
 import { applyStatus, breakOnHit, hitTakenMult, STATUS_RULES, type StatusKind } from './status'
 import { venomJump, VENOM, VENOM_MOVE } from './seasonOneEggRules'
+import { toxicSpreads } from './regionalRules'
 import { bonusMult, drainAmount, drainRefill, executes, nearestFoes, SEED_DECAY, SEED_JUMPS, SEED_MIN_TIME, SEED_REACH } from './kitRules'
 import { guardHit, moveEvent, moveHit } from './moveHooks'
 import { fallInArena } from './riftArena'
@@ -145,7 +146,7 @@ const spreadSeed = (g: Game, e: Enemy) => {
   }
 }
 
-/** A fainting foe poisoned by Corrosive Gas (`VENOM_MOVE`) passes the poison on to its nearest neighbors, a little weaker, while it's strong enough (`venomJump`). */
+/** A fainting foe poisoned by Corrosive Gas (`VENOM_MOVE`), or badly poisoned by Toxic (`toxicSpreads`), passes the poison on to its nearest neighbors, a little weaker, while it's strong enough (`venomJump`). */
 const spreadVenom = (g: Game, e: Enemy) => {
   const poison = e.status.poison
   const spec = venomJump(poison)
@@ -176,7 +177,7 @@ export const killEnemy = (g: Game, e: Enemy, source?: DamageSource | null) => {
   // A Versus match rewards with Energy and EXP for the team, nothing else (`wildDown`).
   if (g.versus) return wildDown(g, e)
   if (e.status.seed.time > 0) spreadSeed(g, e)
-  if (e.status.poison.time > 0 && e.status.poison.move === VENOM_MOVE) spreadVenom(g, e)
+  if (e.status.poison.time > 0 && (e.status.poison.move === VENOM_MOVE || toxicSpreads(e.status.poison))) spreadVenom(g, e)
   e.dying = 0
   e.hp = 0
   g.kills++

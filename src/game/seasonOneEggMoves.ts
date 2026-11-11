@@ -16,6 +16,8 @@ import {
 import { addMoveBuff } from './signatureMoves'
 import { densestFoe } from './signatureRules'
 import { spawnAttack } from './spawn'
+import { VEIL_SNOW } from './regionalRules'
+import { weatherHere } from './weather'
 import { applyStatus } from './status'
 import type { Attack, Game } from './types'
 
@@ -477,7 +479,7 @@ export const SEASON_ONE_EGG_MOVES = {
     },
   },
 
-  /* Amaura: a wide aurora field around the player that chills all it touches and sometimes freezes; it has a hard size cap. */
+  /* Amaura, Alolan Vulpix: a wide aurora field around the player that chills all it touches and sometimes freezes; it has a hard size cap, and grows wider and harder in the snow (`VEIL_SNOW`). */
   auroraVeil: {
     name: 'Aurora Veil',
     type: 'ice',
@@ -494,12 +496,13 @@ export const SEASON_ONE_EGG_MOVES = {
     ],
     fire: (g, s) => {
       const p = g.player
-      const r = veilRadius(s.area)
+      const snow = weatherHere(g) === 'snow'
+      const r = veilRadius(s.area) * (snow ? VEIL_SNOW.area : 1)
       const status = s.status && { ...s.status, chance: veilFreeze(s.status.chance) }
       spawnAttack(g, {
         ...look('auroraVeil', 'ice', 'modTrail'), x: p.x, y: p.y,
         shape: { kind: 'circle', r }, motion: { kind: 'follow', ox: 0, oy: 0 },
-        damage: s.damage, status, hitInterval: VEIL.hitInterval, ttl: s.duration,
+        damage: s.damage * (snow ? VEIL_SNOW.damage : 1), status, hitInterval: VEIL.hitInterval, ttl: s.duration,
       })
       spawnAttack(g, { ...look('auroraVeil', 'ice', 'snowSwirl'), x: p.x, y: p.y - 4, shape: { kind: 'circle', r: 1 }, motion: { kind: 'follow', ox: 0, oy: -4 }, damage: 0, ttl: s.duration, activeFrom: Infinity, mod: null })
       cast(g, 'auroraVeil')
