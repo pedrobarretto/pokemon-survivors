@@ -14,7 +14,7 @@ import { enterPlace } from './placeInterior'
 import { startEndless } from './endless'
 import { enterArena } from './riftArena'
 import { spawnWaveBoss } from './spawner'
-import { EVENTS } from '../data/waves'
+import { EVENTS, stageIndexAt } from '../data/waves'
 import type { Game } from './types'
 
 /**
@@ -293,6 +293,21 @@ const SCENARIOS = {
       gainXp(g, 3000)
     },
   },
+  /** Endless mode at 120:00, its event a swarm: only a species fit for a flyby leads it (`fitsFlyby`), never the stage's slow walker. */
+  endlessSwarm: {
+    start: { ...START, starter: 'charmander' },
+    seconds: 12,
+    stage: (g) => {
+      g.time = 120 * 60
+      g.nextEvent = 99
+      g.endless = { ...startEndless(g.time), nextEvent: g.time + 2, events: 1 }
+      // A slow walker beside a flyer: only the flyer may lead the swarm.
+      const stage = stageIndexAt(g.time)
+      g.roster = { ...g.roster, stages: g.roster.stages.map((pool, i) => (i === stage ? [['slowpoke', 4], ['pidgeotto', 1]] : pool)) }
+      g.player.revives = 3
+      gainXp(g, 3000)
+    },
+  },
 } as const satisfies Record<string, Scenario>
 
 type ScenarioId = keyof typeof SCENARIOS
@@ -322,6 +337,7 @@ const PINNED: Partial<Record<number, Record<ScenarioId, string>>> = {
     underground: '3084·28·30·bb9ad367',
     magicGuard: '1188·37·19·33a5b975',
     endlessCeiling: '826·0·26·b556bf61',
+    endlessSwarm: '844·9·26·eaac907f',
   },
 }
 

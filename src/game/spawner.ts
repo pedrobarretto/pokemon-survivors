@@ -173,7 +173,7 @@ const retireOld = (g: Game) => {
  * toward surges, which wait out a wave boss's first minute and the endless
  * mode (it has its own). Past the endless ceiling (`ENDLESS_HORDE`) the cap
  * stops at it and every spawn stands for `weight` foes, coming that many
- * times fewer.
+ * times fewer. In endless mode an event's flyby flock counts against the cap.
  */
 export const updateSpawner = (g: Game, dt: number) => {
   const stage = stageAt(g.time)
@@ -197,7 +197,8 @@ export const updateSpawner = (g: Game, dt: number) => {
       }
       continue
     }
-    if (e.behavior.kind === 'chase') regular++
+    // Endless: a swarm's flock counts against the cap while it crosses, so the chasers make room for it (`ENDLESS_HORDE`).
+    if (e.behavior.kind === 'chase' || (g.endless !== null && e.behavior.kind === 'flyby')) regular++
     if (e.elite) elites++
     if (hasTrait(e.kind)) traitsAlive++
     if (isSpitter(e)) spitters++

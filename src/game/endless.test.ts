@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { RUN_LENGTH } from '../data/waves'
-import { ENDLESS, endlessPressure, overtime, reaperDue, reaperHp, reaperSpeed, startEndless } from './endless'
+import { ENEMIES, type EnemyId } from '../data/enemies'
+import { ENDLESS, endlessPressure, fitsFlyby, overtime, reaperDue, reaperHp, reaperSpeed, startEndless } from './endless'
 
 describe('endless mode', () => {
   it('sends Arceus at 20:00, or a minute after a late Mewtwo', () => {
@@ -28,5 +29,14 @@ describe('endless mode', () => {
     expect(endlessPressure(RUN_LENGTH + 600).rate).toBeGreaterThan(endlessPressure(RUN_LENGTH + 300).rate)
     expect(overtime(RUN_LENGTH + 75)).toBe(75)
     expect(overtime(300)).toBe(0)
+  })
+
+  it('leads a swarm only with a flyer or a fast species, so no slow walker crawls through the screen', () => {
+    const ids = Object.keys(ENEMIES) as EnemyId[]
+    const flies = (id: EnemyId) => (ENEMIES[id].types as readonly string[]).includes('flying')
+    const slowFlyer = ids.find((id) => flies(id) && ENEMIES[id].speed < ENDLESS.flybySpeed)
+    const slowWalker = ids.find((id) => !flies(id) && ENEMIES[id].speed < ENDLESS.flybySpeed)
+    const fastWalker = ids.find((id) => !flies(id) && ENEMIES[id].speed >= ENDLESS.flybySpeed)
+    expect([slowFlyer, slowWalker, fastWalker].map((id) => id !== undefined && fitsFlyby(id))).toEqual([true, false, true])
   })
 })
