@@ -6,8 +6,8 @@ const inShape = (s: Shape, x: number, y: number) => (s.kind === 'rect' ? x >= s.
 
 const blocked = (room: TownRoomId, x: number, y: number) => REALM_ROOMS[room].solid.some((s) => inShape(s, x, y))
 
-/** Pieces walkers brush past or that lie flat, on the water or on the wall: no solid under them. */
-const OPEN: ReadonlySet<TownArt> = new Set(['flowers', 'boat', 'shelf', 'sandcastle', 'beachball'])
+/** Pieces walkers brush past, sit on or that lie flat, on the water or on the wall: no solid under them. */
+const OPEN: ReadonlySet<TownArt> = new Set(['flowers', 'boat', 'shelf', 'sandcastle', 'beachball', 'cornerStool', 'rocketRug'])
 
 /** The grid step (px) the walk is checked on. */
 const STEP = 4

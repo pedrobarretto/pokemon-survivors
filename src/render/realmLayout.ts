@@ -1,4 +1,4 @@
-import type { Point, Shape, TownRoomId } from '../data/realmMap'
+import { CORNER_FLOOR, type Point, type Shape, type TownRoomId } from '../data/realmMap'
 import type { Dir8 } from '../engine/math'
 
 /**
@@ -95,6 +95,9 @@ export const TOWN_ART = {
   cornerCounter: 'realm/corner/prize-counter',
   cornerShelf: 'realm/corner/prize-shelf',
   rocketPoster: 'realm/corner/poster',
+  cornerStool: 'realm/corner/stool',
+  rocketBanner: 'realm/corner/banner',
+  rocketRug: 'realm/corner/rug',
 } as const satisfies Record<string, string>
 
 export type TownArt = keyof typeof TOWN_ART
@@ -115,9 +118,10 @@ export const TOWN_FPS = 7
  * A piece standing with the bottom middle of what it paints at (`x`, `y`).
  * `mine`: the player's own secret base entrance, drawn in the exterior their
  * base wears (`ENTRANCE_ART`), whatever `art` names (the one drawn until
- * their base is known).
+ * their base is known). `busy`: a slot machine someone plays (its reels spin
+ * now and then, and sometimes pay).
  */
-export type Prop = { art: TownArt; x: number; y: number; flip?: true; mine?: true }
+export type Prop = { art: TownArt; x: number; y: number; flip?: true; mine?: true; busy?: true }
 
 /** Each base exterior's entrance (`BASE_EXTERIORS`), and how far (px) to shift it so its opening lands on the spot in front of it. */
 export const ENTRANCE_ART = {
@@ -147,6 +151,8 @@ export type Surface =
   | { kind: 'wall'; h: number; windows: readonly number[]; neon?: true; casino?: true }
   /** `casino`: the Game Corner's, red with gold coins and diamonds instead of the arcade's night blue. */
   | { kind: 'carpet'; shape: Shape; casino?: true }
+  /** A red velvet runner in a gold border, a diamond woven every few steps (the Game Corner's aisle). */
+  | { kind: 'runner'; shape: Shape }
   /** A round rug woven as a Poké Ball (its top red, its bottom white, the band and the button dark), lying on the floor. */
   | { kind: 'ballRug'; shape: Shape }
 
@@ -157,13 +163,10 @@ export const PRIZE_CLERK = { dex: 137, x: 264, y: 112, facing: 1 } as const
 export type Host = { dex: number; x: number; y: number; facing: Dir8; keeper?: true }
 
 /** The Game Corner's clerk: Meowth, Team Rocket's own talking cat, by the till at the prize counter's west end (the counter's spot is the prizes'). */
-export const CORNER_CLERK = { dex: 52, x: 268, y: 112, facing: 1 } as const
+export const CORNER_CLERK = { dex: 52, ...CORNER_FLOOR.clerk, facing: 1 } as const
 
-/** Team Rocket's Pokémon lounging in the Game Corner, for show: Koffing by the token machine, Ekans by the door. */
-const CORNER_FIGURES = [
-  { dex: 109, x: 40, y: 238, facing: 1 },
-  { dex: 23, x: 360, y: 242, facing: 7 },
-] as const
+/** Team Rocket's Pokémon at play in the Game Corner, for show: on the slots' stools facing their machine, beside the Koffing Sweep tables facing the felt. */
+const CORNER_FIGURES: readonly Host[] = CORNER_FLOOR.taken.map(({ dex, x, y, facing }) => ({ dex, x, y, facing }))
 
 /** The grove's host: Sudowoodo, the Pokémon that passes for a tree, keeps the secret bases' grove. */
 export const GROVE_HOST = { dex: 185, x: 556, y: 292, facing: 7 } as const satisfies Host
@@ -408,37 +411,51 @@ const ARCADE: RoomLayout = {
   ],
 }
 
+/** The slot machines, red and purple in turn, each with its stool; the ones Team Rocket's Pokémon play are `busy`. */
+const CORNER_SLOTS: readonly Prop[] = CORNER_FLOOR.rows.flatMap((y, row) =>
+  CORNER_FLOOR.slots.flatMap((x, i): Prop[] => {
+    const busy = CORNER_FLOOR.taken.some((s) => s.x === x && s.y === y + 14)
+    return [{ art: (i + row) % 2 ? 'slotPurple' : 'slotRed', x, y, ...(busy ? { busy: true as const } : {}) }, { art: 'cornerStool', x, y: y + 14 }]
+  }),
+)
+
 /**
- * The Rocket Game Corner (its door on the plaza's north-east): a casino's red
- * carpet and a black wall lit by red and gold neon, five slot machines along
- * it, Team Rocket's poster beside them, the prize counter on the east with
- * its shelf on the wall and Meowth by the till, the token machine by the west
- * wall, two Koffing Sweep tables in the middle, Koffing and Ekans lounging.
+ * The Rocket Game Corner (`REALM_ROOMS.gameCorner`, its door on the plaza's
+ * north-east), where everything stands by `CORNER_FLOOR`: a casino's red
+ * carpet under a black wall lit by neon (the GAME CORNER sign, the bulbs and
+ * the slots' glow are `drawCornerLights` in `render/realmArt.ts`), three rows
+ * of slot machines with their stools, a red runner from the door to Team
+ * Rocket's poster between two banners and the R rug before it, the prize
+ * counter with its shelf on the wall and Meowth by the till, four Koffing
+ * Sweep tables with two stools before each and the token machines by the door.
  */
 const GAME_CORNER: RoomLayout = {
   indoor: true,
   ground: [
-    { kind: 'carpet', shape: rect(0, 0, 400, 300), casino: true },
-    { kind: 'mat', shape: rect(176, 286, 48, 14) },
+    { kind: 'carpet', shape: rect(0, 0, 440, 320), casino: true },
+    { kind: 'runner', shape: rect(206, 64, 28, 256) },
+    { kind: 'mat', shape: rect(196, 306, 48, 14) },
     { kind: 'wall', h: 64, windows: [], neon: true, casino: true },
   ],
   hosts: [CORNER_CLERK],
   figures: CORNER_FIGURES,
   props: [
-    { art: 'slotRed', x: 40, y: 100 },
-    { art: 'slotPurple', x: 72, y: 100 },
-    { art: 'slotRed', x: 104, y: 100 },
-    { art: 'slotPurple', x: 136, y: 100 },
-    { art: 'slotRed', x: 168, y: 100 },
-    { art: 'rocketPoster', x: 214, y: 52 },
-    { art: 'cornerShelf', x: 322, y: 60 },
-    { art: 'cornerCounter', x: 322, y: 120 },
-    { art: 'tokenMachine', x: 23, y: 174 },
-    { art: 'sweepTable', x: 150, y: 212 },
-    { art: 'sweepTable', x: 250, y: 212 },
-    { art: 'plant', x: 22, y: 96 },
-    { art: 'plant', x: 22, y: 296 },
-    { art: 'plant', x: 378, y: 296 },
+    ...CORNER_SLOTS,
+    { art: 'rocketRug', x: 220, y: 92 },
+    { art: 'rocketPoster', x: 220, y: 58 },
+    { art: 'rocketBanner', x: 190, y: 54 },
+    { art: 'rocketBanner', x: 250, y: 54 },
+    { art: 'cornerShelf', x: 350, y: 60 },
+    { art: 'cornerCounter', x: 350, y: 124 },
+    ...CORNER_FLOOR.tables.flatMap((t): Prop[] => [
+      { art: 'sweepTable', x: t.x, y: t.y },
+      { art: 'cornerStool', x: t.x - 12, y: t.y + 12 },
+      { art: 'cornerStool', x: t.x + 12, y: t.y + 12 },
+    ]),
+    ...CORNER_FLOOR.tokens.map((x): Prop => ({ art: 'tokenMachine', x, y: CORNER_FLOOR.tokenY })),
+    { art: 'plant', x: 110, y: 312 },
+    { art: 'plant', x: 424, y: 150 },
+    { art: 'plant', x: 424, y: 312 },
   ],
 }
 

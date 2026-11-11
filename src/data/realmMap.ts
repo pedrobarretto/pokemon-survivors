@@ -49,7 +49,8 @@ export type TownRoomId = (typeof TOWN_ROOMS)[number]
 
 export const isTownRoomId = (v: unknown): v is TownRoomId => typeof v === 'string' && (TOWN_ROOMS as readonly string[]).includes(v)
 
-export type Door = { at: Rect; to: TownRoomId; spawn: Point }
+/** A way into another room: where it is, where it leads and where a trainer lands there. `sign`: where its label floats instead of the door's middle (a door behind a piece whose own label would cover it). */
+export type Door = { at: Rect; to: TownRoomId; spawn: Point; sign?: Point }
 
 /**
  * `id`: a game table's id (`net/realmTables.ts`, unique in its room).
@@ -66,6 +67,8 @@ export type Spot = {
   face?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7
   /** A bench's seats (`perch`, `net/realm.ts`): where a trainer sitting there goes (the seat's front edge) and faces. */
   seats?: readonly TownSeat[]
+  /** Spots of one group (the Game Corner's rows of slot machines) share one label, floating over the one nearest the trainer. */
+  group?: string
 }
 
 export type TownSeat = { x: number; y: number; face: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 }
@@ -112,6 +115,33 @@ const post = (x: number, y: number) => oval(x, y - 1, 5, 3)
  * west, Bibarel's carpentry to the south and the grove's host (`host`),
  * who explains it all, by the road in.
  */
+/**
+ * Where the Rocket Game Corner's pieces stand (`REALM_ROOMS.gameCorner`, and
+ * its art in `render/realmLayout.ts`, which reads this): the slot machines'
+ * columns and the feet of their three rows (a stool 14 px before each), the
+ * stools Team Rocket's Pokémon sit on (their species and the way they face), Meowth at the till, the Koffing Sweep
+ * tables' feet (two stools before each, 12 px to either side), and the token machines by the door.
+ */
+export const CORNER_FLOOR = {
+  slots: [36, 64, 92, 120, 148, 176],
+  rows: [104, 166, 228],
+  taken: [
+    { x: 92, y: 118, dex: 109, facing: 4 },
+    { x: 148, y: 242, dex: 19, facing: 4 },
+    { x: 302, y: 208, dex: 23, facing: 4 },
+    { x: 370, y: 274, dex: 41, facing: 4 },
+  ],
+  clerk: { x: 294, y: 116 },
+  tables: [
+    { x: 290, y: 196 },
+    { x: 382, y: 196 },
+    { x: 290, y: 262 },
+    { x: 382, y: 262 },
+  ],
+  tokens: [30, 58],
+  tokenY: 298,
+} as const
+
 export const REALM_ROOMS = {
   plaza: {
     w: 640,
@@ -147,7 +177,7 @@ export const REALM_ROOMS = {
       { at: { x: 0, y: 236, w: 10, h: 40 }, to: 'trail', spawn: { x: 600, y: 256 } },
       { at: { x: 630, y: 236, w: 10, h: 40 }, to: 'pier', spawn: { x: 40, y: 256 } },
       { at: { x: 308, y: 108, w: 26, h: 10 }, to: 'cafe', spawn: { x: 200, y: 272 } },
-      { at: { x: 458, y: 112, w: 24, h: 8 }, to: 'gameCorner', spawn: { x: 200, y: 272 } },
+      { at: { x: 458, y: 112, w: 24, h: 8 }, to: 'gameCorner', spawn: { x: 220, y: 290 }, sign: { x: 452, y: 86 } },
     ],
     spots: [
       { kind: 'coopPortal', at: { x: 150, y: 252 }, reach: 28 },
@@ -305,38 +335,47 @@ export const REALM_ROOMS = {
     ],
   },
   /**
-   * The Rocket Game Corner (its door on the plaza's north-east): five slot
-   * machines along the back wall, Team Rocket's poster beside them (it hides
-   * the way to the Hideout), the prize counter on the east with Meowth by the
-   * till, the token machine by the west wall and two Koffing Sweep tables in
-   * the middle.
+   * The Rocket Game Corner (its door on the plaza's north-east), laid out as
+   * a casino floor (`CORNER_FLOOR`): three rows of six slot machines on the
+   * west with a stool before each, a red runner from the door to Team
+   * Rocket's poster on the back wall (it hides the way to the Hideout), the
+   * prize counter on the north-east with Meowth by the till, four Koffing
+   * Sweep tables under it (a free stool before each is its spot) and the
+   * token machines by the door. The stools
+   * Team Rocket's Pokémon sit on are taken (`CORNER_FLOOR.taken`).
    */
   gameCorner: {
-    w: 400,
-    h: 300,
-    spawn: { x: 200, y: 272 },
+    w: 440,
+    h: 320,
+    spawn: { x: 220, y: 290 },
     solid: [
-      rect(0, 0, 400, 64),
-      ...[40, 72, 104, 136, 168].map((x) => rect(x - 12, 84, 24, 16)),
-      rect(278, 64, 88, 56),
-      oval(268, 110, 9, 5),
-      rect(10, 152, 26, 22),
-      ...[150, 250].map((x) => rect(x - 24, 194, 48, 18)),
-      oval(40, 236, 9, 4),
-      oval(360, 240, 9, 4),
-      oval(22, 92, 9, 5),
-      oval(22, 292, 9, 5),
-      oval(378, 292, 9, 5),
-      rect(0, 64, 6, 236),
-      rect(394, 64, 6, 236),
+      rect(0, 0, 440, 64),
+      rect(0, 64, 6, 256),
+      rect(434, 64, 6, 256),
+      ...CORNER_FLOOR.rows.flatMap((y) => CORNER_FLOOR.slots.map((x) => rect(x - 13, y - 14, 26, 14))),
+      ...CORNER_FLOOR.taken.map((s) => oval(s.x, s.y - 2, 6, 3)),
+      rect(306, 96, 88, 28),
+      oval(CORNER_FLOOR.clerk.x, CORNER_FLOOR.clerk.y - 2, 8, 4),
+      ...CORNER_FLOOR.tables.map((t) => rect(t.x - 30, t.y - 24, 60, 24)),
+      ...CORNER_FLOOR.tokens.map((x) => rect(x - 13, CORNER_FLOOR.tokenY - 14, 26, 14)),
+      oval(110, 310, 9, 5),
+      oval(424, 150, 9, 5),
+      oval(424, 312, 9, 5),
     ],
-    doors: [{ at: { x: 170, y: 290, w: 60, h: 10 }, to: 'plaza', spawn: { x: 470, y: 140 } }],
+    doors: [{ at: { x: 190, y: 310, w: 60, h: 10 }, to: 'plaza', spawn: { x: 470, y: 140 } }],
     spots: [
-      ...[40, 72, 104, 136, 168].map((x) => ({ kind: 'cabinet' as const, at: { x, y: 114 }, reach: 14, games: ['slots'] })),
-      { kind: 'poster', at: { x: 214, y: 80 }, reach: 18 },
-      { kind: 'rocketPrizes', at: { x: 322, y: 134 }, reach: 22 },
-      { kind: 'tokens', at: { x: 46, y: 166 }, reach: 18 },
-      ...[150, 250].map((x) => ({ kind: 'cabinet' as const, at: { x, y: 226 }, reach: 18, games: ['sweep'] })),
+      ...CORNER_FLOOR.rows.flatMap((y) =>
+        CORNER_FLOOR.slots
+          .filter((x) => !CORNER_FLOOR.taken.some((s) => s.x === x && s.y === y + 14))
+          .map((x) => ({ kind: 'cabinet' as const, at: { x, y: y + 16 }, reach: 12, games: ['slots'], face: 4 as const, group: 'slots' })),
+      ),
+      { kind: 'poster', at: { x: 220, y: 84 }, reach: 18 },
+      { kind: 'rocketPrizes', at: { x: 350, y: 138 }, reach: 22 },
+      { kind: 'tokens', at: { x: 44, y: CORNER_FLOOR.tokenY + 8 }, reach: 20 },
+      ...CORNER_FLOOR.tables.map((t) => {
+        const x = CORNER_FLOOR.taken.some((s) => s.x === t.x - 12 && s.y === t.y + 12) ? t.x + 12 : t.x - 12
+        return { kind: 'cabinet' as const, at: { x, y: t.y + 14 }, reach: 14, games: ['sweep'], face: 4 as const, group: 'sweep' }
+      }),
     ],
   },
 } as const satisfies Record<TownRoomId, TownRoom>
