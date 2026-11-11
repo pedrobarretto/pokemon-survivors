@@ -9,6 +9,7 @@ import type { GameClaim } from '../../src/net/realmApi'
 import { ERRANDS_BONUS, drawErrands } from '../../src/realm/errands'
 import type { Sql } from './db'
 import { realmStore } from './realm'
+import { ownTestDatabase } from './testDatabase'
 
 /**
  * The Poké Realm's store against a real Postgres: set
@@ -29,7 +30,7 @@ describe.skipIf(!url)('Poké Realm (Postgres)', () => {
 
   beforeAll(async () => {
     const { connect, migrate } = await import('./db')
-    sql = connect(url!, 4)
+    sql = connect(await ownTestDatabase(url!, 'realm'), 4)
     await migrate(sql, new URL('../migrations/', import.meta.url))
   })
 

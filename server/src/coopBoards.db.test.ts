@@ -4,6 +4,7 @@ import { dailyCoopChallenge } from '../../src/game/coopBoard'
 import type { CoopReport } from '../../src/net/coopReport'
 import { coopBoardStore, coopListing } from './coopBoards'
 import type { Sql } from './db'
+import { ownTestDatabase } from './testDatabase'
 
 /**
  * The co-op boards' store against a real Postgres: the same throwaway
@@ -45,7 +46,7 @@ describe.skipIf(!url)('co-op boards (Postgres)', () => {
 
   beforeAll(async () => {
     const { connect, migrate } = await import('./db')
-    sql = connect(url!, 4)
+    sql = connect(await ownTestDatabase(url!, 'coopboards'), 4)
     await migrate(sql, new URL('../migrations/', import.meta.url))
     coop = coopBoardStore(sql)
   })

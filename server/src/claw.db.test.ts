@@ -5,6 +5,7 @@ import { CLAW, pitLayout, weeklyPrizes } from '../../src/realm/games/claw.rules'
 import { clawStore } from './claw'
 import type { Sql } from './db'
 import { applyDeeds } from './realmDeeds'
+import { ownTestDatabase } from './testDatabase'
 
 /**
  * The claw machine's store against a real Postgres: set
@@ -47,7 +48,7 @@ describe.skipIf(!url)('claw machine (Postgres)', () => {
 
   beforeAll(async () => {
     const { connect, migrate } = await import('./db')
-    sql = connect(url!, 4)
+    sql = connect(await ownTestDatabase(url!, 'claw'), 4)
     await migrate(sql, new URL('../migrations/', import.meta.url))
   })
 

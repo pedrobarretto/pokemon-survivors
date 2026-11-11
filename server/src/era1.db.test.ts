@@ -4,6 +4,7 @@ import { coopBoardStore, coopListing } from './coopBoards'
 import type { Sql } from './db'
 import { createEra1Rewards } from './era1'
 import { rankingStore } from './ranking'
+import { ownTestDatabase } from './testDatabase'
 
 /**
  * The Era 1 Hall da Fama's rewards against a real Postgres: the same
@@ -40,7 +41,7 @@ describe.skipIf(!url)('Era 1 rewards (Postgres)', () => {
 
   beforeAll(async () => {
     const { connect, migrate } = await import('./db')
-    sql = connect(url!, 4)
+    sql = connect(await ownTestDatabase(url!, 'era1'), 4)
     await migrate(sql, new URL('../migrations/', import.meta.url))
     coop = coopBoardStore(sql)
     job = createEra1Rewards(sql, [rankingStore(sql), coop])

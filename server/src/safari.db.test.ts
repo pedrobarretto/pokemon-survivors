@@ -7,6 +7,7 @@ import { SAFARI, habitatOfWeek } from '../../src/realm/games/safari.rules'
 import type { Sql } from './db'
 import { applyDeeds } from './realmDeeds'
 import { safariStore } from './safari'
+import { ownTestDatabase } from './testDatabase'
 
 /**
  * The Zona Safári's store against a real Postgres: set
@@ -56,7 +57,7 @@ describe.skipIf(!url)('Zona Safári (Postgres)', () => {
 
   beforeAll(async () => {
     const { connect, migrate } = await import('./db')
-    sql = connect(url!, 4)
+    sql = connect(await ownTestDatabase(url!, 'safari'), 4)
     await migrate(sql, new URL('../migrations/', import.meta.url))
   })
 

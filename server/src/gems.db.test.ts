@@ -5,6 +5,7 @@ import { arenaStore, parseArenaReport } from './arena'
 import type { Sql } from './db'
 import { creditRun, gemStore, moveGems } from './gems'
 import { supporterStore } from './supporters'
+import { ownTestDatabase } from './testDatabase'
 
 /**
  * The gem ledger against a real Postgres: set `GEMS_TEST_DATABASE_URL` to a
@@ -41,7 +42,7 @@ describe.skipIf(!url)('gem ledger (Postgres)', () => {
 
   beforeAll(async () => {
     const { connect, migrate } = await import('./db')
-    sql = connect(url!, 4)
+    sql = connect(await ownTestDatabase(url!, 'gems'), 4)
     await migrate(sql, new URL('../migrations/', import.meta.url))
     gems = gemStore(sql)
   })

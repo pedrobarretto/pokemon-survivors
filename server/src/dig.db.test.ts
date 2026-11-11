@@ -4,6 +4,7 @@ import { DIG, shapeCells, type DigWall } from '../../src/realm/games/dig.rules'
 import { digStore } from './dig'
 import type { Sql } from './db'
 import { applyDeeds } from './realmDeeds'
+import { ownTestDatabase } from './testDatabase'
 
 /**
  * The Escavação's store against a real Postgres: set `REALM_TEST_DATABASE_URL`
@@ -50,7 +51,7 @@ describe.skipIf(!url)('escavação (Postgres)', () => {
 
   beforeAll(async () => {
     const { connect, migrate } = await import('./db')
-    sql = connect(url!, 4)
+    sql = connect(await ownTestDatabase(url!, 'dig'), 4)
     await migrate(sql, new URL('../migrations/', import.meta.url))
   })
 
