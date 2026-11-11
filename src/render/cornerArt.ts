@@ -101,6 +101,3 @@ export const SWEEP_ART = {
 
 /** The Game Corner's token as a DOM icon. */
 export const tokenIcon = () => toIconUrl('rocket:token', () => SWEEP_ART.token())
-
-/** A symbol as a DOM icon (the paytable). */
-export const symbolIcon = (s: SlotSymbol) => toIconUrl(`rocket:slot:${s}`, () => SYMBOL_ART[s]())

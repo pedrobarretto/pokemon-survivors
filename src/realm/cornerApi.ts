@@ -6,7 +6,7 @@ import { isRecord } from '../game/parse'
 import type { CornerBought, CornerRedeemed, CornerSpun, CornerState, CornerSweep, CornerSwept } from '../net/realmApi'
 import { realmFaked, type Failure } from './api'
 import {
-  CORNER, canBuy, cappedWin, clampLevel, cleared, dealBoard, nextLevel, potOf, spinCost, spinStops, spinWins, sweepPay, sweepView, type Bet, type Hint, type SweepLevel, type Tile,
+  CORNER, STRIP, SYMBOLS, canBuy, cappedWin, clampLevel, cleared, dealBoard, nextLevel, potOf, spinCost, spinStops, spinWins, sweepPay, sweepView, type Bet, type Hint, type SlotSymbol, type SweepLevel, type Tile,
 } from './games/corner.rules'
 
 /**
@@ -34,6 +34,17 @@ export const stageCorner = (tokens?: number, level?: number) => {
   if (tokens !== undefined) fake.tokens = Math.max(0, Math.floor(tokens))
   if (level !== undefined) fake.level = clampLevel(level)
   return { ...fake }
+}
+
+/** Dev: the symbol the next faked spin lands three of on the middle line (`ps.corner('win', 'seven')`), once. */
+let rigged: SlotSymbol | null = null
+
+/** Dev (`ps.corner('win', symbol)`): the next faked spin pays three of `symbol` on the middle line. */
+export const rigSpin = (symbol: string) => {
+  const s = SYMBOLS.find((k) => k === symbol)
+  if (!s) return `ps.corner('win', …): ${SYMBOLS.join(', ')}`
+  rigged = s
+  return `next spin: three ${s}`
 }
 
 const failed = (status: number, body: unknown): Failure => ({ status, error: isRecord(body) && typeof body.error === 'string' ? body.error : 'offline' })
@@ -154,7 +165,9 @@ export const spinSlots = async (bet: Bet): Promise<CornerSpun | Failure> => {
   if (realmFaked()) {
     if (fake.spins >= CORNER.spinsDaily) return { status: 403, error: 'cap' }
     if (fake.tokens < spinCost(bet)) return { status: 403, error: 'tokens' }
-    const stops = spinStops(Math.random)
+    const lined = rigged
+    const stops: [number, number, number] = lined ? [0, 1, 2].map(() => STRIP.indexOf(lined)) as [number, number, number] : spinStops(Math.random)
+    rigged = null
     const paid = cappedWin(spinWins(stops, bet).reduce((a, w) => a + w.tokens, 0), fake.won)
     fake.tokens += paid - spinCost(bet)
     fake.won += paid

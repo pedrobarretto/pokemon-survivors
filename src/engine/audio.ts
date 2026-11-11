@@ -860,6 +860,34 @@ const SFX = {
   },
   safariMunch: () => [0, 0.12, 0.24].forEach((d, i) => tone(260 - i * 30, 180, 0.06, 'square', 0.05, d)),
   safariFlee: () => tone(700, 1800, 0.2, 'triangle', 0.06),
+  /* The Rocket Game Corner (`realm/games/slots.ts`, `sweep.ts`). */
+  /** The slot's lever pulled: a spring's twang and the reels catching. */
+  slotLever: () => {
+    tone(190, 80, 0.14, 'square', 0.1)
+    noise(0.07, 0.08, 0.04)
+  },
+  /** A reel stopping: a clack. */
+  slotStop: () => {
+    noise(0.035, 0.2)
+    tone(260, 140, 0.05, 'square', 0.12)
+  },
+  /** A line paid: a quick jingle and tokens dropping in the tray. */
+  slotWin: () => {
+    ;[784, 988, 1175, 1568].forEach((f, i) => tone(f, f, 0.09, 'square', 0.1, i * 0.07))
+    ;[1319, 1568, 1319, 1760].forEach((f, i) => tone(f, f, 0.04, 'square', 0.06, 0.32 + i * 0.07))
+  },
+  /** Three sevens: a fanfare. */
+  slotJackpot: () => {
+    ;[523, 659, 784, 1047, 784, 1047, 1319, 1568].forEach((f, i) => tone(f, f, 0.12, 'square', 0.12, i * 0.08))
+    ;[1047, 1319, 1568].forEach((f) => tone(f, f, 0.5, 'triangle', 0.08, 0.7))
+  },
+  /** A Koffing turned over: a puff of gas. */
+  sweepPuff: () => {
+    noise(0.3, 0.14)
+    tone(150, 70, 0.28, 'triangle', 0.14)
+  },
+  /** Coins turned over: a clink each. */
+  sweepClink: () => [1568, 2093].forEach((f, i) => tone(f, f * 1.02, 0.06, 'square', 0.07, i * 0.05)),
 } as const
 
 export type Sfx = keyof typeof SFX

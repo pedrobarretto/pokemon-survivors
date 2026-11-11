@@ -35,8 +35,10 @@ export type GameSheet = {
   hide: () => void
   /** Keeps the sheet in step with the canvas (the frame refits it when the phone turns): call it every frame. */
   track: () => void
-  /** The part of the canvas no sheet covers, in game pixels. */
+  /** The part of the canvas no sheet covers, in game pixels (above a banner; beside or above a dock). */
   free: () => Rect
+  /** Moves what the dock leaves in view (a fluid canvas lays its game out anew). */
+  setKeep: (keep: Keep) => void
   dispose: () => void
 }
 
@@ -54,13 +56,17 @@ export const callout = (text: string) => h('p', { class: 'mg-callout' }, text)
 export const gameSheet = (stage: HTMLElement, size: { w: number; h: number }, keep: Keep): GameSheet => {
   const body = h('div', { class: 'mg-sheet-body' })
   const foot = h('div', { class: 'mg-sheet-foot' })
-  const orient = `${size.h > size.w ? 'mg-tall' : 'mg-wide'}${keep.hug ? ' mg-hug' : ''}`
+  // Which way the canvas is held: asked again as it goes (a fluid canvas turns with the phone).
+  const orient = () => `${size.h > size.w ? 'mg-tall' : 'mg-wide'}${keep.hug ? ' mg-hug' : ''}`
   const corner = h('button', { class: 'arc-icon-btn mg-close hidden', type: 'button' }, h('img', { src: closeIcon(), alt: '' }))
-  const el = h('div', { class: `mg-sheet ${orient} hidden` }, body, foot, corner)
+  const el = h('div', { class: `mg-sheet ${orient()} hidden` }, body, foot, corner)
   let onClose: (() => void) | null = null
   corner.addEventListener('click', () => (playSfx('select'), onClose?.()))
-  el.style.setProperty('--keep-x', String(keep.x))
-  el.style.setProperty('--keep-y', String(keep.y))
+  const setKeep = (next: Keep) => {
+    el.style.setProperty('--keep-x', String(next.x))
+    el.style.setProperty('--keep-y', String(next.y))
+  }
+  setKeep(keep)
   stage.append(el)
   let kind: SheetKind = 'dock'
   let laid = ''
@@ -78,7 +84,7 @@ export const gameSheet = (stage: HTMLElement, size: { w: number; h: number }, ke
   const show = (next: SheetKind, lines: readonly Line[], actions: readonly SheetAction[] = [], close?: { label: string; run: () => void }) => {
     kind = next
     const shown = lines.flatMap((l) => (l ? [l] : []))
-    el.className = `mg-sheet mg-${next} ${orient}${shown.length === 0 && actions.length === 0 ? ' hidden' : ''}`
+    el.className = `mg-sheet mg-${next} ${orient()}${shown.length === 0 && actions.length === 0 ? ' hidden' : ''}`
     body.replaceChildren(...shown)
     body.scrollTop = 0
     // The primary button first: it leads the row, and takes a row of its own on a phone held upright.
@@ -93,6 +99,8 @@ export const gameSheet = (stage: HTMLElement, size: { w: number; h: number }, ke
   const track = () => {
     const c = stage.querySelector('canvas')
     if (!c) return
+    const turned = orient()
+    if (!el.classList.contains(turned.split(' ')[0]!)) el.className = `mg-sheet mg-${kind} ${turned}${el.classList.contains('hidden') ? ' hidden' : ''}`
     const k = c.clientWidth / size.w
     const key = `${c.offsetLeft}:${c.offsetTop}:${c.clientWidth}:${c.clientHeight}`
     canvas = { l: c.offsetLeft, t: c.offsetTop, k }
@@ -107,10 +115,13 @@ export const gameSheet = (stage: HTMLElement, size: { w: number; h: number }, ke
 
   const free = (): Rect => {
     const all = { x: 0, y: 0, w: size.w, h: size.h }
-    if (kind !== 'dock' || el.classList.contains('hidden')) return all
+    if (el.classList.contains('hidden')) return all
+    // A banner covers the stage's foot whichever way it's held.
+    if (kind === 'banner') return { ...all, h: Math.max(0, Math.min(size.h, Math.floor((el.offsetTop - canvas.t) / canvas.k))) }
+    if (kind !== 'dock') return all
     if (size.h > size.w) return { ...all, h: Math.max(0, Math.min(size.h, Math.floor((el.offsetTop - canvas.t) / canvas.k))) }
     return { ...all, w: Math.max(0, Math.min(size.w, Math.floor((el.offsetLeft - canvas.l) / canvas.k))) }
   }
 
-  return { show, hide: () => show(kind, []), track, free, dispose: () => el.remove() }
+  return { show, hide: () => show(kind, []), track, free, setKeep, dispose: () => el.remove() }
 }
