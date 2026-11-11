@@ -94,6 +94,14 @@ export const blastHorde = (g: Game, force: number) => {
   }
 }
 
+/**
+ * Whether a foe may be moved by its own script while the grid is sealed
+ * (`sealBounds`, `updateAttacks`), without widening its cell: a boss (a
+ * teleport, a park, a phase's home), a fight's partner, an Arena avatar (a
+ * respawn). Its cell is always read, and it is read again.
+ */
+export const movesOnItsOwn = (e: Enemy) => e.boss || e.fight !== null || e.behavior.kind === 'avatar'
+
 export const rebuildGrid = (g: Game) => {
   clearGrid(g.grid)
   g.enemies.forEach((e, i) => {

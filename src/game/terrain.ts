@@ -309,9 +309,13 @@ const NEAR: Feature[] = []
 /** How far a place's entrance reaches from its door, for gathering the features near a spot. */
 const ENTRANCE_REACH = 96
 
-/** Features whose cells overlap the box around (x, y). Reuses one array: copy it if you keep it. */
-export const featuresNear = (g: Game, x: number, y: number, rx: number, ry = rx): readonly Feature[] => {
-  // Filled by index and cut to size, never emptied first (that would drop its storage every call).
+/**
+ * Fills `NEAR` with the features whose cells overlap the box around (x, y)
+ * and returns how many: `featuresNear` for the hot loops, which read the
+ * first `n` and spare the array its cut to size.
+ */
+const gatherNear = (g: Game, x: number, y: number, rx: number, ry = rx) => {
+  // Filled by index, never emptied first (that would drop its storage every call).
   let n = 0
   const room = roomOf(g)
   if (room) NEAR[n++] = room.terrain
@@ -326,7 +330,12 @@ export const featuresNear = (g: Game, x: number, y: number, rx: number, ry = rx)
       }
     }
   }
-  NEAR.length = n
+  return n
+}
+
+/** Features whose cells overlap the box around (x, y). Reuses one array: copy it if you keep it. */
+export const featuresNear = (g: Game, x: number, y: number, rx: number, ry = rx): readonly Feature[] => {
+  NEAR.length = gatherNear(g, x, y, rx, ry)
   return NEAR
 }
 
@@ -416,16 +425,19 @@ const settlePlayer = (g: Game, p: Player) => {
 
 /**
  * Each feature's solids' boxes (x0, y0, x1, y1 per solid, in its order: the
- * union of its feet), worked out once per feature: features never change once
- * built. A cache beside the state, not in it, like the cells themselves.
+ * union of its feet), then the box of them all, worked out once per feature:
+ * features never change once built. A cache beside the state, not in it,
+ * like the cells themselves.
  */
 const solidBoxes = new WeakMap<Feature, Float64Array>()
 
 const boxesOf = (f: Feature) => {
   let boxes = solidBoxes.get(f)
   if (boxes) return boxes
-  boxes = new Float64Array(f.solids.length * 4)
-  for (let i = 0; i < f.solids.length; i++) {
+  const n = f.solids.length
+  boxes = new Float64Array(n * 4 + 4)
+  boxes.set([Infinity, Infinity, -Infinity, -Infinity], n * 4)
+  for (let i = 0; i < n; i++) {
     let x0 = Infinity
     let y0 = Infinity
     let x1 = -Infinity
@@ -437,6 +449,7 @@ const boxesOf = (f: Feature) => {
       y1 = Math.max(y1, e.y + e.ry)
     }
     boxes.set([x0, y0, x1, y1], i * 4)
+    boxes.set([Math.min(boxes[n * 4]!, x0), Math.min(boxes[n * 4 + 1]!, y0), Math.max(boxes[n * 4 + 2]!, x1), Math.max(boxes[n * 4 + 3]!, y1)], n * 4)
   }
   solidBoxes.set(f, boxes)
   return boxes
@@ -446,7 +459,8 @@ const boxesOf = (f: Feature) => {
  * Pushes a circle out of every solid near it (but the thin ones, `thin`: a
  * Ghost-type player's). Returns the last ellipse it hit, or null. A solid
  * whose box the circle is clear of by a pixel can't push it (no ellipse of it
- * would), so its ellipses go untested: the same pushes, in the same order, for a crowd.
+ * would), so its ellipses go untested, and a feature whose solids' box it is
+ * clear of goes untested whole: the same pushes, in the same order, for a crowd.
  */
 const block = (g: Game, o: Pos, r: number, thin = false) => {
   let hit: Ellipse | null = null
@@ -454,8 +468,12 @@ const block = (g: Game, o: Pos, r: number, thin = false) => {
   // Two passes: leaving one lobe of a mountain can land in the next. A first pass that
   // pushed nothing left the circle where it was, so a second would push nothing either.
   for (let pass = 0; pass < 2 && (pass === 0 || hit !== null); pass++) {
-    for (const f of featuresNear(g, o.x, o.y, r)) {
+    const n = gatherNear(g, o.x, o.y, r)
+    for (let k = 0; k < n; k++) {
+      const f = NEAR[k]!
       const boxes = boxesOf(f)
+      const all = f.solids.length * 4
+      if (o.x < boxes[all]! - reach || o.y < boxes[all + 1]! - reach || o.x > boxes[all + 2]! + reach || o.y > boxes[all + 3]! + reach) continue
       for (let i = 0; i < f.solids.length; i++) {
         const b = i * 4
         if (o.x < boxes[b]! - reach || o.y < boxes[b + 1]! - reach || o.x > boxes[b + 2]! + reach || o.y > boxes[b + 3]! + reach) continue
@@ -510,7 +528,11 @@ export type Ground = 'land' | 'water' | 'ice' | 'lava'
 export const groundAt = (g: Game, x: number, y: number): Ground => {
   const room = roomOf(g)
   if (room) return arenaGround(room.layout, x - room.x, y - room.y)
-  for (const f of featuresNear(g, x, y, 0)) if (f.lake && inside(f.lake.foot, x, y, 0)) return f.biome === 'snow' ? 'ice' : 'water'
+  const n = gatherNear(g, x, y, 0)
+  for (let k = 0; k < n; k++) {
+    const f = NEAR[k]!
+    if (f.lake && inside(f.lake.foot, x, y, 0)) return f.biome === 'snow' ? 'ice' : 'water'
+  }
   return 'land'
 }
 
