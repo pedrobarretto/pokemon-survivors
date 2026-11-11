@@ -7,7 +7,7 @@ import type { EnemyId } from './enemies'
  * its entry in `ENEMIES`, its patterns in `data/bosses.ts`, its colors here and its
  * floor plan in `data/arenas.ts`.
  */
-export const RIFT_LEGENDS = ['lugia', 'hoOh', 'kyogre', 'groudon', 'rayquaza', 'dialga', 'latias', 'latios', 'deoxys'] as const satisfies readonly EnemyId[]
+export const RIFT_LEGENDS = ['lugia', 'hoOh', 'kyogre', 'groudon', 'rayquaza', 'dialga', 'latias', 'latios', 'deoxys', 'palkia'] as const satisfies readonly EnemyId[]
 
 /**
  * Event rifts: legendaries a rift brings only during an event, in place of
@@ -61,6 +61,8 @@ export const ARENAS: Record<RiftLegend, ArenaTheme> = {
   deoxys: { floor: ['#484058', '#544c68', '#201830'], wall: ['#f89850', '#a84020'], void: '#020208', motes: '#f8f8ff' },
   /** The Nightmare: slabs of a dream gone dark adrift in a black void, cyan eyes and embers glinting all around. */
   darkrai: { floor: ['#2c2440', '#342a4c', '#140e20'], wall: ['#58e8f0', '#5c3c8c'], void: '#04020a', motes: '#58e8f0' },
+  /** Folded Space: pearl slabs with pink seams adrift in a rose-dark void. */
+  palkia: { floor: ['#d8d0e8', '#e4dcf0', '#9c88b8'], wall: ['#f8b8e8', '#8858b8'], void: '#140820', motes: '#f8c8f0' },
 }
 
 /** Timing and size of rifts, in seconds and world px. */

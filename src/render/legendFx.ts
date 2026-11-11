@@ -261,6 +261,7 @@ const ENTRANCE_LOOK: Partial<Record<RiftLegend, EntranceLook>> = {
   groudon: { ring: '#f8a040', tint: '#a02808', spray: '#f8e060' },
   rayquaza: { ring: '#f8f0a0', tint: '#3c9850', spray: '#ffffff' },
   darkrai: { ring: '#58e8f0', tint: '#140c24', spray: '#58e8f0' },
+  palkia: { ring: '#f8b8e8', tint: '#5c2878', spray: '#ffffff' },
 }
 
 /**
@@ -295,6 +296,8 @@ export const drawEntrance = (ctx: Ctx, g: Game, t: number) => {
     }
   } else if (def.entrance === 'meteor') {
     meteorIn(ctx, s, x, y, k, t)
+  } else if (def.entrance === 'rend') {
+    rendIn(ctx, s, x, y, k, t)
   } else if (def.entrance === 'rise') {
     const lift = Math.round((1 - k) * (body + 8))
     ctx.save()
@@ -331,6 +334,38 @@ const swoopIn = (ctx: Ctx, s: ReturnType<typeof sprites>, x: number, y: number, 
   ctx.fillStyle = color
   for (let i = 1; i < 8 && q < 1; i++) ctx.fillRect(Math.round(px + side * i * 9), Math.round(py - 10 + Math.sin(i + t * 9) * 2), 2, 1)
   drawPokemon(ctx, s, 'Walk', side < 0 ? 2 : 6, t, px, py, { alpha: Math.min(1, shown), flash: k < 0.75 ? 0.6 : 1 - (k - 0.75) / 0.25, tint: { color, amount: 0.3 * (1 - k) } })
+}
+
+/**
+ * Palkia's entrance: a seam of light splits the air over its spot, opens
+ * into a lens of torn space with the dark void inside, Palkia steps out of
+ * it, and the tear seals behind it in a flash of pearl.
+ */
+const rendIn = (ctx: Ctx, s: ReturnType<typeof sprites>, x: number, y: number, k: number, t: number) => {
+  const cy = y - Math.round(s.bodyH * 0.55)
+  // Opening (0..0.35), held open while it steps through (0.35..0.8), sealing (0.8..1).
+  const open = Math.min(1, k / 0.35) * Math.min(1, Math.max(0, (1 - k) / 0.2))
+  const rx = Math.max(1, Math.round(4 + open * 10))
+  const ry = Math.max(2, Math.round(10 + open * (s.bodyH * 0.6)))
+  if (open > 0) {
+    blitEllipse(ctx, rx + 3, ry + 3, 'rgba(248,184,232,0.25)', x, cy)
+    blitEllipse(ctx, rx, ry, '#f8b8e8', x, cy)
+    blitEllipse(ctx, Math.max(1, rx - 2), Math.max(1, ry - 2), '#28103c', x, cy)
+    // Shards of space flaking off the tear's rim.
+    ctx.fillStyle = '#ffffff'
+    for (let i = 0; i < 10; i++) {
+      const a = hash2(i, 1, 37) * TAU
+      const r = ((t * 50 + hash2(i, 2, 37) * 30) % 30) * open
+      ctx.fillRect(Math.round(x + Math.cos(a) * (rx + r)), Math.round(cy + Math.sin(a) * (ry * 0.6 + r * 0.4)), 1, 1)
+    }
+  }
+  const step = Math.min(1, Math.max(0, (k - 0.3) / 0.5))
+  if (step > 0) drawPokemon(ctx, s, 'Idle', 0, t, x, y, { alpha: step, flash: 1 - step, tint: { color: '#f8b8e8', amount: 0.5 * (1 - step) } })
+  if (k > 0.8) {
+    ctx.globalAlpha = Math.max(0, 1 - (k - 0.8) / 0.2)
+    blitRing(ctx, Math.round(10 + (k - 0.8) * 200), 1, '#ffffff', x, cy)
+    ctx.globalAlpha = 1
+  }
 }
 
 const CRYSTAL = lazy(() =>

@@ -74,6 +74,23 @@ const palm = (): Piece => {
   return { sprite: toSprite(g), ax: cx, ay: ground }
 }
 
+const PEARL: Ramp = ['#5c4878', '#8c78a8', '#b8a8d0', '#dcd4ec', '#fcf8ff']
+const ROSE: Ramp = ['#702060', '#b04898', '#e080c8', '#f8c0e8']
+
+/** A pearl column in Folded Space: a smooth shaft with rose-gold bands at its foot and its crown, and a pink pearl set on top (Palkia). */
+const pearlPillar = (): Piece => {
+  const g = grid(26, 64)
+  cylinder(g, 13, 60, 9, 4, PEARL, { ry: 3.5, top: null })
+  cylinder(g, 13, 56, 6.5, 42, PEARL, {
+    top: null,
+    paint: (x, y, _nx, e, l) => (e < 2 || (e > 18 && e < 21) || e > 39 ? shade(ROSE, l, x, y) : null),
+  })
+  cylinder(g, 13, 14, 9.5, 4, PEARL, { ry: 3.5, top: PEARL })
+  limb(g, 13, 7, 13, 7, 4.5, 4.5, ROSE)
+  outline(g, '#1c1028')
+  return { sprite: toSprite(g), ax: 13, ay: 60 }
+}
+
 export const ARENA_PIECES: Record<ArenaPiece, (variant: number) => Piece> = {
   seaRock: (v) => boulder({ stone: ['#1c2840', '#2c3c5c', '#46608a', '#6c88b0', '#98b4d8'], outline: '#0a1020', moss: ['#1c5050', '#2c7068', '#48907c'] }, 14, v),
   redPillar,
@@ -89,10 +106,12 @@ export const ARENA_PIECES: Record<ArenaPiece, (variant: number) => Piece> = {
     stalagmites({ stone: ['#100c18', '#201a2c', '#342c44', '#4c4260', '#6a5e80'], outline: '#06040c', crystal: ['#802810', '#d05818', '#f89850', '#fff0c8'] }, v + 1),
   nightSpire: (v) =>
     stalagmites({ stone: ['#08060e', '#140e20', '#221834', '#32264a', '#463862'], outline: '#020104', crystal: ['#183c50', '#2c8098', '#58e8f0', '#d8ffff'] }, v + 2),
+  pearlSpire: (v) => stalagmites({ stone: PEARL, outline: '#1c1028', crystal: ROSE }, v + 3),
+  pearlPillar,
 }
 
 /** Shadow width of each piece, and which ones are tall enough to go see-through. */
-export const ARENA_SHADOW: Record<ArenaPiece, number> = { seaRock: 10, redPillar: 7, bell: 16, stalagmite: 8, basalt: 10, jadeStump: 8, column: 9, marbleStump: 8, palm: 9, meteorCrystal: 8, nightSpire: 8 }
+export const ARENA_SHADOW: Record<ArenaPiece, number> = { seaRock: 10, redPillar: 7, bell: 16, stalagmite: 8, basalt: 10, jadeStump: 8, column: 9, marbleStump: 8, palm: 9, meteorCrystal: 8, nightSpire: 8, pearlSpire: 8, pearlPillar: 9 }
 export const ARENA_TALL: Record<ArenaPiece, boolean> = {
   seaRock: false,
   redPillar: true,
@@ -105,4 +124,6 @@ export const ARENA_TALL: Record<ArenaPiece, boolean> = {
   palm: true,
   meteorCrystal: true,
   nightSpire: true,
+  pearlSpire: true,
+  pearlPillar: true,
 }

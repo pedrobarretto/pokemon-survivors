@@ -176,6 +176,7 @@ const STING: Record<ThreatKind, readonly string[]> = {
   storm: ['#c8d8e8', '#8ca4c8', '#ffffff'],
   time: ['#a8f0f8', '#d0f8ff', '#ffffff'],
   mist: ['#f8c8e0', '#ffffff', '#e8e0f8'],
+  fold: ['#f8b8e8', '#b070d8', '#ffffff'],
 }
 
 /** The standing player furthest south in the crossing (the threat's front chases them), or furthest north (`lead`: the first to reach the gate). */

@@ -898,6 +898,55 @@ const dialga: Score = {
   },
 }
 
+/**
+ * Palkia's domain (Folded Space): Dialga's twin in E minor, wide leaps in the
+ * lead as if each phrase jumped across space, a glittering arpeggio in the
+ * harmony and a slow swaying bass under the driving drums.
+ */
+const palkia: Score = {
+  bpm: 138,
+  duty: { lead: 0.25, harmony: 0.125 },
+  tracks: {
+    // | Em | C | D | B | Em | Am | B | B |  then  | C | D | Em | C | Am | B | Em | B |
+    lead: [
+      'E5:4 B5 E6 B5',
+      'C6:6 G5:2 E5:4 G5',
+      'D5:4 A5 D6 F#6',
+      'D#6:8 B5:4 F#5',
+      'G5:2 F#5 E5 B4 E5:8',
+      'A5:4 C6 E6 C6',
+      'B5:6 A5:2 F#5:4 D#5',
+      'B4:12 r:4',
+      'G5:3 F#5:1 G5:4 C6 E6',
+      'F#6:3 E6:1 D6:4 A5 F#5',
+      'B5:2 C6 B5 G5 E5:8',
+      'G6:6 F#6:2 E6:4 C6',
+      'A5:4 C6 E6 A6',
+      'F#6:6 D#6:2 B5:4 A5',
+      'G5:2 F#5 G5 B5 E6:8',
+      'D#6:4 B5 F#5 D#5',
+    ],
+    harmony: [
+      sparkle('E4', 'G4', 'B4', 'E5'), sparkle('C4', 'E4', 'G4', 'C5'), sparkle('D4', 'F#4', 'A4', 'D5'), sparkle('B3', 'D#4', 'F#4', 'B4'),
+      sparkle('E4', 'G4', 'B4', 'E5'), sparkle('A3', 'C4', 'E4', 'A4'), sparkle('B3', 'D#4', 'F#4', 'B4'), sparkle('B3', 'D#4', 'F#4', 'B4'),
+      sparkle('C4', 'E4', 'G4', 'C5'), sparkle('D4', 'F#4', 'A4', 'D5'), sparkle('E4', 'G4', 'B4', 'E5'), sparkle('C4', 'E4', 'G4', 'C5'),
+      sparkle('A3', 'C4', 'E4', 'A4'), sparkle('B3', 'D#4', 'F#4', 'B4'), sparkle('E4', 'G4', 'B4', 'E5'), sparkle('B3', 'D#4', 'F#4', 'B4'),
+    ],
+    bass: [
+      sway('E2', 'B2'), sway('C2', 'G2'), sway('D2', 'A2'), sway('B1', 'F#2'),
+      sway('E2', 'B2'), sway('A1', 'E2'), sway('B1', 'F#2'), sway('B1', 'F#2'),
+      sway('C2', 'G2'), sway('D2', 'A2'), sway('E2', 'B2'), sway('C2', 'G2'),
+      sway('A1', 'E2'), sway('B1', 'F#2'), sway('E2', 'B2'), sway('B1', 'F#2'),
+    ],
+    drums: [
+      ...times(7, 'k:2 h:2 s:2 h:1 h k:2 h:2 s:2 h:2'),
+      'k:2 s:1 s s:2 s:1 s k:2 s:1 s o:4',
+      ...times(7, 'k:2 h:2 s:2 h:1 h k:2 h:2 s:2 h:2'),
+      'k:2 s:1 s s:2 s:1 s k:2 s:1 s o:4',
+    ],
+  },
+}
+
 /** Rayquaza's domain (the Sky Pillar's roof): a fast, soaring G mixolydian anthem over glittering arpeggios. */
 const rayquaza: Score = {
   bpm: 156,
@@ -1478,6 +1527,6 @@ const volcano: Score = {
   },
 }
 
-export const THEMES = { menu, run, boss, forest, cave, snow, tower, beach, plant, desert, volcano, kyogre, groudon, rayquaza, lugia, hoOh, dialga, latis, deoxys, birds, beasts, regis, mewtwo, arceus } as const satisfies Record<string, Score>
+export const THEMES = { menu, run, boss, forest, cave, snow, tower, beach, plant, desert, volcano, kyogre, groudon, rayquaza, lugia, hoOh, dialga, palkia, latis, deoxys, birds, beasts, regis, mewtwo, arceus } as const satisfies Record<string, Score>
 
 export type ThemeId = keyof typeof THEMES

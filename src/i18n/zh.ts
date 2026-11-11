@@ -2719,6 +2719,20 @@ export const zh: Messages = {
         phases: ['時間扭曲了！Roar of Time 期間，你的攻擊會凍結在半空中。', '時間加速了！Dialga 越來越快。'],
         cues: { stop: '時間停止了！', forward: '時間快轉了！', rewind: '時間倒流了！' },
       },
+      palkia: {
+        place: '摺疊空間',
+        epithet: '空間之主',
+        omen: '空間開始摺疊…',
+        crossing: '空間正在閉合！穿過雙生傳送門越過裂縫！',
+        phases: ['空間彎曲了！大廳的兩側相連：從一邊走出，就會從另一邊回來。', '起源形態！空間摺疊，大廳的牆壁向內收攏。'],
+        cues: {
+          twist: '空間扭轉了！傳送門會把你送回去！',
+          thrownBack: '被送回去了！',
+          swap: '*Palkia* 和你交換了位置！',
+          fold: '空間之牆正在收攏！',
+          dialga: '*Palkia* 在你身上感受到 *Dialga* 的時間…咆哮得更響了！',
+        },
+      },
       latias: {
         place: '南方孤島',
         epithet: '無限雙子',

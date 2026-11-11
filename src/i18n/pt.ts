@@ -3072,6 +3072,20 @@ export const pt = {
         phases: ['O tempo se distorce! No Roar of Time, seus golpes congelam no ar.', 'O tempo acelera! Dialga fica cada vez mais rápido.'],
         cues: { stop: 'O tempo parou!', forward: 'O tempo saltou para frente!', rewind: 'O tempo voltou!' },
       },
+      palkia: {
+        place: 'Espaço Dobrado',
+        epithet: 'Senhor do Espaço',
+        omen: 'O espaço começa a se dobrar…',
+        crossing: 'O espaço está se fechando! Atravesse as fendas pelos portais gêmeos!',
+        phases: ['O espaço se curva! As bordas do salão se tocam: saia por um lado e volte pelo outro.', 'Forma Origem! O espaço se dobra e as paredes do salão se fecham.'],
+        cues: {
+          twist: 'O espaço se torceu! Os portais levam para trás!',
+          thrownBack: 'Jogado para trás!',
+          swap: '*Palkia* trocou de lugar com você!',
+          fold: 'As paredes do espaço se fecham!',
+          dialga: '*Palkia* sente em você o tempo de *Dialga*… e ruge mais alto!',
+        },
+      },
       latias: {
         place: 'Ilha do Sul',
         epithet: 'Dupla Eon',

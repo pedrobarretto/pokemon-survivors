@@ -15,6 +15,7 @@ import { DIALGA_DOMAIN } from './domains/dialga'
 import { LATIS_DOMAIN } from './domains/latis'
 import { DEOXYS_DOMAIN } from './domains/deoxys'
 import { DARKRAI_DOMAIN } from './domains/darkrai'
+import { PALKIA_DOMAIN } from './domains/palkia'
 
 /**
  * EPIC RIFTS: a legendary's domain, as data.
@@ -70,19 +71,20 @@ import { DARKRAI_DOMAIN } from './domains/darkrai'
  */
 
 /** How a legendary's sky looks over the map in its omen and over its domain (`render/legendSky.ts`). */
-export type LegendSky = 'downpour' | 'harshSun' | 'gale' | 'timeWarp' | 'storm' | 'embers' | 'mist' | 'meteors' | 'newMoon'
+export type LegendSky = 'downpour' | 'harshSun' | 'gale' | 'timeWarp' | 'storm' | 'embers' | 'mist' | 'meteors' | 'newMoon' | 'foldedSpace'
 
-/** How the threat behind the crossing looks (`render/domain.ts`); its rules are the same for every kind. `magma`: lava chasing up a collapsing tunnel; `crumble`: a floor falling away into the sky. */
-export type ThreatKind = 'tide' | 'collapse' | 'fire' | 'void' | 'magma' | 'crumble' | 'storm' | 'time' | 'mist'
+/** How the threat behind the crossing looks (`render/domain.ts`); its rules are the same for every kind. `magma`: lava chasing up a collapsing tunnel; `crumble`: a floor falling away into the sky; `fold`: space folding up behind the player, torn at its edge. */
+export type ThreatKind = 'tide' | 'collapse' | 'fire' | 'void' | 'magma' | 'crumble' | 'storm' | 'time' | 'mist' | 'fold'
 
 /**
  * How the legendary comes in: out of water (`rise`), down from the sky
  * (`descend`), out of thin air (`materialize`), as time stops around it
  * (`warp`: the world greys out and clock rings close on its spot), streaking
- * in out of invisibility (`swoop`, the Eon duo), or reforming out of a crystal
- * meteor that crashes down (`meteor`, Deoxys).
+ * in out of invisibility (`swoop`, the Eon duo), reforming out of a crystal
+ * meteor that crashes down (`meteor`, Deoxys), or tearing space open and
+ * stepping through the tear (`rend`, Palkia).
  */
-export type DomainEntrance = 'rise' | 'descend' | 'materialize' | 'warp' | 'swoop' | 'meteor'
+export type DomainEntrance = 'rise' | 'descend' | 'materialize' | 'warp' | 'swoop' | 'meteor' | 'rend'
 
 /** What a retinue member (or a summoned add) does besides walking at the player: aims ahead (`runner`), shoots from a distance (`spitter`), or comes in tougher (`elite`). */
 export type RetinueRole = 'runner' | 'spitter' | 'elite'
@@ -234,6 +236,7 @@ export const DOMAINS: Partial<Record<RiftLegend, LegendDomain>> = {
   latias: LATIS_DOMAIN,
   deoxys: DEOXYS_DOMAIN,
   darkrai: DARKRAI_DOMAIN,
+  palkia: PALKIA_DOMAIN,
 }
 
 /** The domain behind `legend`'s rift, if it has one. */

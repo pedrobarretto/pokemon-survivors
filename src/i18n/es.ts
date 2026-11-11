@@ -2723,6 +2723,20 @@ export const es: Messages = {
         phases: ['¡El tiempo se distorsiona! Con el Roar of Time tus ataques se congelan en el aire.', '¡El tiempo se acelera! Dialga es cada vez más rápido.'],
         cues: { stop: '¡El tiempo se detuvo!', forward: '¡El tiempo saltó hacia adelante!', rewind: '¡El tiempo retrocedió!' },
       },
+      palkia: {
+        place: 'Espacio Plegado',
+        epithet: 'Señor del Espacio',
+        omen: 'El espacio empieza a plegarse…',
+        crossing: '¡El espacio se cierra! ¡Cruza los huecos por los portales gemelos!',
+        phases: ['¡El espacio se curva! Los bordes de la sala se tocan: sal por un lado y vuelve por el otro.', '¡Forma Origen! El espacio se pliega y las paredes de la sala se cierran.'],
+        cues: {
+          twist: '¡El espacio se torció! ¡Los portales llevan hacia atrás!',
+          thrownBack: '¡De vuelta atrás!',
+          swap: '¡*Palkia* cambió de lugar contigo!',
+          fold: '¡Las paredes del espacio se cierran!',
+          dialga: '*Palkia* siente en ti el tiempo de *Dialga*… ¡y ruge más fuerte!',
+        },
+      },
       latias: {
         place: 'Isla Sur',
         epithet: 'El Dúo Eón',

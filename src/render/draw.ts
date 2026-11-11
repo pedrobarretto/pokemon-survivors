@@ -1020,7 +1020,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
     else if (visible(hz.x, hz.y)) drawHazardGround(ctx, hz)
   drawBossGround(ctx, g, t)
   drawOmenGround(ctx, g)
-  drawDomainGround(ctx, g)
+  drawDomainGround(ctx, g, t)
   drawNightmareGround(ctx, g, t)
   // Breakables, dressed by the biome each stands in.
   drawProps(ctx, g, t)

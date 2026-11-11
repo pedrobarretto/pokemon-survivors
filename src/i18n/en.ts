@@ -2721,6 +2721,20 @@ export const en: Messages = {
         phases: ['Time warps! During Roar of Time your attacks freeze in mid-air.', 'Time speeds up! Dialga keeps getting faster.'],
         cues: { stop: 'Time stopped!', forward: 'Time skipped ahead!', rewind: 'Time rewound!' },
       },
+      palkia: {
+        place: 'Folded Space',
+        epithet: 'Lord of Space',
+        omen: 'Space begins to fold…',
+        crossing: 'Space is closing in! Cross the gaps through the twin portals!',
+        phases: ['Space bends! The hall’s edges meet: walk out one side and come back in the other.', 'Origin Forme! Space folds and the hall’s walls close in.'],
+        cues: {
+          twist: 'Space twisted! The portals lead back!',
+          thrownBack: 'Thrown back!',
+          swap: '*Palkia* swapped places with you!',
+          fold: 'The walls of space are closing in!',
+          dialga: '*Palkia* senses *Dialga*’s time on you… and roars louder!',
+        },
+      },
       latias: {
         place: 'Southern Island',
         epithet: 'The Eon Duo',

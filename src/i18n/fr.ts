@@ -2719,6 +2719,20 @@ export const fr: Messages = {
         phases: ['Le temps se déforme ! Pendant Roar of Time, tes attaques se figent en l’air.', 'Le temps s’accélère ! Dialga va de plus en plus vite.'],
         cues: { stop: 'Le temps s’est arrêté !', forward: 'Le temps a fait un bond !', rewind: 'Le temps est revenu en arrière !' },
       },
+      palkia: {
+        place: 'Espace Replié',
+        epithet: 'Seigneur de l’Espace',
+        omen: 'L’espace commence à se replier…',
+        crossing: 'L’espace se referme ! Franchis les failles par les portails jumeaux !',
+        phases: ['L’espace se courbe ! Les bords de la salle se touchent : sors d’un côté et reviens par l’autre.', 'Forme Originelle ! L’espace se replie et les murs de la salle se resserrent.'],
+        cues: {
+          twist: 'L’espace s’est tordu ! Les portails ramènent en arrière !',
+          thrownBack: 'Renvoyé en arrière !',
+          swap: '*Palkia* a échangé sa place avec toi !',
+          fold: 'Les murs de l’espace se resserrent !',
+          dialga: '*Palkia* sent sur toi le temps de *Dialga*… et rugit plus fort !',
+        },
+      },
       latias: {
         place: 'Île du Sud',
         epithet: 'Le Duo Éon',

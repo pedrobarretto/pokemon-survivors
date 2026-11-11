@@ -24,7 +24,7 @@ import { isRiftLegend } from './data/rifts'
 import { domainTheme } from './game/domain'
 import { partnerOf } from './data/domains'
 import { captureOutcome, setCaptureOutcome } from './render/capture'
-import { captureOutcome as savedCapture } from './game/capture'
+import { captureOutcome as savedCapture, isCaptured } from './game/capture'
 import { domainLines } from './ui/riftTitle'
 import { isWaveLegend, LEGEND_THEME } from './data/legendBosses'
 import { ENEMIES, type EnemyDef, type EnemyId } from './data/enemies'
@@ -2283,6 +2283,11 @@ const handleEvent = (r: Run, e: GameEvent) => {
     case 'riftTitle':
       playSfx('legendary')
       playCry(cryUrl(ENEMIES[e.enemy].dex), 0.9)
+      // Palkia knows its twin: a player who captured Dialga hears it once the title card is down.
+      if (e.enemy === 'palkia' && isCaptured(loadSave().legends, 'dialga')) {
+        const line = domainLines('palkia')?.cues?.dialga
+        if (line) window.setTimeout(() => news(rich(line), 3600), 2600)
+      }
       return flashScreen(ui)
     case 'bossPhase': {
       const def = ENEMIES[e.enemy]
@@ -2309,6 +2314,8 @@ const handleEvent = (r: Run, e: GameEvent) => {
       return aside(rich(t().rifts.escaped(name)), 3200)
     }
     case 'domainCue': {
+      // Palkia's portals: a whoosh as a player goes through one.
+      if (e.cue === 'warp' || e.cue === 'thrownBack' || e.cue === 'swap') playSfx('whoosh')
       const line = domainLines(e.enemy)?.cues?.[e.cue]
       return line ? news(rich(line), 1600) : undefined
     }

@@ -389,6 +389,63 @@ const newMoon: Painter = (ctx, w, h, camX, camY, t, g) => {
   }
 }
 
+/**
+ * Palkia's Folded Space: a rose-violet sky creased by long folds drifting
+ * across it (a bright seam with its shadow beside it), pearl motes hanging at
+ * different depths, and on the map a lens-shaped tear in the sky that opens
+ * as the omen goes on. In its Origin Forme the folds come thicker.
+ */
+const foldedSpace: Painter = (ctx, w, h, camX, camY, t, g) => {
+  const origin = phaseOf(g) >= 2
+  ctx.fillStyle = origin ? 'rgba(96,32,120,0.24)' : 'rgba(176,96,200,0.14)'
+  ctx.fillRect(0, 0, w, h)
+  // Folds: long lines at a shallow slant, each sliding slowly along its own normal.
+  const folds = origin ? 6 : 4
+  for (let i = 0; i < folds; i++) {
+    const slope = (hash2(i, 1, 41) - 0.5) * 0.6
+    const base = mod(hash2(i, 2, 41) * 2048 - camY * 0.25 + t * (6 + hash2(i, 3, 41) * 10), h + 60) - 30
+    const pulse = Math.floor(t * 2 + i) % 3 === 0
+    for (let x = 0; x < w; x += 2) {
+      const y = Math.round(base + (x - w / 2) * slope)
+      if (y < -2 || y > h + 2) continue
+      ctx.fillStyle = 'rgba(40,8,56,0.35)'
+      ctx.fillRect(x, y + 1, 2, 2)
+      ctx.fillStyle = pulse && x % 6 === 0 ? '#ffffff' : 'rgba(248,200,240,0.7)'
+      ctx.fillRect(x, y, 2, 1)
+    }
+  }
+  // Pearl motes at three depths.
+  const n = Math.round((w * h) / 2200)
+  for (let i = 0; i < n; i++) {
+    const depth = 0.1 + (i % 3) * 0.2
+    if (Math.sin(t * 1.6 + i * 2.3) < -0.6) continue
+    const x = Math.round(mod(hash2(i, 4, 41) * 4096 - camX * depth + Math.sin(t * 0.5 + i) * 3, w))
+    const y = Math.round(mod(hash2(i, 5, 41) * 4096 - camY * depth, h))
+    ctx.fillStyle = i % 4 === 0 ? '#ffffff' : i % 4 === 1 ? '#f8b8e8' : '#d8c8f0'
+    ctx.fillRect(x, y, 1, 1)
+  }
+  if (g.rift.arena) return
+  // The tear over the map: a pink lens with a dark heart, widening through the omen and holding while the portal waits.
+  const omen = g.rift.omen
+  const k = omen ? Math.min(1, (1 - omen.left / RIFT.omenTime) * 1.25) : 1
+  if (k <= 0) return
+  const cx = Math.round(w * 0.5)
+  const cy = Math.round(30 + Math.sin(t * 0.7) * 2)
+  const rx = Math.max(2, Math.round((w * 0.22) * k))
+  const ry = Math.max(1, Math.round((5 + 6 * k) * (0.9 + Math.sin(t * 3) * 0.1)))
+  blitEllipse(ctx, rx + 3, ry + 3, 'rgba(248,184,232,0.18)', cx, cy)
+  blitEllipse(ctx, rx, ry, '#f8b8e8', cx, cy)
+  blitEllipse(ctx, Math.max(1, rx - 2), Math.max(1, ry - 2), '#28103c', cx, cy)
+  blitEllipse(ctx, Math.max(1, rx - 6), Math.max(1, ry - 3), '#140820', cx, cy)
+  ctx.fillStyle = '#ffffff'
+  for (let i = 0; i < 8; i++) {
+    const q = (t * 0.4 + i / 8) % 1
+    const x = Math.round(cx + (hash2(i, 6, 41) - 0.5) * 2 * rx * 0.8)
+    const y = Math.round(cy + (q - 0.5) * ry * 1.6)
+    if (Math.floor(t * 8 + i) % 3 !== 0) ctx.fillRect(x, y, 1, 1)
+  }
+}
+
 const TINTS: Record<LegendSky, string> = {
   downpour: 'rgba(8,18,52,0.42)',
   harshSun: 'rgba(248,152,40,0.18)',
@@ -399,10 +456,11 @@ const TINTS: Record<LegendSky, string> = {
   mist: 'rgba(232,224,248,0.22)',
   meteors: 'rgba(16,8,40,0.3)',
   newMoon: 'rgba(6,2,16,0.5)',
+  foldedSpace: 'rgba(176,96,200,0.16)',
 }
 
 /** The skies painted so far; the others get their tint until theirs are written. */
-const PAINTERS: Partial<Record<LegendSky, Painter>> = { downpour, harshSun, gale, storm, embers, timeWarp, mist, meteors, newMoon }
+const PAINTERS: Partial<Record<LegendSky, Painter>> = { downpour, harshSun, gale, storm, embers, timeWarp, mist, meteors, newMoon, foldedSpace }
 
 /** The sky in play: a domain legendary's omen or open portal on the map, or its domain once it has shown itself. */
 export const skyNow = (g: Game): LegendSky | null => {
