@@ -4,7 +4,7 @@
 import { mkdir, readFile, writeFile, access } from 'node:fs/promises'
 import { join } from 'node:path'
 import { measureBody } from './body.mjs'
-import { DEX, EMOTIONS, FLYERS, FORM_CRIES, FORM_PORTRAITS, FORMS, HANDMADE_SHINIES, SHINY, pad, shinyPath } from './dex.mjs'
+import { DEX, EMOTIONS, FLYERS, FORM_CRIES, FORM_PORTRAITS, FORMS, HANDMADE_SHINIES, HANDMADE_SPECIES_SHINIES, SHINY, pad, shinyPath } from './dex.mjs'
 
 const ROOT = new URL('..', import.meta.url).pathname
 const OUT = join(ROOT, 'public/assets/pokemon')
@@ -143,12 +143,14 @@ const fetchEmotions = async (dex, dir) => {
 
 const fetchSpecies = async (dex) => {
   const dir = join(OUT, String(dex))
-  const [normal, shiny, cry] = await Promise.all([
+  const [normal, fetched, cry] = await Promise.all([
     fetchVariant(dex, '', dir),
     SHINY.has(dex) ? fetchVariant(dex, shinyPath(dex), join(dir, 'shiny')) : null,
     mkdir(dir, { recursive: true }).then(() => download(`${CRIES}/${dex}.ogg`, join(dir, 'cry.ogg'))),
   ])
   if (!normal) throw new Error(`#${dex}: missing AnimData.xml`)
+  // A regional form's hand-made shiny (`HANDMADE_SPECIES_SHINIES`) while SpriteCollab has none.
+  const shiny = fetched ?? (SHINY.has(dex) && HANDMADE_SPECIES_SHINIES[dex] ? { ...(await handmadeShiny(normal, join(dir, 'shiny'))), portrait: true } : null)
   const forms = FORMS[dex] && Object.fromEntries(await Promise.all(Object.entries(FORMS[dex]).map(([key, id]) => fetchForm(dex, key, id, dir))))
   const formCries = await fetchFormCries(dex, dir)
   const emotions = await fetchEmotions(dex, dir)

@@ -14,6 +14,17 @@ export const STARTERS = [
   810, 811, 812, 813, 814, 815, 816, 817, 818, // Galar
   906, 907, 908, 909, 910, 911, 912, 913, 914, // Paldea
 ]
+/**
+ * The regional forms (src/data/regionalFamilies.ts): the Ovo de Viagem's families by region, whole lines, and the
+ * regional evolutions of lines already playable (branches). Regional forms go by PokeAPI's id (`REGIONAL`).
+ */
+export const REGIONAL_LINES = [
+  10103, 10104, 10101, 10102, 10105, 10106, 10109, 10110, 10111, 10112, 10113, // Alola: Vulpix, Sandshrew, Diglett, Geodude, Grimer
+  10161, 863, 10164, 10165, 10172, 10174, 10175, 862, 10166, 10173, 864, 439, 10168, 10176, 10177, // Galar: Meowth, Slowpoke, Zigzagoon, Farfetch'd, Corsola, Mime Jr., Darumaka
+  10229, 10230, 10238, 10239, 10231, 10232, 10234, 904, // Hisui: Growlithe, Zorua, Voltorb, Qwilfish
+  10253, 980, 10250, 10251, 10252, // Paldea: Wooper, Tauros and its breeds
+  10100, 10114, 10115, 10233, 10236, 10244, 10242, // regional evolutions: Raichu, Exeggutor, Marowak, Typhlosion, Samurott, Decidueye, Goodra
+]
 /** Families that hatch from eggs (src/data/hatchlings.ts), whole lines. Some also roam the horde. */
 export const HATCHLINGS = [
   172, 25, 26, 66, 67, 68, 133, 197, 175, 176, 468, 363, 364, 365, 396, 397, 398, 406, 315, 407, 744, 745, 736, 737, 738, // common
@@ -38,6 +49,7 @@ export const HATCHLINGS = [
   408, 409, 410, 411, 566, 567, 696, 697, 698, 699, // fossils
   56, 57, 979, 624, 625, 983, 704, 705, 706, 746, 924, 925, 963, 964, 877, 479, 351, 554, 555, 767, 768, 778, 978, 977,
   77, 78, 10162, 10163, // Ponyta's line and its Galarian form's (`REGIONAL`)
+  ...REGIONAL_LINES,
 ]
 export const HORDE = Object.values(roster).map((s) => s.dex)
 /** Horde species with a behavior trait (`src/data/enemies.ts`), plus Nidoqueen's summons. */
@@ -148,6 +160,16 @@ export const HANDMADE_SHINIES = {
 }
 
 /**
+ * Regional forms a player can be whose shiny SpriteCollab doesn't have yet: palette swaps of their own sheets
+ * (Walk, Idle, Hurt and the portrait), made by `scripts/regionalShinies.mjs` into `public/assets/pokemon/<dex>/shiny/`.
+ * By dex, the credit for CREDITS.md. Drop an entry once SpriteCollab publishes that shiny.
+ */
+export const HANDMADE_SPECIES_SHINIES = {
+  10161: 'Pokémon Survivors (palette swap of the sprite above, after Perrserker\'s shiny)',
+  10176: 'Pokémon Survivors (palette swap of the sprite above, after Galarian Darmanitan\'s shiny)',
+}
+
+/**
  * Forms that ship their portrait too (`<dex>/<key>/portrait.png`, `portrait` in the manifest's form), for the
  * screens that show one: Mega Darkrai, the Noite das Bruxas' Meta da comunidade (`ui/halloween.ts`).
  */
@@ -231,7 +253,20 @@ export const EMOTIONS = {
  * Regional forms played as species of their own (keep in sync with `src/data/regionalForms.ts`), by PokeAPI's id
  * for the form (its cry is there under that id): their SpriteCollab folder. Everything keyed by dex then just works.
  */
-export const REGIONAL = { 10162: '0077/0001', 10163: '0078/0001' }
+export const REGIONAL = {
+  10162: '0077/0001', 10163: '0078/0001',
+  // Alola
+  10100: '0026/0001', 10101: '0027/0001', 10102: '0028/0001', 10103: '0037/0001', 10104: '0038/0001', 10105: '0050/0001', 10106: '0051/0001',
+  10109: '0074/0001', 10110: '0075/0001', 10111: '0076/0001', 10112: '0088/0001', 10113: '0089/0001', 10114: '0103/0001', 10115: '0105/0001',
+  // Galar
+  10161: '0052/0002', 10164: '0079/0001', 10165: '0080/0001', 10166: '0083/0001', 10168: '0122/0001', 10172: '0199/0001', 10173: '0222/0001',
+  10174: '0263/0001', 10175: '0264/0001', 10176: '0554/0001', 10177: '0555/0002',
+  // Hisui
+  10229: '0058/0001', 10230: '0059/0001', 10231: '0100/0001', 10232: '0101/0001', 10233: '0157/0001', 10234: '0211/0001', 10236: '0503/0001',
+  10238: '0570/0001', 10239: '0571/0001', 10242: '0706/0001', 10244: '0724/0001',
+  // Paldea (Tauros' three breeds)
+  10250: '0128/0001', 10251: '0128/0002', 10252: '0128/0003', 10253: '0194/0002',
+}
 /** A species' SpriteCollab folder. */
 export const pad = (n) => REGIONAL[n] ?? String(n).padStart(4, '0')
 /** Where a species' shiny sits below its folder: a regional form's is directly under the form, like any form's. */
