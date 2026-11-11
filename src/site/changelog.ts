@@ -28,17 +28,17 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
     title: { pt: 'Temporada 1: Terastal, Pokédex Nacional e lendas novas', en: 'Season 1: Terastal, the National Pokédex and new legends', es: 'Temporada 1: Teracristal, la Pokédex Nacional y leyendas nuevas', fr: 'Saison 1 : Téracristal, le Pokédex National et de nouvelles légendes', zh: '第 1 賽季：太晶化、全國圖鑑和新的傳說' },
     highlights: [
       {
-        pt: 'Terastal: junte Fragmentos Tera dos chefes, encha o Orbe Tera e vire cristal com uma das 19 coroas. Tem Raide Tera em toda partida, a Raide do dia e o Terapagos.',
-        en: 'Terastal: collect Tera Shards from bosses, fill the Tera Orb and turn to crystal under one of 19 crowns. Every run has a Tera Raid, plus the Raid of the Day and Terapagos.',
-        es: 'Teracristal: junta Teralitos de los jefes, llena el Orbe Tera y vuélvete cristal con una de las 19 coronas. Hay Teraincursión en cada partida, la Incursión del día y Terapagos.',
-        fr: 'Téracristal : récupère des Téra-Éclats sur les boss, remplis l’Orbe Téracristal et deviens cristal sous l’une des 19 couronnes. Un Raid Téracristal dans chaque partie, le Raid du jour et Terapagos.',
+        pt: 'Terastal: junte Fragmentos Tera dos chefes, encha o Orbe Tera e vire cristal com uma das 19 coroas. Raide Tera em toda partida, Raide do dia e Terapagos.',
+        en: 'Terastal: collect Tera Shards from bosses, fill the Tera Orb and turn to crystal under one of 19 crowns. A Tera Raid every run, the Raid of the Day and Terapagos.',
+        es: 'Teracristal: junta Teralitos de los jefes, llena el Orbe Tera y vuélvete cristal con una de las 19 coronas. Teraincursión en cada partida, Incursión del día y Terapagos.',
+        fr: 'Téracristal : récupère des Téra-Éclats sur les boss, remplis l’Orbe Téracristal et deviens cristal sous l’une des 19 couronnes. Raid dans chaque partie, Raid du jour et Terapagos.',
         zh: '太晶化：從頭目身上收集太晶碎塊，集滿太晶珠，戴上 19 種皇冠之一化為結晶。每局都有太晶團體戰，還有每日團體戰和太樂巴戈斯。',
       },
       {
-        pt: 'A Pokédex Nacional chegou: 745 espécies selvagens na horda, 898 Pokémon no jogo e 78 famílias novas para jogar, cada uma com a sua mecânica.',
-        en: 'The National Pokédex is here: 745 wild species in the horde, 898 Pokémon in the game and 78 new families to play, each with a mechanic of its own.',
-        es: 'Llegó la Pokédex Nacional: 745 especies salvajes en la horda, 898 Pokémon en el juego y 78 familias nuevas para jugar, cada una con su mecánica.',
-        fr: 'Le Pokédex National est là : 745 espèces sauvages dans la horde, 898 Pokémon dans le jeu et 78 nouvelles familles jouables, chacune avec sa mécanique.',
+        pt: 'A Pokédex Nacional chegou: 745 espécies na horda, 898 Pokémon no jogo e 78 famílias novas, cada uma com a sua mecânica.',
+        en: 'The National Pokédex is here: 745 species in the horde, 898 Pokémon in the game and 78 new families, each with a mechanic of its own.',
+        es: 'Llegó la Pokédex Nacional: 745 especies en la horda, 898 Pokémon en el juego y 78 familias nuevas, cada una con su mecánica.',
+        fr: 'Le Pokédex National est là : 745 espèces dans la horde, 898 Pokémon dans le jeu et 78 nouvelles familles, chacune avec sa mécanique.',
         zh: '全國圖鑑登場：745 種野生寶可夢加入怪潮，遊戲中共有 898 種寶可夢，還有 78 個新的可玩家族，各有獨特機制。',
       },
       {
@@ -56,11 +56,11 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         zh: '火箭隊來到 Poké Realm：有拉霸機和限定獎品的遊戲城、黑暗寶可夢，以及有黑暗超夢的火箭隊基地。',
       },
       {
-        pt: 'Lendas novas: Palkia, 10 Ultracriaturas, o trio dos lagos, as Espadas da Justiça, os Anéis de Hoopa e cinco caminhos lendários, de Zygarde a Regigigas.',
-        en: 'New legends: Palkia, 10 Ultra Beasts, the lake trio, the Swords of Justice, Hoopa’s Rings and five legend paths, from Zygarde to Regigigas.',
-        es: 'Leyendas nuevas: Palkia, 10 Ultraentes, el trío del lago, los Espadachines Místicos, los Anillos de Hoopa y cinco caminos legendarios, de Zygarde a Regigigas.',
-        fr: 'De nouvelles légendes : Palkia, 10 Ultra-Chimères, le trio des lacs, les Épées de la Justice, les Anneaux de Hoopa et cinq chemins légendaires, de Zygarde à Regigigas.',
-        zh: '新的傳說：帕路奇亞、10 隻究極異獸、湖之三神、聖劍士、胡帕的圓環，以及從基格爾德到雷吉奇卡斯的五條傳說之路。',
+        pt: 'Lendas novas: Palkia, 10 Ultracriaturas, o trio dos lagos, as Espadas da Justiça, os Anéis de Hoopa e cinco caminhos lendários.',
+        en: 'New legends: Palkia, 10 Ultra Beasts, the lake trio, the Swords of Justice, Hoopa’s Rings and five legend paths.',
+        es: 'Leyendas nuevas: Palkia, 10 Ultraentes, el trío del lago, los Espadachines Místicos, los Anillos de Hoopa y cinco caminos legendarios.',
+        fr: 'De nouvelles légendes : Palkia, 10 Ultra-Chimères, le trio des lacs, les Épées de la Justice, les Anneaux de Hoopa et cinq chemins légendaires.',
+        zh: '新的傳說：帕路奇亞、10 隻究極異獸、湖之三神、聖劍士、胡帕的圓環和五條傳說之路。',
       },
     ],
     changes: [
