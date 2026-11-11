@@ -6,7 +6,7 @@ import { formatTime } from '../engine/math'
 import { dayKey } from '../game/missions'
 import { FRIEND_MILESTONES, inviteMomentDue, nextMilestone, REFERRAL, type InvitedFriend } from '../game/referral'
 import { formatNumber, t } from '../i18n'
-import { eggIcon } from '../render/art'
+import { friendEggIcon } from '../render/art'
 import { fetchInvites, gameUrl } from '../ranking'
 import { h, later, rich } from './dom'
 import { contentLine } from './gifts'
@@ -129,8 +129,8 @@ export const invitesScreen = (root: HTMLElement, input: Input, onClose: () => vo
     ]
 
     const head = url
-      ? section(m.link, h('button', { class: 'invite-link', type: 'button', onclick: () => void shareLink(root, url) }, h('img', { src: eggIcon('friend'), alt: '' }), h('b', {}, shownUrl(url))))
-      : h('p', { class: 'invite-gate' }, h('img', { src: eggIcon('friend'), alt: '' }), h('span', {}, s.kind === 'signedIn' ? m.noHandle : m.guest))
+      ? section(m.link, h('button', { class: 'invite-link', type: 'button', onclick: () => void shareLink(root, url) }, h('img', { src: friendEggIcon(), alt: '' }), h('b', {}, shownUrl(url))))
+      : h('p', { class: 'invite-gate' }, h('img', { src: friendEggIcon(), alt: '' }), h('span', {}, s.kind === 'signedIn' ? m.noHandle : m.guest))
 
     const people = !handle
       ? null
@@ -244,7 +244,7 @@ export const resultsInvite = (root: HTMLElement, input: Input, run: { won: boole
   const card = h(
     'div',
     { class: 'result-invite' },
-    h('img', { src: eggIcon('friend'), alt: '' }),
+    h('img', { src: friendEggIcon(), alt: '' }),
     h('span', { class: 'result-invite-text' }, rich(run.won ? m.endWin : m.endBest), progress),
     button,
   )

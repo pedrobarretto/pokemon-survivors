@@ -828,7 +828,6 @@ export const bagIcon = (id: BagItem) => itemArt(id)
 export const coinIcon = (tier = 0) => toIconUrl(`coin:${tier}`, () => PICKUPS.coins()[tier]!)
 export const candyIcon = (tier: number) => toIconUrl(`candy:${tier}`, () => PICKUPS.candy()[tier]!)
 export const berryIcon = () => toIconUrl('berry', PICKUPS.berry)
-export const pokeballIcon = () => toIconUrl('pokeball', PICKUPS.pokeball)
 export const heartIcon = () => toIconUrl('heart', FX.heart)
 export const gearIcon = () => toIconUrl('gear', () => art(GEAR, { 1: '#303040' }))
 export const helpIcon = () => toIconUrl('help', () => art(HELP, { 1: '#303040' }))
@@ -872,92 +871,221 @@ const SURVEY = [
 export const surveyIcon = () =>
   toIconUrl('survey', () => art(SURVEY, { 1: '#303040', 2: '#c8d0e0', 3: '#c08850', 4: '#f8f8f8', 5: '#58b858', 6: '#f08030', 7: '#a040c8', 8: '#9098b8' }))
 
-/** Discord's app icon: the white Clyde on a blurple rounded square. 1 outline, 2 blurple, 3 white. */
+/** Discord's Clyde in blurple (the mods' icon pack, 2026-11). */
 const DISCORD = [
-  '..11111111111111..',
-  '.1222222222222221.',
-  '122222222222222221',
-  '122233222222332221',
-  '122333333333333221',
-  '122333333333333221',
-  '123333333333333321',
-  '123332233332233321',
-  '123332233332233321',
-  '123332233332233321',
-  '123333333333333321',
-  '122333322223333221',
-  '122233222222332221',
-  '.1222222222222221.',
-  '..11111111111111..',
+  '................',
+  '................',
+  '..11111..11111..',
+  '.11223111132211.',
+  '.12222222222221.',
+  '1124444444444211',
+  '1344444444444431',
+  '1244255335524421',
+  '5322355335532235',
+  '5333332222333335',
+  '5233366666633325',
+  '5622235555322265',
+  '5566665..5666655',
+  '.555555..555555.',
+  '................',
+  '................',
 ]
 
-export const discordIcon = () => toIconUrl('discord', () => art(DISCORD, { 1: '#283070', 2: '#5865f2', 3: '#ffffff' }))
+export const discordIcon = () =>
+  toIconUrl('discord', () => art(DISCORD, { 1: '#293479', 2: '#8495ff', 3: '#6b80ff', 4: '#9ab1ff', 5: '#202a61', 6: '#4456c4' }))
 
-/** TikTok's app icon: the white note on a black rounded square, with its cyan and red echoes. 1 outline, 2 black, 3 white, 4 cyan, 5 red. */
+/** TikTok's note with its cyan and red echoes (the mods' icon pack). */
 const TIKTOK = [
-  '..111111111111..',
-  '.12222222222221.',
-  '1222222444222221',
-  '1222222433322221',
-  '1222222433332221',
-  '1222222433533221',
-  '1222222433523521',
-  '1222222433522521',
-  '1222444433522221',
-  '1224433333522221',
-  '1224333333522221',
-  '1222333335522221',
-  '1222233355222221',
-  '1222225552222221',
-  '.12222222222221.',
-  '..111111111111..',
+  '......11111.....',
+  '......122211....',
+  '......123321111.',
+  '......123332221.',
+  '......123333345.',
+  '...111123333345.',
+  '..1122223344445.',
+  '.11233323345555.',
+  '.12333326645....',
+  '.12333786675....',
+  '.98667986675....',
+  '.98666866675....',
+  '.98666666675....',
+  '.99866666755....',
+  '..957444755.....',
+  '...5555555......',
 ]
 
-/** YouTube's play button: a white triangle on a red rounded rectangle. 1 outline, 2 red, 3 white. */
+/** YouTube's play button on its red tile (the mods' icon pack). */
 const YOUTUBE = [
   '................',
   '................',
-  '..111111111111..',
-  '.12222222222221.',
-  '1222222222222221',
-  '1222223222222221',
-  '1222223332222221',
-  '1222223333322221',
-  '1222223333322221',
-  '1222223332222221',
-  '1222223222222221',
-  '1222222222222221',
-  '.12222222222221.',
-  '..111111111111..',
+  '.11111111111111.',
+  '1123333333333211',
+  '1233333333333321',
+  '1333333433333331',
+  '1333333443333331',
+  '1233333444333321',
+  '5222222662222225',
+  '5222222622222225',
+  '5232222222222325',
+  '5723333333333275',
+  '5577777777777755',
+  '.55555555555555.',
   '................',
   '................',
 ]
 
-/** Instagram's camera: a white outline, lens and flash on its purple-to-yellow gradient. 1 outline, 2 purple, 3 magenta, 4 pink, 5 orange, 6 yellow, 7 white. */
+/** Instagram's camera on its orange-to-pink gradient (the mods' icon pack, its gradient kept in 12 colors). */
 const INSTAGRAM = [
   '..111111111111..',
-  '.14333332222221.',
-  '1444333332222221',
-  '1444777777772221',
-  '1447443333327221',
-  '1547444333737221',
-  '1557444773337221',
-  '1557447447337321',
-  '1557547447337331',
-  '1557554774437331',
-  '1657555444447331',
-  '1667555544447331',
-  '1666777777774431',
-  '1666655555444441',
-  '.16666555554441.',
+  '.11aabbbccccc11.',
+  '.19933355555cc1.',
+  '.182111111165c1.',
+  '.18111aabb141c1.',
+  '.18119933bb11c1.',
+  '.171182113b11c1.',
+  '.171181111a11c1.',
+  '.161188119a11b1.',
+  '.161128889311b1.',
+  '.161112222111b1.',
+  '.16611111111aa1.',
+  '.14666778889931.',
+  '.11444222222211.',
   '..111111111111..',
+  '................',
 ]
 
 const SOCIAL_ART = {
-  tiktok: () => art(TIKTOK, { 1: '#000000', 2: '#161823', 3: '#ffffff', 4: '#25f4ee', 5: '#fe2c55' }),
-  youtube: () => art(YOUTUBE, { 1: '#7a0012', 2: '#ff0033', 3: '#ffffff' }),
-  instagram: () => art(INSTAGRAM, { 1: '#4a1248', 2: '#833ab4', 3: '#c13584', 4: '#e1306c', 5: '#f77737', 6: '#fcaf45', 7: '#ffffff' }),
+  tiktok: () => art(TIKTOK, { 1: '#16575e', 2: '#67faff', 3: '#252e38', 4: '#ff3e8b', 5: '#21060e', 6: '#181d23', 7: '#e5275f', 8: '#22cad7', 9: '#052023' }),
+  youtube: () => art(YOUTUBE, { 1: '#470a0a', 2: '#dc2727', 3: '#ff3b3b', 4: '#ffffff', 5: '#3b0606', 6: '#ffeded', 7: '#911414' }),
+  instagram: () =>
+    art(INSTAGRAM, {
+      1: '#640000', 2: '#b42d0e', 3: '#b3182c', 4: '#b64500', 5: '#b40548', 6: '#ff8b03',
+      7: '#ff7a19', 8: '#ff6933', 9: '#ff594a', a: '#ff4e5e', b: '#ff4072', c: '#ff2a96',
+    }),
 } as const satisfies Record<SocialId, () => PixelSprite>
+
+/** Pokédex (the lobby's dock, seats with no Pokémon yet, the kill counter): a Poké Ball (the mods' icon pack). */
+const POKEBALL_ICON = [
+  '.....111111.....',
+  '...1122223311...',
+  '..122223422331..',
+  '.12552233225521.',
+  '.12555222255521.',
+  '1265555555555621',
+  '1666655555566661',
+  '1666666116666661',
+  '1116661741666111',
+  '1771118778111771',
+  '1897771881777981',
+  '.18999711799981.',
+  '.18999999999981.',
+  '..189999999881..',
+  '...1188888811...',
+  '.....111111.....',
+]
+
+export const pokeballIcon = () =>
+  toIconUrl('pokeball', () =>
+    art(POKEBALL_ICON, { 1: '#101010', 2: '#e03c3c', 3: '#f27575', 4: '#ffeaea', 5: '#cf1111', 6: '#bd0303', 7: '#b7b7b7', 8: '#6e6e6e', 9: '#9e9e9e' }),
+  )
+
+/** Ovos (the lobby's dock): a spotted egg (the mods' icon pack). The incubator's eggs are `eggIcon`, by tier. */
+const EGGS_DOCK = [
+  '................',
+  '......1111......',
+  '....11222211....',
+  '...1324444231...',
+  '...1564444441...',
+  '..156644444431..',
+  '..166444444421..',
+  '.13444444466231.',
+  '.14444444466521.',
+  '.14444444445521.',
+  '.14446644422221.',
+  '.13226622555231.',
+  '..122222555551..',
+  '..132222555531..',
+  '...1122225511...',
+  '.....111111.....',
+]
+
+export const eggsIcon = () => toIconUrl('eggsDock', () => art(EGGS_DOCK, { 1: '#101010', 2: '#f2e35d', 3: '#65502f', 4: '#ede7b2', 5: '#377b08', 6: '#5fbd20' }))
+
+/** Convites (the lobby's invites card, the invite screen): the friendship egg in pink (the mods' icon pack). */
+const FRIEND_EGG = [
+  '................',
+  '......1111......',
+  '....11222211....',
+  '...1345555231...',
+  '...1675555551...',
+  '..167755555531..',
+  '..177555555521..',
+  '.13555555577231.',
+  '.15555555577621.',
+  '.15555555556621.',
+  '.15557755522221.',
+  '.13227722666231.',
+  '..122222666661..',
+  '..132222666631..',
+  '...1122226611...',
+  '.....111111.....',
+]
+
+export const friendEggIcon = () =>
+  toIconUrl('friendEgg', () => art(FRIEND_EGG, { 1: '#101010', 2: '#de72e5', 3: '#9f51a3', 4: '#e653ed', 5: '#f6a9fb', 6: '#c6c6c6', 7: '#e9e9e9' }))
+
+/** Loja (the lobby's dock): Kecleon's stall, a green awning over a wooden counter (the mods' icon pack). */
+const SHOP = [
+  '..111111111111..',
+  '.12223322332221.',
+  '1222333223332221',
+  '1422332222332241',
+  '1444554444554441',
+  '1661116446111661',
+  '.171..1111..171.',
+  '.171........171.',
+  '1878111111118781',
+  '19999abccbda9991',
+  '.1eeceeeebeeec1.',
+  '.1cbbccbbbccbb1.',
+  '.1ebeeebbeeebb1.',
+  '.1bccbbbcccbbd1.',
+  '1ddbbbbbbbbbddd1',
+  '1111111111111111',
+]
+
+export const shopIcon = () =>
+  toIconUrl('shop', () =>
+    art(SHOP, {
+      1: '#101010', 2: '#6abe30', 3: '#c6c6c6', 4: '#459111', 5: '#888888', 6: '#347706', 7: '#b07e32',
+      8: '#9a6f2e', 9: '#654311', a: '#6e4a16', b: '#775118', c: '#9e702a', d: '#6e4b18', e: '#4b3515',
+    }),
+  )
+
+/** Ranking (the lobby's dock): a gold medal on a red and a blue ribbon (the mods' icon pack). */
+const RANKING = [
+  '1111........1111',
+  '1221........1331',
+  '.1221......1331.',
+  '.1241......1531.',
+  '..1441....1551..',
+  '..1441....1551..',
+  '...1461111751...',
+  '...1618888171...',
+  '....19888891....',
+  '...1988aa8891...',
+  '...19888a8891...',
+  '...19888a8891...',
+  '...19888a8891...',
+  '....19888891....',
+  '.....199991.....',
+  '......1111......',
+]
+
+export const rankingIcon = () =>
+  toIconUrl('ranking', () =>
+    art(RANKING, { 1: '#101010', 2: '#e03c3c', 3: '#5fcde4', 4: '#cf1111', 5: '#25aeca', 6: '#bd0303', 7: '#1a849a', 8: '#f2ba38', 9: '#b97919', a: '#fbda58' }),
+  )
 
 /** Each official profile's icon (`SOCIALS` in `site/routes.ts`). */
 export const socialIcon = (id: SocialId) => toIconUrl(`social:${id}`, SOCIAL_ART[id])
@@ -1096,24 +1224,28 @@ const DIE = [
 
 export const dieIcon = () => toIconUrl('die', () => art(DIE, { 1: '#283040', 2: '#fff8f0', 3: '#c8c0d8', 4: '#e83850' }))
 
-/** Ideias (the idea board): a lit bulb. 1 outline, 2 glass, 3 shine, 4 shade, 5-6 the screw base. */
+/** Ideias (the idea board): a lit bulb (the mods' icon pack). */
 const BULB = [
-  '...11111...',
-  '..1322221..',
-  '.132222241.',
-  '13222222241',
-  '13222222241',
-  '12222222241',
-  '.122222441.',
-  '..1224441..',
-  '...12241...',
-  '...15551...',
-  '...16661...',
-  '...15551...',
-  '....111....',
+  '................',
+  '......1111......',
+  '....11233311....',
+  '...1223333341...',
+  '..123333333341..',
+  '..123333333341..',
+  '..133333333341..',
+  '..133333333441..',
+  '...1333333441...',
+  '....11334411....',
+  '.....156651.....',
+  '.....178871.....',
+  '.....156651.....',
+  '.....178871.....',
+  '......1551......',
+  '......1111......',
 ]
 
-export const bulbIcon = () => toIconUrl('bulb', () => art(BULB, { 1: '#303040', 2: '#f8d030', 3: '#fff8c0', 4: '#c89000', 5: '#c8d0e0', 6: '#7880a0' }))
+export const bulbIcon = () =>
+  toIconUrl('bulb', () => art(BULB, { 1: '#101010', 2: '#fbe281', 3: '#fbda58', 4: '#f2ba38', 5: '#585858', 6: '#6e6e6e', 7: '#808080', 8: '#9e9e9e' }))
 
 /** Passear (the lobby's free walk): a paw print. 1 outline, 2 pad, 3 shine. */
 const PAW = [
@@ -1133,20 +1265,33 @@ const PAW = [
 
 export const pawIcon = () => toIconUrl('paw', () => art(PAW, { 1: '#402818', 2: '#a86838', 3: '#e0a868' }))
 
-/** Jogar junto (co-op): two Poké Balls side by side, red behind blue. 1 outline, 2 red, 3 white, 4 blue, 5 the button. */
+/** Jogar junto (co-op): a red Poké Ball in front of a blue one (the mods' icon pack). */
 const COOP_BALLS = [
-  '..11111.11111..',
-  '.1222221444441.',
-  '122222144444441',
-  '122111144111441',
-  '111151111151111',
-  '133111133111331',
-  '133333133333331',
-  '.1333331333331.',
-  '..11111.11111..',
+  '........1111....',
+  '......11222211..',
+  '.....1322222231.',
+  '.....1332222331.',
+  '....144433333351',
+  '..11666644133551',
+  '.176666667415111',
+  '.177666677411881',
+  '197777777794aa1.',
+  '199771177994ab1.',
+  '11191c81911411..',
+  '188118811881....',
+  '.1aa8118aa1.....',
+  '.1baaaaaab1.....',
+  '..11baab11......',
+  '....1111........',
 ]
 
-export const coopIcon = () => toIconUrl('coop', () => art(COOP_BALLS, { 1: '#202030', 2: '#e83850', 3: '#f8f8f8', 4: '#4898e8', 5: '#f8f8f8' }))
+export const coopIcon = () =>
+  toIconUrl('coop', () =>
+    art(COOP_BALLS, {
+      1: '#101010', 2: '#5fcde4', 3: '#25aeca', 4: '#232323', 5: '#1a849a', 6: '#e03c3c',
+      7: '#cf1111', 8: '#b7b7b7', 9: '#bd0303', a: '#9e9e9e', b: '#6e6e6e', c: '#ffeaea',
+    }),
+  )
 
 /** Arena (Versus): a shield split Blue and Red with an Energy orb on the seam. 1 outline, 2 blue, 3 red, 4 the orb, 5 its shine. */
 const ARENA_SHIELD = [
