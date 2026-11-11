@@ -5009,6 +5009,9 @@ if (import.meta.env.DEV) {
        * Shadow Pokémon (`game/shadow.ts`): `ps.shadow('charmander')` owns it as a Shadow and plays it so from the next run,
        * `ps.shadow('charmander', 'ready')` fills its heart gauge, `('purified')` purifies it, `('off')` plays it Normal, `('drop')` forgets it.
        */
+      /** The partner select on `id` (its Shadow row, `ui/shadowPick.ts`) and the Pokédex (its Shadow marks), for staging. */
+      select: (id: string = loadSave().partner) => (Object.hasOwn(PLAYABLE, id) ? showMenu(id as PlayableId) : 'ps.select: a Pokémon id'),
+      pokedex: () => (endRun(), setScreen(pokedexScreen(ui, input, () => showTitle(), showPcBox))),
       shadow: (id: string = loadSave().partner, how: 'own' | 'ready' | 'purified' | 'off' | 'drop' = 'own') => {
         if (!Object.hasOwn(PLAYABLE, id)) return 'ps.shadow: a Pokémon id'
         const pid = id as PlayableId
