@@ -10000,9 +10000,10 @@ a.btn.dex-site {
     flex: 1 1 0;
     min-width: 0;
     min-height: 44px;
-    padding: 6px 8px;
-    font-size: 16px;
-    white-space: nowrap;
+    padding: 4px 6px;
+    font-size: 15px;
+    line-height: 1.1;
+    text-align: center;
     justify-content: center;
   }
   .dex .hint {
