@@ -530,6 +530,7 @@ export const siteFr: SiteMessages = {
       whereHead: 'Où le battre',
       winsHead: 'Pour capturer',
       wins: (n: number) => (n === 1 ? '1 victoire' : `${n} victoires`),
+      pathWhere: { zygarde: 'Zygarde Cells et Cores en parties solo', solgaleo: 'La recherche stellaire de Lanturn, de jour', lunala: 'La recherche stellaire de Lanturn, de nuit', kubfu: 'La Tour du Dojo de Machoke', meltan: 'Les Fouilles du Poké Realm' },
       need: { zygarde: '10 Zygarde Cells dans le Cube', solgaleo: 'Élever un Cosmog (24 parties, de jour)', lunala: 'Élever un Cosmog (24 parties, de nuit)', kubfu: 'Les 3 étages de la Tour du Dojo', meltan: 'Ouvrir la Mystery Box des Fouilles', regigigas: '1 victoire au temple, trio Regi capturé' },
       innateHead: 'Inné',
       opensHead: 'Capacité légendaire',

@@ -529,6 +529,7 @@ export const siteEn: SiteMessages = {
       whereHead: 'Where to beat it',
       winsHead: 'To capture',
       wins: (n: number) => (n === 1 ? '1 win' : `${n} wins`),
+      pathWhere: { zygarde: 'Zygarde Cells and Cores in solo runs', solgaleo: 'Lanturn’s star research, by day', lunala: 'Lanturn’s star research, by night', kubfu: 'Machoke’s Dojo Tower', meltan: 'The Poké Realm’s Mine Dig' },
       need: { zygarde: '10 Zygarde Cells in the Cube', solgaleo: 'Raise a Cosmog (24 runs, by day)', lunala: 'Raise a Cosmog (24 runs, by night)', kubfu: 'The Dojo Tower’s 3 floors', meltan: 'Open the Mine Dig’s Mystery Box', regigigas: '1 win at the temple, Regi trio caught' },
       innateHead: 'Innate',
       opensHead: 'Legendary move',

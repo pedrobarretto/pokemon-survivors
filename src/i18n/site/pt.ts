@@ -583,6 +583,8 @@ export const sitePt = {
       winsHead: 'Para capturar',
       /** A legend's capture in the guide's table: its wins, or a path legend's own way (`unlock.path`, `unlock.after`). */
       wins: (n: number) => (n === 1 ? '1 vitória' : `${n} vitórias`),
+      /** Where a path legend's own path runs (the table's second column). */
+      pathWhere: { zygarde: 'Zygarde Cells e Cores nas partidas solo', solgaleo: 'A Pesquisa estelar da Lanturn, de dia', lunala: 'A Pesquisa estelar da Lanturn, de noite', kubfu: 'A Torre do Dojo do Machoke', meltan: 'A Escavação do Poké Realm' },
       need: { zygarde: '10 Zygarde Cells no Cube', solgaleo: 'Criar um Cosmog (24 partidas, de dia)', lunala: 'Criar um Cosmog (24 partidas, de noite)', kubfu: 'Os 3 andares da Torre do Dojo', meltan: 'Abrir a Mystery Box da Escavação', regigigas: '1 vitória no templo, com o trio Regi' },
       innateHead: 'Inata',
       opensHead: 'Golpe lendário',

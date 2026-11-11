@@ -533,6 +533,7 @@ export const siteEs: SiteMessages = {
       whereHead: 'Dónde vencerlo',
       winsHead: 'Para capturar',
       wins: (n: number) => (n === 1 ? '1 victoria' : `${n} victorias`),
+      pathWhere: { zygarde: 'Zygarde Cells y Cores en partidas solo', solgaleo: 'La investigación estelar de Lanturn, de día', lunala: 'La investigación estelar de Lanturn, de noche', kubfu: 'La Torre del Dojo de Machoke', meltan: 'La Excavación del Poké Realm' },
       need: { zygarde: '10 Zygarde Cells en el Cube', solgaleo: 'Criar un Cosmog (24 partidas, de día)', lunala: 'Criar un Cosmog (24 partidas, de noche)', kubfu: 'Los 3 pisos de la Torre del Dojo', meltan: 'Abrir la Mystery Box de la Excavación', regigigas: '1 victoria en el templo, con el trío Regi' },
       innateHead: 'Innata',
       opensHead: 'Movimiento legendario',
