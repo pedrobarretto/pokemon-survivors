@@ -46,7 +46,7 @@ const NIGHT_SLOTS = [
 ] as const
 
 /** A Tera Raid's giant (`data/tera.ts`), before its stars and the run clock: slow, heavy and twice the size. */
-const RAID_GIANT = { hp: 6400, speed: 20, damage: 24, xp: 0, mass: 60, boss: true, scale: 2 } as const
+const RAID_GIANT = { hp: 14000, speed: 20, damage: 24, xp: 0, mass: 60, boss: true, scale: 2 } as const
 
 /** Stats of the rare mythical that may join Mewtwo at the end. */
 const MYTHICAL = { hp: 9000, speed: 70, damage: 30, xp: 300, mass: 40, boss: true, legendary: true } as const
@@ -142,7 +142,7 @@ export const ENEMIES = {
   raidDragapult: { dex: 887, name: 'Dragapult', types: ['dragon', 'ghost'], ...RAID_GIANT },
   raidTinkaton: { dex: 959, name: 'Tinkaton', types: ['fairy', 'steel'], ...RAID_GIANT },
   // The 7★ Stellar raid's giant, captured by beating it once (`LEGENDS.terapagos`).
-  terapagos: { dex: 1024, name: 'Terapagos', types: ['normal'], ...RAID_GIANT, hp: 7600, damage: 30, legendary: true },
+  terapagos: { dex: 1024, name: 'Terapagos', types: ['normal'], ...RAID_GIANT, hp: 16000, damage: 30, legendary: true },
   // The endless mode's reaper (`game/endless.ts`): it hunts the player from 20:00.
   arceus: { dex: 493, name: 'Arceus', types: ['normal'], hp: 300000, speed: 60, damage: 90, xp: 0, mass: 999, boss: true, legendary: true, scale: 2 },
 } as const satisfies Record<string, EnemyDef>

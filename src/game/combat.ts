@@ -38,7 +38,7 @@ import { inPlay } from './players'
 import { knockOut, strikeAvatar, tickAvatar, wildDown } from './versusCombat'
 import { seasonKitBlocks, seasonKitHolds, seasonKitHurt, seasonKitKill } from './seasonOneKitSystem'
 import { dropBossShards, stellarBurst, teraGuard, teraKill, teraPower } from './tera'
-import { fallInRaid, isRaidBoss, shieldTakes } from './teraRaid'
+import { fallInRaid, isRaidBoss, raidHarm, shieldTakes } from './teraRaid'
 import { TERA } from '../data/tera'
 import * as dm from '../engine/dmath'
 
@@ -283,7 +283,7 @@ export const hurtPlayer = (
   // Air Lock: the weather boosts no foe's hit.
   const weather = abilityImmune(g, 'weather') ? 1 : weatherPower(weatherHere(g), types)
   // Terastallized, the player defends as its Tera type (`teraGuard`).
-  const dmg = armored(taken * mods.enemyDamage * weather * teraGuard(g, types) * domainHarm(g, from !== undefined) * p.stats.damageTaken, p.stats.armor)
+  const dmg = armored(taken * mods.enemyDamage * weather * teraGuard(g, types) * domainHarm(g, from !== undefined) * raidHarm(g, from !== undefined) * p.stats.damageTaken, p.stats.armor)
   p.hp -= dmg
   p.record.taken += dmg
   p.record.hits++

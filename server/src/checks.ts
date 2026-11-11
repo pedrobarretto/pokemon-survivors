@@ -136,10 +136,11 @@ export const startChecks = (ranking: RankingStore, { paused = false } = {}) => {
       console.log(`check ${id}: a replay its rules' simulator can't read${under}, left unverified`)
       return
     }
-    // The outbreak and the Noite das Bruxas are run inputs: they must fit the day the run started (or the day before).
+    // The outbreak, the Noite das Bruxas and the raid of the day are run inputs: they must fit the day the run started (or the day before).
     if (judged.kind === 'unfit') {
       await ranking.setVerified(id, claimed.time, { ok: false }, null)
-      console.log(`check ${id}: failed, ${judged.why === 'outbreak' ? 'another day\'s outbreak' : 'haunted outside the event'} (${claimed.startedAt.toISOString()})${under}`)
+      const why = judged.why === 'outbreak' ? 'another day\'s outbreak' : judged.why === 'raid' ? 'another day\'s Tera Raid' : 'haunted outside the event'
+      console.log(`check ${id}: failed, ${why} (${claimed.startedAt.toISOString()})${under}`)
       return
     }
     const r = judged.result

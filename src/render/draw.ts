@@ -29,7 +29,7 @@ import { drawMapEventMarkers, drawMapEvents, markerInsets } from './mapEvents'
 import { ALPHA_PRIZE, alphaOutline, drawAlphaAir, drawAlphaGround, drawAlphaMarkers } from './alphas'
 import { drawScale } from '../game/alphas'
 import { drawMegaAir, drawMegaAttack, drawMegaGround, drawMegaStone, megaLook } from './megaFx'
-import { crystalType, drawCrystalPokemon, drawDenAir, drawDenArrow, drawDenGround, drawRaidBoss, drawRaidFloor, drawShardPickup, drawTeraAir, drawTeraAttack, drawTeraGround } from './teraFx'
+import { crystalType, drawCrystalPokemon, drawDenAir, drawDenArrow, drawStarstorm, drawDenGround, drawRaidBoss, drawRaidFloor, drawShardPickup, drawTeraAir, drawTeraAttack, drawTeraGround } from './teraFx'
 import { TERA, TERA_TYPES } from '../data/tera'
 import type { RaidArena } from '../game/teraRaid'
 import { drawModAttack, drawModGround, flightAngle } from './modFx'
@@ -101,6 +101,7 @@ export const shadow = (ctx: Ctx, x: number, y: number, width: number) => {
 const drawGroundAttack = (ctx: Ctx, a: Attack, t: number) => {
   if (a.shape.kind !== 'circle') return
   const r = a.shape.r
+  if (a.move === 'teraStarstorm') return drawStarstorm(ctx, a, t, true)
   switch (a.visual) {
     case 'telegraph':
       return drawTelegraph(ctx, a)
@@ -187,6 +188,7 @@ const slashArc = (ctx: Ctx, x: number, y: number, r: number, dir: number, sweep:
 
 const drawAttack = (ctx: Ctx, a: Attack, t: number) => {
   const m = a.motion
+  if (a.move === 'teraStarstorm') return drawStarstorm(ctx, a, t, false)
   switch (a.visual) {
     case 'ember':
       return drawEmber(ctx, a, t)

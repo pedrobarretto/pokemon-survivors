@@ -7,7 +7,7 @@ import { TAU, retain } from '../engine/math'
 import { pick, range } from '../engine/rng'
 import { onFloor } from './arenaFloor'
 import { healPlayer } from './combat'
-import { dayNumber, type DayKey } from './day'
+import { brasiliaDay, dayNumber, previousDay, type DayKey } from './day'
 import { burst, floatText, setScreenShake, shakeScreen } from './effects'
 import { spawnEnemy } from './enemies'
 import { dropCoins } from './pickups'
@@ -115,8 +115,16 @@ export const raidOfDay = (day: DayKey): RaidPick => {
   return { boss: RAID_BOSSES[mix(n, 1) % RAID_BOSSES.length]!, tera: POKE_TYPES[mix(n, 2) % POKE_TYPES.length]!, stars }
 }
 
-/** Whether a run's raid day fits the day it started (or the one before, a run begun before midnight): what the server checks. */
-export const raidDayFits = (day: DayKey | null, started: DayKey, before: DayKey) => day === null || day === started || day === before
+/**
+ * Whether a run that started at `startedAt` may have played the raid of `day`:
+ * that Brasília day's, or the day before's (the menus picked it before
+ * midnight). A run without one fits. The API checks it (`server/src/sims.ts`).
+ */
+export const raidFits = (day: DayKey | undefined, startedAt: Date) => {
+  if (day === undefined) return true
+  const started = brasiliaDay(startedAt)
+  return day === started || day === previousDay(started)
+}
 
 /** The run's own raid at the den of `slot`: drawn from the seed, its stars by difficulty and one more per endless den. */
 const ownRaid = (g: Game): RaidPick => {
@@ -130,12 +138,19 @@ export const isRaidBoss = (g: Game, e: Enemy) => g.raid.arena !== null && g.raid
 
 /**
  * How a raid boss grows with the run clock, on top of its stars: tuned for a
- * den at 8:10, about a fifth more each minute past it (a third as fast as a rift's).
+ * den at 8:00, 18% more HP each minute past it (as fast as a rift legendary
+ * grows from its own 8:00 strength, `riftScale`).
  */
 export const raidScale = (time: number, stars: RaidStars) => {
   const late = Math.max(0, time / 60 - 8)
   const s = RAID_STARS[stars]
-  return { hp: (1 + late * 0.22) * s.hp, damage: (1 + late * 0.05) * s.damage }
+  return { hp: (1 + late * 0.18) * s.hp, damage: (1 + late * 0.05) * s.damage }
+}
+
+/** What a Tera Raid giant's attacks do to a player, times: its stars' and the clock's (`raidScale`) for its hazards; its body is already scaled. 1 outside a raid. */
+export const raidHarm = (g: Game, body: boolean) => {
+  const arena = g.raid.arena
+  return arena && !body ? raidScale(g.time, arena.raid.stars).damage : 1
 }
 
 /* ---------------- The den on the map ---------------- */
@@ -310,6 +325,9 @@ const STORM_LOOK = {
   stellar: 'judgment',
 } as const satisfies Record<TeraType, HazardVisual>
 
+/** A crystal storm's strike, before the stars and the clock (`raidHarm`). */
+const STORM_DAMAGE = 20
+
 /** The crystal storm: the boss's own attack in its Tera type, crystals raining on each player's path. */
 const crystalStorm = (g: Game, e: Enemy, arena: RaidArena) => {
   const count = arena.raid.stars >= 6 ? 6 : 4
@@ -319,7 +337,7 @@ const crystalStorm = (g: Game, e: Enemy, arena: RaidArena) => {
       const lead = count > 1 ? i / (count - 1) : 1
       const delay = 1.25
       spawnHazard(g, {
-        kind: 'strike', visual: STORM_LOOK[arena.raid.tera], r: 13, damage: e.damage * 0.8, armAt: delay, disarmAt: delay + 0.15, ttl: delay + 0.4,
+        kind: 'strike', visual: STORM_LOOK[arena.raid.tera], r: 13, damage: STORM_DAMAGE, armAt: delay, disarmAt: delay + 0.15, ttl: delay + 0.4,
         x: p.x + p.vx * delay * lead + range(g.rng, -24, 24), y: p.y + p.vy * delay * lead + range(g.rng, -18, 18), by: harmBy(e, 'Tera Storm'),
       })
     }

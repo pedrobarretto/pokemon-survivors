@@ -522,3 +522,72 @@ export const drawDenArrow = (ctx: Ctx, g: Game, camX: number, camY: number, t: n
   const c = crownSprite(type)
   blitCentered(ctx, c, ax - dx * 18, ay - dy * 18)
 }
+
+/* ---------------- Tera Starstorm (Terapagos) ---------------- */
+
+/**
+ * Tera Starstorm's look (`teraStarstorm` in `game/legendaryMoves.ts`):
+ * the prism of the seven crystals gathering over Terapagos, each star's mark
+ * on the ground closing in, the star falling down its light, and its burst.
+ * `ground` draws the marks, the rest goes over the Pokémon.
+ */
+export const drawStarstorm = (ctx: Ctx, a: Attack, t: number, ground: boolean) => {
+  if (a.shape.kind !== 'circle') return
+  const k = a.ttl > 0 ? Math.min(1, a.age / a.ttl) : 1
+  const r = a.shape.r
+  const hue = (i: number) => STELLAR[(i + a.memo) % STELLAR.length]!
+  if (a.visual === 'starFall') {
+    if (ground) {
+      // The mark: seven-colored ticks closing in on the spot the star falls on.
+      const rr = r * (1.4 - 0.4 * k)
+      for (let i = 0; i < 14; i++) {
+        const ang = (i / 14) * TAU + t * 2
+        ctx.fillStyle = hue(i)
+        ctx.fillRect(Math.round(a.x + Math.cos(ang) * rr), Math.round(a.y + Math.sin(ang) * rr * 0.6), 2, 1)
+      }
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(Math.round(a.x) - 1, Math.round(a.y), 3, 1)
+      return
+    }
+    // The star coming down its column of light in the last half of its wait.
+    if (k < 0.45) return
+    const f = (k - 0.45) / 0.55
+    const y = a.y - (1 - f) * 150
+    for (let i = 0; i < 8; i++) {
+      ctx.fillStyle = hue(i)
+      ctx.fillRect(Math.round(a.x - 1), Math.round(y - 6 - i * 4), 2, 3)
+    }
+    blitCentered(ctx, crownSprite('stellar'), a.x, y - 4)
+    return
+  }
+  if (ground) return
+  if (a.visual === 'starPrism') {
+    // A diamond of the seven crystals, growing and turning its facets, rays closing in.
+    const size = Math.round(4 + Math.min(1, k * 2) * 5)
+    const cx = Math.round(a.x)
+    const cy = Math.round(a.y)
+    for (let row = -size; row <= size; row++) {
+      const half = size - Math.abs(row)
+      for (let x = -half; x <= half; x++) {
+        ctx.fillStyle = x === 0 || Math.abs(row) === size ? '#ffffff' : hue(Math.floor((x + size + Math.floor(t * 10)) / 2))
+        ctx.fillRect(cx + x, cy + row, 1, 1)
+      }
+    }
+    for (let i = 0; i < 7; i++) {
+      const ang = (i / 7) * TAU + t
+      const d = (1 - k) * 30 + size + 2
+      ctx.fillStyle = hue(i)
+      ctx.fillRect(Math.round(cx + Math.cos(ang) * d), Math.round(cy + Math.sin(ang) * d), 2, 2)
+    }
+    return
+  }
+  if (a.visual === 'starBurst') {
+    // A ring of splinters racing out, a white star at its heart for the first beat.
+    const rr = r * (0.4 + k * 0.8)
+    for (let i = 0; i < 18; i++) {
+      const ang = (i / 18) * TAU
+      splinter(ctx, a.x + Math.cos(ang) * rr, a.y + Math.sin(ang) * rr * 0.7, hue(i), '#ffffff')
+    }
+    if (k < 0.4) blitCentered(ctx, crownSprite('stellar'), a.x, a.y - 4)
+  }
+}

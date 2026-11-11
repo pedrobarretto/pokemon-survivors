@@ -4,6 +4,7 @@ import { halloweenFits } from '../../src/game/halloween'
 import { outbreakFits } from '../../src/game/outbreak'
 import { isRecord } from '../../src/game/parse'
 import { parseReplay, resimulate, RULES_VERSION, type Replay, type Resimulated } from '../../src/game/replay'
+import { raidFits } from '../../src/game/teraRaid'
 
 /**
  * A simulator the checks judge replays with: this build's, or the previous
@@ -54,10 +55,11 @@ export const simFor = async (rules: number): Promise<Sim | null> => (rules === R
 /**
  * What a check found: the run `played` again to where it ended; `unfit`, a
  * replay that played another day's outbreak (`outbreakFits`) or a haunted run
- * outside the Noite das Bruxas (`halloweenFits`); or `unjudged`, a replay no
+ * outside the Noite das Bruxas (`halloweenFits`), or another day's Tera Raid
+ * (`raidFits`, this build's: the frozen simulator's replays carry none); or `unjudged`, a replay no
  * simulator the API keeps can read.
  */
-export type Judged = { kind: 'played'; result: Resimulated } | { kind: 'unfit'; why: 'outbreak' | 'halloween' } | { kind: 'unjudged' }
+export type Judged = { kind: 'played'; result: Resimulated } | { kind: 'unfit'; why: 'outbreak' | 'halloween' | 'raid' } | { kind: 'unjudged' }
 
 /** A replay to judge (`checks.ts` to its worker): its raw form, the rules it says, and when its run started (ms). */
 export type Job = { id: string; replay: unknown; rules: number; startedAt: number }
@@ -75,6 +77,8 @@ export const judge = async ({ replay, rules, startedAt }: Job): Promise<{ judged
         ? { kind: 'unfit', why: 'outbreak' }
         : !sim.halloweenFits(parsed.start.halloween, at)
           ? { kind: 'unfit', why: 'halloween' }
-          : { kind: 'played', result: sim.resimulate(parsed) }
+          : !raidFits(parsed.start.raid, at)
+            ? { kind: 'unfit', why: 'raid' }
+            : { kind: 'played', result: sim.resimulate(parsed) }
   return { judged, ms: Math.round(performance.now() - t0) }
 }

@@ -1430,6 +1430,8 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
     evo: [...save.evo],
     caps: capLevel(save.caps, starter),
     mythical: mythicalHunt(save),
+    // The raid of the day's den (`raidOfDay`), from the Brasília day like the outbreak.
+    raid: brasiliaDay(today()),
     view: { w: view.w, h: view.h },
   }
   // Created like a replay is re-simulated (the roster drawn ahead is the same one).

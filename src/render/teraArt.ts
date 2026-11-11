@@ -165,10 +165,14 @@ export const crystalize = (px: Uint8ClampedArray, w: number, h: number, type: Te
         const up = facets[(y - 1) * w + x]
         const left = facets[y * w + x - 1]
         const edge = (up !== undefined && up >= 0 && up !== id) || (left !== undefined && left >= 0 && left !== id)
-        const ramp = type === 'stellar' ? tonesOfStellar(id, tones) : tones
         const own: Rgb = [px[i]!, px[i + 1]!, px[i + 2]!]
-        // A facet's edge is a bright line: white-hot where the facet faces the light, a shade darker where it turns away.
-        out = edge ? ramp[light > 0 ? 3 : light === 0 ? 2 : 1]! : mixRgb(own, ramp[tone]!, pull)
+        if (type === 'stellar') {
+          // Stellar is a prism: the Pokémon's own colors, each facet lit or shaded, its edges in the seven crystals.
+          out = edge ? STELLAR_RGB[Math.floor(hash(id >>> 16, id & 0xffff, 5) * STELLAR_RGB.length)]! : light > 0 ? mixRgb(own, tones[3]!, 0.35) : light < 0 ? mixRgb(own, tones[0]!, 0.3) : own
+        } else {
+          // A facet's edge is a bright line: white-hot where the facet faces the light, a shade darker where it turns away.
+          out = edge ? tones[light > 0 ? 3 : light === 0 ? 2 : 1]! : mixRgb(own, tones[tone]!, pull)
+        }
         // Where three facets meet inside the body, a twinkle may catch the light.
         const diag = facets[(y - 1) * w + x - 1]
         if (edge && up !== left && diag !== undefined && diag >= 0 && diag !== id && diag !== up && hash(x, y, 7) < 0.5) corners.push(x, y)
@@ -180,12 +184,6 @@ export const crystalize = (px: Uint8ClampedArray, w: number, h: number, type: Te
     }
   }
   return { corners: Int16Array.from(corners), top: top === h ? 0 : top }
-}
-
-/** Stellar's facets each take one of the seven crystals, lit and shaded by the ramp's ends. */
-const tonesOfStellar = (id: number, tones: readonly Rgb[]): readonly Rgb[] => {
-  const c = STELLAR_RGB[Math.floor(hash(id >>> 16, id & 0xffff, 5) * STELLAR_RGB.length)]!
-  return [mixRgb(c, tones[0]!, 0.55), c, mixRgb(c, tones[3]!, 0.45), tones[3]!]
 }
 
 const TYPE_INDEX = new Map(TERA_TYPES.map((t, i) => [t, i]))
