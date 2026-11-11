@@ -8,6 +8,7 @@ import { SEASON_ONE_EGG_ABILITIES } from './seasonOneEggs'
 import { SEASON_ONE_KIT_ABILITIES } from './seasonOneKits'
 import { GA_FAMILIES_B_ABILITIES } from './gaFamiliesB'
 import { GA_BRANCHES_A_ABILITIES, GA_FAMILIES_A_ABILITIES } from './gaFamiliesA'
+import { REGIONAL_BRANCH_ABILITIES, REGIONAL_FAMILY_ABILITIES } from './regionalFamilies'
 import type { PokeType } from './types'
 
 /**
@@ -263,6 +264,26 @@ export const ABILITIES = {
   multitype: { name: 'Multitype', effects: [{ kind: 'ownType', bonus: 0.2 }] },
   /** Darkrai's: the foes its Dark Void put to sleep (or anything else did) suffer in their dreams. */
   badDreams: { name: 'Bad Dreams', effects: [{ kind: 'nightmare', radius: 120, every: 0.5, damage: 1 }] },
+
+  /* ---------- The regional forms' own (`data/regionalFamilies.ts`) ---------- */
+  /** Alolan Ninetales': it brings the snow its Aurora Veil grows in. */
+  snowWarning: { name: 'Snow Warning', effects: [{ kind: 'summon', weather: 'snow' }, { kind: 'immune', to: ['chip'] }] },
+  /** Alolan Dugtrio's golden hair snares what touches it. */
+  tanglingHair: { name: 'Tangling Hair', effects: [{ kind: 'contact', status: [{ kind: 'slow', chance: 0.6, duration: 2, power: 0.45 }], damage: 0 }] },
+  /** Alolan Golem's magnetism: drops fly to it from farther away. */
+  magnetPull: { name: 'Magnet Pull', effects: [stats({ magnet: 45, typeDamage: { steel: 0.1 } })] },
+  /** Normal moves crackle with electricity, and the electric ones hit harder. */
+  galvanize: { name: 'Galvanize', effects: [stats({ typeDamage: { normal: 0.25, electric: 0.2 } })] },
+  poisonTouch: { name: 'Poison Touch', effects: [stats({ statusChance: 0.06, typeDamage: { poison: 0.1 } }), { kind: 'contact', status: [poison], damage: 0 }] },
+  /** Perrserker's: Steel moves hit much harder. */
+  steelySpirit: { name: 'Steely Spirit', effects: [stats({ typeDamage: { steel: 0.3 } })] },
+  defiant: { name: 'Defiant', effects: [{ kind: 'onHurt', seconds: 4, max: 1, stats: { might: 0.3 } }] },
+  /** Cursola's: whatever touches it is marked to perish, taking more from every hit. */
+  perishBody: { name: 'Perish Body', effects: [{ kind: 'contact', status: [{ kind: 'mark', chance: 0.6, duration: 5, power: 0.2 }], damage: 0.5 }] },
+  /** Galarian Darmanitan's: far stronger, a little slower to strike again. */
+  gorillaTactics: { name: 'Gorilla Tactics', effects: [stats({ might: 0.4, cooldown: 0.06 })] },
+  aftermath: { name: 'Aftermath', effects: [{ kind: 'immune', to: ['blast'] }, { kind: 'contact', status: [], damage: 1 }] },
+  angerPoint: { name: 'Anger Point', effects: [{ kind: 'onHurt', seconds: 3, max: 1, stats: { might: 0.45, speed: 6 } }] },
 } as const satisfies Record<string, AbilityDef>
 
 export type AbilityId = keyof typeof ABILITIES
@@ -406,6 +427,7 @@ export const FAMILY_ABILITIES = {
   ...SEASON_ONE_KIT_ABILITIES,
   ...GA_FAMILIES_B_ABILITIES,
   ...GA_FAMILIES_A_ABILITIES,
+  ...REGIONAL_FAMILY_ABILITIES,
 } as const satisfies Record<PlayableId, AbilitySet>
 
 /** The abilities of a branch picked at the family's first evolution (`data/branches.ts`). */
@@ -427,6 +449,7 @@ export const BRANCH_ABILITIES = {
   flapple: ['overgrow', 'hustle', 'moxie'],
   appletun: ['overgrow', 'thickFat', 'regenerator'],
   ...GA_BRANCHES_A_ABILITIES,
+  ...REGIONAL_BRANCH_ABILITIES,
 } as const satisfies Partial<Record<BranchId, AbilitySet>>
 
 /** The Hidden Ability of a set: the last of three (a lone ability is no Hidden one). */

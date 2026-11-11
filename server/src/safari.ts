@@ -193,7 +193,7 @@ export const safariStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
         const habitat = habitatOfWeek(week, SAFARI_HABITAT_IDS)
         const save = paid?.save ?? (await saveOf(tx, userId))
         const sure = await sureFor(tx, userId, await dryOf(tx, userId), save)
-        const state: Stored = { run: startRun(rollQueue(habitatPool(habitat), partnerTypes(save), dice, sure)), log: [], fresh: false }
+        const state: Stored = { run: startRun(rollQueue(habitatPool(habitat, week), partnerTypes(save), dice, sure)), log: [], fresh: false }
         const [session] = await tx<SessionRow[]>`
           insert into safari_sessions (user_id, day, week, habitat, price, state)
           values (${userId}, ${day}::date, ${week}::date, ${habitat}, ${price}, ${tx.json(state)})

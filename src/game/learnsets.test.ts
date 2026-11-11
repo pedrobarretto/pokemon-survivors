@@ -19,13 +19,14 @@ import { SEASON_ONE_EGG_MOVE_IDS } from './seasonOneEggMoves'
 import { SEASON_ONE_KIT_MOVE_IDS } from './seasonOneKitMoves'
 import { GA_KIT_B_MOVE_IDS } from './gaKitBMoves'
 import { GA_KIT_A_MOVE_IDS } from './gaKitAMoves'
+import { REGIONAL_MOVE_IDS } from './regionalMoves'
 
 /** The egg families' signature moves (the starters' are `SIGNATURE_MOVES`). */
 const EGG_SIGNATURES: readonly MoveId[] = [
   'dreamEater', 'forcePalm', 'dig', 'twister', 'sandTomb', 'meteorMash', 'zenHeadbutt', 'foulPlay', 'bodySlam', 'dynamicPunch', 'rollout',
   'iceBall', 'furyCutter', 'sacredSword', 'dragonDarts', 'snarl', 'gigaImpact', 'flail', 'boneRush', 'metronome', 'echoedVoice', 'curse',
 ]
-const SIGNATURES = new Set<MoveId>([...(Object.keys(SIGNATURE_MOVES) as MoveId[]), ...EGG_SIGNATURES, ...EGG_MOVE_2_IDS, ...EGG_MOVE_3_IDS, ...SKETCH_MOVE_IDS, ...SEASON_ONE_EGG_MOVE_IDS, ...SEASON_ONE_KIT_MOVE_IDS, ...GA_KIT_B_MOVE_IDS, ...GA_KIT_A_MOVE_IDS])
+const SIGNATURES = new Set<MoveId>([...(Object.keys(SIGNATURE_MOVES) as MoveId[]), ...EGG_SIGNATURES, ...EGG_MOVE_2_IDS, ...EGG_MOVE_3_IDS, ...SKETCH_MOVE_IDS, ...SEASON_ONE_EGG_MOVE_IDS, ...SEASON_ONE_KIT_MOVE_IDS, ...GA_KIT_B_MOVE_IDS, ...GA_KIT_A_MOVE_IDS, ...REGIONAL_MOVE_IDS])
 
 type Role = 'shot' | 'homing' | 'boomerang' | 'aura' | 'wave' | 'strike' | 'arc' | 'counter' | 'charge' | 'sky' | 'chain' | 'cone' | 'beam' | 'field' | 'dash' | 'roll' | 'support' | 'random'
 
@@ -47,6 +48,7 @@ const ROLE: Record<string, Role> = {
   uTurn: 'dash', dragonTail: 'arc', sheerCold: 'aura',
   flareBlitz: 'field', dazzlingGleam: 'aura', powderSnow: 'field', electroweb: 'chain', corrosiveGas: 'field', magicCoat: 'support', appleAcid: 'field', icicleSpear: 'cone', headSmash: 'dash', ironDefense: 'support', dualWingbeat: 'strike', bite: 'strike', auroraVeil: 'field',
   braveBird: 'dash', weatherBall: 'shot', accelerock: 'dash', zapCannon: 'shot', aerialAce: 'strike', crossPoison: 'arc', bubbleBeam: 'beam', rockBlast: 'shot', cottonSpore: 'field', wildCharge: 'dash', playRough: 'aura', spore: 'support', waterfall: 'beam', lastResort: 'strike',
+  metalClaw: 'strike', shellSideArm: 'shot', obstruct: 'support', meteorAssault: 'dash', chloroblast: 'aura', poisonSting: 'aura', toxic: 'field', ragingBull: 'dash', bitterMalice: 'sky',
   crossChop: 'arc', nightSlash: 'arc', dragonPulse: 'wave', waterPulse: 'shot', populationBomb: 'support', jetPunch: 'dash', auraWheel: 'shot', discharge: 'aura', forecast: 'shot', firePunch: 'strike', xScissor: 'arc', shadowClaw: 'arc', orderUp: 'wave',
   ironTail: 'arc', eggBomb: 'sky', auraSphere: 'homing', acrobatics: 'dash', shadowPunch: 'homing', saltCure: 'shot', psychoCut: 'shot', poisonFang: 'strike', icePunch: 'strike', spark: 'dash', lunge: 'dash', electroShot: 'beam', tropKick: 'arc', powerTrip: 'strike', hammerArm: 'strike',
   clangingScales: 'wave', dualChop: 'strike', sing: 'wave', beatUp: 'strike', hornAttack: 'strike', shadowSneak: 'shot', ominousWind: 'aura', poisonJab: 'strike',

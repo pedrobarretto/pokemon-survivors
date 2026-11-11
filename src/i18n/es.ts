@@ -8,6 +8,7 @@ import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
 import { SEASON_ONE_DIG_WORDS } from './seasonOne/dig'
+import { REGIONAL_WORDS } from './regional'
 import type { Messages } from './pt'
 import type { Activity } from '../game/friends'
 
@@ -2449,6 +2450,7 @@ export const es: Messages = {
 
   abilities: {
     ...SEASON_ONE_EGGS_WORDS.es.abilities,
+    ...REGIONAL_WORDS.es.abilities,
     ...SEASON_ONE_KITS_WORDS.es.abilities,
     overgrow: 'Con menos de 1/3 del HP, los movimientos de Planta hacen +50%.',
     blaze: 'Con menos de 1/3 del HP, los movimientos de Fuego hacen +50%.',
@@ -2586,7 +2588,7 @@ export const es: Messages = {
     },
   },
   eggs: {
-    tiers: { common: 'Huevo Común', rare: 'Huevo Raro', ultra: 'Huevo Ultrarraro', friend: 'Huevo de la Amistad', haunted: 'Huevo Embrujado', kecleon: 'Huevo Kecleon', kecleonShiny: 'Huevo Kecleon brillante', fossil: 'Huevo Fósil', found: 'Encuentro' },
+    tiers: { common: 'Huevo Común', rare: 'Huevo Raro', ultra: 'Huevo Ultrarraro', friend: 'Huevo de la Amistad', haunted: 'Huevo Embrujado', kecleon: 'Huevo Kecleon', kecleonShiny: 'Huevo Kecleon brillante', fossil: 'Huevo Fósil', found: 'Encuentro', ...REGIONAL_WORDS.es.tiers },
     found: (egg) => `¡Encontraste un *${egg}*! Va a la incubadora.`,
     foundFull: (egg, coins) => `¡Encontraste un *${egg}*! La incubadora está llena, así que se convertirá en *${coins}*.`,
     title: 'INCUBADORA',
@@ -3125,6 +3127,7 @@ export const es: Messages = {
 
   moves: {
     ...SEASON_ONE_EGGS_WORDS.es.moves,
+    ...REGIONAL_WORDS.es.moves,
     ...SEASON_ONE_KITS_WORDS.es.moves,
     ...GA_FAMILIES_B_WORDS.es.moves,
     ...GA_FAMILIES_A_WORDS.es.moves,
@@ -5599,6 +5602,7 @@ export const es: Messages = {
 
   blurbs: {
     ...SEASON_ONE_EGGS_WORDS.es.blurbs,
+    ...REGIONAL_WORDS.es.blurbs,
     ...SEASON_ONE_KITS_WORDS.es.blurbs,
     ...GA_FAMILIES_B_WORDS.es.blurbs,
     ...GA_FAMILIES_A_WORDS.es.blurbs,
@@ -6574,4 +6578,5 @@ export const es: Messages = {
     first: ['¡Vaya, un cliente nuevo! Soy Bibarel, el carpintero de la plaza.', 'Hago muebles para las bases secretas del Poké Realm: sillas, alfombras, estantes y unas piezas muy especiales.', 'Paga con ₽ o con gemas. ¡Y quien captura una leyenda gana un muñequito suyo para decorar su base!'],
     hello: ['Serrando y lijando, como siempre. ¿Te llevas algo?', 'Buena madera, precio justo. ¡Echa un vistazo!', '¡Una base sin muebles es solo un hueco en la pared!', 'Acabo de barnizar unas piezas nuevas.'],
   },
+  travel: REGIONAL_WORDS.es.travel,
 }

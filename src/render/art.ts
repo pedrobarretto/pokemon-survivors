@@ -17,6 +17,7 @@ import { EGG_MOVE_3_ICONS } from './eggMove3Art'
 import { SEASON_ONE_KIT_ICONS } from './seasonOneKitArt'
 import { KIT_B_ICONS } from './gaKitBArt'
 import { GA_KIT_A_ICONS } from './gaKitAArt'
+import { REGIONAL_ICONS } from './regionalArt'
 import { EGG_MOVE_2_ICONS } from './eggMove2Art'
 import { SIGNATURE_ICONS } from './signatureArt'
 import { TM_ICONS } from './tmArt'
@@ -373,6 +374,38 @@ const KECLEON_EGG = [
   '.1222222211.',
   '..11111111..',
 ]
+/**
+ * The Ovos de Viagem: the egg's shell in its region's colors, a luggage strap
+ * buckled round its waist and the region's stamp on top (Alola's hibiscus,
+ * Galar's crown, Hisui's red seal with Mt. Coronet, Paldea's sun). 1 shade, 2 shell, 3 shine,
+ * 4 strap, 9 its shade, 5 buckle, 6 and 7 the stamp. `stamp` is five rows of
+ * five pixels, laid on rows 2 to 6, columns 5 to 9.
+ */
+const travelEgg = (stamp: readonly [string, string, string, string, string]) => {
+  const rows = [
+    '....2222....',
+    '...222222...',
+    '..23222222..',
+    '..32222222..',
+    '.2222222222.',
+    '.2222222221.',
+    '.2222222221.',
+    '222555222221',
+    '445454444449',
+    '445554444449',
+    '222222222221',
+    '122222222211',
+    '.1222222211.',
+    '..11111111..',
+  ]
+  return rows.map((row, y) => (y >= 2 && y <= 6 ? [...row].map((c, x) => (x >= 5 && x <= 9 && stamp[y - 2]![x - 5] !== '.' ? stamp[y - 2]![x - 5] : c)).join('') : row))
+}
+const TRAVEL_EGGS = {
+  alola: travelEgg(['..6..', '.666.', '66766', '.666.', '..6..']),
+  galar: travelEgg(['.....', '6.6.6', '66666', '67676', '66666']),
+  hisui: travelEgg(['.666.', '66666', '66766', '67776', '.666.']),
+  paldea: travelEgg(['6.6.6', '.777.', '67776', '.777.', '6.6.6']),
+} as const
 /** The crack that splits the shell, revealed from the middle out as hatching goes on. */
 const EGG_CRACK = ['', '', '', '', '1...1...1...', '.1.1.1.1.1.1', '..1...1...1.']
 
@@ -390,12 +423,17 @@ const EGG_PALETTES = {
   /** The Fossil Egg: old amber with a dark fossil's spots. */
   fossil: { 1: '#a86820', 2: '#e8a838', 3: '#f8d888', 4: '#583818' },
   found: { 1: '#c8b890', 2: '#f8f0d8', 3: '#ffffff', 4: '#c8b890' },
+  /** The Ovos de Viagem (`TRAVEL_EGGS`): Alola's sand with a sea-teal strap and a hibiscus, Galar's rose with a navy strap and a gold crown, Hisui's snow with a leather strap and a red seal, Paldea's violet with a scarlet strap and a sun. */
+  alola: { 1: '#c06830', 2: '#f8d090', 3: '#fff4d8', 4: '#28a0a0', 9: '#186868', 5: '#f8e070', 6: '#e84878', 7: '#f8e050' },
+  galar: { 1: '#802838', 2: '#d86070', 3: '#f8c0c8', 4: '#283868', 9: '#141c38', 5: '#f8d048', 6: '#f8d048', 7: '#48a0f0' },
+  hisui: { 1: '#6880a0', 2: '#bcd0e4', 3: '#f0f8ff', 4: '#8a5a30', 9: '#4a2c14', 5: '#c8c8d0', 6: '#d03028', 7: '#f8f0e8' },
+  paldea: { 1: '#583080', 2: '#9868c8', 3: '#d8c0f0', 4: '#d83830', 9: '#781810', 5: '#f8e070', 6: '#f8a020', 7: '#f8e070' },
 } as const satisfies Record<EggTier, Palette>
 
-const CRACK_COLORS = { common: '#584830', rare: '#584830', ultra: '#f8f0c0', friend: '#803048', haunted: '#78f0a8', kecleon: '#1c4020', kecleonShiny: '#1c4020', fossil: '#583818', found: '#584830' } as const satisfies Record<EggTier, string>
+const CRACK_COLORS = { common: '#584830', rare: '#584830', ultra: '#f8f0c0', friend: '#803048', haunted: '#78f0a8', kecleon: '#1c4020', kecleonShiny: '#1c4020', fossil: '#583818', found: '#584830', alola: '#7a3018', galar: '#481028', hisui: '#405068', paldea: '#2c1048' } as const satisfies Record<EggTier, string>
 
 /** The eggs drawn from their own rows instead of `EGG`'s spots. */
-const EGG_ROWS: Partial<Record<EggTier, readonly string[]>> = { kecleon: KECLEON_EGG, kecleonShiny: KECLEON_EGG }
+const EGG_ROWS: Partial<Record<EggTier, readonly string[]>> = { kecleon: KECLEON_EGG, kecleonShiny: KECLEON_EGG, ...TRAVEL_EGGS }
 
 /** Memoized sprite per key (one per tier and crack stage). */
 const eggCache = canvasCache<string, PixelSprite>()
@@ -741,6 +779,7 @@ const MOVE_ICON_ART: Record<MoveId, () => PixelSprite> = {
   ...SEASON_ONE_KIT_ICONS,
   ...KIT_B_ICONS,
   ...GA_KIT_A_ICONS,
+  ...REGIONAL_ICONS,
   jawLock: () => art([...TE.MAW_TOP, ...TE.MAW_BOTTOM], TE.MAW, '#d8c0e8'),
   superpower: () => art(TE.BIG_FIST, TE.FIST_PAL, '#281010'),
   fissure: () => art(...TE.FISSURE_ICON, '#181818'),

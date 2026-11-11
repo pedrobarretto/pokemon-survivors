@@ -4,7 +4,7 @@
 import { mkdir, readFile, writeFile, access } from 'node:fs/promises'
 import { join } from 'node:path'
 import { measureBody } from './body.mjs'
-import { DEX, EMOTIONS, FLYERS, FORM_CRIES, FORM_PORTRAITS, FORMS, HANDMADE_SHINIES, RECOLORED_SHINIES, SHINY, pad, shinyPath } from './dex.mjs'
+import { DEX, EMOTIONS, FLYERS, FORM_CRIES, FORM_PORTRAITS, FORMS, HANDMADE_SHINIES, HANDMADE_SPECIES_SHINIES, RECOLORED_SHINIES, SHINY, pad, shinyPath } from './dex.mjs'
 import { readPng, writePng } from './png.mjs'
 
 const ROOT = new URL('..', import.meta.url).pathname
@@ -162,14 +162,19 @@ const fetchEmotions = async (dex, dir) => {
 
 const fetchSpecies = async (dex) => {
   const dir = join(OUT, String(dex))
-  let [normal, shiny, cry] = await Promise.all([
+  const [normal, fetched, cry] = await Promise.all([
     fetchVariant(dex, '', dir),
     SHINY.has(dex) ? fetchVariant(dex, shinyPath(dex), join(dir, 'shiny')) : null,
     mkdir(dir, { recursive: true }).then(() => download(`${CRIES}/${dex}.ogg`, join(dir, 'cry.ogg'))),
   ])
   if (!normal) throw new Error(`#${dex}: missing AnimData.xml`)
-  const recolor = !shiny && SHINY.has(dex) && RECOLORED_SHINIES[dex]
-  if (recolor) shiny = await recoloredShiny(normal, dir, recolor)
+  // A shiny SpriteCollab doesn't have yet: a recolor of the species' own sheets (`RECOLORED_SHINIES`), or a regional
+  // form's hand-made one (`HANDMADE_SPECIES_SHINIES`).
+  const recolor = !fetched && SHINY.has(dex) && RECOLORED_SHINIES[dex]
+  const shiny =
+    fetched ??
+    (recolor ? await recoloredShiny(normal, dir, recolor) : null) ??
+    (SHINY.has(dex) && HANDMADE_SPECIES_SHINIES[dex] ? { ...(await handmadeShiny(normal, join(dir, 'shiny'))), portrait: true } : null)
   const forms = FORMS[dex] && Object.fromEntries(await Promise.all(Object.entries(FORMS[dex]).map(([key, id]) => fetchForm(dex, key, id, dir))))
   const formCries = await fetchFormCries(dex, dir)
   const emotions = await fetchEmotions(dex, dir)

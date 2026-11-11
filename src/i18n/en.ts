@@ -8,6 +8,7 @@ import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
 import { SEASON_ONE_DIG_WORDS } from './seasonOne/dig'
+import { REGIONAL_WORDS } from './regional'
 import type { Messages } from './pt'
 import type { Activity } from '../game/friends'
 
@@ -2447,6 +2448,7 @@ export const en: Messages = {
 
   abilities: {
     ...SEASON_ONE_EGGS_WORDS.en.abilities,
+    ...REGIONAL_WORDS.en.abilities,
     ...SEASON_ONE_KITS_WORDS.en.abilities,
     overgrow: 'Under 1/3 HP, Grass moves deal +50%.',
     blaze: 'Under 1/3 HP, Fire moves deal +50%.',
@@ -2584,7 +2586,7 @@ export const en: Messages = {
     },
   },
   eggs: {
-    tiers: { common: 'Common Egg', rare: 'Rare Egg', ultra: 'Ultra Rare Egg', friend: 'Friendship Egg', haunted: 'Haunted Egg', kecleon: 'Kecleon Egg', kecleonShiny: 'Shiny Kecleon Egg', fossil: 'Fossil Egg', found: 'Encounter' },
+    tiers: { common: 'Common Egg', rare: 'Rare Egg', ultra: 'Ultra Rare Egg', friend: 'Friendship Egg', haunted: 'Haunted Egg', kecleon: 'Kecleon Egg', kecleonShiny: 'Shiny Kecleon Egg', fossil: 'Fossil Egg', found: 'Encounter', ...REGIONAL_WORDS.en.tiers },
     found: (egg) => `You found a *${egg}*! It goes to the incubator.`,
     foundFull: (egg, coins) => `You found a *${egg}*! The incubator is full, so it will become *${coins}*.`,
     title: 'INCUBATOR',
@@ -3123,6 +3125,7 @@ export const en: Messages = {
 
   moves: {
     ...SEASON_ONE_EGGS_WORDS.en.moves,
+    ...REGIONAL_WORDS.en.moves,
     ...SEASON_ONE_KITS_WORDS.en.moves,
     ...GA_FAMILIES_B_WORDS.en.moves,
     ...GA_FAMILIES_A_WORDS.en.moves,
@@ -5597,6 +5600,7 @@ export const en: Messages = {
 
   blurbs: {
     ...SEASON_ONE_EGGS_WORDS.en.blurbs,
+    ...REGIONAL_WORDS.en.blurbs,
     ...SEASON_ONE_KITS_WORDS.en.blurbs,
     ...GA_FAMILIES_B_WORDS.en.blurbs,
     ...GA_FAMILIES_A_WORDS.en.blurbs,
@@ -6572,4 +6576,5 @@ export const en: Messages = {
     first: ['Oh, a new customer! I\'m Bibarel, the plaza\'s carpenter.', 'I make furniture for secret bases in the Poké Realm: chairs, rugs, shelves and a few very special pieces.', 'Pay in ₽ or in gems. And anyone who captures a legend gets a little doll of it to show off in their base!'],
     hello: ['Sawing and sanding, as always. Taking anything home?', 'Good wood, fair prices. Have a look!', 'A base without furniture is just a hole in the wall!', 'I just varnished a few new pieces.'],
   },
+  travel: REGIONAL_WORDS.en.travel,
 }

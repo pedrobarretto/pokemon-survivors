@@ -5,6 +5,7 @@ import { SEASON_ONE_EGGS } from './seasonOneEggs'
 import { SEASON_ONE_KITS } from './seasonOneKits'
 import { GA_FAMILIES_B } from './gaFamiliesB'
 import { GA_FAMILIES_A } from './gaFamiliesA'
+import { REGIONAL_FAMILIES } from './regionalFamilies'
 import { STARTER_IDS, STARTERS, type StarterId } from './starters'
 
 export const HATCHLINGS = {
@@ -688,11 +689,8 @@ export const HATCHLINGS = {
     stats: { area: 0.1, regen: 0.15, speed: -4 },
     signature: 'razorLeaf',
     learnset: [['razorLeaf', 'vineWhip', 'futureSight', 'selfDestruct', 'toxicSpikes'], ['leafBlade', 'drumBeating', 'dragonBreath', 'sludgeBomb']],
-    // Exeggutor needs the Leaf Stone (the one that opens Leafeon too).
-    line: [
-      { name: 'Exeggcute', dex: 102, types: ['grass', 'psychic'], evolveAt: 20, bonus: {} },
-      { name: 'Exeggutor', dex: 103, types: ['grass', 'psychic'], item: 'leafStone', bonus: { maxHp: 70, might: 0.25, area: 0.15, armor: 1 } },
-    ],
+    // Exeggutor needs the Leaf Stone (the one that opens Leafeon too), Alolan Exeggutor the Sparkling Stone (`data/branches.ts`).
+    line: line2(['Exeggcute', 102, ['grass', 'psychic']], ['Exeggutor', 103, ['grass', 'psychic']], { maxHp: 70, might: 0.25, area: 0.15, armor: 1 }),
   },
   scraggy: {
     name: 'Scraggy',
@@ -718,6 +716,7 @@ export const HATCHLINGS = {
   ...SEASON_ONE_KITS,
   ...GA_FAMILIES_B,
   ...GA_FAMILIES_A,
+  ...REGIONAL_FAMILIES,
 } as const satisfies Record<string, HatchlingDef>
 
 export type HatchlingId = keyof typeof HATCHLINGS
@@ -738,8 +737,8 @@ export const PLAYABLE_IDS: readonly (StarterId | HatchlingId)[] = [...STARTER_ID
 
 export const isHatchling = (id: PlayableId): id is HatchlingId => id in HATCHLINGS
 
-/** The eggs whose families come from nowhere else: the Haunted Egg (Duskull's stall), the Kecleon Egg (the Vitrine's fixed card), the Fossil Egg (the Underground) and the families found without one. */
-const EXCLUSIVE_EGGS: readonly EggTier[] = ['haunted', 'kecleon', 'fossil', 'found']
+/** The eggs whose families come from nowhere else: the Haunted Egg (Duskull's stall), the Kecleon Egg (the Vitrine's fixed card), the Fossil Egg (the Underground), the Ovo de Viagem's regions (the Vitrine's travel card) and the families found without one. */
+const EXCLUSIVE_EGGS: readonly EggTier[] = ['haunted', 'kecleon', 'fossil', 'alola', 'galar', 'hisui', 'paldea', 'found']
 
 /**
  * A family only its own egg brings (the Haunted Egg's ghosts, the Kecleon

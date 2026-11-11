@@ -187,7 +187,7 @@ export const startSafari = async (used: number): Promise<SafariStarted | Failure
       fake.id = `fake-${fake.plays}`
       fake.week = week
       fake.habitat = fakeHabitat(week)
-      fake.run = startRun(rollQueue(habitatPool(fake.habitat), partnerTypes(fakePartner()), Math.random, sure))
+      fake.run = startRun(rollQueue(habitatPool(fake.habitat, fake.week || thisWeek()), partnerTypes(fakePartner()), Math.random, sure))
     }
     return { session: fakeView()!, used: fake.used }
   }

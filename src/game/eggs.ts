@@ -46,6 +46,16 @@ export const EGG_TIERS = {
   kecleonShiny: { steps: 4000, refund: 2500, even: true, families: 'kecleon', shiny: true },
   /** The Fossil Egg: Old Amber dug up in the Underground, and only its five fossil families come out. */
   fossil: { steps: 3000, refund: 800, even: true },
+  /**
+   * The Ovo de Viagem, one tier per region: only the Vitrine's travel card
+   * sells it, the week's region's (`game/travel.ts`), and only that region's
+   * families come out (`data/regionalFamilies.ts`), the ones not hatched yet
+   * likelier, as any regular egg.
+   */
+  alola: { steps: 3000, refund: 1500 },
+  galar: { steps: 3000, refund: 1500 },
+  hisui: { steps: 3000, refund: 1500 },
+  paldea: { steps: 3000, refund: 1500 },
   /** No egg at all: the families whose way in is their own (an encounter, research, the Realm). Never laid; it only names their source. */
   found: { steps: 2000, refund: 600 },
 } as const satisfies Record<string, EggTierRule>

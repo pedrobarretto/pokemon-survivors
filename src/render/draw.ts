@@ -55,6 +55,7 @@ import { drawEgg3Attack, drawEgg3Ground, drawEgg3Player, egg3PlayerLook } from '
 import { drawSeasonKitAttack, drawSeasonKitGround, drawSeasonKitPlayer } from './seasonOneKitFx'
 import { drawKitBAir, drawKitBAttack, drawKitBGround, kitBPlayerLook } from './gaKitBFx'
 import { drawGaKitAAttack, drawGaKitAGround, drawGaKitAPlayer, drawGaKitAPlayerGround } from './gaKitAFx'
+import { drawRegionalAttack, drawRegionalGround } from './regionalFx'
 import { drawEgg2Attack, drawEgg2Ground } from './eggMove2Fx'
 import { drawVerbAir, drawVerbGround, drawVerbPlayerAir, drawVerbPlayerGround } from './verbFx'
 import { drawTmAir, drawTmDisc, drawTmGround, drawTmPlayer } from './tmFx'
@@ -151,6 +152,7 @@ const drawGroundAttack = (ctx: Ctx, a: Attack, t: number) => {
       drawEgg3Ground(ctx, a, t)
       drawSeasonKitGround(ctx, a, t)
       drawGaKitAGround(ctx, a, t)
+      drawRegionalGround(ctx, a, t)
       drawEgg2Ground(ctx, a, t)
       drawSignatureGround(ctx, a, t)
       drawTypeEvolvedGround(ctx, a, t)
@@ -276,6 +278,7 @@ const drawAttack = (ctx: Ctx, a: Attack, t: number) => {
       drawSeasonKitAttack(ctx, a, t)
       drawKitBAttack(ctx, a, t)
       drawGaKitAAttack(ctx, a, t)
+      drawRegionalAttack(ctx, a, t)
       drawEgg2Attack(ctx, a, t)
       drawSignatureAttack(ctx, a, t)
       drawTypeEvolvedAttack(ctx, a, t)

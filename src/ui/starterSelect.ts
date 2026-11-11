@@ -39,8 +39,8 @@ import { loadSave, today, updateSave } from './save'
 import { typeBadge, type Screen } from './screens'
 import { actionBar, backButton, gearButton, segmented, shellScreen, topBar, walletChip } from './shell'
 import { detailsSheet, evoLine, shinyPicker, statBars } from './partnerDetails'
-import { nationalDex } from '../data/regionalForms'
-import { stepGrid, type Step } from './gridNav'
+import { isRegion, nationalDex, REGION_IDS, REGIONS as FORM_REGIONS, type RegionId } from '../data/regionalForms'
+import { stepGrid, stepSections, type Step } from './gridNav'
 
 /**
  * Phones held upright get the transposed roster (a row per region, three
@@ -60,6 +60,19 @@ const BAG_KEYS: Partial<Record<BagItem, string>> = { lure: 'KeyC', incense: 'Key
 
 /** How many hatched families the desktop's "Hatched" teaser row shows before "+n". */
 const TEASER = 7
+
+/**
+ * The Eggs tab's sections, each starting a new row: the families of the
+ * regular eggs, then each region's forms under its header (the families its
+ * Ovo de Viagem hatches; most have no playable base form to sit beside).
+ */
+const EGG_SECTIONS: readonly { region: RegionId | null; ids: readonly HatchlingId[] }[] = [
+  { region: null, ids: HATCHLING_IDS.filter((id) => !isRegion(HATCHLINGS[id].egg)) },
+  ...REGION_IDS.map((region) => ({ region, ids: HATCHLING_IDS.filter((id) => HATCHLINGS[id].egg === region) })),
+].filter((section) => section.ids.length > 0)
+
+/** The Eggs tab's families in grid order (the sections one after another): what its arrows walk. */
+const EGG_ORDER = EGG_SECTIONS.flatMap((section) => section.ids)
 
 /** The roster's tabs, in Tab / E order: the starters, the egg families and the legends (Legend mode). */
 const TABS = ['starters', 'eggs', 'legends'] as const
@@ -297,7 +310,16 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
     h('button', { class: 'partner-teaser-more', type: 'button', onclick: () => setTab('eggs') }, owned.length > TEASER ? `+${owned.length - TEASER} ▸` : '▸'),
   )
 
-  const eggGrid = h('div', { class: 'partner-egg-grid' }, ...HATCHLING_IDS.map(eggCell))
+  /** A region's header over its forms in the Eggs grid: its Ovo de Viagem, its name in its color and how many of them are hatched. */
+  const regionHead = (region: RegionId, ids: readonly HatchlingId[]) =>
+    h(
+      'h3',
+      { class: 'partner-egg-head', style: `--rc:${FORM_REGIONS[region].color}` },
+      h('img', { src: eggIcon(region), alt: '', width: 32, height: 32 }),
+      h('span', {}, t().travel.forms(t().travel.regions[region])),
+      h('small', {}, `${ids.filter((id) => save.hatched[id]).length}/${ids.length}`),
+    )
+  const eggGrid = h('div', { class: 'partner-egg-grid' }, ...EGG_SECTIONS.flatMap((s) => [s.region && regionHead(s.region, s.ids), ...s.ids.map(eggCell)]))
   const ready = save.eggs.filter(isReady).length
   const openIncubator = () => (playSfx('select'), later(actions.incubator))
   const eggsPane = h(
@@ -695,10 +717,10 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
   const step = (dir: Step) => {
     if (tab === 'eggs') {
       const cols = getComputedStyle(eggGrid).gridTemplateColumns.split(' ').length || 1
-      const next = stepGrid(HATCHLING_IDS.indexOf(cursor.eggs), dir, cols, HATCHLING_IDS.length)
+      const next = stepSections(EGG_ORDER.indexOf(cursor.eggs), dir, cols, EGG_SECTIONS.map((section) => section.ids.length))
       if (next === 'above') return setTab('starters')
       if (next === 'below') return tabs.includes('legends') ? setTab('legends') : undefined
-      return select(HATCHLING_IDS[next]!)
+      return select(EGG_ORDER[next]!)
     }
     if (tab === 'legends') {
       const cols = getComputedStyle(legendGrid).gridTemplateColumns.split(' ').length || 1

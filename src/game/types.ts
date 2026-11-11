@@ -403,6 +403,8 @@ export type Visual =
   | 'kitBJaws' | 'kitBHammer' | 'kitBErupt' | 'kitBHug'
   /** The big update's first 15 families, drawn by `render/gaKitAFx.ts`. */
   | GaKitAVisual
+  /** The regional forms' moves (`regionalMoves.ts`), drawn by `render/regionalFx.ts`. */
+  | 'metalClaw' | 'shellSlam' | 'shellShot' | 'obstructGuard' | 'obstructX' | 'leekJoust' | 'chloroblast' | 'barb' | 'toxicGlob' | 'toxicPool' | 'bullCharge' | 'bitterMalice'
 
 /** What dealt the damage, for the results screen: a move, the special or the ability (Rough Skin, Magic Bounce). */
 export type DamageSource = MoveId | 'special' | 'ability'
