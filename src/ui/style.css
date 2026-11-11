@@ -741,6 +741,36 @@ button {
   scrollbar-width: thin;
 }
 
+/* A region's header over its forms in the Eggs grid (`regionHead`): a full row, the region's color down its edge. */
+.partner-egg-head {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0 8px 0 4px;
+  font-family: var(--title);
+  font-size: 16px;
+  font-weight: normal;
+  line-height: 1;
+  color: color-mix(in srgb, #283048 var(--dk-lift, 100%), #fff);
+  background: color-mix(in srgb, var(--rc) 22%, var(--dk-surface-1, #f8f8f8));
+  border-left: 4px solid var(--rc);
+  border-radius: 4px;
+}
+
+.partner-egg-head img {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+}
+
+.partner-egg-head small {
+  margin-left: auto;
+  font-size: 14px;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
+}
+
 .partner-eggs .incubator-entry {
   flex: none;
   align-self: center;
@@ -6102,6 +6132,7 @@ button {
   color: #f8d030;
 }
 
+/* Room for a card's whole text (5 lines here, 4 on a short panel or a landscape phone, 6 in portrait); it scrolls only past that. */
 .shop-desc-text {
   max-height: 5.25em;
   margin: 4px 0 0;
@@ -6218,7 +6249,7 @@ button {
     height: 32px;
   }
   .shop-desc-text {
-    max-height: 2.1em;
+    max-height: 4.2em;
     font-size: 16px;
   }
   .btn.shop-buy,
@@ -6352,7 +6383,7 @@ button {
     font-size: 16px;
   }
   .shop-desc-text {
-    max-height: 3.2em;
+    max-height: 6.3em;
     font-size: 17px;
   }
   .btn.shop-buy,
@@ -6469,7 +6500,7 @@ button {
     height: 46px;
   }
   .shop-desc-text {
-    max-height: 2.1em;
+    max-height: 4.2em;
     font-size: 16px;
   }
   .btn.shop-buy,
@@ -30172,4 +30203,11 @@ span.arena-hub-face {
   width: 18px;
   height: 18px;
   image-rendering: pixelated;
+}
+
+/* The Ovo de Viagem's card shows its egg at 4× (64 px), as big as the Kecleon Egg's beside it, so the region's stamp reads. */
+.shop-items.grid .shop-card.travel-egg .shop-pic,
+.shop-items.grid .shop-card.travel-egg .shop-pic > img:not(.shop-icon) {
+  width: 64px;
+  height: 64px;
 }

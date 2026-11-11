@@ -20,15 +20,14 @@ type Words = {
     regions: Record<RegionId, string>
     /** The Vitrine card's name. */
     card: string
-    /** Under the name: where this week's trip goes. */
+    /** Under the card's name, short to fit a phone's card: where this week's trip goes. */
     week: (region: string) => string
-    text: (region: string, steps: string) => string
-    /** How many of the region's families the save has. */
-    progress: (got: number, of: number) => string
-    /** When the next trip leaves and where to. */
-    next: (region: string, when: string) => string
+    /** After the odds, in one short line (the strip shows a few lines on a phone): steps to hatch, how many of the region's families the save has, and when the next trip leaves and where to. */
+    text: (steps: string, got: number, of: number, next: string, when: string) => string
     /** The Safari's notice board: the trip's visitors. */
     safari: (region: string) => string
+    /** The partner select's Eggs tab: the header over a region's forms. */
+    forms: (region: string) => string
     /** Kecleon, on selling one. */
     said: string
   }
@@ -111,11 +110,10 @@ export const REGIONAL_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Words> = {
     travel: {
       regions: { alola: 'Alola', galar: 'Galar', hisui: 'Hisui', paldea: 'Paldea' },
       card: 'Ovo de Viagem',
-      week: (region) => `Viagem da semana: ${region}`,
-      text: (region, steps) => `Choca em ${steps} passos: só formas de ${region}, que nenhum outro ovo traz. Toda segunda a viagem muda de região, e o Safári recebe os mesmos visitantes.`,
-      progress: (got, of) => `Você tem ${got} de ${of} famílias desta região.`,
-      next: (region, when) => `Próxima viagem: ${region}, ${when}.`,
+      week: (region) => `Viagem: ${region}`,
+      text: (steps, got, of, next, when) => `Choca em ${steps} passos. Você tem ${got}/${of}. Próxima viagem: ${next}, ${when}.`,
       safari: (region) => `Visitantes de ${region} nesta semana`,
+      forms: (region) => `Formas de ${region}`,
       said: 'Kecleon! Esse veio de muito longe... olha o carimbo! Cuida bem dele!',
     },
   },
@@ -195,11 +193,10 @@ export const REGIONAL_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Words> = {
     travel: {
       regions: { alola: 'Alola', galar: 'Galar', hisui: 'Hisui', paldea: 'Paldea' },
       card: 'Travel Egg',
-      week: (region) => `This week's trip: ${region}`,
-      text: (region, steps) => `Hatches in ${steps} steps: only ${region} forms, which no other egg brings. Every Monday the trip moves to another region, and the Safari gets the same visitors.`,
-      progress: (got, of) => `You have ${got} of this region's ${of} families.`,
-      next: (region, when) => `Next trip: ${region}, ${when}.`,
+      week: (region) => `Trip: ${region}`,
+      text: (steps, got, of, next, when) => `Hatches in ${steps} steps. You have ${got}/${of}. Next trip: ${next}, ${when}.`,
       safari: (region) => `Visitors from ${region} this week`,
+      forms: (region) => `${region} forms`,
       said: 'Kecleon! This one came from far away... look at that stamp! Take good care of it!',
     },
   },
@@ -279,11 +276,10 @@ export const REGIONAL_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Words> = {
     travel: {
       regions: { alola: 'Alola', galar: 'Galar', hisui: 'Hisui', paldea: 'Paldea' },
       card: 'Huevo de Viaje',
-      week: (region) => `Viaje de la semana: ${region}`,
-      text: (region, steps) => `Eclosiona en ${steps} pasos: solo formas de ${region}, que ningún otro huevo trae. Cada lunes el viaje cambia de región, y el Safari recibe los mismos visitantes.`,
-      progress: (got, of) => `Tienes ${got} de las ${of} familias de esta región.`,
-      next: (region, when) => `Próximo viaje: ${region}, ${when}.`,
+      week: (region) => `Viaje: ${region}`,
+      text: (steps, got, of, next, when) => `Eclosiona en ${steps} pasos. Tienes ${got}/${of}. Próximo viaje: ${next}, ${when}.`,
       safari: (region) => `Visitantes de ${region} esta semana`,
+      forms: (region) => `Formas de ${region}`,
       said: '¡Kecleon! Este vino de muy lejos... ¡mira el sello! ¡Cuídalo bien!',
     },
   },
@@ -363,11 +359,10 @@ export const REGIONAL_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Words> = {
     travel: {
       regions: { alola: 'Alola', galar: 'Galar', hisui: 'Hisui', paldea: 'Paldea' },
       card: 'Œuf de Voyage',
-      week: (region) => `Voyage de la semaine : ${region}`,
-      text: (region, steps) => `Éclot en ${steps} pas : uniquement des formes de ${region}, qu’aucun autre œuf n’apporte. Chaque lundi le voyage change de région, et le Safari reçoit les mêmes visiteurs.`,
-      progress: (got, of) => `Vous avez ${got} des ${of} familles de cette région.`,
-      next: (region, when) => `Prochain voyage : ${region}, ${when}.`,
+      week: (region) => `Voyage : ${region}`,
+      text: (steps, got, of, next, when) => `Éclot en ${steps} pas. Vous en avez ${got}/${of}. Prochain voyage : ${next}, ${when}.`,
       safari: (region) => `Visiteurs de ${region} cette semaine`,
+      forms: (region) => `Formes de ${region}`,
       said: 'Kecleon ! Celui-ci vient de très loin... regardez ce tampon ! Prenez-en bien soin !',
     },
   },
@@ -448,10 +443,9 @@ export const REGIONAL_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Words> = {
       regions: { alola: '阿羅拉', galar: '伽勒爾', hisui: '洗翠', paldea: '帕底亞' },
       card: '旅行蛋',
       week: (region) => `本週旅行：${region}`,
-      text: (region, steps) => `${steps}步孵化：只會孵出${region}的樣子，其他蛋都孵不出來。每週一旅行會換到另一個地區，狩獵地帶也會迎來同樣的訪客。`,
-      progress: (got, of) => `你擁有這個地區${of}個家族中的${got}個。`,
-      next: (region, when) => `下一趟旅行：${region}，${when}。`,
+      text: (steps, got, of, next, when) => `${steps}步孵化。已擁有${got}/${of}。下一趟旅行：${next}，${when}。`,
       safari: (region) => `本週來自${region}的訪客`,
+      forms: (region) => `${region}的樣子`,
       said: 'Kecleon！這顆蛋來自很遠的地方……看看這個郵戳！好好照顧它！',
     },
   },
