@@ -642,6 +642,13 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             fr: 'Le panneau du début dit pour quels types la carte est idéale, et la pause montre la carte et comment ton Pokémon traverse le terrain.',
             zh: '開場的告示牌會說明這張地圖適合哪些屬性，暫停選單則會顯示地圖，以及你的寶可夢如何穿越地形。',
           },
+          {
+            pt: 'As matas fechadas se vestem com o bioma: na Usina Elétrica viram mato, sucata e canos com um poste aqui e ali, no deserto palmas e arbustos secos entre os cactos, e no Monte Chaminé pilares de basalto entre as árvores queimadas.',
+            en: 'Thickets now dress for their biome: at the Power Plant they turn into scrub, scrap and pipes with the odd power pole, in the desert prickly pears and dry brush among the saguaros, and on Mt. Chimney basalt spires among the burnt trees.',
+            es: 'Los matorrales se visten con el bioma: en la Central Energía son maleza, chatarra y tuberías con algún poste, en el desierto nopales y arbustos secos entre los cactus, y en el Monte Cenizo pilares de basalto entre los árboles quemados.',
+            fr: 'Les fourrés s’habillent selon le biome : à la Centrale, broussailles, ferraille et tuyaux avec un poteau de temps en temps, dans le désert des figuiers de Barbarie et des buissons secs parmi les saguaros, et au Mont Chimnée des aiguilles de basalte parmi les arbres brûlés.',
+            zh: '茂密的樹叢現在會配合區域變裝：在無人發電廠變成雜草、廢鐵和管線，偶爾才有一根電線桿；在沙漠是仙人掌間的仙人掌掌片和乾灌木；在煙囪山則是燒焦樹木間的玄武岩石柱。',
+          },
         ],
       },
       {

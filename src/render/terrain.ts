@@ -13,7 +13,7 @@ import { LANDMARK_GROUNDS, LANDMARK_PIECES, LANDMARK_SHADOW, LANDMARK_TALL, LAND
 import type { LandmarkGround, LandmarkPiece } from '../data/landmarks'
 import type { Game } from '../game/types'
 import { hasScenery, keepScenery, sceneryPiece } from './scenery'
-import { barrels, BASALT, cinderCone, EMBER, lighthouse, machine, mirageTower, palm, PALM_LEAVES, pylon, saguaro, smokestack } from './biomePieces'
+import { barrels, BASALT, cinderCone, EMBER, lighthouse, machine, mirageTower, palm, PALM_LEAVES, pipeRun, pricklyPear, pylon, saguaro, scrapHeap, smokestack } from './biomePieces'
 import { localPlayer } from '../game/players'
 import {
   cone,
@@ -694,6 +694,8 @@ const DESERT_ROCK: RockSkin = { stone: ['#6c4428', '#9c6438', '#c48450', '#dca46
 const VOLCANO_ROCK: RockSkin = { stone: BASALT, outline: '#0c0808', ember: EMBER }
 const VOLCANO_TREE: TreeSkin = { leaves: [], trunk: ['#1c1414', '#2c2020', '#3c2c2c', '#4c3c38'], outline: '#0c0808', fruit: '#f86818' }
 const DRY_LEAVES: Ramp = ['#4c4c20', '#6c6c30', '#8c8c44', '#acac60']
+const PLANT_SCRUB: TreeSkin = { leaves: ['#1c2814', '#2c3c1c', '#405428', '#5a6c34', '#7a8844'], trunk: ['#2c2018', '#4a3424', '#6a4c34'], outline: '#101410', fruit: '#c49038' }
+const DESERT_SCRUB: TreeSkin = { leaves: DRY_LEAVES, trunk: ['#3c2814', '#5c4024', '#7c5834'], outline: '#201c08', fruit: '#f8d030' }
 
 /** Each biome's stone, for scenery that borrows it (landmarks' columns). */
 export const ROCK_SKINS: Record<BiomeId, RockSkin> = {
@@ -839,6 +841,44 @@ const SKINS: Record<BiomeId, () => TerrainSet> = {
   }),
 }
 
+/**
+ * A crowd's looks in the biomes whose tree is a thing that doesn't grow in
+ * crowds (the Power Plant's pole, the desert's saguaro, Mt. Chimney's one dead
+ * tree): a tree among several (a grove, the forest's thickets) wears one of
+ * these instead, weighted, picked by where it stands. Overgrown scrub, scrap
+ * and pipes with the odd pole in the plant; prickly pears and dry brush around
+ * the saguaros; basalt spires among the dead trees. Only the look changes: the
+ * solid, its kind and its footprint are the simulation's.
+ */
+const CROWDS: Partial<Record<BiomeId, readonly (readonly [weight: number, build: () => Piece])[]>> = {
+  plant: [
+    [3, () => roundTree(PLANT_SCRUB, 11, 4, 1)],
+    [2, () => roundTree(PLANT_SCRUB, 13, 3, 2)],
+    [2, () => scrapHeap(1)],
+    [1, () => scrapHeap(2)],
+    [2, () => pipeRun(1)],
+    [1, () => pipeRun(2)],
+    [1, () => pylon(1)],
+  ],
+  desert: [
+    [2, () => saguaro(1)],
+    [1, () => saguaro(2)],
+    [3, () => pricklyPear(1)],
+    [2, () => pricklyPear(2)],
+    [2, () => roundTree(DESERT_SCRUB, 10, 3, 3)],
+    [1, () => boulder(DESERT_ROCK, 12, 4)],
+  ],
+  volcano: [
+    [3, () => deadTree(VOLCANO_TREE)],
+    [2, () => stalagmites(VOLCANO_ROCK, 1)],
+    [2, () => stalagmites(VOLCANO_ROCK, 2)],
+    [1, () => boulder(VOLCANO_ROCK, 12, 3)],
+  ],
+}
+
+/** How many trees make a crowd: a grove has 3 to 5, a thicket a dozen or more. */
+const CROWD = 3
+
 /** The footprint's shadow on the ground, offset toward the lower right (the sun is upper left). */
 export const footShadow = (foot: readonly Blob[], grow = 1): Piece => {
   const minX = Math.min(...foot.map((e) => e.x - e.rx)) - grow - 2
@@ -982,6 +1022,12 @@ export const warmTerrain = (biome: BiomeId) => {
       return true
     }
   }
+  const crowd = CROWDS[biome]
+  for (let i = 0; crowd && i < crowd.length; i++) {
+    if (pieces.has(`${biome}:crowd:${i}`)) continue
+    pieces.set(`${biome}:crowd:${i}`, keepPiece(biome, crowd[i]![1]()))
+    return true
+  }
   // Landmarks' big pieces (the ridge, walls, hedges) take longer than a frame to sculpt.
   for (const [kind, v] of LANDMARK_WARM) {
     if (hasScenery(kind, biome, v)) {
@@ -1038,13 +1084,38 @@ const solidBiomes = new WeakMap<Solid, BiomeId>()
 
 const solidBiome = (g: Game, s: Solid): BiomeId => solidBiomes.get(s) ?? (roomOf(g) ? localPlayer(g).biome : biomeOf(g, s.x, s.y))
 
+/** The trees standing in a crowd (`CROWD`), each with its roll in [0, 1) for its look there (`CROWDS`), from where it stands. */
+const crowdRolls = new WeakMap<Solid, number>()
+
+/** The look of a crowd's tree in `biome` for `roll`, or null where the biome's own tree stands in crowds. */
+const crowdPiece = (biome: BiomeId, roll: number): KeptPiece | null => {
+  const looks = CROWDS[biome]
+  if (!looks) return null
+  let left = roll * looks.reduce((sum, [w]) => sum + w, 0)
+  const i = Math.max(0, looks.findIndex(([w]) => (left -= w) < 0))
+  const key = `${biome}:crowd:${i}`
+  let piece = pieces.get(key)
+  if (!piece) pieces.set(key, (piece = keepPiece(biome, looks[i]![1]())))
+  return piece
+}
+
+/** A solid's sprite: a crowd's look for a tree in one, else its kind's (a looted landmark treasure open, and every one in co-op, `treasureOpen`). */
+const solidPiece = (g: Game, s: Solid): KeptPiece => {
+  const biome = solidBiome(g, s)
+  const roll = crowdRolls.get(s)
+  return (roll !== undefined ? crowdPiece(biome, roll) : null) ?? pieceOf(biome, s.kind, s.variant, s.loot !== undefined && treasureOpen(g, s.loot))
+}
+
 /** The solids around the view, for the depth sort with the Pokémon. */
 export const solidsInView = (g: Game, camX: number, camY: number, w: number, h: number, out: { push: (s: Solid) => unknown }) => {
   // Generous margins: towers and mountains reach far above their footprint.
   for (const f of featuresNear(g, camX + w / 2, camY + h / 2 + 60, w / 2 + 90, h / 2 + 150)) {
     const biome = featureBiome(g, f)
+    let trees = 0
+    if (!f.landmark) for (const s of f.solids) if (s.kind === 'tree') trees++
     for (const s of f.solids) {
       solidBiomes.set(s, biome)
+      if (trees >= CROWD && s.kind === 'tree' && !crowdRolls.has(s)) crowdRolls.set(s, noise(Math.round(s.x), Math.round(s.y), 0xc0d))
       out.push(s)
     }
   }
@@ -1206,7 +1277,7 @@ const tallOf = (kind: AnyPiece) =>
  */
 export const solidCovers = (g: Game, s: Solid, x: number, y: number, w: number, h: number) => {
   if (y >= s.y) return false
-  const piece = pieceOf(solidBiome(g, s), s.kind, s.variant, s.loot !== undefined && treasureOpen(g, s.loot))
+  const piece = solidPiece(g, s)
   const left = s.x - piece.ax
   const top = s.y - piece.ay
   return x + w / 2 > left && x - w / 2 < left + piece.packed.w && y > top && y - h < top + piece.packed.h
@@ -1214,7 +1285,7 @@ export const solidCovers = (g: Game, s: Solid, x: number, y: number, w: number, 
 
 /** Draws one solid; a tall one goes see-through around the player when they walk behind it. A looted landmark treasure shows open (and every one in co-op, `treasureOpen`). */
 export const drawSolid = (ctx: CanvasRenderingContext2D, g: Game, s: Solid) => {
-  const piece = pieceOf(solidBiome(g, s), s.kind, s.variant, s.loot !== undefined && treasureOpen(g, s.loot))
+  const piece = solidPiece(g, s)
   const x = Math.round(s.x - piece.ax)
   const y = Math.round(s.y - piece.ay)
   const p = localPlayer(g)
