@@ -70,7 +70,13 @@ export const COMPANIONS = [710]
 export const HALLOWEEN_BOSSES = [778, 354, 302, 426, 429, 229, 94, 609, 711, 709, 430, 477]
 /** The lobby's shopkeepers (render/plaza.ts): Kecleon (and its purple brother, recolored from the same sheets), Leavanny, the Boutique's tailor, and Bibarel, the carpentry's carpenter. */
 export const SHOPKEEPERS = [352, 542, 400]
-export const DEX = [...new Set([...STARTERS, ...HATCHLINGS, ...HORDE, ...TRAITS, ...BOSSES, ...CRITTERS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...CAMEOS, ...FESTIVAL_LEGENDS, ...REAPER, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...COMPANIONS, ...HALLOWEEN_BOSSES, ...SHOPKEEPERS])]
+/**
+ * The legends with a road of their own (`QUEST_LEGENDS` in src/data/legends.ts): Palkia's rift (and its Origin Forme),
+ * the roaming lake trio (Uxie, Mesprit, Azelf), the Swords of Justice (Cobalion, Terrakion, Virizion) and their
+ * Keldeo, and Hoopa of the ring rush (and Hoopa Unbound). All playable in Legend mode, all able to roll shiny.
+ */
+export const QUEST_LEGENDS = [484, 480, 481, 482, 638, 639, 640, 647, 720]
+export const DEX = [...new Set([...STARTERS, ...HATCHLINGS, ...HORDE, ...TRAITS, ...BOSSES, ...CRITTERS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...CAMEOS, ...FESTIVAL_LEGENDS, ...REAPER, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...COMPANIONS, ...HALLOWEEN_BOSSES, ...SHOPKEEPERS, ...QUEST_LEGENDS])]
 /**
  * The Arena's emotes (`emote` in src/data/arenaEffects.ts, `EMOTE_ANIMS` there too): extra SpriteCollab
  * animations, only for the species the Arena plays (the starters' lines) and only their front row
@@ -94,8 +100,8 @@ export const SHINY_LEGENDS = [144, 145, 146, 150, 151, 243, 244, 245, 251, 377, 
  * mode's 25 (the rift, event and festival legends, the trios, the mythicals, Mewtwo and Arceus). The species whose
  * wearables `npm run rig` fits, with their `FORMS` (`render/wearFit.test.ts` keeps them in sync with `PLAYABLE`).
  */
-export const PLAYERS = [...new Set([...STARTERS, ...HATCHLINGS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...SHINY_LEGENDS])]
-export const SHINY = new Set([...STARTERS, ...HATCHLINGS, ...HORDE, ...TRAITS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...SHINY_LEGENDS, ...COMPANIONS])
+export const PLAYERS = [...new Set([...STARTERS, ...HATCHLINGS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...SHINY_LEGENDS, ...QUEST_LEGENDS])]
+export const SHINY = new Set([...STARTERS, ...HATCHLINGS, ...HORDE, ...TRAITS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...SHINY_LEGENDS, ...COMPANIONS, ...QUEST_LEGENDS])
 
 /**
  * Alternate formes the game draws, by key, mapped to their SpriteCollab form id
@@ -136,6 +142,8 @@ export const FORMS = {
   384: { mega: '0001' },
   386: { attack: '0001', defense: '0002', speed: '0003' },
   491: { mega: '0002' }, // 0001 is a cutscene sprite
+  484: { origin: '0001' }, // Palkia's Origin Forme (its rift's last phase, its second awakening)
+  720: { unbound: '0001' }, // Hoopa Unbound (its second awakening, the ring rush's last ring)
 }
 
 /**
@@ -199,6 +207,8 @@ export const FORM_CRIES = {
   384: { mega: 'rayquaza-mega' },
   386: { attack: 'deoxys-attack', defense: 'deoxys-defense', speed: 'deoxys-speed' },
   491: { mega: 'darkrai-mega' },
+  484: { origin: 'palkia-origin' },
+  720: { unbound: 'hoopa-unbound' },
   500: { mega: 'emboar-mega' },
   652: { mega: 'chesnaught-mega' },
   655: { mega: 'delphox-mega' },
