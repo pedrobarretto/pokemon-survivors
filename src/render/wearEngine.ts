@@ -8,6 +8,7 @@ import { drawPokemon, placeFrame, type AnimName, type DrawOpts, type FramePlace,
 import { rasterize } from './wearArt'
 import { artDir, decodeRig, DRAW_ORDER, fitOf, fixOf, layerOf, rigChunk, rigKey, rigSheet, sizeOf, wears, yawOf, type Rig, type RigAnim, type RigChunk, type RigEntry, type WearSize } from './wearFit'
 import { sceneOf, WEAR_MODELS } from './wearModels'
+import { NONE as RIG_NONE } from './wearRig'
 import type { DressDone, DressJob } from './wearWorker'
 
 /**
@@ -386,6 +387,24 @@ export const drawDressed = (
   if (items.length) drawMoving('behind')
   drawPokemon(ctx, s, anim, dir, seconds, x, y, { ...opts, body: { img: row.img, sx: frame * row.cw, sy: 0, w: row.cw, h: row.ch, ox: row.ox, oy: row.oy } })
   if (items.length) drawMoving('front')
+}
+
+/**
+ * Where the head's seat is on the frame `drawPokemon` would draw (x, y and
+ * width in the frame's px, and the eyes' top row or null where none show, a shrunk legend's shrunk with it): Terastal's crown
+ * sits there (`render/teraFx.ts`). Null where a hat would draw bare: no rig
+ * for the variant (or its chunk not landed yet), a sheet the rig didn't
+ * measure, a frame without a seat.
+ */
+export const seatOf = (s: SpeciesSprites, anim: AnimName, dir: Dir8, seconds: number, loop: boolean) => {
+  const src = s.fitted?.from ?? s
+  const w = wearerOf(src)
+  if (!w || !placeFrame(src, anim, seconds, 0, 0, 1, loop, place)) return null
+  const sheet = rigSheet(w.rig, place)
+  const r = sheet ? w.rig[sheet].rows[dir]?.[place.frame] : undefined
+  if (!r || r.seatX === RIG_NONE || r.seatY === RIG_NONE) return null
+  const k = s.fitted?.scale ?? 1
+  return { x: r.seatX * k, y: r.seatY * k, w: r.seatW * k, eyes: r.eyeY0 === RIG_NONE ? null : r.eyeY0 * k }
 }
 
 /* ---------------- Icons and housekeeping ---------------- */

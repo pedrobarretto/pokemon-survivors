@@ -185,6 +185,8 @@ const transform = (g: Game) => {
   })
   shakeScreen(g, 8)
   g.flash = Math.max(g.flash, 0.25)
+  // The shatter lands with a beat of hitstop: the world holds on the flash before the shards fly.
+  g.hitstop = Math.max(g.hitstop, TERA.hitstop)
   g.events.push({ kind: 'tera', tera: s.form! })
 }
 

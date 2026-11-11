@@ -46,22 +46,68 @@ export const STELLAR = ['#f85858', '#f8a838', '#f8e858', '#58e898', '#58a8f8', '
 
 /* ---------------- Crowns ---------------- */
 
-const crowns = canvasCache<TeraType, PixelSprite>()
+/** A crown's art and its white stamp (the glint's), outlined in the ramp's dark. */
+export type CrownArt = { sprite: PixelSprite; shine: HTMLCanvasElement; tipX: number; tipY: number }
 
-/** A type's crown as a sprite, outlined in its ramp's dark. */
-export const crownSprite = (type: TeraType): PixelSprite => {
-  let sprite = crowns.get(type)
-  if (!sprite) {
-    const r = TERA_RAMPS[type]
-    const [a, b, c, d, e, f] = STELLAR
-    sprite = outlined(fromStrings(CROWNS[type], { 1: r[1], 2: r[2], 3: r[3], 4: r[4], 5: r[5], 6: r[6], a, b, c, d, e, f }), r.o)
-    crowns.set(type, sprite)
-  }
-  return sprite
+const crowns = canvasCache<TeraType, CrownArt>()
+
+/** The crown's tones (`teraCrowns.ts`): the ramp, a white glint, a deep crevice, the accent and Stellar's seven crystals. */
+const crownColors = (type: TeraType) => {
+  const r = TERA_RAMPS[type]
+  const [R, O, Y, G, B, V] = STELLAR
+  const [o, one] = [hex(r.o), hex(r[1])]
+  const deep = `rgb(${mixRgb(o, one, 0.45).map(Math.round).join(',')})`
+  return { 1: r[1], 2: r[2], 3: r[3], 4: r[4], w: '#ffffff', d: deep, a: r[5], b: r[6], R, O, Y, G, B, V }
 }
+
+/** A type's crown and its white stamp. */
+export const crownArt = (type: TeraType): CrownArt => {
+  let art = crowns.get(type)
+  if (!art) {
+    const sprite = outlined(fromStrings(CROWNS[type], crownColors(type)), TERA_RAMPS[type].o)
+    const shine = createCanvas(sprite.width, sprite.height)
+    const s = context2d(shine)
+    s.drawImage(sprite, 0, 0)
+    s.globalCompositeOperation = 'source-in'
+    s.fillStyle = '#ffffff'
+    s.fillRect(0, 0, sprite.width, sprite.height)
+    // Its tallest point, where a twinkle catches (the outline shifts it a pixel).
+    const rows = CROWNS[type]
+    const top = rows.findIndex((r) => /[^.]/.test(r))
+    const cols = [...rows[top]!].flatMap((c, i) => (c === '.' ? [] : [i]))
+    crowns.set(type, (art = { sprite, shine, tipX: cols[cols.length >> 1]! + 1, tipY: top + 1 }))
+  }
+  return art
+}
+
+/** A type's crown as a sprite. */
+export const crownSprite = (type: TeraType): PixelSprite => crownArt(type).sprite
 
 /** A type's crown as an icon (the TERA button, toasts, the den's sign). */
 export const crownIcon = (type: TeraType) => toIconUrl(`crown:${type}`, () => crownSprite(type))
+
+/**
+ * Draws a crown with its setting's bottom row on (cx, bottom), `scale` times
+ * its size, a glint sweeping it on the body's beat (`glint` 0..1 while one
+ * crosses, else -1) and, now and then, a twinkle on its tallest point.
+ */
+export const drawCrown = (ctx: CanvasRenderingContext2D, type: TeraType, cx: number, bottom: number, scale: number, glint: number, t: number) => {
+  const { sprite, shine, tipX, tipY } = crownArt(type)
+  const w = sprite.width
+  const h = sprite.height
+  // The outline adds a row under the setting: it hangs below the seat.
+  const dx = Math.round(cx - (w * scale) / 2)
+  const dy = Math.round(bottom - (h - 1) * scale)
+  ctx.drawImage(sprite, dx, dy, w * scale, h * scale)
+  if (glint >= 0) drawGlint(ctx, { shine }, dx, dy, scale, glint)
+  if (Math.floor(t * 2.5) % 4 === 0) {
+    ctx.fillStyle = '#ffffff'
+    const x = dx + tipX * scale
+    const y = dy + tipY * scale
+    ctx.fillRect(x - scale, y, scale * 3, scale)
+    ctx.fillRect(x, y - scale, scale, scale * 3)
+  }
+}
 
 /** Every crown, for the dev gallery and warming. */
 export const ALL_CROWNS = TERA_TYPES
@@ -260,6 +306,7 @@ export const crystalOf = (sheet: Sheet, frame: number, dir: number, type: TeraTy
 /** Lets go of every crystal frame (a run ended). */
 export const freeCrystals = () => {
   while (made.length > 0) forget()
+  for (const c of cut.splice(0)) c.facets.atlas.width = c.facets.atlas.height = c.facets.white.width = c.facets.white.height = 0
   frames = new WeakMap()
 }
 
@@ -279,6 +326,90 @@ export const crystalAt = (s: SpeciesSprites, anim: AnimName, dir: number, second
   return crystal ? { crystal, dx: place.dx, dy: place.dy, fw: place.fw, fh: place.fh } : null
 }
 
+/* ---------------- Facets ---------------- */
+
+/** A facet of a crystal frame: its box in the frame and its row in the atlas. */
+export type Facet = { x: number; y: number; w: number; h: number; ay: number }
+
+/**
+ * A crystal frame cut along its facets (the transformation grows the crystal
+ * facet by facet and shatters it into them): each facet's pixels on a row of
+ * its own in `atlas` (its white stamp in `white`), in growing order, from the
+ * feet up with a little scatter.
+ */
+export type Facets = { atlas: HTMLCanvasElement; white: HTMLCanvasElement; facets: readonly Facet[]; fw: number; fh: number }
+
+/** The last few frames cut (the transformation shows one or two). */
+const cut: { key: CrystalFrame; facets: Facets }[] = []
+
+/** `crystal` cut along its facets, made on first use. */
+export const facetsOf = (crystal: CrystalFrame): Facets | null => {
+  const held = cut.find((c) => c.key === crystal)
+  if (held) return held.facets
+  const fw = crystal.canvas.width
+  const fh = crystal.canvas.height
+  const ctx = readerFor(fw, fh)
+  if (!ctx) return null
+  ctx.drawImage(crystal.canvas, 0, 0)
+  const data = readPixels(ctx, 0, 0, fw, fh)
+  if (!data) return null
+  const px = data.data
+  const boxes = new Map<number, { x0: number; y0: number; x1: number; y1: number; at: number[] }>()
+  for (let y = 0; y < fh; y++) {
+    for (let x = 0; x < fw; x++) {
+      const i = (y * fw + x) * 4
+      if (px[i + 3]! === 0) continue
+      const { id } = facetAt(x + 0.5, y + 0.5)
+      let b = boxes.get(id)
+      if (!b) boxes.set(id, (b = { x0: x, y0: y, x1: x, y1: y, at: [] }))
+      b.x0 = Math.min(b.x0, x)
+      b.y0 = Math.min(b.y0, y)
+      b.x1 = Math.max(b.x1, x)
+      b.y1 = Math.max(b.y1, y)
+      b.at.push(x, y)
+    }
+  }
+  // From the feet up, facets a row apart scattered a little, so the crystal climbs unevenly.
+  const order = [...boxes.entries()].sort(([ia, a], [ib, b]) => b.y1 + hash(ia, 0, 11) * 6 - (a.y1 + hash(ib, 0, 11) * 6))
+  const height = order.reduce((n, [, b]) => n + b.y1 - b.y0 + 1, 0)
+  const atlas = createCanvas(fw, Math.max(1, height))
+  const white = createCanvas(fw, Math.max(1, height))
+  const img = context2d(atlas).createImageData(fw, Math.max(1, height))
+  const facets: Facet[] = []
+  let ay = 0
+  for (const [, b] of order) {
+    for (let k = 0; k < b.at.length; k += 2) {
+      const x = b.at[k]!
+      const y = b.at[k + 1]!
+      const from = (y * fw + x) * 4
+      const to = ((ay + y - b.y0) * fw + x) * 4
+      img.data[to] = px[from]!
+      img.data[to + 1] = px[from + 1]!
+      img.data[to + 2] = px[from + 2]!
+      img.data[to + 3] = 255
+    }
+    facets.push({ x: b.x0, y: b.y0, w: b.x1 - b.x0 + 1, h: b.y1 - b.y0 + 1, ay })
+    ay += b.y1 - b.y0 + 1
+  }
+  context2d(atlas).putImageData(img, 0, 0)
+  const wctx = context2d(white)
+  wctx.drawImage(atlas, 0, 0)
+  wctx.globalCompositeOperation = 'source-in'
+  wctx.fillStyle = '#ffffff'
+  wctx.fillRect(0, 0, fw, height)
+  const out: Facets = { atlas, white, facets, fw, fh }
+  cut.push({ key: crystal, facets: out })
+  while (cut.length > 4) {
+    const old = cut.shift()!
+    old.facets.atlas.width = old.facets.atlas.height = old.facets.white.width = old.facets.white.height = 0
+  }
+  return out
+}
+
+/** Draws facet `f` of `cut` with its frame's top-left at (dx, dy), `scale` times, moved (ox, oy) px; white for a flash. */
+export const drawFacet = (ctx: CanvasRenderingContext2D, cut: Facets, f: Facet, dx: number, dy: number, scale: number, ox = 0, oy = 0, white = false) =>
+  ctx.drawImage(white ? cut.white : cut.atlas, f.x, f.ay, f.w, f.h, Math.round(dx + f.x * scale + ox), Math.round(dy + f.y * scale + oy), f.w * scale, f.h * scale)
+
 /* ---------------- The glint ---------------- */
 
 let glintCanvas: HTMLCanvasElement | null = null
@@ -288,7 +419,7 @@ let glintCanvas: HTMLCanvasElement | null = null
  * diagonal band of light at `k` (0..1 across the frame), its edge stepped on the
  * pixel grid, stamped from the frame's white copy.
  */
-export const drawGlint = (ctx: CanvasRenderingContext2D, f: CrystalFrame, dx: number, dy: number, scale: number, k: number) => {
+export const drawGlint = (ctx: CanvasRenderingContext2D, f: Pick<CrystalFrame, 'shine'>, dx: number, dy: number, scale: number, k: number) => {
   const w = f.shine.width
   const h = f.shine.height
   if (!glintCanvas) glintCanvas = createCanvas(w, h)

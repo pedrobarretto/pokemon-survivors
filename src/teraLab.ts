@@ -1,24 +1,100 @@
 import { TERA_TYPES, type TeraType } from './data/tera'
+import type { Dir8 } from './engine/math'
 import { context2d, createCanvas } from './engine/pixelart'
 import { crownSprite, crystalOf, drawGlint, drawTwinkles, TERA_RAMPS } from './render/teraArt'
-import { loadSpecies } from './render/sprites'
+import { drawCrystalPokemon } from './render/teraFx'
+import { loadSpecies, type SpeciesSprites } from './render/sprites'
+import { headSeat, loadWearables } from './render/wearables'
 
 /**
- * Dev: Terastal's gallery (`ps.tera('lab')`), every crown side by side and a
- * few Pokémon in crystal next to their own colors, at whole-number scales on a
- * dark and a grass background. For eyeballing the art and the PR's pictures;
- * never in a build's player paths.
+ * Dev: Terastal's gallery (`ps.tera('lab')`), for eyeballing the art and the
+ * PR's pictures; never in a build's player paths. `mode: 'crowns'` lays the
+ * 19 crowns out as one sheet, `'worn'` puts them on Pokémon (crystal, crowned
+ * on the head rig) in five directions and a few walking frames, and the
+ * default shows the crowns over a few Pokémon in crystal next to their own colors.
  */
 
 const SPECIES = [448, 25, 6, 445, 282, 1024] as const
 
 const SHOWN: readonly TeraType[] = ['water', 'fire', 'grass', 'dragon', 'fairy', 'stellar']
 
-export const openTeraLab = async (opts: { scale?: number; species?: readonly number[]; types?: readonly TeraType[]; glint?: number; dpr?: number } = {}) => {
+type LabOpts = { scale?: number; species?: readonly number[]; types?: readonly TeraType[]; glint?: number; dpr?: number; mode?: 'crowns' | 'worn' }
+
+/** Puts a pixel canvas on the page at `k` times, over everything; a click takes it off. */
+const show = (canvas: HTMLCanvasElement, k: number, dpr?: number) => {
+  const big = createCanvas(canvas.width * k, canvas.height * k)
+  const b = context2d(big)
+  b.imageSmoothingEnabled = false
+  b.drawImage(canvas, 0, 0, big.width, big.height)
+  big.id = 'tera-lab'
+  Object.assign(big.style, { position: 'fixed', left: '0', top: '0', zIndex: '99999', imageRendering: 'pixelated', width: `${big.width / (dpr ?? devicePixelRatio)}px` })
+  big.addEventListener('click', () => big.remove())
+  document.body.append(big)
+  return { w: canvas.width, h: canvas.height }
+}
+
+/** The 19 crowns in a grid, each on a tile in its type's dark, its name under it. */
+const crownSheet = (k: number, dpr?: number) => {
+  const cols = 7
+  const cw = 30
+  const ch = 30
+  const canvas = createCanvas(cols * cw + 4, Math.ceil(TERA_TYPES.length / cols) * ch + 4)
+  const ctx = context2d(canvas)
+  ctx.fillStyle = '#141024'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  TERA_TYPES.forEach((t, i) => {
+    const x = 2 + (i % cols) * cw
+    const y = 2 + Math.floor(i / cols) * ch
+    ctx.fillStyle = TERA_RAMPS[t].o
+    ctx.fillRect(x + 1, y + 1, cw - 2, ch - 2)
+    const c = crownSprite(t)
+    ctx.drawImage(c, x + Math.floor((cw - c.width) / 2), y + Math.floor((ch - 6 - c.height) / 2) + 1)
+    ctx.fillStyle = TERA_RAMPS[t][3]
+    ctx.fillRect(x + 4, y + ch - 5, cw - 8, 1)
+  })
+  return show(canvas, k, dpr)
+}
+
+/** Waits (up to ~4 s) for the wearables' engine and each species' rig chunk, so the crowns sit on their heads. */
+const rigsReady = async (sprites: readonly SpeciesSprites[]) => {
+  await loadWearables()
+  for (let i = 0; i < 40; i++) {
+    if (sprites.every((s) => headSeat(s, 'Walk', 0, 0) !== null)) return
+    await new Promise((r) => setTimeout(r, 100))
+  }
+}
+
+/** Pokémon in crystal under their crowns, seated on the head rig: five directions, then the walk's frames facing south-east. */
+const wornSheet = async (species: readonly number[], types: readonly TeraType[], k: number, dpr?: number) => {
+  const loaded = (await Promise.all(species.map((dex) => loadSpecies(dex, false, undefined, 'now').catch(() => null)))).filter((s): s is SpeciesSprites => s !== null)
+  await rigsReady(loaded)
+  const cell = 52
+  const dirs: Dir8[] = [0, 1, 2, 3, 4]
+  const steps = 4
+  const canvas = createCanvas((dirs.length + steps) * cell + 6, loaded.length * cell + 4)
+  const ctx = context2d(canvas)
+  ctx.fillStyle = '#3c6c34'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  ctx.fillStyle = '#2c5428'
+  ctx.fillRect(dirs.length * cell + 2, 0, 2, canvas.height)
+  loaded.forEach((s, row) => {
+    const type = types[row % types.length]!
+    const feet = 2 + row * cell + cell - 8
+    dirs.forEach((dir, i) => drawCrystalPokemon(ctx, s, type, 'Walk', dir, 0, 2 + i * cell + cell / 2, feet, {}, 1))
+    const walk = s.anims.Walk
+    const total = walk.durations.reduce((a, b) => a + b, 0) / 60
+    for (let f = 0; f < steps; f++) drawCrystalPokemon(ctx, s, type, 'Walk', 1, (total * f) / steps + 0.001, 6 + (dirs.length + f) * cell + cell / 2, feet, {}, 1)
+  })
+  return show(canvas, k, dpr)
+}
+
+export const openTeraLab = async (opts: LabOpts = {}) => {
   document.getElementById('tera-lab')?.remove()
   const k = opts.scale ?? 4
   const species = opts.species ?? SPECIES
   const types = opts.types ?? SHOWN
+  if (opts.mode === 'crowns') return crownSheet(k, opts.dpr)
+  if (opts.mode === 'worn') return wornSheet(species, types, k, opts.dpr)
   const loaded = await Promise.all(species.map((dex) => loadSpecies(dex, false, undefined, 'now').catch(() => null)))
   const crownW = 24
   const perRow = 10
@@ -52,16 +128,7 @@ export const openTeraLab = async (opts: { scale?: number; species?: readonly num
       ctx.drawImage(f.canvas, x, fy)
       if (opts.glint !== undefined) drawGlint(ctx, f, x, fy, 1, opts.glint)
       drawTwinkles(ctx, f, x, fy, 1, 0.4 + i)
-      const c = crownSprite(t)
-      ctx.drawImage(c, x + Math.floor((sheet.fw - c.width) / 2), fy + f.top - c.height - 1)
     })
   })
-  const big = createCanvas(w * k, h * k)
-  const b = context2d(big)
-  b.drawImage(canvas, 0, 0, w * k, h * k)
-  big.id = 'tera-lab'
-  Object.assign(big.style, { position: 'fixed', left: '0', top: '0', zIndex: '99999', imageRendering: 'pixelated', width: `${w * k / (opts.dpr ?? devicePixelRatio)}px` })
-  big.addEventListener('click', () => big.remove())
-  document.body.append(big)
-  return { w, h, ramps: Object.keys(TERA_RAMPS).length }
+  return show(canvas, k, opts.dpr)
 }

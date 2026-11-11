@@ -137,11 +137,12 @@ import { drawJoystick } from './render/joystick'
 import { cryUrl, loadAll, loadSpecies, overlayStats, portraitUrl, preloadShinies, releaseSprites, spriteMemory, streamSprites, sweepSprites, type Dex, type Variant } from './render/sprites'
 import { castNeeds, runSprites, type SpriteNeed } from './render/spriteNeeds'
 import { setMarkerInsets } from './render/mapEvents'
+import { frameRaid, setRaidRoom } from './render/teraFx'
 import { consumableIcon } from './render/props'
 import { berryIcon, curseIcon, eggIcon, moveIcon, ribbonIcon, warmIcon } from './render/art'
 import { TYPE_COLORS } from './data/types'
 import { megaStoneIcon } from './render/megaFx'
-import { denToast, dressBanner, raidBanner, shardToast, teraBanner } from './ui/teraNews'
+import { denToast, dressBanner, raidBanner, shardToast, teraStrip } from './ui/teraNews'
 import { celebrateShop, createTitleScene, drawTitleScene, meetPartner, revealShopkeeper, sceneAt, stepTitleScene, visitPlaza } from './render/titleScene'
 import { festivalSprites, KECLEON_DEX, type PlazaFestival, type ShopLevel } from './render/plaza'
 import { weatherIcon } from './render/weather'
@@ -1692,6 +1693,9 @@ const syncMarkerInsets = () => {
   const top = Math.max(bottomOf('.hud-row'), team && row && team.width > box.width / 2 ? team.bottom : 0) - box.top
   const bottom = box.bottom - Math.min(topOf('.hud .status'), topOf('.special-button'))
   setMarkerInsets({ top: Math.max(0, top) / cssScale + 10, bottom: Math.max(0, bottom) / cssScale + 10, side: 14 })
+  // A raid frames its giant under the boss bar (`frameRaid` in `render/teraFx.ts`); the touch buttons keep to the corners, so the player's feet may come near the bottom.
+  const boss = rect('.hud .boss:not(.hidden)')
+  setRaidRoom({ top: boss ? Math.max(0, boss.bottom - box.top) / cssScale : 0, bottom: 14 })
 }
 
 /** Settings from the pause menu. The HUD reads its labels once, so a language switch rebuilds it. */
@@ -2382,7 +2386,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
       playSfx('megaBurst', 0)
       playSfx('break', 0)
       playCry(playerCry(g), 0.9)
-      return showTeraBanner(teraBanner(playerName(g), e.tera), 2600)
+      return teraStrip(ui, playerName(g), e.tera)
     case 'teraEnd':
       playSfx('stance', 0)
       return aside(t().tera.ended(playerName(g)), 1800, 'tera')
@@ -2400,6 +2404,8 @@ const handleEvent = (r: Run, e: GameEvent) => {
       playSfx('legendary')
       playCry(cryUrl(ENEMIES[e.raid.boss].dex), 0.7)
       flashScreen(ui)
+      // The boss bar shows from this frame on: measure it for the raid's framing once it's laid out.
+      setTimeout(syncMarkerInsets, 60)
       return showTeraBanner(raidBanner(e.raid), 2800)
     }
     case 'raidShield':
@@ -3014,6 +3020,7 @@ const coopFrame = (r: Run, c: CoopRun, dt: number, t: number, realDt: number) =>
   settleShake(c.shake, dt, runner.next, Math.random)
   shown.shake = c.shake.amount
   c.versus?.controls.frame(shown, localPlayer(shown))
+  if (shown.raid.arena) frameRaid(shown, t, shown.camera.y)
   const drawAt = performance.now()
   render(ctx, shown, t, { ...settings(), companion: null, mates: c.view.mates, shakeOffset: c.shake, arena: c.versus?.controls.overlay() })
   firstFrameDrawn()
@@ -3997,6 +4004,7 @@ const frame = (now: number) => {
       if (steps > 0 || dirty || now - backAt < HELD_BACK || now - runDrawnAt >= HELD_KEEP) {
         dirty = false
         runDrawnAt = now
+        if (g.raid.arena) frameRaid(g, t, localPlayer(g).screen.y)
         render(ctx, g, t, { ...settings(), companion: r.companion })
         firstFrameDrawn()
         firstRunClock(g.time)

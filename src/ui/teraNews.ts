@@ -34,17 +34,52 @@ export const dressBanner = (content: HTMLElement) => {
   for (const v of ['--tera-dark', '--tera-mid', '--tera-light']) box.style.setProperty(v, content.style.getPropertyValue(v))
 }
 
-/** The banner as the crystal shatters: the crown, the Pokémon's name, "Tera <type>". */
-export const teraBanner = (name: string, type: TeraType) =>
-  tint(
+/** How long the Terastal strip shows (ms): it slides in, holds, and closes (`.tera-strip` in `style.css`). */
+const STRIP_MS = 2600
+
+let strip: HTMLElement | null = null
+
+/**
+ * The Terastal strip as the crystal shatters: a band across the whole screen
+ * under the Pokémon, cut in the type's crystal (its dark, facets in its body
+ * tone, its light and the kit's ink round it), the type's crown, the
+ * Pokémon's name small and "TERA <TYPE>" huge in the type's crystal
+ * gradient, a glint crossing the letters and sparkles round them. It opens
+ * like a slit, the words sliding in, and closes the same way. One at a time:
+ * a new one takes the old one's place.
+ */
+export const teraStrip = (root: HTMLElement, name: string, type: TeraType) => {
+  strip?.remove()
+  const r = TERA_RAMPS[type]
+  const words = t().tera.banner(teraName(type))
+  const el = tint(
     h(
-      'span',
-      { class: 'tera-banner' },
-      h('img', { class: 'tera-crown', src: crownIcon(type), alt: '' }),
-      h('span', { class: 'tera-lines' }, h('small', { class: 'tera-kicker' }, `${t().tera.kicker} · ${name}`), h('span', { class: 'tera-type' }, t().tera.banner(teraName(type)))),
+      'div',
+      { class: 'tera-strip', 'aria-live': 'polite' },
+      h(
+        'div',
+        { class: 'tera-strip-band' },
+        h('img', { class: 'tera-strip-crown', src: crownIcon(type), alt: '' }),
+        h(
+          'div',
+          { class: 'tera-strip-words' },
+          h('span', { class: 'tera-strip-name' }, h('i', { class: 'tera-strip-gem' }), name, h('i', { class: 'tera-strip-gem' })),
+          h('span', { class: 'tera-strip-title', 'data-text': words }, words),
+        ),
+        ...Array.from({ length: 6 }, (_, i) => h('i', { class: `tera-spark tera-spark-${i}` })),
+      ),
     ),
     type,
   )
+  setStyle(el, '--tera-deep', r[1])
+  setStyle(el, '--tera-glint', r[4])
+  root.append(el)
+  strip = el
+  setTimeout(() => {
+    el.remove()
+    if (strip === el) strip = null
+  }, STRIP_MS)
+}
 
 /** The raid's title card as the team steps into the hollow. */
 export const raidBanner = (raid: RaidPick) =>

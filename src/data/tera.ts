@@ -25,6 +25,8 @@ export const TERA = {
   /** Seconds a Terastallization lasts, and the transformation (the world waits, solo; co-op wraps the player in crystal). */
   duration: 20,
   intro: 1.6,
+  /** The beat of hitstop the shatter lands with (s). */
+  hitstop: 0.14,
   /** Invulnerability after the crystal shatters. */
   iframes: 1.2,
   /** Damage of a move of the Tera type; `stab` when it's also one of the Pokémon's own types. */

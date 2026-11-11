@@ -4,7 +4,8 @@ import { hash2 } from '../engine/rng'
 import { TAU, type Dir8 } from '../engine/math'
 import { outlined, toIconUrl } from './art'
 import { detail } from './quality'
-import { crownSprite, crystalAt, drawGlint, drawTwinkles, STELLAR, TERA_RAMPS, type Ramp } from './teraArt'
+import { crownSprite, crystalAt, drawCrown, drawFacet, drawGlint, drawTwinkles, facetsOf, STELLAR, TERA_RAMPS, type Facets, type Ramp } from './teraArt'
+import { headSeat } from './wearables'
 import { drawPokemon, type AnimName, type DrawOpts, type SpeciesSprites } from './sprites'
 import { localPlayer } from '../game/players'
 import type { RaidArena, RaidDen } from '../game/teraRaid'
@@ -12,9 +13,10 @@ import type { Attack, Enemy, Game, Player } from '../game/types'
 
 /**
  * Terastal's effects (`game/tera.ts`, `game/teraRaid.ts`), all hard-edged on
- * the pixel grid: the transformation (shards drawn in, a crystal shell rising
- * round the Pokémon, cracking and bursting), the Terastallized Pokémon in
- * crystal (`render/teraArt.ts`) under its type's crown, the shatter's wave,
+ * the pixel grid: the transformation (beams of the type's light, the crystal
+ * growing over the Pokémon facet by facet, a white flash, the shatter into its
+ * facets), the Terastallized Pokémon in crystal (`render/teraArt.ts`) with its
+ * type's crown seated on its head, the shatter's wave and the screen's tint,
  * the shards on the ground, a raid den's pillar of light, the hollow's floor
  * and a raid boss's Tera shield. Drawing lean, the glint, the twinkles and the
  * rising motes stay out; the transformation never does.
@@ -28,12 +30,16 @@ const introK = (p: Player) => (p.tera.intro > 0 ? 1 - p.tera.intro / TERA.intro 
 /** Seconds since the crystal shattered, while the form lasts (Infinity once the burst is long gone or none is on). */
 const sinceShatter = (p: Player) => (p.tera.active > 0 ? TERA.duration - p.tera.active : Infinity)
 
-/** The Tera type a player shows in crystal now: the form's while it lasts, and through the transformation's last beats. */
-export const crystalType = (p: Player): TeraType | null => {
-  const k = introK(p)
-  if (k >= 0) return k > 0.55 ? p.tera.form : null
-  return p.tera.active > 0 ? p.tera.form : null
-}
+/**
+ * The transformation's beats, as shares of `TERA.intro`: the Pokémon gathers
+ * light, the crystal grows over it facet by facet from the feet up, holds
+ * whole while cracks of light run over it, then flashes white; at the end
+ * (`transform`, a hitstop holding the frame) it shatters into its facets.
+ */
+const BEAT = { grow: 0.1, whole: 0.66, flash: 0.86 } as const
+
+/** The Tera type a player shows in crystal now: the form's, once its crystal shattered (the growing shell is drawn over it, `drawTeraAir`). */
+export const crystalType = (p: Player): TeraType | null => (p.tera.intro <= 0 && p.tera.active > 0 ? p.tera.form : null)
 
 /* ---------------- Little sprites ---------------- */
 
@@ -103,8 +109,8 @@ const GLINT_EVERY = 2.4
 const GLINT_TIME = 0.45
 
 /**
- * Draws a player in crystal (its Tera type's) with its crown hovering over
- * its head, the glint and twinkles on top: in `drawPlayer`'s place while it's
+ * Draws a player in crystal (its Tera type's) with its crown seated on its
+ * head (the head rig's seat, floating over it without a rig), the glint and twinkles on top: in `drawPlayer`'s place while it's
  * Terastallized. False when there's nothing to draw it from (the caller draws
  * it plain). `scale` 2 for a raid's giant.
  */
@@ -123,40 +129,76 @@ export const drawCrystalPokemon = (
     drawTwinkles(ctx, crystal, dx, dy, k, t)
   }
   if (crown) {
-    const c = crownSprite(type)
-    const bob = Math.round(Math.sin(t * 3)) * k
-    const top = dy + crystal.top * k
-    if (k === 1) blitCentered(ctx, c, x, top - 4 - c.height / 2 + bob)
-    else ctx.drawImage(c, Math.round(x - (c.width * k) / 2), Math.round(top - 4 * k - c.height * k + bob), c.width * k, c.height * k)
+    const phase = detail.lean ? -1 : (t % GLINT_EVERY) / GLINT_TIME
+    // Seated on the skull as a hat is (the wearables' head rig, `render/wearables.ts`), riding the head through every frame;
+    // a variant without a rig wears it floating over its head.
+    const seat = headSeat(s, anim, dir, seconds, opts.loop ?? true)
+    // It sinks into the skull a little, but always leaves a row of the face above the eyes.
+    const base = seat && Math.min(seat.y + CROWN_SINK, seat.eyes === null ? Infinity : seat.eyes - 2)
+    if (seat && base !== null) drawCrown(ctx, type, dx + (seat.x + 0.5) * k, dy + base * k, k, phase < 1 ? phase : -1, t)
+    else drawCrown(ctx, type, x, dy + (crystal.top - 3) * k + Math.round(Math.sin(t * 3)) * k, k, phase < 1 ? phase : -1, t)
   }
   return true
 }
 
+/** Rows of the crown's setting below the seat: it sits into the skull's top rather than on a point of it. */
+const CROWN_SINK = 2
+
 /* ---------------- The transformation ---------------- */
 
-/** The shell's spikes round a body `bw`×`bh`: x offset, foot width, height share, lean. */
+/** Crystal spikes erupting round the feet as the crystal grows: x offset (share of the body's width), foot width, height share, lean. */
 const SHELL = [
-  [-0.55, 0.45, 0.7, -4],
-  [0.55, 0.45, 0.75, 4],
-  [-0.25, 0.6, 1.05, -2],
-  [0.25, 0.6, 1, 3],
-  [0, 0.75, 1.25, 0],
+  [-0.75, 4, 0.35, -3],
+  [0.75, 4, 0.4, 3],
+  [-0.45, 5, 0.55, -2],
+  [0.45, 5, 0.5, 2],
 ] as const
+
+/** How the shards' clock runs after the shatter: slow for its first beat (the slow-mo), then at speed. */
+const shardClock = (s: number) => (s < 0.22 ? s * 0.35 : 0.077 + (s - 0.22) * 1.1)
 
 /**
  * Under a player while it transforms or is Terastallized: the veil over the
- * world while its crystal forms (`veil`: only this screen's own player), and
- * a ring of crystal splinters turning at its feet while the form lasts.
+ * world in the type's dark while its crystal forms (`veil`: only this
+ * screen's own player), rays of the type's light turning behind it, and a
+ * ring of crystal splinters turning at its feet while the form lasts.
  */
 export const drawTeraGround = (ctx: Ctx, g: Game, camX: number, camY: number, t: number, veil = true) => {
   const p = localPlayer(g)
   const k = introK(p)
-  if (k >= 0 && veil) {
-    ctx.fillStyle = `rgba(10,6,30,${(0.5 * Math.min(1, k * 4)).toFixed(2)})`
-    ctx.fillRect(camX, camY, g.view.w, g.view.h)
+  const form = p.tera.form
+  if (k >= 0 && form) {
+    const r = TERA_RAMPS[form]
+    if (veil) {
+      ctx.globalAlpha = 0.72 * Math.min(1, k * 5)
+      ctx.fillStyle = r.o
+      ctx.fillRect(camX, camY, g.view.w, g.view.h)
+      ctx.globalAlpha = 1
+    }
+    // Beams of the type's light fanning out behind the Pokémon, widening as they go and longer as the crystal grows.
+    if (k > BEAT.grow * 0.5) {
+      const len = 26 + Math.min(1, (k - BEAT.grow * 0.5) / 0.45) * (detail.lean ? 54 : 84)
+      const n = detail.lean ? 6 : 9
+      const cy = p.y - 12
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * TAU + k * 0.9 + 0.2
+        const ux = Math.cos(a)
+        const uy = Math.sin(a) * 0.8
+        const color = form === 'stellar' ? STELLAR[i % STELLAR.length]! : null
+        for (let d = 12; d < len; d += 2) {
+          const half = Math.floor(d / 16)
+          const far = d > len * 0.7
+          for (let w = -half; w <= half; w++) {
+            ctx.fillStyle = color ?? (w === 0 ? r[4] : Math.abs(w) === half && half > 0 ? r[2] : far ? r[2] : r[3])
+            ctx.fillRect(Math.round(p.x + ux * d - uy * w), Math.round(cy + uy * d + ux * w), 2, 2)
+          }
+        }
+      }
+    }
+    return
   }
   const type = crystalType(p)
-  if (!type || k >= 0) return
+  if (!type) return
   const r = TERA_RAMPS[type]
   for (let i = 0; i < 8; i++) {
     const a = (i / 8) * TAU + t * 1.6
@@ -165,42 +207,69 @@ export const drawTeraGround = (ctx: Ctx, g: Game, camX: number, camY: number, t:
 }
 
 /**
- * Over a player: the transformation (splinters spiralling in, the shell
- * rising round it, cracking, bursting) and, once it shattered, the burst's
- * shards flying off; motes rising off the crystal while the form lasts.
- * `top` is the sprite's top edge, `bw` its body width.
+ * Over a player: the transformation, then the shatter. Splinters spiral in
+ * while light gathers; the crystal grows over the Pokémon facet by facet from
+ * its feet up (each facet landing white), spikes erupting round it; whole, it
+ * holds while cracks of light run over it, then flashes white; when it
+ * shatters (`transform`) its facets fly out and fall, slow for a beat. Motes
+ * rise off the crystal while the form lasts. `s`, `anim` and `feet` are how
+ * the Pokémon is drawn now (the facets are cut from that frame).
  */
-export const drawTeraAir = (ctx: Ctx, g: Game, top: number, bw: number, t: number) => {
+export const drawTeraAir = (ctx: Ctx, g: Game, s: SpeciesSprites, anim: AnimName, feet: number, t: number) => {
   const p = localPlayer(g)
   const type = p.tera.form
   if (!type) return
   const r = TERA_RAMPS[type]
   const k = introK(p)
-  const bh = p.y - top
+  const bw = s.bodyW
+  const bh = s.bodyH
   if (k >= 0) {
     // 1. Splinters of the type's crystal spiral in.
-    if (k < 0.45) {
-      const n = 14
+    if (k < 0.4) {
+      const n = 16
       for (let i = 0; i < n; i++) {
-        const d = (1 - k / 0.45) * 90 + 6
+        const d = (1 - k / 0.4) * 90 + 6
         const a = (i / n) * TAU + k * 7
-        splinter(ctx, p.x + Math.cos(a) * d, p.y - bh / 2 + Math.sin(a) * d * 0.7, tone(type, r, i, true), r[1])
+        splinter(ctx, p.x + Math.cos(a) * d, feet - bh / 2 + Math.sin(a) * d * 0.7, tone(type, r, i, true), r[1])
       }
     }
-    // 2. The shell rises from the ground; 3. it cracks; 4. it bursts (the shards below take over).
-    if (k > 0.2 && k < 0.88) {
-      const grow = Math.min(1, (k - 0.2) / 0.35)
-      SHELL.forEach(([ox, fw, fh, lean], i) => {
-        const h = Math.round((bh + 8) * fh * grow)
-        if (h > 1) spike(ctx, p.x + ox * bw, p.y + 2, Math.max(5, bw * fw), h, lean, r, type === 'stellar' ? i : -1)
-      })
-      if (k > 0.66) drawCracks(ctx, p.x, p.y - bh / 2, bw, bh, k)
+    const at = crystalAt(s, anim, p.dir, p.animTime, p.x, feet, 1, true, type)
+    const cut = at && facetsOf(at.crystal)
+    if (!at || !cut) {
+      if (k >= BEAT.flash) drawBurst(ctx, type, r, p.x, feet - bh / 2, (k - BEAT.flash) * 0.4)
+      return
     }
-    if (k >= 0.86) drawBurst(ctx, type, r, p.x, p.y - bh / 2, (k - 0.86) * TERA.intro)
+    // 2. Spikes erupt round the feet as the crystal climbs.
+    const grown = Math.min(1, Math.max(0, (k - BEAT.grow) / (BEAT.whole - BEAT.grow)))
+    if (k < BEAT.flash) {
+      SHELL.forEach(([ox, fw, fh, lean], i) => {
+        const h = Math.round((bh + 6) * fh * Math.min(1, grown * 1.6))
+        if (h > 1) spike(ctx, p.x + ox * bw, feet + 2, fw, h, lean, r, type === 'stellar' ? i : -1)
+      })
+    }
+    // 3. The crystal grows facet by facet; each lands white for a beat.
+    const n = cut.facets.length
+    const shown = Math.floor(grown * n)
+    const fresh = Math.max(1, Math.round(n * 0.12))
+    const white = k >= BEAT.flash
+    shell = { cut, dx: at.dx, dy: at.dy, x: p.x, feet, slot: p.slot }
+    for (let i = 0; i < Math.min(n, shown); i++) drawFacet(ctx, cut, cut.facets[i]!, at.dx, at.dy, 1, 0, 0, white || i >= shown - fresh)
+    // 4. Whole, cracks of light run over it: a few facets at a time catch white.
+    if (k >= BEAT.whole && !white) {
+      const beat = Math.floor(k * 40)
+      const lit = 1 + Math.floor(((k - BEAT.whole) / (BEAT.flash - BEAT.whole)) * n * 0.5)
+      for (let j = 0; j < lit; j++) drawFacet(ctx, cut, cut.facets[Math.floor(hash2(beat, j, 61) * n)]!, at.dx, at.dy, 1, 0, 0, true)
+      drawGlint(ctx, at.crystal, at.dx, at.dy, 1, (k - BEAT.whole) / (BEAT.flash - BEAT.whole))
+    }
+    // 5. White, it swells: a ring of light closing in on it.
+    if (white) {
+      const q = (k - BEAT.flash) / (1 - BEAT.flash)
+      ring(ctx, p.x, feet - bh / 2, (1 - q) * 40 + bw * 0.6, r[4])
+    }
     return
   }
   const since = sinceShatter(p)
-  if (since < 0.9) drawBurst(ctx, type, r, p.x, p.y - bh / 2, since + 0.14 * TERA.intro)
+  if (since < SHATTER_TIME) drawShatter(ctx, s, anim, type, r, p, feet, since)
   // The form's last 3 seconds: the crystal flickers (drawPlayer blinks it); motes rise off it before.
   if (detail.lean || p.tera.active <= 0) return
   for (let i = 0; i < 4; i++) {
@@ -211,36 +280,107 @@ export const drawTeraAir = (ctx: Ctx, g: Game, top: number, bw: number, t: numbe
   }
 }
 
-/** White cracks running over the shell as it gives. */
-const drawCracks = (ctx: Ctx, x: number, cy: number, bw: number, bh: number, k: number) => {
-  const n = Math.round(2 + (k - 0.66) * 30)
-  ctx.fillStyle = '#ffffff'
-  for (let i = 0; i < n; i++) {
-    let cx = Math.round(x + (hash2(i, 1, 41) - 0.5) * bw)
-    let yy = Math.round(cy + (hash2(i, 2, 41) - 0.5) * bh)
-    for (let s = 0; s < 6; s++) {
-      ctx.fillRect(cx, yy, 1, 1)
-      cx += hash2(i, s, 42) < 0.5 ? -1 : 1
-      yy += hash2(i, s, 43) < 0.6 ? 1 : 0
-    }
+/** The shell as last drawn (its facets, where): the shatter flies those, not whatever frame the Pokémon walks on after. */
+let shell: { cut: Facets; dx: number; dy: number; x: number; feet: number; slot: number } | null = null
+
+/** Seconds the shatter's shards fly. */
+const SHATTER_TIME = 1.3
+
+/** A hard ring of 1 px dots, `r` px round (x, y), squashed to the ground's tilt. */
+const ring = (ctx: Ctx, x: number, y: number, r: number, color: string) => {
+  ctx.fillStyle = color
+  const steps = Math.max(16, Math.ceil(r * 3))
+  for (let i = 0; i < steps; i++) {
+    const a = (i / steps) * TAU
+    ctx.fillRect(Math.round(x + Math.cos(a) * r), Math.round(y + Math.sin(a) * r * 0.8), 2, 1)
   }
 }
 
-/** The shell's shards flying off, `s` seconds after the burst: spinning splinters under gravity, fading in steps. */
+/**
+ * The shatter, `since` seconds after it: the shell's facets fly out from the
+ * body's middle (cut from the frame it shattered on), arc, fall to the
+ * ground and blink out, white for their first beat, slow at first
+ * (`shardClock`); splinters burst out with them.
+ */
+const drawShatter = (ctx: Ctx, s: SpeciesSprites, anim: AnimName, type: TeraType, r: Ramp, p: Player, feet: number, since: number) => {
+  const c = shardClock(since)
+  // The shell as it gave (`shell`), or this frame's crystal when it wasn't seen forming (a teammate's, a late join).
+  const own = shell?.slot === p.slot ? shell : null
+  const now = own ? null : crystalAt(s, anim, p.dir, p.animTime, p.x, feet, 1, true, type)
+  const cut = own?.cut ?? (now && facetsOf(now.crystal))
+  if (!cut) return drawBurst(ctx, type, r, p.x, feet - s.bodyH / 2, c)
+  const at = own ?? { dx: now!.dx, dy: now!.dy }
+  const base = own?.feet ?? feet
+  const cx = own?.x ?? p.x
+  const cy = base - s.bodyH / 2
+  drawBurst(ctx, type, r, cx, cy, c)
+  const lean = detail.lean
+  cut.facets.forEach((f, i) => {
+    if (lean && i % 2 === 1) return
+    // Each facet flies off from where it sat, away from the body's middle, a little up, then falls to the ground below it.
+    const fx = at.dx + f.x + f.w / 2
+    const fy = at.dy + f.y + f.h / 2
+    const ax = fx - cx + (hash2(i, 1, 71) - 0.5) * 6
+    const ay = fy - cy + (hash2(i, 2, 71) - 0.5) * 6
+    const len = Math.hypot(ax, ay) || 1
+    const v = 70 + hash2(i, 3, 71) * 80
+    const vx = (ax / len) * v
+    const vy = (ay / len) * v * 0.7 - 60 - hash2(i, 4, 71) * 50
+    const ground = base + 4 + hash2(i, 5, 71) * 10 - f.h / 2
+    let ox = vx * c
+    let oy = vy * c + 260 * c * c
+    // Landed: it lies where it fell, sliding to a stop.
+    if (fy + oy > ground) {
+      oy = ground - fy
+      ox = vx * Math.min(c, 0.5)
+    }
+    const life = 0.85 + hash2(i, 6, 71) * 0.4
+    if (since > life || (since > life - 0.25 && Math.floor(since * 16) % 2 === 0)) return
+    drawFacet(ctx, cut, f, at.dx, at.dy, 1, ox, oy, since < 0.1 || (since < 0.3 && i % 5 === 0))
+  })
+}
+
+/** Splinters bursting out of the shell, `s` seconds after it gave: spinning under gravity, gone in steps. */
 const drawBurst = (ctx: Ctx, type: TeraType, r: Ramp, x: number, cy: number, s: number) => {
-  const n = 22
+  const n = detail.lean ? 14 : 26
   for (let i = 0; i < n; i++) {
     const a = (i / n) * TAU + hash2(i, 3, 51) * 0.4
-    const v = 70 + hash2(i, 4, 51) * 90
+    const v = 80 + hash2(i, 4, 51) * 110
     const px = x + Math.cos(a) * v * s
-    const py = cy + Math.sin(a) * v * s * 0.8 + 120 * s * s
-    if (s > 0.55 + hash2(i, 5, 51) * 0.35) continue
+    const py = cy + Math.sin(a) * v * s * 0.8 + 140 * s * s
+    if (s > 0.5 + hash2(i, 5, 51) * 0.35) continue
     const big = i % 3 === 0
     ctx.fillStyle = tone(type, r, i, true)
     ctx.fillRect(Math.round(px), Math.round(py), big ? 2 : 1, big ? 3 : 2)
     ctx.fillStyle = r[4]
     ctx.fillRect(Math.round(px), Math.round(py), 1, 1)
   }
+}
+
+/**
+ * Over the whole screen (unless flashes are reduced): white swelling as the
+ * crystal flashes, white for the shatter's first beat, then the type's color
+ * washing over the world and out in four steps.
+ */
+export const drawTeraScreen = (ctx: Ctx, g: Game) => {
+  const p = localPlayer(g)
+  const type = p.tera.form
+  if (!type) return
+  const k = introK(p)
+  const since = sinceShatter(p)
+  let alpha = 0
+  let color = '#ffffff'
+  if (k >= 0.93) alpha = ((k - 0.93) / 0.07) * 0.55
+  else if (k < 0 && since < 0.1) alpha = 0.55
+  else if (k < 0 && since < 0.7) {
+    color = type === 'stellar' ? STELLAR[Math.floor(since * 20) % STELLAR.length]! : TERA_RAMPS[type][2]
+    alpha = 0.34 * (1 - Math.floor(((since - 0.1) / 0.6) * 4) / 4)
+  }
+  if (alpha <= 0) return
+  ctx.globalAlpha = alpha
+  ctx.fillStyle = color
+  ctx.fillRect(0, 0, g.view.w, g.view.h)
+  ctx.globalAlpha = 1
 }
 
 /** The shatter's shockwave: a ring of splinters racing out. */
@@ -329,11 +469,14 @@ export const drawDenAir = (ctx: Ctx, den: RaidDen, t: number) => {
     const fade = y / height
     const half = Math.max(1, Math.round((7 + pulse) * (1 - fade * 0.5)))
     const yy = den.y - y
-    if (fade > 0.6 && (y + Math.floor(t * 20)) % 3 === 0) continue
+    // Its top thins out in a checker of light rather than in gaps.
+    const thin = fade > 0.62
     ctx.fillStyle = type === 'stellar' ? STELLAR[Math.floor(y / 6 + t * 8) % STELLAR.length]! : r[2]
-    ctx.fillRect(den.x - half, yy, half * 2, 1)
+    if (thin) {
+      for (let x = -half; x < half; x++) if ((x + y + Math.floor(t * 12)) % 2 === 0 || fade < 0.8) ctx.fillRect(den.x + x, yy, 1, 1)
+    } else ctx.fillRect(den.x - half, yy, half * 2, 1)
     ctx.fillStyle = r[3]
-    ctx.fillRect(den.x - Math.max(1, half - 2), yy, Math.max(2, (half - 2) * 2), 1)
+    if (!thin || y % 2 === 0) ctx.fillRect(den.x - Math.max(1, half - 2), yy, Math.max(2, (half - 2) * 2), 1)
     ctx.fillStyle = r[4]
     ctx.fillRect(den.x - 1, yy, 2, 1)
   }
@@ -463,22 +606,41 @@ export const drawRaidBoss = (ctx: Ctx, arena: RaidArena, e: Enemy, s: SpeciesSpr
   const sh = arena.shield
   const r = TERA_RAMPS[arena.raid.tera]
   const bodyH = s.bodyH * 2
+  // The giant's top (its crown's, roughly), for the framing (`frameRaid`).
+  raidTop = y - bodyH - crownSprite(arena.raid.tera).height * 2
   const cy = y - bodyH / 2
   if (sh.up) {
+    // A dome of crystal round the giant: a rim in the type's light, meridians and a band of facets across it,
+    // turning slowly; its facets fall away as the shield runs down, the last ones blinking.
     const share = sh.max > 0 ? sh.hp / sh.max : 0
-    const rx = s.bodyW + 10
-    const ry = bodyH * 0.62 + 6
-    const facets = 18
+    const rx = s.bodyW + 12
+    const ry = bodyH * 0.62 + 8
+    const facets = 24
+    const spin = t * 0.35
     for (let i = 0; i < facets; i++) {
-      // Facets fall away as the shield runs down, the last ones blinking.
-      if (i / facets > share && !(i / facets - share < 0.06 && Math.floor(t * 10) % 2 === 0)) continue
-      const a0 = (i / facets) * TAU + t * 0.4
-      const a1 = ((i + 1) / facets) * TAU + t * 0.4
-      const steps = 8
+      if (i / facets > share && !(i / facets - share < 0.05 && Math.floor(t * 10) % 2 === 0)) continue
+      const a0 = (i / facets) * TAU + spin
+      const a1 = ((i + 1) / facets) * TAU + spin
+      const steps = 10
       for (let k = 0; k <= steps; k++) {
         const a = a0 + ((a1 - a0) * k) / steps
-        ctx.fillStyle = k === 0 ? r[4] : i % 2 === 0 ? r[3] : r[2]
-        ctx.fillRect(Math.round(e.x + Math.cos(a) * rx), Math.round(cy + Math.sin(a) * ry), 2, 2)
+        const x = Math.round(e.x + Math.cos(a) * rx)
+        const yy = Math.round(cy + Math.sin(a) * ry)
+        // The rim: two pixels thick, its facet's seam bright, the upper-left lit.
+        ctx.fillStyle = k === 0 ? r[4] : Math.cos(a - 2.4) > 0.3 ? r[3] : r[2]
+        ctx.fillRect(x, yy, 2, 2)
+        ctx.fillStyle = r[1]
+        ctx.fillRect(Math.round(e.x + Math.cos(a) * (rx - 2)), Math.round(cy + Math.sin(a) * (ry - 2)), 1, 1)
+      }
+      // A meridian from every third facet's seam over the dome, and a dotted band of facets at its middle.
+      if (i % 3 === 0 && !detail.lean) {
+        const x0 = Math.cos(a0) * rx
+        ctx.fillStyle = r[3]
+        for (let k = -8; k <= 8; k++) {
+          const v = k / 8
+          if (k % 2 !== 0) continue
+          ctx.fillRect(Math.round(e.x + x0 * Math.sqrt(1 - v * v) * 0.98), Math.round(cy + v * ry * 0.96), 1, 1)
+        }
       }
     }
   } else if (sh.broken > 0) {
@@ -488,6 +650,46 @@ export const drawRaidBoss = (ctx: Ctx, arena: RaidArena, e: Enemy, s: SpeciesSpr
     }
   }
   return true
+}
+
+/* ---------------- Framing the raid ---------------- */
+
+/** The giant's top as last drawn (world px), and the screen's room the HUD leaves (world px from the top and bottom). */
+let raidTop: number | null = null
+let raidRoom = { top: 0, bottom: 16 }
+let nudge = 0
+let nudgedAt = 0
+
+/** The shell measures the boss bar's bottom and the room under the player (`syncMarkerInsets` in `main.ts`). */
+export const setRaidRoom = (room: { top: number; bottom: number }) => {
+  raidRoom = room
+}
+
+/**
+ * The drawn camera in a raid on a short screen (a phone held sideways): the
+ * simulation frames the player and the giant (`raidCamera`) without knowing
+ * the HUD, so where the giant's top would sit under the boss bar, the drawn
+ * camera rises until it clears it, as far as the player's feet stay on
+ * screen above the room the touch controls take. Eased, and only ever up.
+ * Writes `g.camera.y` from `base`, the camera as the frame would draw it
+ * (the player's screen solo, the team view's in co-op); nothing outside a raid.
+ */
+export const frameRaid = (g: Game, t: number, base: number) => {
+  const arena = g.raid.arena
+  const p = localPlayer(g)
+  if (!arena || raidTop === null || p.hp <= 0) {
+    nudge = 0
+    if (!arena) raidTop = null
+    return
+  }
+  const camY = base
+  const need = raidRoom.top + 4 - (raidTop - camY)
+  const room = g.view.h - raidRoom.bottom - (p.y + 10 - camY)
+  const want = need > 0 ? -Math.min(need, Math.max(0, room)) : 0
+  const dt = Math.min(0.1, Math.max(0, t - nudgedAt))
+  nudgedAt = t
+  nudge += (want - nudge) * Math.min(1, dt * 6)
+  g.camera.y = base + Math.round(nudge)
 }
 
 /* ---------------- The den's arrow ---------------- */

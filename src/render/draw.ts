@@ -29,7 +29,7 @@ import { drawMapEventMarkers, drawMapEvents, markerInsets } from './mapEvents'
 import { ALPHA_PRIZE, alphaOutline, drawAlphaAir, drawAlphaGround, drawAlphaMarkers } from './alphas'
 import { drawScale } from '../game/alphas'
 import { drawMegaAir, drawMegaAttack, drawMegaGround, drawMegaStone, megaLook } from './megaFx'
-import { crystalType, drawCrystalPokemon, drawDenAir, drawDenArrow, drawStarstorm, drawDenGround, drawRaidBoss, drawRaidFloor, drawShardPickup, drawTeraAir, drawTeraAttack, drawTeraGround } from './teraFx'
+import { crystalType, drawCrystalPokemon, drawDenAir, drawDenArrow, drawStarstorm, drawDenGround, drawRaidBoss, drawRaidFloor, drawShardPickup, drawTeraAir, drawTeraAttack, drawTeraGround, drawTeraScreen } from './teraFx'
 import { TERA, TERA_TYPES } from '../data/tera'
 import type { RaidArena } from '../game/teraRaid'
 import { drawModAttack, drawModGround, flightAngle } from './modFx'
@@ -662,7 +662,7 @@ const drawPlayer = (ctx: Ctx, g: Game, calm: boolean) => {
   // Its last 3 seconds it flickers back to its own colors; while the crystal forms it glows white inside the shell.
   const tera = emote === null && egg === null ? crystalType(p) : null
   const teraFading = p.tera.active > 0 && p.tera.active < 3 && Math.floor(p.tera.active * 6) % 2 === 0
-  const teraGlow = p.tera.intro > 0 ? Math.min(1, (1 - p.tera.intro / TERA.intro) * 1.8) * (calm ? 0.5 : 0.9) : 0
+  const teraGlow = p.tera.intro > 0 ? Math.min(1, (1 - p.tera.intro / TERA.intro) * 6) * (calm ? 0.5 : 0.9) : 0
   if (alpha > 0) {
     const crystal = tera !== null && !teraFading && drawCrystalPokemon(ctx, s, tera, anim, p.dir, p.animTime, p.x, feet, { alpha, flash: Math.max(flash, teraGlow * 0.4), tint, outline: mega.outline }, teraClock)
     if (!crystal) drawDressed(ctx, s, tera ? null : look, anim, emote ? 0 : p.dir, emote ? emote.seconds : p.animTime, p.x, feet, { alpha, flash: Math.max(flash, teraGlow), tint, outline: mega.outline, ...(emote && { sheet: emote.sheet, loop: emote.loop }) })
@@ -671,7 +671,7 @@ const drawPlayer = (ctx: Ctx, g: Game, calm: boolean) => {
   // The shiny entrance plays shortly after the run starts.
   if (p.shiny) drawSparkles(ctx, p.x, p.y - s.bodyH / 2, Math.max(s.bodyW, s.bodyH), g.now - 0.3, 0)
   drawMegaAir(ctx, g, p.y - s.bodyH, p.animTime)
-  drawTeraAir(ctx, g, p.y - s.bodyH, s.bodyW, teraClock)
+  drawTeraAir(ctx, g, s, anim, feet, teraClock)
   drawHpBar(ctx, g)
 }
 
@@ -1265,6 +1265,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   drawPlaceFallOut(ctx, g)
   // Explosions, rift jumps, a Mega's burst: white over the whole screen, unless flashes are reduced.
   if (!calm) drawFlash(ctx, g)
+  if (!calm) drawTeraScreen(ctx, g)
   // A dungeon floor's title card holds the screen black (the shell writes the floor over it).
   if (inside && inside.intro > 0) {
     ctx.fillStyle = '#000000'
