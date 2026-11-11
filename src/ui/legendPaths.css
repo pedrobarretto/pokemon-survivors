@@ -1,6 +1,15 @@
 /* The legend paths' sheets (ui/legendPaths.ts): the lobby sheet's frame, a body of rows and cards. */
 .path-sheet {
   width: min(520px, 100%);
+  /* Its own night blue, whatever screen it opens over (the lobby lightens the kit's): the notes are light on it. */
+  background: #222a5a;
+}
+
+/* On a phone held upright it's the lobby's bottom sheet, full width. */
+@media (max-width: 899px) and (min-height: 501px), (orientation: portrait) and (max-width: 1100px) {
+  .path-sheet {
+    width: 100%;
+  }
 }
 
 .path-body {

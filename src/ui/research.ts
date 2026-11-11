@@ -1,5 +1,6 @@
 import { HATCHLINGS, PLAYABLE, type HatchlingId } from '../data/hatchlings'
 import { RESEARCH, RESEARCH_IDS, type ResearchId } from '../data/seasonOneUnlocks'
+import { COSMOG, COSMOG_DEX } from '../data/legendPaths'
 import { researchStatus } from '../game/seasonOneUnlocks'
 import { formatNumber, t } from '../i18n'
 import { portraitUrl } from '../render/sprites'
@@ -41,5 +42,20 @@ export const researchRows = (): HTMLElement[] => {
       ...(names.length > 0 ? [h('p', { class: 'research-note' }, r.have(names.join(', ')))] : []),
     ]
   })
-  return [h('p', { class: 'research-note' }, r.intro), ...chains]
+  return [h('p', { class: 'research-note' }, r.intro), ...chains, ...cosmogRows()]
+}
+
+/** Cosmog's research (the legend paths, `game/legendPaths.ts`): its three steps, done in any order; then where to find it. */
+const cosmogRows = (): HTMLElement[] => {
+  const r = t().seasonUnlocks.research
+  const m = t().paths.cosmog
+  const c = loadSave().paths.cosmog
+  const done = COSMOG.research.filter((step) => c.research.includes(step)).length
+  return [
+    h('div', { class: 'missions-head research-head' }, h('b', {}, h('img', { src: portraitUrl(COSMOG_DEX.cosmog), alt: '' }), m.researchHead), h('span', {}, done >= COSMOG.research.length ? r.complete : `${done}/${COSMOG.research.length}`)),
+    ...COSMOG.research.map((step) =>
+      h('div', { class: `mission-row${c.research.includes(step) ? ' done' : ''}` }, h('span', { class: 'mission-text' }, m.steps[step]), h('span', { class: 'mission-reward' }, c.research.includes(step) ? '✓' : '')),
+    ),
+    h('p', { class: 'research-note' }, done >= COSMOG.research.length ? t().paths.intro.cosmog[2]!.replace(/[*_]/g, '') : m.researchNote),
+  ]
 }

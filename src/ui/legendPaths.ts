@@ -206,6 +206,12 @@ const regiBody = (save: Save) => {
   ]
 }
 
+/** What the path's Pokémon says: all of it, but once Cosmog came, only how it grows (the research is behind). */
+const introLines = (path: PathId, save: Save): readonly string[] => {
+  const lines = t().paths.intro[path]
+  return path === 'cosmog' && cosmogHere(save.paths.cosmog) ? lines.slice(-1) : lines
+}
+
 /**
  * Opens the sheet of `path`. `start`: the Torre's trials can be started from
  * it (the Dojo passes it; elsewhere the sheet only shows where they stand).
@@ -230,13 +236,13 @@ export const pathSheet = (root: HTMLElement, input: Input, path: PathId, opts: {
     'div',
     { class: 'path-npc' },
     h('img', { class: 'path-npc-face', src: emotionUrl(npc, 'Normal'), alt: '' }),
-    h('div', { class: 'path-npc-text' }, h('b', { class: 'path-npc-name' }, m.npc[path]), ...m.intro[path].map((line) => h('p', {}, rich(line)))),
+    h('div', { class: 'path-npc-text' }, h('b', { class: 'path-npc-name' }, m.npc[path]), ...introLines(path, save).map((line) => h('p', {}, rich(line)))),
   )
   const body = path === 'zygarde' ? zygardeBody(save) : path === 'cosmog' ? cosmogBody(save) : path === 'kubfu' ? kubfuBody(save, opts.start ?? null, dispose) : path === 'meltan' ? meltanBody(save) : regiBody(save)
   const closeButton = h('button', { class: 'arc-icon-btn', type: 'button', 'aria-label': m.close, title: m.close, onclick: () => (playSfx('select'), close()) }, h('img', { class: 'ink-icon', src: closeIcon(), alt: '' }))
   const panel = h(
     'div',
-    { class: `lobby-sheet-panel path-sheet path-${path}`, role: 'dialog', 'aria-label': m.names[path] },
+    { class: `lobby-sheet-panel path-sheet path-sheet-${path}`, role: 'dialog', 'aria-label': m.names[path] },
     h('header', { class: 'lobby-sheet-head' }, h('h2', { class: 'arc-outline' }, m.names[path]), closeButton),
     h('div', { class: 'path-body' }, intro, ...body),
   )
