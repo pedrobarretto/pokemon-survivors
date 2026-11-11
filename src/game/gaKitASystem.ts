@@ -34,11 +34,11 @@ const flare = (g: Game, colors: readonly string[], count = 22, shake = 3) => {
   g.events.push({ kind: 'guard' })
 }
 
-/** A ring that hits everything around the player once (a clang, a croak, a burst of static). */
-const ring = (g: Game, move: Attack['move'], type: PokeType, r: number, damage: number, knockback: number, status: StatusSpec | null = null) => {
+/** A ring that hits everything around the player once (a clang, a croak, a burst of static, a vent); `visual` picks its look. */
+const ring = (g: Game, move: Attack['move'], type: PokeType, r: number, damage: number, knockback: number, status: StatusSpec | null = null, visual: Attack['visual'] = 'gaRing') => {
   const p = g.player
   return spawnAttack(g, {
-    move, type, visual: 'gaRing', x: p.x, y: p.y - 6,
+    move, type, visual, x: p.x, y: p.y - 6,
     shape: { kind: 'circle', r: 6 }, motion: { kind: 'follow', ox: 0, oy: -6 }, grow: (r - 6) / 0.28,
     damage, knockback, status, ttl: 0.36, activeUntil: 0.28,
   })
@@ -56,6 +56,22 @@ const shards = (g: Game, move: Attack['move'], type: PokeType, visual: Attack['v
     })
   }
 }
+
+/**
+ * A cue the screen draws and nothing else: never active, no damage, no mods.
+ * Glued to the player at (ox, oy), or left at (x, y) with `at`.
+ */
+const cue = (g: Game, visual: Attack['visual'], ttl: number, ox: number, oy: number, at?: { x: number; y: number }) => {
+  const p = g.player
+  spawnAttack(g, {
+    move: 'bugBite', type: 'normal', visual, x: at ? at.x : p.x + ox, y: at ? at.y : p.y + oy,
+    shape: { kind: 'circle', r: 1 }, motion: at ? { kind: 'static' } : { kind: 'follow', ox, oy },
+    damage: 0, ttl, activeFrom: Infinity, mod: null,
+  })
+}
+
+/** Whether a cue of `visual` the acting player owns is younger than `age` s: hits in a crowd don't stack them. */
+const cueFresh = (g: Game, visual: Attack['visual'], age: number) => g.attacks.some((a) => a.visual === visual && a.owner === g.player.slot && a.age < age)
 
 /* ---------------- Per family ---------------- */
 
@@ -78,7 +94,7 @@ const soul = (g: Game, k: Extract<GaKitA, { kind: 'soul' }>, dt: number) => {
   k.left = GA_KIT.soul.left
   k.cooldown = GA_KIT.soul.cooldown
   recomputeStats(g)
-  ring(g, 'clangingScales', 'dragon', 62 * p.stats.area, kitPower(p, 12), 120)
+  ring(g, 'clangingScales', 'dragon', 62 * p.stats.area, kitPower(p, 12), 120, null, 'gaClang')
   flare(g, ['#f8d048', '#e86848', '#c8b0a0'], 36, 5)
   g.events.push({ kind: 'cast', move: 'clangingScales' })
 }
@@ -150,10 +166,11 @@ const mirror = (g: Game, k: Extract<GaKitA, { kind: 'hoard' }>, dt: number) => {
     const speed = Math.max(170, dm.hypot(h.vx, h.vy) * 1.25)
     const d = dirTo(h.x, h.y, h.x - h.vx, h.y - h.vy)
     spawnAttack(g, {
-      move: 'shadowSneak', type: 'rock', visual: 'gaGem', x: h.x, y: h.y - 6,
+      move: 'shadowSneak', type: 'rock', visual: 'gaMirror', x: h.x, y: h.y - 6,
       shape: { kind: 'circle', r: 6 }, motion: { kind: 'linear', vx: d.x * speed, vy: d.y * speed },
       damage: kitPower(p, GA_KIT.hoard.power), knockback: 40, pierce: 2, ttl: 1.4,
     })
+    cue(g, 'gaGlint', 0.3, 0, 0, { x: h.x, y: h.y - 6 })
     burst(g, h.x, h.y - 6, { colors: ['#ffffff', '#f85878', '#58e8f8'], count: 8, speed: 90, ttl: 0.25 })
     if (--k.mirror < 1) return
   }
@@ -441,12 +458,20 @@ export const gaKitATaken = (g: Game, amount: number, types: readonly PokeType[])
   if (k.kind === 'plates' && k.plates > 0) {
     k.plates--
     shards(g, 'steelWing', 'steel', 'gaPlate', GA_KIT.plates.shards, kitPower(p, GA_KIT.plates.power), GA_KIT.plates.speed)
+    cue(g, 'gaPlateBreak', 0.4, 0, -10)
     burst(g, p.x, p.y - 12, { colors: ['#a8b0c8', '#ffffff', '#485878'], count: 14, speed: 110, ttl: 0.35 })
     return plateSoak(amount, 1)
   }
-  if (k.kind === 'shell' && p.branch === 'shedinja' && p.stage >= 1 && wonderGuardHolds(types)) {
-    burst(g, p.x, p.y - 12, { colors: ['#f8e8b0', '#c8a868'], count: 6, speed: 60, ttl: 0.25 })
-    return amount * GA_KIT.shell.through
+  if (k.kind === 'shell' && p.branch === 'shedinja' && p.stage >= 1) {
+    // Wonder Guard: a hollow ripple when the shell shrugs a hit off, a crack when a super-effective one gets in.
+    if (wonderGuardHolds(types)) {
+      if (!cueFresh(g, 'gaWard', 0.2)) cue(g, 'gaWard', 0.4, 0, -12)
+      burst(g, p.x, p.y - 12, { colors: ['#f8e8b0', '#c8a868'], count: 6, speed: 60, ttl: 0.25 })
+      return amount * GA_KIT.shell.through
+    }
+    if (!cueFresh(g, 'gaPierce', 0.2)) cue(g, 'gaPierce', 0.45, 0, -12)
+    burst(g, p.x, p.y - 12, { colors: ['#f83018', '#f8a030', '#ffffff'], count: 12, speed: 110, ttl: 0.3 })
+    shakeScreen(g, 2)
   }
   return amount
 }
@@ -511,7 +536,7 @@ export const gaKitACast = (g: Game) => {
   k.heat = next.heat
   if (next.vented) {
     k.vent = GA_KIT.heat.vent
-    ring(g, 'flameBurst', 'fire', GA_KIT.heat.r * p.stats.area, kitPower(p, GA_KIT.heat.power), 110, { kind: 'burn', chance: 0.6, duration: 2.5, power: 0.3 })
+    ring(g, 'flameBurst', 'fire', GA_KIT.heat.r * p.stats.area, kitPower(p, GA_KIT.heat.power), 110, { kind: 'burn', chance: 0.6, duration: 2.5, power: 0.3 }, 'gaVent')
     flare(g, ['#f87838', '#f8d048', '#e83818'], 36, 5)
   }
   recomputeStats(g)

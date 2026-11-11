@@ -29,7 +29,7 @@ export const GA_KIT = {
   /** Croagunk's line: Poison Jab cashes in up to `cash` s of a foe's poison; `need` cash-ins inflate the sacs into a croak. */
   sacs: { need: 5, cash: 4, share: 0.9, r: 64, small: 0.75, power: 22, poison: { kind: 'poison', chance: 1, duration: 4, power: 0.25 } },
   /** Sinistea's line: a spill when hurt (`gap` s apart), the puddles and their heal budget; the Antique Form's tea is the real thing. */
-  tea: { gap: 2, r: 13, share: 0.5, hitInterval: 0.5, ttl: 3.2, antiqueTtl: 4.8, heal: 0.012, antiqueHeal: 0.024, puddles: [2, 4], antiquePuddles: 3 },
+  tea: { gap: 2, r: 13, share: 0.65, hitInterval: 0.5, ttl: 3.2, antiqueTtl: 4.8, heal: 0.012, antiqueHeal: 0.024, puddles: [2, 3], antiquePuddles: 2 },
   /** Impidimp's line: confused or weakened foes within `reach` feed its mischief; full, its hair coils for `left` s. */
   mischief: { need: 30, left: 8, lockout: 10, reach: 130, every: 0.5, maxPerTick: 4, might: [0.15, 0.25, 0.4], armor: [1, 1, 2] },
   /** Pawmi's line: px walked to fill the fur, what a punch adds, the burst a full fur lets go and Pawmot's Revival Blessing. */
@@ -50,6 +50,9 @@ export const GA_KIT = {
 export type GaKitAVisual =
   | 'gaRing' | 'gaSing' | 'gaChop' | 'gaGuillotine' | 'gaClaw' | 'gaHorn' | 'gaShadow' | 'gaGem' | 'gaWisp' | 'gaJab' | 'gaCroak'
   | 'gaTea' | 'gaBow' | 'gaSpark' | 'gaWing' | 'gaPunch' | 'gaZap' | 'gaFlame' | 'gaFlameSplash' | 'gaBite' | 'gaPlate' | 'gaShedClaw'
+  | 'gaClang' | 'gaVent' | 'gaMirror'
+  /** Cues only, never active (`cue` in `gaKitASystem.ts`): a plate breaking, Wonder Guard holding or pierced, a shot caught on the gem. */
+  | 'gaPlateBreak' | 'gaWard' | 'gaPierce' | 'gaGlint'
 
 /** A value from a per-stage table: the stage's, or the last one past its end. */
 export const atStage = <T>(table: readonly T[], stage: number): T => table[Math.max(0, Math.min(stage, table.length - 1))]!
@@ -136,7 +139,7 @@ export const teaRefill = (left: number, elapsed: number, maxHp: number, rate: nu
   return Math.min(cap, left + elapsed * cap)
 }
 
-/** Puddles a Teatime pours: by stage, three for the Antique Form. */
+/** Puddles a Teatime pours: by stage, two (slower to dry, twice the sip) for the Antique Form. */
 export const teaPuddles = (stage: number, branch: BranchId | null) => (branch === 'polteageistAntique' ? GA_KIT.tea.antiquePuddles : atStage(GA_KIT.tea.puddles, stage))
 
 /** Mischief after a feeding tick with `foes` confused or weakened in reach: nothing while the coil runs or rests. */

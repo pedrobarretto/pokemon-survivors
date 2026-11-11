@@ -47,9 +47,34 @@ const FLAME = [
   ['....1..', '.1.121.', '.12321.', '1233321', '1233321', '.12221.', '..111..'],
 ]
 const JAWS = ['11....11', '121..121', '.121121.', '..1221..', '.122221.', '..1111..']
-const PLATE = ['.111.', '12221', '12321', '12221', '.111.']
-const STEAM = ['.1.', '1..', '.1.', '..1']
+/** Corviknight's armor plate as it turns on its orbit: face on, half turned, edge on; and cracked as it soaks a hit. */
+const PLATE_FACE = ['1111111', '1555541', '1463621', '1433321', '1433321', '1433221', '.13321.', '..121..', '...1...']
+const PLATE_HALF = ['11111', '15541', '14321', '14321', '14321', '14221', '.132.', '..1..']
+const PLATE_EDGE = ['111', '151', '141', '141', '131', '131', '121', '.1.']
+const PLATE_CRACK = ['1111111', '1555141', '1461621', '1431321', '1413121', '1433121', '.13121.', '..121..', '...1...']
+const SHARDS = [['1...', '41..', '331.', '1111'], ['111', '143', '.31', '..1'], ['.1.', '141', '131', '11.']]
+const STEAM = [['.1..', '12..', '.21.', '..21', '.12.', '12..', '2...'], ['..1.', '..21', '.12.', '12..', '.21.', '..21', '...2']]
+/** A curl of Impidimp's line's hair drifting in as mischief gathers (and its mirror). */
+const CURL = ['.1111..', '122221.', '13..121', '.1..121', '...1221', '.11221.', '..11...']
+/** Where a hair fist lands. */
+const IMPACT = ['...1...', '.1.2.1.', '..222..', '1222221', '..222..', '.1.2.1.', '...1...']
+/** Kommo-o's scale, ringing. */
+const SCALE = ['.111.', '12331', '12231', '.121.', '..1..']
+/** A strand-made fist of Grimmsnarl's hair. */
+const HAIR_FIST = ['.1111..', '1222211', '1233221', '1222221', '.122221', '..1111.']
+/** Magmortar's arm cannon by heat: warm, hot, white hot, and cooling after a vent. */
+const MUZZLE = ['.111.', '12221', '12321', '12221', '.111.']
+const MUZZLE_HOT = ['..111..', '.12221.', '1233321', '1234321', '1233321', '.12221.', '..111..']
+const SMOKE = ['.111.', '12221', '12221', '.111.']
+/** A super-effective hit cracking Shedinja's shell. */
+const PIERCE = ['......1......', '..1...1...1..', '...1..2..1...', '....2.2.2....', '.....232.....', '.1..23432..1.', '1122344432211', '.1..23432..1.', '.....232.....', '....2.2.2....', '...1..2..1...', '..1...1...1..', '......1......']
+/** A shot caught on Mega Sableye's gem: a glint. */
+const TWINKLE = ['...1...', '...1...', '..121..', '1122211', '..121..', '...1...', '...1...']
 const NOTE = ['..111', '..1.1', '..1..', '111..', '111..']
+
+const STEEL = { 1: '#141826', 2: '#3c4660', 3: '#7888a8', 4: '#b8c8e0', 5: '#ffffff', 6: '#1e2436' }
+/** Grimmsnarl's hair: near black, a violet sheen. */
+export const HAIR = { 1: '#16101e', 2: '#3e3050', 3: '#7e64a0' }
 
 export const GA_KIT_A_FX = {
   chop: lazy(() => sprite(CHOP, { 1: '#7058c8', 2: '#e8e0ff' })),
@@ -65,9 +90,26 @@ export const GA_KIT_A_FX = {
   feather: lazy(() => sprite(FEATHER, { 1: '#484c60', 2: '#d8e0f0' })),
   flame: FLAME.map((rows) => lazy(() => sprite(rows, { 1: '#c83010', 2: '#f88830', 3: '#f8e060' }))),
   jaws: lazy(() => sprite(JAWS, { 1: '#486018', 2: '#c8e858' })),
-  plate: lazy(() => sprite(PLATE, { 1: '#383c50', 2: '#a8b0c8', 3: '#ffffff' })),
+  plate: [PLATE_FACE, PLATE_HALF, PLATE_EDGE].map((rows) => lazy(() => sprite(rows, STEEL))),
+  plateCrack: lazy(() => sprite(PLATE_CRACK, STEEL)),
+  plateFlash: lazy(() => sprite(PLATE_FACE, { ...STEEL, 2: '#b8c8e0', 3: '#ffffff', 4: '#ffffff', 6: '#b8c8e0' })),
+  shard: SHARDS.map((rows) => lazy(() => sprite(rows, STEEL))),
   shedClaw: lazy(() => sprite(CLAW, { 1: '#f8e8b0', 2: '#8868d0' })),
-  steam: lazy(() => sprite(STEAM, { 1: '#f0f0f8' })),
+  steam: STEAM.map((rows) => lazy(() => sprite(rows, { 1: '#ffffff', 2: '#c8c0d0' }))),
+  curl: [CURL, CURL.map((r) => [...r].reverse().join(''))].map((rows) => lazy(() => sprite(rows, { 1: '#16101e', 2: '#5a4478', 3: '#f878b0' }))),
+  impact: lazy(() => sprite(IMPACT, { 1: '#f878b0', 2: '#ffffff' })),
+  scale: lazy(() => sprite(SCALE, { 1: '#5a3810', 2: '#f8c838', 3: '#fff8c0' })),
+  scaleLit: lazy(() => sprite(SCALE, { 1: '#806020', 2: '#ffffff', 3: '#ffffff' })),
+  hairFist: lazy(() => sprite(HAIR_FIST, HAIR)),
+  muzzle: [
+    lazy(() => sprite(MUZZLE, { 1: '#401008', 2: '#a02810', 3: '#e85018' })),
+    lazy(() => sprite(MUZZLE, { 1: '#581008', 2: '#f05818', 3: '#f8c040' })),
+    lazy(() => sprite(MUZZLE_HOT, { 1: '#802010', 2: '#f87828', 3: '#f8d048', 4: '#ffffff' })),
+    lazy(() => sprite(MUZZLE, { 1: '#301010', 2: '#602018', 3: '#903020' })),
+  ],
+  smoke: lazy(() => sprite(SMOKE, { 1: '#4a4448', 2: '#9a9298' })),
+  pierce: lazy(() => outline(sprite(PIERCE, { 1: '#d01818', 2: '#f86020', 3: '#f8d048', 4: '#ffffff' }), '#300808')),
+  twinkle: lazy(() => sprite(TWINKLE, { 1: '#a8f8ff', 2: '#ffffff' })),
   note: lazy(() => outline(sprite(NOTE, { 1: '#f8b8d0' }), '#702848')),
 }
 

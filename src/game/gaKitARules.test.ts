@@ -62,8 +62,8 @@ describe('the big update families’ kits', () => {
     expect(teaRefill(0, 100, 100, 0.012)).toBeCloseTo(1.2)
     expect(teaRefill(0.2, 0.5, 100, 0.012)).toBeCloseTo(0.8)
     expect(teaPuddles(0, null)).toBe(2)
-    expect(teaPuddles(1, 'polteageist')).toBe(4)
-    expect(teaPuddles(1, 'polteageistAntique')).toBe(3)
+    expect(teaPuddles(1, 'polteageist')).toBe(3)
+    expect(teaPuddles(1, 'polteageistAntique')).toBe(2)
   })
 
   it('feeds mischief only between coils', () => {
