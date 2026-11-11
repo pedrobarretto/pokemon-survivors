@@ -57,6 +57,7 @@ import type { CurseId } from '../data/curses'
 import type { CurseState } from './curses'
 import type { LegendaryVisual } from './legendaryMoves'
 import type { LegendaryVisual2 } from './legendaryMoves2'
+import type { LegendaryVisual3 } from './legendaryMoves3'
 import type { TensionState } from './tension'
 import type { AlphaClock, AlphaState } from './alphas'
 import type { LegendForm, LegendId } from '../data/legends'
@@ -389,6 +390,8 @@ export type Visual =
   | LegendaryVisual
   /** Legendary moves, second batch (`legendaryMoves2.ts`), drawn by `render/legendaryFx2.ts`. */
   | LegendaryVisual2
+  /** Legendary moves, third batch (`legendaryMoves3.ts`), drawn by `render/legendaryFx3.ts`. */
+  | LegendaryVisual3
   /** Temporada 1's mechanic families, drawn by `render/seasonOneKitFx.ts`. */
   | 'kitCross' | 'kitClaw' | 'dragonPulse' | 'slime' | 'waterPulse' | 'miceBite' | 'auraWheel' | 'zenOrb' | 'commandSlam' | 'orderUp'
 

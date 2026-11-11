@@ -1,5 +1,6 @@
 import type { LegendaryMoveId } from '../game/legendaryMoves'
 import type { LegendaryMove2Id } from '../game/legendaryMoves2'
+import type { LegendaryMove3Id } from '../game/legendaryMoves3'
 import type { BiomeId } from './biomes'
 import type { LegendId } from './legends'
 import type { PokeType } from './types'
@@ -40,7 +41,17 @@ export const LEGENDARY_MOVE_OF = {
   arceus: 'judgment',
   darkrai: 'darkVoid',
   cresselia: 'lunarBlessing',
-} as const satisfies Record<LegendId, LegendaryMoveId | LegendaryMove2Id>
+  // The legends with a road of their own: the trios share their move, as the lake trio and the Swords do in the games.
+  palkia: 'spacialRend',
+  uxie: 'mysticalPower',
+  mesprit: 'mysticalPower',
+  azelf: 'mysticalPower',
+  cobalion: 'retaliate',
+  terrakion: 'retaliate',
+  virizion: 'retaliate',
+  keldeo: 'secretSword',
+  hoopa: 'hyperspaceFury',
+} as const satisfies Record<LegendId, LegendaryMoveId | LegendaryMove2Id | LegendaryMove3Id>
 
 export type LegendaryId = keyof typeof LEGENDARY_MOVE_OF
 

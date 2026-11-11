@@ -26,6 +26,7 @@ import { EGG_MOVES_2 } from './eggMoves2'
 import { DUO_MOVES } from './duoMoves'
 import { LEGENDARY_MOVES } from './legendaryMoves'
 import { LEGENDARY_MOVES_2 } from './legendaryMoves2'
+import { LEGENDARY_MOVES_3 } from './legendaryMoves3'
 import { beatOf } from './signatureRules'
 import { stacksOf } from './kitRules'
 import * as dm from '../engine/dmath'
@@ -2302,6 +2303,8 @@ export const MOVES = {
   ...LEGENDARY_MOVES,
   /* ---------- Legendary moves, second batch: the trios, Mewtwo and Arceus (`legendaryMoves2.ts`) ---------- */
   ...LEGENDARY_MOVES_2,
+  /* ---------- Legendary moves, third batch: Palkia, the lake trio, the Swords of Justice, Keldeo and Hoopa (`legendaryMoves3.ts`) ---------- */
+  ...LEGENDARY_MOVES_3,
   /* ---------- Smeargle's Sketch, the Kecleon Egg's signature (`sketch.ts`) ---------- */
   ...SKETCH_MOVES,
   ...SEASON_ONE_EGG_MOVES,

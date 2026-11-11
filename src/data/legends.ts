@@ -39,8 +39,26 @@ export const EVENT_LEGENDS = ['darkrai'] as const satisfies readonly EnemyId[]
  */
 export const FESTIVAL_LEGENDS = ['cresselia'] as const
 
-/** Every playable legend: the regular ones, then the event ones, then the festival ones. */
-export const LEGEND_IDS = [...REGULAR_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS] as const
+/**
+ * Legends with a road of their own, each caught its own way (`LegendUnlock`):
+ * Palkia in its rift, the lake trio roaming the map from run to run, the
+ * Swords of Justice in their duels, Keldeo as the Swords' gift and Hoopa at
+ * the end of its ring rush. Out of `REGULAR_LEGENDS` too: Arceus waits for
+ * the 22 it always has.
+ */
+export const QUEST_LEGENDS = ['palkia', 'uxie', 'mesprit', 'azelf', 'cobalion', 'terrakion', 'virizion', 'keldeo', 'hoopa'] as const
+
+/** The roaming lake trio (`game/roamers.ts`). */
+export const LAKE_TRIO = ['uxie', 'mesprit', 'azelf'] as const satisfies readonly (typeof QUEST_LEGENDS)[number][]
+
+/** The Swords of Justice (`game/duels.ts`). */
+export const SWORDS = ['cobalion', 'terrakion', 'virizion'] as const satisfies readonly (typeof QUEST_LEGENDS)[number][]
+
+export type LakeId = (typeof LAKE_TRIO)[number]
+export type SwordId = (typeof SWORDS)[number]
+
+/** Every playable legend: the regular ones, then the event ones, the festival ones and the ones with a road of their own. */
+export const LEGEND_IDS = [...REGULAR_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...QUEST_LEGENDS] as const
 
 export type LegendId = (typeof LEGEND_IDS)[number]
 
@@ -48,7 +66,7 @@ export type LegendId = (typeof LEGEND_IDS)[number]
 export const AWAKEN_AT = [12, 28] as const
 
 /** Asset folder of a legend's alternate form (`<dex>/<form>/`), like the Megas'. Deoxys's formes come with its stance. */
-export type LegendForm = 'primal' | 'mega' | 'attack' | 'defense' | 'speed'
+export type LegendForm = 'primal' | 'mega' | 'attack' | 'defense' | 'speed' | 'origin' | 'unbound'
 
 /**
  * The innate: an ability in play from Lv 1, on top of the one picked at the
@@ -66,9 +84,13 @@ export type LegendEvent = 'halloween'
  * regular legend is unlocked (Arceus, the final trophy); `event`: it only
  * shows up while that event runs (Darkrai, the Noite das Bruxas');
  * `festival`: no win ever counts, that festival's milestone gift captures it
- * (Cresselia, the Festival das Lanternas').
+ * (Cresselia, the Festival das Lanternas'); `roam`: it roams the map, its HP
+ * carried from run to run, and falls once (the lake trio, `game/roamers.ts`);
+ * `duel`: won in its duel (the Swords of Justice, `game/duels.ts`); `swords`:
+ * no win counts, the game gives it once every Sword is captured (Keldeo);
+ * `rush`: won by clearing Hoopa's ring rush once (`game/rush.ts`).
  */
-export type LegendUnlock = { wins: number; endless?: true; last?: true; event?: LegendEvent; festival?: FestivalId }
+export type LegendUnlock = { wins: number; endless?: true; last?: true; event?: LegendEvent; festival?: FestivalId; roam?: true; duel?: true; swords?: true; rush?: true }
 
 export type LegendDef = Omit<PlayableDef, 'learnset' | 'line'> & {
   /** One list: every move it can learn is there from Lv 1, its legendary move first. */
@@ -92,6 +114,10 @@ const stage = (dex: number, name: string, types: readonly PokeType[]) => [{ dex,
 const RIFT_WINS = { wins: 3 } as const satisfies LegendUnlock
 /** The finale's mythicals show up in one run in ten, more after finales without one (`MYTHICAL_PITY`): one win does it. */
 const MYTHICAL_WINS = { wins: 1 } as const satisfies LegendUnlock
+/** A lake legend falls once, worn down across runs: its HP carries over (`game/roamers.ts`). */
+const ROAM_WINS = { wins: 1, roam: true } as const satisfies LegendUnlock
+/** A Sword of Justice joins the player who passes its test once (`game/duels.ts`). */
+const DUEL_WINS = { wins: 1, duel: true } as const satisfies LegendUnlock
 
 const chill = { kind: 'aura', radius: 56, every: 1, status: { kind: 'slow', chance: 1, duration: 1.2, power: 0.3 } } as const satisfies AbilityEffect
 
@@ -383,6 +409,115 @@ export const LEGENDS = {
     innate: { ability: 'badDreams' },
     form: { key: 'mega', name: 'Mega Darkrai', community: true },
     unlock: { wins: 2, event: 'halloween' },
+  },
+
+  /* ---------- Palkia, out of its rift (`data/domains/palkia.ts`) ---------- */
+  palkia: {
+    name: 'Palkia',
+    color: '#d888c8',
+    stats: { maxHp: 45, might: 0.22, area: 0.12, speed: -1 },
+    signature: LEGENDARY_MOVE_OF.palkia,
+    learnset: [[LEGENDARY_MOVE_OF.palkia, 'waterGun', 'whirlpool', 'brine', 'dragonBreath', 'dragonTail', 'futureSight', 'waterShuriken']],
+    line: stage(484, 'Palkia', ['water', 'dragon']),
+    awakenings: [{ maxHp: 30, might: 0.12, area: 0.05 }, { maxHp: 40, might: 0.24, area: 0.1, cooldown: -0.04 }],
+    innate: { ability: 'pressure' },
+    form: { key: 'origin', name: 'Palkia (Origin Forme)' },
+    unlock: RIFT_WINS,
+  },
+
+  /* ---------- The lake trio, roaming (`game/roamers.ts`) ---------- */
+  uxie: {
+    name: 'Uxie',
+    color: '#f0d060',
+    stats: { maxHp: 35, might: 0.16, cooldown: -0.05, growth: 0.1 },
+    signature: LEGENDARY_MOVE_OF.uxie,
+    learnset: [[LEGENDARY_MOVE_OF.uxie, 'psyshock', 'futureSight', 'psybeam', 'swift', 'shockWave', 'iceShard', 'disarmingVoice']],
+    line: stage(480, 'Uxie', ['psychic']),
+    awakenings: [{ maxHp: 25, might: 0.12, growth: 0.05 }, { maxHp: 35, might: 0.22, cooldown: -0.05 }],
+    innate: { ability: 'levitate', extra: [{ kind: 'stats', stats: { growth: 0.08 } }] },
+    unlock: ROAM_WINS,
+  },
+  mesprit: {
+    name: 'Mesprit',
+    color: '#f088b0',
+    stats: { maxHp: 40, might: 0.16, regen: 0.4, speed: 3 },
+    signature: LEGENDARY_MOVE_OF.mesprit,
+    learnset: [[LEGENDARY_MOVE_OF.mesprit, 'psyshock', 'futureSight', 'psybeam', 'disarmingVoice', 'swift', 'flameWheel', 'roost']],
+    line: stage(481, 'Mesprit', ['psychic']),
+    awakenings: [{ maxHp: 25, might: 0.12, regen: 0.3 }, { maxHp: 40, might: 0.22, area: 0.1 }],
+    innate: { ability: 'levitate', extra: [{ kind: 'heal', every: 10, heal: 0.04 }] },
+    unlock: ROAM_WINS,
+  },
+  azelf: {
+    name: 'Azelf',
+    color: '#5890e0',
+    stats: { maxHp: 30, might: 0.24, speed: 6 },
+    signature: LEGENDARY_MOVE_OF.azelf,
+    learnset: [[LEGENDARY_MOVE_OF.azelf, 'psyshock', 'futureSight', 'psybeam', 'uTurn', 'suckerPunch', 'flameWheel', 'shockWave']],
+    line: stage(482, 'Azelf', ['psychic']),
+    awakenings: [{ maxHp: 25, might: 0.14, speed: 3 }, { maxHp: 35, might: 0.26, cooldown: -0.05 }],
+    innate: { ability: 'levitate', extra: [{ kind: 'lowHp', stats: { might: 0.25 } }] },
+    unlock: ROAM_WINS,
+  },
+
+  /* ---------- The Swords of Justice, in their duels (`game/duels.ts`), and Keldeo ---------- */
+  cobalion: {
+    name: 'Cobalion',
+    color: '#58a8d0',
+    stats: { maxHp: 55, armor: 2, might: 0.16, speed: -1 },
+    signature: LEGENDARY_MOVE_OF.cobalion,
+    learnset: [[LEGENDARY_MOVE_OF.cobalion, 'flashCannon', 'gyroBall', 'machPunch', 'focusPunch', 'stealthRock', 'heavySlam', 'swift']],
+    line: stage(638, 'Cobalion', ['steel', 'fighting']),
+    awakenings: [{ maxHp: 35, armor: 1, might: 0.1 }, { maxHp: 45, might: 0.22, regen: 0.3 }],
+    innate: { ability: 'justified' },
+    unlock: DUEL_WINS,
+  },
+  terrakion: {
+    name: 'Terrakion',
+    color: '#a87848',
+    stats: { maxHp: 45, might: 0.26, armor: 1, speed: -2 },
+    signature: LEGENDARY_MOVE_OF.terrakion,
+    learnset: [[LEGENDARY_MOVE_OF.terrakion, 'rockTomb', 'stealthRock', 'earthquake', 'machPunch', 'focusPunch', 'rockBlast', 'crunch']],
+    line: stage(639, 'Terrakion', ['rock', 'fighting']),
+    awakenings: [{ maxHp: 30, might: 0.14, armor: 1 }, { maxHp: 40, might: 0.26, area: 0.1 }],
+    innate: { ability: 'justified' },
+    unlock: DUEL_WINS,
+  },
+  virizion: {
+    name: 'Virizion',
+    color: '#58c070',
+    stats: { maxHp: 35, might: 0.18, speed: 9, cooldown: -0.05 },
+    signature: LEGENDARY_MOVE_OF.virizion,
+    learnset: [[LEGENDARY_MOVE_OF.virizion, 'razorLeaf', 'leafBlade', 'machPunch', 'quickAttack', 'solarBeam', 'leechSeed', 'uTurn']],
+    line: stage(640, 'Virizion', ['grass', 'fighting']),
+    awakenings: [{ maxHp: 25, might: 0.12, speed: 3 }, { maxHp: 35, might: 0.24, cooldown: -0.05 }],
+    innate: { ability: 'justified' },
+    unlock: DUEL_WINS,
+  },
+  keldeo: {
+    name: 'Keldeo',
+    color: '#78b8e8',
+    stats: { maxHp: 35, might: 0.22, speed: 7, cooldown: -0.03 },
+    signature: LEGENDARY_MOVE_OF.keldeo,
+    learnset: [[LEGENDARY_MOVE_OF.keldeo, 'waterGun', 'whirlpool', 'brine', 'machPunch', 'focusPunch', 'swift', 'razorShell']],
+    line: stage(647, 'Keldeo', ['water', 'fighting']),
+    awakenings: [{ maxHp: 25, might: 0.14, speed: 3 }, { maxHp: 40, might: 0.26, area: 0.1 }],
+    innate: { ability: 'justified' },
+    unlock: { wins: 1, swords: true },
+  },
+
+  /* ---------- Hoopa, at the end of its ring rush (`game/rush.ts`) ---------- */
+  hoopa: {
+    name: 'Hoopa',
+    color: '#b878d8',
+    stats: { maxHp: 30, might: 0.2, area: 0.1, cooldown: -0.04 },
+    signature: LEGENDARY_MOVE_OF.hoopa,
+    learnset: [[LEGENDARY_MOVE_OF.hoopa, 'psyshock', 'futureSight', 'psybeam', 'suckerPunch', 'crunch', 'hex', 'snarl']],
+    line: stage(720, 'Hoopa', ['psychic', 'ghost']),
+    awakenings: [{ maxHp: 30, might: 0.12, area: 0.05 }, { maxHp: 45, might: 0.28, cooldown: -0.05 }],
+    innate: { ability: 'magician' },
+    form: { key: 'unbound', name: 'Hoopa Unbound', types: ['psychic', 'dark'] },
+    unlock: { wins: 1, rush: true },
   },
 
   /* ---------- The Festival das Lanternas' moon ---------- */

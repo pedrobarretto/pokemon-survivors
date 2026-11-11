@@ -27,15 +27,16 @@ import type { LegendDomain } from '../domains'
 export const HALL = { half: 176, top: -96, bottom: 132 } as const
 
 /**
- * The crossing's twin portals, domain px: `from` on the near rim of a gap, `to`
- * across it. Stepping into `from` comes out at `to`; while space is twisted it
- * comes out at the gate before's `from` instead (the first gate's: the start).
+ * The crossing's twin portals (`Crossing.portals`), domain px: `from` on the
+ * near rim of a gap, `to` across it. Stepping into `from` comes out at `to`;
+ * while space is twisted it throws the player back where they last landed
+ * instead (`gateExit` in `game/palkiaDomain.ts`).
  */
 export const GATES: readonly { from: Pt; to: Pt }[] = [
-  { from: [0, -236], to: [0, -360] },
-  { from: [-80, -690], to: [-80, -816] },
-  { from: [60, -1140], to: [60, -1266] },
-  { from: [-20, -1590], to: [-20, -1716] },
+  { from: [0, -232], to: [0, -360] },
+  { from: [-74, -682], to: [-80, -816] },
+  { from: [51, -1134], to: [60, -1266] },
+  { from: [-14, -1583], to: [-20, -1716] },
 ]
 
 /** Pearl spires in the hall: cover from Hydro Pump and the first phase's blast. */
@@ -103,6 +104,7 @@ export const PALKIA_DOMAIN: LegendDomain = {
     ],
     start: [0, 22],
     gate: -2030,
+    portals: GATES,
     threat: { kind: 'fold', start: 150, stop: -1920, delay: 2.5, speed: 28, rush: 2.4, gap: 170, damage: 0.05, every: 0.5, push: 34, ground: 'none' },
     retinue: {
       first: 1.5,

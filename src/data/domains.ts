@@ -134,6 +134,12 @@ export type Crossing = FloorPlan & {
   retinue: Retinue
   /** What plays while crossing (the battle plays the domain's `music`). */
   theme: ThemeId
+  /**
+   * Twin portals across gaps the floor doesn't bridge (Palkia's): stepping
+   * into `from` comes out at `to`. The domain's hooks play them
+   * (`game/palkiaDomain.ts`); the crossing's floor checks walk through them.
+   */
+  portals?: readonly { from: Pt; to: Pt }[]
 }
 
 export type DomainArena = FloorPlan & {

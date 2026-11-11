@@ -1,6 +1,7 @@
 import { realmBookEn as realmBook } from './realmStamps/en'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
+import { QUEST_WORDS } from './quests'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -2424,6 +2425,7 @@ export const en: Messages = {
   abilities: {
     ...SEASON_ONE_EGGS_WORDS.en.abilities,
     ...SEASON_ONE_KITS_WORDS.en.abilities,
+    ...QUEST_WORDS.en.abilities,
     overgrow: 'Under 1/3 HP, Grass moves deal +50%.',
     blaze: 'Under 1/3 HP, Fire moves deal +50%.',
     torrent: 'Under 1/3 HP, Water moves deal +50%.',
@@ -3105,6 +3107,7 @@ export const en: Messages = {
   moves: {
     ...SEASON_ONE_EGGS_WORDS.en.moves,
     ...SEASON_ONE_KITS_WORDS.en.moves,
+    ...QUEST_WORDS.en.moves,
     leechSeed: {
       description: 'Lobs seeds at the nearest foes. A seed drains HP over time and heals you; when the foe faints, it jumps to two neighbors.',
       upgrades: [
@@ -5577,6 +5580,7 @@ export const en: Messages = {
   blurbs: {
     ...SEASON_ONE_EGGS_WORDS.en.blurbs,
     ...SEASON_ONE_KITS_WORDS.en.blurbs,
+    ...QUEST_WORDS.en.blurbs,
     bulbasaur: 'Balanced. Regenerates HP.',
     charmander: 'Offensive. More damage, less HP.',
     squirtle: 'Defensive. More HP and defense.',
@@ -6287,6 +6291,7 @@ export const en: Messages = {
       endless: 'The last trophy: once the other 22 are caught, beat it in _endless mode_.',
       event: 'Only on _Halloween Night_: beat it in the _Nightmare rift_.',
       festival: 'A _Plaza Festival_ prize: comes as a Mystery Gift, never fought.',
+      ...QUEST_WORDS.en.where,
     },
     rule: (need: number) => (need === 1 ? 'Beat it once as a boss in a solo run, in any mode, to catch it. Co-op wins don’t count.' : `Beat it ${need} times as a boss in a solo run, in any mode, to catch it. Co-op wins don’t count.`),
     shinyRule: 'Beating a shiny one on the catching win, or after, unlocks its shiny.',

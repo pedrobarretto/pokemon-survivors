@@ -62,6 +62,7 @@ import { drawVerbEvolvedAir, drawVerbEvolvedGround } from './verbEvolvedFx'
 import { drawDuoAir, drawDuoGround } from './duoFx'
 import { drawAncientAura, drawLegendaryAir, drawLegendaryGround, drawStoppedFoes } from './legendaryFx'
 import { drawHeatAura, drawIronDefense, drawLegendary2Air, drawLegendary2Ground } from './legendaryFx2'
+import { drawLegendary3Air, drawLegendary3Ground } from './legendaryFx3'
 import { drawSignatureAttack, drawSignatureGround, drawSignaturePlayer } from './signatureFx'
 import { drawTraitAir, drawTraitGround, traitLift, traitTint } from './traits'
 import { bolt, dashedRing } from './strokes'
@@ -1013,6 +1014,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
       drawDuoGround(into, v, t)
       drawLegendaryGround(into, v, t)
       drawLegendary2Ground(into, v, t)
+      drawLegendary3Ground(into, v, t)
     })
   }
   for (const hz of g.hazards) if (hz.kind === 'beam') drawBeamGround(ctx, hz)
@@ -1155,6 +1157,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
       drawDuoAir(into, v, t, visible)
       drawLegendaryAir(into, v, t, visible)
       drawLegendary2Air(into, v, t, visible)
+      drawLegendary3Air(into, v, t, visible)
       drawDrainVines(into, v, t)
     })
   }
