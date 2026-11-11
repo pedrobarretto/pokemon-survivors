@@ -98,6 +98,13 @@ export type GiftReason =
   | { kind: 'season'; way: 'find' | 'research' | 'fishing' | 'safari' | 'dig' }
   /** The Era 1 Hall da Fama (`game/era1.ts`): the tier, and the board and place that earned it. Sent by the API from its own boards. */
   | { kind: 'era1'; tier: Era1Tier; rank: number; side: Era1Side; difficulty: Difficulty }
+  /** A top place `rank` on a week's Concurso de Insetos board (`data/safari.ts`), sent by the API from its own board. */
+  | { kind: 'bugContest'; rank: number }
+  /**
+   * A Safári habitat's Pokédex filled (`habitat`, a `SafariHabitat` id), or every habitat's (null), sent by the API from its own
+   * catches. Kept a plain id here so the simulation's modules never reach the Safári's (`coop/simBuild.ts`).
+   */
+  | { kind: 'safariDex'; habitat: string | null }
 
 export type Gift = { id: string; content: GiftContent; reason: GiftReason | null }
 
@@ -192,6 +199,8 @@ const parseReason = (v: unknown): GiftReason | null => {
   if (v.kind === 'arenaSeason' && isOneOf(v.tier, TIER_IDS)) return { kind: 'arenaSeason', season: wholeNumber(v.season), tier: v.tier }
   if (v.kind === 'hiddenZone' && isOneOf(v.zone, HIDDEN_PLACE_IDS)) return { kind: 'hiddenZone', zone: v.zone }
   if (v.kind === 'season' && (v.way === 'find' || v.way === 'research' || v.way === 'fishing' || v.way === 'safari' || v.way === 'dig')) return { kind: 'season', way: v.way }
+  if (v.kind === 'bugContest') return { kind: 'bugContest', rank: wholeNumber(v.rank) }
+  if (v.kind === 'safariDex') return { kind: 'safariDex', habitat: typeof v.habitat === 'string' && /^[a-z]{1,16}$/.test(v.habitat) ? v.habitat : null }
   if (v.kind === 'era1' && isOneOf(v.tier, ERA1_TIERS) && isEra1Side(v.side) && isDifficulty(v.difficulty)) return { kind: 'era1', tier: v.tier, rank: wholeNumber(v.rank), side: v.side, difficulty: v.difficulty }
   return null
 }

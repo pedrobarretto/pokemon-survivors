@@ -1545,7 +1545,7 @@ export const en: Messages = {
       wallpaper: 'Wallpaper of the PC Box.',
     },
     styles: {
-      frame: { classic: 'Classic', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Ambassador', supporter: 'Supporter', pumpkin: 'Pumpkin', spectral: 'Spectral', regular: 'Regular', kecleon: 'Golden Kecleon', meowth: 'Meowth', lantern: 'Lantern', creator: 'Creator', grotto: 'Hidden Grotto', stampFrame: 'Stamp Book', era1: 'Era 1', era1Champion: 'Era 1 Crown' },
+      frame: { classic: 'Classic', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Ambassador', supporter: 'Supporter', pumpkin: 'Pumpkin', spectral: 'Spectral', regular: 'Regular', kecleon: 'Golden Kecleon', meowth: 'Meowth', lantern: 'Lantern', creator: 'Creator', grotto: 'Hidden Grotto', stampFrame: 'Stamp Book', era1: 'Era 1', era1Champion: 'Era 1 Crown', bugContest: 'Bug-Catching Contest' },
       background: { night: 'Starry night', meadow: 'Route 1', forest: 'Viridian Forest', cave: 'Mt. Moon', snow: 'Mt. Silver', tower: 'Lavender Tower', supporter: 'Golden sky', halloween: 'Halloween Night', friendship: 'Friendship', era1Champion: 'Era 1 Throne' },
       wallpaper: { classic: 'Classic', forest: 'Leaves', cave: 'Pebbles', snow: 'Snowflakes', tower: 'Little ghosts', supporter: 'Golden stars', haunted: 'Haunted House', secretBase: 'Secret Base' },
     },
@@ -2039,6 +2039,9 @@ export const en: Messages = {
     og: 'For supporting the game from the very start ♥',
     arenaSeason: (season) => `For your peak in Arena season ${season}`,
     era1: (rank, board) => `#${rank} in the Era 1 Hall of Fame · ${board}`,
+    bugContest: (rank) => `#${rank} in the week's Bug-Catching Contest`,
+    safariDex: (place) => `Pokédex complete: ${place}`,
+    safariDexAll: "Every Safari Zone habitat's Pokédex complete",
     hiddenZone: { grotto: 'For finding the Hidden Grotto', underground: 'For finding the Underground' },
   },
 
@@ -2947,7 +2950,7 @@ export const en: Messages = {
     noTitle: 'none',
     titleTag: 'TITLE',
     equipped: 'SHOWN',
-    giftTitles: { ambassador: 'Brought 3 friends to the game', supporter: 'Supported the project with a donation', pumpkinKing: 'Filled the Halloween Night candy jar', exorcist: 'Beat every Ghost Hunt boss', vipCustomer: "Collected 30 stamps on Kecleon's loyalty card", tycoon: "Grew Kecleon's shop into a Department Store", patron: 'Gave ₽50,000 or more to a Plaza Festival', ogSupporter: 'Supported the game before Patreon', arenaPoke: 'Finished an Arena ranked season in Poké Ball', arenaGreat: 'Reached Great Ball in an Arena ranked season', arenaUltra: 'Reached Ultra Ball in an Arena ranked season', arenaMaster: 'Reached Master Ball in an Arena ranked season', creator: 'Makes videos and streams of Pokémon Survivors', friendLegend: 'Brought 10 friends to the game', stampCollector: 'Collected 30 Stamps in the Poké Realm', era1Legend: 'Finished near the top of an Era 1 board', era1Champion: 'Finished #1 on an Era 1 board' },
+    giftTitles: { ambassador: 'Brought 3 friends to the game', supporter: 'Supported the project with a donation', pumpkinKing: 'Filled the Halloween Night candy jar', exorcist: 'Beat every Ghost Hunt boss', vipCustomer: "Collected 30 stamps on Kecleon's loyalty card", tycoon: "Grew Kecleon's shop into a Department Store", patron: 'Gave ₽50,000 or more to a Plaza Festival', ogSupporter: 'Supported the game before Patreon', arenaPoke: 'Finished an Arena ranked season in Poké Ball', arenaGreat: 'Reached Great Ball in an Arena ranked season', arenaUltra: 'Reached Ultra Ball in an Arena ranked season', arenaMaster: 'Reached Master Ball in an Arena ranked season', creator: 'Makes videos and streams of Pokémon Survivors', friendLegend: 'Brought 10 friends to the game', stampCollector: 'Collected 30 Stamps in the Poké Realm', era1Legend: 'Finished near the top of an Era 1 board', era1Champion: 'Finished #1 on an Era 1 board', bugChampion: 'Won a week of the Bug-Catching Contest', safariWarden: 'Filled the Pokédex of every Safari Zone habitat' },
     newMedals: 'New medals',
     names: {
       firstRun: 'First steps',
@@ -3049,6 +3052,8 @@ export const en: Messages = {
       stampCollector: 'Stamp Collector',
       era1Legend: 'Era 1 Legend',
       era1Champion: 'Era 1 Champion',
+      bugChampion: 'Bug Champion',
+      safariWarden: 'Park Ranger',
     },
     goals: {
       runs: (n) => (n === '1' ? 'Play a run' : `Play ${n} runs`),

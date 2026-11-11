@@ -105,6 +105,12 @@ const LEAF: BallArt = [
   { 1: '#0c2408', 2: '#69b84c', 3: '#2e7424', 4: '#c8f0a0', 5: '#f8f8ff' },
 ]
 
+/** The Concurso de Insetos's badge, for its frame's corners: an amber beetle shell with its black spots (1 outline, 2 amber, 3 its shade, 4 the shine, 5 the spots). */
+const BEETLE: BallArt = [
+  ['..1..1..', '...11...', '.111111.', '14221221', '12512521', '12215221', '13522531', '.133331.', '..1111..'],
+  { 1: '#1c1408', 2: '#f0a820', 3: '#b86c10', 4: '#fff0b0', 5: '#2a1c10' },
+]
+
 /** Era 1's coin, for its frame's corners: gold with a navy "I" (1 outline, 2 gold, 3 its shade, 4 the shine, 5 the numeral). */
 const ERA_COIN: BallArt = [
   ['..11111..', '.1422221.', '142555221', '122252221', '122252221', '122252221', '123555321', '.1333331.', '..11111..'],
@@ -208,6 +214,8 @@ export const CARD_FRAMES = {
   era1: { edge: '#120e26', light: '#f8d878', main: '#22357e', shade: '#c89028', accent: '#f8d030', band: 3, studs: '#f8d030', inner: ['#0a0a1c'], ball: ERA_COIN, crest: ERA_WINGS },
   /** An Era 1 board's #1: a wide gold band set with rubies and a gold line inside it, a ruby in a gold bezel in each corner and the crown for its seal. */
   era1Champion: { edge: '#2a1404', light: '#fff4c0', main: '#e8b030', shade: '#f8d030', accent: '#e02848', band: 3, studs: '#e02848', inner: ['#2a1404'], ball: RUBY, crest: CROWN },
+  /** The Concurso de Insetos's podium (`CONTEST_GIFTS`): a meadow-green band between straw lines, an amber beetle in each corner. */
+  bugContest: { edge: '#142008', light: '#f4e8a0', main: '#5c9c2c', shade: '#203c10', accent: '#f0a820', ball: BEETLE },
 } as const satisfies Record<FrameId, CardFrame>
 
 /** A card's backdrop: sky bands top to bottom (dithered where they meet) and how many stars (fireflies, crystals, snow…). */
