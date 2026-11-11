@@ -9,7 +9,7 @@
 // node_modules/.cache/ps-offsets, never committed.
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { FORMS, PLAYERS, pad, shinyPath } from './dex.mjs'
+import { FORMS, PLAYERS, RECOLORED_SHINIES, pad, shinyPath } from './dex.mjs'
 import { readPng } from './png.mjs'
 
 export const ROOT = new URL('..', import.meta.url).pathname
@@ -54,8 +54,9 @@ const cacheDir = ({ key }, shiny) => join(CACHE, `${key.replace(':', '-')}${shin
 export const fetchOffsets = async (v, shiny) => {
   const variant = sheetsOf(v, shiny)
   const dir = cacheDir(v, shiny)
-  // A shiny lives under `0000/0001` (a form's under its own `<id>/0001`).
-  const path = shiny ? (v.form ? `${v.path}/0001` : `${v.path}${shinyPath(v.dex)}`) : v.path
+  // A shiny lives under `0000/0001` (a form's under its own `<id>/0001`); a recolored one (`RECOLORED_SHINIES`) shares the normal frames.
+  const recolored = !v.form && v.dex in RECOLORED_SHINIES
+  const path = shiny && !recolored ? (v.form ? `${v.path}/0001` : `${v.path}${shinyPath(v.dex)}`) : v.path
   await mkdir(dir, { recursive: true })
   if (!(await download(`${REMOTE}/${path}/AnimData.xml`, join(dir, 'AnimData.xml')))) return false
   const xml = await readFile(join(dir, 'AnimData.xml'), 'utf8')
