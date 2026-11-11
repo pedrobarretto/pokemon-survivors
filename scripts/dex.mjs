@@ -14,6 +14,17 @@ export const STARTERS = [
   810, 811, 812, 813, 814, 815, 816, 817, 818, // Galar
   906, 907, 908, 909, 910, 911, 912, 913, 914, // Paldea
 ]
+/**
+ * The big update's first 15 families (src/data/gaFamiliesA.ts), whole lines: Jangmo-o, Axew, Lapras, Sneasel,
+ * Heracross, Sableye, Spiritomb, Croagunk, Sinistea, Impidimp, Pawmi, Rookidee, Elekid, Magby and Nincada
+ * (Ninjask, and Shedinja, its branch and the shell it leaves behind).
+ */
+export const GA_FAMILIES_A = [
+  782, 783, 784, 610, 611, 612, 131, 215, 461, 214, 302, 442, 453, 454, 854, 855, 859, 860, 861,
+  921, 922, 923, 821, 822, 823, 239, 125, 466, 240, 126, 467, 290, 291, 292,
+]
+/** Of those, the Flying forms that take to the sky: Rookidee's line and Ninjask. */
+const GA_FLYERS_A = [821, 822, 823, 291]
 /** Families that hatch from eggs (src/data/hatchlings.ts), whole lines. Some also roam the horde. */
 export const HATCHLINGS = [
   172, 25, 26, 66, 67, 68, 133, 197, 175, 176, 468, 363, 364, 365, 396, 397, 398, 406, 315, 407, 744, 745, 736, 737, 738, // common
@@ -38,6 +49,7 @@ export const HATCHLINGS = [
   408, 409, 410, 411, 566, 567, 696, 697, 698, 699, // fossils
   56, 57, 979, 624, 625, 983, 704, 705, 706, 746, 924, 925, 963, 964, 877, 479, 351, 554, 555, 767, 768, 778, 978, 977,
   77, 78, 10162, 10163, // Ponyta's line and its Galarian form's (`REGIONAL`)
+  ...GA_FAMILIES_A,
 ]
 export const HORDE = Object.values(roster).map((s) => s.dex)
 /** Horde species with a behavior trait (`src/data/enemies.ts`), plus Nidoqueen's summons. */
@@ -85,6 +97,7 @@ export const EMOTE_ANIMS = ['Hop', 'Rotate', 'Sleep', 'Charge', 'Pose']
 export const FLYERS = new Set([
   16, 17, 18, 21, 22, 227, 276, 277, 333, 334, 396, 397, 398, // the sky's flock
   6, 41, 42, 123, 130, 149, 169, 176, 373, 468, 714, 715, 722, 723, 566, 567, // player forms
+  ...GA_FLYERS_A,
 ])
 /** Species that can roll shiny: the player lines, regular enemies, rift legendaries, places' bosses, the hidden zones' Audino and the companions (Pumpkaboo for Gold supporters). */
 /** Legendaries that can also roll shiny as wave bosses (the trios, Mewtwo, the mythicals) and Arceus, for the Legend mode's captures. */
@@ -127,6 +140,7 @@ export const FORMS = {
   362: { mega: '0001' },
   448: { mega: '0001' },
   475: { mega: '0001' },
+  302: { mega: '0001' }, // Mega Sableye (src/data/gaFamiliesA.ts)
   // Legend mode's forms: Primal Reversion, Mega Rayquaza, the Latis', Mewtwo Y's and Darkrai's Megas, Deoxys' formes.
   150: { megaY: '0002' },
   380: { mega: '0001' },
@@ -191,6 +205,7 @@ export const FORM_CRIES = {
   445: { mega: 'garchomp-mega', megaZ: 'garchomp-mega-z' },
   448: { mega: 'lucario-mega', megaZ: 'lucario-mega-z' },
   475: { mega: 'gallade-mega' },
+  302: { mega: 'sableye-mega' },
   150: { megaY: 'mewtwo-mega-y' },
   380: { mega: 'latias-mega' },
   381: { mega: 'latios-mega' },
