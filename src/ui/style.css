@@ -8773,9 +8773,12 @@ button {
 }
 
 @media (max-height: 500px) {
+  /* A phone on its side: the left column, under the moves, mirroring the news on the right; the middle stays clear. */
   .duel-card {
-    top: 94px;
-    width: min(300px, 40 * var(--vw));
+    top: calc(96px + var(--safe-t));
+    left: max(8px, env(safe-area-inset-left));
+    transform: none;
+    width: min(250px, 32 * var(--vw));
     gap: 3px;
     padding: 4px 10px 6px;
   }

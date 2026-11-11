@@ -406,6 +406,9 @@ const keepInDomain = (g: Game, plan: FloorPlan, arena: RiftArena) => {
 /** How far from the view's edges a player always stays while their screen frames the legendary too, px (the HUD sits on top). */
 const FRAME = { side: 44, top: 90, bottom: 44 } as const
 
+/** On a short screen, how far below the view's top the legendary's feet stay at least, and how near the bottom the player may go for it, px. */
+const SHORT = { legend: 100, edge: 28 } as const
+
 /** Through a form change (a phase opening on a new form), how far below the view's top the legendary's feet stay at least, px: whole under the HUD, even if the player goes to the edge for it. */
 const FORM_ROOM = 120
 
@@ -435,6 +438,8 @@ export const domainCamera = (g: Game, dt: number) => {
   if (boss && !offstage(boss)) {
     x = Math.max(p.x - (w - FRAME.side), Math.min(p.x - FRAME.side, (p.x + boss.x) / 2 - w / 2))
     y = Math.max(p.y - (h - FRAME.bottom), Math.min(p.y - FRAME.top, (p.y + boss.y) / 2 - h / 2 - 24))
+    // A short screen (a phone on its side) keeps the legendary's feet under the HUD, letting the player nearer the bottom edge for it.
+    y = Math.max(p.y - (h - SHORT.edge), Math.min(y, boss.y - SHORT.legend))
     if (changingForm(boss)) y = Math.min(y, boss.y - FORM_ROOM)
   }
   const k = 1 - dm.exp(-5 * dt)
