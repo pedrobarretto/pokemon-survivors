@@ -4,6 +4,9 @@ import { captureByGift, legendSource, NO_CAPTURES, winCounts } from './capture'
 import { parseWild, rollRoamer, rollSword, type WildStart } from './quests'
 import { bankRoamer, mergeRoamers, mergeRushBest, parseRoamers, recordRush, wildOf } from './questSave'
 import { questGifts } from './questGifts'
+import { gameGiftsApplied } from './gameGifts'
+import { keepGiven } from './gifts'
+import { EMPTY_SAVE } from './meta'
 
 const FREE: WildStart = { lake: { uxie: 0.5, mesprit: 1, azelf: 0.2 }, swords: ['cobalion', 'terrakion', 'virizion'] }
 
@@ -44,6 +47,15 @@ describe('the open map’s legends', () => {
     const three = captureByGift(two, 'virizion')
     expect(questGifts({ legends: three, gifts: [] }).map((g) => g.content)).toEqual([{ kind: 'legend', legend: 'keldeo' }])
     expect(questGifts({ legends: three, gifts: ['quest:keldeo'] })).toEqual([])
+  })
+
+  it('keep Keldeo on the API only with its gift, as a festival’s or a path’s legend', () => {
+    const swords = captureByGift(captureByGift(captureByGift(NO_CAPTURES, 'cobalion'), 'terrakion'), 'virizion')
+    const save = { ...EMPTY_SAVE, legends: captureByGift(swords, 'keldeo'), gifts: ['quest:keldeo'] }
+    expect(keepGiven(save, gameGiftsApplied(save)).legends.keldeo).toBeDefined()
+    // A save edited to list Keldeo without the Swords (so no gift vouches for it) loses it.
+    const edited = { ...EMPTY_SAVE, legends: captureByGift(NO_CAPTURES, 'keldeo'), gifts: ['quest:keldeo'] }
+    expect(keepGiven(edited, gameGiftsApplied(edited)).legends.keldeo).toBeUndefined()
   })
 
   it('keep each level’s best time in Hoopa’s Rings', () => {

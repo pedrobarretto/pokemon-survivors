@@ -4,7 +4,7 @@ import { isSpecialCompanion, type SpecialCompanionId } from '../data/companions'
 import { FESTIVALS, type FestivalId } from '../data/festivals'
 import { HIDDEN_PLACE_IDS, type HiddenPlaceId } from '../data/places'
 import { DEX_REGIONS, type DexRegion } from '../data/nationalDex'
-import { giftLegend, isLegend, LEGEND_IDS, legendFestival, legendPath, type LegendId } from '../data/legends'
+import { giftLegend, isLegend, LEGEND_IDS, LEGENDS, legendFestival, legendPath, type LegendId, type LegendUnlock } from '../data/legends'
 import { PATH_IDS, type PathId } from '../data/legendPaths'
 import { isDifficulty, type Difficulty } from './difficulty'
 import { ERA1_TIERS, isEra1Side, type Era1Side, type Era1Tier } from './era1'
@@ -351,11 +351,17 @@ export const mergeClaimedGifts = (a: readonly string[], b: readonly string[]): s
 
 /* ---------------- What only a gift brings ---------------- */
 
+/** Whether a legend only ever comes as a gift (`keepGiven` keeps it only with one): a festival's, Poipole, the paths' and Keldeo. */
+const onlyGiven = (id: LegendId) => {
+  const unlock: LegendUnlock = LEGENDS[id].unlock
+  return legendFestival(id) !== null || giftLegend(id) || legendPath(id) !== null || unlock.swords === true
+}
+
 /**
  * `save` with only the gift-only rewards the API really sent: `given` is
  * every gift of the player (claimed or not). Gift titles, ribbons, shiny
  * tickets, the styles never sold (a `null` price), the festival legends
- * (Cresselia), Poipole (the Ultra Beasts' gift) and the path legends (Zygarde, Kubfu, Meltan, Solgaleo, Lunala) can't be earned on the device, so whatever else a save lists
+ * (Cresselia), Poipole (the Ultra Beasts' gift), Keldeo (the Swords' gift) and the path legends (Zygarde, Kubfu, Meltan, Solgaleo, Lunala) can't be earned on the device, so whatever else a save lists
  * came from editing it. The equipped title and styles fall back when they go,
  * and so does the companion with the Supporter title. The API runs it on
  * every push.
@@ -369,8 +375,8 @@ export const keepGiven = (save: Save, given: readonly Pick<Gift, 'id' | 'content
   const kept = <S extends StyleSlot>(slot: S, ids: readonly StyleId<S>[]) =>
     ids.filter((id) => stylePrice(slot, id) !== null || styles.some((s) => s.slot === slot && s.id === id))
   const owned = { frame: kept('frame', save.style.owned.frame), background: kept('background', save.style.owned.background), wallpaper: kept('wallpaper', save.style.owned.wallpaper) }
-  // A festival's or a path's legend comes only as a gift; one won in a fight is the save's own.
-  const vouched = (id: LegendId) => (!legendFestival(id) && !giftLegend(id) && !legendPath(id)) || contents.some((c) => c.kind === 'legend' && c.legend === id)
+  // A festival's, a path's or the Swords' legend (Keldeo) comes only as a gift; one won in a fight is the save's own.
+  const vouched = (id: LegendId) => !onlyGiven(id) || contents.some((c) => c.kind === 'legend' && c.legend === id)
   const legends: Captures = Object.fromEntries(LEGEND_IDS.flatMap((id) => (save.legends[id] !== undefined && vouched(id) ? [[id, save.legends[id]]] : [])))
   return {
     ...save,
