@@ -644,7 +644,9 @@ const drawPlayer = (ctx: Ctx, g: Game, calm: boolean) => {
   // Moves can lift the sprite (Body Slam's leap, Heavy Slam's hop, Fly) or hide it under the mound (Dig).
   const egg = flying ?? eggPlayerLook(g) ?? egg3PlayerLook(g)
   // Invulnerable after a hit: blinking, or a steady see-through when calm.
-  const faded = calm ? p.iframes > 0 && localPlayer(g).special.active <= 0 : blink
+  // The crystal that just shattered stays solid through the shatter's invulnerability: a fresh Terastal form never blinks.
+  const fresh = p.tera.active > TERA.duration - TERA.iframes
+  const faded = !fresh && (calm ? p.iframes > 0 && localPlayer(g).special.active <= 0 : blink)
   // Versus: in tall grass, the viewer's team draws see-through (`grassAlpha`); a Ghost type slipping through a tree or a rock (`phasingNow`) too.
   const alpha = (egg ? egg.alpha : p.hidden ? 0.3 : faded && mega.flash === 0 ? (calm ? 0.65 : 0.45) : phasingNow(g, p) ? 0.55 : 1) * grassAlpha(g, viewer, p)
   const feet = p.y - (egg?.lift ?? 0)

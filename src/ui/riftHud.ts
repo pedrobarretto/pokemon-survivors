@@ -36,9 +36,8 @@ const pillFor = (g: Game): Pill => {
   const m = t().rifts
   const { portal, arena } = g.rift
   if (g.place.inside) return insidePill(g)
-  // A Tera Raid: the hollow's clock, then a den's on the map (`game/teraRaid.ts`).
-  const raid = g.raid.arena
-  if (raid) return raid.loot !== null || raid.fall !== null ? null : { text: t().raid.hudRaid(raid.raid.stars, formatTime(Math.ceil(raid.left))), kind: 'arena', urgent: raid.left < 15 }
+  // A Tera Raid: the hollow's clock rides the boss bar (`ui/hud.ts`); a den's shows here (`game/teraRaid.ts`).
+  if (g.raid.arena) return null
   const den = g.raid.den
   if (den && !portal) return { text: t().raid.hudDen(formatTime(Math.ceil(den.left))), kind: 'portal', urgent: den.left < 8 }
   if (arena?.domain) {

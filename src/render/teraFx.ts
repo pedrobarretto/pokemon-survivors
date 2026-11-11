@@ -404,7 +404,7 @@ const floorOf = (type: TeraType) => {
   }
   // The raid's sigil where the giant stands: two rings of the type's crystal and six points.
   const sx = o
-  const sy = o - 46
+  const sy = o - 30
   for (let k = 0; k < 120; k++) {
     const a = (k / 120) * TAU
     ctx.fillStyle = k % 10 < 6 ? r[2] : r[1]

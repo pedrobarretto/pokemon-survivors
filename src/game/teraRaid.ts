@@ -14,7 +14,7 @@ import { dropCoins } from './pickups'
 import { bringBack, keepOnFloor, setAside, type Room, type Stash } from './room'
 import { chargeOrb, dropShard } from './tera'
 import { clearSpot, footOf } from './terrain'
-import { anchorPlayer, centerScreen, placeTeam, playerWithin } from './players'
+import { aimScreen, anchorPlayer, centerScreen, placeTeam, playerWithin } from './players'
 import { spawnHazard } from './bosses'
 import { harmBy } from './harm'
 import type { HazardVisual } from '../data/bosses'
@@ -153,6 +153,30 @@ export const raidHarm = (g: Game, body: boolean) => {
   return arena && !body ? raidScale(g.time, arena.raid.stars).damage : 1
 }
 
+/** How close to a screen's edges the raid camera lets the player go: room for the HUD at the top, the touch buttons at the bottom. */
+const FRAME = { side: 44, top: 70, bottom: 56 } as const
+
+/**
+ * The acting player's screen in a raid's hollow: between them and the giant,
+ * so the boss shows above the player whatever the screen's shape, the player
+ * kept inside `FRAME`. False outside a raid (the caller centers the player).
+ */
+export const raidCamera = (g: Game, dt: number) => {
+  const arena = g.raid.arena
+  if (!arena) return false
+  const p = g.player
+  const { w, h } = g.view
+  const boss = g.enemies.find((e) => e.id === arena.bossId && e.dying < 0)
+  const cx = boss ? (p.x + boss.x) / 2 : p.x
+  const cy = boss ? (p.y + boss.y - boss.radius) / 2 : p.y - 10
+  const x = Math.max(p.x - (w - FRAME.side), Math.min(p.x - FRAME.side, cx - w / 2))
+  const y = Math.max(p.y - (h - FRAME.bottom), Math.min(p.y - FRAME.top, cy - h / 2))
+  const k = 1 - dm.exp(-5 * dt)
+  const s = p.screen
+  aimScreen(g, p, s.x + (x - s.x) * k, s.y + (y - s.y) * k)
+  return true
+}
+
 /* ---------------- The den on the map ---------------- */
 
 /** Whether a den opens now: nothing else holding the team's attention, no boss fight (up to `RAID.bossWait`), and never so late a regular run's den would meet Mewtwo. */
@@ -212,8 +236,8 @@ export const updateRaidDen = (g: Game, dt: number) => {
 export const RAID_FLOOR: FloorPlan = { floor: [circle(0, 0, 150)] }
 
 /** Where the boss and the team appear in the hollow (px from its center). */
-const BOSS_AT = { x: 0, y: -46 }
-const TEAM_AT = { x: 0, y: 84 }
+const BOSS_AT = { x: 0, y: -30 }
+const TEAM_AT = { x: 0, y: 46 }
 
 /** Sends the team into a den's hollow, centered where the den was. */
 export const enterRaid = (g: Game, den: RaidDen) => {

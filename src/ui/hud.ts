@@ -84,7 +84,8 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
   const bossCrown = h('img', { class: 'boss-crown hidden', alt: '' })
   const shieldFill = h('div', { class: 'boss-shield-fill' })
   const shieldBar = h('div', { class: 'boss-shield hidden' }, shieldFill, h('span', { class: 'boss-shield-label' }, t().raid.shield))
-  const boss = h('div', { class: 'boss hidden' }, h('div', { class: 'boss-head' }, bossCrown, bossName), bossBar, shieldBar, pairBars)
+  const bossClock = h('span', { class: 'boss-clock hidden' })
+  const boss = h('div', { class: 'boss hidden' }, h('div', { class: 'boss-head' }, bossCrown, bossName, bossClock), bossBar, shieldBar, pairBars)
   /** The boss whose phase ticks the bar shows (`BOSS_PHASES`), so they're laid once per boss. */
   let ticked: string | null = null
   const portrait = h('img', { class: 'status-portrait', alt: '' })
@@ -318,11 +319,14 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
     }
     const raid = b && g.raid.arena?.bossId === b.id ? g.raid.arena : null
     bossCrown.classList.toggle('hidden', !raid)
+    bossClock.classList.toggle('hidden', !raid || raid.loot !== null)
+    bossClock.classList.toggle('urgent', raid !== null && raid.left < 15)
+    if (raid) setText(bossClock, formatTime(Math.ceil(Math.max(0, raid.left))))
     shieldBar.classList.toggle('hidden', !raid?.shield.up)
     if (raid) {
       const src = crownIcon(raid.raid.tera)
       if (bossCrown.getAttribute('src') !== src) bossCrown.setAttribute('src', src)
-      setText(bossName, `${t().raid.title(ENEMIES[raid.raid.boss].name, teraName(raid.raid.tera))} ${'★'.repeat(raid.raid.stars)}`)
+      setText(bossName, `${t().raid.title(ENEMIES[raid.raid.boss].name, teraName(raid.raid.tera))} ${raid.raid.stars}★`)
       const r = TERA_RAMPS[raid.raid.tera]
       setStyle(shieldBar, '--tera-mid', r[2])
       setStyle(shieldBar, '--tera-light', r[4])

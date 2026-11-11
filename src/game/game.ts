@@ -42,7 +42,7 @@ import { updateDuos } from './duoMoves'
 import { recipeOf } from './duoRules'
 import { createMegaState, updateMega, updateMegaIntro } from './mega'
 import { createTeraState, stellarForm, updateTera, updateTeraIntro } from './tera'
-import { createRaidState, updateRaid, updateRaidDen, updateRaidFall } from './teraRaid'
+import { createRaidState, raidCamera, updateRaid, updateRaidDen, updateRaidFall } from './teraRaid'
 import { NO_RANKS, runCharges, type Ranks } from './meta'
 import { afterCast as afterModCast, echoStats, hasMod, MOD } from './mods'
 import { forkAt, isManual, MOVES, moveStats, type CastStats, type MoveDef, type MoveId } from './moves'
@@ -1018,7 +1018,7 @@ export const stepTeam = (g: Game, inputs: readonly StepInput[], dt: number) => {
   if (g.coop !== null) updateCoop(g, dt)
 
   // In a legendary's domain the camera looks ahead and frames the fight (`domainCamera`); elsewhere it sits on the player.
-  followPlayers(g, dt, domainCamera)
+  followPlayers(g, dt, (g, dt) => domainCamera(g, dt) || raidCamera(g, dt))
   updateSightings(g, dt)
 
   // Level-ups earned this tick, or a held evolution whose item was just found, open everyone's next pick at once

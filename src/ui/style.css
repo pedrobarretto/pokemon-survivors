@@ -7558,6 +7558,8 @@ button {
 
 /* Terastal's banner and a Tera Raid's title card (`ui/teraNews.ts`): the banner box re-cut in the type's crystal. */
 .banner.tera-box {
+  /* Higher than other banners: the crown it announces hovers over the Pokémon at the screen's middle. */
+  top: 14%;
   border-color: var(--tera-dark);
   box-shadow:
     inset 0 0 0 var(--px) var(--paper),
@@ -16099,9 +16101,24 @@ button.hall-tile:hover {
 }
 
 .boss-crown {
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   image-rendering: pixelated;
+}
+
+/* The hollow's clock: the den throws the team out when it runs down. */
+.boss-clock {
+  padding: 1px 6px;
+  font-size: 16px;
+  line-height: 1;
+  color: #ffffff;
+  background: #482080;
+  border: 2px solid var(--kit-tinta);
+  border-radius: 4px;
+}
+
+.boss-clock.urgent {
+  animation: rift-pulse 0.5s steps(2) infinite;
 }
 
 .boss-shield {
