@@ -1,3 +1,4 @@
+import { CAFE_TABLES_WORDS } from './cafeTables'
 import type { DexRegion } from '../data/nationalDex'
 import { GALLOP_WORDS } from './gallop'
 import { ITEM_DROP_WORDS } from './itemDrop'
@@ -6427,6 +6428,7 @@ export const pt = {
   /** Secret bases' furniture (`data/furniture.ts`): each piece's name by id (a doll's from its legend, whose name stays English), and the kinds. */
   furniture: {
     names: {
+      ...CAFE_TABLES_WORDS.pt.furniture,
       woodChair: 'Cadeira de madeira',
       stool: 'Banquinho',
       woodTable: 'Mesa de madeira',
@@ -6956,7 +6958,9 @@ export const pt = {
     dig: SEASON_ONE_DIG_WORDS.pt.words,
     close: 'Sair',
     choose: 'Qual jogo?',
+    cafe: CAFE_TABLES_WORDS.pt,
     games: {
+      ...CAFE_TABLES_WORDS.pt.games,
       fishing: { name: 'Pesca no Píer', blurb: 'Jogue a linha e fisgue o que morder.' },
       berryCatch: { name: 'Chuva de Frutas', blurb: 'Pegue as frutas e fuja dos Voltorb.' },
       whackDiglett: { name: 'Acerte o Diglett', blurb: 'Bata nos Diglett antes que se escondam.' },
@@ -6968,7 +6972,7 @@ export const pt = {
       slots: { name: ROCKET_WORDS.pt.slots.name, blurb: ROCKET_WORDS.pt.slots.blurb },
       sweep: { name: ROCKET_WORDS.pt.sweep.name, blurb: ROCKET_WORDS.pt.sweep.blurb },
     },
-    feats: { fishing: { feebas: 'Pesquei um Feebas!', shinyGyarados: 'Pesquei um Gyarados shiny!!', wishiwashi: 'Pesquei um Wishiwashi!', bigHaul: 'Pescaria de 300 pontos!' }, berryCatch: { flawless: 'Chuva de Frutas sem perder uma vida!', goldRush: 'Três frutas douradas numa rodada!', combo50: 'Combo de 50 frutas!' }, whackDiglett: { combo30: 'Combo de 30 marteladas!', dugtrio: 'Acertou 5 Dugtrio numa rodada!' }, fourInRow: {}, typeDuel: { perfectDuel: 'Duelo perfeito, sem perder uma rodada!' }, claw: SEASON_ONE_CLAW_WORDS.pt.feats, safari: SEASON_ONE_SAFARI_WORDS.pt.feats, dig: SEASON_ONE_DIG_WORDS.pt.feats, slots: ROCKET_WORDS.pt.feats.slots, sweep: ROCKET_WORDS.pt.feats.sweep },
+    feats: { ...CAFE_TABLES_WORDS.pt.feats, fishing: { feebas: 'Pesquei um Feebas!', shinyGyarados: 'Pesquei um Gyarados shiny!!', wishiwashi: 'Pesquei um Wishiwashi!', bigHaul: 'Pescaria de 300 pontos!' }, berryCatch: { flawless: 'Chuva de Frutas sem perder uma vida!', goldRush: 'Três frutas douradas numa rodada!', combo50: 'Combo de 50 frutas!' }, whackDiglett: { combo30: 'Combo de 30 marteladas!', dugtrio: 'Acertou 5 Dugtrio numa rodada!' }, fourInRow: {}, typeDuel: { perfectDuel: 'Duelo perfeito, sem perder uma rodada!' }, claw: SEASON_ONE_CLAW_WORDS.pt.feats, safari: SEASON_ONE_SAFARI_WORDS.pt.feats, dig: SEASON_ONE_DIG_WORDS.pt.feats, slots: ROCKET_WORDS.pt.feats.slots, sweep: ROCKET_WORDS.pt.feats.sweep },
     duel: {
       pick: 'Escolha uma carta',
       play: 'Jogar',

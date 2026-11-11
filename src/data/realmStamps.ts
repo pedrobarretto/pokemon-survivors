@@ -27,7 +27,7 @@ const BENCHES = ['plaza:3', 'plaza:4', 'pier:1', 'cafe:1', 'cafe:2', 'trail:4', 
 /** `REALM_EMOTES` less `look`, which only some trainers have. */
 const EMOTES = ['wave', 'heart', 'laugh', 'music', 'sleep', 'angry', 'question', 'exclaim'] as const
 /** The games claimed through `POST /realm/game/claim` (`claimable` in `data/minigames.ts`). */
-const GAMES = ['fishing', 'berryCatch', 'whackDiglett', 'fourInRow', 'typeDuel'] as const
+const GAMES = ['fishing', 'berryCatch', 'whackDiglett', 'fourInRow', 'typeDuel', 'ludo', 'unown'] as const
 /** `<game>:<feat>` of those games' `MINIGAMES` feats (held to it by `realmStamps.test.ts`). */
 const FEATS = [
   'fishing:feebas',
@@ -40,6 +40,8 @@ const FEATS = [
   'whackDiglett:combo30',
   'whackDiglett:dugtrio',
   'typeDuel:perfectDuel',
+  'ludo:untouchable',
+  'unown:mewFinish',
 ] as const
 /** The kinds of Hora do Realm (`data/realmEvents.ts`). */
 const EVENT_KINDS = ['tide', 'storm', 'tables'] as const

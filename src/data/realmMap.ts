@@ -245,6 +245,8 @@ export const REALM_ROOMS = {
       oval(330, 190, 24, 9),
       oval(110, 256, 24, 9),
       oval(290, 256, 24, 9),
+      // The round tables of four in the middle (Ludo, Unown): the top and the front stool.
+      ...[150, 250].flatMap((x) => [oval(x, 182, 22, 7), oval(x, 205, 9, 4)]),
       oval(150, 296, 10, 4),
       ...[22, 378].flatMap((x) => [oval(x, 92, 9, 5), oval(x, 292, 9, 5)]),
       rect(0, 64, 6, 236),
@@ -258,6 +260,9 @@ export const REALM_ROOMS = {
       // The game tables by the door (`net/realmTables.ts`): a trainer plays from in front, seated on a stool by the relay.
       { kind: 'gameTable', at: { x: 110, y: 280 }, reach: 26, id: 'cafe-1', games: ['fourInRow', 'typeDuel'] },
       { kind: 'gameTable', at: { x: 290, y: 280 }, reach: 26, id: 'cafe-2', games: ['fourInRow', 'typeDuel'] },
+      // The round tables of four (the open tables, `TableRules.open`): 2 to 4 trainers, bots in the empty seats, one on each side.
+      { kind: 'gameTable', at: { x: 150, y: 228 }, reach: 30, id: 'cafe-3', games: ['ludo', 'unown'] },
+      { kind: 'gameTable', at: { x: 250, y: 228 }, reach: 30, id: 'cafe-4', games: ['unown', 'ludo'] },
     ],
   },
   trail: {

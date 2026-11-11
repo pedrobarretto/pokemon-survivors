@@ -103,6 +103,7 @@ export const siteFr: SiteMessages = {
     cameoNote: 'Pas un ennemi : il apparaît un instant dans la faille de Darkrai pendant la Nuit des Sorcières et brise le cauchemar avec Lunar Wing.',
     summonNote: 'Pas un ennemi : c’est le Dondozo que Tatsugiri appelle avec Commandant, pour quelques secondes d’attaques lourdes.',
     lobbyNote: 'Le tailleur de la Boutique, sur la place du lobby : il coud avec des feuilles les tenues que vend la boutique de gemmes.',
+    cardsNote: 'Vit sur les cartes d’Unown, le jeu de cartes du café du Poké Realm : chaque lettre est une de ses formes.',
     wildNote: 'Valeurs de base. Les ennemis normaux deviennent plus coriaces chaque minute ; pas les boss.',
     appears: 'Quand il apparaît',
     horde: (from: string, until: string) => `Peut rejoindre la horde, de ${from} à ${until}`,

@@ -121,12 +121,17 @@ export const ULTRA_BEASTS = [793, 794, 795, 796, 797, 798, 799, 803, 804, 805, 8
  */
 export const LEGEND_PATHS = [718, 789, 790, 791, 792, 891, 892, 808, 809, 486]
 /**
+ * The café's card game (`realm/games/unown.ts`): Unown, whose letters (its `FORMS`) are the number cards' faces.
+ * Never a player, a foe or shiny.
+ */
+export const CAFE_CARDS = [201]
+/**
  * The legends with a road of their own (`QUEST_LEGENDS` in src/data/legends.ts): Palkia's rift (and its Origin Forme),
  * the roaming lake trio (Uxie, Mesprit, Azelf), the Swords of Justice (Cobalion, Terrakion, Virizion) and their
  * Keldeo, and Hoopa of the ring rush (and Hoopa Unbound). All playable in Legend mode, all able to roll shiny.
  */
 export const QUEST_LEGENDS = [484, 480, 481, 482, 638, 639, 640, 647, 720]
-export const DEX = [...new Set([...STARTERS, ...HATCHLINGS, ...ROCKET_FAMILIES, ...ROCKET_CAST, ...HORDE, ...TRAITS, ...BOSSES, ...CRITTERS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...CAMEOS, ...FESTIVAL_LEGENDS, ...REAPER, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...COMPANIONS, ...HALLOWEEN_BOSSES, ...SHOPKEEPERS, ...TERA_LEGENDS, ...ULTRA_BEASTS, ...LEGEND_PATHS, ...QUEST_LEGENDS])]
+export const DEX = [...new Set([...STARTERS, ...HATCHLINGS, ...ROCKET_FAMILIES, ...ROCKET_CAST, ...HORDE, ...TRAITS, ...BOSSES, ...CRITTERS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...CAMEOS, ...FESTIVAL_LEGENDS, ...REAPER, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...COMPANIONS, ...HALLOWEEN_BOSSES, ...SHOPKEEPERS, ...TERA_LEGENDS, ...ULTRA_BEASTS, ...LEGEND_PATHS, ...QUEST_LEGENDS, ...CAFE_CARDS])]
 /**
  * The Arena's emotes (`emote` in src/data/arenaEffects.ts, `EMOTE_ANIMS` there too): extra SpriteCollab
  * animations, only for the species the Arena plays (the starters' lines) and only their front row
@@ -160,6 +165,7 @@ export const SHINY = new Set([...STARTERS, ...HATCHLINGS, ...ROCKET_FAMILIES, ..
  * `public/assets/pokemon/<dex>/<key>/` and under `forms.<key>` in the manifest.
  */
 export const FORMS = {
+  201: { b: '0001', c: '0002', f: '0005', j: '0009', k: '0010', n: '0013', o: '0014', u: '0020' }, // Unown's letters, the café's Unown cards (A is the species' own)
   681: { blade: '0001' }, // Aegislash's Blade Forme (Stance Change)
   // Temporada 1's formes (src/data/seasonOneKits.ts)
   351: { sunny: '0001', rainy: '0002', snowy: '0003' }, // Castform (the weather)

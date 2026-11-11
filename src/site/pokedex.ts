@@ -73,6 +73,8 @@ export type DexEntry = {
     | { kind: 'cameo'; by: RiftLegend }
     /** `lobby`: lives only in the lobby (Leavanny, the Boutique's tailor, `TAILOR`). */
     | { kind: 'lobby' }
+    /** `cards`: seen only on the cards of the Poké Realm café's card game (Unown's letters, `realm/games/unown.ts`). */
+    | { kind: 'cards' }
     /** `summon`: called in by a playable family's mechanic, never fought (Tatsugiri's Dondozo, `data/seasonOneKits.ts`). */
     | { kind: 'summon' }
     /** `gift`: a legend that's never fought, only given (Poipole, for capturing the Ultra Beasts, `game/ultraGifts.ts`). */
@@ -166,6 +168,9 @@ const cameoEntries = (): DexEntry[] =>
 /** Who lives only in the lobby (Leavanny at the Boutique), as event Pokémon. */
 const lobbyEntries = (): DexEntry[] => [{ ...base(TAILOR.dex, TAILOR.name, TAILOR.types), role: 'event', source: { kind: 'lobby' } }]
 
+/** Who's only on the café's Unown cards, as an event Pokémon. */
+const cardEntries = (): DexEntry[] => [{ ...base(201, 'Unown', ['psychic']), role: 'event', source: { kind: 'cards' } }]
+
 /** The path legends that are never fought, and their forms of other species (Urshifu, Melmetal), as legendaries. */
 const pathEntries = (): DexEntry[] =>
   PATH_LEGENDS.filter((id) => !wildByDex.has(LEGENDS[id].line[0].dex)).flatMap((id): DexEntry[] => {
@@ -228,14 +233,14 @@ export const regionCounts = (region: DexRegion, entries: readonly DexEntry[] = g
 
 /**
  * The site's Pokédex: every species the game loads, `gameDex()` plus the
- * gift-only companions, the domains' cameos and the lobby's Leavanny (never
- * met in a run, so never counted in game).
+ * gift-only companions, the domains' cameos, the lobby's Leavanny and the
+ * café cards' Unown (never met in a run, so never counted in game).
  */
 export const pokedex = (): DexEntry[] => {
   const game = gameDex()
   const listed = new Set(game.map((e) => e.dex))
   // Leavanny roams the horde too: its wild card stands for the tailor's.
-  const extras = [...SPECIAL_COMPANION_IDS.map(companionEntry), ...cameoEntries(), ...lobbyEntries(), ...summonEntries(), ...cosmogEntries()].filter((e) => !listed.has(e.dex))
+  const extras = [...SPECIAL_COMPANION_IDS.map(companionEntry), ...cameoEntries(), ...lobbyEntries(), ...cardEntries(), ...summonEntries(), ...cosmogEntries()].filter((e) => !listed.has(e.dex))
   return [...game, ...extras].sort(byDex)
 }
 

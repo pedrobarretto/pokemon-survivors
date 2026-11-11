@@ -14,12 +14,31 @@ import { blitCentered, context2d, fromStrings, lazy, type PixelSprite } from '..
 export type TableSeat = Point & { facing: Facing; sortY: number }
 
 /**
- * A table spot's two seats. The café's round tables (the spot stands in
- * front of the table's feet) seat on their side stools; a base's game table
- * (its spot in front of the piece, `gameSpots`) at its two ends.
+ * A table spot's seats, `count` of them (a 2-seat game's or an open table's
+ * 4). The café's round tables (the spot stands in front of the table's
+ * feet) seat on their side stools; its round tables of four go round
+ * clockwise (as Ludo's seats do) from the left stool, so the first two to
+ * sit face the room and the front stool, whose trainer hides the table top,
+ * fills last; the one behind is sorted under the table. A base's game table
+ * (its spot in front of the piece, `gameSpots`) seats at its two ends, then
+ * behind it and before it.
  */
-export const tableSeats = (spot: Spot, town: boolean): readonly [TableSeat, TableSeat] => {
+export const tableSeats = (spot: Spot, town: boolean, count = 2): readonly TableSeat[] => {
   const { x, y } = spot.at
+  if (count > 2)
+    return town
+      ? [
+          { x: x - 24, y: y - 41, facing: 2, sortY: y - 13 },
+          { x, y: y - 60, facing: 0, sortY: y - 58 },
+          { x: x + 24, y: y - 41, facing: 6, sortY: y - 13 },
+          { x, y: y - 28, facing: 4, sortY: y - 13 },
+        ]
+      : [
+          { x: x - 30, y: y - 12, facing: 2, sortY: y - 5 },
+          { x, y: y - 26, facing: 0, sortY: y - 30 },
+          { x: x + 30, y: y - 12, facing: 6, sortY: y - 5 },
+          { x, y: y + 2, facing: 4, sortY: y + 3 },
+        ]
   return town
     ? [
         { x: x - 17, y: y - 34, facing: 2, sortY: y - 17 },
@@ -37,7 +56,7 @@ export const seatedAt = (tables: ReadonlyMap<string, TableView>, spots: readonly
   for (const spot of spots) {
     const tb = spot.kind === 'gameTable' && spot.id ? tables.get(spot.id) : undefined
     if (!tb) continue
-    const seats = tableSeats(spot, town)
+    const seats = tableSeats(spot, town, tb.seats.length)
     tb.seats.forEach((id, i) => {
       const seat = seats[i]
       if (id !== null && seat) out.set(id, seat)
@@ -71,8 +90,9 @@ const MARKERS = lazy(() => {
  * one bobs, calling someone over).
  */
 export const drawTableMarker = (ctx: CanvasRenderingContext2D, spot: Spot, tb: TableView, town: boolean, camX: number, camY: number, now: number) => {
-  const waiting = tb.seats.includes(null)
+  // An open table's empty seats in a match are the bots': only a table that hasn't started waits for someone.
+  const waiting = tb.phase !== 'playing' && tb.seats.includes(null)
   const bob = waiting ? Math.round(Math.sin(now * 4) + 1) : 0
-  const top = town ? spot.at.y - 66 : spot.at.y - 40
+  const top = town ? spot.at.y - (tb.seats.length > 2 ? 100 : 66) : spot.at.y - (tb.seats.length > 2 ? 62 : 40)
   blitCentered(ctx, waiting ? MARKERS().waiting : MARKERS().playing, Math.round(spot.at.x - camX), Math.round(top - camY - bob))
 }

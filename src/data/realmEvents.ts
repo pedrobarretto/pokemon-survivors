@@ -16,7 +16,7 @@ export type RealmEventDef = { room: 'pier' | 'arcade' | 'cafe'; games: readonly 
 export const REALM_EVENTS = {
   tide: { room: 'pier', games: ['fishing'], payMult: 2 },
   storm: { room: 'arcade', games: ['berryCatch', 'whackDiglett'], payMult: 2 },
-  tables: { room: 'cafe', games: ['fourInRow', 'typeDuel'], payMult: 2 },
+  tables: { room: 'cafe', games: ['fourInRow', 'typeDuel', 'ludo', 'unown'], payMult: 2 },
 } as const satisfies Record<string, RealmEventDef>
 
 export type RealmEventKind = keyof typeof REALM_EVENTS

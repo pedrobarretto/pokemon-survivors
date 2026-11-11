@@ -27,6 +27,8 @@ const SOLO: Record<SoloGameId, () => Promise<SoloGame>> = {
 const TABLES: Record<TableGameId, () => Promise<TableUi>> = {
   fourInRow: () => import('./fourInRow').then((m) => m.fourInRow),
   typeDuel: () => import('./typeDuel').then((m) => m.typeDuel),
+  ludo: () => import('./ludo').then((m) => m.ludo),
+  unown: () => import('./unown').then((m) => m.unown),
 }
 
 /**

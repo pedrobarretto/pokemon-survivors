@@ -1188,7 +1188,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       const source =
         id && avatar !== null && client.status().kind === 'open'
           ? (game: TableGameId) =>
-              relayTable({ link: client, id, game, you: avatar, initial: tables.get(id) ?? null, bot: () => localTable(id, game, TABLE_GAMES[game], avatar, Date.now()) })
+              relayTable({ link: client, id, game, you: avatar, initial: tables.get(id) ?? null, open: TABLE_GAMES[game].open !== null, bot: () => localTable(id, game, TABLE_GAMES[game], avatar, Date.now()) })
           : null
       openSub((r) =>
         chooseGame(r, games, {

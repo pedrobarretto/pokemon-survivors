@@ -1,3 +1,4 @@
+import { CAFE_TABLES_WORDS } from './cafeTables'
 import type { DexRegion } from '../data/nationalDex'
 import { GALLOP_WORDS } from './gallop'
 import { ITEM_DROP_WORDS } from './itemDrop'
@@ -6017,6 +6018,7 @@ export const zh: Messages = {
   },
   furniture: {
     names: {
+      ...CAFE_TABLES_WORDS.zh.furniture,
       woodChair: '木椅',
       stool: '小圓凳',
       woodTable: '木桌',
@@ -6506,7 +6508,9 @@ export const zh: Messages = {
     dig: SEASON_ONE_DIG_WORDS.zh.words,
     close: '離開',
     choose: '玩哪個遊戲？',
+    cafe: CAFE_TABLES_WORDS.zh,
     games: {
+      ...CAFE_TABLES_WORDS.zh.games,
       fishing: { name: '碼頭釣魚', blurb: '拋出釣線，釣起上鉤的寶可夢。' },
       berryCatch: { name: '樹果雨', blurb: '接住樹果，躲開 Voltorb。' },
       whackDiglett: { name: '敲敲 Diglett', blurb: '趁 Diglett 躲起來前敲下去。' },
@@ -6518,7 +6522,7 @@ export const zh: Messages = {
       slots: { name: ROCKET_WORDS.zh.slots.name, blurb: ROCKET_WORDS.zh.slots.blurb },
       sweep: { name: ROCKET_WORDS.zh.sweep.name, blurb: ROCKET_WORDS.zh.sweep.blurb },
     },
-    feats: { fishing: { feebas: '我釣到了 Feebas！', shinyGyarados: '我釣到了異色 Gyarados！！', wishiwashi: '我釣到了 Wishiwashi！', bigHaul: '一輪釣到 300 分！' }, berryCatch: { flawless: '樹果雨零失誤！', goldRush: '一局接到三顆金色樹果！', combo50: '樹果 50 連擊！' }, whackDiglett: { combo30: '30 連敲！', dugtrio: '一局敲中 5 隻 Dugtrio！' }, fourInRow: {}, typeDuel: { perfectDuel: '完美對決,一回合都沒輸!' }, claw: SEASON_ONE_CLAW_WORDS.zh.feats, safari: SEASON_ONE_SAFARI_WORDS.zh.feats, dig: SEASON_ONE_DIG_WORDS.zh.feats, slots: ROCKET_WORDS.zh.feats.slots, sweep: ROCKET_WORDS.zh.feats.sweep },
+    feats: { ...CAFE_TABLES_WORDS.zh.feats, fishing: { feebas: '我釣到了 Feebas！', shinyGyarados: '我釣到了異色 Gyarados！！', wishiwashi: '我釣到了 Wishiwashi！', bigHaul: '一輪釣到 300 分！' }, berryCatch: { flawless: '樹果雨零失誤！', goldRush: '一局接到三顆金色樹果！', combo50: '樹果 50 連擊！' }, whackDiglett: { combo30: '30 連敲！', dugtrio: '一局敲中 5 隻 Dugtrio！' }, fourInRow: {}, typeDuel: { perfectDuel: '完美對決,一回合都沒輸!' }, claw: SEASON_ONE_CLAW_WORDS.zh.feats, safari: SEASON_ONE_SAFARI_WORDS.zh.feats, dig: SEASON_ONE_DIG_WORDS.zh.feats, slots: ROCKET_WORDS.zh.feats.slots, sweep: ROCKET_WORDS.zh.feats.sweep },
     duel: {
       pick: '選一張牌',
       play: '出牌',
