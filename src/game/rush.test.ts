@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { RUSH } from '../data/rush'
+import { BOSS_PATTERNS, BOSS_PHASES } from '../data/bosses'
+import { RUSH, RUSH_ORDER } from '../data/rush'
 import { rushHp, rushLineup } from './rush'
 
 describe('Hoopa’s Rings', () => {
@@ -13,6 +14,13 @@ describe('Hoopa’s Rings', () => {
     expect(hard).toHaveLength(RUSH.rings.hard + 1)
     expect(hard.at(-1)).toBe('hoopa')
     expect(rushLineup(all, 'hard', 7)).toEqual(hard)
+  })
+
+  it('bring every captured legend that fights somewhere, and none a fight never brings', () => {
+    const fought = ['kartana', 'guzzlord', 'regigigas', 'terapagos', 'keldeo'] as const
+    expect(rushLineup([...fought, 'zygarde', 'solgaleo', 'lunala', 'kubfu', 'meltan', 'poipole', 'cresselia'], 'nightmare', 3)).toEqual([...fought.toSorted((a, b) => RUSH_ORDER.indexOf(a) - RUSH_ORDER.indexOf(b)), 'hoopa'])
+    // Each fights in the rings with its own phases or patterns.
+    for (const id of RUSH_ORDER) expect(BOSS_PHASES[id] ?? BOSS_PATTERNS[id], id).toBeTruthy()
   })
 
   it('give every ring’s legend the same HP whatever its species, growing ring by ring, Hoopa the most', () => {

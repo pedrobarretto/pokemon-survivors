@@ -3,7 +3,7 @@ import { TAU } from '../engine/math'
 import { hash2 } from '../engine/rng'
 import { ENEMIES } from '../data/enemies'
 import { RUSH } from '../data/rush'
-import { rushGate } from '../game/rush'
+import { rushGate, type RushState } from '../game/rush'
 import type { Game } from '../game/types'
 import { rgb } from './rift'
 import { drawPokemon, sprites } from './sprites'
@@ -15,7 +15,7 @@ type Ctx = CanvasRenderingContext2D
  * desert sand floating in a starry night (its own room, `RushState.room`),
  * rimmed in gold and inlaid with ring portals; the golden circle the rush is
  * fought in, Hoopa's ring portals standing round it, the big ring at its north
- * opening on each legend, and Hoopa floating over it until the last ring,
+ * opening on each legend, and Hoopa floating behind it until the last ring,
  * when it comes through itself.
  */
 
@@ -216,14 +216,16 @@ export const drawRushGround = (ctx: Ctx, g: Game, t: number) => {
   const gate = rushGate(r)
   const opening = r.stage === 'gate' ? Math.min(1, 1 - r.clock / RUSH.gate + 0.15) : r.stage === 'fight' ? 1 : 0.55
   standingRing(ctx, Math.round(gate.x), Math.round(gate.y - 6), 22, t, opening)
+  drawHost(ctx, r, gate, t)
 }
 
-/** Air layer: Hoopa floating over the gate, watching, until it comes through on the last ring. */
-export const drawRushAir = (ctx: Ctx, g: Game, t: number) => {
-  const r = g.rush
-  if (!r || r.lineup[r.ring] === 'hoopa' || r.stage === 'cleared') return
-  const s = sprites(ENEMIES.hoopa.dex)
-  const gate = rushGate(r)
+/**
+ * Hoopa floating behind the gate, watching, until it comes through on the
+ * last ring: drawn with the ground, so the ring's legend (a Palkia stands
+ * tall) is never under it.
+ */
+const drawHost = (ctx: Ctx, r: RushState, gate: { x: number; y: number }, t: number) => {
+  if (r.lineup[r.ring] === 'hoopa' || r.stage === 'cleared') return
   const bob = Math.round(Math.sin(t * 2.4) * 2)
-  drawPokemon(ctx, s, 'Idle', 0, t, Math.round(gate.x + 40), Math.round(gate.y - 44 + bob))
+  drawPokemon(ctx, sprites(ENEMIES.hoopa.dex), 'Idle', 0, t, Math.round(gate.x + 40), Math.round(gate.y - 44 + bob))
 }

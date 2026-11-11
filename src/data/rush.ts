@@ -3,6 +3,7 @@ import type { Difficulty } from '../game/difficulty'
 import { pin } from './domains/kit'
 import type { EnemyId } from './enemies'
 import type { LegendId } from './legends'
+import { ULTRA_BEASTS } from './ultraBeasts'
 
 /**
  * Hoopa's Rings (Anéis de Hoopa), the Legend mode's boss rush
@@ -37,14 +38,19 @@ export const RUSH = {
 
 /**
  * The order the rings bring the captured legends in, from the gentler to the
- * fiercer: the trios, the mythicals, the lake trio and the Swords, then the
- * rift legendaries, Darkrai and Palkia, Mewtwo and Arceus. Never Hoopa (it's
- * the last ring) nor a legend never fought (Cresselia).
+ * fiercer: the trios, the mythicals, the lake trio and the Swords, the Ultra
+ * Beasts, then the rift legendaries, Regigigas, Darkrai and Palkia,
+ * Terapagos, Mewtwo and Arceus. Every captured legend that fights somewhere
+ * comes, on the rings' own stage. Never Hoopa (it's the last ring), nor a
+ * legend no fight ever brings: Cresselia (a festival's gift), Poipole (the
+ * Ultra Beasts' gift) and the path legends but Regigigas (Zygarde, Solgaleo,
+ * Lunala, Kubfu and Meltan, each raised on its own path).
  */
 export const RUSH_ORDER = [
   'articuno', 'zapdos', 'moltres', 'raikou', 'entei', 'suicune', 'regirock', 'regice', 'registeel',
   'mew', 'celebi', 'jirachi', 'uxie', 'mesprit', 'azelf', 'cobalion', 'terrakion', 'virizion', 'keldeo',
-  'lugia', 'hoOh', 'latias', 'latios', 'kyogre', 'groudon', 'rayquaza', 'deoxys', 'dialga', 'darkrai', 'palkia', 'mewtwo', 'arceus',
+  ...ULTRA_BEASTS,
+  'lugia', 'hoOh', 'latias', 'latios', 'kyogre', 'groudon', 'rayquaza', 'deoxys', 'regigigas', 'dialga', 'darkrai', 'palkia', 'terapagos', 'mewtwo', 'arceus',
 ] as const satisfies readonly (LegendId & EnemyId)[]
 
 /** Hyperspace Fury: fists raining around the player. */
