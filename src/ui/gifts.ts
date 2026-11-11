@@ -1,5 +1,6 @@
 import { HATCHLINGS } from '../data/hatchlings'
 import { LEGENDS } from '../data/legends'
+import type { CosmogLegend } from '../game/legendPaths'
 import { BAG_ITEMS, EVO_ITEMS } from '../data/shop'
 import { giftInbox, nextGift, openGift } from '../account'
 import { playSfx } from '../engine/audio'
@@ -125,6 +126,8 @@ export type GiftScreenActions = {
   hatch: (hatch: Hatch) => void
   /** A shiny ticket came out and the player wants to pick now: the Hall's shiny picker. */
   pick: () => void
+  /** Cosmog's legend came out (its path's gift): the evolution scene plays. */
+  evolve: (legend: CosmogLegend) => void
   /** Back to the lobby. */
   close: () => void
 }
@@ -200,6 +203,12 @@ export const giftScreen = (root: HTMLElement, input: Input, actions: GiftScreenA
       const hatch = out.hatch
       dispose()
       return later(() => actions.hatch(hatch))
+    }
+    const content = gift.content
+    if (gift.reason?.kind === 'path' && gift.reason.path === 'cosmog' && content.kind === 'legend' && (content.legend === 'solgaleo' || content.legend === 'lunala')) {
+      const legend = content.legend
+      dispose()
+      return later(() => actions.evolve(legend))
     }
     playSfx('unlock')
     const line = contentLine(gift)

@@ -82,6 +82,10 @@ export type PathWords = {
       /** A run's end: Cosmog grew, or turned into its legend. */
       grew: string
       evolved: (name: string) => string
+      /** The gift's evolution scene (`ui/cosmogEvolve.ts`): while it glows, once it's done, and where the legend waits. */
+      evolving: string
+      became: (name: string) => string
+      becameNote: string
     }
     tower: {
       title: string
@@ -104,6 +108,8 @@ export type PathWords = {
       kubfu: string
       urshifu: (style: string) => string
       chooseNote: string
+      /** The heading over the three floors' cards. */
+      floorsHead: string
       styles: { dark: string; water: string }
     }
     meltan: {
@@ -251,6 +257,9 @@ const pt: PathWords = {
       raised: (names: string) => `Já criou: ${names}.`,
       grew: 'O *Cosmog* virou *Cosmoem*!',
       evolved: (name: string) => `O seu Cosmoem evoluiu em *${name}*! Abra o Presente.`,
+      evolving: 'Hã? O *Cosmoem* está evoluindo!',
+      became: (name: string) => `O *Cosmoem* evoluiu em *${name}*!`,
+      becameNote: 'Ele espera por você no modo Lenda.',
     },
     tower: {
       title: 'TORRE DO DOJO',
@@ -282,6 +291,7 @@ const pt: PathWords = {
       kubfu: 'O *Kubfu* quer ir com você! Abra o Presente no lobby.',
       urshifu: (style: string) => `O Kubfu escolheu o *${style}*: no 2º despertar ele vira *Urshifu*.`,
       chooseNote: 'Só dá para subir uma das duas torres. A escolhida decide o estilo do Urshifu para sempre.',
+      floorsHead: 'Os três andares',
       styles: { dark: 'Estilo Golpe Único', water: 'Estilo Golpe Fluido' },
     },
     meltan: {
@@ -425,6 +435,9 @@ const en: PathWords = {
       raised: (names: string) => `Raised so far: ${names}.`,
       grew: '*Cosmog* became *Cosmoem*!',
       evolved: (name: string) => `Your Cosmoem evolved into *${name}*! Open the Gift.`,
+      evolving: 'What? *Cosmoem* is evolving!',
+      became: (name: string) => `*Cosmoem* evolved into *${name}*!`,
+      becameNote: 'It’s waiting for you in Legend mode.',
     },
     tower: {
       title: 'DOJO TOWER',
@@ -456,6 +469,7 @@ const en: PathWords = {
       kubfu: '*Kubfu* wants to come with you! Open the Gift in the lobby.',
       urshifu: (style: string) => `Kubfu chose the *${style}*: at its 2nd awakening it becomes *Urshifu*.`,
       chooseNote: 'Only one of the two towers can be climbed. The one chosen decides Urshifu’s style for good.',
+      floorsHead: 'The three floors',
       styles: { dark: 'Single Strike Style', water: 'Rapid Strike Style' },
     },
     meltan: {
@@ -599,6 +613,9 @@ const es: PathWords = {
       raised: (names: string) => `Ya criaste: ${names}.`,
       grew: '¡*Cosmog* se volvió *Cosmoem*!',
       evolved: (name: string) => `¡Tu Cosmoem evolucionó a *${name}*! Abre el Regalo.`,
+      evolving: '¿Qué? ¡*Cosmoem* está evolucionando!',
+      became: (name: string) => `¡*Cosmoem* evolucionó a *${name}*!`,
+      becameNote: 'Te espera en el modo Leyenda.',
     },
     tower: {
       title: 'TORRE DEL DOJO',
@@ -630,6 +647,7 @@ const es: PathWords = {
       kubfu: '¡*Kubfu* quiere ir contigo! Abre el Regalo en el lobby.',
       urshifu: (style: string) => `Kubfu eligió el *${style}*: en su 2.º despertar se vuelve *Urshifu*.`,
       chooseNote: 'Solo se puede subir una de las dos torres. La elegida decide el estilo de Urshifu para siempre.',
+      floorsHead: 'Los tres pisos',
       styles: { dark: 'Estilo Brusco', water: 'Estilo Fluido' },
     },
     meltan: {
@@ -773,6 +791,9 @@ const fr: PathWords = {
       raised: (names: string) => `Déjà élevés : ${names}.`,
       grew: '*Cosmog* est devenu *Cosmoem* !',
       evolved: (name: string) => `Votre Cosmoem a évolué en *${name}* ! Ouvrez le Cadeau.`,
+      evolving: 'Quoi ? *Cosmoem* évolue !',
+      became: (name: string) => `*Cosmoem* a évolué en *${name}* !`,
+      becameNote: 'Il vous attend dans le mode Légende.',
     },
     tower: {
       title: 'TOUR DU DOJO',
@@ -804,6 +825,7 @@ const fr: PathWords = {
       kubfu: '*Kubfu* veut venir avec vous ! Ouvrez le Cadeau dans le lobby.',
       urshifu: (style: string) => `Kubfu a choisi le *${style}* : à son 2e éveil il devient *Urshifu*.`,
       chooseNote: 'On ne peut gravir qu’une des deux tours. Celle choisie décide du style d’Urshifu pour de bon.',
+      floorsHead: 'Les trois étages',
       styles: { dark: 'Style Poing Final', water: 'Style Mille Poings' },
     },
     meltan: {
@@ -947,6 +969,9 @@ const zh: PathWords = {
       raised: (names: string) => `已經養大：${names}。`,
       grew: '*Cosmog* 變成了 *Cosmoem*！',
       evolved: (name: string) => `你的Cosmoem進化成了 *${name}*！打開禮物吧。`,
+      evolving: '咦？*Cosmoem* 正在進化！',
+      became: (name: string) => `*Cosmoem* 進化成了 *${name}*！`,
+      becameNote: '牠在傳說模式等著你。',
     },
     tower: {
       title: '道館之塔',
@@ -978,6 +1003,7 @@ const zh: PathWords = {
       kubfu: '*Kubfu* 想跟你走！到大廳打開禮物吧。',
       urshifu: (style: string) => `Kubfu選擇了 *${style}*：第 2 次覺醒時會變成 *Urshifu*。`,
       chooseNote: '兩座塔只能爬一座。選擇的那座會永遠決定Urshifu的流派。',
+      floorsHead: '三層樓',
       styles: { dark: '一擊流', water: '連擊流' },
     },
     meltan: {

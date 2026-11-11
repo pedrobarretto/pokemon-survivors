@@ -74,8 +74,8 @@ import { pathDevTools } from './ui/pathDev'
 import { pathSheet } from './ui/legendPaths'
 import { trialHud } from './ui/towerTrial'
 import { startTrial } from './game/towerTrial'
-import { TRIALS, type TrialId } from './data/legendPaths'
-import { clearTrial, giantAwake, kubfuJoined, openForms, templeRun, towerOf } from './game/legendPaths'
+import { COSMOG_DEX, PATH_IDS, TRIALS, type TrialId } from './data/legendPaths'
+import { clearTrial, cosmogStage, giantAwake, kubfuJoined, openForms, templeRun, towerOf } from './game/legendPaths'
 import { FIELD, FIELD_MISSION_KINDS, TOGEPI_DEX, type FieldMissionKind } from './game/fieldMissionRules'
 import { advancePhase, banishOffer, chooseOffer, createGame, offerAbilities, playerDex, rerollOffers, skipLevelUp, step, takeBerryLevelUps } from './game/game'
 import { applyBuild, setDummies, setLens, startTraining } from './game/training'
@@ -177,6 +177,7 @@ import { loadLobbyMode, saveLobbyMode } from './ui/lobbyMode'
 import { bankEggs, challengeToday, depositPokeDollars, halloweenToday, loadAttempt, loadSave, outbreakToday, recordRunProgress, saveAttempt, saveHatch, setToday, today, updateSave, writeSave, type Settings } from './ui/save'
 import { challengeScreen, challengeShiny, type ChallengeSide } from './ui/challenge'
 import { hatchScene, incubator } from './ui/incubator'
+import { cosmogEvolveScene } from './ui/cosmogEvolve'
 import { medalChips, missionReport, missionsScreen, progressToast, titleBadge } from './ui/missions'
 import { martDevTools } from './ui/martDev'
 import { CARAVAN, STALL_IDS, STALLS, TAILOR, type StallId } from './data/visitors'
@@ -566,7 +567,7 @@ let meetings = 0
 const meadow: Meadow = {
   meet: (partner) => {
     const id = ++meetings
-    meetPartner(scene, partner, runCompanion({ x: 0, y: 0 }))
+    meetPartner(scene, partner, runCompanion({ x: 0, y: 0 }), lobbyCosmog())
     return () => void (id === meetings && meetPartner(scene, null))
   },
   visit: (to, instant) => {
@@ -922,6 +923,15 @@ const takeOffLooks = () => {
   setLooksGame(null)
 }
 
+/** Cosmog or Cosmoem while one grows (the legend paths), to float beside the partner on the lobby's trips (its sprites start loading); null when none does. */
+const lobbyCosmog = (): CompanionView | null => {
+  const stage = cosmogStage(loadSave().paths.cosmog)
+  if (!stage) return null
+  const dex = COSMOG_DEX[stage]
+  void loadSpecies(dex).catch(() => {})
+  return createCompanion(dex, false, { x: 0, y: 0 })
+}
+
 /** The save's companion for a run starting now, if the account's tier still allows it (`knownTier`; its sprites start loading). */
 const runCompanion = (at: Vec): CompanionView | null => {
   const save = loadSave()
@@ -1016,7 +1026,8 @@ const afterRun = (then: () => void) => {
 
 /**
  * The lobby's gift box: opens the waiting Mystery Gifts one by one. A shiny
- * hatch plays its scene (recorded in the missions and medals) and a shiny
+ * hatch plays its scene (recorded in the missions and medals), Cosmog's
+ * legend its evolution (`cosmogEvolveScene`) and a shiny
  * ticket goes to the Hall's picker, each coming back to the next gift, or
  * to the lobby once none waits.
  */
@@ -1030,6 +1041,7 @@ const showGifts = () => {
         showHatch(hatch, back, undefined, () => later(() => progressToast(ui, record)))
       },
       pick: () => setScreen(supportersScreen(ui, input, { play: (id) => void startRun(id), onClose: back }, 'pick')),
+      evolve: (legend) => setScreen(cosmogEvolveScene(ui, input, legend, back)),
       close: () => showTitle({ focus: 'gifts' }),
     }),
   )
@@ -4447,13 +4459,14 @@ const devGifts = {
    * `ps.gift('title')`, `ps.gift('style', 'ambassador')` (a frame), `ps.gift('shinyHatch', 'munchlax')`,
    * `ps.gift('ribbon', 'gold')` (yesterday's challenge, #12 of 340), `ps.gift('shinyPick')` (a shiny of one's choice),
    * `ps.gift('companion', 'pumpkaboo')` (a gift-only companion), `ps.gift('bag', 'lure')` (3 of a Bag item), `ps.gift('legend', 'cresselia')` (a festival legend).
-   * `why`: an inviter's handle (welcome) or a count of friends brought.
+   * `why`: an inviter's handle (welcome), a count of friends brought, or a legend path (`ps.gift('legend', 'solgaleo', 'cosmog')`: Cosmog's evolution scene as it opens).
    */
   gift: (kind: GiftKind = 'egg', arg?: string, why?: string | number) => {
     const raw = { egg: { tier: arg ?? 'friend' }, coins: { amount: Number(arg ?? 500) }, title: { title: arg ?? 'ambassador' }, style: { style: { slot: 'frame', id: arg ?? 'ambassador' } }, shinyHatch: { family: arg ?? 'munchlax' }, family: { family: arg ?? 'mimikyu' }, ribbon: { ribbon: { day: previousDay(brasiliaDay(today())), tier: arg ?? 'gold', rank: 12, total: 340 } }, shinyPick: {}, companion: { id: arg ?? 'pumpkaboo' }, bag: { item: arg ?? 'lure', count: 3 }, legend: { legend: arg ?? 'cresselia' }, evoItem: { item: arg ?? 'fireStone' } }[kind]
     const content = parseGiftContent({ kind, ...raw })
     if (!content) return 'Kinds: egg (tier), coins (amount), title, style (frame id), shinyHatch (family), ribbon (tier), shinyPick, companion (id), bag (item, 3 of it), legend (id)'
-    const reason: GiftReason | null = typeof why === 'number' ? { kind: 'friends', count: why } : why ? { kind: 'welcome', from: why } : null
+    const path = PATH_IDS.find((id) => id === why)
+    const reason: GiftReason | null = typeof why === 'number' ? { kind: 'friends', count: why } : path ? { kind: 'path', path } : why ? { kind: 'welcome', from: why } : null
     return stageGifts([{ id: `dev-${Date.now()}`, content, reason }])
   },
   /** Puts one invite milestone's gifts in the gift box as the API sends them (`FRIEND_MILESTONES`): `ps.friendGifts(10)` the shiny Dratini, the Friendship Legend title and background. */
