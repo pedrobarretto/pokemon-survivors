@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { HATCHLING_IDS, type HatchlingId } from '../../src/data/hatchlings'
-import { SAFARI_ONLY } from '../../src/data/safari'
-import { brasiliaDay } from '../../src/game/day'
+import { CONTEST_POOL, SAFARI_HABITAT_IDS, SAFARI_ONLY, habitatResidents } from '../../src/data/safari'
+import { addDays, brasiliaDay, weekStart } from '../../src/game/day'
 import type { SafariSession } from '../../src/net/realmApi'
-import { SAFARI } from '../../src/realm/games/safari.rules'
+import { SAFARI, habitatOfWeek } from '../../src/realm/games/safari.rules'
 import type { Sql } from './db'
 import { applyDeeds } from './realmDeeds'
 import { safariStore } from './safari'
@@ -24,8 +24,10 @@ describe.skipIf(!url)('Zona Safári (Postgres)', () => {
   const now = () => new Date('2026-11-10T15:00:00Z')
   const dice = () => rolls.shift() ?? after
 
-  const started = async (base: number | null = null) => {
-    const got = await safari.start('u_ash', base)
+  const body = (base: number | null = null, more: { mode?: 'safari' | 'contest'; offset?: number } = {}) => ({ base, mode: more.mode ?? 'safari', offset: more.offset ?? -180 })
+
+  const started = async (base: number | null = null, more: { mode?: 'safari' | 'contest'; offset?: number } = {}) => {
+    const got = await safari.start('u_ash', body(base, more))
     if (!got.ok) throw new Error(got.error)
     return got
   }
@@ -59,7 +61,7 @@ describe.skipIf(!url)('Zona Safári (Postgres)', () => {
   })
 
   beforeEach(async () => {
-    await sql`truncate safari_sessions, safari_progress, gifts, saves, users cascade`
+    await sql`truncate safari_sessions, safari_progress, safari_dex, safari_contest_settled, realm_game_boards, gifts, saves, users cascade`
     safari = safariStore(sql, { closed: async () => false, earn: (userId, deeds) => sql.begin((tx) => applyDeeds(tx, userId, deeds, brasiliaDay(now()))).then(() => undefined), now, dice })
     rolls = []
     after = 0.5
@@ -73,7 +75,7 @@ describe.skipIf(!url)('Zona Safári (Postgres)', () => {
   })
 
   it('needs a handle', async () => {
-    expect(await safari.start('u_nohandle', null)).toEqual({ ok: false, error: 'profile' })
+    expect(await safari.start('u_nohandle', body())).toEqual({ ok: false, error: 'profile' })
     expect(await safari.state('u_nohandle')).toBeNull()
   })
 
@@ -82,26 +84,27 @@ describe.skipIf(!url)('Zona Safári (Postgres)', () => {
     expect(first.used).toBe(1)
     expect((await started()).session.id).toBe(first.session.id)
     await act(first.session, 0, { kind: 'finish' })
-    expect(await safari.start('u_ash', null)).toEqual({ ok: false, error: 'stale' })
-    expect(await safari.start('u_ash', 2)).toEqual({ ok: false, error: 'stale' })
+    expect(await safari.start('u_ash', body())).toEqual({ ok: false, error: 'stale' })
+    expect(await safari.start('u_ash', body(2))).toEqual({ ok: false, error: 'stale' })
     const paid = await started(3)
     expect(paid.paid?.revision).toBe(4)
     expect(paid.paid?.save.wallet).toBe(0)
     expect(paid.paid?.save.spent).toBe(SAFARI.price)
     await act(paid.session, 0, { kind: 'finish' })
-    expect(await safari.start('u_ash', 4)).toEqual({ ok: false, error: 'funds' })
+    expect(await safari.start('u_ash', body(4))).toEqual({ ok: false, error: 'funds' })
   })
 
   it('stops at the daily cap', async () => {
     const day = brasiliaDay(now())
     await sql`insert into safari_sessions (user_id, day, week, habitat, state, finished_at) select 'u_ash', ${day}::date, ${day}::date, 'meadow', '{}'::jsonb, now() from generate_series(1, ${SAFARI.dailyCap})`
-    expect(await safari.start('u_ash', 3)).toEqual({ ok: false, error: 'cap' })
+    expect(await safari.start('u_ash', body(3))).toEqual({ ok: false, error: 'cap' })
   })
 
   it('never names who is still to come, and reveals them in the order they were rolled', async () => {
     const { session } = await started()
     const names = await hiding(session.id)
-    const sent = JSON.stringify(session)
+    // The wanderers are named on purpose (they're in the open); nothing else is.
+    const sent = JSON.stringify({ ...session, wanderers: [] })
     for (const { family } of names) expect(sent).not.toContain(`"${family}"`)
     expect(session.encounter).toBeNull()
     expect(session.left).toBe(SAFARI.encounters)
@@ -162,8 +165,11 @@ describe.skipIf(!url)('Zona Safári (Postgres)', () => {
 
   it('counts a shiny caught as a shiny too', async () => {
     const { session } = await started()
-    await sql`update safari_sessions set state = jsonb_set(state, '{run,queue,0,shiny}', 'true') where id = ${session.id}::uuid`
-    const caught = await catchFirst(session)
+    // The shiny is rolled as it shows: a low roll there.
+    rolls = [0]
+    await act(session, 0, { kind: 'grass' })
+    rolls = [0, 0, 0]
+    const caught = await act(session, 1, { kind: 'ball' })
     expect(caught.turn).toMatchObject({ caught: true, shiny: true })
     expect(await book()).toEqual({ deeds: { 'safari:catch': 1, 'safari:shiny': 1 }, stamps: ['safariCatch', 'safariShiny'] })
   })
@@ -198,5 +204,99 @@ describe.skipIf(!url)('Zona Safári (Postgres)', () => {
     expect((await safari.state('u_ash'))!.sure).toBe(false)
     const { session } = await started()
     expect(session.sureNext).toBe(false)
+  })
+
+  /** The week's habitat on the test's clock. */
+  const habitat = habitatOfWeek(weekStart(brasiliaDay(now())), SAFARI_HABITAT_IDS)
+
+  it('takes who is about from the player’s hour, never Brasília’s', async () => {
+    // 15:00 UTC is midnight in Tokyo.
+    const { session } = await started(null, { offset: 9 * 60 })
+    expect(session.daypart).toBe('night')
+    await act(session, 0, { kind: 'finish' })
+    expect(await safari.start('u_ash', { base: null, mode: 'safari', offset: 9 * 60 })).toMatchObject({ ok: false })
+    expect((await sql<{ daypart: string }[]>`select daypart from safari_sessions where id = ${session.id}::uuid`)[0]!.daypart).toBe('night')
+  })
+
+  it('names the wanderers, meets one sneaked up on calmer, once, and keeps them out of the grass', async () => {
+    const { session } = await started()
+    expect(session.wanderers).toHaveLength(SAFARI.visible)
+    const queue = await hiding(session.id)
+    const [w] = session.wanderers
+    expect(w!.family).toBe(queue[w!.slot]!.family)
+    const met = await act(session, 0, { kind: 'stalk', slot: w!.slot })
+    expect(met.turn).toMatchObject({ kind: 'appear', family: w!.family, stalked: true })
+    expect(met.session.encounter).toMatchObject({ calm: SAFARI.stalkCalm, stalked: true })
+    expect(met.session.wanderers.map((x) => x.slot)).not.toContain(w!.slot)
+    await act(session, 1, { kind: 'leave' })
+    expect(await safari.act('u_ash', session.id, 2, { kind: 'stalk', slot: w!.slot })).toEqual({ ok: false, error: 'illegal' })
+    const visible = new Set(session.wanderers.map((x) => x.slot))
+    const grass = await act(session, 2, { kind: 'grass' })
+    expect(grass.turn).toMatchObject({ family: queue.find((_, i) => !visible.has(i))!.family, stalked: false })
+  })
+
+  it('throws rocks and bait: angry or eating for a few turns', async () => {
+    const { session } = await started()
+    await act(session, 0, { kind: 'grass' })
+    rolls = [0.99, 0.99]
+    const rock = await act(session, 1, { kind: 'rock' })
+    expect(rock.turn).toEqual({ kind: 'rock', turns: 3, fled: false })
+    expect(rock.session.encounter).toMatchObject({ mood: 'angry', moodTurns: 3 })
+    rolls = [0, 0.99]
+    const bait = await act(session, 2, { kind: 'bait' })
+    expect(bait.turn).toEqual({ kind: 'bait', turns: 1, fled: false })
+    expect(bait.session.encounter).toMatchObject({ mood: 'eating', moodTurns: 1 })
+  })
+
+  it('fills the habitat’s Pokédex, and a full one sends its egg once', async () => {
+    const residents = habitatResidents(habitat).map((e) => e.family)
+    const { session } = await started()
+    const [first] = await hiding(session.id)
+    const rest = residents.filter((f) => f !== first!.family)
+    for (const family of rest) await sql`insert into safari_dex (user_id, habitat, family) values ('u_ash', ${habitat}, ${family})`
+    await catchFirst(session)
+    expect((await safari.state('u_ash'))!.dex[habitat]).toContain(first!.family)
+    const sent = await sql<{ key: string }[]>`select key from gifts where user_id = 'u_ash' and key like 'safariDex:%'`
+    expect(sent.map((r) => r.key)).toEqual(residents.includes(first!.family) ? [`safariDex:${habitat}`] : [])
+  })
+
+  it('runs the contest on its days: a free entry of bugs, scored, its best kept if new and on the board', async () => {
+    const state = (await safari.state('u_ash'))!
+    expect(state.contest).toEqual({ open: true, left: 1, best: null })
+    const { session, used } = await started(null, { mode: 'contest' })
+    expect(used).toBe(0)
+    expect(session.mode).toBe('contest')
+    const bugs = new Set(CONTEST_POOL.map((e) => e.family))
+    for (const { family } of await hiding(session.id)) expect(bugs.has(family)).toBe(true)
+    const [first] = await hiding(session.id)
+    const caught = await catchFirst(session)
+    expect(caught.gift).toBeNull()
+    expect(caught.turn).toMatchObject({ caught: true })
+    const done = await act(session, 2, { kind: 'finish' })
+    expect(done.gift).toMatchObject({ content: { kind: 'family', family: first!.family } })
+    const score = (caught.turn.kind === 'ball' && caught.turn.score) || 0
+    expect((await safari.state('u_ash'))!.contest).toEqual({ open: true, left: 0, best: score })
+    expect(await safari.start('u_ash', body(null, { mode: 'contest' }))).toEqual({ ok: false, error: 'cap' })
+    // The day's free session is still there.
+    expect((await started()).used).toBe(1)
+  })
+
+  it('closes the contest on the other days', async () => {
+    const wed = safariStore(sql, { closed: async () => false, earn: async () => {}, now: () => new Date('2026-11-11T15:00:00Z'), dice })
+    expect((await wed.state('u_ash'))!.contest.open).toBe(false)
+    expect(await wed.start('u_ash', body(null, { mode: 'contest' }))).toEqual({ ok: false, error: 'closed' })
+  })
+
+  it('sends last week’s prizes once, to the places the field earns', async () => {
+    const last = addDays(weekStart(brasiliaDay(now())), -7)
+    for (const [id, score] of [['u_misty', 300], ['u_brock', 200], ['u_gary', 100], ['u_ash', 50]] as const) {
+      if (id !== 'u_ash') await sql`insert into users (id, handle, name) values (${id}, ${id.slice(2)}, ${id})`
+      await sql`insert into realm_game_boards (game, period, start, user_id, score) values ('safari', 'week', ${last}::date, ${id}, ${score})`
+    }
+    await safari.state('u_ash')
+    await safari.state('u_ash')
+    const gifts = await sql<{ user_id: string; kind: string }[]>`select user_id, kind from gifts where key like 'bugContest:%' order by user_id, kind`
+    // Four entrants: the top two earn a prize, the champion's three gifts and the podium's two.
+    expect(gifts.map((g) => `${g.user_id}:${g.kind}`)).toEqual(['u_brock:bag', 'u_brock:style', 'u_misty:bag', 'u_misty:style', 'u_misty:title'])
   })
 })

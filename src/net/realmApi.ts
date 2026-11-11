@@ -8,7 +8,7 @@ import type { PlushFamily } from '../data/plushes'
 import type { SafariHabitat } from '../data/safari'
 import type { DigPrize, DigTreasureId } from '../data/digTreasures'
 import type { Gift, GiftContent, GiftReason } from '../game/gifts'
-import type { SafariCatch, SafariTurn } from '../realm/games/safari.rules'
+import type { SafariCatch, SafariDaypart, SafariMode, SafariMood, SafariTurn } from '../realm/games/safari.rules'
 import type { DigCell, DigHint, DigPattern, DigPowers, DigTreasure } from '../realm/games/dig.rules'
 
 /**
@@ -165,28 +165,57 @@ export type ClawInserted = { play: ClawPlay; used: number }
 /** What a drop came to: the plush it went for (its place in `prizes`), the grip, whether it held and every plush's misses after it. */
 export type ClawDropped = { target: number; grip: number; won: boolean; family: PlushFamily; misses: number[] }
 
-/** The Pokémon being faced, known once the grass has given it away. */
-export type SafariEncounterView = { family: HatchlingId; shiny: boolean; calm: number; sure: boolean }
+/** The Pokémon being faced, known once the grass has given it away: its calm (berries), its mood and turns left, its place in the chain and whether it was sneaked up on. */
+export type SafariEncounterView = { family: HatchlingId; shiny: boolean; calm: number; sure: boolean; level: number; mood: SafariMood | null; moodTurns: number; chain: number; stalked: boolean }
+
+/** A Pokémon out in the open: the queue's slot it holds (what `stalk` sends) and who it is. */
+export type SafariWanderer = { slot: number; family: HatchlingId }
 
 /** A session as its owner sees it. `turn`: how many actions the API has answered (what the next action sends). */
 export type SafariSession = {
   id: string
   week: string
   habitat: SafariHabitat
+  /** A regular session or a Concurso de Insetos entry. */
+  mode: SafariMode
+  /** The time of day the API took from the player's clock: who's about. */
+  daypart: SafariDaypart
   balls: number
   berries: number
-  /** Encounters still to come; never who. */
+  /** Encounters still to come; never who hides in the grass. */
   left: number
-  /** Whether the next one is the guarantee's. */
+  /** Whether the next one in the grass is the guarantee's. */
   sureNext: boolean
+  /** Who wanders in the open, not met yet. */
+  wanderers: SafariWanderer[]
+  /** The species met last and how many in a row. */
+  chain: { family: HatchlingId; n: number } | null
   encounter: SafariEncounterView | null
   catches: SafariCatch<HatchlingId>[]
   over: boolean
   turn: number
 }
 
-/** The Zona Safári for this account: the habitat, the sessions used today, the sessions without a new family, whether the next one is the guarantee's, the partner the API counts and the session left open, if any. */
-export type SafariState = { week: string; habitat: SafariHabitat; used: number; dry: number; sure: boolean; partner: PlayableId | null; open: SafariSession | null }
+/** The Concurso de Insetos today: whether it runs, the entries left, and this week's best entry (null without one). */
+export type SafariContest = { open: boolean; left: number; best: number | null }
+
+/**
+ * The Zona Safári for this account: the habitat, the sessions used today, the
+ * sessions without a new family, whether the next one is the guarantee's, the
+ * partner the API counts, the session left open, if any, the contest, and
+ * each habitat's Pokédex (the families caught there).
+ */
+export type SafariState = {
+  week: string
+  habitat: SafariHabitat
+  used: number
+  dry: number
+  sure: boolean
+  partner: PlayableId | null
+  open: SafariSession | null
+  contest: SafariContest
+  dex: Record<SafariHabitat, HatchlingId[]>
+}
 
 export type SafariStarted = { session: SafariSession; used: number }
 

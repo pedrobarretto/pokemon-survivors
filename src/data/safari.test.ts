@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { HATCHLINGS, type HatchlingId } from './hatchlings'
-import { SAFARI_FAMILIES, SAFARI_HABITAT_IDS, SAFARI_ONLY, habitatPool, lackingFamilies } from './safari'
+import { CONTEST_POOL, SAFARI_FAMILIES, SAFARI_HABITAT_IDS, SAFARI_ONLY, habitatPool, habitatResidents, lackingFamilies, poolAt, whenAbout } from './safari'
 
 const SEASON_ONE: readonly HatchlingId[] = ['snom', 'joltik', 'applin', 'hatenna', 'salandit', 'darumaka', 'wimpod', 'finizen', 'pawniard', 'frigibax']
 
@@ -32,5 +32,33 @@ describe('who the Safari holds', () => {
     expect(lacking).not.toContain('snom')
     expect(lacking).not.toContain('joltik')
     expect(lacking).toContain('applin')
+  })
+})
+
+describe('day and night', () => {
+  it('gives every habitat night owls and early birds, and dawn and dusk both', () => {
+    for (const habitat of SAFARI_HABITAT_IDS) {
+      const day = new Set(poolAt(habitat, 'day').map((e) => e.family))
+      const night = new Set(poolAt(habitat, 'night').map((e) => e.family))
+      expect([...night].some((f) => !day.has(f))).toBe(true)
+      for (const f of day) expect(whenAbout(f)).not.toBe('night')
+      for (const f of night) expect(whenAbout(f)).not.toBe('day')
+      const dusk = new Set(poolAt(habitat, 'dusk').map((e) => e.family))
+      for (const f of [...day, ...night]) expect(dusk).toContain(f)
+      expect(poolAt(habitat, 'night').filter((e) => e.rarity === 'special')).toHaveLength(1)
+    }
+  })
+
+  it('lists in each Pokédex everyone met there at any hour', () => {
+    for (const habitat of SAFARI_HABITAT_IDS) {
+      const dex = new Set(habitatResidents(habitat).map((e) => e.family))
+      for (const part of ['dawn', 'day', 'dusk', 'night'] as const) for (const e of poolAt(habitat, part)) expect(dex).toContain(e.family)
+      expect(dex.size).toBe(habitatResidents(habitat).length)
+    }
+  })
+
+  it('fills the contest with Bug types only', () => {
+    expect(CONTEST_POOL.length).toBeGreaterThanOrEqual(5)
+    for (const e of CONTEST_POOL) expect(e.types).toContain('bug')
   })
 })
