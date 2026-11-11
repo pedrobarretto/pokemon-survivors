@@ -1,6 +1,6 @@
 import type { Dir8 } from '../engine/math'
 import { hash2 } from '../engine/rng'
-import { frameEdges, type AnimName, type SpeciesSprites } from './sprites'
+import { drawPokemon, frameEdges, loadSpecies, type AnimName, type SpeciesSprites } from './sprites'
 
 /**
  * The Shadow aura (`game/shadow.ts`): dark violet flames licking up from a
@@ -37,7 +37,7 @@ export const drawShadowAura = (ctx: Ctx, s: SpeciesSprites, anim: AnimName, dir:
     if (y0 < 0) continue
     headY = Math.min(headY, y0)
     const n = hash2(c >> 1, tick, 41)
-    const h = 1 + Math.floor(n * 4) + ((c >> 1) % 3 === 0 ? 2 : 0)
+    const h = 2 + Math.floor(n * 4) + ((c >> 1) % 3 === 0 ? 2 : 0)
     for (let i = 0; i < h; i++) {
       const k = i / Math.max(1, h - 1)
       const color = i === 0 ? FLAME[1] : k > 0.85 && h >= 4 ? FLAME[4] : k > 0.55 ? FLAME[3] : FLAME[2]
@@ -87,4 +87,23 @@ export const drawPurifiedMark = (ctx: Ctx, x: number, y: number) => {
       ctx.fillStyle = colors[ch]!
       ctx.fillRect(Math.round(x) + c, Math.round(y) + r, 1, 1)
     }
+}
+
+/**
+ * A Pokémon standing for a menu (the Game Corner's counter, the PC box): its
+ * Idle frame facing down, feet on the canvas's floor, in its Shadow aura when
+ * `shadow`; drawn once its sheets land. CSS scales the canvas, pixelated.
+ */
+export const standingCanvas = (dex: number, shadow: boolean, w = 56, h = 52) => {
+  const canvas = document.createElement('canvas')
+  canvas.width = w
+  canvas.height = h
+  void loadSpecies(dex).then((s) => {
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    const feet = h - 6
+    if (shadow) drawShadowAura(ctx, s, 'Idle', 0, 0, w / 2, feet, 0.7, true)
+    drawPokemon(ctx, s, 'Idle', 0, 0, w / 2, feet, {})
+  }).catch(() => {})
+  return canvas
 }

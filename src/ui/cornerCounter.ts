@@ -12,6 +12,7 @@ import { bagIcon, coinIcon, medalIcon } from '../render/art'
 import { tokenIcon } from '../render/cornerArt'
 import { frameIcon } from '../render/cosmetics'
 import { portraitUrl } from '../render/sprites'
+import { standingCanvas } from '../render/shadowAura'
 import { dialogue, type DialogueLine, type Speaker } from './dialogue'
 import { h, later, setText } from './dom'
 import { loadSave } from './save'
@@ -39,7 +40,13 @@ export type CornerTab = 'prizes' | 'tokens'
 export type CornerCounterOpts = { tab: CornerTab; close: () => void }
 
 /** A prize's picture: the family's face (a Shadow's in its aura frame), the Bag item, the title's medal or the frame. */
-const prizeArt = (id: CornerPrizeId) => {
+const prizeArt = (id: CornerPrizeId): HTMLElement => {
+  const def = CORNER_PRIZES[id]
+  if (def.kind === 'family' || def.kind === 'shadow') return standingCanvas(HATCHLINGS[def.family].line[0].dex, def.kind === 'shadow')
+  return h('img', { src: prizeIcon(id), alt: '' })
+}
+
+const prizeIcon = (id: CornerPrizeId) => {
   const def = CORNER_PRIZES[id]
   switch (def.kind) {
     case 'family':
@@ -131,7 +138,7 @@ export const openCornerCounter = (root: HTMLElement, input: Input, opts: CornerC
     return h(
       'button',
       { class: `carpentry-card corner-card ${def.kind}${have ? ' owned' : ''}${short && !have ? ' short' : ''}`, type: 'button', onclick: () => !busy && show(id) },
-      h('span', { class: `carpentry-art corner-art ${def.kind}` }, h('img', { src: prizeArt(id), alt: '' })),
+      h('span', { class: `carpentry-art corner-art ${def.kind}` }, prizeArt(id)),
       h('span', { class: `corner-kind ${def.kind}` }, c().kinds[def.kind]),
       h('b', { class: 'carpentry-name' }, c().prizes[id]),
       h('span', { class: 'carpentry-owned' }, have ? c().owned : ''),
@@ -158,7 +165,7 @@ export const openCornerCounter = (root: HTMLElement, input: Input, opts: CornerC
         'div',
         { class: `carpentry-detail-box box pop corner-detail ${def.kind}`, role: 'dialog', 'aria-label': c().prizes[id] },
         close,
-        h('div', { class: `carpentry-detail-art corner-art ${def.kind}` }, h('img', { src: prizeArt(id), alt: '' })),
+        h('div', { class: `carpentry-detail-art corner-art ${def.kind}` }, prizeArt(id)),
         h(
           'div',
           { class: 'carpentry-detail-text' },

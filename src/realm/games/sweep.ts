@@ -34,6 +34,8 @@ const GOLD = '#f8c838'
 
 /** A Koffing face for the hints and a turned Koffing card: our own little gas ball. */
 const KOFFING = ['...1111...', '..122221..', '.12222221.', '1223223221', '1224224221', '1222222221', '1222552221', '.12222221.', '..122221..', '...1111...']
+/** The hints' little Koffing. */
+const MINI = ['.111.', '12221', '13231', '12221', '.111.']
 const KOFFING_PAL: Record<string, string> = { 1: '#381848', 2: '#9068b0', 3: '#ffffff', 4: '#201020', 5: '#e0d070' }
 
 const SIZE = () => arcadeSize(SIZES.tall, SIZES.wide)
@@ -76,7 +78,8 @@ const start = (ctx: SoloCtx): GameRun => {
 
   const playing = () => {
     if (!board) return
-    say('banner', [h('p', { class: 'mg-lead' }, `${m().level(board.level)} · ${m().payout(formatNumber(payNow()))}`)], [
+    // Upright the banner sits under the table; sideways the dock stands beside it, the tokens with it.
+    say(L.tall ? 'banner' : 'dock', [h('p', { class: 'mg-lead' }, `${m().level(board.level)} · ${m().payout(formatNumber(payNow()))}`), !L.tall && tokensLine()], [
       { label: marking ? `✓ ${m().mark}` : m().mark, run: () => ((marking = !marking), playing()) },
       { label: m().bank, run: bank, primary: true },
     ])
@@ -270,7 +273,7 @@ const start = (ctx: SoloCtx): GameRun => {
     }
   }
 
-  /** A hint card: the coins of its line on top, its Koffing under. */
+  /** A hint card: the coins of its line on top (a coin beside the count), its Koffing under (a little Koffing beside theirs). */
   const drawHint = (g: CanvasRenderingContext2D, x: number, y: number, coinsN: number, koffingN: number) => {
     g.fillStyle = DARK
     g.fillRect(x, y, CARD, CARD)
@@ -278,10 +281,16 @@ const start = (ctx: SoloCtx): GameRun => {
     g.fillRect(x + 1, y + 1, CARD - 2, 10)
     g.fillStyle = '#4a3058'
     g.fillRect(x + 1, y + 11, CARD - 2, CARD - 12)
-    drawText(g, String(coinsN), x + CARD / 2, y + 3, '#402808', 'center')
-    g.drawImage(SWEEP_ART.coin(), x + 2, y + 13)
-    drawText(g, String(koffingN), x + CARD - 4, y + 13, '#ffffff', 'right')
-    void koffingN
+    g.drawImage(SWEEP_ART.coin(), x + 2, y + 3)
+    drawText(g, String(coinsN), x + CARD - 3, y + 3, '#402808', 'right')
+    for (let r = 0; r < MINI.length; r++)
+      for (let k = 0; k < MINI[r]!.length; k++) {
+        const ch = MINI[r]![k]!
+        if (ch === '.') continue
+        g.fillStyle = KOFFING_PAL[ch]!
+        g.fillRect(x + 2 + k, y + 13 + r, 1, 1)
+      }
+    drawText(g, String(koffingN), x + CARD - 3, y + 13, '#ffffff', 'right')
   }
 
   const draw = (g: CanvasRenderingContext2D) => {
@@ -322,9 +331,9 @@ const start = (ctx: SoloCtx): GameRun => {
     plate(g, p.x, p.y, w, 22)
     drawText(g, `LV ${board?.level ?? state?.level ?? 1}`, p.x + 4, p.y + 4, GOLD)
     g.drawImage(SWEEP_ART.token(), p.x + 4, p.y + 11)
-    drawText(g, formatNumber(state?.tokens ?? 0), p.x + 17, p.y + 13, '#ffffff')
+    drawText(g, String(state?.tokens ?? 0), p.x + 17, p.y + 13, '#ffffff')
     const pay = board && !board.over ? payNow() : lastPaid
-    drawText(g, `+${formatNumber(pay)}`, p.x + w - 4, p.y + 8, board?.over === 'koffing' ? '#a080c0' : GOLD, 'right', 1)
+    drawText(g, `+${pay}`, p.x + w - 4, p.y + 8, board?.over === 'koffing' ? '#a080c0' : GOLD, 'right', 1)
     drawFx(g, parts, pops)
   }
 

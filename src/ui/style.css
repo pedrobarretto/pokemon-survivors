@@ -30191,6 +30191,17 @@ span.arena-hub-face {
   image-rendering: pixelated;
 }
 
+.corner-art canvas {
+  width: 112px;
+  height: 104px;
+  image-rendering: pixelated;
+}
+
+.carpentry-detail-art.corner-art canvas {
+  width: 168px;
+  height: 156px;
+}
+
 .corner-art.bag img,
 .corner-art.title img,
 .corner-art.pack img {
@@ -30199,11 +30210,7 @@ span.arena-hub-face {
 }
 
 .corner-art.shadow {
-  background: radial-gradient(circle at 50% 62%, #b468f0 0 18%, #7a2cc0 19% 36%, #4a1478 37% 55%, #1c0828 56%);
-}
-
-.corner-art.shadow img {
-  filter: drop-shadow(0 0 0 #1c0828) drop-shadow(1px 0 0 #1c0828) drop-shadow(-1px 0 0 #1c0828);
+  background: radial-gradient(circle at 50% 60%, #3a1050 0 55%, #1c0828 56%);
 }
 
 .corner-kind {

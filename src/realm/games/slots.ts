@@ -46,17 +46,17 @@ let shown: { w: number; h: number } = SIZE()
 /** Where the machine's parts stand: the window, the bet lamps, the readouts and the two buttons. */
 const layoutOf = ({ w, h: ch }: { w: number; h: number }) => {
   const tall = ch > w
-  const win = { x: tall ? 26 : 22, y: tall ? 40 : 30 }
+  const win = { x: tall ? 39 : 22, y: tall ? 40 : 30 }
   const ww = CELL.w * 3 + GAP * 2
   return {
     tall,
     win,
     ww,
     wh: CELL.h * 3,
-    body: tall ? { x: 6, y: 6, w: 164, h: 170 } : { x: 6, y: 4, w: 144, h: 152 },
-    readout: tall ? { x: 18, y: 126 } : { x: 14, y: 118 },
-    bet: tall ? { x: 44, y: 212, r: 18 } : { x: 196, y: 108, r: 18 },
-    spin: tall ? { x: 128, y: 212, r: 22 } : { x: 262, y: 108, r: 22 },
+    body: tall ? { x: 6, y: 6, w: 164, h: 238 } : { x: 6, y: 4, w: 144, h: 152 },
+    readout: tall ? { x: 18, y: 128 } : { x: 14, y: 118 },
+    bet: tall ? { x: 50, y: 190, r: 18 } : { x: 178, y: 46, r: 18 },
+    spin: tall ? { x: 124, y: 190, r: 22 } : { x: 178, y: 112, r: 22 },
   }
 }
 
@@ -65,7 +65,7 @@ const start = (ctx: SoloCtx): GameRun => {
   const L = layoutOf(size)
   const m = () => t().rocket.slots
   const c = () => t().rocket.corner
-  const sheet = gameSheet(ctx.stage, size, L.tall ? { x: 176, y: 180, hug: true } : { x: 152, y: 160 })
+  const sheet = gameSheet(ctx.stage, size, L.tall ? { x: 176, y: 246, hug: true } : { x: 206, y: 160 })
   const say = sheet.show
 
   let state: CornerState | null = null
@@ -323,19 +323,26 @@ const start = (ctx: SoloCtx): GameRun => {
     const r = L.readout
     plate(g, r.x, r.y, L.tall ? 140 : 124, 24)
     g.drawImage(SWEEP_ART.token(), r.x + 4, r.y + 7)
-    const tokens = formatNumber(state?.tokens ?? 0)
+    // The in-world font has no thousands separator: plain digits.
+    const tokens = String(state?.tokens ?? 0)
     drawText(g, tokens, r.x + 18, r.y + 9, '#ffffff', 'left')
     const betText = `${spinCost(bet)}`
     drawText(g, betText, r.x + (L.tall ? 136 : 120), r.y + 9, GOLD, 'right')
     g.drawImage(SWEEP_ART.token(), r.x + (L.tall ? 122 : 106) - textWidth(betText), r.y + 7)
     // The controls: BET (cycling 1-3, its lamps) and the big red spin button.
     button(g, L.bet, '#d8a020', '#f8d048', betHeld)
-    drawText(g, String(bet), L.bet.x, L.bet.y - 4 + (betHeld ? 2 : 0), DARK, 'center', 2)
+    // The bet button carries a token per line the bet plays, stacked.
+    const token = SWEEP_ART.token()
+    for (let k = 0; k < bet; k++) g.drawImage(token, L.bet.x - 5 + (k - (bet - 1) / 2) * 4, L.bet.y - 8 + (betHeld ? 2 : 0) - k * 2)
     for (const k of BETS) {
       g.fillStyle = k <= bet ? GOLD : '#503010'
       g.fillRect(L.bet.x - 10 + (k - 1) * 8, L.bet.y + L.bet.r + 8, 5, 3)
     }
     button(g, L.spin, busy ? '#803030' : '#e02830', busy ? '#a04848' : '#ff7070', spinHeld || busy)
+    // A white play mark on the spin button.
+    const down = spinHeld || busy ? 2 : 0
+    g.fillStyle = '#ffffff'
+    for (let i = 0; i < 9; i++) g.fillRect(L.spin.x - 4 + i, L.spin.y - 9 + i + down, 1, 18 - i * 2)
     drawFx(g, parts, pops)
   }
 

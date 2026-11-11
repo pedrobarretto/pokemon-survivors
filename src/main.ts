@@ -125,7 +125,7 @@ import { parseReplay, recordEvent, recordStep, resimulate, RULES_VERSION, rulesS
 import { gameSpecial } from './game/special'
 import { unlockShinyStarter } from './game/shinyStarters'
 import { playsShiny } from './game/shinyPicks'
-import { runVariant, type ShadowSave } from './game/shadow'
+import { grantShadow, pickShadow, purifySteps, runVariant, type ShadowSave } from './game/shadow'
 import { canWalkWith, companionForm, OG_GIFT, SUPPORTER_TIERS, TIER_GIFTS, type CompanionId, type SupporterTier } from './game/supporters'
 import { createCompanion, stepCompanion, type CompanionView } from './render/companion'
 import { MOVES } from './game/moves'
@@ -4989,6 +4989,37 @@ if (import.meta.env.DEV) {
        * a table game against the bot (`'fourInRow'`, `'typeDuel'`). Its claim goes to the API (or `ps.realm('fake')`'s fakes).
        */
       minigame: devMinigame,
+      /**
+       * Shadow Pokémon (`game/shadow.ts`): `ps.shadow('charmander')` owns it as a Shadow and plays it so from the next run,
+       * `ps.shadow('charmander', 'ready')` fills its heart gauge, `('purified')` purifies it, `('off')` plays it Normal, `('drop')` forgets it.
+       */
+      shadow: (id: string = loadSave().partner, how: 'own' | 'ready' | 'purified' | 'off' | 'drop' = 'own') => {
+        if (!Object.hasOwn(PLAYABLE, id)) return 'ps.shadow: a Pokémon id'
+        const pid = id as PlayableId
+        updateSave((s) => {
+          const owned = grantShadow(s.shadows, pid)
+          const e = owned[pid]!
+          const next = how === 'drop' ? Object.fromEntries(Object.entries(s.shadows).filter(([k]) => k !== pid))
+            : how === 'ready' ? { ...owned, [pid]: { ...e, steps: purifySteps(pid) } }
+            : how === 'purified' ? { ...owned, [pid]: { ...e, steps: purifySteps(pid), purified: true } }
+            : how === 'off' ? pickShadow(owned, pid, false)
+            : pickShadow(owned, pid, true)
+          return { ...s, shadows: next }
+        })
+        return loadSave().shadows[pid] ?? 'dropped'
+      },
+      /**
+       * The Rocket Game Corner (faked API): `ps.corner('prizes')` or `ps.corner('tokens')` opens the counter on that page,
+       * `ps.corner('stage', 5000)` sets the faked tokens (a second number the Koffing Sweep level), `ps.minigame('slots')` and
+       * `ps.minigame('sweep')` its games; `ps.realm('room', 'gameCorner')` walks into the room.
+       */
+      corner: async (cmd: string = 'prizes', tokens?: number, level?: number) => {
+        const [{ fakeRealm }, { stageCorner }, { openCornerCounter }] = await Promise.all([realmMode(), import('./realm/cornerApi'), import('./ui/cornerCounter')])
+        fakeRealm(true, accountHandle() ?? 'you')
+        if (cmd === 'stage') return stageCorner(tokens, level)
+        if (cmd !== 'prizes' && cmd !== 'tokens') return "ps.corner: 'prizes', 'tokens' or 'stage'"
+        return setScreen(openCornerCounter(ui, input, { tab: cmd, close: () => showTitle() }))
+      },
       /**
        * The claw machine's faked state (after `ps.realm('fake')`, open it with `ps.minigame('claw')`): `ps.claw()` puts the week's
        * first plush one miss short of sure, `ps.claw(2, 4)` 4 misses on the week's third plush, `ps.claw(2, 4, 9)` also 9 credits used today.
