@@ -10,7 +10,9 @@ import { unlockShinyStarter } from './shinyStarters'
 /**
  * Capturing legends for the Legend mode: beating a legendary as a boss (any
  * mode) counts toward catching it, and once its `unlock.wins` are in, it's
- * playable. Arceus only counts in endless mode, and only once the other 22
+ * playable. The legends with a road of their own fall once, their own way
+ * (a roamer worn down across runs, a duel won, Hoopa's rush cleared), and
+ * Keldeo comes as a gift once the three Swords are caught. Arceus only counts in endless mode, and only once the other 22
  * regular legends are captured (an event legend, like Darkrai, never holds it
  * back). A festival legend (Cresselia) is never fought: its festival's
  * milestone gift captures it (`captureByGift`). A shiny one beaten on its
@@ -25,13 +27,17 @@ export type Captures = Readonly<Partial<Record<LegendId, number>>>
 export const NO_CAPTURES: Captures = {}
 
 /** Where a legend can be beaten: a rift, the trio's wave, the finale's rare guest, the finale itself, the endless mode's reaper, an event's rift; or the festival gift that brings it. */
-export type LegendSource = 'rift' | 'trio' | 'mythical' | 'finale' | 'endless' | 'event' | 'festival'
+export type LegendSource = 'rift' | 'trio' | 'mythical' | 'finale' | 'endless' | 'event' | 'festival' | 'roam' | 'duel' | 'swords' | 'rush'
 
 const inList = (list: readonly string[], id: LegendId) => list.includes(id)
 
 export const legendSource = (id: LegendId): LegendSource => {
   const unlock: LegendUnlock = LEGENDS[id].unlock
   if (unlock.festival) return 'festival'
+  if (unlock.swords) return 'swords'
+  if (unlock.roam) return 'roam'
+  if (unlock.duel) return 'duel'
+  if (unlock.rush) return 'rush'
   if (unlock.event) return 'event'
   if (unlock.endless) return 'endless'
   if (id === 'mewtwo') return 'finale'
@@ -53,10 +59,16 @@ export const stillMissing = (captures: Captures, id: LegendId): LegendId[] => RE
 
 const othersCaptured = (captures: Captures, id: LegendId) => stillMissing(captures, id).length === 0
 
-/** Whether a win over `id` right now counts toward capturing it: Arceus' only in endless mode, after the other 22; a festival legend's never. */
+/** Whether a win over `id` right now counts toward capturing it: Arceus' only in endless mode, after the other 22; a gift's legend's (a festival's, Keldeo) never. */
 export const winCounts = (captures: Captures, id: LegendId, endless: boolean) => {
   const unlock: LegendUnlock = LEGENDS[id].unlock
-  return !unlock.festival && (!unlock.endless || endless) && (!unlock.last || othersCaptured(captures, id))
+  return !unlock.festival && !unlock.swords && (!unlock.endless || endless) && (!unlock.last || othersCaptured(captures, id))
+}
+
+/** Whether a legend is caught its own way (a roamer worn down, a duel, the Swords' gift, Hoopa's rush) rather than by counting wins. */
+export const questSource = (id: LegendId) => {
+  const source = legendSource(id)
+  return source === 'roam' || source === 'duel' || source === 'swords' || source === 'rush'
 }
 
 /** The captures with `id` captured, as a gift brings it (a festival legend's milestone gift). */

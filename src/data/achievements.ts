@@ -129,7 +129,7 @@ export type MedalTitleId = { [K in AchievementId]: (typeof ACHIEVEMENTS)[K] exte
  * the Stamp Collector's for 30 Estampas in the Poké Realm (`STAMP_MILESTONES` in `data/realmStamps.ts`),
  * the Era 1 Legend's for a top place on an Era 1 board and the Era 1 Champion's for a #1 (`game/era1.ts`).
  */
-export const GIFT_TITLES = ['ambassador', 'supporter', 'pumpkinKing', 'exorcist', 'vipCustomer', 'tycoon', 'patron', 'ogSupporter', 'arenaPoke', 'arenaGreat', 'arenaUltra', 'arenaMaster', 'creator', 'friendLegend', 'stampCollector', 'era1Legend', 'era1Champion'] as const
+export const GIFT_TITLES = ['ambassador', 'supporter', 'pumpkinKing', 'exorcist', 'vipCustomer', 'tycoon', 'patron', 'ogSupporter', 'arenaPoke', 'arenaGreat', 'arenaUltra', 'arenaMaster', 'creator', 'friendLegend', 'stampCollector', 'era1Legend', 'era1Champion', 'spaceTime'] as const
 
 export type GiftTitleId = (typeof GIFT_TITLES)[number]
 

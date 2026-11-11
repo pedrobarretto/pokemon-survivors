@@ -1,4 +1,5 @@
 import { LAKE_TRIO, SWORDS, type LakeId } from '../data/legends'
+import { DIFFICULTY_IDS, type Difficulty } from './difficulty'
 import type { Captures } from './capture'
 import { isCaptured } from './capture'
 import { isRecord } from './parse'
@@ -44,3 +45,30 @@ export const wildOf = (save: { legends: Captures; roamers: Roamers }): WildStart
   lake: Object.fromEntries(LAKE_TRIO.flatMap((id) => (isCaptured(save.legends, id) ? [] : [[id, save.roamers[id] ?? 1]]))),
   swords: SWORDS.filter((id) => !isCaptured(save.legends, id)),
 })
+
+/** Hoopa's Rings cleared: each level's best time in seconds (a level cleared has one). */
+export type RushBest = Readonly<Partial<Record<Difficulty, number>>>
+
+export const NO_RUSH: RushBest = {}
+
+export const parseRushBest = (raw: unknown): RushBest =>
+  isRecord(raw)
+    ? Object.fromEntries(DIFFICULTY_IDS.flatMap((d) => {
+      const v = raw[d]
+      return typeof v === 'number' && Number.isFinite(v) && v > 0 ? [[d, v]] : []
+    }))
+    : NO_RUSH
+
+/** Both sides in one: each level's faster time. */
+export const mergeRushBest = (a: RushBest, b: RushBest): RushBest =>
+  Object.fromEntries(DIFFICULTY_IDS.flatMap((d) => {
+    const v = Math.min(a[d] ?? Infinity, b[d] ?? Infinity)
+    return Number.isFinite(v) ? [[d, v]] : []
+  }))
+
+/** The best times after clearing `difficulty` in `seconds`, and whether it's a record. */
+export const recordRush = (best: RushBest, difficulty: Difficulty, seconds: number): { best: RushBest; record: boolean } => {
+  const was = best[difficulty]
+  const record = was === undefined || seconds < was
+  return { best: record ? { ...best, [difficulty]: seconds } : best, record }
+}

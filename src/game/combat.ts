@@ -1,4 +1,5 @@
 import { dirTo } from '../engine/math'
+import { rushDown } from './rush'
 import { chance, range } from '../engine/rng'
 import { effectiveness, TYPE_COLORS, type PokeType } from '../data/types'
 import { ENEMY_BERRY_CHANCE } from '../data/consumables'
@@ -175,6 +176,8 @@ export const killEnemy = (g: Game, e: Enemy, source?: DamageSource | null) => {
   }
   // A Versus match rewards with Energy and EXP for the team, nothing else (`wildDown`).
   if (g.versus) return wildDown(g, e)
+  // Hoopa's Rings: a ring's legend down opens the next ring (`rushDown`); nothing drops.
+  if (g.rush) return rushDown(g, e)
   if (e.status.seed.time > 0) spreadSeed(g, e)
   if (e.status.poison.time > 0 && e.status.poison.move === VENOM_MOVE) spreadVenom(g, e)
   e.dying = 0

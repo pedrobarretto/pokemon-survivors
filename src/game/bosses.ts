@@ -727,7 +727,8 @@ const enrage = (g: Game, e: Enemy) => {
 export const updateBosses = (g: Game, tick: number) => {
   const reach = bossReach(g)
   for (const e of g.enemies) {
-    if (e.dying >= 0) continue
+    // A roaming lake legend runs, it doesn't fight (its phases are Hoopa's rings', `data/rush.ts`).
+    if (e.dying >= 0 || e.behavior.kind === 'roam') continue
     const phases = phasesOf(e.kind)
     if (e.fight === null && (phases || fightsInStances(e.kind))) {
       e.fight = createFight(g.rng, g.difficulty, { x: e.x, y: e.y })

@@ -98,6 +98,8 @@ export type GiftReason =
   | { kind: 'season'; way: 'find' | 'research' | 'fishing' | 'safari' | 'dig' }
   /** The Era 1 Hall da Fama (`game/era1.ts`): the tier, and the board and place that earned it. Sent by the API from its own boards. */
   | { kind: 'era1'; tier: Era1Tier; rank: number; side: Era1Side; difficulty: Difficulty }
+  /** A legend's road (`game/questGifts.ts`): all three Swords of Justice captured (Keldeo), or Dialga and Palkia (the title). Made by the game too. */
+  | { kind: 'quest'; way: 'swords' | 'creation' }
 
 export type Gift = { id: string; content: GiftContent; reason: GiftReason | null }
 

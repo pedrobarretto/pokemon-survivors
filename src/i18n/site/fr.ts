@@ -532,7 +532,7 @@ export const siteFr: SiteMessages = {
       opensHead: 'Capacité légendaire',
       pressureTitle: 'Difficultés en Mode Légendaire',
       pressure: 'La Pression s’ajoute à chaque difficulté : voici les multiplicateurs du Mode Légendaire.',
-      where: { rift: 'Faille légendaire', trio: 'Trio légendaire', mythical: 'Aux côtés de Mewtwo (1 sur 10, plus après chaque finale sans fabuleux)', finale: 'Boss final', endless: 'Mode sans fin, en tout dernier', event: 'Nuit des Sorcières 2026 (événement)', festival: 'Festival des Lanternes 2026 (prix)' },
+      where: { rift: 'Faille légendaire', trio: 'Trio légendaire', mythical: 'Aux côtés de Mewtwo (1 sur 10, plus après chaque finale sans fabuleux)', finale: 'Boss final', endless: 'Mode sans fin, en tout dernier', event: 'Nuit des Sorcières 2026 (événement)', festival: 'Festival des Lanternes 2026 (prix)', roam: 'Erre sur la carte (PV gardés entre les parties)', duel: 'Duel dans un biome qui lui va', swords: 'Cadeau des trois Épées de la Justice', rush: 'Venir à bout des Anneaux de Hoopa' },
       /** The event legends (`EVENT_LEGENDS`), after the table. */
       eventNote: 'Pendant la Nuit des Sorcières 2026 (du 24 octobre au 2 novembre), Darkrai arrive comme légendaire d’événement : il n’apparaît que dans la faille du Cauchemar, qui peut remplacer une faille lors d’une partie hantée, et 2 victoires le capturent. Il joue avec Dark Void, qui endort les foules, et l’inné Bad Dreams, qui blesse ceux qui dorment près de lui. Après l’événement, il retourne dans l’ombre, mais qui l’a capturé continue de le jouer. Il ne compte pas pour Arceus.',
     },

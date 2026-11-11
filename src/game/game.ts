@@ -37,6 +37,7 @@ import {
 } from './leveling'
 import { createMapEvents, updateMapEvents } from './mapEvents'
 import { createQuests, updateQuests, type WildStart } from './quests'
+import { updateRush } from './rush'
 import { createCurseState } from './curses'
 import { curseCast, decideCurse, updateCurses } from './curseSystem'
 import { updateDuos } from './duoMoves'
@@ -302,6 +303,7 @@ export const createRun = (view: Game['view'], seed: number, setups: readonly Pla
     landmarks: createLandmarkState(),
     finds: createSeasonFinds(seed),
     quests: createQuests(seed, options.wild, coop),
+    rush: null,
     tutors: 0,
     endless: null,
     tally: createTally(),
@@ -953,6 +955,7 @@ export const stepTeam = (g: Game, inputs: readonly StepInput[], dt: number) => {
   if (updatePlaceFall(g, dt)) return
   if (hitstopHolds(g, dt)) return
   if (g.training !== null) return stepTraining(g, inputs, dt)
+  if (g.rush !== null) return stepRush(g, inputs, dt)
 
   // The run clock stops inside a rift (`clockRuns`); `now` never does.
   g.now += dt
@@ -1052,6 +1055,40 @@ const stepTraining = (g: Game, inputs: readonly StepInput[], dt: number) => {
   updateEffects(g, dt)
   updateTraining(g, dt)
   followPlayers(g, dt, trainingCamera)
+}
+
+/**
+ * Hoopa's Rings' tick (`rush.ts`): the players and their moves against the
+ * ring's legend and its attacks, and the rings themselves. No horde, map
+ * events, weather or level-ups; the clock counts the rush.
+ */
+const stepRush = (g: Game, inputs: readonly StepInput[], dt: number) => {
+  g.now += dt
+  g.time += dt
+  const actor = g.player
+  for (const p of g.players) {
+    g.player = p
+    stepPlayer(g, inputs[p.slot] ?? STILL, dt)
+  }
+  g.player = actor
+  rebuildGrid(g)
+  updateEnemies(g, dt)
+  updateBosses(g, dt)
+  updateHazards(g, dt)
+  updateStatuses(g, dt)
+  rebuildGrid(g)
+  for (const p of g.players) {
+    g.player = p
+    stepMoves(g, inputs[p.slot] ?? STILL, dt)
+  }
+  g.player = actor
+  updateAttacks(g, dt)
+  updateVerbEvolved(g, dt)
+  updateTerrain(g, dt)
+  updatePickups(g, dt)
+  updateEffects(g, dt)
+  updateRush(g, dt)
+  followPlayers(g, dt, domainCamera)
 }
 
 /**

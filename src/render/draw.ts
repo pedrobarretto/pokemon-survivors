@@ -27,6 +27,7 @@ import { FX, HAZARD_FX, hostile, PICKUPS, SPARKLE, SPIT_FX } from './art'
 import { drawEvolvedAttack, drawEvolvedGround, drawFrost, drawShard } from './evolved'
 import { drawMapEventMarkers, drawMapEvents, markerInsets } from './mapEvents'
 import { drawQuestAir, drawQuestGround, drawQuestMarkers } from './quests'
+import { drawRushAir, drawRushGround } from './rush'
 import { ALPHA_PRIZE, alphaOutline, drawAlphaAir, drawAlphaGround, drawAlphaMarkers } from './alphas'
 import { drawScale } from '../game/alphas'
 import { drawMegaAir, drawMegaAttack, drawMegaGround, drawMegaStone, megaLook } from './megaFx'
@@ -1025,6 +1026,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   drawOmenGround(ctx, g)
   drawDomainGround(ctx, g, t)
   if (!indoors) drawQuestGround(ctx, g, t)
+  drawRushGround(ctx, g, t)
   drawNightmareGround(ctx, g, t)
   // Breakables, dressed by the biome each stands in.
   drawProps(ctx, g, t)
@@ -1144,6 +1146,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   drawCapture(ctx, g, t)
   drawDomainAir(ctx, g, t)
   drawQuestAir(ctx, g, t)
+  drawRushAir(ctx, g, t)
   drawNightmareAir(ctx, g, t)
   drawLegendScene(ctx, g, t)
 

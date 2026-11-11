@@ -55,6 +55,9 @@ export const LAKE_TRIO = ['uxie', 'mesprit', 'azelf'] as const satisfies readonl
 export const SWORDS = ['cobalion', 'terrakion', 'virizion'] as const satisfies readonly (typeof QUEST_LEGENDS)[number][]
 
 export type LakeId = (typeof LAKE_TRIO)[number]
+
+/** Whether a legend is one of the roaming lake trio. */
+export const isLakeLegend = (id: string): id is LakeId => LAKE_TRIO.some((l) => l === id)
 export type SwordId = (typeof SWORDS)[number]
 
 /** Every playable legend: the regular ones, then the event ones, the festival ones and the ones with a road of their own. */

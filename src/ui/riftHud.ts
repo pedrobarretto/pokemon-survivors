@@ -6,6 +6,7 @@ import type { Game } from '../game/types'
 import { t } from '../i18n'
 import { h, setText } from './dom'
 import { questPill } from './quests'
+import { rushPill } from './rush'
 
 type Pill = { text: string; kind: 'portal' | 'arena' | 'endless' | 'reaper' | 'place' | 'quest'; urgent: boolean } | null
 
@@ -55,6 +56,8 @@ const pillFor = (g: Game): Pill => {
     const p = t().places
     return { text: p.hudOpen(p.hudNames[ent.id], formatTime(Math.ceil(ent.left))), kind: 'place', urgent: ent.left < 8 }
   }
+  const rush = rushPill(g)
+  if (rush) return { text: rush, kind: 'quest', urgent: false }
   const quest = questPill(g)
   if (quest) return { text: quest.text, kind: 'quest', urgent: quest.urgent }
   const s = g.endless
