@@ -375,10 +375,13 @@ const rifts = (locale: Locale, m: SiteMessages) => {
 const legends = (locale: Locale, m: SiteMessages) => {
   const g = m.guide.legends
   // A festival legend (Cresselia) is a surprise for now: its row comes with its festival's announcement.
+  // A path legend is never won in fights: its column says what its path asks instead.
+  const need: Partial<Record<LegendId, string>> = g.need
+  const capture = (id: LegendId) => need[id] ?? g.wins(LEGENDS[id].unlock.wins)
   const rows = LEGEND_IDS.filter((id) => !legendFestival(id)).map((id) => [
     legendName(locale, id),
     g.where[legendSource(id)],
-    String(LEGENDS[id].unlock.wins),
+    capture(id),
     ABILITIES[LEGENDS[id].innate.ability].name,
     MOVES[LEGENDS[id].signature].name,
   ])
