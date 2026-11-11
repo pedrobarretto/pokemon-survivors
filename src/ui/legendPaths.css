@@ -500,3 +500,10 @@
     margin: auto 0;
   }
 }
+
+/* The partner select's way into a path legend's sheet (ui/starterSelect.ts). */
+.partner-path {
+  align-self: flex-start;
+  margin-top: 6px;
+  font-size: 20px;
+}

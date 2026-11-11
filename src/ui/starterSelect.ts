@@ -8,7 +8,7 @@ import { megasOf } from '../data/megas'
 import { bodyOf } from '../data/bodies'
 import { DIFFICULTY_IDS, type Difficulty } from '../game/difficulty'
 import { incubatorSlots, isReady } from '../game/eggs'
-import { isLegend, legendEvent, legendFestival, LEGENDS, REGULAR_LEGENDS, type LegendId } from '../data/legends'
+import { isLegend, legendEvent, legendFestival, legendPath, LEGENDS, REGULAR_LEGENDS, type LegendId } from '../data/legends'
 import { HALLOWEEN } from '../data/halloween'
 import { brasiliaDay } from '../game/day'
 import { claimOpen, festivalById, festivalEnd, shownLegends } from '../game/festival'
@@ -192,7 +192,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
   /** Opens a path's sheet over the select (its keys wait until it closes). */
   let pathOpen: Screen | null = null
   const pathButton = (path: PathId) =>
-    h('button', { class: 'partner-more compact partner-path', type: 'button', onclick: () => (playSfx('select'), (pathOpen = pathSheet(root, input, path, { close: () => (pathOpen = null) }))) }, m.paths.open, ' ▸')
+    h('button', { class: 'arc-chip partner-path', type: 'button', onclick: () => (playSfx('select'), (pathOpen = pathSheet(root, input, path, { close: () => (pathOpen = null) }))) }, m.paths.open, ' ▸')
   /** A captured path legend with forms still ahead (Zygarde, Kubfu, Meltan): the way to see where its path stands. */
   const pathAfter = (id: PlayableId) => {
     const path = isLegend(id) ? pathOfLegend(id) : null
@@ -267,7 +267,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
         onclick: () => select(id),
       },
       open ? cellPortrait(id) : cellSilhouette(id),
-      !open && !legendFestival(id) && h('b', { class: 'partner-cell-count' }, wins),
+      !open && !legendFestival(id) && !legendPath(id) && h('b', { class: 'partner-cell-count' }, wins),
       eventTag(id),
       shinyOf(id) && shinyTag(),
       clearTag(id),
