@@ -18,6 +18,14 @@ let cellOf = new Int32Array(0)
 let sorted = new Int32Array(0)
 let starts = new Int32Array(0)
 
+/**
+ * Share of a pair's overlap settled per tick. Settling each pair from both
+ * sides, half each, held a crowd back like this does at 0.7 (a horde walking
+ * on a player for 15 s from the same late-run spots gathers as close), so the
+ * horde presses in no harder than it did.
+ */
+export const STIFFNESS = 0.7
+
 /** The grid's cell (px), and the most cells it spans before it coarsens (bodies spread far apart, a co-op team split up). */
 const CELL = 32
 const MAX_CELLS = 1 << 16
@@ -28,7 +36,7 @@ const MAX_CELLS = 1 << 16
  * are filed in cells where they stand as the pass starts; a body reads the
  * cells within twice its radius and settles the pairs it finds with the
  * bodies after it in `bodies`: both move apart by their share of the
- * overlap (the heavier one less), half the overlap per tick between them.
+ * overlap (the heavier one less), `STIFFNESS` of it per tick between them.
  * Twice its radius takes in any overlap with a body up to 1.5 times its
  * size, so a body bigger than that also settles its pairs with the smaller
  * ones before it (now and then one the smaller had found too, which then
@@ -43,11 +51,10 @@ const MAX_CELLS = 1 << 16
  * avatar; a dying or airborne one doesn't). Both are read again for each
  * overlapping pair, as a body may faint meanwhile. `touch(e, o)` hears every
  * overlapping pair, both ways for two pushers, before the push: body blows
- * go through it. Nothing it calls may move a body. `settles(b)`: whether
- * `b` settles its pairs this pass (it's still pushed by the ones that do).
+ * go through it. Nothing it calls may move a body.
  */
 export const separate = <T extends Separable>(
-  bodies: readonly T[], pushes: (b: T) => boolean, solid: (b: T) => boolean, touch: (e: T, o: T) => void, settles: (b: T) => boolean = () => true,
+  bodies: readonly T[], pushes: (b: T) => boolean, solid: (b: T) => boolean, touch: (e: T, o: T) => void,
 ) => {
   const count = bodies.length
   if (kinds.length < count) {
@@ -117,8 +124,8 @@ export const separate = <T extends Separable>(
   for (let i = 0; i < count; i++) {
     if (kind[i] !== PUSH) continue
     const e = bodies[i]!
-    // It may have fainted to a body blow since, or sit this pass out.
-    if (!pushes(e) || !settles(e)) continue
+    // It may have fainted to a body blow since.
+    if (!pushes(e)) continue
     const r = pr[i]!
     let ex = px[i]!
     let ey = py[i]!
@@ -147,7 +154,7 @@ export const separate = <T extends Separable>(
         if (both) touch(o, e)
         if (d2 === 0) continue
         const d = Math.sqrt(d2)
-        const share = ((min - d) / d / (e.mass + o.mass)) * 0.5
+        const share = ((min - d) / d / (e.mass + o.mass)) * STIFFNESS
         const pe = share * o.mass
         ex += dx * pe
         ey += dy * pe

@@ -117,14 +117,6 @@ const LOST_PACE = 0.55
 const SHY_FEAR = 110
 /** A thrown foe stops hurting others once its knockback drops under this speed (px/s). */
 const THROWN_MIN = 90
-/**
- * Px beyond every player's screen past which a foe settles its separation
- * (`separate`) only every other tick, staggered by id: nobody sees those
- * crowds, and one walking in is back to every tick before it shows. A
- * thrown or confused one always does, so its body blows land.
- */
-const OFFSCREEN_MARGIN = 32
-
 /** Whether a foe pushes off its neighbors and is pushed (`separate`): not while fainting, in the air or as an Arena avatar. */
 const separates = (e: Enemy) => e.dying < 0 && !isAirborne(e) && e.behavior.kind !== 'avatar'
 /** Whether a foe can be bumped into: not while fainting or in the air. */
@@ -339,10 +331,9 @@ export const updateEnemies = (g: Game, dt: number) => {
 
   // Separation: overlapping enemies push each other apart so hordes form rings, not blobs (`separate`);
   // a thrown or confused one bumping into another lands a body blow.
-  const turn = dt > 0 ? Math.floor(g.now / dt + 0.5) : 0
   separate(g.enemies, separates, bumpable, (e, o) => {
     if (e.thrown || e.status.confuse.time > 0) bodyBlow(g, e, o)
-  }, (e) => (e.id + turn) % 2 === 0 || e.thrown !== null || e.status.confuse.time > 0 || onAnyScreen(g, e.x, e.y, OFFSCREEN_MARGIN))
+  })
 
   // Then bodies keep out of the players and deal contact damage: a pass over the horde as it stood
   // (as `forEach` walks it), so a foe added meanwhile waits for the next tick.

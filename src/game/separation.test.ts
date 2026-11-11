@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createRng, range } from '../engine/rng'
-import { separate, type Separable } from './separation'
+import { separate, STIFFNESS, type Separable } from './separation'
 
 type Body = Separable & { id: number; pushes: boolean }
 
@@ -37,7 +37,7 @@ describe('separate', () => {
       const dx = a.x - b.x
       const dy = a.y - b.y
       const d = Math.sqrt(dx * dx + dy * dy)
-      const share = ((((a.radius + b.radius) * 0.8 - d) / d / (a.mass + b.mass)) * 0.5)
+      const share = (((a.radius + b.radius) * 0.8 - d) / d / (a.mass + b.mass)) * STIFFNESS
       // A body that doesn't push stays put, and its partner takes only its own share.
       const pa = a.pushes ? share * b.mass : 0
       const pb = b.pushes ? share * a.mass : 0
