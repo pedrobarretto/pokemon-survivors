@@ -379,7 +379,9 @@ const start = (ctx: SoloCtx): GameRun => {
     const coin = SWEEP_ART.coin()
     const ck = C >= 30 ? 2 : 1
     g.drawImage(coin, x + 3, y + Math.round((half - coin.height * ck) / 2), coin.width * ck, coin.height * ck)
-    drawText(g, String(coinsN), x + C - 3, y + Math.round((half - 5 * tk) / 2), '#402808', 'right', tk, '#f8e8b0')
+    // A two-digit count drops to the small digits where the big ones would run into the coin.
+    const ctk = textWidth(String(coinsN), tk) > C - 8 - coin.width * ck ? 1 : tk
+    drawText(g, String(coinsN), x + C - 3, y + Math.round((half - 5 * ctk) / 2), '#402808', 'right', ctk, '#f8e8b0')
     rows(g, MINI, KOFFING_PAL, x + 3, y + half + Math.round((C - half - 5 * ck) / 2), ck)
     drawText(g, String(koffingN), x + C - 3, y + half + Math.round((C - half - 5 * tk) / 2), '#ffffff', 'right', tk, '#4a3058')
   }
