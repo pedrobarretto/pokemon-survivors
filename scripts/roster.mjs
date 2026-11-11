@@ -7,7 +7,7 @@
 // Usage: npm run roster && npm run assets
 import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { BOSSES, COMPANIONS, CRITTERS, HIDDEN_DWELLERS, PLACE_BOSSES, STARTERS, TRAITS, pad } from './dex.mjs'
+import { BOSSES, COMPANIONS, CRITTERS, HIDDEN_DWELLERS, PLACE_BOSSES, RECOLORED_SHINIES, STARTERS, TRAITS, pad } from './dex.mjs'
 import { NATIONAL_LAST, nationalSpecies } from './pokeapi.mjs'
 
 const ROOT = new URL('..', import.meta.url).pathname
@@ -56,12 +56,12 @@ const json = async (url) => {
 /** Whether SpriteCollab has every anim we draw for the species' normal form. */
 const drawn = (tracker, dex) => ANIMS.every((a) => a in (tracker[pad(dex)]?.sprite_files ?? {}))
 
-/** Every anim we draw exists in the normal and the shiny (`0000/0001`) form. */
+/** Every anim we draw exists in the normal and the shiny (`0000/0001`) form, or the shiny is one we recolor (`RECOLORED_SHINIES`). */
 const brokenSprites = (tracker, dex) => {
   const node = tracker[pad(dex)]
   const shiny = node?.subgroups?.['0000']?.subgroups?.['0001']
   const missing = (n) => ANIMS.filter((a) => !(a in (n?.sprite_files ?? {})))
-  const problems = [...missing(node).map((a) => a), ...missing(shiny).map((a) => `shiny ${a}`)]
+  const problems = [...missing(node).map((a) => a), ...(dex in RECOLORED_SHINIES ? [] : missing(shiny).map((a) => `shiny ${a}`))]
   return problems.length > 0 ? problems.join(', ') : null
 }
 

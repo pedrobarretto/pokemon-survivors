@@ -11536,6 +11536,22 @@
     },
     "capture": 255
   },
+  "naclstack": {
+    "dex": 933,
+    "name": "Naclstack",
+    "types": [
+      "rock"
+    ],
+    "stats": {
+      "hp": 60,
+      "attack": 60,
+      "defense": 100,
+      "spAttack": 35,
+      "spDefense": 65,
+      "speed": 35
+    },
+    "capture": 120
+  },
   "garganacl": {
     "dex": 934,
     "name": "Garganacl",

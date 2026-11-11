@@ -113,6 +113,7 @@ export const ROCKET_CAST = [53, 23, 24, 109, 110]
 /** Terastal's legend (`LEGENDS.terapagos`, the 7★ Tera Raid's giant): Terapagos, playable in Legend mode, its Terastal Form at the first awakening. */
 export const TERA_LEGENDS = [1024]
 /** The Ultra Beasts (src/data/ultraBeasts.ts): the Ultra Wormholes' ten, fought and captured, and Poipole, the gift for capturing them all. */
+export const ULTRA_BEASTS = [793, 794, 795, 796, 797, 798, 799, 803, 804, 805, 806]
 export const DEX = [...new Set([...STARTERS, ...HATCHLINGS, ...ROCKET_FAMILIES, ...ROCKET_CAST, ...HORDE, ...TRAITS, ...BOSSES, ...CRITTERS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...CAMEOS, ...FESTIVAL_LEGENDS, ...REAPER, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...COMPANIONS, ...HALLOWEEN_BOSSES, ...SHOPKEEPERS, ...TERA_LEGENDS, ...ULTRA_BEASTS])]
 /**
  * The Arena's emotes (`emote` in src/data/arenaEffects.ts, `EMOTE_ANIMS` there too): extra SpriteCollab
