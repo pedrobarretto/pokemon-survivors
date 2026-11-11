@@ -497,16 +497,16 @@ const openTower = () => {
   const sheet = r.overlay
 }
 
-/** A Torre trial won: into the save, and a word on what it brought (Kubfu joining, Urshifu's style). */
-const bankTrial = (id: TrialId) => {
+/** A Torre trial won: into the save; returns a word on what it brought (Kubfu joining, Urshifu's style), or null. */
+const bankTrial = (id: TrialId): string | null => {
   const before = loadSave().paths.trials
   updateSave((s) => ({ ...s, paths: { ...s.paths, trials: clearTrial(s.paths.trials, id) } }))
   void syncSave()
   const after = loadSave().paths.trials
   const m = t().paths.tower
   const tower = towerOf(after)
-  if (!kubfuJoined(before) && kubfuJoined(after)) news(rich(m.kubfu), 5200, 'dojo')
-  else if (tower && !towerOf(before)) news(rich(m.urshifu(m.styles[tower])), 5200, 'dojo')
+  if (!kubfuJoined(before) && kubfuJoined(after)) return m.kubfu
+  return tower && !towerOf(before) ? m.urshifu(m.styles[tower]) : null
 }
 
 /**
@@ -1653,7 +1653,7 @@ const startDojo = async (starter: PlayableId, trial: TrialId | null = null) => {
         : null
     if (!trial) dojoPartner = starter
     const panel: DojoPanel = trial ? trialHud(ui, game, {
-      ended: (won) => (won ? bankTrial(trial) : undefined),
+      ended: (won) => (won ? bankTrial(trial) : null),
       retry: () => void startDojo(starter, trial),
       back: () => void startDojo(dojoPartner, null).then(() => openTower()),
     }) : trainingPanel(ui, game, {

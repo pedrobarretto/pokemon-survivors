@@ -507,3 +507,46 @@
   margin-top: 6px;
   font-size: 20px;
 }
+
+.trial-result-news {
+  max-width: 340px;
+  margin: 0;
+  color: #fff;
+  font-size: 20px;
+  line-height: 1.25;
+  text-align: center;
+}
+
+/* A phone held sideways: the sheet tightens so its rows show under the intro. */
+@media (max-height: 500px) {
+  .path-sheet .lobby-sheet-head h2 {
+    font-size: 28px;
+  }
+
+  .path-npc {
+    padding: 6px 8px;
+  }
+
+  .path-npc-face,
+  .path-cosmog-face {
+    width: 48px;
+    height: 48px;
+  }
+
+  .path-npc-text p,
+  .path-note,
+  .path-lean,
+  .path-trial p {
+    font-size: 16px;
+  }
+
+  .path-npc-name,
+  .path-trial-head b {
+    font-size: 20px;
+  }
+
+  .path-cube {
+    width: 128px;
+    height: 128px;
+  }
+}

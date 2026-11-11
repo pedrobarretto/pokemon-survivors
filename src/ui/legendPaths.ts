@@ -5,7 +5,7 @@ import { COSMOG, COSMOG_DEX, FLOORS, MELTAN, REGIGIGAS, TOWERS, TRIALS, ZYGARDE,
 import { LEGENDS } from '../data/legends'
 import { MOVES } from '../game/moves'
 import { isCaptured } from '../game/capture'
-import { cosmogHere, cosmogLean, cosmogStage, cubePieces, sunHour, towerOf, trialOpen } from '../game/legendPaths'
+import { cosmogHere, cosmogLean, cosmogStage, cubePieces, kubfuJoined, sunHour, towerOf, trialOpen } from '../game/legendPaths'
 import type { Save } from '../game/meta'
 import { formatNumber, t } from '../i18n'
 import { closeIcon } from '../render/art'
@@ -171,14 +171,10 @@ const kubfuBody = (save: Save, start: ((id: TrialId) => void) | null, close: () 
     )
   }
   const styleLine = tower ? [h('p', { class: 'path-lean' }, rich(m.urshifu(m.styles[tower])))] : []
-  return [
-    h('p', { class: 'path-note' }, m.intro),
-    ...FLOORS.map(card),
-    h('h3', { class: 'path-sub' }, LEGENDS.kubfu.name, ' → Urshifu'),
-    h('p', { class: 'path-note' }, m.chooseNote),
-    h('div', { class: 'path-towers' }, ...TOWERS.map(card)),
-    ...styleLine,
-  ]
+  const towers = [h('h3', { class: 'path-sub' }, LEGENDS.kubfu.name, ' → Urshifu'), h('p', { class: 'path-note' }, m.chooseNote), h('div', { class: 'path-towers' }, ...TOWERS.map(card)), ...styleLine]
+  // With every floor cleared, the towers come first: they're what's left.
+  const floors = FLOORS.map(card)
+  return [h('p', { class: 'path-note' }, m.intro), ...(kubfuJoined(trials) ? [...towers, ...floors] : [...floors, ...towers])]
 }
 
 const meltanBody = (save: Save) => {
@@ -206,10 +202,11 @@ const regiBody = (save: Save) => {
   ]
 }
 
-/** What the path's Pokémon says: all of it, but once Cosmog came, only how it grows (the research is behind). */
+/** What the path's Pokémon says: all of it the first time; once Cosmog came, only how it grows; once a Torre trial is cleared, only its first line. */
 const introLines = (path: PathId, save: Save): readonly string[] => {
   const lines = t().paths.intro[path]
-  return path === 'cosmog' && cosmogHere(save.paths.cosmog) ? lines.slice(-1) : lines
+  if (path === 'cosmog' && cosmogHere(save.paths.cosmog)) return lines.slice(-1)
+  return path === 'kubfu' && save.paths.trials.length > 0 ? lines.slice(0, 1) : lines
 }
 
 /**

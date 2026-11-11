@@ -2,7 +2,7 @@ import { playSfx } from '../engine/audio'
 import { TRIALS, type TrialDef } from '../data/legendPaths'
 import type { Game } from '../game/types'
 import { formatNumber, t } from '../i18n'
-import { h, setText } from './dom'
+import { h, rich, setText } from './dom'
 import { trialLoadout } from './legendPaths'
 import type { Screen } from './screens'
 
@@ -13,8 +13,8 @@ import type { Screen } from './screens'
  */
 
 export type TrialHudActions = {
-  /** The trial just ended (once): `won` or not. */
-  ended: (won: boolean) => void
+  /** The trial just ended (once): `won` or not; what it brought, said under the result (Kubfu joining, Urshifu's style), or null. */
+  ended: (won: boolean) => string | null
   /** Plays the trial again. */
   retry: () => void
   /** Back to the Dojo and the Torre's sheet. */
@@ -55,9 +55,10 @@ export const trialHud = (root: HTMLElement, g: Game, actions: TrialHudActions): 
   const finish = (won: boolean) => {
     ended = true
     playSfx(won ? 'levelUp' : 'denied')
-    actions.ended(won)
+    const news = actions.ended(won)
     result.replaceChildren(
       h('b', { class: 'arc-outline trial-result-title' }, won ? m.won : m.lost),
+      ...(news ? [h('p', { class: 'trial-result-news' }, rich(news))] : []),
       h(
         'div',
         { class: 'trial-result-actions' },
