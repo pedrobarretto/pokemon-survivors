@@ -175,10 +175,10 @@ const CROWN: BallArt = [
   { 1: '#2a1404', 2: '#f8d030', 3: '#b87818', 4: '#fff4c0', 5: '#e02848', 7: '#ff9cb0', 8: '#f8f8f8' },
 ]
 
-/** The Pokédex's big blue lens in its red ring, for the National Dex frame's corners (1 outline, 3 the red ring, 4 the lens, 5 its light, 6 the glint). */
+/** The Pokédex's big blue lens in its white rim, for the National Dex frame's corners (1 outline, 3 the rim, 4 the lens, 5 its light, 6 the glint). */
 const DEX_LENS: BallArt = [
   ['..111..', '.13331.', '1365431', '1354441', '1344441', '.13331.', '..111..'],
-  { 1: '#200c10', 3: '#e03030', 4: '#2878d8', 5: '#78c8f8', 6: '#ffffff' },
+  { 1: '#200c10', 3: '#f0f0f8', 4: '#2878d8', 5: '#78c8f8', 6: '#ffffff' },
 ]
 
 export const CARD_FRAMES = {
