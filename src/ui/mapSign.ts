@@ -24,8 +24,34 @@ export const announceMap = (root: HTMLElement, run: object, g: Game) => {
   dropMapSign(root)
   const m = t().maps
   const id = g.terrain.archetype
-  root.append(h('div', { class: 'landmark-sign map-sign', 'aria-live': 'polite' }, h('b', {}, m.names[id]), h('small', {}, m.flavor[id]), mapGoodFor(id)))
+  const sign = h('div', { class: 'landmark-sign map-sign', 'aria-live': 'polite' }, h('b', {}, m.names[id]), h('small', {}, m.flavor[id]), mapGoodFor(id))
+  // Its slide ends hidden (`steps(1) both`): from then on it no longer holds the news back (`afterMapSign`).
+  sign.addEventListener('animationend', () => sign.classList.add('done'), { once: true })
+  root.append(sign)
   playSfx('select')
+}
+
+/**
+ * Runs `show` once the map's sign is off the screen, at once when none is up:
+ * a big line that comes as the run starts (an Ultra Wormhole's or a rift's
+ * omen) waits its turn instead of landing over the sign.
+ */
+export const afterMapSign = (root: HTMLElement, show: () => void) => {
+  const sign = root.querySelector<HTMLElement>(':scope > .map-sign:not(.done)')
+  if (!sign) return show()
+  let shown = false
+  const once = () => {
+    if (shown) return
+    shown = true
+    observer.disconnect()
+    show()
+  }
+  sign.addEventListener('animationend', once, { once: true })
+  // Taken down early (a landmark's sign, a new run): the line goes out then.
+  const observer = new MutationObserver(() => {
+    if (!sign.isConnected) once()
+  })
+  observer.observe(root, { childList: true })
 }
 
 /** Takes the map's sign down (a landmark's sign takes its place, a new run brings its own). */

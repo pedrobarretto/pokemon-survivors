@@ -112,7 +112,7 @@ import { rushDevTools } from './game/rushDev'
 import { placeDevTools } from './game/placeDev'
 import { placeFeedback } from './ui/places'
 import { landmarkFeedback } from './ui/landmarks'
-import { announceMap } from './ui/mapSign'
+import { afterMapSign, announceMap } from './ui/mapSign'
 import { MAP_ARCHETYPE_IDS, type MapArchetypeId } from './data/mapArchetypes'
 import { PLACES } from './data/places'
 import { kitDevTools } from './game/kitDev'
@@ -2546,9 +2546,13 @@ const handleEvent = (r: Run, e: GameEvent) => {
       // Rayquaza's Air Lock ends what Kyogre or Groudon stirred up earlier in the run.
       const calmed = e.enemy === 'rayquaza' ? g.rift.met.find((l) => l === 'kyogre' || l === 'groudon') : undefined
       const nod = calmed ? ` ${t().rifts.calms(ENEMIES[calmed].name)}` : ''
-      // An Ultra Wormhole's omen says what's coming through, in co-op (no domain lines' sky) too.
-      if (isUltraBeast(e.enemy)) return news(rich(`${lines ? `${lines.omen} ` : ''}${t().ultra.omen(ENEMIES[e.enemy].name)}`), 4600)
-      return news(rich(lines ? `${lines.omen}${nod} ${t().rifts.omen(ENEMIES[e.enemy].name)}` : t().rifts.omenFaint), 4200)
+      // An Ultra Wormhole's omen says what's coming through, in co-op (no domain lines' sky) too. Either waits for the map's sign to go.
+      if (isUltraBeast(e.enemy)) {
+        const line = `${lines ? `${lines.omen} ` : ''}${t().ultra.omen(ENEMIES[e.enemy].name)}`
+        return afterMapSign(ui, () => news(rich(line), 4600))
+      }
+      const line = lines ? `${lines.omen}${nod} ${t().rifts.omen(ENEMIES[e.enemy].name)}` : t().rifts.omenFaint
+      return afterMapSign(ui, () => news(rich(line), 4200))
     }
     case 'riftEnter': {
       const def = ENEMIES[e.enemy]
