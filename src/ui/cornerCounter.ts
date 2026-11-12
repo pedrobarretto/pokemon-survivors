@@ -1,6 +1,6 @@
 import { accountState } from '../account'
 import { HATCHLINGS } from '../data/hatchlings'
-import { CORNER_PRIZE_IDS, CORNER_PRIZES, prizeOnce, ROCKET_FRAME, ROCKET_TITLE, type CornerPrizeId } from '../data/rocketCorner'
+import { CORNER_PRIZE_IDS, CORNER_PRIZES, prizeOnce, ROCKET_FRAME, ROCKET_TITLE, type CornerPrize, type CornerPrizeId } from '../data/rocketCorner'
 import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
 import { formatNumber, t } from '../i18n'
@@ -36,6 +36,9 @@ const clerk = (): Speaker => ({
 })
 
 export type CornerTab = 'prizes' | 'tokens'
+
+/** The prize page's sections, by kind: the families, their Shadows, the Bag's items, and the card's title and frame. */
+const SECTIONS: readonly (readonly CornerPrize['kind'][])[] = [['family'], ['shadow'], ['bag'], ['title', 'frame']]
 
 export type CornerCounterOpts = { tab: CornerTab; close: () => void }
 
@@ -135,6 +138,8 @@ export const openCornerCounter = (root: HTMLElement, input: Input, opts: CornerC
     const def = CORNER_PRIZES[id]
     const have = taken(id)
     const short = (state?.tokens ?? 0) < def.price
+    // A family the save doesn't have yet wears the NOVO tag, as the Safári's board does.
+    const fresh = def.kind === 'family' && !have
     return h(
       'button',
       { class: `carpentry-card corner-card ${def.kind}${have ? ' owned' : ''}${short && !have ? ' short' : ''}`, type: 'button', onclick: () => !busy && show(id) },
@@ -143,6 +148,7 @@ export const openCornerCounter = (root: HTMLElement, input: Input, opts: CornerC
       h('b', { class: 'carpentry-name' }, c().prizes[id]),
       h('span', { class: 'carpentry-owned' }, have ? c().owned : ''),
       h('span', { class: 'carpentry-tag' }, tokenTag(def.price)),
+      fresh && h('em', { class: 'arc-tag new corner-new' }, t().minigames.safari.fresh),
     )
   }
 
@@ -204,7 +210,7 @@ export const openCornerCounter = (root: HTMLElement, input: Input, opts: CornerC
     setText(tokens, formatNumber(state?.tokens ?? 0))
     if (tab === 'prizes') {
       pageHead.replaceChildren(h('b', { class: 'carpentry-page-name' }, c().prizesTitle), h('span', { class: 'carpentry-page-blurb' }, c().prizesNote))
-      grid.replaceChildren(...CORNER_PRIZE_IDS.map(prizeCard))
+      grid.replaceChildren(...SECTIONS.flatMap((kinds) => [h('b', { class: 'corner-section' }, kinds.map((k) => c().kinds[k]).join(' · ')), ...CORNER_PRIZE_IDS.filter((id) => kinds.includes(CORNER_PRIZES[id].kind)).map(prizeCard)]))
     } else {
       pageHead.replaceChildren(
         h('b', { class: 'carpentry-page-name' }, c().buyTitle),

@@ -24,7 +24,7 @@ import { MEOWTH_DEX } from '../game/mapEventRules'
 import { SPECIAL_COMPANION_IDS, SPECIAL_COMPANIONS, type SpecialCompanionId } from '../data/companions'
 import { TAILOR } from '../data/visitors'
 import { isUltraBeast, WORMHOLE } from '../data/ultraBeasts'
-import { EVENT_LEGENDS, giftLegend, LEGEND_IDS, LEGENDS, legendFestival, PATH_LEGENDS, type LegendId } from '../data/legends'
+import { EVENT_LEGENDS, eggLegend, giftLegend, LEGEND_IDS, LEGENDS, legendFestival, PATH_LEGENDS, type LegendId } from '../data/legends'
 import { COSMOG_DEX, PATH_FORMS, REGIGIGAS } from '../data/legendPaths'
 import { nationalDex } from '../data/regionalForms'
 
@@ -189,9 +189,9 @@ const cosmogEntries = (): DexEntry[] => [
 /** Who a family's mechanic calls in (Tatsugiri's Dondozo), as event Pokémon. */
 const summonEntries = (): DexEntry[] => [{ ...base(977, 'Dondozo', ['water']), role: 'event', source: { kind: 'summon' } }]
 
-/** The legends only ever given, never fought (Poipole): no wild entry stands for them. */
+/** The legends only ever given, never fought (Poipole, Manaphy from its egg): no wild entry stands for them. */
 const giftEntries = (): DexEntry[] =>
-  LEGEND_IDS.filter(giftLegend).map((id) => {
+  LEGEND_IDS.filter((id) => giftLegend(id) || eggLegend(id)).map((id) => {
     const own = LEGENDS[id].line[0]
     return { ...base(own.dex, own.name, own.types), role: 'legendary', source: { kind: 'gift', id } }
   })

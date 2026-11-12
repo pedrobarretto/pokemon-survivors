@@ -1,7 +1,8 @@
-import { spendFromSave } from '../account'
+import { spendFromSave, stageGifts } from '../account'
 import { apiCall } from '../api'
 import { HATCHLING_IDS, PLAYABLE, type HatchlingId, type PlayableId } from '../data/hatchlings'
-import { SAFARI_HABITAT_IDS, SAFARI_ONLY, habitatDexDone, habitatResidents, isSafariHabitat, lackingFamilies, safariEntry, sessionPool, type SafariHabitat } from '../data/safari'
+import { DEX_GIFT, HABITAT_REWARDS, SAFARI_HABITAT_IDS, SAFARI_ONLY, dexRewardKey, habitatDone, habitatResidents, isSafariHabitat, lackingFamilies, markLacking, openGated, safariEntry, sessionPool, type SafariHabitat } from '../data/safari'
+import { isCaptured } from '../game/capture'
 import { brasiliaDay, weekStart } from '../game/day'
 import { parseGift, type Gift } from '../game/gifts'
 import { isRecord } from '../game/parse'
@@ -56,6 +57,8 @@ type FakeSafari = {
   forceCatch: boolean
   forceFlee: boolean
   dex: Record<SafariHabitat, HatchlingId[]>
+  /** The habitats whose gifts went out (completed for good). */
+  done: SafariHabitat[]
   /** Dev: the habitat instead of the week's, the time of day instead of the clock's, the next encounter's family and whether it's shiny, and whether the contest runs. */
   stagedHabitat: SafariHabitat | null
   stagedDaypart: SafariDaypart | null
@@ -84,6 +87,7 @@ const fake: FakeSafari = {
   forceCatch: false,
   forceFlee: false,
   dex: emptyDex(),
+  done: [],
   stagedHabitat: null,
   stagedDaypart: null,
   stagedNext: null,
@@ -116,6 +120,8 @@ export const stageSafari = (opts: {
   shiny?: boolean
   contest?: boolean | null
   dex?: { habitat: SafariHabitat; fill: 'almost' | 'half' | 'empty' | 'all' }
+  /** Habitats marked completed before (as if their gifts went out under fewer residents). */
+  done?: readonly SafariHabitat[]
 }) => {
   if (opts.sure) fake.dry = SAFARI.guarantee
   if (opts.dry !== undefined) fake.dry = opts.dry
@@ -133,7 +139,9 @@ export const stageSafari = (opts: {
   if (opts.dex) {
     const all = habitatResidents(opts.dex.habitat).map((e) => e.family)
     fake.dex[opts.dex.habitat] = opts.dex.fill === 'empty' ? [] : opts.dex.fill === 'all' ? all : opts.dex.fill === 'half' ? all.filter((_, i) => i % 3 !== 1) : all.slice(0, -1)
+    if (opts.dex.fill !== 'all') fake.done = fake.done.filter((h) => h !== opts.dex?.habitat)
   }
+  if (opts.done) fake.done = [...new Set([...fake.done, ...opts.done])]
   return { dry: fake.dry, used: fake.used, catches: fake.forceCatch, flees: fake.forceFlee, habitat: fake.stagedHabitat, daypart: fake.stagedDaypart, next: fake.stagedNext, shiny: fake.stagedShiny, contest: fake.stagedContest }
 }
 
@@ -149,7 +157,13 @@ const fakePartner = (): PlayableId | null => {
   return Object.hasOwn(PLAYABLE, partner) ? partner : null
 }
 
-const fakeLacking = () => lackingFamilies(loadSave().hatched, [])
+/** The gated families this device's save opened (Phione once Manaphy hatched). */
+export const savedOpen = () => {
+  const { legends } = loadSave()
+  return openGated((legend) => isCaptured(legends, legend))
+}
+
+const fakeLacking = () => lackingFamilies(loadSave().hatched, [], savedOpen())
 
 const fakeView = (): SafariSession | null => {
   const run = fake.run
@@ -250,7 +264,8 @@ const parseState = (v: unknown): SafariState | null => {
   const dry = count(v.dry)
   const open = v.open === null ? null : parseSession(v.open)
   if (used === null || dry === null || (v.open !== null && !open)) return null
-  return { week: v.week, habitat: v.habitat, used, dry, sure: v.sure, partner: isPlayable(v.partner) ? v.partner : null, open, contest: parseContest(v.contest), dex: parseDex(v.dex) }
+  const done = Array.isArray(v.done) ? v.done.filter(isSafariHabitat) : []
+  return { week: v.week, habitat: v.habitat, used, dry, sure: v.sure, partner: isPlayable(v.partner) ? v.partner : null, open, contest: parseContest(v.contest), dex: parseDex(v.dex), done }
 }
 
 const parseStarted = (v: unknown): SafariStarted | null => {
@@ -318,6 +333,7 @@ export const fetchSafari = async (): Promise<SafariState | Failure> => {
       open: fakeView(),
       contest: fakeContest(),
       dex: { ...fake.dex },
+      done: [...fake.done],
     }
   }
   const { status, body } = await apiCall('/realm/safari', { auth: true })
@@ -349,7 +365,9 @@ export const startSafari = async (used: number, mode: SafariMode = 'safari'): Pr
       fake.week = week
       fake.habitat = fakeHabitat(week)
       fake.daypart = localDaypart()
-      const queue = rollQueue(sessionPool(mode, fake.habitat, fake.daypart, fake.week || thisWeek()), partnerTypes(fakePartner()), Math.random, sure)
+      const { hatched } = loadSave()
+      const pool = markLacking(sessionPool(mode, fake.habitat, fake.daypart, fake.week || thisWeek(), savedOpen()), (id) => hatched[id] === undefined)
+      const queue = rollQueue(pool, partnerTypes(fakePartner()), Math.random, sure)
       fake.run = startRun(queue, pickVisible(queue, Math.random), mode)
     }
     return { session: fakeView()!, used: fake.used }
@@ -373,12 +391,22 @@ const breaksAndFlees = () => {
   return () => (first ? ((first = false), 0.99) : 0)
 }
 
-/** Faked: what the API does with a catch's habitat Pokédex. */
+/** Faked: what the API does with a catch's habitat Pokédex, its gifts staged in the gift box as the API would send them. */
 const fakeDex = (family: HatchlingId) => {
-  const list = fake.dex[fake.habitat]
-  if (habitatResidents(fake.habitat).some((e) => e.family === family) && !list.includes(family)) list.push(family)
-  return habitatDexDone(fake.habitat, list)
+  const habitat = fake.habitat
+  const list = fake.dex[habitat]
+  if (!habitatResidents(habitat).some((e) => e.family === family) || list.includes(family)) return
+  list.push(family)
+  if (!habitatDone(habitat, list, fake.done) || fake.done.includes(habitat)) return
+  fake.done = [...fake.done, habitat]
+  stageGifts(fakeRewards(habitat))
 }
+
+/** A habitat's gifts as the API sends them (`server/src/safari.ts`), under dev ids. */
+export const fakeRewards = (habitat: SafariHabitat): Gift[] => [
+  { id: `dev-safariDex:${habitat}`, content: DEX_GIFT, reason: { kind: 'safariDex', habitat } },
+  ...HABITAT_REWARDS[habitat].map((content, i): Gift => ({ id: `dev-${dexRewardKey(habitat, i)}`, content, reason: { kind: 'safariDex', habitat } })),
+]
 
 /** One action on the session: the API's dice (faked, the same rules here). */
 export const actSafari = async (session: SafariSession, action: SafariAction): Promise<SafariActed | Failure> => {

@@ -3,6 +3,7 @@ import { seasonKitDeltas } from './seasonOneKitRules'
 import { kitBDeltas } from './gaKitBRules'
 import { kitFDeltas } from './fossilKitRules'
 import { kitMADeltas } from './gaKitMARules'
+import { kitSCDeltas } from './scKitRules'
 import { gaKitADeltas } from './gaKitARules'
 import { rocketKitDeltas } from './rocketKitRules'
 import { megaKitBDeltas } from './megaKitBRules'
@@ -292,6 +293,7 @@ export const recomputeStats = (g: Game) => {
     ...bagDeltas(p.bag),
     ...seasonKitDeltas(p.kit),
     ...kitBDeltas(p.kitB, p.stage),
+    ...kitSCDeltas(p.kitSC, p.stage),
     ...gaKitADeltas(p.kitA, p.stage),
     ...rocketKitDeltas(p.rocket),
     ...kitFDeltas(p.kitF, p.stage),

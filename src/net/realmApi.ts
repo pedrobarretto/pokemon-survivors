@@ -243,6 +243,8 @@ export type SafariState = {
   open: SafariSession | null
   contest: SafariContest
   dex: Record<SafariHabitat, HatchlingId[]>
+  /** The habitats whose Pokédex gift went out: completed for good, however many residents joined since. */
+  done: SafariHabitat[]
 }
 
 export type SafariStarted = { session: SafariSession; used: number }

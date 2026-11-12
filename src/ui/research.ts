@@ -31,7 +31,8 @@ export const lockedWhere = (id: HatchlingId): string | null => {
   const egg = HATCHLINGS[id].egg
   if (egg === 'dig') return words.fossilBlurb(fossilName(id))
   if (egg === 'fossil') return words.amberBlurb
-  const where: Partial<Record<HatchlingId, string>> = { ...words.where, ...t().megaFamiliesWhere }
+  // The Mega families and the Safári and Game Corner wave's families say where they come from too.
+  const where: Partial<Record<HatchlingId, string>> = { ...words.where, ...t().megaFamiliesWhere, ...t().scWave.where }
   const megaWhere: Partial<Record<HatchlingId, string>> = MEGA_FAMILIES_B_WORDS[locale()].where
   return where[id] ?? megaWhere[id] ?? null
 }

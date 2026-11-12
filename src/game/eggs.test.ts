@@ -230,7 +230,7 @@ describe('egg families', () => {
   })
 
   it('evolve mid-run and grow stronger (Smeargle aside, and the one-stage Temporada 1, big update, Game Corner, fossil and Mega families and Galarian Farfetch\'d: their mechanics take the place of evolving)', () => {
-    expect(HATCHLING_IDS.filter((id) => PLAYABLE[id].line.length === 1)).toEqual(['smeargle', 'wishiwashi', 'morpeko', 'rotom', 'castform', 'mimikyu', 'tatsugiri', 'lapras', 'heracross', 'sableye', 'spiritomb', 'farfetchdGalar', 'ditto', 'absol', 'mawile', 'aerodactyl', 'dracozolt', 'arctozolt', 'dracovish', 'kangaskhan', 'pinsir', 'skarmory', 'drampa'])
+    expect(HATCHLING_IDS.filter((id) => PLAYABLE[id].line.length === 1)).toEqual(['smeargle', 'wishiwashi', 'morpeko', 'rotom', 'castform', 'mimikyu', 'tatsugiri', 'lapras', 'heracross', 'sableye', 'spiritomb', 'farfetchdGalar', 'ditto', 'absol', 'mawile', 'aerodactyl', 'dracozolt', 'arctozolt', 'dracovish', 'kangaskhan', 'pinsir', 'skarmory', 'drampa', 'phione'])
     for (const id of HATCHLING_IDS) {
       const line: readonly EvolutionStage[] = PLAYABLE[id].line
       if (line.length === 1) continue

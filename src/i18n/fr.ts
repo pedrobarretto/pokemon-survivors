@@ -13,6 +13,7 @@ import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { GA_MEGAS_WORDS } from './gaMegas'
 import { GA_MEGA_FAMILIES_A_WORDS } from './gaMegaFamiliesA'
+import { SC_WAVE_WORDS } from './scWave'
 import { ROCKET_WORDS } from './rocket/words'
 import { ULTRA_WORDS } from './ultra'
 import { LEGEND_PATHS_WORDS } from './legendPaths'
@@ -2393,6 +2394,7 @@ export const fr: Messages = {
       ...ROCKET_FAMILY_WORDS.fr.megas,
       ...GA_MEGAS_WORDS.fr.megas,
       ...GA_MEGA_FAMILIES_A_WORDS.fr.megas,
+      ...SC_WAVE_WORDS.fr.megas,
     },
   },
 
@@ -3022,7 +3024,7 @@ export const fr: Messages = {
     noTitle: 'aucun',
     titleTag: 'TITRE',
     equipped: 'AFFICHE',
-    giftTitles: { ambassador: 'A amené 3 amis dans le jeu', supporter: 'A soutenu le projet par un don', pumpkinKing: 'A rempli le bocal de bonbons de la Nuit des Sorcières', exorcist: 'A battu tous les boss de la Chasse aux Fantômes', vipCustomer: 'A réuni 30 tampons sur la carte de fidélité de Kecleon', tycoon: 'A fait de la boutique de Kecleon un Grand Magasin', patron: 'A donné ₽50 000 ou plus à un Festival de la Place', ogSupporter: 'A soutenu le jeu avant Patreon', arenaPoke: 'A fini une saison classée de l’Arène en Poké Ball', arenaGreat: 'A atteint Great Ball lors d’une saison classée de l’Arène', arenaUltra: 'A atteint Ultra Ball lors d’une saison classée de l’Arène', arenaMaster: 'A atteint Master Ball lors d’une saison classée de l’Arène', creator: 'Fait des vidéos et des lives de Pokémon Survivors', friendLegend: 'A amené 10 amis dans le jeu', stampCollector: 'A réuni 30 Estampes dans le Poké Realm', era1Legend: 'A fini en haut d’un classement de l’Ère 1', era1Champion: 'A fini n° 1 d’un classement de l’Ère 1', spaceTime: 'A capturé Dialga et Palkia', bugChampion: 'A gagné une semaine du Concours d’Insectes', safariWarden: 'A rempli le Pokédex de tous les habitats du Parc Safari', ...ROCKET_WORDS.fr.giftTitles, kantoDex: 'A vu tous les Pokémon de Kanto dans le Pokédex', johtoDex: 'A vu tous les Pokémon de Johto dans le Pokédex', hoennDex: 'A vu tous les Pokémon de Hoenn dans le Pokédex', sinnohDex: 'A vu tous les Pokémon de Sinnoh dans le Pokédex', unovaDex: 'A vu tous les Pokémon de Unova dans le Pokédex', kalosDex: 'A vu tous les Pokémon de Kalos dans le Pokédex', alolaDex: 'A vu tous les Pokémon de Alola dans le Pokédex', galarDex: 'A vu tous les Pokémon de Galar dans le Pokédex', paldeaDex: 'A vu tous les Pokémon de Paldea dans le Pokédex' },
+    giftTitles: { ambassador: 'A amené 3 amis dans le jeu', supporter: 'A soutenu le projet par un don', pumpkinKing: 'A rempli le bocal de bonbons de la Nuit des Sorcières', exorcist: 'A battu tous les boss de la Chasse aux Fantômes', vipCustomer: 'A réuni 30 tampons sur la carte de fidélité de Kecleon', tycoon: 'A fait de la boutique de Kecleon un Grand Magasin', patron: 'A donné ₽50 000 ou plus à un Festival de la Place', ogSupporter: 'A soutenu le jeu avant Patreon', arenaPoke: 'A fini une saison classée de l’Arène en Poké Ball', arenaGreat: 'A atteint Great Ball lors d’une saison classée de l’Arène', arenaUltra: 'A atteint Ultra Ball lors d’une saison classée de l’Arène', arenaMaster: 'A atteint Master Ball lors d’une saison classée de l’Arène', creator: 'Fait des vidéos et des lives de Pokémon Survivors', friendLegend: 'A amené 10 amis dans le jeu', stampCollector: 'A réuni 30 Estampes dans le Poké Realm', era1Legend: 'A fini en haut d’un classement de l’Ère 1', era1Champion: 'A fini n° 1 d’un classement de l’Ère 1', spaceTime: 'A capturé Dialga et Palkia', bugChampion: 'A gagné une semaine du Concours d’Insectes', safariWarden: 'A rempli le Pokédex de tous les habitats du Parc Safari', ...ROCKET_WORDS.fr.giftTitles, ...SC_WAVE_WORDS.fr.giftTitles, kantoDex: 'A vu tous les Pokémon de Kanto dans le Pokédex', johtoDex: 'A vu tous les Pokémon de Johto dans le Pokédex', hoennDex: 'A vu tous les Pokémon de Hoenn dans le Pokédex', sinnohDex: 'A vu tous les Pokémon de Sinnoh dans le Pokédex', unovaDex: 'A vu tous les Pokémon de Unova dans le Pokédex', kalosDex: 'A vu tous les Pokémon de Kalos dans le Pokédex', alolaDex: 'A vu tous les Pokémon de Alola dans le Pokédex', galarDex: 'A vu tous les Pokémon de Galar dans le Pokédex', paldeaDex: 'A vu tous les Pokémon de Paldea dans le Pokédex' },
     newMedals: 'Nouvelles médailles',
     names: {
       ...TERA_WORDS.fr.achievementNames,
@@ -3136,6 +3138,7 @@ export const fr: Messages = {
       galarDex: 'Chercheur de Galar',
       paldeaDex: 'Chercheur de Paldea',
       ...ROCKET_WORDS.fr.titles,
+      ...SC_WAVE_WORDS.fr.titles,
       bugChampion: 'Champion(ne) des Insectes',
       safariWarden: 'Garde-Parc',
       spaceTime: 'Maître du Temps et de l’Espace',
@@ -3189,6 +3192,7 @@ export const fr: Messages = {
     ...GA_FOSSILS_WORDS.fr.moves,
     ...ROCKET_FAMILY_WORDS.fr.moves,
     ...GA_MEGA_FAMILIES_A_WORDS.fr.moves,
+    ...SC_WAVE_WORDS.fr.moves,
     ...GALLOP_WORDS.fr,
     ...ULTRA_WORDS.fr.moves,
     ...LEGEND_PATHS_WORDS.fr.moves,
@@ -5671,6 +5675,7 @@ export const fr: Messages = {
     ...GA_FOSSILS_WORDS.fr.blurbs,
     ...ROCKET_FAMILY_WORDS.fr.blurbs,
     ...GA_MEGA_FAMILIES_A_WORDS.fr.blurbs,
+    ...SC_WAVE_WORDS.fr.blurbs,
     ...ULTRA_WORDS.fr.blurbs,
     ...LEGEND_PATHS_WORDS.fr.blurbs,
     ...QUEST_WORDS.fr.blurbs,
@@ -6395,6 +6400,7 @@ export const fr: Messages = {
       path: LEGEND_PATHS_WORDS.fr.paths.where.zygarde,
       temple: LEGEND_PATHS_WORDS.fr.paths.where.regigigas,
       ...QUEST_WORDS.fr.where,
+      egg: SC_WAVE_WORDS.fr.legendWhere,
     },
     rule: (need: number) => (need === 1 ? 'Bats-le une fois comme boss en partie solo, quel que soit le mode, pour le capturer. Les victoires en coop ne comptent pas.' : `Bats-le ${need} fois comme boss en partie solo, quel que soit le mode, pour le capturer. Les victoires en coop ne comptent pas.`),
     shinyRule: 'Battre un chromatique lors de la victoire de capture, ou après, débloque son chromatique.',
@@ -6518,10 +6524,11 @@ export const fr: Messages = {
   seasonUnlocks: SEASON_ONE_UNLOCKS_WORDS.fr,
   megaFamiliesWhere: GA_MEGA_FAMILIES_A_WORDS.fr.where,
   rocket: ROCKET_WORDS.fr,
+  scWave: SC_WAVE_WORDS.fr,
   paths: LEGEND_PATHS_WORDS.fr.paths,
   minigames: {
     claw: SEASON_ONE_CLAW_WORDS.fr.words,
-    safari: SEASON_ONE_SAFARI_WORDS.fr.words,
+    safari: { ...SEASON_ONE_SAFARI_WORDS.fr.words, only: SC_WAVE_WORDS.fr.safari },
     dig: SEASON_ONE_DIG_WORDS.fr.words,
     close: 'Quitter',
     choose: 'Quel jeu ?',

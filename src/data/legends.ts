@@ -74,6 +74,14 @@ export const PATH_LEGENDS = ['zygarde', 'solgaleo', 'lunala', 'kubfu', 'meltan',
  */
 export const QUEST_LEGENDS = ['palkia', 'uxie', 'mesprit', 'azelf', 'cobalion', 'terrakion', 'virizion', 'keldeo', 'hoopa'] as const
 
+/**
+ * The Safári's legend: Manaphy, never fought. Filling the Zona Safári cove's
+ * Pokédex sends its egg (`SAFARI_EGG` in `data/safari.ts`, vouched by the
+ * API like the Safári's other gifts), which hatches it (`ui/manaphyEgg.ts`).
+ * Out of `REGULAR_LEGENDS` too.
+ */
+export const SAFARI_LEGENDS = ['manaphy'] as const
+
 /** The roaming lake trio (`game/roamers.ts`). */
 export const LAKE_TRIO = ['uxie', 'mesprit', 'azelf'] as const satisfies readonly (typeof QUEST_LEGENDS)[number][]
 
@@ -87,8 +95,8 @@ export const isLakeLegend = (id: string): id is LakeId => LAKE_TRIO.some((l) => 
 export type SwordId = (typeof SWORDS)[number]
 
 
-/** Every playable legend: the regular ones, then the event ones, the festival ones, Terastal's, the Ultra Beasts, the path ones and the ones with a road of their own. */
-export const LEGEND_IDS = [...REGULAR_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...TERA_LEGENDS, ...ULTRA_LEGENDS, ...PATH_LEGENDS, ...QUEST_LEGENDS] as const
+/** Every playable legend: the regular ones, then the event ones, the festival ones, Terastal's, the Ultra Beasts, the path ones, the ones with a road of their own and the Safári's. */
+export const LEGEND_IDS = [...REGULAR_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...TERA_LEGENDS, ...ULTRA_LEGENDS, ...PATH_LEGENDS, ...QUEST_LEGENDS, ...SAFARI_LEGENDS] as const
 
 export type LegendId = (typeof LEGEND_IDS)[number]
 
@@ -122,9 +130,10 @@ export type LegendEvent = 'halloween'
  * carried from run to run, and falls once (the lake trio, `game/roamers.ts`);
  * `duel`: won in its duel (the Swords of Justice, `game/duels.ts`); `swords`:
  * no win counts, the game gives it once every Sword is captured (Keldeo);
- * `rush`: won by clearing Hoopa's ring rush once (`game/rush.ts`).
+ * `rush`: won by clearing Hoopa's ring rush once (`game/rush.ts`); `egg`: no win
+ * counts, it hatches from the egg the Safári's cove Pokédex sends (Manaphy).
  */
-export type LegendUnlock = { wins: number; endless?: true; last?: true; event?: LegendEvent; festival?: FestivalId; ultra?: 'wormhole' | 'gift'; path?: PathId; after?: readonly LegendId[]; roam?: true; duel?: true; swords?: true; rush?: true }
+export type LegendUnlock = { wins: number; endless?: true; last?: true; event?: LegendEvent; festival?: FestivalId; ultra?: 'wormhole' | 'gift'; path?: PathId; after?: readonly LegendId[]; roam?: true; duel?: true; swords?: true; rush?: true; egg?: true }
 
 export type LegendDef = Omit<PlayableDef, 'learnset' | 'line'> & {
   /** One list: every move it can learn is there from Lv 1, its legendary move first. */
@@ -795,6 +804,20 @@ export const LEGENDS = {
     innate: { ability: 'slowStart' },
     unlock: { wins: 1, after: ['regirock', 'regice', 'registeel'] },
   },
+
+  /* ---------- The Safári's legend ---------- */
+  /** Manaphy, the Prince of the Sea: hatched from the egg the cove's Pokédex brings. Hydration keeps it fresh in the rain. */
+  manaphy: {
+    name: 'Manaphy',
+    color: '#58a8e0',
+    stats: { maxHp: 40, might: 0.18, speed: 6, regen: 0.3 },
+    signature: LEGENDARY_MOVE_OF.manaphy,
+    learnset: [[LEGENDARY_MOVE_OF.manaphy, 'waterPulse', 'bubbleBeam', 'whirlpool', 'brine', 'psyshock', 'iceShard', 'disarmingVoice']],
+    line: stage(490, 'Manaphy', ['water']),
+    awakenings: [{ maxHp: 30, might: 0.12, regen: 0.2 }, { maxHp: 40, might: 0.24, area: 0.1 }],
+    innate: { ability: 'hydration' },
+    unlock: { wins: 1, egg: true },
+  },
 } as const satisfies Record<LegendId, LegendDef>
 
 export const isLegend = (id: unknown): id is LegendId => LEGEND_IDS.some((l) => l === id)
@@ -821,6 +844,12 @@ export const giftLegend = (id: LegendId) => {
 export const legendFestival = (id: LegendId): FestivalId | null => {
   const unlock: LegendUnlock = LEGENDS[id].unlock
   return unlock.festival ?? null
+}
+
+/** Whether a legend hatches from an egg the Safári sends (Manaphy): no win counts for it. */
+export const eggLegend = (id: LegendId) => {
+  const unlock: LegendUnlock = LEGENDS[id].unlock
+  return unlock.egg === true
 }
 
 /** The path whose gift brings a legend, or null for one caught otherwise. */

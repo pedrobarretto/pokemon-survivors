@@ -9,6 +9,7 @@ import { SEASON_ONE_EGG_MOVE_IDS } from '../game/seasonOneEggMoves'
 import { SEASON_ONE_KIT_MOVE_IDS } from '../game/seasonOneKitMoves'
 import { GA_KIT_B_MOVE_IDS } from '../game/gaKitBMoves'
 import { FOSSIL_KIT_MOVE_IDS } from '../game/fossilKitMoves'
+import { SC_KIT_MOVE_IDS } from '../game/scKitMoves'
 import { GA_KIT_A_MOVE_IDS } from '../game/gaKitAMoves'
 import { REGIONAL_MOVE_IDS } from '../game/regionalMoves'
 import { MEGA_KIT_B_MOVE_IDS } from '../game/megaKitBMoves'
@@ -96,7 +97,7 @@ const EGG_SIGNATURES: readonly MoveId[] = [
  */
 export const neverEvolves = (id: MoveId) => {
   const def: MoveDef = MOVES[id]
-  const eggs: readonly MoveId[] = [...EGG_SIGNATURES, ...EGG_MOVE_2_IDS, ...EGG_MOVE_3_IDS, ...SKETCH_MOVE_IDS, ...SEASON_ONE_EGG_MOVE_IDS, ...SEASON_ONE_KIT_MOVE_IDS, ...ROCKET_KIT_MOVE_IDS, ...GA_KIT_B_MOVE_IDS, ...GA_KIT_A_MOVE_IDS, ...REGIONAL_MOVE_IDS, ...FOSSIL_KIT_MOVE_IDS, ...GA_KIT_MA_MOVE_IDS, ...MEGA_KIT_B_MOVE_IDS]
+  const eggs: readonly MoveId[] = [...EGG_SIGNATURES, ...EGG_MOVE_2_IDS, ...EGG_MOVE_3_IDS, ...SKETCH_MOVE_IDS, ...SEASON_ONE_EGG_MOVE_IDS, ...SEASON_ONE_KIT_MOVE_IDS, ...ROCKET_KIT_MOVE_IDS, ...GA_KIT_B_MOVE_IDS, ...GA_KIT_A_MOVE_IDS, ...REGIONAL_MOVE_IDS, ...FOSSIL_KIT_MOVE_IDS, ...GA_KIT_MA_MOVE_IDS, ...MEGA_KIT_B_MOVE_IDS, ...SC_KIT_MOVE_IDS]
   const signature = id in SIGNATURE_MOVES || eggs.includes(id)
   return signature || isTmMove(id) || isShopTmMove(id) || isLegendary(id) || def.duo === true
 }

@@ -1,7 +1,8 @@
 import { randomInt } from 'node:crypto'
 import type { TransactionSql } from 'postgres'
 import { PLAYABLE } from '../../src/data/hatchlings'
-import { CONTEST_GIFTS, DEX_ALL_GIFT, DEX_GIFT, SAFARI_HABITAT_IDS, SAFARI_ONLY, habitatDexDone, habitatResidents, isSafariHabitat, lackingFamilies, sessionPool, type SafariHabitat } from '../../src/data/safari'
+import { CONTEST_GIFTS, DEX_ALL_GIFT, DEX_GIFT, HABITAT_REWARDS, SAFARI_HABITAT_IDS, SAFARI_ONLY, dexRewardKey, habitatDexDone, habitatDone, habitatResidents, isSafariHabitat, lackingFamilies, markLacking, openGated, sessionPool, type SafariHabitat } from '../../src/data/safari'
+import { isCaptured } from '../../src/game/capture'
 import { addDays, brasiliaDay, weekStart, type DayKey } from '../../src/game/day'
 import { donateFrom } from '../../src/game/festival'
 import type { Gift, GiftContent, GiftReason } from '../../src/game/gifts'
@@ -61,7 +62,12 @@ import { rateLimiter } from './rateLimit'
  * client is told about: meeting one (`stalk`) brings it a berry's calm, which
  * a client skipping the sneak could claim for at most `SAFARI.visible` of a
  * session's encounters. Every catch fills its habitat's Pokédex
- * (`safari_dex`), a full one sends its gift. A contest entry
+ * (`safari_dex`), a full one sends its gifts (`DEX_GIFT` and the habitat's
+ * `HABITAT_REWARDS`, the cove's Ovo de Manaphy among them). A habitat whose
+ * gift went out stays completed when new residents join it, and a read sends
+ * whatever reward it was completed before (`backfill`). Who lives there
+ * follows the stored save: Phione only for an account owning Manaphy
+ * (`SAFARI_GATED`), and the Safari-only families it lacks weigh more. A contest entry
  * (`mode: 'contest'`) is free, one a contest day, bugs only; its catches only
  * score, and as it ends its best catch is kept if it's new to the account and
  * goes on the week's board (`realm_game_boards`, game `safari`), whose prizes
@@ -205,6 +211,16 @@ const saveOf = async (q: Q, userId: string): Promise<Save | null> => {
   return row ? parseSaveData(row.data) : null
 }
 
+/** The gated families (`SAFARI_GATED`) the stored save opened: Phione once Manaphy hatched. */
+const openOf = (save: Save | null) => openGated((legend) => save !== null && isCaptured(save.legends, legend))
+
+/** The habitats whose Pokédex gift went out (`safariDex:<habitat>`): completed for good. */
+const rewardedOf = async (q: Q, userId: string): Promise<SafariHabitat[]> =>
+  (await q<{ key: string }[]>`select key from gifts where user_id = ${userId} and key like 'safariDex:%'`).flatMap((r) => {
+    const habitat = r.key.slice('safariDex:'.length)
+    return isSafariHabitat(habitat) ? [habitat] : []
+  })
+
 /** The families gifted to the account that the save may not hold yet (a family or shiny gift not opened or not synced), so the guarantee doesn't bring one twice. */
 const giftedFamilies = async (q: Q, userId: string) => (await q<{ family: string }[]>`select payload->>'family' as family from gifts where user_id = ${userId} and kind in ('family', 'shinyHatch')`).map((r) => r.family)
 
@@ -240,7 +256,7 @@ export const safariStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
   /** The guarantee's family for an account `dry` sessions without a new one, or null (not there yet, or nothing left to get). */
   const sureFor = async (q: Q, userId: string, dry: number, save: Save | null) => {
     if (dry < SAFARI.guarantee) return null
-    return guaranteedEntry(lackingFamilies(save?.hatched ?? {}, await giftedFamilies(q, userId)), SAFARI_ONLY, dice)
+    return guaranteedEntry(lackingFamilies(save?.hatched ?? {}, await giftedFamilies(q, userId), openOf(save)), SAFARI_ONLY, dice)
   }
 
   /** Sends a catch's prize: a shiny hatch or the family, either way through the gift path, under a key of its own. */
@@ -262,31 +278,63 @@ export const safariStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
     return had === undefined && gifted.length === 0
   }
 
-  /** Puts a catch in its habitat's Pokédex; a first one that fills the habitat (or every habitat) sends its gift. */
+  /** Sends a completed habitat's gifts, each under its own key (sent once, so a repeat is a no-op): the Ultra egg, then its `HABITAT_REWARDS`. */
+  const rewardHabitat = async (tx: TransactionSql, userId: string, habitat: SafariHabitat) => {
+    const reason: GiftReason = { kind: 'safariDex', habitat }
+    await sendGift(tx, userId, DEX_GIFT, reason, `safariDex:${habitat}`)
+    const rewards: readonly GiftContent[] = HABITAT_REWARDS[habitat]
+    for (const [i, content] of rewards.entries()) await sendGift(tx, userId, content, reason, dexRewardKey(habitat, i))
+  }
+
+  /** Every habitat completed (now or before it grew): the Guarda-Parque title. */
+  const rewardAll = async (tx: TransactionSql, userId: string) => {
+    const dex = await dexOf(tx, userId)
+    const rewarded = await rewardedOf(tx, userId)
+    if (SAFARI_HABITAT_IDS.every((h) => habitatDone(h, dex[h], rewarded))) await sendGift(tx, userId, DEX_ALL_GIFT, { kind: 'safariDex', habitat: null }, 'safariDex:all')
+  }
+
+  /** Puts a catch in its habitat's Pokédex; a first one that fills the habitat (or every habitat) sends its gifts. */
   const fillDex = async (tx: TransactionSql, userId: string, habitat: SafariHabitat, family: HatchlingId) => {
     if (!habitatResidents(habitat).some((e) => e.family === family)) return
     const fresh = await tx`insert into safari_dex (user_id, habitat, family) values (${userId}, ${habitat}, ${family}) on conflict do nothing returning family`
     if (fresh.length === 0) return
     const dex = await dexOf(tx, userId)
-    if (!habitatDexDone(habitat, dex[habitat])) return
-    await sendGift(tx, userId, DEX_GIFT, { kind: 'safariDex', habitat }, `safariDex:${habitat}`)
-    if (SAFARI_HABITAT_IDS.every((h) => habitatDexDone(h, dex[h]))) await sendGift(tx, userId, DEX_ALL_GIFT, { kind: 'safariDex', habitat: null }, 'safariDex:all')
+    if (!habitatDone(habitat, dex[habitat], await rewardedOf(tx, userId))) return
+    await rewardHabitat(tx, userId, habitat)
+    await rewardAll(tx, userId)
+  }
+
+  /**
+   * A habitat completed before a reward joined it (its egg sent, a later gift
+   * not yet: the titles, the shinies and the Ovo de Manaphy came with the
+   * Safári's second wave) gets what it's missing. Only reads unless something's missing.
+   */
+  const backfill = async (userId: string, rewarded: readonly SafariHabitat[]) => {
+    if (rewarded.length === 0) return
+    const keys = new Set((await sql<{ key: string }[]>`select key from gifts where user_id = ${userId} and key like 'safariDex:%:%'`).map((r) => r.key))
+    const missing = rewarded.filter((h) => HABITAT_REWARDS[h].some((_, i) => !keys.has(dexRewardKey(h, i))))
+    if (missing.length === 0) return
+    await sql.begin(async (tx) => {
+      for (const habitat of missing) await rewardHabitat(tx, userId, habitat)
+      await rewardAll(tx, userId)
+    })
   }
 
   /**
    * Sends the Pokédex gifts a habitat earned without a fresh catch: one that
    * became complete because a family left it (Kabuto, now the Escavação's
-   * Dome Fossil). A habitat already paid is skipped (each gift has its key).
+   * Dome Fossil), with all of `rewardHabitat`'s. A habitat already paid is
+   * skipped (each gift has its key).
    */
   const settleDex = async (userId: string, dex: Record<SafariHabitat, HatchlingId[]>) => {
     const done = SAFARI_HABITAT_IDS.filter((h) => habitatDexDone(h, dex[h]))
     if (done.length === 0) return
     const paid = new Set((await sql<{ key: string }[]>`select key from gifts where user_id = ${userId} and key like 'safariDex:%'`).map((r) => r.key))
-    const all = done.length === SAFARI_HABITAT_IDS.length
-    if (done.every((h) => paid.has(`safariDex:${h}`)) && (!all || paid.has('safariDex:all'))) return
+    const fresh = done.filter((h) => !paid.has(`safariDex:${h}`))
+    if (fresh.length === 0) return
     await sql.begin(async (tx) => {
-      for (const habitat of done) await sendGift(tx, userId, DEX_GIFT, { kind: 'safariDex', habitat }, `safariDex:${habitat}`)
-      if (all) await sendGift(tx, userId, DEX_ALL_GIFT, { kind: 'safariDex', habitat: null }, 'safariDex:all')
+      for (const habitat of fresh) await rewardHabitat(tx, userId, habitat)
+      await rewardAll(tx, userId)
     })
   }
 
@@ -341,11 +389,13 @@ export const safariStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
       const week = open ? dayOf(open.week) : weekStart(day)
       const save = await saveOf(sql, userId)
       const dry = await dryOf(sql, userId)
-      const sure = dry >= SAFARI.guarantee && lackingFamilies(save?.hatched ?? {}, await giftedFamilies(sql, userId)).length > 0
-      const contestOpen = isContestDay(day)
-      const contest = { open: contestOpen, left: contestOpen ? Math.max(0, CONTEST.entries - (await usedOn(sql, userId, day, 'contest'))) : 0, best: await contestBest(sql, userId, weekStart(day)) }
+      const sure = dry >= SAFARI.guarantee && lackingFamilies(save?.hatched ?? {}, await giftedFamilies(sql, userId), openOf(save)).length > 0
       const dex = await dexOf(sql, userId)
       await settleDex(userId, dex).catch((err: unknown) => console.error('safari: dex gifts not settled', err))
+      const done = await rewardedOf(sql, userId)
+      await backfill(userId, done).catch((err: unknown) => console.error('safari: rewards not backfilled', err))
+      const contestOpen = isContestDay(day)
+      const contest = { open: contestOpen, left: contestOpen ? Math.max(0, CONTEST.entries - (await usedOn(sql, userId, day, 'contest'))) : 0, best: await contestBest(sql, userId, weekStart(day)) }
       return {
         week,
         habitat: open ? habitatFor(open) : habitatOfWeek(week, SAFARI_HABITAT_IDS),
@@ -356,6 +406,7 @@ export const safariStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
         open: open ? viewOf(open) : null,
         contest,
         dex,
+        done,
       }
     },
 
@@ -400,7 +451,9 @@ export const safariStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
         const save = paid?.save ?? (await saveOf(tx, userId))
         // The contest neither brings the guarantee nor counts toward it.
         const sure = mode === 'contest' ? null : await sureFor(tx, userId, await dryOf(tx, userId), save)
-        const queue = rollQueue(sessionPool(mode, habitat, daypart, week), partnerTypes(save), dice, sure)
+        const gifted = await giftedFamilies(tx, userId)
+        const pool = markLacking(sessionPool(mode, habitat, daypart, week, openOf(save)), (id) => save?.hatched[id] === undefined && !gifted.includes(id))
+        const queue = rollQueue(pool, partnerTypes(save), dice, sure)
         const state: Stored = { run: startRun(queue, pickVisible(queue, dice), mode), log: [], fresh: false }
         const [session] = await tx<SessionRow[]>`
           insert into safari_sessions (user_id, day, week, habitat, price, state, mode, daypart)

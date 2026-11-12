@@ -30429,6 +30429,71 @@ span.arena-hub-face {
   color: #2e7a2e;
 }
 
+/* The Exclusivos tab: a habitat's count rides its heading; this week's habitat stands out. */
+.sz-only-count {
+  margin-left: 8px;
+  padding: 0 6px;
+  font-style: normal;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+}
+
+.sz-only section {
+  padding: 6px;
+  border-radius: 12px;
+}
+
+.sz-only section.sz-only-now {
+  background: rgba(255, 216, 72, 0.18);
+  box-shadow: inset 0 0 0 2px rgba(216, 168, 56, 0.6);
+}
+
+/* What a habitat's Pokédex gives: small chips, an icon and its words, wrapping on a phone. */
+.sz-rewards {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.sz-rewards > small {
+  color: var(--kit-ink-2);
+  font-size: 15px;
+}
+
+.sz-rewards ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+}
+
+.sz-reward {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 2px 8px 2px 3px;
+  font-size: 15px;
+  line-height: 1.1;
+  background: var(--kit-tag);
+  border-radius: 8px;
+}
+
+.sz-reward img {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  image-rendering: pixelated;
+}
+
+.sz-reward.legend {
+  background: rgba(88, 168, 224, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(28, 72, 128, 0.5);
+}
+
 /* A resident not caught yet: its portrait as a flat silhouette. */
 .sz-note .sz-sil {
   background: var(--kit-paper);
@@ -31824,6 +31889,31 @@ span.arena-hub-face {
   opacity: 0.6;
 }
 
+/* The prize page's sections (families, Shadows, Bag, card), each a heading across the grid. */
+.corner-section {
+  grid-column: 1 / -1;
+  margin: 8px 2px 0;
+  font-family: var(--title);
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  color: color-mix(in srgb, #2a3050 var(--dk-lift, 100%), #fff);
+}
+
+.corner-section:first-child {
+  margin-top: 0;
+}
+
+/* A family not owned yet: the NOVO tag on the art's corner. */
+.corner-card .corner-new {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  padding: 1px 5px 2px;
+  font-size: 13px;
+  font-style: normal;
+  background: #2f7a3a;
+}
+
 .corner-card.short .corner-price {
   color: color-mix(in srgb, #a83030 var(--dk-lift, 100%), #fff);
 }
@@ -32456,4 +32546,10 @@ span.arena-hub-face {
   font-family: var(--kit-title);
   font-size: 20px;
   text-align: center;
+}
+
+/* The Ovo de Manaphy's hatching (`ui/manaphyEgg.ts`): the hatch dialog, in the sea's blue. */
+.dialog.hatch.manaphy-egg {
+  border-color: #58a8e0;
+  box-shadow: 0 0 0 2px #1c4880, 0 0 24px rgba(88, 168, 224, 0.45);
 }

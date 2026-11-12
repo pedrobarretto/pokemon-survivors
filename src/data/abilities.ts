@@ -13,6 +13,7 @@ import { REGIONAL_BRANCH_ABILITIES, REGIONAL_FAMILY_ABILITIES } from './regional
 import { ROCKET_FAMILY_ABILITIES } from './rocketFamilies'
 import { GA_MEGA_FAMILIES_A_ABILITIES } from './gaMegaFamiliesA'
 import { MEGA_BRANCHES_B_ABILITIES, MEGA_FAMILIES_B_ABILITIES } from './megaFamiliesB'
+import { SC_FAMILY_ABILITIES } from './scFamilies'
 import type { PokeType } from './types'
 
 /**
@@ -465,6 +466,7 @@ export const FAMILY_ABILITIES = {
   virizion: ['leafGuard', 'quickFeet', 'sharpness'],
   keldeo: ['swiftSwim', 'sharpness', 'innerFocus'],
   hoopa: ['infiltrator', 'moldBreaker', 'adaptability'],
+  manaphy: ['swiftSwim', 'rainDish', 'sereneGrace'],
   ...SEASON_ONE_EGG_ABILITIES,
   ...SEASON_ONE_KIT_ABILITIES,
   ...GA_FAMILIES_B_ABILITIES,
@@ -474,6 +476,7 @@ export const FAMILY_ABILITIES = {
   ...GA_FOSSILS_ABILITIES,
   ...GA_MEGA_FAMILIES_A_ABILITIES,
   ...MEGA_FAMILIES_B_ABILITIES,
+  ...SC_FAMILY_ABILITIES,
 } as const satisfies Record<PlayableId, AbilitySet>
 
 /** The abilities of a branch picked at the family's first evolution (`data/branches.ts`). */

@@ -418,4 +418,6 @@ export const WEAR_FITS: Partial<Record<FitKey, SpeciesFit>> = {
   529: { no: ['head'] }, // Drilbur: its eyes sit right under the steel band a hat would cover
   '530:mega': { no: ['head'] }, // Mega Excadrill: all drill, its tip where a hat would go
   '780:mega': { no: ['cap', 'vikingHelmet'] }, // Mega Drampa: facing south the mane's spikes cut a cap's brim and the helmet's horns
+  33: { no: ['head:S'] }, // Nidorino: facing south, its big ears stand over the skull and cut every hat in half between them
+  35: { no: ['cap:S'] }, // Clefairy: facing south, the cap's peak runs into its ear and is cut off
 }

@@ -29,13 +29,14 @@ export type Captures = Readonly<Partial<Record<LegendId, number>>>
 export const NO_CAPTURES: Captures = {}
 
 /** Where a legend can be beaten: a rift, the trio's wave, the finale's rare guest, the finale itself, the endless mode's reaper, an event's rift, an Ultra Wormhole, Regigigas's temple, the open map (a roamer, a duel), Hoopa's rush; or the gift that brings it (a festival's, Poipole's, Keldeo's), or its path. */
-export type LegendSource = 'rift' | 'trio' | 'mythical' | 'finale' | 'endless' | 'event' | 'festival' | 'ultra' | 'ultraGift' | 'path' | 'temple' | 'roam' | 'duel' | 'swords' | 'rush'
+export type LegendSource = 'rift' | 'trio' | 'mythical' | 'finale' | 'endless' | 'event' | 'festival' | 'ultra' | 'ultraGift' | 'path' | 'temple' | 'roam' | 'duel' | 'swords' | 'rush' | 'egg'
 
 const inList = (list: readonly string[], id: LegendId) => list.includes(id)
 
 export const legendSource = (id: LegendId): LegendSource => {
   const unlock: LegendUnlock = LEGENDS[id].unlock
   if (unlock.festival) return 'festival'
+  if (unlock.egg) return 'egg'
   if (unlock.ultra) return unlock.ultra === 'gift' ? 'ultraGift' : 'ultra'
   if (unlock.path) return 'path'
   if (unlock.after) return 'temple'
@@ -72,6 +73,7 @@ export const winCounts = (captures: Captures, id: LegendId, endless: boolean) =>
     unlock.ultra !== 'gift' &&
     !unlock.path &&
     !unlock.swords &&
+    !unlock.egg &&
     (!unlock.endless || endless) &&
     (!unlock.last || othersCaptured(captures, id)) &&
     (unlock.after ?? []).every((other) => isCaptured(captures, other))

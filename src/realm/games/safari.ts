@@ -2,17 +2,20 @@ import { openGift, stageGifts } from '../../account'
 import { HATCHLINGS, PLAYABLE, type HatchlingId } from '../../data/hatchlings'
 import { isRegion } from '../../data/regionalForms'
 import { regionOfWeek } from '../../game/travel'
-import { CONTEST_POOL, SAFARI_HABITAT_IDS, habitatPool, habitatResidents, poolAt, safariEntry, safariForm, whenAbout, type SafariHabitat } from '../../data/safari'
+import { CONTEST_POOL, HABITAT_REWARDS, SAFARI_GATED, SAFARI_HABITAT_IDS, SAFARI_HABITATS, habitatDone, habitatPool, habitatResidents, markLacking, poolAt, safariEntry, safariForm, whenAbout, type SafariHabitat } from '../../data/safari'
+import type { GiftContent } from '../../game/gifts'
+import { eggIcon, medalIcon, sparkleIcon } from '../../render/art'
+import { manaphyEggIcon } from '../../render/manaphyEggArt'
 import { PLAZA, SAFARI_MAPS, TILE } from '../../data/safariMaps'
 import { playSfx } from '../../engine/audio'
 import { LOCALES, formatPokeDollars, locale, t } from '../../i18n'
 import type { SafariActed, SafariSession, SafariState } from '../../net/realmApi'
 import { closeIcon } from '../../render/art'
 import { loadSpecies, portraitUrl, walkSheet } from '../../render/sprites'
-import { h } from '../../ui/dom'
+import { h, rich } from '../../ui/dom'
 import { loadSave } from '../../ui/save'
 import { isFailure } from '../api'
-import { actSafari, fetchSafari, localDaypart, startSafari } from '../safariApi'
+import { actSafari, fetchSafari, localDaypart, savedOpen, startSafari } from '../safariApi'
 import { openGameBoard } from './board'
 import { image, partnerDex } from './arcadeKit'
 import type { GameInput, GameRun, SoloCtx, SoloGame } from './frame'
@@ -35,7 +38,9 @@ import { buildWorld } from './safariWorld'
  * stand in the open (`Field.setWanderers`): sneaking up on one from behind
  * meets it calmer (`stalk`). On the contest days the booth also offers the
  * Concurso de Insetos (a free entry, bugs only, scored). The notice board has
- * three tabs: who's about now, each habitat's Pokédex and the contest.
+ * four tabs: the Safari-only families (every habitat's, this week's first,
+ * which the player lacks and what each habitat's Pokédex gives), who's about
+ * now, each habitat's Pokédex and the contest.
  *
  * Touch: a floating stick anywhere on the map (a light push sneaks), the sneak
  * toggle, buttons in battle. Keys: arrows or WASD walk, Shift sneaks; 1 to 5
@@ -53,8 +58,8 @@ const GATE_WALK = ((PLAZA.spawn.y - PLAZA.entry.y) * TILE) / GATE_SPEED
 /** What the dev hooks (`ps.safari`) reach of the running game. */
 export const safariDev: { run: { phase: () => Phase; wanderers: () => unknown; battle: () => string | null; rustle: () => void; stalk: () => void; sneakUp: (front: boolean) => void; say: (text: string) => void } | null } = { run: null }
 
-/** The board's tabs: who's about now, each habitat's Pokédex and the contest. */
-type BoardTab = 'seen' | 'dex' | 'contest'
+/** The board's tabs: the Safari-only families, who's about now, each habitat's Pokédex and the contest. */
+type BoardTab = 'only' | 'seen' | 'dex' | 'contest'
 
 /** The next contest day on or after today (Brasília), for the board's line. */
 const nextContestDay = (from: Date) => {
@@ -313,6 +318,15 @@ const start = (ctx: SoloCtx): GameRun => {
     return field
   }
 
+  /** A habitat's Safari-only families this account meets there (Phione once Manaphy is its own). */
+  const exclusivesOf = (at: SafariHabitat) => {
+    const open = savedOpen()
+    return (SAFARI_HABITATS[at].only as readonly HatchlingId[]).filter((id) => SAFARI_GATED[id] === undefined || open.has(id))
+  }
+
+  /** The Safari-only families of a habitat the save still lacks. */
+  const lackingHere = (at: SafariHabitat) => exclusivesOf(at).filter(lacks)
+
   const showLobby = () => {
     if (!view) return
     const w = m()
@@ -327,13 +341,19 @@ const start = (ctx: SoloCtx): GameRun => {
     go('lobby')
     showWalkHud(false)
     readBtn.classList.add('hidden')
-    const small = [view.sure ? w.sureNow : w.sureIn(Math.max(0, SAFARI.guarantee - view.dry)), w.today(view.used, SAFARI.dailyCap), ...(view.contest.open ? [contest ? w.contest.open : w.contest.used] : [])]
+    const missing = lackingHere(at)
+    const small = [
+      missing.length > 0 ? w.only.lacking(missing.length, missing.map((id) => safariForm(id).name).join(', ')) : w.only.allHere,
+      view.sure ? w.sureNow : w.sureIn(Math.max(0, SAFARI.guarantee - view.dry)),
+      w.today(view.used, SAFARI.dailyCap),
+      ...(view.contest.open ? [contest ? w.contest.open : w.contest.used] : []),
+    ]
     // By day the booth says the rules; at another hour it says who comes out instead.
     say(`${w.welcome(w.habitats[at].name)} ${daypart === 'day' ? w.rules(SAFARI.balls, SAFARI.berries) : w.hourNote[daypart]}`, small.join(' · '))
     commands([
       ...(price === null || !affordable ? [] : [{ label: price === 0 ? w.free : w.paid(formatPokeDollars(price)), run: () => void enter('safari'), hot: true }]),
       ...(contest ? [{ label: w.contest.enter, run: () => void enter('contest'), hot: price === null || !affordable }] : []),
-      { label: w.boardOpen, run: () => openBoard(contest ? 'contest' : 'seen') },
+      { label: w.boardOpen, run: () => openBoard(contest ? 'contest' : missing.length > 0 ? 'only' : 'seen') },
     ])
     hud.classList.toggle('sz-three', cmds.childElementCount === 3)
     if (contest && (price === null || !affordable)) say(w.contest.welcome, small.join(' · '))
@@ -415,7 +435,7 @@ const start = (ctx: SoloCtx): GameRun => {
     const partner = view!.partner
     const partnerTypes = partner ? PLAYABLE[partner].line[0].types : []
     const week = session?.week ?? view!.week
-    const pool = session?.mode === 'contest' ? [...CONTEST_POOL] : poolAt(at, daypart, week)
+    const pool = session?.mode === 'contest' ? [...CONTEST_POOL] : markLacking(poolAt(at, daypart, week, savedOpen()), lacks)
     const all = shareOf(pool, partnerTypes).sort((a, b) => b.share - a.share)
     // The week's trip's visitors (`game/travel.ts`) get a section of their own, the region's name on it.
     const visiting = (family: (typeof all)[number]['family']) => isRegion(HATCHLINGS[family].egg)
@@ -447,7 +467,7 @@ const start = (ctx: SoloCtx): GameRun => {
     const w = m()
     const caught = view!.dex[dexHabitat]
     const residents = habitatResidents(dexHabitat)
-    const done = residents.every((e) => caught.includes(e.family))
+    const done = habitatDone(dexHabitat, caught, view!.done)
     return [
       h(
         'nav',
@@ -458,11 +478,12 @@ const start = (ctx: SoloCtx): GameRun => {
             'button',
             { type: 'button', role: 'tab', class: hb === dexHabitat ? 'sz-on' : '', 'aria-selected': String(hb === dexHabitat), onclick: () => ((dexHabitat = hb), renderBoard()) },
             h('span', {}, w.habitats[hb].name),
-            h('small', {}, w.dex.progress(n, habitatResidents(hb).length)),
+            h('small', {}, habitatDone(hb, view!.dex[hb], view!.done) ? `✓ ${w.dex.progress(n, habitatResidents(hb).length)}` : w.dex.progress(n, habitatResidents(hb).length)),
           )
         }),
       ),
-      h('small', { class: done ? 'sz-dex-done' : '' }, done ? w.dex.done : `${w.dex.reward} ${w.dex.allReward}`),
+      done ? h('small', { class: 'sz-dex-done' }, w.only.done) : rewardsLine(dexHabitat),
+      !done && h('small', {}, w.dex.allReward),
       h(
         'div',
         { class: 'sz-notes' },
@@ -475,6 +496,62 @@ const start = (ctx: SoloCtx): GameRun => {
             return note(e.family, false, { hidden: !has, when: w.dex.when[when] })
           }),
         ),
+      ),
+    ]
+  }
+
+  /** One of a habitat's rewards as a chip: its icon and its words. */
+  const rewardChip = (c: GiftContent) => {
+    const w = m().only
+    const [src, text] =
+      c.kind === 'egg' ? [eggIcon(c.tier), w.ultraEgg]
+      : c.kind === 'title' ? [medalIcon('gold'), w.title_(t().achievements.titles[c.title])]
+      : c.kind === 'shinyHatch' ? [portraitUrl(safariForm(c.family).dex, true), w.shiny(safariForm(c.family).name)]
+      : c.kind === 'legend' ? [manaphyEggIcon(), w.manaphyEgg]
+      : [sparkleIcon(), '']
+    return h('li', { class: `sz-reward ${c.kind}` }, h('img', { src, alt: '', width: 24, height: 24 }), h('span', {}, rich(text)))
+  }
+
+  /** What filling a habitat's Pokédex gives: the Ultra egg, its title, its sure shiny and, for the cove, the Ovo de Manaphy. */
+  const rewardsLine = (at: SafariHabitat) => {
+    const rewards: readonly GiftContent[] = [{ kind: 'egg', tier: 'ultra' }, ...HABITAT_REWARDS[at]]
+    return h('div', { class: 'sz-rewards' }, h('small', {}, m().only.rewardHead), h('ul', {}, ...rewards.map(rewardChip)))
+  }
+
+  /** The Safari-only families, habitat by habitat from this week's: which the player has, which it lacks, and each habitat's Pokédex prize. */
+  const onlyTab = () => {
+    const w = m()
+    // The habitats come round in their weekly order (`habitatOfWeek`), from the one open now.
+    const now = SAFARI_HABITAT_IDS.indexOf(session?.habitat ?? view!.habitat)
+    const order = SAFARI_HABITAT_IDS.map((_, i) => ({ at: SAFARI_HABITAT_IDS[(now + i) % SAFARI_HABITAT_IDS.length]!, i }))
+    const open = savedOpen()
+    return [
+      h('small', {}, w.only.intro),
+      h(
+        'div',
+        { class: 'sz-notes sz-only' },
+        ...order.map(({ at, i }) => {
+          const all = SAFARI_HABITATS[at].only as readonly HatchlingId[]
+          const met = exclusivesOf(at)
+          const have = met.filter((id) => !lacks(id)).length
+          const when = i === 0 ? w.only.thisWeek : w.only.inWeeks(i)
+          const done = habitatDone(at, view!.dex[at], view!.done)
+          return h(
+            'section',
+            { class: i === 0 ? 'sz-only-now' : '' },
+            h('h4', {}, `${w.habitats[at].name} · ${when}`, h('em', { class: 'sz-only-count' }, w.only.have(have, met.length))),
+            h(
+              'ul',
+              {},
+              ...all.map((id) => {
+                const gated = SAFARI_GATED[id] !== undefined && !open.has(id)
+                const mine = !gated && !lacks(id)
+                return note(id, gated ? w.only.gated : mine ? `✓ ${w.only.owned}` : `${w.only.missing} · ${w.only.boost}`, { fresh: !gated && !mine, hidden: gated })
+              }),
+            ),
+            done ? h('small', { class: 'sz-dex-done' }, w.only.done) : rewardsLine(at),
+          )
+        }),
       ),
     ]
   }
@@ -503,9 +580,9 @@ const start = (ctx: SoloCtx): GameRun => {
     if (!view) return
     const w = m()
     const at = session?.habitat ?? view.habitat
-    const tabs: readonly BoardTab[] = ['seen', 'dex', 'contest']
-    const kicker = boardTab === 'dex' ? w.habitats[dexHabitat].name : boardTab === 'contest' ? w.contest.days : w.habitats[at].name
-    const title = boardTab === 'seen' ? w.seenTitle(w.dayparts[daypart]) : boardTab === 'dex' ? w.dex.title : w.contest.name
+    const tabs: readonly BoardTab[] = ['only', 'seen', 'dex', 'contest']
+    const kicker = boardTab === 'dex' ? w.habitats[dexHabitat].name : boardTab === 'contest' ? w.contest.days : boardTab === 'only' ? w.thisWeek : w.habitats[at].name
+    const title = boardTab === 'seen' ? w.seenTitle(w.dayparts[daypart]) : boardTab === 'dex' ? w.dex.title : boardTab === 'only' ? w.only.title : w.contest.name
     board.replaceChildren(
       h(
         'div',
@@ -519,10 +596,10 @@ const start = (ctx: SoloCtx): GameRun => {
           h(
             'nav',
             { class: 'sz-tabs', role: 'tablist' },
-            ...tabs.map((tab) => h('button', { type: 'button', role: 'tab', class: tab === boardTab ? 'sz-on' : '', 'aria-selected': String(tab === boardTab), onclick: () => ((boardTab = tab), playSfx('select'), renderBoard()) }, w.tabs[tab])),
+            ...tabs.map((tab) => h('button', { type: 'button', role: 'tab', class: tab === boardTab ? 'sz-on' : '', 'aria-selected': String(tab === boardTab), onclick: () => ((boardTab = tab), playSfx('select'), renderBoard()) }, tab === 'only' ? w.only.tab : w.tabs[tab])),
           ),
         ),
-        ...(boardTab === 'seen' ? seenTab() : boardTab === 'dex' ? dexTab() : contestTab()),
+        ...(boardTab === 'seen' ? seenTab() : boardTab === 'dex' ? dexTab() : boardTab === 'only' ? onlyTab() : contestTab()),
         h('button', { class: 'arc-icon-btn sz-board-close', type: 'button', 'aria-label': w.ok, title: w.ok, onclick: closeBoard }, h('img', { src: closeIcon(), alt: '' })),
       ),
     )

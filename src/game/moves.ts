@@ -21,6 +21,7 @@ import { SEASON_ONE_EGG_MOVES } from './seasonOneEggMoves'
 import { SEASON_ONE_KIT_MOVES } from './seasonOneKitMoves'
 import { GA_KIT_B_MOVES } from './gaKitBMoves'
 import { FOSSIL_KIT_MOVES } from './fossilKitMoves'
+import { SC_KIT_MOVES } from './scKitMoves'
 import { GA_KIT_A_MOVES } from './gaKitAMoves'
 import { REGIONAL_MOVES } from './regionalMoves'
 import { ROCKET_KIT_MOVES } from './rocketKitMoves'
@@ -38,6 +39,7 @@ import { LEGENDARY_MOVES_2 } from './legendaryMoves2'
 import { ULTRA_MOVES } from './ultraMoves'
 import { PATH_LEGEND_MOVES } from './pathLegendMoves'
 import { LEGENDARY_MOVES_3 } from './legendaryMoves3'
+import { LEGENDARY_MOVES_4 } from './legendaryMoves4'
 import { beatOf } from './signatureRules'
 import { stacksOf } from './kitRules'
 import * as dm from '../engine/dmath'
@@ -2319,11 +2321,14 @@ export const MOVES = {
   ...PATH_LEGEND_MOVES,
   /* ---------- Legendary moves, third batch: Palkia, the lake trio, the Swords of Justice, Keldeo and Hoopa (`legendaryMoves3.ts`) ---------- */
   ...LEGENDARY_MOVES_3,
+  /* ---------- Legendary moves, fourth batch: Manaphy (`legendaryMoves4.ts`) ---------- */
+  ...LEGENDARY_MOVES_4,
   /* ---------- Smeargle's Sketch, the Kecleon Egg's signature (`sketch.ts`) ---------- */
   ...SKETCH_MOVES,
   ...SEASON_ONE_EGG_MOVES,
   ...SEASON_ONE_KIT_MOVES,
   ...GA_KIT_B_MOVES,
+  ...SC_KIT_MOVES,
   ...GA_KIT_A_MOVES,
   ...REGIONAL_MOVES,
   ...ROCKET_KIT_MOVES,
@@ -2359,10 +2364,12 @@ export const MOVE_TABLES: Readonly<Record<string, Readonly<Record<string, MoveDe
   ULTRA_MOVES,
   PATH_LEGEND_MOVES,
   LEGENDARY_MOVES_3,
+  LEGENDARY_MOVES_4,
   SKETCH_MOVES,
   SEASON_ONE_EGG_MOVES,
   SEASON_ONE_KIT_MOVES,
   GA_KIT_B_MOVES,
+  SC_KIT_MOVES,
   GA_KIT_A_MOVES,
   REGIONAL_MOVES,
   ROCKET_KIT_MOVES,
