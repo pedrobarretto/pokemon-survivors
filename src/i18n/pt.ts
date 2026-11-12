@@ -11,6 +11,7 @@ import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
 import { GA_FOSSILS_WORDS } from './gaFossils'
 import { MEGA_FAMILIES_B_WORDS } from './megaFamiliesB'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
+import { GA_HOOK_WORDS } from './gaHook'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { GA_MEGAS_WORDS } from './gaMegas'
 import { GA_MEGA_FAMILIES_A_WORDS } from './gaMegaFamiliesA'
@@ -3570,6 +3571,7 @@ export const pt = {
     ...ROCKET_FAMILY_WORDS.pt.moves,
     ...GA_MEGA_FAMILIES_A_WORDS.pt.moves,
     ...SC_WAVE_WORDS.pt.moves,
+    ...GA_HOOK_WORDS.pt.moves,
     ...GALLOP_WORDS.pt,
     ...ULTRA_WORDS.pt.moves,
     ...LEGEND_PATHS_WORDS.pt.moves,
@@ -6055,6 +6057,7 @@ export const pt = {
     ...ROCKET_FAMILY_WORDS.pt.blurbs,
     ...GA_MEGA_FAMILIES_A_WORDS.pt.blurbs,
     ...SC_WAVE_WORDS.pt.blurbs,
+    ...GA_HOOK_WORDS.pt.blurbs,
     ...ULTRA_WORDS.pt.blurbs,
     ...LEGEND_PATHS_WORDS.pt.blurbs,
     ...QUEST_WORDS.pt.blurbs,
@@ -6978,7 +6981,7 @@ export const pt = {
     },
   },
   /** Bibarel, the carpentry's carpenter on the plaza's north-east, as the partner walks up: the first visit, then one of these in turn. */
-  seasonUnlocks: SEASON_ONE_UNLOCKS_WORDS.pt,
+  seasonUnlocks: { ...SEASON_ONE_UNLOCKS_WORDS.pt, where: { ...SEASON_ONE_UNLOCKS_WORDS.pt.where, ...GA_HOOK_WORDS.pt.where } },
   megaFamiliesWhere: GA_MEGA_FAMILIES_A_WORDS.pt.where,
   rocket: ROCKET_WORDS.pt,
   scWave: SC_WAVE_WORDS.pt,
@@ -7136,6 +7139,8 @@ export const pt = {
   },
   /** A Viagem (`game/travel.ts`): the Ovo de Viagem's card and the trip of the week. */
   travel: REGIONAL_WORDS.pt.travel,
+  /** The wave's hook families (`data/gaFamiliesHook.ts`): Tyrogue's evolution, Vivillon's pattern, Plus and Minus. */
+  gaHook: { tyrogue: GA_HOOK_WORDS.pt.tyrogue, vivillon: GA_HOOK_WORDS.pt.vivillon, plusMinus: GA_HOOK_WORDS.pt.plusMinus },
 } satisfies ContentTexts & Record<string, unknown>
 
 export type Messages = typeof pt

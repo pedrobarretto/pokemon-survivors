@@ -10,6 +10,7 @@ import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
 import { GA_FOSSILS_WORDS } from './gaFossils'
 import { MEGA_FAMILIES_B_WORDS } from './megaFamiliesB'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
+import { GA_HOOK_WORDS } from './gaHook'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { GA_MEGAS_WORDS } from './gaMegas'
 import { GA_MEGA_FAMILIES_A_WORDS } from './gaMegaFamiliesA'
@@ -3194,6 +3195,7 @@ export const zh: Messages = {
     ...ROCKET_FAMILY_WORDS.zh.moves,
     ...GA_MEGA_FAMILIES_A_WORDS.zh.moves,
     ...SC_WAVE_WORDS.zh.moves,
+    ...GA_HOOK_WORDS.zh.moves,
     ...GALLOP_WORDS.zh,
     ...ULTRA_WORDS.zh.moves,
     ...LEGEND_PATHS_WORDS.zh.moves,
@@ -5678,6 +5680,7 @@ export const zh: Messages = {
     ...ROCKET_FAMILY_WORDS.zh.blurbs,
     ...GA_MEGA_FAMILIES_A_WORDS.zh.blurbs,
     ...SC_WAVE_WORDS.zh.blurbs,
+    ...GA_HOOK_WORDS.zh.blurbs,
     ...ULTRA_WORDS.zh.blurbs,
     ...LEGEND_PATHS_WORDS.zh.blurbs,
     ...QUEST_WORDS.zh.blurbs,
@@ -6528,7 +6531,7 @@ export const zh: Messages = {
       awards: { damage: '最高傷害', kills: '最多擊倒', revives: '守護天使', untouched: '毫髮無傷', tank: '坦克', comeback: '不死鳥', survivor: '倖存者', specialist: '專家', collector: '收藏家', loyal: '團隊精神' },
     },
   },
-  seasonUnlocks: SEASON_ONE_UNLOCKS_WORDS.zh,
+  seasonUnlocks: { ...SEASON_ONE_UNLOCKS_WORDS.zh, where: { ...SEASON_ONE_UNLOCKS_WORDS.zh.where, ...GA_HOOK_WORDS.zh.where } },
   megaFamiliesWhere: GA_MEGA_FAMILIES_A_WORDS.zh.where,
   rocket: ROCKET_WORDS.zh,
   scWave: SC_WAVE_WORDS.zh,
@@ -6682,4 +6685,5 @@ export const zh: Messages = {
     hello: ['一如往常，鋸木頭、磨木頭。要帶點什麼回去嗎？', '好木頭，價格公道。看看吧！', '沒有家具的基地，只是牆上的一個洞！', '我剛替幾件新作品上好亮光漆。'],
   },
   travel: REGIONAL_WORDS.zh.travel,
+  gaHook: { tyrogue: GA_HOOK_WORDS.zh.tyrogue, vivillon: GA_HOOK_WORDS.zh.vivillon, plusMinus: GA_HOOK_WORDS.zh.plusMinus },
 }

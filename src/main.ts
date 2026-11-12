@@ -98,7 +98,7 @@ import { trainingPanel } from './ui/training'
 import { formAt, playerForm } from './game/branch'
 import { unlockedAt } from './game/learnsets'
 import { ABILITIES, type AbilityEffect, type AbilityId } from './data/abilities'
-import { branchesAt, familyDex, MEGA_BRANCH, type BranchId } from './data/branches'
+import { BRANCHES, branchesAt, familyDex, MEGA_BRANCH, type BranchId } from './data/branches'
 import { abilityStacks, grantAbility } from './game/abilities'
 import { abilityIcon } from './render/abilityArt'
 import { recomputeStats, xpFor } from './game/leveling'
@@ -120,6 +120,10 @@ import { MAP_ARCHETYPE_IDS, type MapArchetypeId } from './data/mapArchetypes'
 import { PLACES } from './data/places'
 import { kitDevTools } from './game/kitDev'
 import { gaKitADevTools } from './game/gaKitADev'
+import { gaHookDevTools } from './gaHookDev'
+import { fighterNow } from './game/gaHookSystem'
+import { devicePattern } from './vivillonRegion'
+import { parsePattern, setSeatPatterns } from './render/gaHookLook'
 import { eggMoveDevTools } from './game/eggMovesDev'
 import { learnDevTools } from './game/learnDev'
 import { itemDropDevTools } from './game/itemDropDev'
@@ -946,6 +950,7 @@ const showMenu = (initial: PlayableId = loadSave().partner, tab?: 'legends') => 
  */
 const wearOwnLook = () => {
   setLooksGame(null)
+  setSeatPatterns([])
   setLooks([parseLook(equippedLook())])
 }
 
@@ -957,6 +962,7 @@ onGems(() => {
 const takeOffLooks = () => {
   resetArenaFx()
   setLooks([])
+  setSeatPatterns([])
   setLooksGame(null)
 }
 
@@ -2368,6 +2374,9 @@ const handleEvent = (r: Run, e: GameEvent) => {
     case 'branchChoice':
       playCry(playerCry(g), 0.6)
       return
+    case 'plusMinus':
+      playSfx('unlock')
+      return news(rich(t().gaHook.plusMinus.linked), 2800)
     case 'evoItem':
       playSfx('unlock')
       return evoItemToast([e.item], t().branch.found(EVO_ITEMS[e.item].name), t().branch.foundHint, 'evoItem', aside)
@@ -2423,7 +2432,10 @@ const handleEvent = (r: Run, e: GameEvent) => {
     case 'evolve': {
       playCry(cryUrl(e.from))
       r.closeText?.()
-      r.closeText = textBox(ui, t().toast.evolving(playerForm(g).name))
+      // Tyrogue reads out the build that decided its branch (`ruledBranch`).
+      const me = localPlayer(g)
+      const build = me.branch ? fighterNow(me) : null
+      r.closeText = textBox(ui, build && me.branch ? t().gaHook.tyrogue.evolving(playerForm(g).name, build.attack, build.defense, BRANCHES[me.branch].name) : t().toast.evolving(playerForm(g).name))
       return
     }
     case 'evolved': {
@@ -3102,6 +3114,7 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
   const seatLook = (p: (typeof live.start.players)[number], i: number) =>
     i === me.slot ? equippedLook() : (p.loadout.look ?? (import.meta.env.DEV ? tabBotLook(p.seat) : null))
   setLooks(live.start.players.map((p, i) => parseLook(seatLook(p, i))))
+  setSeatPatterns(live.start.players.map((p, i) => (i === me.slot ? devicePattern() : parsePattern(p.loadout.pattern))))
   setLooksGame(`${live.room}:${live.start.id}`)
   run = {
     game: live.game,
@@ -5063,7 +5076,8 @@ const devCoop = async (cmd?: string, arg?: string | number | boolean | null, ext
     case 'join':
       return joinCoop(String(arg ?? ''), 'code')
     case 'bots':
-      return st.code ? addBots(st.code, Number(arg ?? 1)) : 'ps.coop: join a room first'
+      // ps.coop('bots', 1, 'minun'): the bots play that Pokémon (Plusle and Minun's link).
+      return st.code ? addBots(st.code, Number(arg ?? 1), PLAYABLE_IDS.find((p) => p === extra)) : 'ps.coop: join a room first'
     case 'pick': {
       // Another Pokémon for this room (the lobby picks it in PR 7).
       const id = PLAYABLE_IDS.find((p) => p === arg)
@@ -5781,6 +5795,7 @@ if (import.meta.env.DEV) {
       ...levelUpDevTools(() => run?.game),
       ...kitDevTools(() => run?.game),
       ...gaKitADevTools(() => run?.game),
+      ...gaHookDevTools(() => run?.game),
       ...eggMoveDevTools(() => run?.game),
       ...learnDevTools(() => run?.game),
       ...itemDropDevTools(() => run?.game),

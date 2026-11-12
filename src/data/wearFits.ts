@@ -420,4 +420,7 @@ export const WEAR_FITS: Partial<Record<FitKey, SpeciesFit>> = {
   '780:mega': { no: ['cap', 'vikingHelmet'] }, // Mega Drampa: facing south the mane's spikes cut a cap's brim and the helmet's horns
   33: { no: ['head:S'] }, // Nidorino: facing south, its big ears stand over the skull and cut every hat in half between them
   35: { no: ['cap:S'] }, // Clefairy: facing south, the cap's peak runs into its ear and is cut off
+  // The hook families (src/data/gaFamiliesHook.ts)
+  665: { rig: { E: { seat: [-1, -2] } } }, // Spewpa: turned, the brim came down onto its eye
+  311: { rig: { SE: { seat: [0, -3] }, E: { seat: [0, -3] } } }, // Plusle: turned, the seat sat between its ears, down on its eyes
 }

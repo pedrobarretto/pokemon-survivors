@@ -59,6 +59,11 @@ export const REGIONAL_LINES = [
   10253, 980, 10250, 10251, 10252, // Paldea: Wooper, Tauros and its breeds
   10100, 10114, 10115, 10233, 10236, 10244, 10242, // regional evolutions: Raichu, Exeggutor, Marowak, Typhlosion, Samurott, Decidueye, Goodra
 ]
+/**
+ * The wave's hook families (src/data/gaFamiliesHook.ts), whole lines: Scatterbug's (Vivillon's patterns are its
+ * `FORMS`), Minior (its Core colors, `FORMS`), Tyrogue and its three branches, Plusle and Minun.
+ */
+export const GA_FAMILIES_HOOK = [664, 665, 666, 774, 236, 106, 107, 237, 311, 312]
 /** Families that hatch from eggs (src/data/hatchlings.ts), whole lines. Some also roam the horde. */
 export const HATCHLINGS = [
   172, 25, 26, 66, 67, 68, 133, 197, 175, 176, 468, 363, 364, 365, 396, 397, 398, 406, 315, 407, 744, 745, 736, 737, 738, // common
@@ -91,6 +96,7 @@ export const HATCHLINGS = [
   ...MEGA_FAMILIES_B,
   // The Safári and Game Corner wave's families (src/data/scFamilies.ts): the Celadon prizes, both Nidoran lines and Cleffa's, and Phione
   29, 30, 31, 32, 33, 34, 173, 35, 36, 489,
+  ...GA_FAMILIES_HOOK,
 ]
 export const HORDE = Object.values(roster).map((s) => s.dex)
 /** Horde species with a behavior trait (`src/data/enemies.ts`), plus Nidoqueen's summons. */
@@ -261,6 +267,13 @@ export const FORMS = {
   719: { mega: '0001' },
   807: { mega: '0001' },
   1017: { wellspring: '0001', hearthflame: '0002', cornerstone: '0003', tealTera: '0004', wellspringTera: '0005', hearthflameTera: '0006', cornerstoneTera: '0007' },
+  // The hook families' looks (src/data/vivillon.ts): Vivillon's wing patterns by region (Meadow is the species' own;
+  // Fancy, 0018, and Poké Ball, 0019, are event patterns with no region, left out) and Minior's seven Core colors.
+  666: {
+    icySnow: '0001', polar: '0002', tundra: '0003', continental: '0004', garden: '0005', elegant: '0006', modern: '0007', marine: '0008',
+    archipelago: '0009', highPlains: '0010', sandstorm: '0011', river: '0012', monsoon: '0013', savanna: '0014', sun: '0015', ocean: '0016', jungle: '0017',
+  },
+  774: { red: '0001', orange: '0002', yellow: '0003', green: '0004', blue: '0005', indigo: '0006', violet: '0007' },
 }
 
 /**

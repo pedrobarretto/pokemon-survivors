@@ -10,6 +10,7 @@ import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
 import { GA_FOSSILS_WORDS } from './gaFossils'
 import { MEGA_FAMILIES_B_WORDS } from './megaFamiliesB'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
+import { GA_HOOK_WORDS } from './gaHook'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { GA_MEGAS_WORDS } from './gaMegas'
 import { GA_MEGA_FAMILIES_A_WORDS } from './gaMegaFamiliesA'
@@ -3197,6 +3198,7 @@ export const en: Messages = {
     ...ROCKET_FAMILY_WORDS.en.moves,
     ...GA_MEGA_FAMILIES_A_WORDS.en.moves,
     ...SC_WAVE_WORDS.en.moves,
+    ...GA_HOOK_WORDS.en.moves,
     ...GALLOP_WORDS.en,
     ...ULTRA_WORDS.en.moves,
     ...LEGEND_PATHS_WORDS.en.moves,
@@ -5682,6 +5684,7 @@ export const en: Messages = {
     ...ROCKET_FAMILY_WORDS.en.blurbs,
     ...GA_MEGA_FAMILIES_A_WORDS.en.blurbs,
     ...SC_WAVE_WORDS.en.blurbs,
+    ...GA_HOOK_WORDS.en.blurbs,
     ...ULTRA_WORDS.en.blurbs,
     ...LEGEND_PATHS_WORDS.en.blurbs,
     ...QUEST_WORDS.en.blurbs,
@@ -6532,7 +6535,7 @@ export const en: Messages = {
       awards: { damage: 'Top damage', kills: 'Most defeated', revives: 'Guardian angel', untouched: 'Untouchable', tank: 'Tank', comeback: 'Phoenix', survivor: 'Survivor', specialist: 'Specialist', collector: 'Collector', loyal: 'Team player' },
     },
   },
-  seasonUnlocks: SEASON_ONE_UNLOCKS_WORDS.en,
+  seasonUnlocks: { ...SEASON_ONE_UNLOCKS_WORDS.en, where: { ...SEASON_ONE_UNLOCKS_WORDS.en.where, ...GA_HOOK_WORDS.en.where } },
   megaFamiliesWhere: GA_MEGA_FAMILIES_A_WORDS.en.where,
   rocket: ROCKET_WORDS.en,
   scWave: SC_WAVE_WORDS.en,
@@ -6686,4 +6689,5 @@ export const en: Messages = {
     hello: ['Sawing and sanding, as always. Taking anything home?', 'Good wood, fair prices. Have a look!', 'A base without furniture is just a hole in the wall!', 'I just varnished a few new pieces.'],
   },
   travel: REGIONAL_WORDS.en.travel,
+  gaHook: { tyrogue: GA_HOOK_WORDS.en.tyrogue, vivillon: GA_HOOK_WORDS.en.vivillon, plusMinus: GA_HOOK_WORDS.en.plusMinus },
 }

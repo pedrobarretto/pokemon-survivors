@@ -10,6 +10,7 @@ import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
 import { GA_FOSSILS_WORDS } from './gaFossils'
 import { MEGA_FAMILIES_B_WORDS } from './megaFamiliesB'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
+import { GA_HOOK_WORDS } from './gaHook'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { GA_MEGAS_WORDS } from './gaMegas'
 import { GA_MEGA_FAMILIES_A_WORDS } from './gaMegaFamiliesA'
@@ -3194,6 +3195,7 @@ export const fr: Messages = {
     ...ROCKET_FAMILY_WORDS.fr.moves,
     ...GA_MEGA_FAMILIES_A_WORDS.fr.moves,
     ...SC_WAVE_WORDS.fr.moves,
+    ...GA_HOOK_WORDS.fr.moves,
     ...GALLOP_WORDS.fr,
     ...ULTRA_WORDS.fr.moves,
     ...LEGEND_PATHS_WORDS.fr.moves,
@@ -5678,6 +5680,7 @@ export const fr: Messages = {
     ...ROCKET_FAMILY_WORDS.fr.blurbs,
     ...GA_MEGA_FAMILIES_A_WORDS.fr.blurbs,
     ...SC_WAVE_WORDS.fr.blurbs,
+    ...GA_HOOK_WORDS.fr.blurbs,
     ...ULTRA_WORDS.fr.blurbs,
     ...LEGEND_PATHS_WORDS.fr.blurbs,
     ...QUEST_WORDS.fr.blurbs,
@@ -6528,7 +6531,7 @@ export const fr: Messages = {
       awards: { damage: 'Plus de dégâts', kills: 'Plus de vaincus', revives: 'Ange gardien', untouched: 'Intouchable', tank: 'Tank', comeback: 'Phénix', survivor: 'Survivant', specialist: 'Spécialiste', collector: 'Collectionneur', loyal: 'Esprit d’équipe' },
     },
   },
-  seasonUnlocks: SEASON_ONE_UNLOCKS_WORDS.fr,
+  seasonUnlocks: { ...SEASON_ONE_UNLOCKS_WORDS.fr, where: { ...SEASON_ONE_UNLOCKS_WORDS.fr.where, ...GA_HOOK_WORDS.fr.where } },
   megaFamiliesWhere: GA_MEGA_FAMILIES_A_WORDS.fr.where,
   rocket: ROCKET_WORDS.fr,
   scWave: SC_WAVE_WORDS.fr,
@@ -6682,4 +6685,5 @@ export const fr: Messages = {
     hello: ['Je scie et je ponce, comme toujours. Vous emportez quelque chose ?', 'Du bon bois, des prix honnêtes. Jetez un œil !', 'Une base sans meubles, c\'est juste un trou dans le mur !', 'Je viens de vernir quelques nouvelles pièces.'],
   },
   travel: REGIONAL_WORDS.fr.travel,
+  gaHook: { tyrogue: GA_HOOK_WORDS.fr.tyrogue, vivillon: GA_HOOK_WORDS.fr.vivillon, plusMinus: GA_HOOK_WORDS.fr.plusMinus },
 }

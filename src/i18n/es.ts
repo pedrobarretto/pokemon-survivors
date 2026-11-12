@@ -10,6 +10,7 @@ import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
 import { GA_FOSSILS_WORDS } from './gaFossils'
 import { MEGA_FAMILIES_B_WORDS } from './megaFamiliesB'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
+import { GA_HOOK_WORDS } from './gaHook'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { GA_MEGAS_WORDS } from './gaMegas'
 import { GA_MEGA_FAMILIES_A_WORDS } from './gaMegaFamiliesA'
@@ -3199,6 +3200,7 @@ export const es: Messages = {
     ...ROCKET_FAMILY_WORDS.es.moves,
     ...GA_MEGA_FAMILIES_A_WORDS.es.moves,
     ...SC_WAVE_WORDS.es.moves,
+    ...GA_HOOK_WORDS.es.moves,
     ...GALLOP_WORDS.es,
     ...ULTRA_WORDS.es.moves,
     ...LEGEND_PATHS_WORDS.es.moves,
@@ -5684,6 +5686,7 @@ export const es: Messages = {
     ...ROCKET_FAMILY_WORDS.es.blurbs,
     ...GA_MEGA_FAMILIES_A_WORDS.es.blurbs,
     ...SC_WAVE_WORDS.es.blurbs,
+    ...GA_HOOK_WORDS.es.blurbs,
     ...ULTRA_WORDS.es.blurbs,
     ...LEGEND_PATHS_WORDS.es.blurbs,
     ...QUEST_WORDS.es.blurbs,
@@ -6534,7 +6537,7 @@ export const es: Messages = {
       awards: { damage: 'Más daño', kills: 'Más derrotas', revives: 'Ángel guardián', untouched: 'Intocable', tank: 'Tanque', comeback: 'Fénix', survivor: 'Superviviente', specialist: 'Especialista', collector: 'Coleccionista', loyal: 'Compañero fiel' },
     },
   },
-  seasonUnlocks: SEASON_ONE_UNLOCKS_WORDS.es,
+  seasonUnlocks: { ...SEASON_ONE_UNLOCKS_WORDS.es, where: { ...SEASON_ONE_UNLOCKS_WORDS.es.where, ...GA_HOOK_WORDS.es.where } },
   megaFamiliesWhere: GA_MEGA_FAMILIES_A_WORDS.es.where,
   rocket: ROCKET_WORDS.es,
   scWave: SC_WAVE_WORDS.es,
@@ -6688,4 +6691,5 @@ export const es: Messages = {
     hello: ['Serrando y lijando, como siempre. ¿Te llevas algo?', 'Buena madera, precio justo. ¡Echa un vistazo!', '¡Una base sin muebles es solo un hueco en la pared!', 'Acabo de barnizar unas piezas nuevas.'],
   },
   travel: REGIONAL_WORDS.es.travel,
+  gaHook: { tyrogue: GA_HOOK_WORDS.es.tyrogue, vivillon: GA_HOOK_WORDS.es.vivillon, plusMinus: GA_HOOK_WORDS.es.plusMinus },
 }

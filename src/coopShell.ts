@@ -2,6 +2,7 @@ import { accountHandle, accountsEnabled, sessionToken } from './account'
 import { track, type RunPerf } from './analytics'
 import { bank, bankKey, paysAnything, type BankDelta, type Store } from './coop/bank'
 import { createBot, botPick, type Bot } from './coop/bot'
+import type { CoopPick } from './coop/start'
 import { COSMETIC_IDS, slotOf, type CosmeticSlot } from './data/cosmetics'
 import { SKIN_LINES } from './data/skinCatalog'
 import { skinsOf } from './arena/gemShop'
@@ -431,8 +432,8 @@ export const tabBotLook = (seat: number): WireLook | null => {
   return null
 }
 
-/** Dev: `n` bots join room `code` (they set a loadout and get ready; the soak's bots in a tab). */
-export const addBots = async (code: string, n: number) => {
+/** Dev: `n` bots join room `code` (they set a loadout and get ready; the soak's bots in a tab), playing `starter` when given. */
+export const addBots = async (code: string, n: number, starter?: CoopPick['starter']) => {
   const url = coopUrl()
   if (!url) return []
   const joined: number[] = []
@@ -446,7 +447,7 @@ export const addBots = async (code: string, n: number) => {
     // Each bot wears a look of its own (`botLook`), so a room shows every seat's look arriving.
     const look = botLook(k)
     botLooks.set(bot, look)
-    bot.client.setLoadout({ ...botPick(k + 1), look })
+    bot.client.setLoadout({ ...botPick(k + 1), ...(starter && { starter }), look })
     setTimeout(() => bot.client.setReady(true), 300)
     // After a run the relay clears everyone's ready: a bot is ready for "Jogar de novo" a moment later.
     bot.client.on((e) => {

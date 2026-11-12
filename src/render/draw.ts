@@ -63,6 +63,7 @@ import { drawKitBAir, drawKitBAttack, drawKitBGround, kitBPlayerLook } from './g
 import { drawKitFAir, drawKitFAttack, drawKitFGround } from './fossilKitFx'
 import { drawGaKitMAAir, drawGaKitMAAttack, drawGaKitMAGround, drawGaKitMAWaiting, kitMAPlayerLook } from './gaKitMAFx'
 import { drawGaKitAAttack, drawGaKitAGround, drawGaKitAPlayer, drawGaKitAPlayerGround } from './gaKitAFx'
+import { drawHookAir, drawHookAttack } from './gaHookFx'
 import { drawRegionalAttack, drawRegionalGround } from './regionalFx'
 import { drawRocketKitAttack, drawRocketKitPlayer } from './rocketKitFx'
 import { drawMegaBAir, drawMegaBAttack, drawMegaBPending, megaBPlayerLook } from './megaKitBFx'
@@ -207,7 +208,7 @@ const slashArc = (ctx: Ctx, x: number, y: number, r: number, dir: number, sweep:
   }
 }
 
-const drawAttack = (ctx: Ctx, a: Attack, t: number) => {
+const drawAttack = (ctx: Ctx, a: Attack, t: number, g: Game) => {
   const m = a.motion
   if (a.move === 'teraStarstorm') return drawStarstorm(ctx, a, t, false)
   switch (a.visual) {
@@ -301,6 +302,7 @@ const drawAttack = (ctx: Ctx, a: Attack, t: number) => {
       drawScKitAttack(ctx, a, t)
       drawGaKitAAttack(ctx, a, t)
       drawKitFAttack(ctx, a, t)
+      drawHookAttack(ctx, a, t, g)
       drawRegionalAttack(ctx, a, t)
       drawRocketKitAttack(ctx, a, t)
       drawGaKitMAAttack(ctx, a, t)
@@ -1002,6 +1004,7 @@ const drawPlayerAir = (ctx: Ctx, g: Game, t: number) => {
   drawScKitAir(ctx, g, t)
   drawGaKitAPlayer(ctx, g, t)
   drawKitFAir(ctx, g, t)
+  drawHookAir(ctx, g, t)
   drawRocketKitPlayer(ctx, g, t)
   drawGaKitMAAir(ctx, g, t)
   drawMegaBAir(ctx, g, t)
@@ -1252,7 +1255,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   for (const side of sides) {
     paintAttacks(ctx, side.side, side.alpha, g.view, camX, camY, (into) => {
       const v = side.game
-      for (const a of v.attacks) if (a.age >= 0 && visible(a.x, a.y, 200)) drawAttack(into, a, t)
+      for (const a of v.attacks) if (a.age >= 0 && visible(a.x, a.y, 200)) drawAttack(into, a, t, v)
       drawImpacts(into, g.now, (owner) => g.coop === null || (side.side === 'own') === (owner === me.slot))
       drawVerbAir(into, v, t, visible)
       drawGallopAir(into, v, visible)

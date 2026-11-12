@@ -57,6 +57,7 @@ import type { DamageBonus, Ward } from './kitRules'
 import type { GaKitB } from './gaKitBRules'
 import type { FossilKit, FossilVisual } from './fossilKitRules'
 import type { ScKit } from './scKitRules'
+import type { GaKitHook } from './gaHookRules'
 import type { MoveSound } from './moveVerbs'
 import type { TmSource } from './tmRules'
 import type { TmState } from './tms'
@@ -276,6 +277,8 @@ export type Player = {
   kitMA?: GaKitMA
   /** The big update's Mega families (`megaKitBRules.ts`): their running state. Absent for everyone else. */
   megaB?: MegaKitB
+  /** The wave's hook families (`gaHookRules.ts`): their running state. Absent for everyone else. */
+  kitH?: GaKitHook
   /** A Shadow or Purified Pokémon (`shadow.ts`), decided as the run starts. Absent for the plain one, so its state hashes as before. */
   variant?: ShadowVariant
 }
@@ -468,6 +471,8 @@ export type Visual =
   /** The Rocket Game Corner's prize families, drawn by `render/rocketKitFx.ts`. */
   | 'transformSplash' | 'razorWind' | 'omenFall' | 'coinRain' | 'viseGrip' | 'deceiverBite'
   /** Ponyta's gallop batch (`gallopMoves.ts`), drawn by `render/gallopFx.ts`. */
+  /** The hook families (`gaHookMoves.ts`, `gaHookSystem.ts`), drawn by `render/gaHookFx.ts`; `hookHit` is a kit's unseen hitbox. */
+  | 'hookHit' | 'hookPowder' | 'hookBuzz' | 'hookGem' | 'hookShell' | 'hookJab' | 'hookLeap' | 'hookKnee' | 'hookSpin' | 'hookCounter' | 'hookBolt' | 'hookImpulse' | 'hookBurst' | 'hookPulse' | 'hookZap'
   | 'gallopQuake' | 'gallopPillar' | 'lowKick' | 'axeKick' | 'axeRing' | 'hornDrill' | 'hornBlow' | 'hyperLance' | 'morningSun' | 'revivalFlare' | 'bounceLand' | 'skyDive'
 
 /** What dealt the damage, for the results screen: a move, the special or the ability (Rough Skin, Magic Bounce). */
@@ -809,6 +814,8 @@ export type GameEvent =
   | { kind: 'evolve'; from: number; to: number }
   /** A branching evolution waits on the player's pick. */
   | { kind: 'branchChoice' }
+  /** Co-op: Plusle and Minun on one team linked up (`updatePlusMinus` in `coop.ts`). */
+  | { kind: 'plusMinus' }
   /** An evolution item found in the run (`game/evoGate.ts`). */
   | { kind: 'evoItem'; item: EvoItemId }
   /** The evolution waits for one of these items: the run stays in its form, stronger (`Game.evoHeld`). */

@@ -4,6 +4,7 @@ import { kitBDeltas } from './gaKitBRules'
 import { kitFDeltas } from './fossilKitRules'
 import { kitMADeltas } from './gaKitMARules'
 import { kitSCDeltas } from './scKitRules'
+import { kitHDeltas, linkDeltas } from './gaHookRules'
 import { gaKitADeltas } from './gaKitARules'
 import { rocketKitDeltas } from './rocketKitRules'
 import { megaKitBDeltas } from './megaKitBRules'
@@ -294,6 +295,8 @@ export const recomputeStats = (g: Game) => {
     ...seasonKitDeltas(p.kit),
     ...kitBDeltas(p.kitB, p.stage),
     ...kitSCDeltas(p.kitSC, p.stage),
+    ...kitHDeltas(p.kitH, p.stage, p.branch),
+    ...linkDeltas(g.coop !== null && g.coop.plusMinus.on, p.starter),
     ...gaKitADeltas(p.kitA, p.stage),
     ...rocketKitDeltas(p.rocket),
     ...kitFDeltas(p.kitF, p.stage),

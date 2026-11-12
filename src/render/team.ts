@@ -17,6 +17,7 @@ import { concealed } from './valeGrass'
 import { drawPlateTag, plateOf } from './arenaPlates'
 import { VERSUS } from '../data/versus'
 import { seasonKitForm } from '../game/seasonOneKitRules'
+import { hookForm } from './gaHookLook'
 import { weatherHere } from '../game/weather'
 
 /**
@@ -119,7 +120,7 @@ export const busyWith = (p: Player): TeamIcon | null => {
 const mateSprites = (g: Game, p: Player): SpeciesSprites => {
   const dex = formAt(p.starter, p.branch, p.stage).dex
   const skin = skinFor(shownLook(g, p.slot), dex)
-  const form = seasonKitForm(p.kit, p.stage, weatherHere(g))
+  const form = seasonKitForm(p.kit, p.stage, weatherHere(g)) ?? hookForm(g, p)
   if (form) return sprites(dex, p.shiny, form)
   if (p.mega.active <= 0) return (skin && skinSprites(skin, dex, p.shiny)) || sprites(dex, p.shiny)
   const before = actAs(g, p)

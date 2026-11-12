@@ -34,6 +34,8 @@ import { createKitSC } from './scKitRules'
 import { updateKitSC } from './scKitSystem'
 import { createGaKitA } from './gaKitARules'
 import { updateGaKitA } from './gaKitASystem'
+import { createKitH } from './gaHookRules'
+import { ruledBranch, updateKitH } from './gaHookSystem'
 import { createRocketKit } from './rocketKitRules'
 import { createMegaKitB } from './megaKitBRules'
 import { updateMegaKitB } from './megaKitBSystem'
@@ -139,7 +141,8 @@ const kitField = (starter: PlayableId) => {
   const kitMA = createKitMA(starter)
   const megaB = createMegaKitB(starter)
   const kitSC = createKitSC(starter)
-  return { ...(kit && { kit }), ...(kitB && { kitB }), ...(kitA && { kitA }), ...(rocket && { rocket }), ...(kitF && { kitF }), ...(kitMA && { kitMA }), ...(megaB && { megaB }), ...(kitSC && { kitSC }) }
+  const kitH = createKitH(starter)
+  return { ...(kit && { kit }), ...(kitB && { kitB }), ...(kitA && { kitA }), ...(rocket && { rocket }), ...(kitF && { kitF }), ...(kitMA && { kitMA }), ...(megaB && { megaB }), ...(kitSC && { kitSC }), ...(kitH && { kitH }) }
 }
 
 /** What the save brings into a run besides the Poké Mart ranks. */
@@ -641,6 +644,13 @@ export const advancePhase = (g: Game): void => {
   }
   const branches = p.branch === null ? branchesAt(p.starter, p.stage + 1) : []
   if (branches.length > 0) {
+    // A family that decides its own branch (Tyrogue, by the build) goes there without asking or drawing.
+    const ruled = ruledBranch(g)
+    if (ruled !== null) {
+      p.evoHeld = false
+      p.branch = ruled
+      return startEvolution(g)
+    }
     const offers = evolutionOffers(g.rng, branches, branchContext(g), runEvoItems(g))
     if (offers.length === 0) return holdEvolution(g)
     p.evoHeld = false
@@ -951,6 +961,7 @@ export const stepMoves = (g: Game, input: StepInput, dt: number) => {
   updateKitSC(g, dt)
   updateGaKitA(g, dt)
   updateKitF(g, dt)
+  updateKitH(g, dt)
   updateRocketKit(g, dt)
   updateKitMA(g, dt)
   updateMegaKitB(g, dt)
