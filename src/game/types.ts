@@ -82,6 +82,7 @@ import type { Harm, HarmBy } from './harm'
 import type { SeasonKit } from './seasonOneKitRules'
 import type { GaKitA, GaKitAVisual } from './gaKitARules'
 import type { GaKitMA, GaKitMAVisual } from './gaKitMARules'
+import type { MegaKitB } from './megaKitBRules'
 import type { RocketKit } from './rocketKitRules'
 import type { ShadowVariant } from './shadow'
 import type { MythicalHunt } from './mythicalHunt'
@@ -267,6 +268,8 @@ export type Player = {
   rocket?: RocketKit
   /** The Grande Atualização's Mega families (`gaKitMARules.ts`): their running state. Absent for everyone else. */
   kitMA?: GaKitMA
+  /** The big update's Mega families (`megaKitBRules.ts`): their running state. Absent for everyone else. */
+  megaB?: MegaKitB
   /** A Shadow or Purified Pokémon (`shadow.ts`), decided as the run starts. Absent for the plain one, so its state hashes as before. */
   variant?: ShadowVariant
 }
@@ -445,6 +448,9 @@ export type Visual =
   /** The fossil families (`fossilKitMoves.ts`, `fossilKitSystem.ts`), drawn by `render/fossilKitFx.ts`. */
   | FossilVisual
   | GaKitMAVisual
+  /** The big update's Mega families (`megaKitBMoves.ts`, `megaKitBSystem.ts`), drawn by `render/megaKitBFx.ts`; `mbLeap`, `mbHop` and `mbCrash` never hit. */
+  | 'mbKick' | 'mbLeap' | 'mbCrash' | 'mbQuake' | 'mbBomb' | 'mbMagma' | 'mbPunch' | 'mbHop' | 'mbStomp' | 'mbWind' | 'mbBlossom' | 'mbPetal'
+  | 'mbGlob' | 'mbSplash' | 'mbDrop'
   /** The regional forms' moves (`regionalMoves.ts`), drawn by `render/regionalFx.ts`. */
   | 'metalClaw' | 'shellSlam' | 'shellShot' | 'obstructGuard' | 'obstructX' | 'leekJoust' | 'chloroblast' | 'barb' | 'toxicGlob' | 'toxicPool' | 'bullCharge' | 'bitterMalice'
   /** The Rocket Game Corner's prize families, drawn by `render/rocketKitFx.ts`. */

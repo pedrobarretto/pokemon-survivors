@@ -31,6 +31,8 @@ export const GA_FAMILIES_A = [
   782, 783, 784, 610, 611, 612, 131, 215, 461, 214, 302, 442, 453, 454, 854, 855, 859, 860, 861,
   921, 922, 923, 821, 822, 823, 239, 125, 466, 240, 126, 467, 290, 291, 292,
 ]
+/** Of those, the Flying forms that take to the sky: Rookidee's line and Ninjask. */
+const GA_FLYERS_A = [821, 822, 823, 291]
 /**
  * The Grande Atualização's fossil families (src/data/gaFossils.ts), whole lines: Aerodactyl, Omanyte, Lileep and
  * Anorith's, and Galar's Dracozolt, Arctozolt and Dracovish (Kabuto's line was a hatchling already).
@@ -41,8 +43,11 @@ export const GA_FOSSILS = [142, 138, 139, 345, 346, 347, 348, 880, 881, 882]
  * Pinsir, Skarmory, Drilbur (and Excadrill) and Drampa.
  */
 export const GA_MEGA_FAMILIES_A = [115, 127, 227, 529, 530, 780]
-/** Of those, the Flying forms that take to the sky: Rookidee's line and Ninjask. */
-const GA_FLYERS_A = [821, 822, 823, 291]
+/**
+ * The big update's Mega families (src/data/megaFamiliesB.ts), whole lines, Safari-only: Meditite, Numel, Buneary,
+ * Flabébé (the Eternal Flower Floette, `REGIONAL`, and Florges, its branch) and Skrelp.
+ */
+export const MEGA_FAMILIES_B = [307, 308, 322, 323, 427, 428, 669, 10061, 671, 690, 691]
 /**
  * The regional forms (src/data/regionalFamilies.ts): the Ovo de Viagem's families by region, whole lines, and the
  * regional evolutions of lines already playable (branches). Regional forms go by PokeAPI's id (`REGIONAL`).
@@ -83,6 +88,7 @@ export const HATCHLINGS = [
   ...REGIONAL_LINES,
   ...GA_FOSSILS,
   ...GA_MEGA_FAMILIES_A,
+  ...MEGA_FAMILIES_B,
 ]
 export const HORDE = Object.values(roster).map((s) => s.dex)
 /** Horde species with a behavior trait (`src/data/enemies.ts`), plus Nidoqueen's summons. */
@@ -232,6 +238,13 @@ export const FORMS = {
   227: { mega: '0001' },
   530: { mega: '0001' },
   780: { mega: '0001' },
+  // The big update's Mega families (src/data/megaFamiliesB.ts). Mega Floette sits beside the Eternal Flower in
+  // Floette's folder, not under it: a form id with a slash is the whole folder (`formFolder`).
+  308: { mega: '0001' },
+  323: { mega: '0001' },
+  428: { mega: '0001' },
+  10061: { mega: '0670/0006' },
+  691: { mega: '0001' },
 }
 
 /**
@@ -348,6 +361,11 @@ export const FORM_CRIES = {
   227: { mega: 'skarmory-mega' },
   530: { mega: 'excadrill-mega' },
   780: { mega: 'drampa-mega' },
+  308: { mega: 'medicham-mega' },
+  323: { mega: 'camerupt-mega' },
+  428: { mega: 'lopunny-mega' },
+  10061: { mega: 'floette-mega' },
+  691: { mega: 'dragalge-mega' },
 }
 
 /**
@@ -393,8 +411,12 @@ export const REGIONAL = {
   10238: '0570/0001', 10239: '0571/0001', 10242: '0706/0001', 10244: '0724/0001',
   // Paldea (Tauros' three breeds)
   10250: '0128/0001', 10251: '0128/0002', 10252: '0128/0003', 10253: '0194/0002',
+  // Floette of the Eternal Flower (src/data/megaFamiliesB.ts): Flabébé's line's final stage, the one with the Mega.
+  10061: '0670/0005',
 }
 /** A species' SpriteCollab folder. */
 export const pad = (n) => REGIONAL[n] ?? String(n).padStart(4, '0')
+/** A form's SpriteCollab folder (`FORMS`): under the species' own, or the whole folder when the id has a slash. */
+export const formFolder = (dex, id) => (id.includes('/') ? id : `${pad(dex)}/${id}`)
 /** Where a species' shiny sits below its folder: a regional form's is directly under the form, like any form's. */
 export const shinyPath = (dex) => (REGIONAL[dex] ? '/0001' : '/0000/0001')

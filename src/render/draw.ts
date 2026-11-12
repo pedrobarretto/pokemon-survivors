@@ -65,6 +65,7 @@ import { drawGaKitMAAir, drawGaKitMAAttack, drawGaKitMAGround, drawGaKitMAWaitin
 import { drawGaKitAAttack, drawGaKitAGround, drawGaKitAPlayer, drawGaKitAPlayerGround } from './gaKitAFx'
 import { drawRegionalAttack, drawRegionalGround } from './regionalFx'
 import { drawRocketKitAttack, drawRocketKitPlayer } from './rocketKitFx'
+import { drawMegaBAir, drawMegaBAttack, drawMegaBPending, megaBPlayerLook } from './megaKitBFx'
 import { drawGallopAir, drawGallopAttack, gallopLift } from './gallopFx'
 import { drawPurifiedMark, drawShadowAura } from './shadowAura'
 import { drawEgg2Attack, drawEgg2Ground } from './eggMove2Fx'
@@ -300,6 +301,7 @@ const drawAttack = (ctx: Ctx, a: Attack, t: number) => {
       drawRocketKitAttack(ctx, a, t)
       drawGaKitMAAttack(ctx, a, t)
       drawGallopAttack(ctx, a, t)
+      drawMegaBAttack(ctx, a, t)
       drawEgg2Attack(ctx, a, t)
       drawSignatureAttack(ctx, a, t)
       drawTypeEvolvedAttack(ctx, a, t)
@@ -668,7 +670,7 @@ const drawPlayer = (ctx: Ctx, g: Game, calm: boolean) => {
   const tint = calm && p.hurt > 0.2 ? HURT_TINT : isAsleep(p) ? SLEEP_TINT : undefined
   // Burrowed or out of sight (Dig): a faint ghost of the player.
   // Moves can lift the sprite (Body Slam's leap, Heavy Slam's hop, Fly) or hide it under the mound (Dig).
-  const egg = flying ?? eggPlayerLook(g) ?? egg3PlayerLook(g) ?? kitBPlayerLook(g) ?? kitMAPlayerLook(g)
+  const egg = flying ?? eggPlayerLook(g) ?? egg3PlayerLook(g) ?? kitBPlayerLook(g) ?? kitMAPlayerLook(g) ?? megaBPlayerLook(g)
   // Invulnerable after a hit: blinking, or a steady see-through when calm.
   // The crystal that just shattered stays solid through the shatter's invulnerability: a fresh Terastal form never blinks.
   const fresh = p.tera.active > TERA.duration - TERA.iframes
@@ -996,6 +998,7 @@ const drawPlayerAir = (ctx: Ctx, g: Game, t: number) => {
   drawKitFAir(ctx, g, t)
   drawRocketKitPlayer(ctx, g, t)
   drawGaKitMAAir(ctx, g, t)
+  drawMegaBAir(ctx, g, t)
   drawSignaturePlayer(ctx, g, t)
   drawTmPlayer(ctx, g, t)
   drawShopTm2Player(ctx, g, t, g.player.y - playerSprites(g).bodyH)
@@ -1247,6 +1250,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
       drawVerbAir(into, v, t, visible)
       drawGallopAir(into, v, visible)
       drawGaKitMAWaiting(into, v, t, visible)
+      drawMegaBPending(into, v, t, visible)
       drawTmAir(into, v, t, visible)
       drawShopTmAir(into, v, t, visible)
       drawShopTm2Air(into, v, t, visible)

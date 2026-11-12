@@ -8,7 +8,7 @@ const WEEK = '2026-11-16'
 const SEASON_ONE: readonly HatchlingId[] = ['snom', 'joltik', 'applin', 'hatenna', 'salandit', 'darumaka', 'wimpod', 'finizen', 'pawniard', 'frigibax']
 
 describe('who the Safari holds', () => {
-  it('has at least four habitats, each with a Safari-only family and a real pool', () => {
+  it('has at least four habitats, each with Safari-only families and a real pool', () => {
     expect(SAFARI_HABITAT_IDS.length).toBeGreaterThanOrEqual(4)
     for (const habitat of SAFARI_HABITAT_IDS) {
       const pool = habitatPool(habitat, WEEK)

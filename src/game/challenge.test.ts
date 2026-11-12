@@ -2,6 +2,7 @@ import { SEASON_ONE } from '../data/seasons'
 import { SEASON_ONE_EGGS } from '../data/seasonOneEggs'
 import { SEASON_ONE_KITS } from '../data/seasonOneKits'
 import { GA_FAMILIES_B } from '../data/gaFamiliesB'
+import { MEGA_FAMILIES_B } from '../data/megaFamiliesB'
 import { GA_FAMILIES_A } from '../data/gaFamiliesA'
 import { describe, expect, it } from 'vitest'
 import { createRng } from '../engine/rng'
@@ -25,7 +26,7 @@ describe('dailyChallenge', () => {
   })
 
   it('gives every playable Pokémon its day once per cycle, egg families included and the exclusive eggs’ families aside', () => {
-    const pool = PLAYABLE_IDS.filter((id) => (!isExclusiveFamily(id) || id === 'kabuto') && !(id in SEASON_ONE_EGGS) && !(id in SEASON_ONE_KITS) && !(id in GA_FAMILIES_B) && !(id in GA_FAMILIES_A))
+    const pool = PLAYABLE_IDS.filter((id) => (!isExclusiveFamily(id) || id === 'kabuto') && !(id in SEASON_ONE_EGGS) && !(id in SEASON_ONE_KITS) && !(id in GA_FAMILIES_B) && !(id in GA_FAMILIES_A) && !(id in MEGA_FAMILIES_B))
     let day = '2026-01-01'
     const days: string[] = []
     // A whole cycle starts at a multiple of its length in days since 1970.

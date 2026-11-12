@@ -26,6 +26,7 @@ import { REGIONAL_MOVES } from './regionalMoves'
 import { ROCKET_KIT_MOVES } from './rocketKitMoves'
 import { GA_KIT_MA_MOVES } from './gaKitMAMoves'
 import { GALLOP_MOVES } from './gallopMoves'
+import { MEGA_KIT_B_MOVES } from './megaKitBMoves'
 import { TM_MOVES } from './tmMoves'
 import { SHOP_TM_MOVES } from './shopTmMoves'
 import { SHOP_TM_MOVES_2 } from './shopTmMoves2'
@@ -2332,6 +2333,8 @@ export const MOVES = {
   ...FOSSIL_KIT_MOVES,
   /* ---------- The Mega families' signatures (`gaKitMAMoves.ts`) ---------- */
   ...GA_KIT_MA_MOVES,
+  /* ---------- The big update's Mega families (`megaKitBMoves.ts`) ---------- */
+  ...MEGA_KIT_B_MOVES,
 } as const satisfies Record<string, MoveDef>
 
 export type MoveId = keyof typeof MOVES
@@ -2366,6 +2369,7 @@ export const MOVE_TABLES: Readonly<Record<string, Readonly<Record<string, MoveDe
   GALLOP_MOVES,
   FOSSIL_KIT_MOVES,
   GA_KIT_MA_MOVES,
+  MEGA_KIT_B_MOVES,
 }
 
 export const MOVE_IDS = Object.keys(MOVES) as MoveId[]

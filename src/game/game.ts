@@ -33,6 +33,8 @@ import { updateKitMA } from './gaKitMASystem'
 import { createGaKitA } from './gaKitARules'
 import { updateGaKitA } from './gaKitASystem'
 import { createRocketKit } from './rocketKitRules'
+import { createMegaKitB } from './megaKitBRules'
+import { updateMegaKitB } from './megaKitBSystem'
 import { updateRocketKit } from './rocketKitSystem'
 import type { ShadowVariant } from './shadow'
 import { FRESH_LEVELUPS } from './learnsets'
@@ -133,7 +135,8 @@ const kitField = (starter: PlayableId) => {
   const rocket = createRocketKit(starter)
   const kitF = createKitF(starter)
   const kitMA = createKitMA(starter)
-  return { ...(kit && { kit }), ...(kitB && { kitB }), ...(kitA && { kitA }), ...(rocket && { rocket }), ...(kitF && { kitF }), ...(kitMA && { kitMA }) }
+  const megaB = createMegaKitB(starter)
+  return { ...(kit && { kit }), ...(kitB && { kitB }), ...(kitA && { kitA }), ...(rocket && { rocket }), ...(kitF && { kitF }), ...(kitMA && { kitMA }), ...(megaB && { megaB }) }
 }
 
 /** What the save brings into a run besides the Poké Mart ranks. */
@@ -946,6 +949,7 @@ export const stepMoves = (g: Game, input: StepInput, dt: number) => {
   updateKitF(g, dt)
   updateRocketKit(g, dt)
   updateKitMA(g, dt)
+  updateMegaKitB(g, dt)
   updateSignatures(g, dt)
   updateShopTms(g, dt)
   updateLegendary(g)

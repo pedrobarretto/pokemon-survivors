@@ -5,6 +5,7 @@ import { SEASON_ONE } from '../data/seasons'
 import { SEASON_ONE_EGGS } from '../data/seasonOneEggs'
 import { SEASON_ONE_KITS } from '../data/seasonOneKits'
 import { GA_FAMILIES_B } from '../data/gaFamiliesB'
+import { MEGA_FAMILIES_B } from '../data/megaFamiliesB'
 import { GA_FAMILIES_A } from '../data/gaFamiliesA'
 import { brasiliaDay, dayNumber, msSinceDayStart, previousDay, type DayKey } from './day'
 import type { Difficulty } from './difficulty'
@@ -54,7 +55,7 @@ const drawable = (id: PlayableId) => !isExclusiveFamily(id) || id === 'kabuto'
  * Egg's; they also joined after the draw began: leaving them out keeps every
  * day's Pokémon where it was).
  */
-const OLD_POOL = PLAYABLE_IDS.filter((id) => drawable(id) && !(id in SEASON_ONE_EGGS) && !(id in SEASON_ONE_KITS) && !(id in GA_FAMILIES_B) && !(id in GA_FAMILIES_A))
+const OLD_POOL = PLAYABLE_IDS.filter((id) => drawable(id) && !(id in SEASON_ONE_EGGS) && !(id in SEASON_ONE_KITS) && !(id in GA_FAMILIES_B) && !(id in GA_FAMILIES_A) && !(id in MEGA_FAMILIES_B))
 
 /** The pool from Temporada 1 on, with its new egg families. */
 const SEASON_POOL = PLAYABLE_IDS.filter(drawable)

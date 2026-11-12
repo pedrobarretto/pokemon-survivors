@@ -21,6 +21,7 @@ import { GA_KIT_A_ICONS } from './gaKitAArt'
 import { REGIONAL_ICONS } from './regionalArt'
 import { ROCKET_KIT_ICONS } from './rocketKitArt'
 import { GA_KIT_MA_ICONS } from './gaKitMAArt'
+import { MEGA_KIT_B_ICONS } from './megaKitBArt'
 import { GALLOP_ICONS } from './gallopArt'
 import { EGG_MOVE_2_ICONS } from './eggMove2Art'
 import { SIGNATURE_ICONS } from './signatureArt'
@@ -794,6 +795,7 @@ const MOVE_ICON_ART: Record<MoveId, () => PixelSprite> = {
   ...REGIONAL_ICONS,
   ...ROCKET_KIT_ICONS,
   ...GA_KIT_MA_ICONS,
+  ...MEGA_KIT_B_ICONS,
   ...GALLOP_ICONS,
   ...FOSSIL_KIT_ICONS,
   jawLock: () => art([...TE.MAW_TOP, ...TE.MAW_BOTTOM], TE.MAW, '#d8c0e8'),

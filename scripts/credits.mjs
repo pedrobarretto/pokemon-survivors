@@ -46,7 +46,9 @@ const rows = DEX.flatMap((dex) => {
     `| ${dex} | ${label} | ${artists(node.sprite_credit)} | ${portrait ? artists(node.portrait_credit) : '—'} |`
   // Alternate forms ship sprites, and a portrait only where the manifest says so; their shiny sits under `<id>/0001`.
   const forms = Object.keys(manifest[dex]?.forms ?? {}).flatMap((key) => {
-    const node = entry.subgroups[FORMS[dex][key]]
+    // A form id with a slash is a whole folder of its own (`formFolder`), beside the species' entry rather than under it.
+    const id = FORMS[dex][key]
+    const node = id.includes('/') ? id.split('/').slice(1).reduce((n, sub) => n.subgroups[sub], tracker[id.split('/')[0]]) : entry.subgroups[id]
     const handmade = manifest[dex].forms[key].shiny && HANDMADE_SHINIES[dex]?.[key]
     const formShiny = manifest[dex].forms[key].shiny && !handmade && node.subgroups['0001']
     const name = node.name.replaceAll('_', ' ')

@@ -386,6 +386,12 @@ export const WEAR_FITS: Partial<Record<FitKey, SpeciesFit>> = {
   '303:mega': { no: ['head'] }, // Mega Mawile: two jaws for a crown, and its face under them
   10263: { no: ['head:E'] }, // Gimmighoul (Roaming): turned, its eye is its head's whole side
   '150:shadow': { no: ['head:E'] }, // Shadow Mewtwo: turned, its sheets' crest reads as its eyes
+  // The Mega families (data/megaFamiliesB.ts), `fit-check` 11-12: off where a quarter or more of the checks failed in a direction.
+  669: { no: ['head'] }, // Flabébé: a head no bigger than the flower's heart, and the hat sat down on its eyes
+  '10061:mega': { no: ['head:SE'] }, // Mega Floette: turned half away, its crown of petals reads as its head
+  '428:mega': { no: ['head'] }, // Mega Lopunny: its ears' tufts frame the face, and the brim came down over its eyes
+  308: { no: ['head:E'] }, // Medicham: turned, its round head is mostly face and the brim reached its eye
+  691: { no: ['head:E'] }, // Dragalge: turned, its fin-crest reads as the skull and the hat sat on its eye
   // The legend paths (data/legendPaths.ts)
   '718:ten': { rig: { 'S:Idle': { seat: [0, 6] } } }, // Zygarde 10%: idle, it sits up and its head drops under the seat the Walk frame measured
   718: { rig: { E: { seat: [-2, 0] } } }, // Zygarde 50%: turned, the hat's brim reached its eye

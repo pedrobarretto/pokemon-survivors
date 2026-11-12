@@ -7,6 +7,7 @@ import type { MegaId } from './megas'
 import type { EvolutionStage } from './starters'
 import type { PokeType } from './types'
 import { GA_BRANCHES_A } from './gaFamiliesA'
+import { MEGA_BRANCHES_B } from './megaFamiliesB'
 
 /**
  * Branching evolutions: a family whose evolution can go more than one way
@@ -279,14 +280,15 @@ export const BRANCHES = {
     moves: ['waterGun', 'whirlpool'],
     favors: { weather: ['rain'], biome: ['beach'] },
   },
+  ...MEGA_BRANCHES_B,
 } as const satisfies Record<string, BranchDef>
 
 export type BranchId = keyof typeof BRANCHES
 
 export const BRANCH_IDS = Object.keys(BRANCHES) as BranchId[]
 
-/** The Megas only one branch can reach: Glalie's, Froslass's, Gardevoir's, Gallade's, Scizor's and Raichu's (never the Alolan one). */
-export const MEGA_BRANCH: Partial<Record<MegaId, BranchId>> = { glalie: 'glalie', froslass: 'froslass', gardevoir: 'gardevoir', gallade: 'gallade', scizor: 'scizor', raichuX: 'raichu', raichuY: 'raichu' }
+/** The Megas only one branch can reach: Glalie's, Froslass's, Gardevoir's, Gallade's, Scizor's, Raichu's (never the Alolan one) and the Eternal Flower's (never Florges'). */
+export const MEGA_BRANCH: Partial<Record<MegaId, BranchId>> = { glalie: 'glalie', froslass: 'froslass', gardevoir: 'gardevoir', gallade: 'gallade', scizor: 'scizor', raichuX: 'raichu', raichuY: 'raichu', floette: 'floetteEternal' }
 
 /** How much likelier a free branch the run's weather or biome favors is drawn than the others (`evolutionOffers`). */
 export const BRANCH_FAVOR_WEIGHT = 3

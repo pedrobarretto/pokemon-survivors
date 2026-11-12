@@ -12,6 +12,7 @@ import { GA_BRANCHES_A_ABILITIES, GA_FAMILIES_A_ABILITIES } from './gaFamiliesA'
 import { REGIONAL_BRANCH_ABILITIES, REGIONAL_FAMILY_ABILITIES } from './regionalFamilies'
 import { ROCKET_FAMILY_ABILITIES } from './rocketFamilies'
 import { GA_MEGA_FAMILIES_A_ABILITIES } from './gaMegaFamiliesA'
+import { MEGA_BRANCHES_B_ABILITIES, MEGA_FAMILIES_B_ABILITIES } from './megaFamiliesB'
 import type { PokeType } from './types'
 
 /**
@@ -472,6 +473,7 @@ export const FAMILY_ABILITIES = {
   ...ROCKET_FAMILY_ABILITIES,
   ...GA_FOSSILS_ABILITIES,
   ...GA_MEGA_FAMILIES_A_ABILITIES,
+  ...MEGA_FAMILIES_B_ABILITIES,
 } as const satisfies Record<PlayableId, AbilitySet>
 
 /** The abilities of a branch picked at the family's first evolution (`data/branches.ts`). */
@@ -494,6 +496,7 @@ export const BRANCH_ABILITIES = {
   appletun: ['overgrow', 'thickFat', 'regenerator'],
   ...GA_BRANCHES_A_ABILITIES,
   ...REGIONAL_BRANCH_ABILITIES,
+  ...MEGA_BRANCHES_B_ABILITIES,
 } as const satisfies Partial<Record<BranchId, AbilitySet>>
 
 /** The Hidden Ability of a set: the last of three (a lone ability is no Hidden one). */

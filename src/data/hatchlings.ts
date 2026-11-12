@@ -9,6 +9,7 @@ import { GA_FAMILIES_A } from './gaFamiliesA'
 import { REGIONAL_FAMILIES } from './regionalFamilies'
 import { ROCKET_FAMILIES } from './rocketFamilies'
 import { GA_MEGA_FAMILIES_A } from './gaMegaFamiliesA'
+import { MEGA_FAMILIES_B } from './megaFamiliesB'
 import { STARTER_IDS, STARTERS, type StarterId } from './starters'
 
 export const HATCHLINGS = {
@@ -724,6 +725,7 @@ export const HATCHLINGS = {
   ...ROCKET_FAMILIES,
   ...GA_FOSSILS,
   ...GA_MEGA_FAMILIES_A,
+  ...MEGA_FAMILIES_B,
 } as const satisfies Record<string, HatchlingDef>
 
 export type HatchlingId = keyof typeof HATCHLINGS
