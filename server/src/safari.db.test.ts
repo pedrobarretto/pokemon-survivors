@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { HATCHLING_IDS, type HatchlingId } from '../../src/data/hatchlings'
-import { CONTEST_POOL, SAFARI_HABITAT_IDS, SAFARI_ONLY, habitatResidents } from '../../src/data/safari'
+import { CONTEST_POOL, HABITAT_REWARDS, SAFARI_HABITAT_IDS, SAFARI_ONLY, dexRewardKey, habitatResidents } from '../../src/data/safari'
 import { addDays, brasiliaDay, weekStart } from '../../src/game/day'
 import type { SafariSession } from '../../src/net/realmApi'
 import { SAFARI, habitatOfWeek } from '../../src/realm/games/safari.rules'
@@ -249,7 +249,7 @@ describe.skipIf(!url)('Zona Safári (Postgres)', () => {
     expect(bait.session.encounter).toMatchObject({ mood: 'eating', moodTurns: 1 })
   })
 
-  it('fills the habitat’s Pokédex, and a full one sends its egg once', async () => {
+  it('fills the habitat’s Pokédex, and a full one sends its egg and rewards once', async () => {
     const residents = habitatResidents(habitat).map((e) => e.family)
     const { session } = await started()
     const [first] = await hiding(session.id)
@@ -257,8 +257,32 @@ describe.skipIf(!url)('Zona Safári (Postgres)', () => {
     for (const family of rest) await sql`insert into safari_dex (user_id, habitat, family) values ('u_ash', ${habitat}, ${family})`
     await catchFirst(session)
     expect((await safari.state('u_ash'))!.dex[habitat]).toContain(first!.family)
-    const sent = await sql<{ key: string }[]>`select key from gifts where user_id = 'u_ash' and key like 'safariDex:%'`
-    expect(sent.map((r) => r.key)).toEqual(residents.includes(first!.family) ? [`safariDex:${habitat}`] : [])
+    const sent = await sql<{ key: string }[]>`select key from gifts where user_id = 'u_ash' and key like 'safariDex:%' order by key`
+    const rewards = HABITAT_REWARDS[habitat].map((_, i) => dexRewardKey(habitat, i))
+    expect(sent.map((r) => r.key)).toEqual(residents.includes(first!.family) ? [`safariDex:${habitat}`, ...rewards].sort() : [])
+  })
+
+  it('keeps a habitat completed before its residents grew, and sends the rewards it was completed without', async () => {
+    await sql`insert into gifts (user_id, kind, payload, key) values ('u_ash', 'egg', ${sql.json({ kind: 'egg', tier: 'ultra' })}, 'safariDex:cove')`
+    const state = (await safari.state('u_ash'))!
+    expect(state.done).toEqual(['cove'])
+    const keys = (await sql<{ key: string; payload: { kind: string; legend?: string } }[]>`select key, payload from gifts where user_id = 'u_ash' and key like 'safariDex:cove:%' order by key`)
+    expect(keys.map((r) => r.key)).toEqual(HABITAT_REWARDS.cove.map((_, i) => dexRewardKey('cove', i)))
+    expect(keys.some((r) => r.payload.kind === 'legend' && r.payload.legend === 'manaphy')).toBe(true)
+    // A second read sends nothing more.
+    await safari.state('u_ash')
+    expect((await sql<{ n: number }[]>`select count(*)::int as n from gifts where user_id = 'u_ash'`)[0]!.n).toBe(1 + HABITAT_REWARDS.cove.length)
+  })
+
+  it('brings Phione only to an account that owns Manaphy', async () => {
+    const all = Object.fromEntries(HATCHLING_IDS.filter((id) => id !== 'phione').map((id) => [id, { shiny: false }]))
+    await sql`insert into safari_progress (user_id, dry) values ('u_ash', ${SAFARI.guarantee})`
+    await setSave({ hatched: all })
+    expect((await safari.state('u_ash'))!.sure).toBe(false)
+    await setSave({ hatched: all, legends: { manaphy: 1 } })
+    expect((await safari.state('u_ash'))!.sure).toBe(true)
+    const { session } = await started()
+    expect((await hiding(session.id))[0]).toEqual({ family: 'phione', sure: true })
   })
 
   it('runs the contest on its days: a free entry of bugs, scored, its best kept if new and on the board', async () => {

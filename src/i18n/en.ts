@@ -9,6 +9,7 @@ import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
+import { SC_WAVE_WORDS } from './scWave'
 import { ROCKET_WORDS } from './rocket/words'
 import { ULTRA_WORDS } from './ultra'
 import { LEGEND_PATHS_WORDS } from './legendPaths'
@@ -2387,6 +2388,7 @@ export const en: Messages = {
       glalie: 'Normal and Ice moves +30% and moves +25%. The special becomes Sheer Cold.',
       salamence: 'Normal and Flying moves +30%, speed +12 and moves +25%. The special becomes Double-Edge.',
       ...ROCKET_FAMILY_WORDS.en.megas,
+      ...SC_WAVE_WORDS.en.megas,
     },
   },
 
@@ -3016,7 +3018,7 @@ export const en: Messages = {
     noTitle: 'none',
     titleTag: 'TITLE',
     equipped: 'SHOWN',
-    giftTitles: { ambassador: 'Brought 3 friends to the game', supporter: 'Supported the project with a donation', pumpkinKing: 'Filled the Halloween Night candy jar', exorcist: 'Beat every Ghost Hunt boss', vipCustomer: "Collected 30 stamps on Kecleon's loyalty card", tycoon: "Grew Kecleon's shop into a Department Store", patron: 'Gave ₽50,000 or more to a Plaza Festival', ogSupporter: 'Supported the game before Patreon', arenaPoke: 'Finished an Arena ranked season in Poké Ball', arenaGreat: 'Reached Great Ball in an Arena ranked season', arenaUltra: 'Reached Ultra Ball in an Arena ranked season', arenaMaster: 'Reached Master Ball in an Arena ranked season', creator: 'Makes videos and streams of Pokémon Survivors', friendLegend: 'Brought 10 friends to the game', stampCollector: 'Collected 30 Stamps in the Poké Realm', era1Legend: 'Finished near the top of an Era 1 board', era1Champion: 'Finished #1 on an Era 1 board', spaceTime: 'Caught Dialga and Palkia', bugChampion: 'Won a week of the Bug-Catching Contest', safariWarden: 'Filled the Pokédex of every Safari Zone habitat', ...ROCKET_WORDS.en.giftTitles, kantoDex: 'Saw every Pokémon from Kanto in the Pokédex', johtoDex: 'Saw every Pokémon from Johto in the Pokédex', hoennDex: 'Saw every Pokémon from Hoenn in the Pokédex', sinnohDex: 'Saw every Pokémon from Sinnoh in the Pokédex', unovaDex: 'Saw every Pokémon from Unova in the Pokédex', kalosDex: 'Saw every Pokémon from Kalos in the Pokédex', alolaDex: 'Saw every Pokémon from Alola in the Pokédex', galarDex: 'Saw every Pokémon from Galar in the Pokédex', paldeaDex: 'Saw every Pokémon from Paldea in the Pokédex' },
+    giftTitles: { ambassador: 'Brought 3 friends to the game', supporter: 'Supported the project with a donation', pumpkinKing: 'Filled the Halloween Night candy jar', exorcist: 'Beat every Ghost Hunt boss', vipCustomer: "Collected 30 stamps on Kecleon's loyalty card", tycoon: "Grew Kecleon's shop into a Department Store", patron: 'Gave ₽50,000 or more to a Plaza Festival', ogSupporter: 'Supported the game before Patreon', arenaPoke: 'Finished an Arena ranked season in Poké Ball', arenaGreat: 'Reached Great Ball in an Arena ranked season', arenaUltra: 'Reached Ultra Ball in an Arena ranked season', arenaMaster: 'Reached Master Ball in an Arena ranked season', creator: 'Makes videos and streams of Pokémon Survivors', friendLegend: 'Brought 10 friends to the game', stampCollector: 'Collected 30 Stamps in the Poké Realm', era1Legend: 'Finished near the top of an Era 1 board', era1Champion: 'Finished #1 on an Era 1 board', spaceTime: 'Caught Dialga and Palkia', bugChampion: 'Won a week of the Bug-Catching Contest', safariWarden: 'Filled the Pokédex of every Safari Zone habitat', ...ROCKET_WORDS.en.giftTitles, ...SC_WAVE_WORDS.en.giftTitles, kantoDex: 'Saw every Pokémon from Kanto in the Pokédex', johtoDex: 'Saw every Pokémon from Johto in the Pokédex', hoennDex: 'Saw every Pokémon from Hoenn in the Pokédex', sinnohDex: 'Saw every Pokémon from Sinnoh in the Pokédex', unovaDex: 'Saw every Pokémon from Unova in the Pokédex', kalosDex: 'Saw every Pokémon from Kalos in the Pokédex', alolaDex: 'Saw every Pokémon from Alola in the Pokédex', galarDex: 'Saw every Pokémon from Galar in the Pokédex', paldeaDex: 'Saw every Pokémon from Paldea in the Pokédex' },
     newMedals: 'New medals',
     names: {
       ...TERA_WORDS.en.achievementNames,
@@ -3130,6 +3132,7 @@ export const en: Messages = {
       galarDex: 'Galar Researcher',
       paldeaDex: 'Paldea Researcher',
       ...ROCKET_WORDS.en.titles,
+      ...SC_WAVE_WORDS.en.titles,
       bugChampion: 'Bug Champion',
       safariWarden: 'Park Ranger',
       spaceTime: 'Master of Time and Space',
@@ -3181,6 +3184,7 @@ export const en: Messages = {
     ...GA_FAMILIES_B_WORDS.en.moves,
     ...GA_FAMILIES_A_WORDS.en.moves,
     ...ROCKET_FAMILY_WORDS.en.moves,
+    ...SC_WAVE_WORDS.en.moves,
     ...GALLOP_WORDS.en,
     ...ULTRA_WORDS.en.moves,
     ...LEGEND_PATHS_WORDS.en.moves,
@@ -5661,6 +5665,7 @@ export const en: Messages = {
     ...GA_FAMILIES_B_WORDS.en.blurbs,
     ...GA_FAMILIES_A_WORDS.en.blurbs,
     ...ROCKET_FAMILY_WORDS.en.blurbs,
+    ...SC_WAVE_WORDS.en.blurbs,
     ...ULTRA_WORDS.en.blurbs,
     ...LEGEND_PATHS_WORDS.en.blurbs,
     ...QUEST_WORDS.en.blurbs,
@@ -6383,6 +6388,7 @@ export const en: Messages = {
       path: LEGEND_PATHS_WORDS.en.paths.where.zygarde,
       temple: LEGEND_PATHS_WORDS.en.paths.where.regigigas,
       ...QUEST_WORDS.en.where,
+      egg: SC_WAVE_WORDS.en.legendWhere,
     },
     rule: (need: number) => (need === 1 ? 'Beat it once as a boss in a solo run, in any mode, to catch it. Co-op wins don’t count.' : `Beat it ${need} times as a boss in a solo run, in any mode, to catch it. Co-op wins don’t count.`),
     shinyRule: 'Beating a shiny one on the catching win, or after, unlocks its shiny.',
@@ -6505,10 +6511,11 @@ export const en: Messages = {
   },
   seasonUnlocks: SEASON_ONE_UNLOCKS_WORDS.en,
   rocket: ROCKET_WORDS.en,
+  scWave: SC_WAVE_WORDS.en,
   paths: LEGEND_PATHS_WORDS.en.paths,
   minigames: {
     claw: SEASON_ONE_CLAW_WORDS.en.words,
-    safari: SEASON_ONE_SAFARI_WORDS.en.words,
+    safari: { ...SEASON_ONE_SAFARI_WORDS.en.words, only: SC_WAVE_WORDS.en.safari },
     dig: SEASON_ONE_DIG_WORDS.en.words,
     close: 'Leave',
     choose: 'Which game?',

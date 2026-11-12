@@ -1,6 +1,7 @@
 import { retain } from '../engine/math'
 import { seasonKitDeltas } from './seasonOneKitRules'
 import { kitBDeltas } from './gaKitBRules'
+import { kitSCDeltas } from './scKitRules'
 import { gaKitADeltas } from './gaKitARules'
 import { rocketKitDeltas } from './rocketKitRules'
 import { rocketEvolves } from './rocketKitSystem'
@@ -289,6 +290,7 @@ export const recomputeStats = (g: Game) => {
     ...bagDeltas(p.bag),
     ...seasonKitDeltas(p.kit),
     ...kitBDeltas(p.kitB, p.stage),
+    ...kitSCDeltas(p.kitSC, p.stage),
     ...gaKitADeltas(p.kitA, p.stage),
     ...rocketKitDeltas(p.rocket),
     ...variantDeltas(p.variant),

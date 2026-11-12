@@ -1,6 +1,6 @@
 import { isSafariHabitat } from '../data/safari'
 import { HATCHLINGS } from '../data/hatchlings'
-import { LEGENDS } from '../data/legends'
+import { eggLegend, LEGENDS, type LegendId } from '../data/legends'
 import type { CosmogLegend } from '../game/legendPaths'
 import { BAG_ITEMS, EVO_ITEMS } from '../data/shop'
 import { giftInbox, nextGift, openGift } from '../account'
@@ -12,6 +12,7 @@ import type { Gift, StyleRef } from '../game/gifts'
 import { companionForm } from '../game/supporters'
 import { formatDay, formatPokeDollars, formatPokeDollarsShort, t } from '../i18n'
 import { bagIcon, coinIcon, eggIcon, giftIcon, itemArt, medalIcon, ribbonIcon, sparkleIcon } from '../render/art'
+import { manaphyEggIcon } from '../render/manaphyEggArt'
 import { styleThumb } from '../render/card'
 import { frameArtUrl, frameIcon, titleMark, wallpaperUrl } from '../render/cosmetics'
 import { cryUrl, drawPokemon, loadedSprites, loadSpecies, portraitUrl } from '../render/sprites'
@@ -63,7 +64,8 @@ export const contentLine = (gift: Pick<Gift, 'content'>): { src: string; text: s
     case 'bag':
       return { src: bagIcon(c.item), text: m.bag(c.count, BAG_ITEMS[c.item].name) }
     case 'legend':
-      return { src: portraitUrl(LEGENDS[c.legend].line[0].dex), text: m.legend(LEGENDS[c.legend].name) }
+      // Manaphy comes as its egg, and hatches when opened (`ui/manaphyEgg.ts`).
+      return eggLegend(c.legend) ? { src: manaphyEggIcon(), text: t().scWave.egg.gift } : { src: portraitUrl(LEGENDS[c.legend].line[0].dex), text: m.legend(LEGENDS[c.legend].name) }
     case 'evoItem':
       return { src: itemArt(c.item), text: EVO_ITEMS[c.item].name }
     case 'shadow':
@@ -142,6 +144,8 @@ export type GiftScreenActions = {
   pick: () => void
   /** Cosmog's legend came out (its path's gift): the evolution scene plays. */
   evolve: (legend: CosmogLegend) => void
+  /** A legend's egg came out (the Ovo de Manaphy): its hatching scene plays (`ui/manaphyEgg.ts`). */
+  legendEgg: (legend: LegendId) => void
   /** Back to the lobby. */
   close: () => void
 }
@@ -222,6 +226,11 @@ export const giftScreen = (root: HTMLElement, input: Input, actions: GiftScreenA
       return later(() => actions.hatch(hatch))
     }
     const content = gift.content
+    if (content.kind === 'legend' && eggLegend(content.legend)) {
+      const legend = content.legend
+      dispose()
+      return later(() => actions.legendEgg(legend))
+    }
     if (gift.reason?.kind === 'path' && gift.reason.path === 'cosmog' && content.kind === 'legend' && (content.legend === 'solgaleo' || content.legend === 'lunala')) {
       const legend = content.legend
       dispose()

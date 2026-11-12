@@ -1,5 +1,6 @@
 import type { BagItem } from './shop'
 import type { RocketFamilyId } from './rocketFamilies'
+import type { CornerFamilyId } from './scFamilies'
 
 /**
  * The Rocket Game Corner's prize counter (`ui/cornerCounter.ts`; the API
@@ -8,7 +9,9 @@ import type { RocketFamilyId } from './rocketFamilies'
  * goal of days: a day's tokens (`CORNER.buyDaily` bought, plus a fair day at
  * the games) is about 700, so a family is four to seven days.
  *
- * - `family`: one of the four prize families (`data/rocketFamilies.ts`), once.
+ * - `family`: one of the prize families, once: Team Rocket's four
+ *   (`data/rocketFamilies.ts`) or the classic Celadon prizes, both Nidoran
+ *   lines and Cleffa's (`CORNER_FAMILY_IDS`, `data/scFamilies.ts`).
  * - `shadow`: that family as a Shadow (`game/shadow.ts`), the family too if it
  *   isn't owned yet, once.
  * - `bag`: Bag items, as often as the tokens last.
@@ -16,9 +19,12 @@ import type { RocketFamilyId } from './rocketFamilies'
  *
  * Names and blurbs live in i18n `rocket.prizes`, keyed by these ids.
  */
+/** A family the counter sells: Team Rocket's or a Celadon prize. */
+export type PrizeFamilyId = RocketFamilyId | CornerFamilyId
+
 export type CornerPrize =
-  | { kind: 'family'; family: RocketFamilyId; price: number }
-  | { kind: 'shadow'; family: RocketFamilyId; price: number }
+  | { kind: 'family'; family: PrizeFamilyId; price: number }
+  | { kind: 'shadow'; family: PrizeFamilyId; price: number }
   | { kind: 'bag'; item: BagItem; count: number; price: number }
   | { kind: 'title'; price: number }
   | { kind: 'frame'; price: number }
@@ -28,10 +34,16 @@ export const CORNER_PRIZES = {
   gimmighoul: { kind: 'family', family: 'gimmighoul', price: 4000 },
   mawile: { kind: 'family', family: 'mawile', price: 4000 },
   absol: { kind: 'family', family: 'absol', price: 5000 },
+  nidoranF: { kind: 'family', family: 'nidoranF', price: 4500 },
+  nidoranM: { kind: 'family', family: 'nidoranM', price: 4500 },
+  cleffa: { kind: 'family', family: 'cleffa', price: 6000 },
   shadowDitto: { kind: 'shadow', family: 'ditto', price: 6500 },
   shadowGimmighoul: { kind: 'shadow', family: 'gimmighoul', price: 8000 },
   shadowMawile: { kind: 'shadow', family: 'mawile', price: 8000 },
   shadowAbsol: { kind: 'shadow', family: 'absol', price: 9500 },
+  shadowNidoranF: { kind: 'shadow', family: 'nidoranF', price: 8500 },
+  shadowNidoranM: { kind: 'shadow', family: 'nidoranM', price: 8500 },
+  shadowCleffa: { kind: 'shadow', family: 'cleffa', price: 10500 },
   rareCandy: { kind: 'bag', item: 'rareCandy', count: 3, price: 450 },
   xAttack: { kind: 'bag', item: 'xAttack', count: 3, price: 500 },
   luckyEgg: { kind: 'bag', item: 'luckyEgg', count: 2, price: 450 },

@@ -34,6 +34,8 @@ import { LEGENDARY_ICONS_2 } from './legendaryArt2'
 import { ULTRA_ICONS } from './ultraArt'
 import { PATH_LEGEND_ICONS } from './pathLegendArt'
 import { LEGENDARY_ICONS_3 } from './legendaryFx3'
+import { LEGENDARY_ICONS_4 } from './legendaryFx4'
+import { SC_KIT_ICONS } from './scKitArt'
 import * as TE from './typeEvolvedArt'
 
 /**
@@ -713,6 +715,7 @@ const MOVE_ICON_ART: Record<MoveId, () => PixelSprite> = {
   ...ULTRA_ICONS,
   ...PATH_LEGEND_ICONS,
   ...LEGENDARY_ICONS_3,
+  ...LEGENDARY_ICONS_4,
   ember: () => FX.ember()[0]!,
   fireSpin: () => FX.flame()[0]!,
   waterGun: () => FX.water(),
@@ -790,6 +793,7 @@ const MOVE_ICON_ART: Record<MoveId, () => PixelSprite> = {
   ...REGIONAL_ICONS,
   ...ROCKET_KIT_ICONS,
   ...GALLOP_ICONS,
+  ...SC_KIT_ICONS,
   jawLock: () => art([...TE.MAW_TOP, ...TE.MAW_BOTTOM], TE.MAW, '#d8c0e8'),
   superpower: () => art(TE.BIG_FIST, TE.FIST_PAL, '#281010'),
   fissure: () => art(...TE.FISSURE_ICON, '#181818'),

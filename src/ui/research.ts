@@ -16,7 +16,8 @@ import { loadSave } from './save'
 export const lockedWhere = (id: HatchlingId): string | null => {
   const words = t().seasonUnlocks
   if (HATCHLINGS[id].egg === 'fossil') return words.fossilBlurb
-  const where: Partial<Record<HatchlingId, string>> = words.where
+  // The Safári and Game Corner wave's families say where they come from too (`i18n/scWave.ts`).
+  const where: Partial<Record<HatchlingId, string>> = { ...words.where, ...t().scWave.where }
   return where[id] ?? null
 }
 

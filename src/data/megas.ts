@@ -560,6 +560,18 @@ export const MEGAS = {
     stats: { might: 0.3, speed: 8, typeDamage: { electric: 0.2 } },
     special: 'zapCannon',
   },
+  /** Z-A's Mega Clefable, a Game Corner prize line's: no SpriteCollab sheets yet, so Clefable wears the rainbow outline. */
+  clefable: {
+    line: 'cleffa',
+    name: 'Mega Clefable',
+    stone: 'Clefablite',
+    form: 'mega',
+    colors: ['#f0a0b8', '#fff0f4', '#a878d8'],
+    ability: 'Magic Bounce',
+    effect: { kind: 'stats' },
+    stats: { maxHp: 40, might: 0.25, regen: 0.6, typeDamage: { fairy: 0.25 } },
+    special: 'moonblast',
+  },
 } as const satisfies Record<string, MegaDef>
 
 export type MegaId = keyof typeof MEGAS

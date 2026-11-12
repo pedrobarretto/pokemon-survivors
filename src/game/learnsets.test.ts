@@ -18,6 +18,7 @@ import { SKETCH_MOVE_IDS } from './sketch'
 import { SEASON_ONE_EGG_MOVE_IDS } from './seasonOneEggMoves'
 import { SEASON_ONE_KIT_MOVE_IDS } from './seasonOneKitMoves'
 import { GA_KIT_B_MOVE_IDS } from './gaKitBMoves'
+import { SC_KIT_MOVE_IDS } from './scKitMoves'
 import { GA_KIT_A_MOVE_IDS } from './gaKitAMoves'
 import { REGIONAL_MOVE_IDS } from './regionalMoves'
 import { ROCKET_KIT_MOVE_IDS } from './rocketKitMoves'
@@ -27,7 +28,7 @@ const EGG_SIGNATURES: readonly MoveId[] = [
   'dreamEater', 'forcePalm', 'dig', 'twister', 'sandTomb', 'meteorMash', 'zenHeadbutt', 'foulPlay', 'bodySlam', 'dynamicPunch', 'rollout',
   'iceBall', 'furyCutter', 'sacredSword', 'dragonDarts', 'snarl', 'gigaImpact', 'flail', 'boneRush', 'metronome', 'echoedVoice', 'curse',
 ]
-const SIGNATURES = new Set<MoveId>([...(Object.keys(SIGNATURE_MOVES) as MoveId[]), ...EGG_SIGNATURES, ...EGG_MOVE_2_IDS, ...EGG_MOVE_3_IDS, ...SKETCH_MOVE_IDS, ...SEASON_ONE_EGG_MOVE_IDS, ...SEASON_ONE_KIT_MOVE_IDS, ...ROCKET_KIT_MOVE_IDS, ...GA_KIT_B_MOVE_IDS, ...GA_KIT_A_MOVE_IDS, ...REGIONAL_MOVE_IDS])
+const SIGNATURES = new Set<MoveId>([...(Object.keys(SIGNATURE_MOVES) as MoveId[]), ...EGG_SIGNATURES, ...EGG_MOVE_2_IDS, ...EGG_MOVE_3_IDS, ...SKETCH_MOVE_IDS, ...SEASON_ONE_EGG_MOVE_IDS, ...SEASON_ONE_KIT_MOVE_IDS, ...ROCKET_KIT_MOVE_IDS, ...GA_KIT_B_MOVE_IDS, ...GA_KIT_A_MOVE_IDS, ...REGIONAL_MOVE_IDS, ...SC_KIT_MOVE_IDS])
 
 type Role = 'shot' | 'homing' | 'boomerang' | 'aura' | 'wave' | 'strike' | 'arc' | 'counter' | 'charge' | 'sky' | 'chain' | 'cone' | 'beam' | 'field' | 'dash' | 'roll' | 'support' | 'random'
 
@@ -55,6 +56,7 @@ const ROLE: Record<string, Role> = {
   clangingScales: 'wave', dualChop: 'strike', sing: 'wave', beatUp: 'strike', hornAttack: 'strike', shadowSneak: 'shot', ominousWind: 'aura', poisonJab: 'strike',
   teatime: 'field', falseSurrender: 'strike', nuzzle: 'dash', steelWing: 'arc', thunderPunch: 'strike', flameBurst: 'shot', bugBite: 'strike',
   transform: 'strike', razorWind: 'shot', makeItRain: 'field', viseGrip: 'arc',
+  sludge: 'shot', furyAttack: 'strike', moonlight: 'field', dive: 'field',
   highHorsepower: 'beam', lowKick: 'arc', hornDrill: 'strike', morningSun: 'support', bounce: 'aura',
   sketch: 'random', fieryDance: 'aura', overdrive: 'wave', gigatonHammer: 'strike', bitterBlade: 'arc', leechLife: 'strike', fireFang: 'strike', furySwipes: 'strike', heavySlam: 'dash', bulldoze: 'wave', perishSong: 'support', chargeBeam: 'beam', moonblast: 'shot', frostBreath: 'cone', avalanche: 'field',
 }

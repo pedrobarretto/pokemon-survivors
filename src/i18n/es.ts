@@ -9,6 +9,7 @@ import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
+import { SC_WAVE_WORDS } from './scWave'
 import { ROCKET_WORDS } from './rocket/words'
 import { ULTRA_WORDS } from './ultra'
 import { LEGEND_PATHS_WORDS } from './legendPaths'
@@ -2389,6 +2390,7 @@ export const es: Messages = {
       glalie: 'movimientos de Normal y Hielo +30% y movimientos +25%. El especial pasa a ser Sheer Cold.',
       salamence: 'movimientos de Normal y Volador +30%, velocidad +12 y movimientos +25%. El especial pasa a ser Double-Edge.',
       ...ROCKET_FAMILY_WORDS.es.megas,
+      ...SC_WAVE_WORDS.es.megas,
     },
   },
 
@@ -3018,7 +3020,7 @@ export const es: Messages = {
     noTitle: 'ninguno',
     titleTag: 'TÍTULO',
     equipped: 'EN USO',
-    giftTitles: { ambassador: 'Ha traído 3 amigos al juego', supporter: 'Apoyó el proyecto con una donación', pumpkinKing: 'Llenó el frasco de dulces de la Noche de Brujas', exorcist: 'Venció a todos los jefes de la Cacería de Fantasmas', vipCustomer: 'Juntó 30 sellos en la tarjeta de cliente de Kecleon', tycoon: 'Convirtió la tienda de Kecleon en Gran Almacén', patron: 'Donó ₽50.000 o más en un Festival de la Plaza', ogSupporter: 'Apoyó el juego antes de Patreon', arenaPoke: 'Terminó una temporada clasificatoria de la Arena en Poké Ball', arenaGreat: 'Llegó a Great Ball en una temporada clasificatoria de la Arena', arenaUltra: 'Llegó a Ultra Ball en una temporada clasificatoria de la Arena', arenaMaster: 'Llegó a Master Ball en una temporada clasificatoria de la Arena', creator: 'Hace videos y directos de Pokémon Survivors', friendLegend: 'Ha traído 10 amigos al juego', stampCollector: 'Reunió 30 Estampas en el Poké Realm', era1Legend: 'Quedó en lo más alto de un ranking de la Era 1', era1Champion: 'Fue el n.º 1 de un ranking de la Era 1', spaceTime: 'Capturó a Dialga y a Palkia', bugChampion: 'Ganó una semana del Concurso de Bichos', safariWarden: 'Completó la Pokédex de todos los hábitats de la Zona Safari', ...ROCKET_WORDS.es.giftTitles, kantoDex: 'Vio todos los Pokémon de Kanto en la Pokédex', johtoDex: 'Vio todos los Pokémon de Johto en la Pokédex', hoennDex: 'Vio todos los Pokémon de Hoenn en la Pokédex', sinnohDex: 'Vio todos los Pokémon de Sinnoh en la Pokédex', unovaDex: 'Vio todos los Pokémon de Unova en la Pokédex', kalosDex: 'Vio todos los Pokémon de Kalos en la Pokédex', alolaDex: 'Vio todos los Pokémon de Alola en la Pokédex', galarDex: 'Vio todos los Pokémon de Galar en la Pokédex', paldeaDex: 'Vio todos los Pokémon de Paldea en la Pokédex' },
+    giftTitles: { ambassador: 'Ha traído 3 amigos al juego', supporter: 'Apoyó el proyecto con una donación', pumpkinKing: 'Llenó el frasco de dulces de la Noche de Brujas', exorcist: 'Venció a todos los jefes de la Cacería de Fantasmas', vipCustomer: 'Juntó 30 sellos en la tarjeta de cliente de Kecleon', tycoon: 'Convirtió la tienda de Kecleon en Gran Almacén', patron: 'Donó ₽50.000 o más en un Festival de la Plaza', ogSupporter: 'Apoyó el juego antes de Patreon', arenaPoke: 'Terminó una temporada clasificatoria de la Arena en Poké Ball', arenaGreat: 'Llegó a Great Ball en una temporada clasificatoria de la Arena', arenaUltra: 'Llegó a Ultra Ball en una temporada clasificatoria de la Arena', arenaMaster: 'Llegó a Master Ball en una temporada clasificatoria de la Arena', creator: 'Hace videos y directos de Pokémon Survivors', friendLegend: 'Ha traído 10 amigos al juego', stampCollector: 'Reunió 30 Estampas en el Poké Realm', era1Legend: 'Quedó en lo más alto de un ranking de la Era 1', era1Champion: 'Fue el n.º 1 de un ranking de la Era 1', spaceTime: 'Capturó a Dialga y a Palkia', bugChampion: 'Ganó una semana del Concurso de Bichos', safariWarden: 'Completó la Pokédex de todos los hábitats de la Zona Safari', ...ROCKET_WORDS.es.giftTitles, ...SC_WAVE_WORDS.es.giftTitles, kantoDex: 'Vio todos los Pokémon de Kanto en la Pokédex', johtoDex: 'Vio todos los Pokémon de Johto en la Pokédex', hoennDex: 'Vio todos los Pokémon de Hoenn en la Pokédex', sinnohDex: 'Vio todos los Pokémon de Sinnoh en la Pokédex', unovaDex: 'Vio todos los Pokémon de Unova en la Pokédex', kalosDex: 'Vio todos los Pokémon de Kalos en la Pokédex', alolaDex: 'Vio todos los Pokémon de Alola en la Pokédex', galarDex: 'Vio todos los Pokémon de Galar en la Pokédex', paldeaDex: 'Vio todos los Pokémon de Paldea en la Pokédex' },
     newMedals: 'Nuevas medallas',
     names: {
       ...TERA_WORDS.es.achievementNames,
@@ -3132,6 +3134,7 @@ export const es: Messages = {
       galarDex: 'Investigador(a) de Galar',
       paldeaDex: 'Investigador(a) de Paldea',
       ...ROCKET_WORDS.es.titles,
+      ...SC_WAVE_WORDS.es.titles,
       bugChampion: 'Campeón(a) de Bichos',
       safariWarden: 'Guardaparques',
       spaceTime: 'Maestro del Tiempo y el Espacio',
@@ -3183,6 +3186,7 @@ export const es: Messages = {
     ...GA_FAMILIES_B_WORDS.es.moves,
     ...GA_FAMILIES_A_WORDS.es.moves,
     ...ROCKET_FAMILY_WORDS.es.moves,
+    ...SC_WAVE_WORDS.es.moves,
     ...GALLOP_WORDS.es,
     ...ULTRA_WORDS.es.moves,
     ...LEGEND_PATHS_WORDS.es.moves,
@@ -5663,6 +5667,7 @@ export const es: Messages = {
     ...GA_FAMILIES_B_WORDS.es.blurbs,
     ...GA_FAMILIES_A_WORDS.es.blurbs,
     ...ROCKET_FAMILY_WORDS.es.blurbs,
+    ...SC_WAVE_WORDS.es.blurbs,
     ...ULTRA_WORDS.es.blurbs,
     ...LEGEND_PATHS_WORDS.es.blurbs,
     ...QUEST_WORDS.es.blurbs,
@@ -6385,6 +6390,7 @@ export const es: Messages = {
       path: LEGEND_PATHS_WORDS.es.paths.where.zygarde,
       temple: LEGEND_PATHS_WORDS.es.paths.where.regigigas,
       ...QUEST_WORDS.es.where,
+      egg: SC_WAVE_WORDS.es.legendWhere,
     },
     rule: (need: number) => (need === 1 ? 'Para capturarlo, vence a este legendario 1 vez como jefe, en una partida solo y en cualquier modo. Las victorias en cooperativo no cuentan.' : `Para capturarlo, vence a este legendario ${need} veces como jefe, en una partida solo y en cualquier modo. Las victorias en cooperativo no cuentan.`),
     shinyRule: 'Vencer a uno shiny en la victoria de la captura, o después, desbloquea su forma shiny.',
@@ -6507,10 +6513,11 @@ export const es: Messages = {
   },
   seasonUnlocks: SEASON_ONE_UNLOCKS_WORDS.es,
   rocket: ROCKET_WORDS.es,
+  scWave: SC_WAVE_WORDS.es,
   paths: LEGEND_PATHS_WORDS.es.paths,
   minigames: {
     claw: SEASON_ONE_CLAW_WORDS.es.words,
-    safari: SEASON_ONE_SAFARI_WORDS.es.words,
+    safari: { ...SEASON_ONE_SAFARI_WORDS.es.words, only: SC_WAVE_WORDS.es.safari },
     dig: SEASON_ONE_DIG_WORDS.es.words,
     close: 'Salir',
     choose: '¿Qué juego?',

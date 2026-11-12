@@ -47,8 +47,17 @@ export const SAFARI = {
   repeat: 0.3,
   /** How much likelier a family sharing a type with the partner is. */
   partnerBoost: 1.6,
-  /** How common each rarity is, per encounter (`shareOf`). */
+  /**
+   * How common each rarity is, per encounter (`shareOf`). A habitat's Safari-only
+   * families split theirs (`specialWeight`): each weighs `weights.special` alone,
+   * and every other one adds `specialSplit` of that to the habitat's total, so a
+   * habitat with five exclusives meets one more often than a habitat with one,
+   * but each of the five less often.
+   */
   weights: { common: 10, rare: 5, ultra: 2, special: 6 },
+  specialSplit: 0.5,
+  /** How much likelier a Safari-only family the account still lacks is (`SafariEntry.lacking`). */
+  lackingBoost: 2,
   /** A ball's chance on a Pokémon that hasn't been calmed. */
   catchChance: { common: 0.35, rare: 0.22, ultra: 0.12, special: 0.16 },
   /** The chance it flees after a turn, not calmed. */
@@ -88,7 +97,7 @@ export type SafariMood = keyof typeof SAFARI.mood
 export type SafariDaypart = 'dawn' | 'day' | 'dusk' | 'night'
 
 /** A family a habitat can hold. */
-export type SafariEntry<F extends string> = { family: F; rarity: SafariRarity; types: readonly string[] }
+export type SafariEntry<F extends string> = { family: F; rarity: SafariRarity; types: readonly string[]; lacking?: boolean }
 
 /** An encounter rolled in advance: who, its level and whether it's the guarantee's. Whether it's shiny is rolled when it shows. */
 export type SafariSlot<F extends string> = { family: F; rarity: SafariRarity; level: number; sure: boolean }
@@ -157,21 +166,30 @@ export const localHour = (now: number, offset: number) => Math.floor((((now + of
 /** The time of day at an hour: dawn 5 to 7, day to 17, dusk to 19, night the rest. */
 export const daypartOf = (hour: number): SafariDaypart => (hour >= 5 && hour < 7 ? 'dawn' : hour >= 7 && hour < 17 ? 'day' : hour >= 17 && hour < 19 ? 'dusk' : 'night')
 
-/** An entry's weight for this partner: its rarity's, raised when they share a type. */
-const weightOf = <F extends string>(entry: SafariEntry<F>, partnerTypes: readonly string[]) =>
-  SAFARI.weights[entry.rarity] * (entry.types.some((type) => partnerTypes.includes(type)) ? SAFARI.partnerBoost : 1)
+/** One Safari-only family's weight in a pool holding `n` of them: `weights.special` shared out (`SAFARI.specialSplit`). */
+export const specialWeight = (n: number) => (SAFARI.weights.special * (1 + SAFARI.specialSplit * (Math.max(1, n) - 1))) / Math.max(1, n)
+
+/** Each entry's weight for this partner: its rarity's (a Safari-only one's split, boosted while lacking), raised when they share a type. */
+const weightsOf = <F extends string>(pool: readonly SafariEntry<F>[], partnerTypes: readonly string[]) => {
+  const special = specialWeight(pool.filter((e) => e.rarity === 'special').length)
+  return pool.map((entry) => {
+    const base = entry.rarity === 'special' ? special * (entry.lacking ? SAFARI.lackingBoost : 1) : SAFARI.weights[entry.rarity]
+    return base * (entry.types.some((type) => partnerTypes.includes(type)) ? SAFARI.partnerBoost : 1)
+  })
+}
 
 /** Each entry's chance of being any one encounter, as the screen shows it (they add up to 1). */
 export const shareOf = <F extends string>(pool: readonly SafariEntry<F>[], partnerTypes: readonly string[]) => {
-  const total = pool.reduce((sum, entry) => sum + weightOf(entry, partnerTypes), 0)
-  return pool.map((entry) => ({ ...entry, share: weightOf(entry, partnerTypes) / total }))
+  const weights = weightsOf(pool, partnerTypes)
+  const total = weights.reduce((sum, w) => sum + w, 0)
+  return pool.map((entry, i) => ({ ...entry, share: weights[i]! / total }))
 }
 
-const pickEntry = <F extends string>(pool: readonly SafariEntry<F>[], partnerTypes: readonly string[], next: () => number) => {
-  let left = next() * pool.reduce((sum, entry) => sum + weightOf(entry, partnerTypes), 0)
-  for (const entry of pool) {
-    left -= weightOf(entry, partnerTypes)
-    if (left < 0) return entry
+const pickEntry = <F extends string>(pool: readonly SafariEntry<F>[], weights: readonly number[], next: () => number) => {
+  let left = next() * weights.reduce((sum, w) => sum + w, 0)
+  for (let i = 0; i < pool.length; i++) {
+    left -= weights[i]!
+    if (left < 0) return pool[i]!
   }
   return pool[pool.length - 1]!
 }
@@ -191,9 +209,10 @@ const slotOf = <F extends string>({ family, rarity }: SafariEntry<F>, next: () =
  */
 export const rollQueue = <F extends string>(pool: readonly SafariEntry<F>[], partnerTypes: readonly string[], next: () => number, sure: SafariEntry<F> | null): SafariSlot<F>[] => {
   const queue: SafariSlot<F>[] = []
+  const weights = weightsOf(pool, partnerTypes)
   let last: SafariEntry<F> | null = null
   for (let i = 0; i < SAFARI.encounters; i++) {
-    const entry: SafariEntry<F> = last && next() < SAFARI.repeat ? last : pickEntry(pool, partnerTypes, next)
+    const entry: SafariEntry<F> = last && next() < SAFARI.repeat ? last : pickEntry(pool, weights, next)
     queue.push(slotOf(entry, next, false))
     last = entry
   }

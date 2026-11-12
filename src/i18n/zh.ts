@@ -9,6 +9,7 @@ import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
+import { SC_WAVE_WORDS } from './scWave'
 import { ROCKET_WORDS } from './rocket/words'
 import { ULTRA_WORDS } from './ultra'
 import { LEGEND_PATHS_WORDS } from './legendPaths'
@@ -2385,6 +2386,7 @@ export const zh: Messages = {
       glalie: '一般與冰屬性招式+30%、招式+25%。必殺技變為 Sheer Cold。',
       salamence: '一般與飛行屬性招式+30%、速度+12、招式+25%。必殺技變為 Double-Edge。',
       ...ROCKET_FAMILY_WORDS.zh.megas,
+      ...SC_WAVE_WORDS.zh.megas,
     },
   },
 
@@ -3014,7 +3016,7 @@ export const zh: Messages = {
     noTitle: '無',
     titleTag: '稱號',
     equipped: '展示中',
-    giftTitles: { ambassador: '邀請了3位好友加入遊戲', supporter: '透過贊助支持本專案', pumpkinKing: '裝滿了女巫之夜的糖果罐', exorcist: '擊敗了所有捉鬼行動的首領', vipCustomer: '在 Kecleon 集點卡上集滿30個印章', tycoon: '把 Kecleon 的商店經營成百貨公司', patron: '在廣場祭典中捐出 ₽50,000 以上', ogSupporter: '在 Patreon 之前就贊助了遊戲', arenaPoke: '以 Poké Ball 段位結束一個競技場排位賽季', arenaGreat: '在競技場排位賽季中達到 Great Ball', arenaUltra: '在競技場排位賽季中達到 Ultra Ball', arenaMaster: '在競技場排位賽季中達到 Master Ball', creator: '製作 Pokémon Survivors 的影片和直播', friendLegend: '邀請了10位好友加入遊戲', stampCollector: '在 Poké Realm 收集了30枚印章', era1Legend: '在第一紀元排行榜名列前茅', era1Champion: '在第一紀元排行榜奪得第一', spaceTime: '捕捉了 Dialga 與 Palkia', bugChampion: '贏得一週的捕蟲大會', safariWarden: '完成狩獵地帶所有棲地的圖鑑', ...ROCKET_WORDS.zh.giftTitles, kantoDex: '在圖鑑中看過關都的所有寶可夢', johtoDex: '在圖鑑中看過城都的所有寶可夢', hoennDex: '在圖鑑中看過豐緣的所有寶可夢', sinnohDex: '在圖鑑中看過神奧的所有寶可夢', unovaDex: '在圖鑑中看過合眾的所有寶可夢', kalosDex: '在圖鑑中看過卡洛斯的所有寶可夢', alolaDex: '在圖鑑中看過阿羅拉的所有寶可夢', galarDex: '在圖鑑中看過伽勒爾的所有寶可夢', paldeaDex: '在圖鑑中看過帕底亞的所有寶可夢' },
+    giftTitles: { ambassador: '邀請了3位好友加入遊戲', supporter: '透過贊助支持本專案', pumpkinKing: '裝滿了女巫之夜的糖果罐', exorcist: '擊敗了所有捉鬼行動的首領', vipCustomer: '在 Kecleon 集點卡上集滿30個印章', tycoon: '把 Kecleon 的商店經營成百貨公司', patron: '在廣場祭典中捐出 ₽50,000 以上', ogSupporter: '在 Patreon 之前就贊助了遊戲', arenaPoke: '以 Poké Ball 段位結束一個競技場排位賽季', arenaGreat: '在競技場排位賽季中達到 Great Ball', arenaUltra: '在競技場排位賽季中達到 Ultra Ball', arenaMaster: '在競技場排位賽季中達到 Master Ball', creator: '製作 Pokémon Survivors 的影片和直播', friendLegend: '邀請了10位好友加入遊戲', stampCollector: '在 Poké Realm 收集了30枚印章', era1Legend: '在第一紀元排行榜名列前茅', era1Champion: '在第一紀元排行榜奪得第一', spaceTime: '捕捉了 Dialga 與 Palkia', bugChampion: '贏得一週的捕蟲大會', safariWarden: '完成狩獵地帶所有棲地的圖鑑', ...ROCKET_WORDS.zh.giftTitles, ...SC_WAVE_WORDS.zh.giftTitles, kantoDex: '在圖鑑中看過關都的所有寶可夢', johtoDex: '在圖鑑中看過城都的所有寶可夢', hoennDex: '在圖鑑中看過豐緣的所有寶可夢', sinnohDex: '在圖鑑中看過神奧的所有寶可夢', unovaDex: '在圖鑑中看過合眾的所有寶可夢', kalosDex: '在圖鑑中看過卡洛斯的所有寶可夢', alolaDex: '在圖鑑中看過阿羅拉的所有寶可夢', galarDex: '在圖鑑中看過伽勒爾的所有寶可夢', paldeaDex: '在圖鑑中看過帕底亞的所有寶可夢' },
     newMedals: '新獎牌',
     names: {
       ...TERA_WORDS.zh.achievementNames,
@@ -3128,6 +3130,7 @@ export const zh: Messages = {
       galarDex: '伽勒爾研究員',
       paldeaDex: '帕底亞研究員',
       ...ROCKET_WORDS.zh.titles,
+      ...SC_WAVE_WORDS.zh.titles,
       bugChampion: '捕蟲冠軍',
       safariWarden: '園區巡守員',
       spaceTime: '時間與空間之主',
@@ -3178,6 +3181,7 @@ export const zh: Messages = {
     ...GA_FAMILIES_B_WORDS.zh.moves,
     ...GA_FAMILIES_A_WORDS.zh.moves,
     ...ROCKET_FAMILY_WORDS.zh.moves,
+    ...SC_WAVE_WORDS.zh.moves,
     ...GALLOP_WORDS.zh,
     ...ULTRA_WORDS.zh.moves,
     ...LEGEND_PATHS_WORDS.zh.moves,
@@ -5657,6 +5661,7 @@ export const zh: Messages = {
     ...GA_FAMILIES_B_WORDS.zh.blurbs,
     ...GA_FAMILIES_A_WORDS.zh.blurbs,
     ...ROCKET_FAMILY_WORDS.zh.blurbs,
+    ...SC_WAVE_WORDS.zh.blurbs,
     ...ULTRA_WORDS.zh.blurbs,
     ...LEGEND_PATHS_WORDS.zh.blurbs,
     ...QUEST_WORDS.zh.blurbs,
@@ -6379,6 +6384,7 @@ export const zh: Messages = {
       path: LEGEND_PATHS_WORDS.zh.paths.where.zygarde,
       temple: LEGEND_PATHS_WORDS.zh.paths.where.regigigas,
       ...QUEST_WORDS.zh.where,
+      egg: SC_WAVE_WORDS.zh.legendWhere,
     },
     rule: (need: number) => (need === 1 ? '在任何模式的單人遊戲中以首領身分擊敗它1次，即可收服。合作模式的勝利不計。' : `在任何模式的單人遊戲中以首領身分擊敗它${need}次，即可收服。合作模式的勝利不計。`),
     shinyRule: '在收服的那場勝利或之後擊敗異色個體，即可解鎖它的異色。',
@@ -6501,10 +6507,11 @@ export const zh: Messages = {
   },
   seasonUnlocks: SEASON_ONE_UNLOCKS_WORDS.zh,
   rocket: ROCKET_WORDS.zh,
+  scWave: SC_WAVE_WORDS.zh,
   paths: LEGEND_PATHS_WORDS.zh.paths,
   minigames: {
     claw: SEASON_ONE_CLAW_WORDS.zh.words,
-    safari: SEASON_ONE_SAFARI_WORDS.zh.words,
+    safari: { ...SEASON_ONE_SAFARI_WORDS.zh.words, only: SC_WAVE_WORDS.zh.safari },
     dig: SEASON_ONE_DIG_WORDS.zh.words,
     close: '離開',
     choose: '玩哪個遊戲？',

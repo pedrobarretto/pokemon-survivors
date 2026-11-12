@@ -78,6 +78,8 @@ import { drawUltraAir, drawUltraGround } from './ultraFx'
 import { drawPathLegendAir, drawPathLegendGround } from './pathLegendFx'
 import { PATH_ART } from './pathLegendArt'
 import { drawLegendary3Air, drawLegendary3Ground } from './legendaryFx3'
+import { drawLegendary4Air } from './legendaryFx4'
+import { drawScKitAir, drawScKitAttack, drawScKitGround } from './scKitFx'
 import { drawSignatureAttack, drawSignatureGround, drawSignaturePlayer } from './signatureFx'
 import { drawTraitAir, drawTraitGround, traitLift, traitTint } from './traits'
 import { bolt, dashedRing } from './strokes'
@@ -292,6 +294,7 @@ const drawAttack = (ctx: Ctx, a: Attack, t: number) => {
       drawEgg3Attack(ctx, a, t)
       drawSeasonKitAttack(ctx, a, t)
       drawKitBAttack(ctx, a, t)
+      drawScKitAttack(ctx, a, t)
       drawGaKitAAttack(ctx, a, t)
       drawRegionalAttack(ctx, a, t)
       drawRocketKitAttack(ctx, a, t)
@@ -976,6 +979,7 @@ const drawPlayerGround = (ctx: Ctx, g: Game, camX: number, camY: number, t: numb
   drawSpecialAura(ctx, g, t)
   drawMegaGround(ctx, g, camX, camY, t, own)
   drawKitBGround(ctx, g, t)
+  drawScKitGround(ctx, g, t)
   drawTeraGround(ctx, g, camX, camY, t, own)
 }
 
@@ -986,6 +990,7 @@ const drawPlayerAir = (ctx: Ctx, g: Game, t: number) => {
   drawEgg3Player(ctx, g, t)
   drawSeasonKitPlayer(ctx, g, t)
   drawKitBAir(ctx, g, t)
+  drawScKitAir(ctx, g, t)
   drawGaKitAPlayer(ctx, g, t)
   drawRocketKitPlayer(ctx, g, t)
   drawSignaturePlayer(ctx, g, t)
@@ -1248,6 +1253,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
       drawUltraAir(into, v, t, visible)
       drawPathLegendAir(into, v, t, visible)
       drawLegendary3Air(into, v, t, visible)
+      drawLegendary4Air(into, v, t, visible)
       drawDrainVines(into, v, t)
     })
   }

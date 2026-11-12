@@ -17,6 +17,7 @@ import {
   sessionPrice,
   shareOf,
   shinyChanceOf,
+  specialWeight,
   startRun,
   wanderersOf,
   type SafariAction,
@@ -68,6 +69,21 @@ describe('the week', () => {
 })
 
 describe('who the grass holds', () => {
+  it('shares a habitat’s weight among its Safari-only families: more of them together, each one rarer', () => {
+    expect(specialWeight(1)).toBe(SAFARI.weights.special)
+    for (const n of [2, 3, 5, 8]) {
+      expect(specialWeight(n) * n).toBeGreaterThan(specialWeight(n - 1) * (n - 1))
+      expect(specialWeight(n)).toBeLessThan(specialWeight(n - 1))
+    }
+  })
+
+  it('boosts the Safari-only families the account lacks', () => {
+    const lacking = POOL.map((e) => (e.rarity === 'special' ? { ...e, lacking: true } : e))
+    const plain = shareOf(POOL, []).find((e) => e.family === 'mimikyu')!.share
+    const boosted = shareOf(lacking, []).find((e) => e.family === 'mimikyu')!.share
+    expect(boosted).toBeGreaterThan(plain * 1.5)
+  })
+
   it('shows shares that add up to 1 and raises the partner’s type', () => {
     const plain = shareOf(POOL, [])
     expect(plain.reduce((sum, e) => sum + e.share, 0)).toBeCloseTo(1)

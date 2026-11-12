@@ -4,8 +4,10 @@
  * Hideout, a table per language (`pt` is the reference; the type checker
  * holds the others to it). Each language's file puts it under `rocket` and
  * spreads the titles, the frame and the mini games into their own tables.
- * Pokémon, move and item names stay in English.
+ * Pokémon, move and item names stay in English. The Celadon prizes'
+ * names and blurbs come from `scWave.ts`.
  */
+import { SC_WAVE_WORDS } from '../scWave'
 
 const pt = {
   titles: { rocketRecruit: 'Recruta Rocket', rocketBuster: 'Caça-Rocket' },
@@ -84,6 +86,7 @@ const pt = {
       maxRevive: 'Max Revive',
       rocketTitle: 'Título: Recruta Rocket',
       rocketFrame: 'Moldura da Equipe Rocket',
+      ...SC_WAVE_WORDS.pt.prizes,
     },
     blurbs: {
       ditto: 'Copia o inimigo mais forte por perto.',
@@ -94,6 +97,7 @@ const pt = {
       bag: 'Direto para a Mochila. Pode trocar de novo.',
       title: 'Um título para o seu cartão.',
       frame: 'Uma moldura para o seu cartão de treinador.',
+      ...SC_WAVE_WORDS.pt.prizeBlurbs,
     },
     poster: [
       'É um cartaz da Equipe Rocket. Tem um Persian desenhado... e um interruptor escondido atrás!',
@@ -243,6 +247,7 @@ const en: RocketWords = {
       maxRevive: 'Max Revive',
       rocketTitle: 'Title: Rocket Recruit',
       rocketFrame: 'Team Rocket frame',
+      ...SC_WAVE_WORDS.en.prizes,
     },
     blurbs: {
       ditto: 'Copies the strongest foe nearby.',
@@ -253,6 +258,7 @@ const en: RocketWords = {
       bag: 'Straight into the Bag. Trade for it again anytime.',
       title: 'A title for your card.',
       frame: 'A frame for your Trainer Card.',
+      ...SC_WAVE_WORDS.en.prizeBlurbs,
     },
     poster: [
       "It's a Team Rocket poster. There's a Persian on it... and a switch hidden behind it!",
@@ -397,6 +403,7 @@ const es: RocketWords = {
       maxRevive: 'Max Revive',
       rocketTitle: 'Título: Recluta Rocket',
       rocketFrame: 'Marco del Team Rocket',
+      ...SC_WAVE_WORDS.es.prizes,
     },
     blurbs: {
       ditto: 'Copia al enemigo más fuerte cerca.',
@@ -407,6 +414,7 @@ const es: RocketWords = {
       bag: 'Directo a la Mochila. Puedes canjearlo otra vez.',
       title: 'Un título para tu tarjeta.',
       frame: 'Un marco para tu Tarjeta de Entrenador.',
+      ...SC_WAVE_WORDS.es.prizeBlurbs,
     },
     poster: [
       'Es un cartel del Team Rocket. Tiene un Persian dibujado... ¡y un interruptor escondido detrás!',
@@ -551,6 +559,7 @@ const fr: RocketWords = {
       maxRevive: 'Max Revive',
       rocketTitle: 'Titre : Recrue Rocket',
       rocketFrame: 'Cadre de la Team Rocket',
+      ...SC_WAVE_WORDS.fr.prizes,
     },
     blurbs: {
       ditto: 'Copie l’ennemi le plus fort à proximité.',
@@ -561,6 +570,7 @@ const fr: RocketWords = {
       bag: 'Directement dans le Sac. Échangeable à nouveau.',
       title: 'Un titre pour votre carte.',
       frame: 'Un cadre pour votre Carte de Dresseur.',
+      ...SC_WAVE_WORDS.fr.prizeBlurbs,
     },
     poster: [
       'C’est une affiche de la Team Rocket. Un Persian y est dessiné... et un interrupteur est caché derrière !',
@@ -705,6 +715,7 @@ const zh: RocketWords = {
       maxRevive: 'Max Revive',
       rocketTitle: '稱號：火箭隊新兵',
       rocketFrame: '火箭隊相框',
+      ...SC_WAVE_WORDS.zh.prizes,
     },
     blurbs: {
       ditto: '複製附近最強的敵人。',
@@ -715,6 +726,7 @@ const zh: RocketWords = {
       bag: '直接放進背包，可以再次兌換。',
       title: '訓練家卡片的稱號。',
       frame: '訓練家卡片的相框。',
+      ...SC_WAVE_WORDS.zh.prizeBlurbs,
     },
     poster: ['這是火箭隊的海報。上面畫著一隻 Persian……後面還藏著一個開關！', '喀嚓。遊戲城的地板打開了一道樓梯。'],
     hideoutKey: '你找到了通往火箭隊秘密基地的路！下一局，入口會出現在地圖上。',

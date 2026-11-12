@@ -194,6 +194,7 @@ import { openGameModes } from './ui/gameModes'
 import { loadLobbyMode, saveLobbyMode } from './ui/lobbyMode'
 import { bankEggs, challengeToday, depositPokeDollars, halloweenToday, loadAttempt, loadSave, outbreakToday, recordRunProgress, saveAttempt, saveHatch, setToday, today, ultraToday, updateSave, writeSave, type Settings } from './ui/save'
 import { challengeScreen, challengeShiny, type ChallengeSide } from './ui/challenge'
+import { manaphyEggScene } from './ui/manaphyEgg'
 import { hatchScene, incubator } from './ui/incubator'
 import { cosmogEvolveScene } from './ui/cosmogEvolve'
 import { medalChips, missionReport, missionsScreen, progressToast, titleBadge } from './ui/missions'
@@ -1075,6 +1076,7 @@ const showGifts = () => {
       },
       pick: () => setScreen(supportersScreen(ui, input, { play: (id) => void startRun(id), onClose: back }, 'pick')),
       evolve: (legend) => setScreen(cosmogEvolveScene(ui, input, legend, back)),
+      legendEgg: (legend) => setScreen(manaphyEggScene(ui, input, legend, { play: () => void startRun(legend), done: back })),
       close: () => showTitle({ focus: 'gifts' }),
     }),
   )
@@ -5437,10 +5439,12 @@ if (import.meta.env.DEV) {
        * Concurso de Insetos open (false closed, null back to the calendar), `ps.safari('dex', 'marsh')` fills a habitat's Pokédex but for one (`('dex', 'marsh', 'all')`,
        * `'half'`, `'empty'`), `ps.safari('sneakup')` sets the partner just behind the first wanderer, sneaking (`('sneakup', 'front')` where it looks), and `ps.safari('stalk')` meets it now,
        * `ps.safari('prize', 1)` puts that contest place's prizes in the gift box (on a field of 40),
+       * `ps.safari('done', 'meadow')` marks a habitat completed before its residents grew, `ps.safari('rewards', 'cove')` puts a completed habitat's gifts
+       * in the gift box (the cove's with the Ovo de Manaphy, whose hatching plays as it opens),
        * and `ps.safari('say', text)` puts a line in the message box (to check that it fits).
        */
       safari: async (
-        what?: 'sure' | 'catch' | 'flee' | 'real' | 'dry' | 'used' | 'habitat' | 'meet' | 'grass' | 'phase' | 'hour' | 'contest' | 'dex' | 'sneakup' | 'stalk' | 'prize' | 'say',
+        what?: 'sure' | 'catch' | 'flee' | 'real' | 'dry' | 'used' | 'habitat' | 'meet' | 'grass' | 'phase' | 'hour' | 'contest' | 'dex' | 'sneakup' | 'stalk' | 'prize' | 'say' | 'done' | 'rewards',
         arg?: number | string | boolean | null,
         shiny?: boolean | string,
       ) => {
@@ -5458,6 +5462,11 @@ if (import.meta.env.DEV) {
         if (what === 'contest') return stageSafari({ contest: typeof arg === 'boolean' ? arg : null })
         if (what === 'dex') return isSafariHabitat(arg) ? stageSafari({ dex: { habitat: arg, fill: shiny === 'all' || shiny === 'empty' || shiny === 'half' ? shiny : 'almost' } }) : null
         if (what === 'sneakup') return safariDev.run?.sneakUp(arg === 'front')
+        if (what === 'done') return isSafariHabitat(arg) ? stageSafari({ done: [arg] }) : null
+        if (what === 'rewards') {
+          const { fakeRewards } = await import('./realm/safariApi')
+          return isSafariHabitat(arg) ? stageGifts(fakeRewards(arg).map((g) => ({ ...g, id: `${g.id}-${Date.now()}` }))) : null
+        }
         if (what === 'prize') {
           const { CONTEST_GIFTS } = await import('./data/safari')
           const { contestPrize } = await import('./realm/games/safari.rules')

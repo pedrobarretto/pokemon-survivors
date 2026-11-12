@@ -42,6 +42,7 @@ import { inPlay } from './players'
 import { knockOut, strikeAvatar, tickAvatar, wildDown } from './versusCombat'
 import { seasonKitBlocks, seasonKitHolds, seasonKitHurt, seasonKitKill } from './seasonOneKitSystem'
 import { kitBBlocks, kitBHurt, kitBKill } from './gaKitBSystem'
+import { kitSCHurt, kitSCKill } from './scKitSystem'
 import { gaKitAHolds, gaKitAHurt, gaKitAKill, gaKitATaken } from './gaKitASystem'
 import { dropBossShards, stellarBurst, teraGuard, teraKill, teraPower } from './tera'
 import { fallInRaid, isRaidBoss, raidHarm, shieldTakes } from './teraRaid'
@@ -206,6 +207,7 @@ export const killEnemy = (g: Game, e: Enemy, source?: DamageSource | null) => {
   abilityKill(g, e)
   seasonKitKill(g, e)
   kitBKill(g, source)
+  kitSCKill(g)
   gaKitAKill(g, e)
   rocketKitKill(g, e)
   const big = e.boss || e.shiny
@@ -313,6 +315,7 @@ export const hurtPlayer = (
   moveEvent(g, null, 'hurt')
   seasonKitHurt(g, dmg)
   kitBHurt(g)
+  kitSCHurt(g)
   gaKitAHurt(g)
   // A small shove keeps the player from being body-blocked into a death spiral.
   if (from) {

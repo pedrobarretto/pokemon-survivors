@@ -55,6 +55,7 @@ import type { BossFight } from './bossFight'
 import type { ModState } from './mods'
 import type { DamageBonus, Ward } from './kitRules'
 import type { GaKitB } from './gaKitBRules'
+import type { ScKit } from './scKitRules'
 import type { MoveSound } from './moveVerbs'
 import type { TmSource } from './tmRules'
 import type { TmState } from './tms'
@@ -66,6 +67,7 @@ import type { UltraVisual } from './ultraMoves'
 import type { PathLegendVisual } from './pathLegendMoves'
 import type { PathNotice, PathRun } from './pathRun'
 import type { LegendaryVisual3 } from './legendaryMoves3'
+import type { LegendaryVisual4 } from './legendaryMoves4'
 import type { QuestState } from './quests'
 import type { RushState } from './rush'
 import type { RoamMoment } from './roamers'
@@ -257,6 +259,8 @@ export type Player = {
   kit?: SeasonKit
   /** The Grande Atualização's second batch of families (`gaKitBRules.ts`): their running state. Absent for everyone else. */
   kitB?: GaKitB
+  /** The Safári and Game Corner wave's families (`scKitRules.ts`): their running state. Absent for everyone else. */
+  kitSC?: ScKit
   /** The big update's first 15 families (`gaKitARules.ts`): their running state. Absent for everyone else. */
   kitA?: GaKitA
   /** The Rocket Game Corner's prize families (`rocketKitRules.ts`): their running state. Absent for everyone else. */
@@ -428,12 +432,16 @@ export type Visual =
   | PathLegendVisual
   /** Legendary moves, third batch (`legendaryMoves3.ts`), drawn by `render/legendaryFx3.ts`. */
   | LegendaryVisual3
+  /** Legendary moves, fourth batch (`legendaryMoves4.ts`), drawn by `render/legendaryFx4.ts`. */
+  | LegendaryVisual4
   /** Temporada 1's mechanic families, drawn by `render/seasonOneKitFx.ts`. */
   | 'kitCross' | 'kitClaw' | 'dragonPulse' | 'slime' | 'waterPulse' | 'miceBite' | 'auraWheel' | 'zenOrb' | 'commandSlam' | 'orderUp'
   /** The second batch's families (`gaKitBMoves.ts`, `gaKitBSystem.ts`), drawn by `render/gaKitBFx.ts`; `kitBHit` is a kit's unseen hitbox. */
   | 'kitBHit' | 'kitBTail' | 'kitBEgg' | 'kitBSphere' | 'kitBWing' | 'kitBFist' | 'kitBSalt' | 'kitBCut' | 'kitBSpark' | 'kitBLatch'
   | 'kitBCharge' | 'kitBShot' | 'kitBKick' | 'kitBRing' | 'kitBSlam' | 'kitBSplash'
   | 'kitBJaws' | 'kitBHammer' | 'kitBErupt' | 'kitBHug'
+  /** The Safári and Game Corner wave's families (`scKitMoves.ts`, `scKitSystem.ts`), drawn by `render/scKitFx.ts`; `scHit` is a kit's unseen hitbox. */
+  | 'scSludge' | 'scQuill' | 'scHorn' | 'scCharge' | 'scQuake' | 'scMoonbeam' | 'scGeyser' | 'scSplash' | 'scHit'
   /** The big update's first 15 families, drawn by `render/gaKitAFx.ts`. */
   | GaKitAVisual
   /** The regional forms' moves (`regionalMoves.ts`), drawn by `render/regionalFx.ts`. */

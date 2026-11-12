@@ -8,7 +8,7 @@ import { megasOf } from '../data/megas'
 import { bodyOf } from '../data/bodies'
 import { DIFFICULTY_IDS, type Difficulty } from '../game/difficulty'
 import { incubatorSlots, isReady } from '../game/eggs'
-import { giftLegend, isLakeLegend, isLegend, isUltraLegend, LEGEND_IDS, legendEvent, legendFestival, legendPath, LEGENDS, REGULAR_LEGENDS, type LegendId } from '../data/legends'
+import { eggLegend, giftLegend, isLakeLegend, isLegend, isUltraLegend, LEGEND_IDS, legendEvent, legendFestival, legendPath, LEGENDS, REGULAR_LEGENDS, type LegendId } from '../data/legends'
 import { ULTRA_BEASTS } from '../data/ultraBeasts'
 import { ultraCaptured } from '../game/ultraGifts'
 import { beastBallIcon } from '../render/ultraArt'
@@ -291,12 +291,12 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
       {
         class: `${open ? 'partner-cell legend' : 'partner-cell legend locked'}${week ? ' ultra-week' : ''}`,
         type: 'button',
-        title: [open ? cellTitle(id, name) : legendFestival(id) || giftLegend(id) ? name : `${name} · ${m.legend.wins(wins)}`, week ? m.ultra.week.title : null].filter((s) => s !== null).join(' · '),
+        title: [open ? cellTitle(id, name) : legendFestival(id) || giftLegend(id) || eggLegend(id) ? name : `${name} · ${m.legend.wins(wins)}`, week ? m.ultra.week.title : null].filter((s) => s !== null).join(' · '),
         style: `--t:${open ? PLAYABLE[id].color : '#8890b0'}`,
         onclick: () => select(id),
       },
       open ? cellPortrait(id) : cellSilhouette(id),
-      !open && !legendFestival(id) && !giftLegend(id) && !legendPath(id) && h('b', { class: 'partner-cell-count' }, wins),
+      !open && !legendFestival(id) && !giftLegend(id) && !eggLegend(id) && !legendPath(id) && h('b', { class: 'partner-cell-count' }, wins),
       eventTag(id),
       isUltraLegend(id) && h('img', { class: 'partner-cell-ultra', src: beastBallIcon(), alt: '' }),
       shinyOf(id) && shinyTag(),
@@ -504,8 +504,8 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
       const need = winsNeeded(id)
       // Once its event is over, an event legend can't be caught: only the line saying it's gone stays.
       const over = eventStanding(id) === 'after'
-      // A festival legend is never fought: no wins to count, only its festival's line. Poipole neither: its line counts the Ultra Beasts captured.
-      const gift = legendFestival(id) !== null || giftLegend(id)
+      // A festival legend is never fought: no wins to count, only its festival's line. Poipole neither: its line counts the Ultra Beasts captured. Manaphy hatches from its egg.
+      const gift = legendFestival(id) !== null || giftLegend(id) || eggLegend(id)
       // A path legend comes from its path (Regigigas by its temple): its sheet says where it stands.
       const path = pathOfLegend(id)
       // The last legend (Arceus) names the regular ones it still waits for.
@@ -530,6 +530,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
             path && pathButton(path),
             missing.length > 0 && h('p', { class: 'partner-blurb locked-blurb' }, m.legend.stillMissing(missing.map((other) => LEGENDS[other].line[0].name))),
             giftLegend(id) && h('p', { class: 'partner-blurb locked-blurb' }, rich(m.legend.where.ultraGift)),
+            eggLegend(id) && h('p', { class: 'partner-blurb locked-blurb' }, rich(m.legend.where.egg)),
             giftLegend(id) && h('p', { class: 'partner-legend-wins' }, m.ultra.progress(ultraCaptured(save), ULTRA_BEASTS.length)),
             id === weekBeast && h('p', { class: 'partner-legend-event' }, h('img', { class: 'ultra-ball-icon', src: beastBallIcon(), alt: '' }), h('b', {}, m.ultra.week.title)),
             eventLine(id, true),

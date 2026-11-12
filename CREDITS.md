@@ -917,6 +917,26 @@ shinies are our own palette swaps, credited in their rows. This file is generate
 | 10244 | Decidueye (Hisui) (shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | [Caitemis](https://caitemis-art.tumblr.com/) |
 | 10242 | Goodra (Hisui) | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
 | 10242 | Goodra (Hisui) (shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
+| 29 | Nidoran_F | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), JFain, Fearless-Quit |
+| 29 | Nidoran_F (shiny) | [lokatts](https://twitter.com/lokatts) | Anonymous, JFain, Fearless-Quit |
+| 30 | Nidorina | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), [TawnySoup](https://linktr.ee/tawnysoup) |
+| 30 | Nidorina (shiny) | [Audino](https://github.com/audinowho), baronessfaron | Tacocoa, [Morei](https://bsky.app/profile/murpia57.bsky.social) |
+| 31 | Nidoqueen | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), Emboarger, [TawnySoup](https://linktr.ee/tawnysoup) |
+| 31 | Nidoqueen (shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
+| 32 | Nidoran_M | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), JFain |
+| 32 | Nidoran_M (shiny) | Tacocoa | Tacocoa, JFain |
+| 33 | Nidorino | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), JustAGunk |
+| 33 | Nidorino (shiny) | Anonymous | Anonymous, JustAGunk |
+| 34 | Nidoking | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), JFain, Emboarger |
+| 34 | Nidoking (shiny) | Tacocoa | Lovi, [Noo](https://artfight.net/~NooNoo_Skidoo), Emboarger |
+| 173 | Cleffa | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), Deleca7755, baronessfaron |
+| 173 | Cleffa (shiny) | Anonymous | Anonymous, JFain, baronessfaron |
+| 35 | Clefairy | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), [estelstarlight](https://estelstarlight.tumblr.com/post/186838449949) |
+| 35 | Clefairy (shiny) | Tacocoa | [bwappi](https://bsky.app/profile/bwappi.bsky.social) |
+| 36 | Clefable | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), [jackolanternjackalope](https://www.instagram.com/jackolanternjackalope/), [Gust](https://twitter.com/Estelaris__) |
+| 36 | Clefable (shiny) | Tacocoa | [Morei](https://bsky.app/profile/murpia57.bsky.social) |
+| 489 | Phione | [CHUNSOFT](https://www.spike-chunsoft.com/), [Emmuffin](https://twitter.com/Ernmuffin) | [CHUNSOFT](https://www.spike-chunsoft.com/), [Emmuffin](https://twitter.com/Ernmuffin) |
+| 489 | Phione (shiny) | Anonymous, [Emmuffin](https://twitter.com/Ernmuffin) | Anonymous, [Emmuffin](https://twitter.com/Ernmuffin) |
 | 132 | Ditto | [CHUNSOFT](https://www.spike-chunsoft.com/), [Caitemis](https://caitemis-art.tumblr.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), Anonymous |
 | 132 | Ditto (shiny) | ShyStarryRain | ShyStarryRain |
 | 359 | Absol | [CHUNSOFT](https://www.spike-chunsoft.com/), [Deeshura](https://bsky.app/profile/deeshura.bsky.social), Top_Kec | [CHUNSOFT](https://www.spike-chunsoft.com/), [Emmuffin](https://twitter.com/Ernmuffin), baronessfaron |
@@ -965,16 +985,6 @@ shinies are our own palette swaps, credited in their rows. This file is generate
 | 27 | Sandshrew (shiny) | ShyStarryRain | Tacocoa, Vex, ShyStarryRain |
 | 28 | Sandslash | [CHUNSOFT](https://www.spike-chunsoft.com/), [Emmuffin](https://twitter.com/Ernmuffin) | [CHUNSOFT](https://www.spike-chunsoft.com/), XModxGodX, Okami |
 | 28 | Sandslash (shiny) | [SilverDeoxys563](https://www.reddit.com/user/SilverDeoxys563), XModxGodX, [Emmuffin](https://twitter.com/Ernmuffin) | XModxGodX, [Morei](https://bsky.app/profile/murpia57.bsky.social) |
-| 30 | Nidorina | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), [TawnySoup](https://linktr.ee/tawnysoup) |
-| 30 | Nidorina (shiny) | [Audino](https://github.com/audinowho), baronessfaron | Tacocoa, [Morei](https://bsky.app/profile/murpia57.bsky.social) |
-| 33 | Nidorino | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), JustAGunk |
-| 33 | Nidorino (shiny) | Anonymous | Anonymous, JustAGunk |
-| 34 | Nidoking | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), JFain, Emboarger |
-| 34 | Nidoking (shiny) | Tacocoa | Lovi, [Noo](https://artfight.net/~NooNoo_Skidoo), Emboarger |
-| 35 | Clefairy | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), [estelstarlight](https://estelstarlight.tumblr.com/post/186838449949) |
-| 35 | Clefairy (shiny) | Tacocoa | [bwappi](https://bsky.app/profile/bwappi.bsky.social) |
-| 36 | Clefable | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), [jackolanternjackalope](https://www.instagram.com/jackolanternjackalope/), [Gust](https://twitter.com/Estelaris__) |
-| 36 | Clefable (shiny) | Tacocoa | [Morei](https://bsky.app/profile/murpia57.bsky.social) |
 | 39 | Jigglypuff | [CHUNSOFT](https://www.spike-chunsoft.com/), JFain | [CHUNSOFT](https://www.spike-chunsoft.com/), Mojo, Emboarger |
 | 39 | Jigglypuff (shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | Lovi, Mojo, Emboarger |
 | 40 | Wigglytuff | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), [Gust](https://twitter.com/Estelaris__), Gayschlatt |
@@ -1097,8 +1107,6 @@ shinies are our own palette swaps, credited in their rows. This file is generate
 | 170 | Chinchou (shiny) | Prismatic | Anonymous, [Noo](https://artfight.net/~NooNoo_Skidoo) |
 | 171 | Lanturn | [CHUNSOFT](https://www.spike-chunsoft.com/), JFain | [CHUNSOFT](https://www.spike-chunsoft.com/), Anonymous |
 | 171 | Lanturn (shiny) | Prismatic | Anonymous |
-| 173 | Cleffa | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), Deleca7755, baronessfaron |
-| 173 | Cleffa (shiny) | Anonymous | Anonymous, JFain, baronessfaron |
 | 174 | Igglybuff | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), [Gust](https://twitter.com/Estelaris__) |
 | 174 | Igglybuff (shiny) | Anonymous | [Gust](https://twitter.com/Estelaris__) |
 | 177 | Natu | [CHUNSOFT](https://www.spike-chunsoft.com/), [Hanbei](https://twitter.com/Hanbei) | [CHUNSOFT](https://www.spike-chunsoft.com/), JFain |
@@ -1831,12 +1839,6 @@ shinies are our own palette swaps, credited in their rows. This file is generate
 | 1012 | Poltchageist (shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
 | 1013 | Sinistcha | Shadowcrafts, [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
 | 1013 | Sinistcha (shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
-| 29 | Nidoran_F | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), JFain, Fearless-Quit |
-| 29 | Nidoran_F (shiny) | [lokatts](https://twitter.com/lokatts) | Anonymous, JFain, Fearless-Quit |
-| 31 | Nidoqueen | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), Emboarger, [TawnySoup](https://linktr.ee/tawnysoup) |
-| 31 | Nidoqueen (shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
-| 32 | Nidoran_M | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), JFain |
-| 32 | Nidoran_M (shiny) | Tacocoa | Tacocoa, JFain |
 | 81 | Magnemite | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), Fearless-Quit, Emboarger |
 | 81 | Magnemite (shiny) | El_Pangoro_Parse | [RaoKurai](https://twitter.com/RaoKurai), Fearless-Quit, Emboarger |
 | 100 | Voltorb | [CHUNSOFT](https://www.spike-chunsoft.com/), Emboarger | [CHUNSOFT](https://www.spike-chunsoft.com/), JFain |
@@ -2004,6 +2006,8 @@ shinies are our own palette swaps, credited in their rows. This file is generate
 | 201 | Unown (N) | [CHUNSOFT](https://www.spike-chunsoft.com/) | — |
 | 201 | Unown (O) | [CHUNSOFT](https://www.spike-chunsoft.com/) | — |
 | 201 | Unown (U) | [CHUNSOFT](https://www.spike-chunsoft.com/) | — |
+| 490 | Manaphy | [CHUNSOFT](https://www.spike-chunsoft.com/), JFain | [CHUNSOFT](https://www.spike-chunsoft.com/), [Emmuffin](https://twitter.com/Ernmuffin) |
+| 490 | Manaphy (shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
 
 ## Shop art
 
