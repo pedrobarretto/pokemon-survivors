@@ -11,7 +11,7 @@ import type { CornerFamilyId } from './scFamilies'
  *
  * - `family`: one of the prize families, once: Team Rocket's four
  *   (`data/rocketFamilies.ts`) or the classic Celadon prizes, both Nidoran
- *   lines and Cleffa's (`CORNER_FAMILY_IDS`, `data/scFamilies.ts`).
+ *   lines, Cleffa's, Plusle and Minun (`CORNER_FAMILY_IDS`, `data/scFamilies.ts`).
  * - `shadow`: that family as a Shadow (`game/shadow.ts`), the family too if it
  *   isn't owned yet, once.
  * - `bag`: Bag items, as often as the tokens last.
@@ -37,6 +37,8 @@ export const CORNER_PRIZES = {
   nidoranF: { kind: 'family', family: 'nidoranF', price: 4500 },
   nidoranM: { kind: 'family', family: 'nidoranM', price: 4500 },
   cleffa: { kind: 'family', family: 'cleffa', price: 6000 },
+  plusle: { kind: 'family', family: 'plusle', price: 4000 },
+  minun: { kind: 'family', family: 'minun', price: 4000 },
   shadowDitto: { kind: 'shadow', family: 'ditto', price: 6500 },
   shadowGimmighoul: { kind: 'shadow', family: 'gimmighoul', price: 8000 },
   shadowMawile: { kind: 'shadow', family: 'mawile', price: 8000 },
@@ -44,6 +46,8 @@ export const CORNER_PRIZES = {
   shadowNidoranF: { kind: 'shadow', family: 'nidoranF', price: 8500 },
   shadowNidoranM: { kind: 'shadow', family: 'nidoranM', price: 8500 },
   shadowCleffa: { kind: 'shadow', family: 'cleffa', price: 10500 },
+  shadowPlusle: { kind: 'shadow', family: 'plusle', price: 8000 },
+  shadowMinun: { kind: 'shadow', family: 'minun', price: 8000 },
   rareCandy: { kind: 'bag', item: 'rareCandy', count: 3, price: 450 },
   xAttack: { kind: 'bag', item: 'xAttack', count: 3, price: 500 },
   luckyEgg: { kind: 'bag', item: 'luckyEgg', count: 2, price: 450 },

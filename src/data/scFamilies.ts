@@ -1,4 +1,7 @@
 import { line3, type HatchlingDef } from './playableLines'
+import type { GA_FAMILY_HOOK_IDS } from './gaFamiliesHook'
+
+type GaHookFamilyId = (typeof GA_FAMILY_HOOK_IDS)[number]
 
 /**
  * The families the Safári and the Game Corner wave brings, none from an egg
@@ -56,8 +59,8 @@ export type ScFamilyId = keyof typeof SC_FAMILIES
 
 export const SC_FAMILY_IDS = Object.keys(SC_FAMILIES) as ScFamilyId[]
 
-/** The Game Corner's new prize families (`CORNER_PRIZES`), beside Team Rocket's four. */
-export const CORNER_FAMILY_IDS = ['nidoranF', 'nidoranM', 'cleffa'] as const satisfies readonly ScFamilyId[]
+/** The Game Corner's new prize families (`CORNER_PRIZES`), beside Team Rocket's four: this wave's and the hook families' Plusle and Minun (`data/gaFamiliesHook.ts`). */
+export const CORNER_FAMILY_IDS = ['nidoranF', 'nidoranM', 'cleffa', 'plusle', 'minun'] as const satisfies readonly (ScFamilyId | GaHookFamilyId)[]
 
 export type CornerFamilyId = (typeof CORNER_FAMILY_IDS)[number]
 

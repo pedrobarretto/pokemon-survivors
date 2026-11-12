@@ -86,6 +86,9 @@ type Words = {
   vivillon: { pattern: (name: string) => string; why: string }
   /** Co-op: the line when Plusle and Minun link up. */
   plusMinus: { linked: string }
+  /** The Game Corner's prize counter (`CORNER_PRIZES`): Plusle and Minun, and their Shadows, by prize id, and a line each. */
+  prizes: Record<'plusle' | 'minun' | 'shadowPlusle' | 'shadowMinun', string>
+  prizeBlurbs: Record<'plusle' | 'minun', string>
 }
 
 const wordsOf = (v: Vocab, w: Words) => ({ ...w, moves: movesOf(v, w.moves) })
@@ -128,6 +131,8 @@ const pt = wordsOf(
       voltSwitch: 'Um raio que vai até o inimigo e volta, acertando na ida e na volta.',
       eerieImpulse: 'Um anel de corrente estranha em volta que enfraquece todo inimigo que toca.',
     },
+    prizes: { plusle: 'Plusle', minun: 'Minun', shadowPlusle: 'Plusle Sombrio', shadowMinun: 'Minun Sombrio' },
+    prizeBlurbs: { plusle: 'Cada derrota carrega um anel de faíscas. No co-op, liga com um Minun.', minun: 'Um pulso que enfraquece e cura. No co-op, liga com um Plusle.' },
     where: {
       scatterbug: 'Só na *Zona Safári*, na Campina Dourada, no Bosque das Bases do Poké Realm. Precisa de conta.',
       minior: 'Só na *Zona Safári*, na Serra Trovejante, e só de noite. No Bosque das Bases do Poké Realm. Precisa de conta.',
@@ -182,6 +187,8 @@ const en = wordsOf(
       voltSwitch: 'A bolt that zips out to a foe and back, hitting both ways.',
       eerieImpulse: 'A ring of eerie current around it that weakens every foe it touches.',
     },
+    prizes: { plusle: 'Plusle', minun: 'Minun', shadowPlusle: 'Shadow Plusle', shadowMinun: 'Shadow Minun' },
+    prizeBlurbs: { plusle: 'Every KO charges a ring of sparks. In co-op, it links with a Minun.', minun: 'A pulse that weakens foes and heals. In co-op, it links with a Plusle.' },
     where: {
       scatterbug: 'Only in the *Safari Zone*, in the Golden Meadow, at the Poké Realm’s Secret Base Grove. Needs an account.',
       minior: 'Only in the *Safari Zone*, on Thunder Ridge, and only at night. At the Poké Realm’s Secret Base Grove. Needs an account.',
@@ -236,6 +243,8 @@ const es = wordsOf(
       voltSwitch: 'Un rayo que va hasta un enemigo y vuelve, golpeando a la ida y a la vuelta.',
       eerieImpulse: 'Un anillo de corriente extraña alrededor que debilita a todo enemigo que toca.',
     },
+    prizes: { plusle: 'Plusle', minun: 'Minun', shadowPlusle: 'Plusle Oscuro', shadowMinun: 'Minun Oscuro' },
+    prizeBlurbs: { plusle: 'Cada derrota carga un anillo de chispas. En co-op, se enlaza con un Minun.', minun: 'Un pulso que debilita y cura. En co-op, se enlaza con un Plusle.' },
     where: {
       scatterbug: 'Solo en la *Zona Safari*, en la Pradera Dorada, en el Bosque de Bases del Poké Realm. Necesita cuenta.',
       minior: 'Solo en la *Zona Safari*, en la Sierra Tronadora, y solo de noche. En el Bosque de Bases del Poké Realm. Necesita cuenta.',
@@ -290,6 +299,8 @@ const fr = wordsOf(
       voltSwitch: 'Un éclair qui file jusqu’à un ennemi et revient, frappant à l’aller et au retour.',
       eerieImpulse: 'Un anneau de courant étrange autour qui affaiblit chaque ennemi qu’il touche.',
     },
+    prizes: { plusle: 'Plusle', minun: 'Minun', shadowPlusle: 'Plusle Obscur', shadowMinun: 'Minun Obscur' },
+    prizeBlurbs: { plusle: 'Chaque K.O. charge un anneau d’étincelles. En coop, il se lie à un Minun.', minun: 'Une impulsion qui affaiblit et soigne. En coop, il se lie à un Plusle.' },
     where: {
       scatterbug: 'Seulement dans la *Zone Safari*, dans la Prairie Dorée, au Bosquet des Bases du Poké Realm. Compte requis.',
       minior: 'Seulement dans la *Zone Safari*, sur la Crête du Tonnerre, et seulement la nuit. Au Bosquet des Bases du Poké Realm. Compte requis.',
@@ -344,6 +355,8 @@ const zh = wordsOf(
       voltSwitch: '射向敵人再折返的閃電，去程和回程都會命中。',
       eerieImpulse: '在周圍放出一圈怪異電流，削弱碰到的每個敵人。',
     },
+    prizes: { plusle: 'Plusle', minun: 'Minun', shadowPlusle: '黑暗 Plusle', shadowMinun: '黑暗 Minun' },
+    prizeBlurbs: { plusle: '每次擊倒都會為火花環充電。合作模式中會與 Minun 相連。', minun: '削弱敵人並回復自己的脈衝。合作模式中會與 Plusle 相連。' },
     where: {
       scatterbug: '只在 Poké Realm 秘密基地森林的*狩獵地帶*，金色草原。需要帳號。',
       minior: '只在 Poké Realm 秘密基地森林的*狩獵地帶*，雷鳴山脊，而且只在夜晚。需要帳號。',
