@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { DIG_FOSSIL_FAMILIES, DIG_TREASURES } from '../../data/digTreasures'
-import { buildWall, cellIndex, DIG, digOdds, digPowers, digVein, fossilStreak, hitWall, NO_POWERS, sortOut, startProgress, tileAt, toolArea, toolCrack, treasureCells, treasureFree, wallPrice, wallWorth, type DigWall, type DigWallCtx } from './dig.rules'
+import { DIG_FOSSIL_FAMILIES, DIG_HALVES, DIG_TREASURES, GALAR_PAIRS } from '../../data/digTreasures'
+import { buildWall, cellIndex, DIG, digOdds, digPowers, digVein, fossilFor, fossilStreak, hitWall, labHalf, NO_POWERS, sortOut, startProgress, tileAt, toolArea, toolCrack, treasureCells, treasureFree, wallPrice, wallWorth, type DigWall, type DigWallCtx } from './dig.rules'
 
 const week = '2026-11-09'
 const ctx: DigWallCtx = { week, powers: NO_POWERS, lacking: [], due: false }
@@ -173,6 +173,36 @@ describe('the fossil guarantee', () => {
     for (const i of treasureCells(held.treasures[0]!)) left[i] = 0
     expect(fossilStreak(9, held, left, lacking)).toBe(0)
     expect(fossilStreak(DIG.fossilGuarantee, held, startProgress(held).left, lacking)).toBe(DIG.fossilGuarantee)
+  })
+})
+
+describe('the Galar halves', () => {
+  it('restore a family only from a top and a bottom that fit, and never Fish with Dino', () => {
+    expect(labHalf('drake', ['bird'], ['dracozolt']).kind).toBe('restored')
+    expect(labHalf('bird', ['drake'], ['dracozolt'])).toEqual({ kind: 'restored', family: 'dracozolt', with: 'drake', held: [] })
+    expect(labHalf('dino', ['fish'], DIG_FOSSIL_FAMILIES)).toEqual({ kind: 'stored', held: ['fish', 'dino'] })
+    expect(GALAR_PAIRS.map((p) => `${p.top}+${p.bottom}`)).not.toContain('fish+dino')
+  })
+
+  it('keep a needed half in the lab once, and pay a half no lacked family needs', () => {
+    expect(labHalf('bird', [], ['arctozolt'])).toEqual({ kind: 'stored', held: ['bird'] })
+    expect(labHalf('bird', ['bird'], ['arctozolt']).kind).toBe('repeat')
+    expect(labHalf('fish', [], ['dracozolt', 'arctozolt']).kind).toBe('repeat')
+  })
+
+  it('guarantee the half the lab lacks for a Galar family, and count it toward the streak', () => {
+    expect(fossilFor('dracovish', [])).toBe(DIG_HALVES.fish)
+    expect(fossilFor('dracovish', ['fish'])).toBe(DIG_HALVES.drake)
+    expect(fossilFor('kabuto')).toBe('domeFossil')
+    const w = wall(9, { lacking: ['dracovish'], held: ['fish'], due: true })
+    expect(w.treasures.map((t) => t.id)).toContain('fossilizedDrake')
+    const half = { ...soft(), treasures: [{ id: 'fossilizedDrake' as const, x: 0, y: 0 }] }
+    const left = startProgress(half).left
+    for (const i of treasureCells(half.treasures[0]!)) left[i] = 0
+    expect(fossilStreak(9, half, left, ['dracovish'], ['fish'])).toBe(0)
+    // A second Fish while one waits brings nothing new: the streak grows.
+    const twice = { ...soft(), treasures: [{ id: 'fossilizedFish' as const, x: 0, y: 0 }] }
+    expect(fossilStreak(3, twice, startProgress(twice).left.map(() => 0), ['dracovish'], ['fish'])).toBe(4)
   })
 })
 

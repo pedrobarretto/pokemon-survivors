@@ -55,6 +55,7 @@ import type { BossFight } from './bossFight'
 import type { ModState } from './mods'
 import type { DamageBonus, Ward } from './kitRules'
 import type { GaKitB } from './gaKitBRules'
+import type { FossilKit, FossilVisual } from './fossilKitRules'
 import type { MoveSound } from './moveVerbs'
 import type { TmSource } from './tmRules'
 import type { TmState } from './tms'
@@ -259,6 +260,8 @@ export type Player = {
   kitB?: GaKitB
   /** The big update's first 15 families (`gaKitARules.ts`): their running state. Absent for everyone else. */
   kitA?: GaKitA
+  /** The fossil families the Grande Atualização restores (`fossilKitRules.ts`): their running state. Absent for everyone else. */
+  kitF?: FossilKit
   /** The Rocket Game Corner's prize families (`rocketKitRules.ts`): their running state. Absent for everyone else. */
   rocket?: RocketKit
   /** A Shadow or Purified Pokémon (`shadow.ts`), decided as the run starts. Absent for the plain one, so its state hashes as before. */
@@ -436,6 +439,8 @@ export type Visual =
   | 'kitBJaws' | 'kitBHammer' | 'kitBErupt' | 'kitBHug'
   /** The big update's first 15 families, drawn by `render/gaKitAFx.ts`. */
   | GaKitAVisual
+  /** The fossil families (`fossilKitMoves.ts`, `fossilKitSystem.ts`), drawn by `render/fossilKitFx.ts`. */
+  | FossilVisual
   /** The regional forms' moves (`regionalMoves.ts`), drawn by `render/regionalFx.ts`. */
   | 'metalClaw' | 'shellSlam' | 'shellShot' | 'obstructGuard' | 'obstructX' | 'leekJoust' | 'chloroblast' | 'barb' | 'toxicGlob' | 'toxicPool' | 'bullCharge' | 'bitterMalice'
   /** The Rocket Game Corner's prize families, drawn by `render/rocketKitFx.ts`. */

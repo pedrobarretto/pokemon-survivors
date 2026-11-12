@@ -32377,3 +32377,83 @@ span.arena-hub-face {
     display: none;
   }
 }
+
+/* The Escavação's fossil lab (`labSheet` in `realm/games/dig.ts`): Galar's halves, the waiting ones bright, and the pairs. */
+.dig-lab-halves {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 10px;
+  align-items: center;
+}
+
+.dig-lab-halves b {
+  font-family: var(--kit-title);
+  font-weight: 400;
+  font-size: 18px;
+}
+
+.dig-lab-halves ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dig-lab-halves li {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 8px;
+  font-size: 16px;
+  line-height: 1.05;
+  background: var(--kit-tag);
+  border: var(--kit-edge) solid transparent;
+  border-radius: 10px;
+}
+
+.dig-lab-halves li:not(.held) img {
+  filter: grayscale(0.9);
+  opacity: 0.5;
+}
+
+.dig-lab-halves li.held {
+  background: var(--dk-wash-gold, #fff1c2);
+  border-color: var(--mode);
+}
+
+.dig-lab-pairs {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dig-lab-pairs li {
+  display: grid;
+  grid-template-columns: 28px auto 28px auto 32px 1fr;
+  gap: 4px;
+  align-items: center;
+  padding: 4px 10px;
+  font-size: 17px;
+  background: var(--kit-tag);
+  border-radius: 10px;
+}
+
+.dig-lab-pairs li.owned small {
+  color: color-mix(in srgb, #2e7d32 var(--dk-lift, 100%), #fff);
+}
+
+.dig-lab-pairs img,
+.dig-lab-halves img {
+  image-rendering: pixelated;
+}
+
+.dig-lab-plus {
+  font-family: var(--kit-title);
+  font-size: 20px;
+  text-align: center;
+}

@@ -7,6 +7,7 @@ import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { TERA_WORDS } from './tera'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
+import { GA_FOSSILS_WORDS } from './gaFossils'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { ROCKET_WORDS } from './rocket/words'
@@ -2386,6 +2387,7 @@ export const es: Messages = {
       altaria: 'movimientos de Normal y Hada +30%, movimientos de Dragón +20%, HP +30 y regenera 1 HP/s. El especial pasa a ser Hyper Voice.',
       banette: 'recargas −20%, +10% de probabilidad de estado en cada movimiento y movimientos +15%. El especial pasa a ser Phantom Force, una embestida en cadena que suelta un anillo de sombras en cada aterrizaje.',
       ...GA_FAMILIES_A_WORDS.es.megas,
+      ...GA_FOSSILS_WORDS.es.megas,
       glalie: 'movimientos de Normal y Hielo +30% y movimientos +25%. El especial pasa a ser Sheer Cold.',
       salamence: 'movimientos de Normal y Volador +30%, velocidad +12 y movimientos +25%. El especial pasa a ser Double-Edge.',
       ...ROCKET_FAMILY_WORDS.es.megas,
@@ -2610,7 +2612,7 @@ export const es: Messages = {
     },
   },
   eggs: {
-    tiers: { common: 'Huevo Común', rare: 'Huevo Raro', ultra: 'Huevo Ultrarraro', friend: 'Huevo de la Amistad', haunted: 'Huevo Embrujado', kecleon: 'Huevo Kecleon', kecleonShiny: 'Huevo Kecleon brillante', fossil: 'Huevo Fósil', found: 'Encuentro', ...REGIONAL_WORDS.es.tiers },
+    tiers: { common: 'Huevo Común', rare: 'Huevo Raro', ultra: 'Huevo Ultrarraro', friend: 'Huevo de la Amistad', haunted: 'Huevo Embrujado', kecleon: 'Huevo Kecleon', kecleonShiny: 'Huevo Kecleon brillante', fossil: 'Huevo Fósil', found: 'Encuentro', dig: 'Fósil de la Excavación', ...REGIONAL_WORDS.es.tiers },
     found: (egg) => `¡Encontraste un *${egg}*! Va a la incubadora.`,
     foundFull: (egg, coins) => `¡Encontraste un *${egg}*! La incubadora está llena, así que se convertirá en *${coins}*.`,
     title: 'INCUBADORA',
@@ -2935,7 +2937,7 @@ export const es: Messages = {
       sphere: '¡Desenterraste una *Prism Sphere*! Vale ₽.',
       rareCandy: '¡Desenterraste un *Rare Candy*!',
       stone: '¡Desenterraste una *piedra evolutiva*!',
-      fossil: '¡Desenterraste *Old Amber*! ¡Tenía un huevo dentro!',
+      fossil: '¡Desenterraste *Old Amber*! ¡Tenía un huevo de *Aerodactyl* dentro!',
     },
     hudGrotto: (n, time) => `Audino ${n} · ${time}`,
     hudDig: (n, time) => `Hallazgos ${n} · paredes ${time}`,
@@ -3182,6 +3184,7 @@ export const es: Messages = {
     ...SEASON_ONE_KITS_WORDS.es.moves,
     ...GA_FAMILIES_B_WORDS.es.moves,
     ...GA_FAMILIES_A_WORDS.es.moves,
+    ...GA_FOSSILS_WORDS.es.moves,
     ...ROCKET_FAMILY_WORDS.es.moves,
     ...GALLOP_WORDS.es,
     ...ULTRA_WORDS.es.moves,
@@ -5662,6 +5665,7 @@ export const es: Messages = {
     ...SEASON_ONE_KITS_WORDS.es.blurbs,
     ...GA_FAMILIES_B_WORDS.es.blurbs,
     ...GA_FAMILIES_A_WORDS.es.blurbs,
+    ...GA_FOSSILS_WORDS.es.blurbs,
     ...ROCKET_FAMILY_WORDS.es.blurbs,
     ...ULTRA_WORDS.es.blurbs,
     ...LEGEND_PATHS_WORDS.es.blurbs,

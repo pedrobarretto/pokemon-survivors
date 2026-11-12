@@ -161,7 +161,7 @@ export const VITRINE = {
    * `game/travel.ts`), `stock` a Brasília day at `price`, at any shop level.
    */
   travelEgg: { price: 8000, stock: 1 },
-} as const satisfies { eggs: Record<Exclude<EggTier, 'friend' | 'haunted' | 'kecleon' | 'kecleonShiny' | 'fossil' | 'found' | RegionId>, { price: number; weight: number }> } & Record<string, unknown>
+} as const satisfies { eggs: Record<Exclude<EggTier, 'friend' | 'haunted' | 'kecleon' | 'kecleonShiny' | 'fossil' | 'found' | 'dig' | RegionId>, { price: number; weight: number }> } & Record<string, unknown>
 
 export type VitrineEgg = keyof typeof VITRINE.eggs
 

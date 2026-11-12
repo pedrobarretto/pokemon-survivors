@@ -20,6 +20,7 @@ import { SKETCH_MOVES } from './sketch'
 import { SEASON_ONE_EGG_MOVES } from './seasonOneEggMoves'
 import { SEASON_ONE_KIT_MOVES } from './seasonOneKitMoves'
 import { GA_KIT_B_MOVES } from './gaKitBMoves'
+import { FOSSIL_KIT_MOVES } from './fossilKitMoves'
 import { GA_KIT_A_MOVES } from './gaKitAMoves'
 import { REGIONAL_MOVES } from './regionalMoves'
 import { ROCKET_KIT_MOVES } from './rocketKitMoves'
@@ -121,8 +122,8 @@ export type MoveDef = {
   onGuard?: (g: Game, s: CastStats, owned: OwnedMove, from?: Enemy) => void
   /** A burrow it started (`burrow` in `moveKit.ts`) ended: come back out, usually with a hit. */
   emerge?: (g: Game, s: CastStats, owned: OwnedMove) => void
-  /** One of its hitboxes `a` landed a hit on `e` (after the damage): ramp it up, grow it, shake the screen. */
-  onHit?: (g: Game, a: Attack, e: Enemy) => void
+  /** One of its hitboxes `a` landed a hit on `e` (after the damage): ramp it up, grow it, shake the screen. `unhurt`: `e` had all its HP before this hit (a first strike). */
+  onHit?: (g: Game, a: Attack, e: Enemy, unhurt?: boolean) => void
 }
 
 /**
@@ -2326,6 +2327,8 @@ export const MOVES = {
   ...ROCKET_KIT_MOVES,
   /* ---------- Ponyta's gallop batch and its evolutions (`gallopMoves.ts`) ---------- */
   ...GALLOP_MOVES,
+  /* ---------- The fossil families' signatures (`fossilKitMoves.ts`) ---------- */
+  ...FOSSIL_KIT_MOVES,
 } as const satisfies Record<string, MoveDef>
 
 export type MoveId = keyof typeof MOVES
@@ -2358,6 +2361,7 @@ export const MOVE_TABLES: Readonly<Record<string, Readonly<Record<string, MoveDe
   REGIONAL_MOVES,
   ROCKET_KIT_MOVES,
   GALLOP_MOVES,
+  FOSSIL_KIT_MOVES,
 }
 
 export const MOVE_IDS = Object.keys(MOVES) as MoveId[]

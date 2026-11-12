@@ -67,6 +67,8 @@ export const damageEnemy = (g: Game, e: Enemy, attack: Attack) => {
   const dmg = shieldTakes(g, e, attack.sure || attack.ignoreWards || abilityImmune(g, 'wards') ? raw : absorb(e.trait, raw), eff, attack.type)
   // Mimikyu's Disguise takes the first big hit whole.
   if (disguiseTakes(e, dmg)) return bustDisguise(g, e)
+  // A first strike: the foe had all its HP (Bolt Beak's and Fishious Rend's hooks read it, `moveHit`).
+  const unhurt = e.hp >= e.maxHp
   e.hp -= dmg
   e.flash = 0.16
   g.player.damageByMove[attack.move] = (g.player.damageByMove[attack.move] ?? 0) + dmg
@@ -95,7 +97,7 @@ export const damageEnemy = (g: Game, e: Enemy, attack: Attack) => {
   if (attack.drain > 0) drainHeal(g, dmg, attack.drain)
   if (attack.move !== 'special' && attack.move !== 'ability') {
     moveEvent(g, attack.move, 'hit')
-    moveHit(g, attack, e)
+    moveHit(g, attack, e, unhurt)
   }
 
   if (e.hp > 0 && executes(attack.execute, e.hp, e.maxHp, e.boss)) {

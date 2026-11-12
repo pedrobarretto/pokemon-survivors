@@ -7,6 +7,7 @@ import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { TERA_WORDS } from './tera'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
+import { GA_FOSSILS_WORDS } from './gaFossils'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { ROCKET_WORDS } from './rocket/words'
@@ -2384,6 +2385,7 @@ export const en: Messages = {
       altaria: 'Normal and Fairy moves +30%, Dragon moves +20%, HP +30 and 1 HP/s regen. The special becomes Hyper Voice.',
       banette: 'cooldowns −20%, +10% condition chance on every move and moves +15%. The special becomes Phantom Force, a chain dash that bursts a ring of shadows on every landing.',
       ...GA_FAMILIES_A_WORDS.en.megas,
+      ...GA_FOSSILS_WORDS.en.megas,
       glalie: 'Normal and Ice moves +30% and moves +25%. The special becomes Sheer Cold.',
       salamence: 'Normal and Flying moves +30%, speed +12 and moves +25%. The special becomes Double-Edge.',
       ...ROCKET_FAMILY_WORDS.en.megas,
@@ -2608,7 +2610,7 @@ export const en: Messages = {
     },
   },
   eggs: {
-    tiers: { common: 'Common Egg', rare: 'Rare Egg', ultra: 'Ultra Rare Egg', friend: 'Friendship Egg', haunted: 'Haunted Egg', kecleon: 'Kecleon Egg', kecleonShiny: 'Shiny Kecleon Egg', fossil: 'Fossil Egg', found: 'Encounter', ...REGIONAL_WORDS.en.tiers },
+    tiers: { common: 'Common Egg', rare: 'Rare Egg', ultra: 'Ultra Rare Egg', friend: 'Friendship Egg', haunted: 'Haunted Egg', kecleon: 'Kecleon Egg', kecleonShiny: 'Shiny Kecleon Egg', fossil: 'Fossil Egg', found: 'Encounter', dig: 'Mine Dig Fossil', ...REGIONAL_WORDS.en.tiers },
     found: (egg) => `You found a *${egg}*! It goes to the incubator.`,
     foundFull: (egg, coins) => `You found a *${egg}*! The incubator is full, so it will become *${coins}*.`,
     title: 'INCUBATOR',
@@ -2933,7 +2935,7 @@ export const en: Messages = {
       sphere: 'You dug up a *Prism Sphere*! It’s worth ₽.',
       rareCandy: 'You dug up a *Rare Candy*!',
       stone: 'You dug up an *evolution stone*!',
-      fossil: 'You dug up *Old Amber*! There was an egg inside!',
+      fossil: 'You dug up *Old Amber*! There was an *Aerodactyl* egg inside!',
     },
     hudGrotto: (n, time) => `Audino ${n} · ${time}`,
     hudDig: (n, time) => `Finds ${n} · walls ${time}`,
@@ -3180,6 +3182,7 @@ export const en: Messages = {
     ...SEASON_ONE_KITS_WORDS.en.moves,
     ...GA_FAMILIES_B_WORDS.en.moves,
     ...GA_FAMILIES_A_WORDS.en.moves,
+    ...GA_FOSSILS_WORDS.en.moves,
     ...ROCKET_FAMILY_WORDS.en.moves,
     ...GALLOP_WORDS.en,
     ...ULTRA_WORDS.en.moves,
@@ -5660,6 +5663,7 @@ export const en: Messages = {
     ...SEASON_ONE_KITS_WORDS.en.blurbs,
     ...GA_FAMILIES_B_WORDS.en.blurbs,
     ...GA_FAMILIES_A_WORDS.en.blurbs,
+    ...GA_FOSSILS_WORDS.en.blurbs,
     ...ROCKET_FAMILY_WORDS.en.blurbs,
     ...ULTRA_WORDS.en.blurbs,
     ...LEGEND_PATHS_WORDS.en.blurbs,

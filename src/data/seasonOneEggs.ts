@@ -58,27 +58,27 @@ export const SEASON_ONE_EGGS = {
     ]),
   },
   cranidos: {
-    name: 'Cranidos', color: '#6090c8', egg: 'fossil', stats: { might: 0.12, armor: -1 }, signature: 'headSmash',
+    name: 'Cranidos', color: '#6090c8', egg: 'dig', stats: { might: 0.12, armor: -1 }, signature: 'headSmash',
     learnset: [['headSmash', 'rockTomb', 'crunch', 'focusPunch'], ['stealthRock', 'earthquake', 'machPunch', 'pyroBall', 'gyroBall']],
     line: line2(['Cranidos', 408, ['rock']], ['Rampardos', 409, ['rock']], { maxHp: 40, might: 0.3 }),
   },
   shieldon: {
-    name: 'Shieldon', color: '#a8a078', egg: 'fossil', stats: { maxHp: 15, speed: -5 }, signature: 'ironDefense',
+    name: 'Shieldon', color: '#a8a078', egg: 'dig', stats: { maxHp: 15, speed: -5 }, signature: 'ironDefense',
     learnset: [['ironDefense', 'rockTomb', 'flashCannon', 'gyroBall'], ['stealthRock', 'earthquake', 'crunch', 'fireSpin', 'thunder']],
     line: line2(['Shieldon', 410, ['rock', 'steel']], ['Bastiodon', 411, ['rock', 'steel']], { maxHp: 55, armor: 1, might: 0.16 }),
   },
   archen: {
-    name: 'Archen', color: '#e8c848', egg: 'fossil', stats: { speed: 7, maxHp: -10 }, signature: 'dualWingbeat',
+    name: 'Archen', color: '#e8c848', egg: 'dig', stats: { speed: 7, maxHp: -10 }, signature: 'dualWingbeat',
     learnset: [['dualWingbeat', 'rockTomb', 'gust', 'suckerPunch'], ['stealthRock', 'roost', 'dragonBreath', 'quickAttack', 'pinMissile']],
     line: line2(['Archen', 566, ['rock', 'flying']], ['Archeops', 567, ['rock', 'flying']], { maxHp: 40, speed: 4, might: 0.26 }),
   },
   tyrunt: {
-    name: 'Tyrunt', color: '#a07858', egg: 'fossil', stats: { might: 0.08, speed: -2 }, signature: 'bite',
+    name: 'Tyrunt', color: '#a07858', egg: 'dig', stats: { might: 0.08, speed: -2 }, signature: 'bite',
     learnset: [['bite', 'rockTomb', 'dragonBreath', 'crunch'], ['stealthRock', 'dragonTail', 'earthquake', 'ember', 'pyroBall']],
     line: line2(['Tyrunt', 696, ['rock', 'dragon']], ['Tyrantrum', 697, ['rock', 'dragon']], { maxHp: 50, might: 0.24 }),
   },
   amaura: {
-    name: 'Amaura', color: '#88c8e8', egg: 'fossil', stats: { area: 0.08, speed: -3 }, signature: 'auroraVeil',
+    name: 'Amaura', color: '#88c8e8', egg: 'dig', stats: { area: 0.08, speed: -3 }, signature: 'auroraVeil',
     learnset: [['auroraVeil', 'iceShard', 'rockTomb', 'brine'], ['stealthRock', 'sheerCold', 'thunder', 'waterGun', 'gyroBall']],
     line: line2(['Amaura', 698, ['rock', 'ice']], ['Aurorus', 699, ['rock', 'ice']], { maxHp: 50, might: 0.2, area: 0.1 }),
   },

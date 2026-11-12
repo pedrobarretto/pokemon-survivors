@@ -560,6 +560,18 @@ export const MEGAS = {
     stats: { might: 0.3, speed: 8, typeDamage: { electric: 0.2 } },
     special: 'zapCannon',
   },
+  /* The fossil families (`data/gaFossils.ts`): Aerodactyl, out of Old Amber. Its dive comes faster and twice (`fossilKitRules.ts`). */
+  aerodactyl: {
+    line: 'aerodactyl',
+    name: 'Mega Aerodactyl',
+    stone: 'Aerodactylite',
+    form: 'mega',
+    colors: ['#584870', '#c8b8e0', '#e86888'],
+    ability: 'Tough Claws',
+    effect: { kind: 'stats' },
+    stats: { might: 0.3, speed: 6, armor: 1 },
+    special: 'skyAttack',
+  },
 } as const satisfies Record<string, MegaDef>
 
 export type MegaId = keyof typeof MEGAS

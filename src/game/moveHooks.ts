@@ -26,10 +26,10 @@ export const moveEvent = (g: Game, move: MoveId | null, event: StackEvent) => {
 }
 
 /** A hit by `attack` landed on `e`: the move's `onHit` reacts (Rollout's ramp, Ice Ball's growth). */
-export const moveHit = (g: Game, attack: Attack, e: Enemy) => {
+export const moveHit = (g: Game, attack: Attack, e: Enemy, unhurt = false) => {
   if (attack.move === 'special' || attack.move === 'ability') return
   const def: MoveDef = MOVES[attack.move]
-  def.onHit?.(g, attack, e)
+  def.onHit?.(g, attack, e, unhurt)
 }
 
 /** After `owned` fired: spends or grows its stacks on the cast and stamps where it fired from. */

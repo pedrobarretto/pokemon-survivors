@@ -1,6 +1,6 @@
 import { landGifts, spendFromSave } from '../account'
 import { apiCall } from '../api'
-import { DIG_FOSSIL_FAMILIES, DIG_TREASURES, type DigPrize, type FossilFamily } from '../data/digTreasures'
+import { DIG_FOSSIL_FAMILIES, DIG_FOSSIL_REPEAT, DIG_HALF_REPEAT, DIG_TREASURES, isGalarHalf, type DigPrize, type FossilFamily, type GalarHalf } from '../data/digTreasures'
 import { PLAYABLE, type PlayableId } from '../data/hatchlings'
 import { brasiliaDay, weekStart } from '../game/day'
 import { parseGift, type Gift, type GiftContent } from '../game/gifts'
@@ -8,7 +8,7 @@ import { isRecord } from '../game/parse'
 import type { DigEnd, DigGift, DigHitAnswer, DigReward, DigStarted, DigState, DigWallView } from '../net/realmApi'
 import { addFakePiece, fakeGameDeeds, realmFaked, type Failure } from './api'
 import { digDeeds } from './gameDeeds'
-import { buildWall, DIG, digPowers, fossilStreak, hitWall, NO_POWERS, sortOut, startProgress, tileAt, treasureFree, wallPrice, type DigPowers, type DigProgress, type DigTool, type DigWall } from './games/dig.rules'
+import { buildWall, DIG, digPowers, fossilStreak, hitWall, labHalf, NO_POWERS, sortOut, startProgress, tileAt, treasureFree, wallPrice, type DigPowers, type DigProgress, type DigTool, type DigWall } from './games/dig.rules'
 
 /**
  * The Escavação's calls (`net/realmApi.ts` lists the routes). Fail soft and
@@ -16,12 +16,14 @@ import { buildWall, DIG, digPowers, fossilStreak, hitWall, NO_POWERS, sortOut, s
  * from an in-memory mine that runs the same rules the API does; `stageDig` (`ps.dig`) sets it up.
  */
 
-type FakeWall = { id: string; week: string; wall: DigWall; powers: DigPowers; progress: DigProgress; seq: number; answers: DigHitAnswer[]; lacking: FossilFamily[] }
+type FakeWall = { id: string; week: string; wall: DigWall; powers: DigPowers; progress: DigProgress; seq: number; answers: DigHitAnswer[]; lacking: FossilFamily[]; held: GalarHalf[] }
 
 const fake = {
   used: 0,
   dry: 0,
   lacking: [...DIG_FOSSIL_FAMILIES] as FossilFamily[],
+  /** The Galar halves waiting in the lab. */
+  held: [] as GalarHalf[],
   open: null as FakeWall | null,
   plays: 0,
   /** What the next wall is forced to be (`ps.dig`). */
@@ -34,8 +36,8 @@ const fake = {
 
 const thisWeek = () => weekStart(brasiliaDay(new Date()))
 
-/** Dev (`ps.dig`): forces the next faked wall, the walls used today, the dry streak and the fossils lacked. */
-export const stageDig = (patch: { golden?: boolean; fossil?: FossilFamily | null; box?: boolean; used?: number; dry?: number; lacking?: readonly FossilFamily[]; partner?: string | null; soft?: boolean }) => {
+/** Dev (`ps.dig`): forces the next faked wall, the walls used today, the dry streak, the fossils lacked and the halves in the lab. */
+export const stageDig = (patch: { golden?: boolean; fossil?: FossilFamily | null; box?: boolean; used?: number; dry?: number; lacking?: readonly FossilFamily[]; held?: readonly GalarHalf[]; partner?: string | null; soft?: boolean }) => {
   if (patch.golden !== undefined) fake.force.golden = patch.golden
   if (patch.box !== undefined) fake.force.box = patch.box
   if (patch.fossil !== undefined) {
@@ -45,9 +47,10 @@ export const stageDig = (patch: { golden?: boolean; fossil?: FossilFamily | null
   if (patch.used !== undefined) fake.used = patch.used
   if (patch.dry !== undefined) fake.dry = patch.dry
   if (patch.lacking !== undefined) fake.lacking = [...patch.lacking]
+  if (patch.held !== undefined) fake.held = [...patch.held]
   if (patch.partner !== undefined) fake.partner = patch.partner
   if (patch.soft !== undefined) fake.soft = patch.soft
-  return { used: fake.used, dry: fake.dry, lacking: fake.lacking, force: fake.force, open: fake.open !== null }
+  return { used: fake.used, dry: fake.dry, lacking: fake.lacking, held: fake.held, force: fake.force, open: fake.open !== null }
 }
 
 /** Dev: where the open faked wall hides things and how many layers are left, for staging screenshots. */
@@ -83,7 +86,9 @@ const parseState = (v: unknown): DigState | null => {
   if (used === null || dry === null) return null
   const open = v.open === null ? null : asView(v.open)
   if (v.open !== null && !open) return null
-  return { week: v.week, used, dry, lacking: v.lacking.filter((f): f is string => typeof f === 'string'), open }
+  // An API from before the halves sends no lab: an empty one.
+  const held = Array.isArray(v.held) ? v.held.filter(isGalarHalf) : []
+  return { week: v.week, used, dry, lacking: v.lacking.filter((f): f is string => typeof f === 'string'), held, open }
 }
 
 const parseStarted = (v: unknown): DigStarted | null => {
@@ -99,7 +104,7 @@ const parseEnd = (v: unknown): DigEnd | null => (isRecord(v) && (v.outcome === '
 
 /** The mine as this account sees it. */
 export const fetchDig = async (): Promise<DigState | Failure> => {
-  if (realmFaked()) return { week: fake.open?.week ?? thisWeek(), used: fake.used, dry: fake.dry, lacking: fake.lacking, open: fake.open ? viewOf(fake.open) : null }
+  if (realmFaked()) return { week: fake.open?.week ?? thisWeek(), used: fake.used, dry: fake.dry, lacking: fake.lacking, held: fake.held, open: fake.open ? viewOf(fake.open) : null }
   const { status, body } = await apiCall('/realm/dig', { auth: true })
   return (status === 200 ? parseState(body) : null) ?? failed(status, body)
 }
@@ -137,11 +142,11 @@ export const startWall = async (used: number, partner: string, resuming: boolean
       const week = thisWeek()
       const powers = fakePartnerPowers(fake.partner ?? partner)
       const { box, ...force } = fake.force
-      const built = buildWall(1000 + fake.plays * 37 + (Date.now() & 0xffff), { week, powers, lacking: fake.lacking, due: fake.dry >= DIG.fossilGuarantee && fake.lacking.length > 0, box: box === true, force: Object.keys(force).length > 0 ? force : undefined })
+      const built = buildWall(1000 + fake.plays * 37 + (Date.now() & 0xffff), { week, powers, lacking: fake.lacking, held: fake.held, due: fake.dry >= DIG.fossilGuarantee && fake.lacking.length > 0, box: box === true, force: Object.keys(force).length > 0 ? force : undefined })
       const wall = fake.soft ? { ...built, depths: built.depths.map(() => 1), cap: built.cap + 200 } : built
       fake.soft = false
       fake.force = {}
-      fake.open = { id: `fake-${fake.plays}`, week, wall, powers, progress: startProgress(wall), seq: 0, answers: [], lacking: [...fake.lacking] }
+      fake.open = { id: `fake-${fake.plays}`, week, wall, powers, progress: startProgress(wall), seq: 0, answers: [], lacking: [...fake.lacking], held: [...fake.held] }
     }
     return { wall: viewOf(fake.open), used: fake.used }
   }
@@ -173,14 +178,26 @@ const fakeFinish = (w: FakeWall, outcome: DigEnd['outcome']): DigEnd => {
     }
     if (prize.kind === 'fossil') {
       const fresh = still.delete(prize.family)
-      content(fresh ? { kind: 'family', family: prize.family } : { kind: 'coins', amount: 800 })
-      return { id: t.id, prize, repeat: !fresh, coins: fresh ? 0 : 800 }
+      content(fresh ? { kind: 'family', family: prize.family } : { kind: 'coins', amount: DIG_FOSSIL_REPEAT })
+      return { id: t.id, prize, repeat: !fresh, coins: fresh ? 0 : DIG_FOSSIL_REPEAT }
+    }
+    if (prize.kind === 'half') {
+      const lab = labHalf(prize.half, fake.held, [...still])
+      fake.held = lab.held
+      if (lab.kind === 'restored') {
+        still.delete(lab.family)
+        content({ kind: 'family', family: lab.family })
+        return { id: t.id, prize, repeat: false, coins: 0, restored: lab.family }
+      }
+      if (lab.kind === 'stored') return { id: t.id, prize, repeat: false, coins: 0, stored: true }
+      content({ kind: 'coins', amount: DIG_HALF_REPEAT })
+      return { id: t.id, prize, repeat: true, coins: DIG_HALF_REPEAT }
     }
     content(prize.kind === 'coins' ? { kind: 'coins', amount: prize.amount } : prize.kind === 'bag' ? { kind: 'bag', item: prize.item, count: 1 } : { kind: 'evoItem', item: prize.item })
     return { id: t.id, prize, repeat: false, coins: prize.kind === 'coins' ? prize.amount : 0 }
   })
   fake.lacking = fake.lacking.filter((f) => still.has(f))
-  fake.dry = fossilStreak(fake.dry, w.wall, w.progress.left, w.lacking)
+  fake.dry = fossilStreak(fake.dry, w.wall, w.progress.left, w.lacking, w.held)
   fake.open = null
   fakeGameDeeds(digDeeds(w.wall.golden, sorted.kept.map((t) => t.id)))
   return { outcome, kept: rewards, buried: sorted.buried, treasures: w.wall.treasures, gifts, dry: fake.dry }
