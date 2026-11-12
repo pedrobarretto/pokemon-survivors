@@ -98,6 +98,8 @@ type Words = {
     shiny: (name: string) => string
     manaphyEgg: string
     done: string
+    /** A habitat whose Pokédex was completed before new exclusives moved in: it stays complete, and they're only missing from the collection. */
+    doneBefore: string
     lacking: (n: number, names: string) => string
     allHere: string
     boost: string
@@ -171,7 +173,7 @@ const pt = wordsOf(ptVocab, {
     intro: 'Pokémon que nenhum ovo traz: só a Zona Safári. Os que faltam para você aparecem 2× mais.',
     thisWeek: 'Esta semana',
     inWeeks: (n) => (n === 1 ? 'Semana que vem' : `Em ${n} semanas`),
-    have: (n, total) => `${n}/${total}`,
+    have: (n, total) => `Seus: ${n}/${total}`,
     owned: 'Seu',
     missing: 'Falta',
     gated: 'Chega depois de Manaphy',
@@ -181,6 +183,7 @@ const pt = wordsOf(ptVocab, {
     shiny: (name) => `*${name}* shiny garantido`,
     manaphyEgg: '*Ovo de Manaphy*',
     done: 'Pokédex completa! Os prêmios foram para a sua caixa de presentes.',
+    doneBefore: 'Pokédex completa antes dos exclusivos novos chegarem: ela continua completa e os prêmios já são seus. Os que faltam acima são só para a sua coleção.',
     lacking: (n, names) => (n === 1 ? `Exclusivo que falta aqui: ${names}.` : `${n} exclusivos que faltam aqui: ${names}.`),
     allHere: 'Você já tem todos os exclusivos daqui.',
     boost: '2× mais',
@@ -243,7 +246,7 @@ const en = wordsOf(enVocab, {
     intro: 'Pokémon no egg brings: only the Safari Zone. The ones you lack show up 2× as often.',
     thisWeek: 'This week',
     inWeeks: (n) => (n === 1 ? 'Next week' : `In ${n} weeks`),
-    have: (n, total) => `${n}/${total}`,
+    have: (n, total) => `Yours: ${n}/${total}`,
     owned: 'Yours',
     missing: 'Missing',
     gated: 'Comes after Manaphy',
@@ -253,6 +256,7 @@ const en = wordsOf(enVocab, {
     shiny: (name) => `a sure shiny *${name}*`,
     manaphyEgg: 'the *Manaphy Egg*',
     done: 'Pokédex complete! The prizes went to your gift box.',
+    doneBefore: 'Pokédex completed before the new exclusives arrived: it stays complete and its prizes are yours. The ones missing above are for your collection only.',
     lacking: (n, names) => (n === 1 ? `Exclusive you lack here: ${names}.` : `${n} exclusives you lack here: ${names}.`),
     allHere: 'You have every exclusive here.',
     boost: '2× as often',
@@ -315,7 +319,7 @@ const es = wordsOf(esVocab, {
     intro: 'Pokémon que ningún huevo trae: solo la Zona Safari. Los que te faltan aparecen el doble.',
     thisWeek: 'Esta semana',
     inWeeks: (n) => (n === 1 ? 'La semana que viene' : `En ${n} semanas`),
-    have: (n, total) => `${n}/${total}`,
+    have: (n, total) => `Tuyos: ${n}/${total}`,
     owned: 'Tuyo',
     missing: 'Falta',
     gated: 'Llega después de Manaphy',
@@ -325,6 +329,7 @@ const es = wordsOf(esVocab, {
     shiny: (name) => `*${name}* shiny asegurado`,
     manaphyEgg: 'el *Huevo de Manaphy*',
     done: '¡Pokédex completa! Los premios están en tu caja de regalos.',
+    doneBefore: 'Pokédex completada antes de que llegaran los exclusivos nuevos: sigue completa y sus premios ya son tuyos. Los que faltan arriba son solo para tu colección.',
     lacking: (n, names) => (n === 1 ? `Exclusivo que te falta aquí: ${names}.` : `${n} exclusivos que te faltan aquí: ${names}.`),
     allHere: 'Ya tienes todos los exclusivos de aquí.',
     boost: '2× más',
@@ -387,7 +392,7 @@ const fr = wordsOf(frVocab, {
     intro: 'Des Pokémon qu’aucun œuf n’apporte : seulement le Parc Safari. Ceux qui vous manquent apparaissent 2× plus.',
     thisWeek: 'Cette semaine',
     inWeeks: (n) => (n === 1 ? 'La semaine prochaine' : `Dans ${n} semaines`),
-    have: (n, total) => `${n}/${total}`,
+    have: (n, total) => `À vous : ${n}/${total}`,
     owned: 'À vous',
     missing: 'Manque',
     gated: 'Vient après Manaphy',
@@ -397,6 +402,7 @@ const fr = wordsOf(frVocab, {
     shiny: (name) => `*${name}* chromatique assuré`,
     manaphyEgg: 'l’*Œuf de Manaphy*',
     done: 'Pokédex rempli ! Les prix sont dans votre boîte à cadeaux.',
+    doneBefore: 'Pokédex rempli avant l’arrivée des nouveaux exclusifs : il reste rempli et ses prix sont à vous. Ceux qui manquent ci-dessus ne comptent que pour votre collection.',
     lacking: (n, names) => (n === 1 ? `Exclusif qui vous manque ici : ${names}.` : `${n} exclusifs qui vous manquent ici : ${names}.`),
     allHere: 'Vous avez tous les exclusifs d’ici.',
     boost: '2× plus',
@@ -459,7 +465,7 @@ const zh = wordsOf(zhVocab, {
     intro: '沒有任何蛋能孵出的寶可夢：只有狩獵地帶有。你還沒有的出現機率加倍。',
     thisWeek: '本週',
     inWeeks: (n) => (n === 1 ? '下週' : `${n} 週後`),
-    have: (n, total) => `${n}/${total}`,
+    have: (n, total) => `已擁有 ${n}/${total}`,
     owned: '已擁有',
     missing: '尚缺',
     gated: '擁有 Manaphy 後出現',
@@ -469,6 +475,7 @@ const zh = wordsOf(zhVocab, {
     shiny: (name) => `必定異色的 *${name}*`,
     manaphyEgg: '*瑪納霏之蛋*',
     done: '圖鑑完成！獎勵已送到你的禮物箱。',
+    doneBefore: '新的限定寶可夢加入前你就完成了這裡的圖鑑：圖鑑依然算完成，獎勵也已是你的。上面還缺的只差收進你的收藏。',
     lacking: (n, names) => `這裡你還缺 ${n} 隻限定：${names}。`,
     allHere: '這裡的限定你都有了。',
     boost: '機率加倍',

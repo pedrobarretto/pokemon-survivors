@@ -549,7 +549,8 @@ const start = (ctx: SoloCtx): GameRun => {
                 return note(id, gated ? w.only.gated : mine ? `✓ ${w.only.owned}` : `${w.only.missing} · ${w.only.boost}`, { fresh: !gated && !mine, hidden: gated })
               }),
             ),
-            done ? h('small', { class: 'sz-dex-done' }, w.only.done) : rewardsLine(at),
+            // A Pokédex completed before new exclusives moved in stays complete (`habitatDone`): say so beside the ones it lacks.
+            done ? h('small', { class: 'sz-dex-done' }, have < met.length ? w.only.doneBefore : w.only.done) : rewardsLine(at),
           )
         }),
       ),
