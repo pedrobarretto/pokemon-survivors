@@ -1,4 +1,4 @@
-import { DIG_TREASURES, type DigGroup, type DigTreasureId } from '../../data/digTreasures'
+import { DIG_FOSSIL_FAMILIES, DIG_HALVES, DIG_TREASURES, GALAR_PAIRS, type DigGroup, type DigTreasureId, type FossilFamily, type GalarHalf } from '../../data/digTreasures'
 import { HATCHLINGS, PLAYABLE, type PlayableId } from '../../data/hatchlings'
 import { BAG_ITEMS, EVO_ITEMS } from '../../data/shop'
 import { playCry, playSfx } from '../../engine/audio'
@@ -148,7 +148,7 @@ const start = (ctx: SoloCtx): GameRun => {
   let crackDirty = true
   let wallDirty = true
   let revealAt = 0
-  let fossilOn: Extract<DigReward['prize'], { kind: 'fossil' }>['family'] | null = null
+  let fossilOn: FossilFamily | null = null
   let fresh: Set<number> = new Set()
 
   const wallLayer = document.createElement('canvas')
@@ -217,7 +217,9 @@ const start = (ctx: SoloCtx): GameRun => {
           { class: 'mg-facts' },
           partnerLine(),
           h('li', { class: due ? 'hot' : '' }, h('img', { src: art('skullFossil'), alt: '', width: 28, height: 28 }), h('span', {}, fossil)),
+          labLine(v.held),
         ),
+        h('button', { class: 'btn mg-link', type: 'button', onclick: () => (playSfx('select'), labSheet()) }, h('img', { src: art('fossilizedBird'), alt: '', width: 24, height: 24 }), m().lab.open),
         stop ? callout(stop) : false,
       ],
       [
@@ -225,6 +227,61 @@ const start = (ctx: SoloCtx): GameRun => {
       ],
     )
   }
+
+  /** The Galar halves waiting in the lab, as a fact on the entry (none: nothing to tell). */
+  const labLine = (held: readonly GalarHalf[]) =>
+    held.length > 0 && h('li', { class: 'dig-lab-line' }, h('img', { src: art(DIG_HALVES[held[0]!]), alt: '', width: 28, height: 28 }), h('span', {}, m().lab.waiting(held.map((half) => treasureName(DIG_HALVES[half])).join(', '))))
+
+  /**
+   * The fossil lab: Galar's halves (the ones waiting bright, the rest dim),
+   * then each pair with the Pokémon it restores, and why Fish and Dino don't fit.
+   */
+  const labSheet = () => {
+    if (!view) return
+    const held = view.held
+    const lacking = view.lacking
+    const half = (which: GalarHalf) =>
+      h('li', { class: held.includes(which) ? 'held' : '' }, h('img', { src: art(DIG_HALVES[which]), alt: '', width: 40, height: 40 }), h('span', {}, treasureName(DIG_HALVES[which])))
+    say(
+      'card',
+      [
+        sheetTitle(m().lab.title, m().lab.kicker),
+        h('p', { class: 'mg-note' }, rich(m().lab.note)),
+        h('div', { class: 'dig-lab-halves' }, h('b', {}, m().lab.tops), h('ul', {}, half('bird'), half('fish')), h('b', {}, m().lab.bottoms), h('ul', {}, half('drake'), half('dino'))),
+        h(
+          'ul',
+          { class: 'dig-lab-pairs' },
+          ...GALAR_PAIRS.map((p) => {
+            const own = !lacking.includes(p.family)
+            return h(
+              'li',
+              { class: own ? 'owned' : '' },
+              h('img', { src: art(DIG_HALVES[p.top]), alt: treasureName(DIG_HALVES[p.top]), width: 28, height: 28 }),
+              h('span', { class: 'dig-lab-plus' }, '+'),
+              h('img', { src: art(DIG_HALVES[p.bottom]), alt: treasureName(DIG_HALVES[p.bottom]), width: 28, height: 28 }),
+              h('span', { class: 'dig-lab-plus' }, '='),
+              h('img', { class: 'dig-lab-mon', src: portraitUrl(HATCHLINGS[p.family].line[0].dex), alt: '', width: 32, height: 32 }),
+              h('span', {}, HATCHLINGS[p.family].name, own ? h('small', {}, ` ${m().lab.owned}`) : false),
+            )
+          }),
+        ),
+        h('p', { class: 'mg-note' }, m().lab.arctovish),
+        held.length === 0 ? h('p', { class: 'mg-note' }, m().lab.empty) : false,
+      ],
+      [],
+      { label: m().back, run: oddsPanel },
+    )
+  }
+
+  /** The halves a stored one still needs: the other side of each lacked pair it's in. */
+  const halfNeeds = (which: GalarHalf) => {
+    const lacking = view?.lacking ?? []
+    const names = GALAR_PAIRS.flatMap((p) => (lacking.includes(p.family) && (p.top === which || p.bottom === which) ? [treasureName(DIG_HALVES[p.top === which ? p.bottom : p.top])] : []))
+    return names.length > 0 ? names.reduce((a, b) => m().or(a, b)) : ''
+  }
+
+  /** The family a prize brings to life on screen: a whole fossil's, or the one a half completed. */
+  const familyOf = (r: DigReward): FossilFamily | null => (r.prize.kind === 'fossil' ? r.prize.family : r.prize.kind === 'half' ? (r.restored ?? null) : null)
 
   /** The week's odds, as the sheet of the vein: a tile a group, the golden wall's chance, and what the numbers mean. */
   const oddsSheet = () => {
@@ -408,8 +465,13 @@ const start = (ctx: SoloCtx): GameRun => {
     // Prizes land on the save now; a fossil plays its scene only if it truly is new to this save.
     const landed = landDigGifts(e.gifts)
     const repeats = new Set(landed.flatMap((l) => (l.gift.content.kind === 'family' && l.duplicate ? [l.gift.content.family] : [])))
-    fresh = new Set(e.kept.flatMap((r, i) => (r.prize.kind === 'fossil' && !r.repeat && !repeats.has(r.prize.family) ? [i] : [])))
-    if (e.kept.some((r) => r.id === 'digFossilDisplay' || r.prize.kind === 'stone' || r.prize.kind === 'fossil')) ctx.brag('fossilOrStone')
+    fresh = new Set(
+      e.kept.flatMap((r, i) => {
+        const family = familyOf(r)
+        return family !== null && !r.repeat && !repeats.has(family) ? [i] : []
+      }),
+    )
+    if (e.kept.some((r) => r.id === 'digFossilDisplay' || r.prize.kind === 'stone' || r.prize.kind === 'fossil' || r.restored !== undefined)) ctx.brag('fossilOrStone')
     go('hold')
     quiet()
     if (e.outcome === 'collapse') {
@@ -608,6 +670,19 @@ const start = (ctx: SoloCtx): GameRun => {
     announce()
   }
 
+  /** What the banner says under a prize's name. */
+  const rewardNote = (r: DigReward) => {
+    if (r.repeat) return m().repeat(formatPokeDollars(r.coins))
+    if (r.coins > 0) return `+${formatPokeDollars(r.coins)}`
+    const prize = r.prize
+    if (prize.kind === 'half') {
+      const pair = GALAR_PAIRS.find((p) => p.family === r.restored)
+      if (pair) return m().halfRestored(treasureName(DIG_HALVES[pair.top === prize.half ? pair.bottom : pair.top]))
+      return m().halfStored(halfNeeds(prize.half))
+    }
+    return prize.kind === 'furniture' ? m().furnitureNote : prize.kind === 'bag' ? m().bagNote : prize.kind === 'stone' ? m().stoneNote : prize.kind === 'legend' ? t().paths.meltan.found : m().fossilNote
+  }
+
   const announce = () => {
     if (!end) return
     const r = end.kept[revealAt]
@@ -617,10 +692,10 @@ const start = (ctx: SoloCtx): GameRun => {
       'banner',
       [
         h('h3', { class: 'mg-banner-title' }, treasureName(r.id)),
-        h('p', {}, r.repeat ? m().repeat(formatPokeDollars(r.coins)) : r.coins > 0 ? `+${formatPokeDollars(r.coins)}` : r.prize.kind === 'furniture' ? m().furnitureNote : r.prize.kind === 'bag' ? m().bagNote : r.prize.kind === 'stone' ? m().stoneNote : r.prize.kind === 'legend' ? t().paths.meltan.found : m().fossilNote),
+        h('p', {}, rewardNote(r)),
       ],
     )
-    playSfx(r.prize.kind === 'coins' ? 'coin' : r.prize.kind === 'fossil' ? 'shiny' : r.prize.kind === 'legend' && !r.repeat ? 'legendary' : def.group === 'stone' ? 'evolve' : def.group === 'furniture' ? 'unlock' : 'item')
+    playSfx(r.prize.kind === 'coins' ? 'coin' : r.prize.kind === 'fossil' || r.restored !== undefined ? 'shiny' : r.prize.kind === 'legend' && !r.repeat ? 'legendary' : def.group === 'stone' ? 'evolve' : def.group === 'furniture' ? 'unlock' : 'item')
     if (r.prize.kind === 'legend' && !r.repeat) {
       playCry(cryUrl(MELTAN_DEX), 0.6)
       void loadSpecies(MELTAN_DEX).catch(() => {})
@@ -636,11 +711,12 @@ const start = (ctx: SoloCtx): GameRun => {
   const nextReveal = () => {
     if (!end) return
     const r = end.kept[revealAt]
-    if (r && r.prize.kind === 'fossil' && fresh.has(revealAt)) {
-      fossilOn = r.prize.family
+    const family = r ? familyOf(r) : null
+    if (family !== null && fresh.has(revealAt)) {
+      fossilOn = family
       go('fossil')
       quiet()
-      void loadSpecies(HATCHLINGS[r.prize.family].line[0].dex).catch(() => {})
+      void loadSpecies(HATCHLINGS[family].line[0].dex).catch(() => {})
       return
     }
     revealAt++
@@ -674,7 +750,7 @@ const start = (ctx: SoloCtx): GameRun => {
       'card',
       [
         sheetTitle(headline),
-        e.kept.length > 0 ? h('ul', { class: 'dig-loot' }, ...e.kept.map((r) => h('li', {}, h('img', { src: art(r.id), alt: '', width: 32, height: 32 }), h('span', {}, treasureName(r.id))))) : false,
+        e.kept.length > 0 ? h('ul', { class: 'dig-loot' }, ...e.kept.map((r) => h('li', {}, h('img', { src: art(r.id), alt: '', width: 32, height: 32 }), h('span', {}, r.restored ? `${treasureName(r.id)} → ${HATCHLINGS[r.restored].name}` : treasureName(r.id))))) : false,
         coins > 0 ? h('p', { class: 'dig-coins' }, m().coinsTotal(formatPokeDollars(coins))) : false,
         e.buried.length > 0 ? h('div', { class: 'dig-buried' }, h('span', {}, m().buried), h('span', {}, ...e.buried.map((b) => h('img', { src: art(b.id), alt: treasureName(b.id), title: treasureName(b.id), width: 24, height: 24 })))) : false,
         stopReason ? callout(stopReason) : false,
@@ -1153,7 +1229,7 @@ const start = (ctx: SoloCtx): GameRun => {
 }
 
 /** How many fossil families there are (the lacked list's largest size). */
-const DIG_FAMILIES = 5
+const DIG_FAMILIES = DIG_FOSSIL_FAMILIES.length
 
 /** The Escavação; its canvas fits the way the phone is held. */
 export const dig: SoloGame = {

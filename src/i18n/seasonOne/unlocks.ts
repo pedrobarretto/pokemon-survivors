@@ -6,8 +6,10 @@
 type UnlockWords = {
   /** The partner select's locked card. */
   where: Record<'mankey' | 'goomy' | 'tatsugiri' | 'wishiwashi' | 'rotom' | 'castform' | 'mimikyu' | 'morpeko' | 'tandemaus' | 'lapras' | 'spiritomb', string>
-  /** The locked card of the five fossil families. */
-  fossilBlurb: string
+  /** The locked card of the fossil families the Escavação restores, with the fossil (or the two Galar halves) that does it. */
+  fossilBlurb: (fossil: string) => string
+  /** Aerodactyl's locked card: Old Amber, in a run's Underground or at the Escavação. */
+  amberBlurb: string
   /** Why the family came, in the gift box. */
   way: Record<'find' | 'research' | 'fishing' | 'safari' | 'dig', string>
   find: { rotom: string; castformSighted: string; castformFound: string; castformGone: string; spiritomb: string }
@@ -38,7 +40,8 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       lapras: 'Só na *Zona Safári*, na semana da Enseada, no Bosque das Bases do Poké Realm. Precisa de conta.',
       spiritomb: 'Desperte o *Odd Keystone* no Cemitério e derrote o Spiritomb que sai dele.',
     },
-    fossilBlurb: 'Choca do *Ovo Fóssil* (cave as paredes do Subterrâneo atrás de Old Amber) ou é restaurado na *Escavação* do Poké Realm, na Trilha. Precisa de conta.',
+    fossilBlurb: (fossil) => `Restaurado do *${fossil}*, achado na *Escavação* do Poké Realm, na Trilha. Precisa de conta.`,
+    amberBlurb: 'Choca do *Ovo Fóssil*: cave as paredes do Subterrâneo de uma run atrás de *Old Amber*. A *Escavação* do Poké Realm também tem Old Amber.',
     way: { find: 'Por um encontro no mapa', research: 'Por concluir uma Pesquisa', fishing: 'Pela sua pescaria', safari: 'Pela sua captura na Zona Safári', dig: 'Da Escavação' },
     find: {
       rotom: 'A TV deu um estalo e *Rotom* escapou! Ele espera na caixa de presentes.',
@@ -72,7 +75,8 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       lapras: 'Only in the *Safari Zone*, on the Cove’s week, in the Poké Realm’s Secret Base Grove. Needs an account.',
       spiritomb: 'Wake the *Odd Keystone* in the Graveyard and beat the Spiritomb that breaks out.',
     },
-    fossilBlurb: 'Hatches from the *Fossil Egg* (dig the Underground’s walls for Old Amber) or gets restored at the *Mine Dig* on the Poké Realm’s Trail. Needs an account.',
+    fossilBlurb: (fossil) => `Restored from the *${fossil}*, dug up at the *Mine Dig* on the Poké Realm’s Trail. Needs an account.`,
+    amberBlurb: 'Hatches from the *Fossil Egg*: dig a run’s Underground walls for *Old Amber*. The Poké Realm’s *Mine Dig* has Old Amber too.',
     way: { find: 'For an encounter on the map', research: 'For finishing a Research', fishing: 'For your fishing', safari: 'For your catch in the Safari Zone', dig: 'From the Mine Dig' },
     find: {
       rotom: 'The TV crackled and *Rotom* got out! It’s waiting in your gift box.',
@@ -106,7 +110,8 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       lapras: 'Solo en la *Zona Safari*, en la semana de la Ensenada, en la Arboleda de Bases del Poké Realm. Necesitas una cuenta.',
       spiritomb: 'Despierta la *Odd Keystone* en el Cementerio y vence al Spiritomb que sale de ella.',
     },
-    fossilBlurb: 'Nace del *Huevo Fósil* (excava las paredes del Subsuelo en busca de Old Amber) o se restaura en la *Excavación* del Poké Realm, en el Sendero. Requiere cuenta.',
+    fossilBlurb: (fossil) => `Se restaura del *${fossil}*, hallado en la *Excavación* del Poké Realm, en el Sendero. Requiere cuenta.`,
+    amberBlurb: 'Nace del *Huevo Fósil*: excava las paredes del Subsuelo de una partida en busca de *Old Amber*. La *Excavación* del Poké Realm también tiene Old Amber.',
     way: { find: 'Por un encuentro en el mapa', research: 'Por completar una Investigación', fishing: 'Por tu pesca', safari: 'Por tu captura en la Zona Safari', dig: 'De la Excavación' },
     find: {
       rotom: '¡El televisor chisporroteó y *Rotom* escapó! Te espera en la caja de regalos.',
@@ -140,7 +145,8 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       lapras: 'Seulement au *Parc Safari*, la semaine de la Crique, au Bosquet des Bases du Poké Realm. Compte requis.',
       spiritomb: 'Réveille la *Odd Keystone* au Cimetière et bats le Spiritomb qui en sort.',
     },
-    fossilBlurb: 'Éclot de l’*Œuf Fossile* (creuse les parois du Souterrain pour trouver de l’Old Amber) ou restauré à l’*Excavation* du Poké Realm, sur le Sentier. Compte requis.',
+    fossilBlurb: (fossil) => `Restauré à partir du *${fossil}*, déterré à l’*Excavation* du Poké Realm, sur le Sentier. Compte requis.`,
+    amberBlurb: 'Éclot de l’*Œuf Fossile* : creuse les parois du Souterrain d’une partie pour trouver de l’*Old Amber*. L’*Excavation* du Poké Realm en a aussi.',
     way: { find: 'Pour une rencontre sur la carte', research: 'Pour avoir terminé une Recherche', fishing: 'Pour ta pêche', safari: 'Pour ta capture au Parc Safari', dig: 'De l’Excavation' },
     find: {
       rotom: 'La télé a grésillé et *Rotom* s’est échappé ! Il t’attend dans la boîte à cadeaux.',
@@ -174,7 +180,8 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       lapras: '只在 Poké Realm 秘密基地樹林的*狩獵地帶*出現，限海灣週。需要帳號。',
       spiritomb: '在墓地喚醒*楔石*，打倒從中出現的 Spiritomb。',
     },
-    fossilBlurb: '由*化石蛋*孵化（在地下通道挖掘牆壁尋找 Old Amber），或在 Poké Realm 步道的*礦坑挖掘*復原。需要帳號。',
+    fossilBlurb: (fossil) => `用在 Poké Realm 步道的*礦坑挖掘*挖到的 *${fossil}* 復原。需要帳號。`,
+    amberBlurb: '由*化石蛋*孵化：在冒險的地下通道挖掘牆壁尋找 *Old Amber*。Poké Realm 的*礦坑挖掘*也有 Old Amber。',
     way: { find: '獎勵你在地圖上的邂逅', research: '獎勵你完成研究', fishing: '獎勵你的釣魚成果', safari: '獎勵你在狩獵地帶的捕捉', dig: '來自礦坑挖掘' },
     find: {
       rotom: '電視一陣雜音，*Rotom* 跑出來了！牠在禮物箱等你。',

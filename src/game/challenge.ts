@@ -43,15 +43,21 @@ export const CHALLENGE = {
 export type Challenge = { day: DayKey; seed: number; starter: PlayableId; difficulty: Difficulty; outbreak: EnemyId; halloween: boolean }
 
 /**
+ * Kabuto left the Rare Egg for the Escavação's Dome Fossil after the draw
+ * began: it stays in, so every day keeps its Pokémon.
+ */
+const drawable = (id: PlayableId) => !isExclusiveFamily(id) || id === 'kabuto'
+
+/**
  * Who the challenge draws from: every playable Pokémon but the exclusive
  * families, which only their own egg brings (the Haunted Egg's, the Kecleon
  * Egg's; they also joined after the draw began: leaving them out keeps every
  * day's Pokémon where it was).
  */
-const OLD_POOL = PLAYABLE_IDS.filter((id) => !isExclusiveFamily(id) && !(id in SEASON_ONE_EGGS) && !(id in SEASON_ONE_KITS) && !(id in GA_FAMILIES_B) && !(id in GA_FAMILIES_A))
+const OLD_POOL = PLAYABLE_IDS.filter((id) => drawable(id) && !(id in SEASON_ONE_EGGS) && !(id in SEASON_ONE_KITS) && !(id in GA_FAMILIES_B) && !(id in GA_FAMILIES_A))
 
 /** The pool from Temporada 1 on, with its new egg families. */
-const SEASON_POOL = PLAYABLE_IDS.filter((id) => !isExclusiveFamily(id))
+const SEASON_POOL = PLAYABLE_IDS.filter(drawable)
 
 /** Who a day draws from: days before `SEASON_ONE` keep the old pool, so their Pokémon stay where they were. */
 const poolOf = (day: DayKey) => (day < SEASON_ONE.day ? OLD_POOL : SEASON_POOL)

@@ -16,6 +16,7 @@ import { EGG_MOVE_ICONS } from './eggMoveArt'
 import { EGG_MOVE_3_ICONS } from './eggMove3Art'
 import { SEASON_ONE_KIT_ICONS } from './seasonOneKitArt'
 import { KIT_B_ICONS } from './gaKitBArt'
+import { FOSSIL_KIT_ICONS } from './fossilKitArt'
 import { GA_KIT_A_ICONS } from './gaKitAArt'
 import { REGIONAL_ICONS } from './regionalArt'
 import { ROCKET_KIT_ICONS } from './rocketKitArt'
@@ -428,6 +429,8 @@ const EGG_PALETTES = {
   /** The Fossil Egg: old amber with a dark fossil's spots. */
   fossil: { 1: '#a86820', 2: '#e8a838', 3: '#f8d888', 4: '#583818' },
   found: { 1: '#c8b890', 2: '#f8f0d8', 3: '#ffffff', 4: '#c8b890' },
+  /** The Escavação's restored fossils (never laid): a shell of sandstone with dark fossil spots. */
+  dig: { 1: '#806850', 2: '#c8b088', 3: '#e8d8b8', 4: '#4a3420' },
   /** The Ovos de Viagem (`TRAVEL_EGGS`): Alola's sand with a sea-teal strap and a hibiscus, Galar's rose with a navy strap and a gold crown, Hisui's snow with a leather strap and a red seal, Paldea's violet with a scarlet strap and a sun. */
   alola: { 1: '#c06830', 2: '#f8d090', 3: '#fff4d8', 4: '#28a0a0', 9: '#186868', 5: '#f8e070', 6: '#e84878', 7: '#f8e050' },
   galar: { 1: '#802838', 2: '#d86070', 3: '#f8c0c8', 4: '#283868', 9: '#141c38', 5: '#f8d048', 6: '#f8d048', 7: '#48a0f0' },
@@ -435,7 +438,7 @@ const EGG_PALETTES = {
   paldea: { 1: '#583080', 2: '#9868c8', 3: '#d8c0f0', 4: '#d83830', 9: '#781810', 5: '#f8e070', 6: '#f8a020', 7: '#f8e070' },
 } as const satisfies Record<EggTier, Palette>
 
-const CRACK_COLORS = { common: '#584830', rare: '#584830', ultra: '#f8f0c0', friend: '#803048', haunted: '#78f0a8', kecleon: '#1c4020', kecleonShiny: '#1c4020', fossil: '#583818', found: '#584830', alola: '#7a3018', galar: '#481028', hisui: '#405068', paldea: '#2c1048' } as const satisfies Record<EggTier, string>
+const CRACK_COLORS = { common: '#584830', rare: '#584830', ultra: '#f8f0c0', friend: '#803048', haunted: '#78f0a8', kecleon: '#1c4020', kecleonShiny: '#1c4020', fossil: '#583818', found: '#584830', dig: '#4a3420', alola: '#7a3018', galar: '#481028', hisui: '#405068', paldea: '#2c1048' } as const satisfies Record<EggTier, string>
 
 /** The eggs drawn from their own rows instead of `EGG`'s spots. */
 const EGG_ROWS: Partial<Record<EggTier, readonly string[]>> = { kecleon: KECLEON_EGG, kecleonShiny: KECLEON_EGG, ...TRAVEL_EGGS }
@@ -790,6 +793,7 @@ const MOVE_ICON_ART: Record<MoveId, () => PixelSprite> = {
   ...REGIONAL_ICONS,
   ...ROCKET_KIT_ICONS,
   ...GALLOP_ICONS,
+  ...FOSSIL_KIT_ICONS,
   jawLock: () => art([...TE.MAW_TOP, ...TE.MAW_BOTTOM], TE.MAW, '#d8c0e8'),
   superpower: () => art(TE.BIG_FIST, TE.FIST_PAL, '#281010'),
   fissure: () => art(...TE.FISSURE_ICON, '#181818'),

@@ -273,6 +273,23 @@ export const safariStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
     if (SAFARI_HABITAT_IDS.every((h) => habitatDexDone(h, dex[h]))) await sendGift(tx, userId, DEX_ALL_GIFT, { kind: 'safariDex', habitat: null }, 'safariDex:all')
   }
 
+  /**
+   * Sends the Pokédex gifts a habitat earned without a fresh catch: one that
+   * became complete because a family left it (Kabuto, now the Escavação's
+   * Dome Fossil). A habitat already paid is skipped (each gift has its key).
+   */
+  const settleDex = async (userId: string, dex: Record<SafariHabitat, HatchlingId[]>) => {
+    const done = SAFARI_HABITAT_IDS.filter((h) => habitatDexDone(h, dex[h]))
+    if (done.length === 0) return
+    const paid = new Set((await sql<{ key: string }[]>`select key from gifts where user_id = ${userId} and key like 'safariDex:%'`).map((r) => r.key))
+    const all = done.length === SAFARI_HABITAT_IDS.length
+    if (done.every((h) => paid.has(`safariDex:${h}`)) && (!all || paid.has('safariDex:all'))) return
+    await sql.begin(async (tx) => {
+      for (const habitat of done) await sendGift(tx, userId, DEX_GIFT, { kind: 'safariDex', habitat }, `safariDex:${habitat}`)
+      if (all) await sendGift(tx, userId, DEX_ALL_GIFT, { kind: 'safariDex', habitat: null }, 'safariDex:all')
+    })
+  }
+
   /** Puts a finished contest entry's score on the day's and the week's boards, each keeping its best. */
   const postScore = async (tx: TransactionSql, userId: string, day: DayKey, score: number) => {
     for (const [period, start] of [['day', day], ['week', weekStart(day)]] as const) {
@@ -327,6 +344,8 @@ export const safariStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
       const sure = dry >= SAFARI.guarantee && lackingFamilies(save?.hatched ?? {}, await giftedFamilies(sql, userId)).length > 0
       const contestOpen = isContestDay(day)
       const contest = { open: contestOpen, left: contestOpen ? Math.max(0, CONTEST.entries - (await usedOn(sql, userId, day, 'contest'))) : 0, best: await contestBest(sql, userId, weekStart(day)) }
+      const dex = await dexOf(sql, userId)
+      await settleDex(userId, dex).catch((err: unknown) => console.error('safari: dex gifts not settled', err))
       return {
         week,
         habitat: open ? habitatFor(open) : habitatOfWeek(week, SAFARI_HABITAT_IDS),
@@ -336,7 +355,7 @@ export const safariStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
         partner: partnerOf(save),
         open: open ? viewOf(open) : null,
         contest,
-        dex: await dexOf(sql, userId),
+        dex,
       }
     },
 

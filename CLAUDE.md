@@ -60,6 +60,7 @@ npm run roster     # rebuild the wild horde (every regular species with full Spr
 npm run assets     # fetch sprites (add new dex numbers in scripts/dex.mjs; the horde comes from the roster)
 npm run credits    # regenerate CREDITS.md (SpriteCollab artists) after adding species
 npm run creators   # fetch the title, date and thumbnail of each video in CREATOR_VIDEOS (src/data/creators.ts) for the site's Criadores page; run it after adding a video URL
+npm run fossils    # the fossils' item art (Escavação, Old Amber) from PokeAPI's item sprites into public/assets/items; then `npm run dig-shapes`
 npm run bodies     # re-measure sprite bodies (hitboxes) into sprites.generated.json; `npm run assets` does it too
 npm run rig        # the wearables' head rig: reads each direction's head of every species and form a player can be from its pixels and SpriteCollab's offsets (cached in node_modules/.cache, never committed) and tracks it into every frame, into src/data/wearRig/ (it lists the variants it leaves out)
 npm run rig:migrate -- --from <ref>  # after a rig change, moves data/wearFits.ts's fixes so they land where they did on the rig at <ref> (--dry prints only)

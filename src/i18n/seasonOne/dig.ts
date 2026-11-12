@@ -25,6 +25,24 @@ type DigWords = {
     oddsNote: string
     fossilsDone: string
     fossilDue: string
+    /** The lab where Galar's fossil halves wait for their other half (`GALAR_PAIRS`). */
+    lab: {
+      open: string
+      kicker: string
+      title: string
+      note: string
+      empty: string
+      waiting: (names: string) => string
+      tops: string
+      bottoms: string
+      owned: string
+      arctovish: string
+    }
+    /** A half put in the lab, with what it still needs (`or` joins the names). */
+    halfStored: (needs: string) => string
+    /** A half that met the one waiting in the lab. */
+    halfRestored: (other: string) => string
+    or: (a: string, b: string) => string
     fossilProgress: (dry: number, of: number, owned: number, total: number) => string
     powers: Record<'bigHammer' | 'hold' | 'reveal' | 'deepPick', string>
     partnerLine: (name: string, power: string) => string
@@ -79,8 +97,23 @@ export const SEASON_ONE_DIG_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', DigW
       goldenStart: 'Uma parede dourada!',
       oneIn: (n) => `1 em ${n}`,
       oddsNote: 'Chance de cada tesouro enterrado ser desse tipo, com o veio desta semana.',
-      fossilsDone: 'Você já tem os cinco fósseis da mina.',
+      fossilsDone: 'Você já tem todos os fósseis da mina.',
       fossilDue: 'A próxima parede vem com um fóssil que você não tem!',
+      lab: {
+        open: 'Laboratório de fósseis',
+        kicker: 'Fósseis de Galar',
+        title: 'Laboratório de fósseis',
+        note: 'Os fósseis de Galar saem em *metades*: uma de cima e uma de baixo. Cada metade espera aqui até a sua outra metade sair da parede, e as duas restauram um Pokémon.',
+        empty: 'Nenhuma metade esperando no laboratório.',
+        waiting: (names) => `No laboratório: ${names}.`,
+        tops: 'De cima',
+        bottoms: 'De baixo',
+        owned: 'Já é seu',
+        arctovish: 'Fish + Dino seria o Arctovish, que ainda não tem sprites completos: por enquanto o Fish só encaixa no Drake, e o Dino só no Bird.',
+      },
+      halfStored: (needs) => `Guardado no laboratório. Falta: ${needs}.`,
+      halfRestored: (other) => `Encaixou no ${other} que esperava no laboratório!`,
+      or: (a, b) => `${a} ou ${b}`,
       fossilProgress: (dry, of, owned, total) => `Garantia de fóssil: ${dry} de ${of} paredes. Fósseis: ${owned} de ${total}.`,
       powers: { bigHammer: 'marreta maior', hold: 'parede aguenta mais', reveal: 'revela uma pedra de um tesouro', deepPick: 'picareta corta rocha dura' },
       partnerLine: (name, power) => `${name} ajuda: ${power}.`,
@@ -133,8 +166,23 @@ export const SEASON_ONE_DIG_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', DigW
       goldenStart: 'A golden wall!',
       oneIn: (n) => `1 in ${n}`,
       oddsNote: 'Chance each buried treasure is this kind, with this week’s vein.',
-      fossilsDone: 'You already have all five of the mine’s fossils.',
+      fossilsDone: 'You already have every fossil in the mine.',
       fossilDue: 'Your next wall holds a fossil you don’t have!',
+      lab: {
+        open: 'Fossil lab',
+        kicker: 'Galar fossils',
+        title: 'Fossil lab',
+        note: 'Galar’s fossils come out in *halves*: a top and a bottom. Each half waits here until its other half comes out of a wall, and the two restore a Pokémon.',
+        empty: 'No half is waiting in the lab.',
+        waiting: (names) => `In the lab: ${names}.`,
+        tops: 'Tops',
+        bottoms: 'Bottoms',
+        owned: 'Yours',
+        arctovish: 'Fish + Dino would be Arctovish, whose sprites aren’t complete yet: for now the Fish only fits the Drake, and the Dino only the Bird.',
+      },
+      halfStored: (needs) => `Kept in the lab. Still needs: ${needs}.`,
+      halfRestored: (other) => `It fit the ${other} waiting in the lab!`,
+      or: (a, b) => `${a} or ${b}`,
       fossilProgress: (dry, of, owned, total) => `Fossil guarantee: ${dry} of ${of} walls. Fossils: ${owned} of ${total}.`,
       powers: { bigHammer: 'a bigger hammer', hold: 'the wall holds longer', reveal: 'shows one stone of a treasure', deepPick: 'the pickaxe cuts hard rock' },
       partnerLine: (name, power) => `${name} helps: ${power}.`,
@@ -187,8 +235,23 @@ export const SEASON_ONE_DIG_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', DigW
       goldenStart: '¡Una pared dorada!',
       oneIn: (n) => `1 de ${n}`,
       oddsNote: 'Probabilidad de que cada tesoro enterrado sea de este tipo, con la veta de esta semana.',
-      fossilsDone: 'Ya tienes los cinco fósiles de la mina.',
+      fossilsDone: 'Ya tienes todos los fósiles de la mina.',
       fossilDue: '¡Tu próxima pared trae un fósil que no tienes!',
+      lab: {
+        open: 'Laboratorio de fósiles',
+        kicker: 'Fósiles de Galar',
+        title: 'Laboratorio de fósiles',
+        note: 'Los fósiles de Galar salen en *mitades*: una de arriba y una de abajo. Cada mitad espera aquí hasta que su otra mitad salga de una pared, y las dos restauran un Pokémon.',
+        empty: 'Ninguna mitad espera en el laboratorio.',
+        waiting: (names) => `En el laboratorio: ${names}.`,
+        tops: 'De arriba',
+        bottoms: 'De abajo',
+        owned: 'Ya es tuyo',
+        arctovish: 'Fish + Dino sería Arctovish, que aún no tiene sprites completos: por ahora el Fish solo encaja con el Drake, y el Dino solo con el Bird.',
+      },
+      halfStored: (needs) => `Guardado en el laboratorio. Falta: ${needs}.`,
+      halfRestored: (other) => `¡Encajó con el ${other} que esperaba en el laboratorio!`,
+      or: (a, b) => `${a} o ${b}`,
       fossilProgress: (dry, of, owned, total) => `Garantía de fósil: ${dry} de ${of} paredes. Fósiles: ${owned} de ${total}.`,
       powers: { bigHammer: 'un martillo más grande', hold: 'la pared aguanta más', reveal: 'revela una piedra de un tesoro', deepPick: 'el pico corta roca dura' },
       partnerLine: (name, power) => `${name} ayuda: ${power}.`,
@@ -241,8 +304,23 @@ export const SEASON_ONE_DIG_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', DigW
       goldenStart: 'Une paroi dorée !',
       oneIn: (n) => `1 sur ${n}`,
       oddsNote: 'Chance que chaque trésor enfoui soit de ce type, avec le filon de la semaine.',
-      fossilsDone: 'Tu as déjà les cinq fossiles de la mine.',
+      fossilsDone: 'Tu as déjà tous les fossiles de la mine.',
       fossilDue: 'Ta prochaine paroi contient un fossile que tu n’as pas !',
+      lab: {
+        open: 'Labo des fossiles',
+        kicker: 'Fossiles de Galar',
+        title: 'Labo des fossiles',
+        note: 'Les fossiles de Galar sortent en *moitiés* : un haut et un bas. Chaque moitié attend ici que l’autre sorte d’une paroi, et les deux restaurent un Pokémon.',
+        empty: 'Aucune moitié n’attend au labo.',
+        waiting: (names) => `Au labo : ${names}.`,
+        tops: 'Hauts',
+        bottoms: 'Bas',
+        owned: 'Déjà à toi',
+        arctovish: 'Fish + Dino donnerait Arctovish, dont les sprites ne sont pas encore complets : pour l’instant le Fish ne va qu’avec le Drake, et le Dino qu’avec le Bird.',
+      },
+      halfStored: (needs) => `Rangé au labo. Il manque : ${needs}.`,
+      halfRestored: (other) => `Ça s’emboîte avec le ${other} qui attendait au labo !`,
+      or: (a, b) => `${a} ou ${b}`,
       fossilProgress: (dry, of, owned, total) => `Garantie de fossile : ${dry} sur ${of} parois. Fossiles : ${owned} sur ${total}.`,
       powers: { bigHammer: 'une masse plus grande', hold: 'la paroi tient plus longtemps', reveal: 'montre une pierre d’un trésor', deepPick: 'la pioche tranche la roche dure' },
       partnerLine: (name, power) => `${name} aide : ${power}.`,
@@ -295,8 +373,23 @@ export const SEASON_ONE_DIG_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', DigW
       goldenStart: '黃金岩壁！',
       oneIn: (n) => `${n} 分之 1`,
       oddsNote: '每件埋藏的寶物屬於這一類的機率（已計入本週礦脈）。',
-      fossilsDone: '礦坑的五種化石你都有了。',
+      fossilsDone: '礦坑的化石你全都有了。',
       fossilDue: '你的下一面岩壁必定有你還沒有的化石！',
+      lab: {
+        open: '化石研究所',
+        kicker: '伽勒爾化石',
+        title: '化石研究所',
+        note: '伽勒爾的化石會分成*兩半*挖出來：上半部和下半部。每一半都會在這裡等，直到另一半從岩壁挖出，兩半合起來就能復原一隻寶可夢。',
+        empty: '研究所裡沒有等待中的化石。',
+        waiting: (names) => `研究所裡有：${names}。`,
+        tops: '上半部',
+        bottoms: '下半部',
+        owned: '已擁有',
+        arctovish: 'Fish + Dino 會是 Arctovish，但它的圖像還不完整：目前 Fish 只能配 Drake，Dino 只能配 Bird。',
+      },
+      halfStored: (needs) => `存放在研究所。還缺：${needs}。`,
+      halfRestored: (other) => `和研究所裡等待的 ${other} 合起來了！`,
+      or: (a, b) => `${a} 或 ${b}`,
       fossilProgress: (dry, of, owned, total) => `化石保底：${dry} / ${of} 面岩壁。化石：${owned} / ${total}。`,
       powers: { bigHammer: '大鎚範圍更大', hold: '岩壁更耐敲', reveal: '顯示寶物的一格', deepPick: '十字鎬能切開硬岩' },
       partnerLine: (name, power) => `${name} 幫忙：${power}。`,

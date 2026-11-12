@@ -44,7 +44,7 @@ export const EGG_TIERS = {
   kecleon: { steps: 4000, refund: 2500, even: true },
   /** The loyalty card's 100-stamp gift (`LOYALTY`): a Kecleon Egg whose hatch is always shiny. */
   kecleonShiny: { steps: 4000, refund: 2500, even: true, families: 'kecleon', shiny: true },
-  /** The Fossil Egg: Old Amber dug up in the Underground, and only its five fossil families come out. */
+  /** The Fossil Egg: Old Amber dug up in the Underground, and only Aerodactyl, the amber's own fossil, comes out. */
   fossil: { steps: 3000, refund: 800, even: true },
   /**
    * The Ovo de Viagem, one tier per region: only the Vitrine's travel card
@@ -58,6 +58,8 @@ export const EGG_TIERS = {
   paldea: { steps: 3000, refund: 1500 },
   /** No egg at all: the families whose way in is their own (an encounter, research, the Realm). Never laid; it only names their source. */
   found: { steps: 2000, refund: 600 },
+  /** No egg either: the fossils the Escavação restores (`data/digTreasures.ts`), each its own family. Never laid; it only names their source. */
+  dig: { steps: 3000, refund: 800 },
 } as const satisfies Record<string, EggTierRule>
 
 export type EggTier = keyof typeof EGG_TIERS

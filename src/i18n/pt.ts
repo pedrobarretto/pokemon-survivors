@@ -8,6 +8,7 @@ import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { TERA_WORDS } from './tera'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
+import { GA_FOSSILS_WORDS } from './gaFossils'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { GA_MEGAS_WORDS } from './gaMegas'
@@ -2715,6 +2716,7 @@ export const pt = {
       altaria: 'golpes Normal e Fada +30%, golpes Dragão +20%, HP +30 e regenera 1 HP/s. O especial vira Hyper Voice.',
       banette: 'recargas −20%, +10% de chance de condição em todo golpe e golpes +15%. O especial vira Phantom Force, uma investida em cadeia que solta um anel de sombras a cada pouso.',
       ...GA_FAMILIES_A_WORDS.pt.megas,
+      ...GA_FOSSILS_WORDS.pt.megas,
       glalie: 'golpes Normal e Gelo +30% e golpes +25%. O especial vira Sheer Cold.',
       salamence: 'golpes Normal e Voador +30%, velocidade +12 e golpes +25%. O especial vira Double-Edge.',
       ...ROCKET_FAMILY_WORDS.pt.megas,
@@ -2948,7 +2950,7 @@ export const pt = {
   },
   /** Eggs: the incubator, the hatching scene and the egg box in the Pokémon select. */
   eggs: {
-    tiers: { common: 'Ovo comum', rare: 'Ovo raro', ultra: 'Ovo ultra raro', friend: 'Ovo da Amizade', haunted: 'Ovo Assombrado', kecleon: 'Ovo do Kecleon', kecleonShiny: 'Ovo do Kecleon brilhante', fossil: 'Ovo Fóssil', found: 'Encontro', ...REGIONAL_WORDS.pt.tiers } satisfies Record<EggTier, string>,
+    tiers: { common: 'Ovo comum', rare: 'Ovo raro', ultra: 'Ovo ultra raro', friend: 'Ovo da Amizade', haunted: 'Ovo Assombrado', kecleon: 'Ovo do Kecleon', kecleonShiny: 'Ovo do Kecleon brilhante', fossil: 'Ovo Fóssil', found: 'Encontro', dig: 'Fóssil da Escavação', ...REGIONAL_WORDS.pt.tiers } satisfies Record<EggTier, string>,
     found: (egg: string) => `Você achou um *${egg}*! Ele vai para a incubadora.`,
     /** Found mid-run with no room left in the incubator: it will be paid in ₽ when the run ends. */
     foundFull: (egg: string, coins: string) => `Você achou um *${egg}*! A incubadora está cheia, então ele vai virar *${coins}*.`,
@@ -3305,7 +3307,7 @@ export const pt = {
       sphere: 'Você desenterrou uma *Prism Sphere*! Vale ₽.',
       rareCandy: 'Você desenterrou um *Rare Candy*!',
       stone: 'Você desenterrou uma *pedra de evolução*!',
-      fossil: 'Você desenterrou *Old Amber*! Tinha um ovo dentro!',
+      fossil: 'Você desenterrou *Old Amber*! Tinha um ovo de *Aerodactyl* dentro!',
     } satisfies Record<DigFind, string>,
     hudGrotto: (n: number, time: string) => `Audino ${n} · ${time}`,
     hudDig: (n: number, time: string) => `Achados ${n} · parede ${time}`,
@@ -3555,6 +3557,7 @@ export const pt = {
     ...SEASON_ONE_KITS_WORDS.pt.moves,
     ...GA_FAMILIES_B_WORDS.pt.moves,
     ...GA_FAMILIES_A_WORDS.pt.moves,
+    ...GA_FOSSILS_WORDS.pt.moves,
     ...ROCKET_FAMILY_WORDS.pt.moves,
     ...GALLOP_WORDS.pt,
     ...ULTRA_WORDS.pt.moves,
@@ -6035,6 +6038,7 @@ export const pt = {
     ...SEASON_ONE_KITS_WORDS.pt.blurbs,
     ...GA_FAMILIES_B_WORDS.pt.blurbs,
     ...GA_FAMILIES_A_WORDS.pt.blurbs,
+    ...GA_FOSSILS_WORDS.pt.blurbs,
     ...ROCKET_FAMILY_WORDS.pt.blurbs,
     ...ULTRA_WORDS.pt.blurbs,
     ...LEGEND_PATHS_WORDS.pt.blurbs,

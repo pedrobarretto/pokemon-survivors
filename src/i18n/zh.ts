@@ -7,6 +7,7 @@ import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { TERA_WORDS } from './tera'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
+import { GA_FOSSILS_WORDS } from './gaFossils'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { GA_MEGAS_WORDS } from './gaMegas'
@@ -2383,6 +2384,7 @@ export const zh: Messages = {
       altaria: '一般與妖精屬性招式+30%、龍屬性招式+20%、HP+30、每秒回復1 HP。必殺技變為 Hyper Voice。',
       banette: '冷卻−20%、每個招式的異常狀態機率+10%、招式+15%。必殺技變為 Phantom Force，連鎖衝刺，每次落地都會爆發一圈暗影。',
       ...GA_FAMILIES_A_WORDS.zh.megas,
+      ...GA_FOSSILS_WORDS.zh.megas,
       glalie: '一般與冰屬性招式+30%、招式+25%。必殺技變為 Sheer Cold。',
       salamence: '一般與飛行屬性招式+30%、速度+12、招式+25%。必殺技變為 Double-Edge。',
       ...ROCKET_FAMILY_WORDS.zh.megas,
@@ -2608,7 +2610,7 @@ export const zh: Messages = {
     },
   },
   eggs: {
-    tiers: { common: '普通蛋', rare: '稀有蛋', ultra: '超稀有蛋', friend: '友情蛋', haunted: '鬧鬼蛋', kecleon: 'Kecleon蛋', kecleonShiny: '異色Kecleon蛋', fossil: '化石蛋', found: '邂逅', ...REGIONAL_WORDS.zh.tiers },
+    tiers: { common: '普通蛋', rare: '稀有蛋', ultra: '超稀有蛋', friend: '友情蛋', haunted: '鬧鬼蛋', kecleon: 'Kecleon蛋', kecleonShiny: '異色Kecleon蛋', fossil: '化石蛋', found: '邂逅', dig: '礦坑挖掘化石', ...REGIONAL_WORDS.zh.tiers },
     found: (egg) => `你找到了一顆*${egg}*！已放進孵化器。`,
     foundFull: (egg, coins) => `你找到了一顆*${egg}*！孵化器已滿，所以會變成*${coins}*。`,
     title: '孵化器',
@@ -2933,7 +2935,7 @@ export const zh: Messages = {
       sphere: '你挖到了 *Prism Sphere*！可以換成₽。',
       rareCandy: '你挖到了 *Rare Candy*！',
       stone: '你挖到了*進化石*！',
-      fossil: '你挖到了 *Old Amber*！裡面有一顆蛋！',
+      fossil: '你挖到了 *Old Amber*！裡面有一顆 *Aerodactyl* 的蛋！',
     },
     hudGrotto: (n, time) => `Audino ${n} · ${time}`,
     hudDig: (n, time) => `收穫 ${n} · 牆壁 ${time}`,
@@ -3179,6 +3181,7 @@ export const zh: Messages = {
     ...SEASON_ONE_KITS_WORDS.zh.moves,
     ...GA_FAMILIES_B_WORDS.zh.moves,
     ...GA_FAMILIES_A_WORDS.zh.moves,
+    ...GA_FOSSILS_WORDS.zh.moves,
     ...ROCKET_FAMILY_WORDS.zh.moves,
     ...GALLOP_WORDS.zh,
     ...ULTRA_WORDS.zh.moves,
@@ -5658,6 +5661,7 @@ export const zh: Messages = {
     ...SEASON_ONE_KITS_WORDS.zh.blurbs,
     ...GA_FAMILIES_B_WORDS.zh.blurbs,
     ...GA_FAMILIES_A_WORDS.zh.blurbs,
+    ...GA_FOSSILS_WORDS.zh.blurbs,
     ...ROCKET_FAMILY_WORDS.zh.blurbs,
     ...ULTRA_WORDS.zh.blurbs,
     ...LEGEND_PATHS_WORDS.zh.blurbs,

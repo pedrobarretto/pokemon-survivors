@@ -25,6 +25,8 @@ export type BonusWhen =
   /** At least `HEAVY_MASS` (Snorlax, Golem, the Alphas, every boss): Low Kick's weight. */
   | 'heavy'
   | 'elite' | 'boss'
+  /** All its HP still: a first strike (Bolt Beak, Fishious Rend). */
+  | 'unhurt'
 
 /** ×`mult` damage on hits against foes matching `when`. Several bonuses multiply. `stamp`: a branch's mod put it there (Hunter, Cruel; `stampMods`), so it's added once. */
 export type DamageBonus = { when: BonusWhen; mult: number; stamp?: 'hunter' | 'cruel' }
@@ -53,6 +55,7 @@ export const bonusApplies = (when: BonusWhen, e: Enemy): boolean => {
     case 'heavy': return e.mass >= HEAVY_MASS
     case 'elite': return e.elite
     case 'boss': return e.boss
+    case 'unhurt': return e.hp >= e.maxHp
   }
 }
 

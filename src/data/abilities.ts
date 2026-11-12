@@ -7,6 +7,7 @@ import type { PlayableId } from './hatchlings'
 import { SEASON_ONE_EGG_ABILITIES } from './seasonOneEggs'
 import { SEASON_ONE_KIT_ABILITIES } from './seasonOneKits'
 import { GA_FAMILIES_B_ABILITIES } from './gaFamiliesB'
+import { GA_FOSSILS_ABILITIES } from './gaFossils'
 import { GA_BRANCHES_A_ABILITIES, GA_FAMILIES_A_ABILITIES } from './gaFamiliesA'
 import { REGIONAL_BRANCH_ABILITIES, REGIONAL_FAMILY_ABILITIES } from './regionalFamilies'
 import { ROCKET_FAMILY_ABILITIES } from './rocketFamilies'
@@ -468,6 +469,7 @@ export const FAMILY_ABILITIES = {
   ...GA_FAMILIES_A_ABILITIES,
   ...REGIONAL_FAMILY_ABILITIES,
   ...ROCKET_FAMILY_ABILITIES,
+  ...GA_FOSSILS_ABILITIES,
 } as const satisfies Record<PlayableId, AbilitySet>
 
 /** The abilities of a branch picked at the family's first evolution (`data/branches.ts`). */

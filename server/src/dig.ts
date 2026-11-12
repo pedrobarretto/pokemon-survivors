@@ -1,6 +1,6 @@
 import { randomInt } from 'node:crypto'
 import type { TransactionSql } from 'postgres'
-import { DIG_BOX_REPEAT, DIG_FOSSIL_FAMILIES, DIG_FOSSIL_REPEAT, DIG_TREASURES, type DigPiece, type FossilFamily } from '../../src/data/digTreasures'
+import { DIG_BOX_REPEAT, DIG_FOSSIL_FAMILIES, DIG_FOSSIL_REPEAT, DIG_HALF_REPEAT, DIG_TREASURES, isGalarHalf, type DigPiece, type FossilFamily, type GalarHalf } from '../../src/data/digTreasures'
 import { MELTAN } from '../../src/data/legendPaths'
 import { PLAYABLE } from '../../src/data/hatchlings'
 import type { Deed } from '../../src/data/realmStamps'
@@ -13,7 +13,7 @@ import { isRecord } from '../../src/game/parse'
 import { isPlayable } from '../../src/game/ranking'
 import type { DigEnd, DigGift, DigHitAnswer, DigReward, DigState, DigWallView } from '../../src/net/realmApi'
 import { digDeeds } from '../../src/realm/gameDeeds'
-import { buildWall, DIG, digPowers, fossilStreak, hitWall, NO_POWERS, sortOut, startProgress, tileAt, treasureFree, wallPrice, type DigPowers, type DigTool, type DigWall } from '../../src/realm/games/dig.rules'
+import { buildWall, DIG, digPowers, fossilStreak, hitWall, labHalf, NO_POWERS, sortOut, startProgress, tileAt, treasureFree, wallPrice, type DigPowers, type DigTool, type DigWall } from '../../src/realm/games/dig.rules'
 import type { Sql } from './db'
 import { sendGift } from './gifts'
 import type { EarnDeeds } from './realmDeeds'
@@ -57,8 +57,8 @@ export const parseDigHit = (v: unknown): { id: string; seq: number; tool: DigToo
 /** `POST /realm/dig/stop`'s body. */
 export const parseDigStop = (v: unknown): { id: string } | null => (isRecord(v) && typeof v.id === 'string' && UUID.test(v.id) ? { id: v.id } : null)
 
-/** What's stored with a wall and never leaves the API. */
-type Built = { wall: DigWall; powers: DigPowers; lacking: FossilFamily[] }
+/** What's stored with a wall and never leaves the API: the lab's halves as it was built (absent on walls from before the halves). */
+type Built = { wall: DigWall; powers: DigPowers; lacking: FossilFamily[]; held?: GalarHalf[] }
 
 type WallRow = { id: string; week: Date | string; seed: number; built: Built; left_layers: number[]; crack: number; seq: number; result: DigEnd | null; ended_at: Date | null }
 
@@ -93,6 +93,9 @@ const usedOn = async (q: Q, userId: string, day: DayKey) => (await q<{ n: number
 const openWall = async (q: Q, userId: string) => (await q<WallRow[]>`select id, week, seed, built, left_layers, crack, seq, result, ended_at from dig_walls where user_id = ${userId} and ended_at is null`)[0] ?? null
 
 const dryOf = async (q: Q, userId: string) => (await q<{ dry: number }[]>`select dry from dig_progress where user_id = ${userId}`)[0]?.dry ?? 0
+
+/** The Galar halves waiting in the account's lab. */
+const heldOf = async (q: Q, userId: string): Promise<GalarHalf[]> => ((await q<{ halves: string[] }[]>`select halves from dig_progress where user_id = ${userId}`)[0]?.halves ?? []).filter(isGalarHalf)
 
 /** The fossil families this account has neither hatched nor been sent (a gift on its way counts). */
 const lackingOf = async (q: Q, userId: string, save: Save | null) => {
@@ -149,13 +152,15 @@ export const digStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => Pro
    * one transaction. Gifts carry a key per wall and treasure, so a retry can't
    * pay twice; a lacked fossil is a family (the rest pay ₽), Meltan's
    * Mystery Box is Meltan while the account lacks it, furniture goes straight
-   * in, and the dry streak moves (`fossilStreak`).
+   * in, a Galar half meets the lab (`labHalf`: a family with the half waiting
+   * there, a place in the lab, or ₽), and the dry streak moves (`fossilStreak`).
    */
   const finish = async (tx: TransactionSql, userId: string, row: WallRow, left: number[], outcome: DigEnd['outcome']): Promise<DigEnd> => {
     const { wall, lacking } = row.built
     const sorted = sortOut(wall, left)
     const [stored] = await tx<{ data: unknown }[]>`select data from saves where user_id = ${userId}`
     const still = new Set<FossilFamily>(await lackingOf(tx, userId, stored ? parseSaveData(stored.data) : null))
+    let held = await heldOf(tx, userId)
     const keys: string[] = []
     const kept: DigReward[] = []
     for (const [i, t] of sorted.kept.entries()) {
@@ -188,13 +193,27 @@ export const digStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => Pro
         kept.push({ id: t.id, prize, repeat: !fresh, coins: fresh ? 0 : DIG_FOSSIL_REPEAT })
         continue
       }
+      if (prize.kind === 'half') {
+        const lab = labHalf(prize.half, held, [...still])
+        held = lab.held
+        if (lab.kind === 'restored') {
+          still.delete(lab.family)
+          await send({ kind: 'family', family: lab.family })
+          kept.push({ id: t.id, prize, repeat: false, coins: 0, restored: lab.family })
+        } else if (lab.kind === 'stored') kept.push({ id: t.id, prize, repeat: false, coins: 0, stored: true })
+        else {
+          await send({ kind: 'coins', amount: DIG_HALF_REPEAT })
+          kept.push({ id: t.id, prize, repeat: true, coins: DIG_HALF_REPEAT })
+        }
+        continue
+      }
       await send(prize.kind === 'coins' ? { kind: 'coins', amount: prize.amount } : prize.kind === 'bag' ? { kind: 'bag', item: prize.item, count: 1 } : { kind: 'evoItem', item: prize.item })
       kept.push({ id: t.id, prize, repeat: false, coins: prize.kind === 'coins' ? prize.amount : 0 })
     }
     const gifts = keys.length === 0 ? [] : await tx<{ id: string; kind: string; payload: unknown; reason: unknown; created_at: Date }[]>`select id, kind, payload, reason, created_at from gifts where user_id = ${userId} and key = any(${keys}::text[])`
     const out: DigGift[] = gifts.map((g) => ({ id: g.id, content: g.payload as GiftContent, reason: g.reason as GiftReason | null, at: g.created_at.toISOString() }))
-    const dry = fossilStreak(await dryOf(tx, userId), wall, left, lacking)
-    await tx`insert into dig_progress (user_id, dry) values (${userId}, ${dry}) on conflict (user_id) do update set dry = ${dry}`
+    const dry = fossilStreak(await dryOf(tx, userId), wall, left, lacking, row.built.held)
+    await tx`insert into dig_progress (user_id, dry, halves) values (${userId}, ${dry}, ${held}) on conflict (user_id) do update set dry = ${dry}, halves = ${held}`
     const end: DigEnd = { outcome, kept, buried: sorted.buried, treasures: wall.treasures, gifts: out, dry }
     await tx`update dig_walls set ended_at = now(), outcome = ${outcome}, left_layers = ${tx.json(left)}, result = ${tx.json(end)} where id = ${row.id}::uuid`
     console.log(`dig: ${userId} ${outcome}, kept ${sorted.kept.length}/${wall.treasures.length}`)
@@ -213,7 +232,7 @@ export const digStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => Pro
       const [stored] = await sql<{ data: unknown }[]>`select data from saves where user_id = ${userId}`
       const lacking = await lackingOf(sql, userId, stored ? parseSaveData(stored.data) : null)
       const open = await openWall(sql, userId)
-      return { week: open ? dayOf(open.week) : weekStart(day), used: await usedOn(sql, userId, day), dry: await dryOf(sql, userId), lacking, open: open ? viewOf(open) : null }
+      return { week: open ? dayOf(open.week) : weekStart(day), used: await usedOn(sql, userId, day), dry: await dryOf(sql, userId), lacking, held: await heldOf(sql, userId), open: open ? viewOf(open) : null }
     },
 
     /**
@@ -251,8 +270,9 @@ export const digStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => Pro
         const dry = await dryOf(tx, userId)
         const powers = powersFor(saved, partner)
         const box = await boxDue(tx, userId, saved)
-        const wall = buildWall(seed, { week, powers, lacking, due: dry >= DIG.fossilGuarantee, box })
-        const built: Built = { wall, powers, lacking }
+        const held = await heldOf(tx, userId)
+        const wall = buildWall(seed, { week, powers, lacking, held, due: dry >= DIG.fossilGuarantee, box })
+        const built: Built = { wall, powers, lacking, held }
         const [inserted] = await tx<WallRow[]>`
           insert into dig_walls (user_id, day, week, seed, price, built, left_layers)
           values (${userId}, ${day}::date, ${week}::date, ${seed}, ${price}, ${tx.json(built)}, ${tx.json(startProgress(wall).left)})

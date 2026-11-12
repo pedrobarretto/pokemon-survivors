@@ -394,4 +394,14 @@ export const WEAR_FITS: Partial<Record<FitKey, SpeciesFit>> = {
   809: { rig: { E: { seat: [-2, -4] } } }, // Melmetal: turned, its little head's seat sat down on its face
   486: { rig: { E: { seat: [-2, -3] }, SE: { seat: [-1, -2] } } }, // Regigigas: turned, the brim came down onto its lights
   892: { rig: { 'SE:Idle': { seat: [0, -2] } } }, // Urshifu: idle, the brim came down to its eyes
+  // The fossil families (data/gaFossils.ts)
+  142: { no: ['bunnyEars:E'] }, // Aerodactyl: turned, its swept-back crest pokes through the ears' gap
+  '142:mega': { no: ['head'] }, // Mega Aerodactyl: its jagged rock crest and jaw fill where a hat sits, and the brim lands on its face
+  138: { no: ['strawHat:S', 'cap:S', 'cowboyHat:S', 'santaHat:S', 'vikingHelmet:S'] }, // Omanyte: facing us it's all shell over two eyes, and a wide brim comes down onto them
+  345: { no: ['head'] }, // Lileep: its head is a ring of tentacles round a mouth, with no eyes the rig can find, and a hat covers the ring
+  346: { no: ['head:S', 'head:SE'] }, // Cradily: facing us its tentacle crown is where a hat would sit, and the hat sinks into it
+  347: { no: ['head'] }, // Anorith: its eyes ride on stalks at the head's sides, never found, and a hat lands between them on its face
+  348: { no: ['bunnyEars'] }, // Armaldo: the ears stand right in its two-pronged head crest
+  880: { no: ['head'] }, // Dracozolt: a small bird's head on a big body, its crest of feathers where a hat sits, and the brim reaches its beak
+  881: { no: ['head'] }, // Arctozolt: its head peeks out of its icy top half, turned its eye isn't found, and a hat sits on the ice over its face
 }

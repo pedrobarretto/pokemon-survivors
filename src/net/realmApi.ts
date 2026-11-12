@@ -6,7 +6,7 @@ import type { GameOutcome, MinigameId } from '../data/minigames'
 import type { HatchlingId, PlayableId } from '../data/hatchlings'
 import type { PlushFamily } from '../data/plushes'
 import type { SafariHabitat } from '../data/safari'
-import type { DigPrize, DigTreasureId } from '../data/digTreasures'
+import type { DigPrize, DigTreasureId, FossilFamily, GalarHalf } from '../data/digTreasures'
 import type { Gift, GiftContent, GiftReason } from '../game/gifts'
 import type { SafariCatch, SafariDaypart, SafariMode, SafariMood, SafariTurn } from '../realm/games/safari.rules'
 import type { DigCell, DigHint, DigPattern, DigPowers, DigTreasure } from '../realm/games/dig.rules'
@@ -267,13 +267,17 @@ export type DigWallView = {
   freed: number[]
 }
 
-/** The mine for this account: the week it's on, walls used today, the dry streak toward a guaranteed fossil, the fossils it lacks and the wall left open. */
-export type DigState = { week: string; used: number; dry: number; lacking: string[]; open: DigWallView | null }
+/** The mine for this account: the week it's on, walls used today, the dry streak toward a guaranteed fossil, the fossils it lacks, the Galar halves waiting in its lab and the wall left open. */
+export type DigState = { week: string; used: number; dry: number; lacking: string[]; held: GalarHalf[]; open: DigWallView | null }
 
 export type DigStarted = { wall: DigWallView; used: number }
 
-/** A prize dug out: its treasure, what it pays, whether a fossil was a repeat and the ₽ it paid in coins. */
-export type DigReward = { id: DigTreasureId; prize: DigPrize; repeat: boolean; coins: number }
+/**
+ * A prize dug out: its treasure, what it pays, whether a fossil was a repeat
+ * and the ₽ it paid in coins. A Galar half either `restored` a family with the
+ * half that waited in the lab, or was `stored` there (or is a repeat).
+ */
+export type DigReward = { id: DigTreasureId; prize: DigPrize; repeat: boolean; coins: number; restored?: FossilFamily; stored?: boolean }
 
 /** A prize's gift as the API sends it (`parseGift` reads it). */
 export type DigGift = { id: string; content: GiftContent; reason: GiftReason | null; at: string }

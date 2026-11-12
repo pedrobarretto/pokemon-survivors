@@ -1,3 +1,4 @@
+import { DIG_HALVES, DIG_TREASURE_IDS, DIG_TREASURES, GALAR_PAIRS, type DigPrize } from '../data/digTreasures'
 import { HATCHLINGS, PLAYABLE, type HatchlingId } from '../data/hatchlings'
 import { RESEARCH, RESEARCH_IDS, type ResearchId } from '../data/seasonOneUnlocks'
 import { COSMOG, COSMOG_DEX } from '../data/legendPaths'
@@ -12,10 +13,23 @@ import { loadSave } from './save'
  * the partner select's locked card shows for Temporada 1's families.
  */
 
+/** The fossil that restores a family at the Escavação: its whole fossil, or its two Galar halves. */
+const fossilName = (id: HatchlingId) => {
+  const pair = GALAR_PAIRS.find((p) => p.family === id)
+  if (pair) return `${DIG_TREASURES[DIG_HALVES[pair.top]].name} + ${DIG_TREASURES[DIG_HALVES[pair.bottom]].name}`
+  const whole = DIG_TREASURE_IDS.find((t) => {
+    const prize: DigPrize = DIG_TREASURES[t].prize
+    return prize.kind === 'fossil' && prize.family === id
+  })
+  return whole ? DIG_TREASURES[whole].name : ''
+}
+
 /** Where a locked family is found, for the families with a way of their own; null for the rest, whose egg's line says it. */
 export const lockedWhere = (id: HatchlingId): string | null => {
   const words = t().seasonUnlocks
-  if (HATCHLINGS[id].egg === 'fossil') return words.fossilBlurb
+  const egg = HATCHLINGS[id].egg
+  if (egg === 'dig') return words.fossilBlurb(fossilName(id))
+  if (egg === 'fossil') return words.amberBlurb
   const where: Partial<Record<HatchlingId, string>> = words.where
   return where[id] ?? null
 }

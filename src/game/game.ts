@@ -26,6 +26,8 @@ import { createSeasonKit } from './seasonOneKitRules'
 import { updateSeasonKit } from './seasonOneKitSystem'
 import { createKitB } from './gaKitBRules'
 import { updateKitB } from './gaKitBSystem'
+import { createKitF } from './fossilKitRules'
+import { updateKitF } from './fossilKitSystem'
 import { createGaKitA } from './gaKitARules'
 import { updateGaKitA } from './gaKitASystem'
 import { createRocketKit } from './rocketKitRules'
@@ -127,7 +129,8 @@ const kitField = (starter: PlayableId) => {
   const kitB = createKitB(starter)
   const kitA = createGaKitA(starter)
   const rocket = createRocketKit(starter)
-  return { ...(kit && { kit }), ...(kitB && { kitB }), ...(kitA && { kitA }), ...(rocket && { rocket }) }
+  const kitF = createKitF(starter)
+  return { ...(kit && { kit }), ...(kitB && { kitB }), ...(kitA && { kitA }), ...(rocket && { rocket }), ...(kitF && { kitF }) }
 }
 
 /** What the save brings into a run besides the Poké Mart ranks. */
@@ -937,6 +940,7 @@ export const stepMoves = (g: Game, input: StepInput, dt: number) => {
   updateSeasonKit(g, dt)
   updateKitB(g, dt)
   updateGaKitA(g, dt)
+  updateKitF(g, dt)
   updateRocketKit(g, dt)
   updateSignatures(g, dt)
   updateShopTms(g, dt)

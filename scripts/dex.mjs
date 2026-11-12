@@ -31,6 +31,11 @@ export const GA_FAMILIES_A = [
   782, 783, 784, 610, 611, 612, 131, 215, 461, 214, 302, 442, 453, 454, 854, 855, 859, 860, 861,
   921, 922, 923, 821, 822, 823, 239, 125, 466, 240, 126, 467, 290, 291, 292,
 ]
+/**
+ * The Grande Atualização's fossil families (src/data/gaFossils.ts), whole lines: Aerodactyl, Omanyte, Lileep and
+ * Anorith's, and Galar's Dracozolt, Arctozolt and Dracovish (Kabuto's line was a hatchling already).
+ */
+export const GA_FOSSILS = [142, 138, 139, 345, 346, 347, 348, 880, 881, 882]
 /** Of those, the Flying forms that take to the sky: Rookidee's line and Ninjask. */
 const GA_FLYERS_A = [821, 822, 823, 291]
 /**
@@ -71,6 +76,7 @@ export const HATCHLINGS = [
   ...GA_FAMILIES_B,
   ...GA_FAMILIES_A,
   ...REGIONAL_LINES,
+  ...GA_FOSSILS,
 ]
 export const HORDE = Object.values(roster).map((s) => s.dex)
 /** Horde species with a behavior trait (`src/data/enemies.ts`), plus Nidoqueen's summons. */
@@ -147,6 +153,7 @@ export const FLYERS = new Set([
   16, 17, 18, 21, 22, 227, 276, 277, 333, 334, 396, 397, 398, // the sky's flock
   6, 41, 42, 123, 130, 149, 169, 176, 373, 468, 714, 715, 722, 723, 566, 567, 661, 662, 663, // player forms
   ...GA_FLYERS_A,
+  142, // Aerodactyl (src/data/gaFossils.ts)
 ])
 /** Species that can roll shiny: the player lines, regular enemies, rift legendaries, places' bosses, the hidden zones' Audino and the companions (Pumpkaboo for Gold supporters). */
 /** Legendaries that can also roll shiny as wave bosses (the trios, Mewtwo, the mythicals) and Arceus, for the Legend mode's captures. */
@@ -193,6 +200,7 @@ export const FORMS = {
   208: { mega: '0001' }, // Mega Steelix (src/data/gaFamiliesB.ts)
   604: { mega: '0001' }, // Mega Eelektross
   302: { mega: '0001' }, // Mega Sableye (src/data/gaFamiliesA.ts)
+  142: { mega: '0001' }, // Mega Aerodactyl (src/data/gaFossils.ts)
   // Legend mode's forms: Primal Reversion, Mega Rayquaza, the Latis', Mewtwo Y's and Darkrai's Megas, Deoxys' formes.
   150: { megaY: '0002', shadow: '0003' }, // Shadow Mewtwo: the Rocket Hideout's boss and its Legend-mode variant (src/data/shadow.ts)
   // Team Rocket's prize families' Megas (src/data/megas.ts)
@@ -323,6 +331,7 @@ export const FORM_CRIES = {
   768: { mega: 'golisopod-mega' },
   998: { mega: 'baxcalibur-mega' },
   978: { mega: 'tatsugiri-curly-mega' },
+  142: { mega: 'aerodactyl-mega' },
 }
 
 /**

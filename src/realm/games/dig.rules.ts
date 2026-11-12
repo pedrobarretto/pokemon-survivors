@@ -1,4 +1,4 @@
-import { DIG_FOSSILS, DIG_TREASURE_IDS, DIG_TREASURES, type DigGroup, type DigPrize, type DigTreasureId, type FossilFamily } from '../../data/digTreasures'
+import { DIG_FOSSILS, DIG_HALVES, DIG_TREASURE_IDS, DIG_TREASURES, GALAR_PAIRS, type DigGroup, type DigPrize, type DigTreasureId, type FossilFamily, type GalarHalf } from '../../data/digTreasures'
 import SHAPES from '../../data/digShapes.generated.json'
 
 /**
@@ -95,8 +95,9 @@ export const DIG_VEIN_IDS = Object.keys(DIG_VEINS) as DigVein[]
 
 /** A treasure group's base chance per treasure, and a golden wall's (richer: fewer pebbles, far more that's rare). */
 const GROUP_WEIGHTS: Record<'plain' | 'golden', Record<DigGroup, number>> = {
-  plain: { coins: 83, bag: 10.4, stone: 0.6, furniture: 2.8, fossil: 3.2, legend: 0 },
-  golden: { coins: 42, bag: 26, stone: 10, furniture: 10, fossil: 12, legend: 0 },
+  // Fossils grew from 5 to 14 treasures (13 families): a little more of the group, so each still turns up, and the guarantee does the rest.
+  plain: { coins: 82.2, bag: 10.4, stone: 0.6, furniture: 2.8, fossil: 4, legend: 0 },
+  golden: { coins: 40, bag: 26, stone: 10, furniture: 10, fossil: 14, legend: 0 },
 }
 
 /** A golden wall skews its nuggets rare. */
@@ -197,19 +198,60 @@ export type DigWall = {
   guaranteed: boolean
 }
 
-/** Who a wall is built for: the week, the partner's powers, the fossils the account lacks, whether its dry streak is due, whether it holds Meltan's Mystery Box (`box`), and what dev forces. */
+/** Who a wall is built for: the week, the partner's powers, the fossils the account lacks and the Galar halves its lab holds, whether its dry streak is due, whether it holds Meltan's Mystery Box (`box`), and what dev forces. */
 export type DigWallCtx = {
   week: string
   powers: DigPowers
   lacking: readonly FossilFamily[]
+  held?: readonly GalarHalf[]
   due: boolean
   box?: boolean
   force?: { golden?: boolean; fossil?: FossilFamily } | undefined
 }
 
-const fossilFamily = (id: DigTreasureId): FossilFamily | null => {
+/**
+ * The treasure that brings `family` closer: its whole fossil, or for a Galar
+ * family the half its lab lacks (the bottom when the top waits there, else
+ * the top).
+ */
+export const fossilFor = (family: FossilFamily, held: readonly GalarHalf[] = []): DigTreasureId => {
+  const pair = GALAR_PAIRS.find((p) => p.family === family)
+  if (pair) return DIG_HALVES[held.includes(pair.top) ? pair.bottom : pair.top]
+  const whole = DIG_FOSSILS.find((id) => {
+    const prize: DigPrize = DIG_TREASURES[id].prize
+    return prize.kind === 'fossil' && prize.family === family
+  })
+  if (!whole) throw new Error(`no fossil restores ${family}`)
+  return whole
+}
+
+/** The lacked families a half could still help restore: a pair it's in, not owned yet. */
+const halfNeeded = (half: GalarHalf, lacking: readonly FossilFamily[]) => GALAR_PAIRS.some((p) => (p.top === half || p.bottom === half) && lacking.includes(p.family))
+
+/**
+ * A Galar half dug out, against the lab: it restores the first lacked family
+ * whose other half waits there (that half is used up), else it waits in the
+ * lab while a lacked family needs it and the lab hasn't one already, else it
+ * pays as a repeat. `held` is the lab after.
+ */
+export const labHalf = (half: GalarHalf, held: readonly GalarHalf[], lacking: readonly FossilFamily[]):
+  | { kind: 'restored'; family: FossilFamily; with: GalarHalf; held: GalarHalf[] }
+  | { kind: 'stored'; held: GalarHalf[] }
+  | { kind: 'repeat'; held: GalarHalf[] } => {
+  for (const p of GALAR_PAIRS) {
+    const other = p.top === half ? p.bottom : p.bottom === half ? p.top : null
+    if (other === null || !lacking.includes(p.family) || !held.includes(other)) continue
+    return { kind: 'restored', family: p.family, with: other, held: held.filter((h) => h !== other) }
+  }
+  if (halfNeeded(half, lacking) && !held.includes(half)) return { kind: 'stored', held: [...held, half] }
+  return { kind: 'repeat', held: [...held] }
+}
+
+/** Whether a treasure brings a lacked family closer: a whole fossil of one, or a half one still needs that the lab hasn't got. */
+const fossilUseful = (id: DigTreasureId, lacking: readonly FossilFamily[], held: readonly GalarHalf[]) => {
   const prize: DigPrize = DIG_TREASURES[id].prize
-  return prize.kind === 'fossil' ? prize.family : null
+  if (prize.kind === 'fossil') return lacking.includes(prize.family)
+  return prize.kind === 'half' && halfNeeded(prize.half, lacking) && !held.includes(prize.half)
 }
 
 /** A rock pattern's layer count for each cell (1 soft dirt to 3 hard rock), its own seeded look. */
@@ -325,8 +367,9 @@ const place = (ids: readonly DigTreasureId[], arrangement: Arrangement, next: ()
 
 /**
  * The wall of seed `seed` for `ctx`. Golden is rolled on the wall's seed
- * alone. The guarantee puts a fossil the account lacks in; other fossils are
- * rolled from the five, so a repeat can come. `box` puts Meltan's Mystery Box in too. Treasures are placed biggest
+ * alone. The guarantee puts a fossil the account lacks in (for a Galar
+ * family, the half its lab lacks, `fossilFor`); other fossils are rolled
+ * from them all, so a repeat can come. `box` puts Meltan's Mystery Box in too. Treasures are placed biggest
  * first so what's rare always fits.
  */
 export const buildWall = (seed: number, ctx: DigWallCtx): DigWall => {
@@ -337,7 +380,7 @@ export const buildWall = (seed: number, ctx: DigWallCtx): DigWall => {
   const slots = golden ? DIG.slots.golden : DIG.slots.plain
   const count = slots.min + Math.floor(next() * (slots.extra + 1))
   const forcedFamily = ctx.force?.fossil ?? (ctx.due && ctx.lacking.length > 0 ? ctx.lacking[Math.floor(next() * ctx.lacking.length)] : undefined)
-  const forced = forcedFamily === undefined ? [] : DIG_FOSSILS.filter((id) => fossilFamily(id) === forcedFamily)
+  const forced = forcedFamily === undefined ? [] : [fossilFor(forcedFamily, ctx.held)]
   const boxed: DigTreasureId[] = ctx.box ? ['mysteryBox'] : []
   const rolled = Array.from({ length: Math.max(0, count - forced.length - boxed.length) }, () => roll(pool, next))
   const ids = [...forced, ...boxed, ...rolled].sort((a, b) => shapeCells(b).length - shapeCells(a).length)
@@ -438,17 +481,12 @@ export const sortOut = (wall: DigWall, left: readonly number[]) => ({
   buried: wall.treasures.filter((_, i) => !treasureFree(wall, left, i)),
 })
 
-/** Whether a wall's end leaves the dry streak grown (nothing a lacked fossil in it), reset (a lacked fossil dug out), or as it was (one held, and buried). */
-export const fossilStreak = (dry: number, wall: DigWall, left: readonly number[], lacking: readonly FossilFamily[]) => {
+/** Whether a wall's end leaves the dry streak grown (nothing in it a lacked family needed), reset (one dug out), or as it was (one held, and buried). `lacking` and `held` as the wall was built. */
+export const fossilStreak = (dry: number, wall: DigWall, left: readonly number[], lacking: readonly FossilFamily[], held: readonly GalarHalf[] = []) => {
   if (lacking.length === 0) return dry
-  const heldFossils = wall.treasures.filter((t) => DIG_TREASURES[t.id].group === 'fossil' && DIG_FOSSIL_LACKED(t.id, lacking))
-  if (heldFossils.length === 0) return dry + 1
-  return heldFossils.some((t) => treasureCells(t).every((i) => (left[i] ?? 0) === 0)) ? 0 : dry
-}
-
-const DIG_FOSSIL_LACKED = (id: DigTreasureId, lacking: readonly FossilFamily[]) => {
-  const family = fossilFamily(id)
-  return family !== null && lacking.includes(family)
+  const useful = wall.treasures.filter((t) => fossilUseful(t.id, lacking, held))
+  if (useful.length === 0) return dry + 1
+  return useful.some((t) => treasureCells(t).every((i) => (left[i] ?? 0) === 0)) ? 0 : dry
 }
 
 /** The price of the next wall after `used` today: free, ₽, or null past the day's cap. */
