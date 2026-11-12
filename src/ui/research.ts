@@ -16,7 +16,7 @@ import { loadSave } from './save'
 export const lockedWhere = (id: HatchlingId): string | null => {
   const words = t().seasonUnlocks
   if (HATCHLINGS[id].egg === 'fossil') return words.fossilBlurb
-  const where: Partial<Record<HatchlingId, string>> = words.where
+  const where: Partial<Record<HatchlingId, string>> = { ...words.where, ...t().megaFamiliesWhere }
   return where[id] ?? null
 }
 

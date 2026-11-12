@@ -13,7 +13,7 @@ describe('who the Safari holds', () => {
     for (const habitat of SAFARI_HABITAT_IDS) {
       const pool = habitatPool(habitat, WEEK)
       expect(pool.length).toBeGreaterThan(8)
-      expect(pool.filter((e) => e.rarity === 'special')).toHaveLength(1)
+      expect(pool.filter((e) => e.rarity === 'special').length).toBeGreaterThanOrEqual(1)
     }
   })
 
@@ -57,7 +57,7 @@ describe('day and night', () => {
       for (const f of night) expect(whenAbout(f)).not.toBe('day')
       const dusk = new Set(poolAt(habitat, 'dusk', WEEK).map((e) => e.family))
       for (const f of [...day, ...night]) expect(dusk).toContain(f)
-      expect(poolAt(habitat, 'night', WEEK).filter((e) => e.rarity === 'special')).toHaveLength(1)
+      expect(poolAt(habitat, 'night', WEEK).filter((e) => e.rarity === 'special').length).toBeGreaterThanOrEqual(1)
     }
   })
 

@@ -9,6 +9,7 @@ import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
+import { GA_MEGA_FAMILIES_A_WORDS } from './gaMegaFamiliesA'
 import { ROCKET_WORDS } from './rocket/words'
 import { ULTRA_WORDS } from './ultra'
 import { LEGEND_PATHS_WORDS } from './legendPaths'
@@ -2389,6 +2390,7 @@ export const es: Messages = {
       glalie: 'movimientos de Normal y Hielo +30% y movimientos +25%. El especial pasa a ser Sheer Cold.',
       salamence: 'movimientos de Normal y Volador +30%, velocidad +12 y movimientos +25%. El especial pasa a ser Double-Edge.',
       ...ROCKET_FAMILY_WORDS.es.megas,
+      ...GA_MEGA_FAMILIES_A_WORDS.es.megas,
     },
   },
 
@@ -3183,6 +3185,7 @@ export const es: Messages = {
     ...GA_FAMILIES_B_WORDS.es.moves,
     ...GA_FAMILIES_A_WORDS.es.moves,
     ...ROCKET_FAMILY_WORDS.es.moves,
+    ...GA_MEGA_FAMILIES_A_WORDS.es.moves,
     ...GALLOP_WORDS.es,
     ...ULTRA_WORDS.es.moves,
     ...LEGEND_PATHS_WORDS.es.moves,
@@ -5663,6 +5666,7 @@ export const es: Messages = {
     ...GA_FAMILIES_B_WORDS.es.blurbs,
     ...GA_FAMILIES_A_WORDS.es.blurbs,
     ...ROCKET_FAMILY_WORDS.es.blurbs,
+    ...GA_MEGA_FAMILIES_A_WORDS.es.blurbs,
     ...ULTRA_WORDS.es.blurbs,
     ...LEGEND_PATHS_WORDS.es.blurbs,
     ...QUEST_WORDS.es.blurbs,
@@ -6506,6 +6510,7 @@ export const es: Messages = {
     },
   },
   seasonUnlocks: SEASON_ONE_UNLOCKS_WORDS.es,
+  megaFamiliesWhere: GA_MEGA_FAMILIES_A_WORDS.es.where,
   rocket: ROCKET_WORDS.es,
   paths: LEGEND_PATHS_WORDS.es.paths,
   minigames: {

@@ -31,6 +31,11 @@ export const GA_FAMILIES_A = [
   782, 783, 784, 610, 611, 612, 131, 215, 461, 214, 302, 442, 453, 454, 854, 855, 859, 860, 861,
   921, 922, 923, 821, 822, 823, 239, 125, 466, 240, 126, 467, 290, 291, 292,
 ]
+/**
+ * The Grande Atualização's Mega families (src/data/gaMegaFamiliesA.ts), whole lines, all Safari-only: Kangaskhan,
+ * Pinsir, Skarmory, Drilbur (and Excadrill) and Drampa.
+ */
+export const GA_MEGA_FAMILIES_A = [115, 127, 227, 529, 530, 780]
 /** Of those, the Flying forms that take to the sky: Rookidee's line and Ninjask. */
 const GA_FLYERS_A = [821, 822, 823, 291]
 /**
@@ -71,6 +76,7 @@ export const HATCHLINGS = [
   ...GA_FAMILIES_B,
   ...GA_FAMILIES_A,
   ...REGIONAL_LINES,
+  ...GA_MEGA_FAMILIES_A,
 ]
 export const HORDE = Object.values(roster).map((s) => s.dex)
 /** Horde species with a behavior trait (`src/data/enemies.ts`), plus Nidoqueen's summons. */
@@ -212,6 +218,11 @@ export const FORMS = {
   892: { rapid: '0001' },
   484: { origin: '0001' }, // Palkia's Origin Forme (its rift's last phase, its second awakening)
   720: { unbound: '0001' }, // Hoopa Unbound (its second awakening, the ring rush's last ring)
+  // The Mega families' Megas (src/data/gaMegaFamiliesA.ts); Mega Pinsir has no sheets yet (rainbow outline).
+  115: { mega: '0001' },
+  227: { mega: '0001' },
+  530: { mega: '0001' },
+  780: { mega: '0001' },
 }
 
 /**
@@ -311,6 +322,11 @@ export const FORM_CRIES = {
   604: { mega: 'eelektross-mega' },
   655: { mega: 'delphox-mega' },
   658: { mega: 'greninja-mega' },
+  115: { mega: 'kangaskhan-mega' },
+  127: { mega: 'pinsir-mega' },
+  227: { mega: 'skarmory-mega' },
+  530: { mega: 'excadrill-mega' },
+  780: { mega: 'drampa-mega' },
 }
 
 /**

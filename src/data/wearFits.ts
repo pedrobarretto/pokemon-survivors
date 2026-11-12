@@ -393,4 +393,12 @@ export const WEAR_FITS: Partial<Record<FitKey, SpeciesFit>> = {
   809: { rig: { E: { seat: [-2, -4] } } }, // Melmetal: turned, its little head's seat sat down on its face
   486: { rig: { E: { seat: [-2, -3] }, SE: { seat: [-1, -2] } } }, // Regigigas: turned, the brim came down onto its lights
   892: { rig: { 'SE:Idle': { seat: [0, -2] } } }, // Urshifu: idle, the brim came down to its eyes
+  // The Mega families (src/data/gaMegaFamiliesA.ts)
+  115: { rig: { E: { seat: [-2, -3] }, 'S:Idle': { seat: [0, -3] } } }, // Kangaskhan: turned, the brim came down onto its eye; idle facing south, its fists rise round its head and clipped the hat
+  '115:mega': { rig: { E: { seat: [-2, -3] }, 'S:Idle': { seat: [0, -3] } } }, // Mega Kangaskhan: the same as Kangaskhan's
+  227: { no: ['head'] }, // Skarmory: a slim beak of a head, the eye at its crown: every hat sat on the eye
+  '227:mega': { no: ['head'] }, // Mega Skarmory: the same slim head under its crest
+  529: { no: ['head'] }, // Drilbur: its eyes sit right under the steel band a hat would cover
+  '530:mega': { no: ['head'] }, // Mega Excadrill: all drill, its tip where a hat would go
+  '780:mega': { no: ['cap', 'vikingHelmet'] }, // Mega Drampa: facing south the mane's spikes cut a cap's brim and the helmet's horns
 }
