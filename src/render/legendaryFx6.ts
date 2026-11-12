@@ -1,7 +1,7 @@
 import { blitEllipse, blitRing, context2d, createCanvas, type PixelSprite } from '../engine/pixelart'
 import { TAU } from '../engine/math'
 import { hash2 } from '../engine/rng'
-import { DRAGON_ENERGY, type LegendaryMove4Id } from '../game/legendaryMoves4'
+import { DRAGON_ENERGY, type LegendaryMove6Id } from '../game/legendaryMoves6'
 import type { Attack, Game } from '../game/types'
 import { medallion } from './legendaryArt'
 import { fadeOut, px, thickLine } from './legendaryFx'
@@ -9,7 +9,7 @@ import { fadeOut, px, thickLine } from './legendaryFx'
 type Ctx = CanvasRenderingContext2D
 
 /**
- * The fourth batch of legendary moves on screen (`game/legendaryMoves4.ts`)
+ * The sixth batch of legendary moves on screen (`game/legendaryMoves6.ts`)
  * and their icons: Regieleki's cage of lightning and the sparks it leaves,
  * Regidrago's beam out of its dragon jaws, Tornadus's icy gusts, Thundurus's
  * storm cloud and its bolts, Landorus's spiral of searing sand and Enamorus's
@@ -34,7 +34,7 @@ const YELLOW = '#f8e048'
 const PALE = '#fff8b8'
 const DEEP = '#a87818'
 
-export const LEGENDARY_ICONS_4: Record<LegendaryMove4Id, () => PixelSprite> = {
+export const LEGENDARY_ICONS_6: Record<LegendaryMove6Id, () => PixelSprite> = {
   // Four bars of lightning under a crackling top: a cage.
   thunderCage: () =>
     medallion(paint(11, 11, (dot) => {
@@ -398,7 +398,7 @@ const drawSpringPetal = (ctx: Ctx, a: Attack, t: number) => {
 }
 
 /** Ground layer: the cage's floor ring and Electro Drift's sparks. */
-export const drawLegendary4Ground = (ctx: Ctx, g: Game, t: number) => {
+export const drawLegendary6Ground = (ctx: Ctx, g: Game, t: number) => {
   for (const a of g.attacks) {
     if (a.age < 0) continue
     if (a.visual === 'cageBars') drawCageFloor(ctx, a, t)
@@ -407,7 +407,7 @@ export const drawLegendary4Ground = (ctx: Ctx, g: Game, t: number) => {
 }
 
 /** Air layer (over the Pokémon). Beams span the screen: they draw even when their start is off it. */
-export const drawLegendary4Air = (ctx: Ctx, g: Game, t: number, visible: (x: number, y: number, m?: number) => boolean) => {
+export const drawLegendary6Air = (ctx: Ctx, g: Game, t: number, visible: (x: number, y: number, m?: number) => boolean) => {
   for (const a of g.attacks) {
     if (a.age < 0) continue
     if (a.visual === 'dragonBeam') {

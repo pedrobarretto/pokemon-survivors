@@ -9,7 +9,7 @@ import { shakeScreen } from './effects'
 import * as dm from '../engine/dmath'
 
 /**
- * Legendary moves, fourth batch: the capstones of the Ruínas da Decisão's
+ * Legendary moves, sixth batch: the capstones of the Ruínas da Decisão's
  * Regis and the Forces of Nature (`RUINS_LEGENDS`, `FORCE_LEGENDS` in
  * `data/legends.ts`). Same tier and rules as the others
  * (`legendaryMoves.ts`): Lv1–5 with a fork at Lv4, `legendary: true`, never
@@ -17,13 +17,13 @@ import * as dm from '../engine/dmath'
  * speed, Dragon Energy with Regidrago's HP, Bleakwind Storm lends Tornadus a
  * tailwind, Thundurus's Nasty Plot doubles its bolts in the rain, Sandsear Storm
  * spirals out burning, Springtide Storm stacks Enamorus's Contrary might.
- * Their art is `render/legendaryFx4.ts`.
+ * Their art is `render/legendaryFx6.ts`.
  *
  * This module must not import `moves.ts` at runtime (it is evaluated first).
  */
 
-/** The visuals of this batch, drawn by `render/legendaryFx4.ts`. */
-export type LegendaryVisual4 = 'cageBars' | 'cageSpark' | 'dragonMaw' | 'dragonBeam' | 'bleakGust' | 'plotCloud' | 'plotBolt' | 'searSand' | 'springPetal'
+/** The visuals of this batch, drawn by `render/legendaryFx6.ts`. */
+export type LegendaryVisual6 = 'cageBars' | 'cageSpark' | 'dragonMaw' | 'dragonBeam' | 'bleakGust' | 'plotCloud' | 'plotBolt' | 'searSand' | 'springPetal'
 
 /**
  * Thunder Cage: the cage's radius (× area), its bars, the zap's beat, the pull
@@ -48,7 +48,7 @@ export const SANDSEAR = { shots: 6, more: 9, beat: 0.07, turn: 0.42, r: 7, ttl: 
 /** Springtide Storm: the whirl's radius (× area) and spin, how often a petal hits; Contrary's might per stack and its cap (the fork's B raises it). */
 export const SPRING = { ring: 44, spin: 3.2, hit: 0.4, might: 0.03, max: 5, maxB: 8 } as const
 
-export const LEGENDARY_MOVES_4 = {
+export const LEGENDARY_MOVES_6 = {
   /* Regieleki */
   thunderCage: {
     name: 'Thunder Cage',
@@ -286,4 +286,4 @@ export const LEGENDARY_MOVES_4 = {
   },
 } as const satisfies Record<string, MoveDef>
 
-export type LegendaryMove4Id = keyof typeof LEGENDARY_MOVES_4
+export type LegendaryMove6Id = keyof typeof LEGENDARY_MOVES_6
