@@ -32590,8 +32590,11 @@ span.arena-hub-face {
 
 .ruins-tile {
   --ruin: #c8a018;
-  --ruin-ink: #7a5a00;
-  --ruin-bg: #fff6c8;
+  --ruin-ink: #5c4300;
+  /* The name's color in the dark theme, bright on the deep wash. */
+  --ruin-lit: #f8d848;
+  /* The theme's washes: a light tint by day, a deep one in the dark. */
+  --ruin-bg: var(--dk-wash-gold, #fff6c8);
   flex: 1;
   min-width: 0;
   display: flex;
@@ -32600,14 +32603,15 @@ span.arena-hub-face {
   padding: 4px 6px;
   border: 3px solid var(--ruin);
   border-radius: 8px;
-  background: color-mix(in srgb, var(--ruin-bg) var(--dk-lift, 100%), #1c1c28);
+  background: var(--ruin-bg);
   transition: opacity 0.3s steps(3);
 }
 
 .ruins-tile[data-regi='regidrago'] {
   --ruin: #3a8a3c;
   --ruin-ink: #23602a;
-  --ruin-bg: #dcf8d0;
+  --ruin-lit: #98e890;
+  --ruin-bg: var(--dk-wash-green, #dcf8d0);
 }
 
 .ruins-tile img {
@@ -32639,7 +32643,11 @@ span.arena-hub-face {
 
 .ruins-words b {
   font-size: 14px;
-  color: color-mix(in srgb, var(--ruin-ink) var(--dk-lift, 100%), #fff);
+  color: var(--ruin-ink);
+}
+
+:root[data-theme='dark'] .ruins-words b {
+  color: var(--ruin-lit);
 }
 
 .ruins-label,

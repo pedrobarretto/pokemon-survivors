@@ -52,7 +52,7 @@ const ruinsFeedback = (root: HTMLElement, notice: RuinsNotice) => {
   }
   playSfx('rumble')
   const only = notice.free.length === 1 ? notice.free[0]! : null
-  return say(root, portraitUrl(ENEMIES[only ?? 'regigigas'].dex), only ? m.one(ENEMIES[only].name) : m.risen, 5200, 'ruins')
+  return say(root, portraitUrl(ENEMIES[only ?? 'regigigas'].dex), only ? m.one(ENEMIES[only].name) : m.risen, 3600, 'ruins')
 }
 
 export const pathFeedback = (root: HTMLElement, notice: PathNotice) => {

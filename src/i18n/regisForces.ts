@@ -109,8 +109,8 @@ const pt = {
   } satisfies Record<Legend, readonly [string, string]>,
   ui: {
     ruins: {
-      risen: 'As *Ruínas da Decisão* surgiram! Entre em _uma_ delas: só uma desperta nesta partida.',
-      one: (name: string) => `As *Ruínas da Decisão* surgiram! Só a ruína de *${name}* ainda dorme: entre nela.`,
+      risen: 'As *Ruínas da Decisão* surgiram!',
+      one: (name: string) => `As *Ruínas da Decisão* surgiram: só a de *${name}* dorme.`,
       chosen: (name: string, other: string) => `Você escolheu *${name}*! A ruína de ${other} se fecha até outra partida.`,
       woken: (name: string) => `A ruína de *${name}* desperta!`,
       silent: 'As ruínas estão quietas: termine a luta com o chefe primeiro.',
@@ -119,11 +119,11 @@ const pt = {
     },
     force: {
       sighted: {
-        tornadus: (pct: number) => `*Tornadus* chegou com a _nevasca_! Ele foge quando você chega perto, mas o HP que você tirar fica guardado (${pct}%).`,
-        thundurus: (pct: number) => `*Thundurus* chegou com a _chuva_! Ele foge quando você chega perto, mas o HP que você tirar fica guardado (${pct}%).`,
-        landorus: (pct: number) => `*Landorus* chegou com a _tempestade de areia_! Ele enfrenta você até se cansar, e o HP que você tirar fica guardado (${pct}%).`,
-        enamorus: (pct: number) => `*Enamorus* chegou com o _sol da primavera_! Ela rodeia você, e o HP que você tirar fica guardado (${pct}%).`,
-      } satisfies Record<ForceId, (pct: number) => string>,
+        tornadus: '*Tornadus* trouxe a _nevasca_!',
+        thundurus: '*Thundurus* trouxe a _chuva_!',
+        landorus: '*Landorus* trouxe a _tempestade de areia_!',
+        enamorus: '*Enamorus* trouxe o _sol da primavera_!',
+      } satisfies Record<ForceId, string>,
     },
   },
 }
@@ -221,8 +221,8 @@ const en: typeof pt = {
   },
   ui: {
     ruins: {
-      risen: 'The *Split-Decision Ruins* rose! Step into _one_ of them: only one wakes this run.',
-      one: (name: string) => `The *Split-Decision Ruins* rose! Only *${name}*’s ruin still sleeps: step into it.`,
+      risen: 'The *Split-Decision Ruins* rose!',
+      one: (name: string) => `The *Split-Decision Ruins* rose: only *${name}*’s sleeps.`,
       chosen: (name: string, other: string) => `You chose *${name}*! ${other}’s ruin closes until another run.`,
       woken: (name: string) => `*${name}*’s ruin awakens!`,
       silent: 'The ruins are quiet: finish the boss fight first.',
@@ -230,10 +230,10 @@ const en: typeof pt = {
     },
     force: {
       sighted: {
-        tornadus: (pct: number) => `*Tornadus* came with the _snow_! It runs when you get close, but the HP you take stays taken (${pct}%).`,
-        thundurus: (pct: number) => `*Thundurus* came with the _rain_! It runs when you get close, but the HP you take stays taken (${pct}%).`,
-        landorus: (pct: number) => `*Landorus* came with the _sandstorm_! It fights you until it tires, and the HP you take stays taken (${pct}%).`,
-        enamorus: (pct: number) => `*Enamorus* came with the _spring sun_! It circles you, and the HP you take stays taken (${pct}%).`,
+        tornadus: '*Tornadus* brought the _snow_!',
+        thundurus: '*Thundurus* brought the _rain_!',
+        landorus: '*Landorus* brought the _sandstorm_!',
+        enamorus: '*Enamorus* brought the _spring sun_!',
       },
     },
   },
@@ -332,8 +332,8 @@ const es: typeof pt = {
   },
   ui: {
     ruins: {
-      risen: '¡Surgieron las *Ruinas de la Elección*! Entra en _una_ de ellas: solo una despierta en esta partida.',
-      one: (name: string) => `¡Surgieron las *Ruinas de la Elección*! Solo la ruina de *${name}* sigue dormida: entra en ella.`,
+      risen: '¡Surgieron las *Ruinas de la Elección*!',
+      one: (name: string) => `¡Surgieron las *Ruinas de la Elección*: solo duerme la de *${name}*!`,
       chosen: (name: string, other: string) => `¡Elegiste a *${name}*! La ruina de ${other} se cierra hasta otra partida.`,
       woken: (name: string) => `¡La ruina de *${name}* despierta!`,
       silent: 'Las ruinas están en calma: termina primero la pelea con el jefe.',
@@ -341,10 +341,10 @@ const es: typeof pt = {
     },
     force: {
       sighted: {
-        tornadus: (pct: number) => `¡*Tornadus* llegó con la _nevada_! Huye cuando te acercas, pero los PS que le quites se guardan (${pct}%).`,
-        thundurus: (pct: number) => `¡*Thundurus* llegó con la _lluvia_! Huye cuando te acercas, pero los PS que le quites se guardan (${pct}%).`,
-        landorus: (pct: number) => `¡*Landorus* llegó con la _tormenta de arena_! Te enfrenta hasta cansarse, y los PS que le quites se guardan (${pct}%).`,
-        enamorus: (pct: number) => `¡*Enamorus* llegó con el _sol de primavera_! Te rodea, y los PS que le quites se guardan (${pct}%).`,
+        tornadus: '¡*Tornadus* trajo la _nevada_!',
+        thundurus: '¡*Thundurus* trajo la _lluvia_!',
+        landorus: '¡*Landorus* trajo la _tormenta de arena_!',
+        enamorus: '¡*Enamorus* trajo el _sol de primavera_!',
       },
     },
   },
@@ -443,8 +443,8 @@ const fr: typeof pt = {
   },
   ui: {
     ruins: {
-      risen: 'Les *Ruines du Choix* ont surgi ! Entrez dans _l’une_ d’elles : une seule s’éveille dans cette partie.',
-      one: (name: string) => `Les *Ruines du Choix* ont surgi ! Seule la ruine de *${name}* dort encore : entrez-y.`,
+      risen: 'Les *Ruines du Choix* ont surgi !',
+      one: (name: string) => `Les *Ruines du Choix* ont surgi : seule celle de *${name}* dort.`,
       chosen: (name: string, other: string) => `Vous avez choisi *${name}* ! La ruine de ${other} se referme jusqu’à une autre partie.`,
       woken: (name: string) => `La ruine de *${name}* s’éveille !`,
       silent: 'Les ruines sont calmes : terminez d’abord le combat contre le boss.',
@@ -452,10 +452,10 @@ const fr: typeof pt = {
     },
     force: {
       sighted: {
-        tornadus: (pct: number) => `*Tornadus* est arrivé avec la _neige_ ! Il fuit quand vous approchez, mais les PV que vous lui prenez restent pris (${pct} %).`,
-        thundurus: (pct: number) => `*Thundurus* est arrivé avec la _pluie_ ! Il fuit quand vous approchez, mais les PV que vous lui prenez restent pris (${pct} %).`,
-        landorus: (pct: number) => `*Landorus* est arrivé avec la _tempête de sable_ ! Il vous affronte jusqu’à se lasser, et les PV que vous lui prenez restent pris (${pct} %).`,
-        enamorus: (pct: number) => `*Enamorus* est arrivée avec le _soleil du printemps_ ! Elle tourne autour de vous, et les PV que vous lui prenez restent pris (${pct} %).`,
+        tornadus: '*Tornadus* amène la _neige_ !',
+        thundurus: '*Thundurus* amène la _pluie_ !',
+        landorus: '*Landorus* amène la _tempête de sable_ !',
+        enamorus: '*Enamorus* amène le _soleil du printemps_ !',
       },
     },
   },
@@ -554,8 +554,8 @@ const zh: typeof pt = {
   },
   ui: {
     ruins: {
-      risen: '*抉擇遺跡*出現了！走進其中_一座_：這場只有一座會甦醒。',
-      one: (name: string) => `*抉擇遺跡*出現了！只剩 *${name}* 的遺跡還在沉睡：走進去吧。`,
+      risen: '*抉擇遺跡*出現了！',
+      one: (name: string) => `*抉擇遺跡*出現了：只剩 *${name}* 的還在沉睡。`,
       chosen: (name: string, other: string) => `你選擇了 *${name}*！${other} 的遺跡關閉，留待下一場。`,
       woken: (name: string) => `*${name}* 的遺跡甦醒了！`,
       silent: '遺跡很安靜：先結束與首領的戰鬥。',
@@ -563,10 +563,10 @@ const zh: typeof pt = {
     },
     force: {
       sighted: {
-        tornadus: (pct: number) => `*Tornadus* 帶著_大雪_來了！你一靠近它就逃，但你打掉的 HP 會保留（${pct}%）。`,
-        thundurus: (pct: number) => `*Thundurus* 帶著_大雨_來了！你一靠近它就逃，但你打掉的 HP 會保留（${pct}%）。`,
-        landorus: (pct: number) => `*Landorus* 帶著_沙暴_來了！它會與你交戰直到疲倦，你打掉的 HP 會保留（${pct}%）。`,
-        enamorus: (pct: number) => `*Enamorus* 帶著_春日陽光_來了！它在你身邊盤旋，你打掉的 HP 會保留（${pct}%）。`,
+        tornadus: '*Tornadus* 帶來了_大雪_！',
+        thundurus: '*Thundurus* 帶來了_大雨_！',
+        landorus: '*Landorus* 帶來了_沙暴_！',
+        enamorus: '*Enamorus* 帶來了_春日陽光_！',
       },
     },
   },

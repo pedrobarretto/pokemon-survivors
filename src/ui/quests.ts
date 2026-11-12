@@ -31,7 +31,7 @@ export const questNews = (e: QuestEvent): QuestNews => {
     switch (e.moment) {
       case 'sighted':
         // A Force's first visit plays its entrance, cry and card included: its line only.
-        return f ? { line: t().regisForces.force.sighted[f](pct(e.left)), ms: 4600, sfx: null, cry: null } : { line: m.roam.sighted(name, pct(e.left)), ms: 4200, sfx: 'legendary', cry: dex }
+        return f ? { line: t().regisForces.force.sighted[f], ms: 3200, sfx: null, cry: null } : { line: m.roam.sighted(name, pct(e.left)), ms: 4200, sfx: 'legendary', cry: dex }
       case 'rage': {
         const line = f ? t().regisForces.phases[f][Math.max(0, Math.min(1, e.phase - 1))] : undefined
         return { line: line ?? null, ms: 3800, sfx: 'boss', cry: dex }

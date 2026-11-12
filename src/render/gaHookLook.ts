@@ -3,7 +3,7 @@ import { formAt } from '../game/branch'
 import type { Game, Player } from '../game/types'
 import { isVivillonPattern, MINIOR_CORE_IDS, MINIOR_DEX, VIVILLON_DEX, VIVILLON_PATTERNS, type MiniorCore, type VivillonPattern } from '../data/vivillon'
 import { devicePattern } from '../vivillonRegion'
-import type { FormKey } from './sprites'
+import { formPortraitUrl, portraitUrl, type FormKey } from './sprites'
 
 /**
  * The hook families' looks, the shell's alone (`data/vivillon.ts`): each
@@ -48,4 +48,13 @@ export const hookVariants = (g: Game, p: Player): { dex: number; shiny: boolean;
   if (p.starter !== 'scatterbug' || p.stage < 1) return []
   const pattern = patternOf(p.slot)
   return [pattern === 'meadow' ? { dex: VIVILLON_DEX, shiny: p.shiny } : { dex: VIVILLON_DEX, shiny: p.shiny, form: pattern }]
+}
+
+/**
+ * The portrait of `p` as `dex` (its form on screen): a Vivillon wears its seat's pattern there too (SpriteCollab draws
+ * one per pattern, `FORM_PORTRAITS`; a shiny keeps the pattern's, its wings being what tells it apart), else the species'.
+ */
+export const hookPortrait = (g: Game, p: Player, dex: number) => {
+  const form = dex === VIVILLON_DEX ? hookForm(g, p) : undefined
+  return form ? formPortraitUrl(dex, form) : portraitUrl(dex, p.shiny)
 }

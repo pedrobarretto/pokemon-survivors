@@ -318,6 +318,8 @@ export const HANDMADE_SPECIES_SHINIES = {
 export const FORM_PORTRAITS = {
   491: ['mega'],
   1024: ['terastal'],
+  // Vivillon's regional patterns (`FORMS`): the HUD's portrait shows the wings the sprite wears.
+  666: ['icySnow', 'polar', 'tundra', 'continental', 'garden', 'elegant', 'modern', 'marine', 'archipelago', 'highPlains', 'sandstorm', 'river', 'monsoon', 'savanna', 'sun', 'ocean', 'jungle'],
 }
 
 /**

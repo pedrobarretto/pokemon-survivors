@@ -22,7 +22,7 @@ import { treatIcon } from '../render/halloweenArt'
 import { MELTAN } from '../data/legendPaths'
 import { nutIcon } from './pathRun'
 import { loadSave } from './save'
-import { portraitUrl } from '../render/sprites'
+import { hookPortrait } from '../render/gaHookLook'
 import { abilityIcon } from '../render/abilityArt'
 import { abilityMark, abilityMarkKey } from './abilityMark'
 import { megaIcon } from '../render/megaFx'
@@ -295,9 +295,10 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
     const megaName = localPlayer(g).mega.active > 0 ? heldMega(g)?.name : undefined
     // A legend's awakened form (Primal Kyogre) renames it on the same dex.
     const formName = playerForm(g).name
-    if (`${dex}${p.shiny}${megaName}${formName}` !== portraitKey) {
-      portraitKey = `${dex}${p.shiny}${megaName}${formName}`
-      portrait.setAttribute('src', portraitUrl(dex, p.shiny))
+    const face = hookPortrait(g, p, dex)
+    if (`${face}${megaName}${formName}` !== portraitKey) {
+      portraitKey = `${face}${megaName}${formName}`
+      portrait.setAttribute('src', face)
       shinyBadge.classList.toggle('hidden', !p.shiny)
       name.classList.toggle('shiny-name', p.shiny)
       name.classList.toggle('mega-name', megaName !== undefined)
