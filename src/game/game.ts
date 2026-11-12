@@ -3,7 +3,7 @@ import { dir8, type Vec } from '../engine/math'
 import { createRng } from '../engine/rng'
 import { createGrid } from '../engine/spatial'
 import { bodyOf } from '../data/bodies'
-import { isLegend, LEGENDS, type LegendDef } from '../data/legends'
+import { isLegend, LEGENDS, type LegendDef, type RuinsRegi } from '../data/legends'
 import type { EnemyId } from '../data/enemies'
 import { isHidden } from '../data/abilities'
 import { branchesAt } from '../data/branches'
@@ -168,6 +168,8 @@ export type RunOptions = {
   forms?: readonly PathFormId[]
   /** The run brings Regigigas's temple (`game/pathRun.ts`). */
   temple?: boolean
+  /** The run brings the Ruínas da Decisão, these Regis free in them (`game/splitRuins.ts`). */
+  ruins?: readonly RuinsRegi[]
 }
 
 /**
@@ -338,7 +340,7 @@ export const createRun = (view: Game['view'], seed: number, setups: readonly Pla
     place: options.hideout ? { ...createPlaceState(seed), hideout: true } : createPlaceState(seed),
     landmarks: createLandmarkState(),
     finds: createSeasonFinds(seed),
-    paths: createPathRun(seed, options.temple === true && !coop),
+    paths: createPathRun(seed, options.temple === true && !coop, coop ? [] : (options.ruins ?? [])),
     quests: createQuests(seed, options.wild, coop),
     rush: null,
     tutors: 0,

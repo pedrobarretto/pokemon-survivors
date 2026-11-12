@@ -2,7 +2,7 @@ import { blitCentered, blitEllipse, blitRing, fromStrings, lazy, type PixelSprit
 import { dir8, TAU } from '../engine/math'
 import { hash2 } from '../engine/rng'
 import { ENEMIES } from '../data/enemies'
-import type { LakeId, SwordId } from '../data/legends'
+import type { RoamerId, SwordId } from '../data/legends'
 import { DUEL } from '../data/quests'
 import { duelTest } from '../game/duels'
 import { roamerBody, roamerShown } from '../game/roamers'
@@ -49,12 +49,26 @@ const LEAF = lazy(() => fromStrings(LEAF_ROWS, { 1: '#143c10', 2: '#2c7020', 3: 
 
 /** The edge arrow's icons: a lake legend's gem, a Sword's blade. */
 const GEM = ['..kkk..', '.kwwck.', 'kwwccck', 'kwcccdk', 'kcccddk', '.kcddk.', '..kkk..']
-/** Each lake legend's gem color (the one on its head), and its shade. */
-const LAKE_GEM = { uxie: ['#f8d048', '#c09018'], mesprit: ['#f878b0', '#c04880'], azelf: ['#58a0f8', '#2860c0'] } as const satisfies Record<LakeId, readonly [string, string]>
-const GEMS = lazy((): Record<LakeId, PixelSprite> => ({
+/** Each roamer's gem color (a lake legend's, the one on its head; a Force's, its weather's), and its shade. */
+export const LAKE_GEM = {
+  uxie: ['#f8d048', '#c09018'], mesprit: ['#f878b0', '#c04880'], azelf: ['#58a0f8', '#2860c0'],
+  tornadus: ['#98e0f0', '#3c8aa8'], thundurus: ['#f8e048', '#4868c0'], landorus: ['#f0b050', '#a06020'], enamorus: ['#f8a0c8', '#c05890'],
+} as const satisfies Record<RoamerId, readonly [string, string]>
+/** A Force's mark instead of a gem: a swirl (wind), a bolt, a sand dune, a heart, in its colors. */
+const FORCE_MARK = {
+  tornadus: ['..ccc..', '.c...c.', 'c..cc.c', 'c.c..dc', 'c.cdd.c', '.c...d.', '..ddd..'],
+  thundurus: ['...cc..', '..cc...', '.cccc..', '...cc..', '..cc...', '.dd....', 'd......'],
+  landorus: ['.......', '...c...', '..ccc..', '.ccccc.', 'cccdccc', 'ddddddd', '.......'],
+  enamorus: ['.cc.cc.', 'cwcccdc', 'cccccdc', '.ccccd.', '..ccd..', '...d...', '.......'],
+} as const
+const GEMS = lazy((): Record<RoamerId, PixelSprite> => ({
   uxie: fromStrings(GEM, { c: LAKE_GEM.uxie[0], d: LAKE_GEM.uxie[1], w: '#ffffff', k: '#181020' }),
   mesprit: fromStrings(GEM, { c: LAKE_GEM.mesprit[0], d: LAKE_GEM.mesprit[1], w: '#ffffff', k: '#181020' }),
   azelf: fromStrings(GEM, { c: LAKE_GEM.azelf[0], d: LAKE_GEM.azelf[1], w: '#ffffff', k: '#181020' }),
+  tornadus: fromStrings(FORCE_MARK.tornadus, { c: LAKE_GEM.tornadus[0], d: LAKE_GEM.tornadus[1], w: '#ffffff' }),
+  thundurus: fromStrings(FORCE_MARK.thundurus, { c: LAKE_GEM.thundurus[0], d: LAKE_GEM.thundurus[1], w: '#ffffff' }),
+  landorus: fromStrings(FORCE_MARK.landorus, { c: LAKE_GEM.landorus[0], d: LAKE_GEM.landorus[1], w: '#ffffff' }),
+  enamorus: fromStrings(FORCE_MARK.enamorus, { c: LAKE_GEM.enamorus[0], d: LAKE_GEM.enamorus[1], w: '#ffffff' }),
 }))
 const BLADE = lazy(() => fromStrings(['.....w', '....w.', '...w..', 'y.w...', '.y....', 'y.y...'], { w: '#f0f4ff', y: GOLD }))
 
@@ -253,6 +267,8 @@ export const drawQuestAir = (ctx: Ctx, g: Game, t: number) => {
     ctx.globalAlpha = 0.5 + k * 0.4
     blitRing(ctx, Math.round(e.radius + 6 + k * 3), 1, '#58a0f8', Math.round(e.x), Math.round(e.y - e.radius))
     ctx.globalAlpha = 1
+  } else if (r.legend === 'tornadus' || r.legend === 'thundurus' || r.legend === 'landorus' || r.legend === 'enamorus') {
+    drawForceAura(ctx, r.legend, e.x, e.y, e.radius, top, t, r.phase, r.broken)
   } else if (r.legend === 'uxie' && g.time < r.hidden) {
     // Gold dust where it blinked to, fading as the player's memory comes back.
     ctx.fillStyle = GOLD
@@ -260,6 +276,57 @@ export const drawQuestAir = (ctx: Ctx, g: Game, t: number) => {
       if (Math.floor(t * 10 + i) % 2) continue
       ctx.fillRect(Math.round(e.x + (hash2(i, 2, 7) - 0.5) * 24), Math.round(e.y - 10 + (hash2(i, 3, 7) - 0.5) * 20), 1, 1)
     }
+  }
+}
+
+/**
+ * A Force's weather around it, stronger with its phase: Tornadus in a ring of
+ * wind and snow, Thundurus under a small storm cloud crackling, Landorus in a
+ * swirl of sand (gone once its will breaks), Enamorus with hearts and petals
+ * floating up.
+ */
+const drawForceAura = (ctx: Ctx, legend: 'tornadus' | 'thundurus' | 'landorus' | 'enamorus', x0: number, y0: number, radius: number, top: number, t: number, phase: number, broken: boolean) => {
+  const n = 5 + phase * 3
+  const x = Math.round(x0)
+  const y = Math.round(y0 - radius)
+  if (legend === 'tornadus') {
+    for (let i = 0; i < n; i++) {
+      const q = (i / n) * TAU + t * (3 + phase)
+      const rr = radius + 8 + (i % 3) * 3
+      ctx.fillStyle = i % 2 === 0 ? '#ffffff' : '#a8e0f0'
+      ctx.fillRect(Math.round(x + Math.cos(q) * rr), Math.round(y + Math.sin(q) * rr * 0.5), i % 3 === 0 ? 2 : 1, 1)
+    }
+  } else if (legend === 'thundurus') {
+    const cy = Math.round(top - 4)
+    blitEllipse(ctx, 9 + phase, 3, '#383c50', x, cy)
+    blitEllipse(ctx, 7 + phase, 2, '#5c6480', x - 1, cy - 1)
+    if (Math.floor(t * 7) % 3 === 0) {
+      ctx.fillStyle = '#f8e048'
+      const bx = x + Math.round((hash2(Math.floor(t * 7), 1, 9) - 0.5) * 12)
+      ctx.fillRect(bx, cy + 2, 1, 3)
+      ctx.fillRect(bx + 1, cy + 4, 1, 3)
+    }
+  } else if (legend === 'landorus') {
+    if (broken) return
+    for (let i = 0; i < n + 2; i++) {
+      const q = (i / (n + 2)) * TAU - t * (2 + phase)
+      const rr = radius + 6 + ((t * 8 + i * 3) % 6)
+      ctx.fillStyle = i % 3 === 0 ? '#f8e0a0' : '#c89848'
+      ctx.fillRect(Math.round(x0 + Math.cos(q) * rr), Math.round(y0 - 2 + Math.sin(q) * rr * 0.4), 2, 1)
+    }
+  } else {
+    for (let i = 0; i < n; i++) {
+      const q = (t * 0.7 + i / n) % 1
+      const hx = Math.round(x0 + (hash2(i, 4, 7) - 0.5) * 26)
+      const hy = Math.round(top - q * 18)
+      ctx.globalAlpha = 1 - q
+      ctx.fillStyle = i % 2 === 0 ? '#f878b0' : '#ffd0e4'
+      ctx.fillRect(hx - 1, hy, 1, 1)
+      ctx.fillRect(hx + 1, hy, 1, 1)
+      ctx.fillRect(hx - 1, hy + 1, 3, 1)
+      ctx.fillRect(hx, hy + 2, 1, 1)
+    }
+    ctx.globalAlpha = 1
   }
 }
 

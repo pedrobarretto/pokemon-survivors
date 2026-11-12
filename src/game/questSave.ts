@@ -1,4 +1,4 @@
-import { LAKE_TRIO, SWORDS, type LakeId } from '../data/legends'
+import { FORCE_LEGENDS, LAKE_TRIO, LEGENDS, ROAMER_IDS, SWORDS, type ForceId, type LegendUnlock, type RoamerId } from '../data/legends'
 import { DIFFICULTY_IDS, type Difficulty } from './difficulty'
 import type { Captures } from './capture'
 import { isCaptured } from './capture'
@@ -13,15 +13,15 @@ import type { WildStart } from './quests'
  * `Save.legends` like any other. Pure.
  */
 
-/** Each lake legend's share of max HP left, worn down across runs (absent: whole). */
-export type Roamers = Readonly<Partial<Record<LakeId, number>>>
+/** Each roaming legend's share of max HP left (the lake trio's, the Forces of Nature's), worn down across runs (absent: whole). */
+export type Roamers = Readonly<Partial<Record<RoamerId, number>>>
 
 export const NO_ROAMERS: Roamers = {}
 
-/** The save's `roamers`: known lake legends with a share in (0, 1). */
+/** The save's `roamers`: known roaming legends with a share in (0, 1). */
 export const parseRoamers = (raw: unknown): Roamers =>
   isRecord(raw)
-    ? Object.fromEntries(LAKE_TRIO.flatMap((id) => {
+    ? Object.fromEntries(ROAMER_IDS.flatMap((id) => {
       const v = raw[id]
       return typeof v === 'number' && Number.isFinite(v) && v > 0 && v < 1 ? [[id, v]] : []
     }))
@@ -29,22 +29,32 @@ export const parseRoamers = (raw: unknown): Roamers =>
 
 /** Both sides in one: per legend, the lower share (the HP taken on either device stays taken; safe to merge again). */
 export const mergeRoamers = (a: Roamers, b: Roamers): Roamers =>
-  Object.fromEntries(LAKE_TRIO.flatMap((id) => {
+  Object.fromEntries(ROAMER_IDS.flatMap((id) => {
     const v = Math.min(a[id] ?? 1, b[id] ?? 1)
     return v < 1 ? [[id, v]] : []
   }))
 
 /** The roamers after a visit left `legend` with `left` of its HP: never back up (a lower share stays). */
-export const bankRoamer = (roamers: Roamers, legend: LakeId, left: number): Roamers => {
+export const bankRoamer = (roamers: Roamers, legend: RoamerId, left: number): Roamers => {
   const v = Math.min(roamers[legend] ?? 1, Math.max(0, left))
   return v > 0 && v < 1 ? { ...roamers, [legend]: v } : Object.fromEntries(Object.entries(roamers).filter(([id]) => id !== legend))
 }
 
-/** What a run brings along: the lake legends not caught yet with their HP left, and the Swords not caught yet. */
-export const wildOf = (save: { legends: Captures; roamers: Roamers }): WildStart => ({
-  lake: Object.fromEntries(LAKE_TRIO.flatMap((id) => (isCaptured(save.legends, id) ? [] : [[id, save.roamers[id] ?? 1]]))),
-  swords: SWORDS.filter((id) => !isCaptured(save.legends, id)),
-})
+/** Whether a Force of Nature may show: not caught yet, and the Forces it waits for are (Landorus after Tornadus and Thundurus, Enamorus after all three). */
+export const forceDue = (legends: Captures, id: ForceId) => {
+  const unlock: LegendUnlock = LEGENDS[id].unlock
+  return !isCaptured(legends, id) && (unlock.after ?? []).every((other) => isCaptured(legends, other))
+}
+
+/** What a run brings along: the lake legends not caught yet with their HP left, the Swords not caught yet, and the Forces whose turn has come with theirs. */
+export const wildOf = (save: { legends: Captures; roamers: Roamers }): WildStart => {
+  const forces = Object.fromEntries(FORCE_LEGENDS.flatMap((id) => (forceDue(save.legends, id) ? [[id, save.roamers[id] ?? 1]] : [])))
+  return {
+    lake: Object.fromEntries(LAKE_TRIO.flatMap((id) => (isCaptured(save.legends, id) ? [] : [[id, save.roamers[id] ?? 1]]))),
+    swords: SWORDS.filter((id) => !isCaptured(save.legends, id)),
+    ...(Object.keys(forces).length > 0 ? { forces } : {}),
+  }
+}
 
 /** Hoopa's Rings cleared: each level's best time in seconds (a level cleared has one). */
 export type RushBest = Readonly<Partial<Record<Difficulty, number>>>

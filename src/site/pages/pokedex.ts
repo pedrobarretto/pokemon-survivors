@@ -187,6 +187,10 @@ export const appearance = (a: Appearance, m: SiteMessages) => {
       return m.pokedex.retinue(ENEMIES[a.by].name)
     case 'roam':
       return m.pokedex.roam(clock(a.from))
+    case 'ruins':
+      return m.pokedex.ruins(clock(a.from), clock(a.until))
+    case 'force':
+      return m.pokedex.force(clock(a.from), m.pokedex.forceWeather[a.force])
     case 'duel':
       return m.pokedex.duel[a.sword](clock(a.from))
     case 'rush':

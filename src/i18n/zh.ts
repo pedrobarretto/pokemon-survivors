@@ -13,6 +13,7 @@ import { ROCKET_WORDS } from './rocket/words'
 import { ULTRA_WORDS } from './ultra'
 import { LEGEND_PATHS_WORDS } from './legendPaths'
 import { QUEST_WORDS } from './quests'
+import { REGIS_FORCES_WORDS } from './regisForces'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -2470,6 +2471,7 @@ export const zh: Messages = {
     ...ULTRA_WORDS.zh.abilities,
     ...LEGEND_PATHS_WORDS.zh.abilities,
     ...QUEST_WORDS.zh.abilities,
+    ...REGIS_FORCES_WORDS.zh.abilities,
     overgrow: 'HP低於1/3時，草屬性招式傷害+50%。',
     blaze: 'HP低於1/3時，火屬性招式傷害+50%。',
     torrent: 'HP低於1/3時，水屬性招式傷害+50%。',
@@ -3182,6 +3184,7 @@ export const zh: Messages = {
     ...ULTRA_WORDS.zh.moves,
     ...LEGEND_PATHS_WORDS.zh.moves,
     ...QUEST_WORDS.zh.moves,
+    ...REGIS_FORCES_WORDS.zh.moves,
     leechSeed: {
       description: '向最近的敵人拋出種子。種子會隨時間吸取HP並回復你；敵人倒下時，種子會跳到附近的兩個敵人身上。',
       upgrades: [
@@ -5660,6 +5663,7 @@ export const zh: Messages = {
     ...ULTRA_WORDS.zh.blurbs,
     ...LEGEND_PATHS_WORDS.zh.blurbs,
     ...QUEST_WORDS.zh.blurbs,
+    ...REGIS_FORCES_WORDS.zh.blurbs,
     bulbasaur: '平衡型。會回復HP。',
     charmander: '進攻型。傷害較高，HP較低。',
     squirtle: '防禦型。HP與防禦較高。',
@@ -6379,6 +6383,7 @@ export const zh: Messages = {
       path: LEGEND_PATHS_WORDS.zh.paths.where.zygarde,
       temple: LEGEND_PATHS_WORDS.zh.paths.where.regigigas,
       ...QUEST_WORDS.zh.where,
+      ...REGIS_FORCES_WORDS.zh.where,
     },
     rule: (need: number) => (need === 1 ? '在任何模式的單人遊戲中以首領身分擊敗它1次，即可收服。合作模式的勝利不計。' : `在任何模式的單人遊戲中以首領身分擊敗它${need}次，即可收服。合作模式的勝利不計。`),
     shinyRule: '在收服的那場勝利或之後擊敗異色個體，即可解鎖它的異色。',
@@ -6395,6 +6400,8 @@ export const zh: Messages = {
     },
   },
   quests: QUEST_WORDS.zh.ui,
+  /** The Ruínas da Decisão and the Forces of Nature (`game/splitRuins.ts`, `game/roamers.ts`): the choice on screen, the Forces' visits, their title cards and phase lines. */
+  regisForces: { ...REGIS_FORCES_WORDS.zh.ui, epithets: REGIS_FORCES_WORDS.zh.epithets, phases: REGIS_FORCES_WORDS.zh.phases },
   legends: {
     epithets: {
       articuno: '永恆寒冰之鳥',
@@ -6412,6 +6419,8 @@ export const zh: Messages = {
       mewtwo: '基因之怒',
       arceus: '創始之神',
       regigigas: LEGEND_PATHS_WORDS.zh.epithet,
+      regieleki: REGIS_FORCES_WORDS.zh.epithets.regieleki,
+      regidrago: REGIS_FORCES_WORDS.zh.epithets.regidrago,
     },
     phases: {
       articuno: ['*Articuno* 起飛了！快逃離它的_影子_。', '暴風雪！在 Snowscape 之前躲進_雪之避難所_。'],
@@ -6429,6 +6438,8 @@ export const zh: Messages = {
       mewtwo: ['*Mewtwo* 釋放超能力！快離開 Teleport 的_圓圈_。', 'Psystrike！從_空隙_鑽過去，再跑向_避難所_。'],
       arceus: ['*Arceus* 瞬間移動來審判你！', 'Judgment！只有_光之避難所_能救你。'],
       regigigas: LEGEND_PATHS_WORDS.zh.phases,
+      regieleki: REGIS_FORCES_WORDS.zh.phases.regieleki,
+      regidrago: REGIS_FORCES_WORDS.zh.phases.regidrago,
     },
   },
   team: {

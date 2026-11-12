@@ -2,6 +2,9 @@ import { dirTo, TAU, type Vec } from '../engine/math'
 import { momentBusy } from './legendMoments'
 import { createRng, hash2 } from '../engine/rng'
 import { REGIGIGAS, ZYGARDE } from '../data/legendPaths'
+import { RUINS } from '../data/forces'
+import type { RuinsRegi } from '../data/legends'
+import type { RuinsNotice } from './splitRuins'
 import { burst, shakeScreen } from './effects'
 import { teamLegend } from './legend'
 import { runPieces } from './legendPaths'
@@ -25,13 +28,16 @@ import * as dm from '../engine/dmath'
  * - A run that starts with the temple (`ReplayStart.temple`, the Regi trio
  *   captured) raises it once, ahead of the player: walking up to it wakes
  *   Regigigas, which rises there as a wave legendary and is captured on the map.
+ * - Once Regigigas is captured, a run may bring the Ruínas da Decisão in its
+ *   place (`ReplayStart.ruins`, `splitRuins.ts`): the player wakes one of their
+ *   two Regis.
  */
 
 /** A Zygarde piece still to come: when (run s) and whether it's a Core. */
 export type PieceDue = { at: number; core: boolean }
 
-/** A run's path state (`Game.paths`): the pieces still to come, the Hex Nuts picked up, and when the temple rises (null: not this run, or risen). */
-export type PathRun = { pieces: PieceDue[]; nuts: number; temple: number | null }
+/** A run's path state (`Game.paths`): the pieces still to come, the Hex Nuts picked up, when the temple rises and when the Ruins do (null: not this run, or risen), and the Ruins' free Regis. */
+export type PathRun = { pieces: PieceDue[]; nuts: number; temple: number | null; ruins: number | null; ruinsFree: RuinsRegi[] }
 
 const SALT = 7193
 
@@ -47,15 +53,17 @@ const piecesOf = (seed: number): PieceDue[] => {
   }))
 }
 
-/** A run's path state: the pieces from its seed and, when the run brings it, the temple's time (`REGIGIGAS.at`). */
-export const createPathRun = (seed: number, temple: boolean): PathRun => ({
+/** A run's path state: the pieces from its seed and, when the run brings them, the temple's time (`REGIGIGAS.at`) or the Ruins' (`RUINS.at`). */
+export const createPathRun = (seed: number, temple: boolean, ruins: readonly RuinsRegi[] = []): PathRun => ({
   pieces: piecesOf(seed),
   nuts: 0,
   temple: temple ? dm.round(REGIGIGAS.at[0] + (REGIGIGAS.at[1] - REGIGIGAS.at[0]) * hash2(seed, 4, SALT)) : null,
+  ruins: ruins.length > 0 ? dm.round(RUINS.at[0] + (RUINS.at[1] - RUINS.at[0]) * hash2(seed, 5, SALT)) : null,
+  ruinsFree: [...ruins],
 })
 
 /** What the shell hears: a piece showing up, taken or gone; the temple risen or woken. */
-export type PathNotice = { kind: 'piece'; core: boolean; moment: 'sighted' | 'found' | 'gone' } | { kind: 'temple'; moment: 'risen' | 'woken' | 'silent' }
+export type PathNotice = { kind: 'piece'; core: boolean; moment: 'sighted' | 'found' | 'gone' } | { kind: 'temple'; moment: 'risen' | 'woken' | 'silent' } | RuinsNotice
 
 const notify = (g: Game, notice: PathNotice) => g.events.push({ kind: 'path', notice })
 
@@ -93,6 +101,14 @@ export const updatePathRun = (g: Game, spawn: Spawn) => {
       s.temple = null
       spawn(g, 'regiTemple', at.x, at.y)
     } else s.temple = g.time + 1
+  }
+  if (s.ruins !== null && g.time >= s.ruins) {
+    // The Ruins rise as the temple does: on a quiet map, ahead of the player.
+    const at = g.bossId !== null || g.legendScene !== null || momentBusy(g, 'ruins') ? null : spotNear(g, Math.floor(g.time) * 4 + 3, [RUINS.distance, RUINS.distance + 40])
+    if (at) {
+      s.ruins = null
+      spawn(g, 'splitRuins', at.x, at.y)
+    } else s.ruins = g.time + 1
   }
 }
 

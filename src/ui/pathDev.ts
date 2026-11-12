@@ -1,5 +1,7 @@
 import { COSMOG, MELTAN, TRIALS, ZYGARDE, type PathId, type TrialId } from '../data/legendPaths'
 import type { PlayableId } from '../data/hatchlings'
+import { ENEMIES } from '../data/enemies'
+import { RUINS_LEGENDS, type RuinsRegi } from '../data/legends'
 import { spawnMapEvent } from '../game/mapEvents'
 import { NO_COSMOG } from '../game/legendPaths'
 import type { Game } from '../game/types'
@@ -8,7 +10,7 @@ import { loadSave, writeSave } from './save'
 
 /**
  * Dev console helpers for the legend paths (`ps.*` in dev builds): stage a
- * run's Zygarde pieces and Regigigas's temple, and set each path's progress.
+ * run's Zygarde pieces, Regigigas's temple and the Ruínas da Decisão, and set each path's progress.
  */
 export const pathDevTools = (game: () => Game | undefined, open: { menu: (id: PlayableId) => void; sheet: (path: PathId) => void }) => {
   const playing = (fn: (g: Game) => unknown) => {
@@ -29,6 +31,13 @@ export const pathDevTools = (game: () => Game | undefined, open: { menu: (id: Pl
       playing((g) => {
         void loadSpecies(486).catch(() => {})
         return spawnMapEvent(g, 'regiTemple', g.player.x + 90, g.player.y)
+      }),
+    /** `ps.ruins()` raises the Ruínas da Decisão 110 px above the player, both Regis free (`ps.ruins('regidrago')` with only that one: the other's ruin stands dark); walk into a ruin's gate to wake its Regi. */
+    ruins: (...free: RuinsRegi[]) =>
+      playing((g) => {
+        g.paths.ruinsFree = free.length > 0 ? RUINS_LEGENDS.filter((r) => free.includes(r)) : [...RUINS_LEGENDS]
+        for (const r of g.paths.ruinsFree) void loadSpecies(ENEMIES[r].dex).catch(() => {})
+        return spawnMapEvent(g, 'splitRuins', g.player.x, g.player.y - 110)
       }),
     /** `ps.cube(50, 2)` sets the Zygarde Cube's Cells and Cores (`ps.cube()` fills it). */
     cube: (cells: number = ZYGARDE.cells, cores: number = ZYGARDE.cores) => setPaths({ cells, cores }),

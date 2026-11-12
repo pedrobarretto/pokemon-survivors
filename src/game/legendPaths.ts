@@ -1,5 +1,6 @@
 import { hash2 } from '../engine/rng'
-import { isLegend, type LegendId } from '../data/legends'
+import { isLegend, RUINS_LEGENDS, type LegendId, type RuinsRegi } from '../data/legends'
+import { RUINS } from '../data/forces'
 import { COSMOG, FLOORS, MELTAN, PATH_FORM_IDS, PATH_FORMS, REGIGIGAS, TOWER_FORM, TOWERS, TRIALS, ZYGARDE, type CosmogStep, type PathFormId, type PathId, type Tower, type TrialId } from '../data/legendPaths'
 import type { Gift } from './gifts'
 import { isRecord, wholeNumber } from './parse'
@@ -166,6 +167,16 @@ export const clearTrial = (trials: readonly TrialId[], id: TrialId): TrialId[] =
 
 /** Whether every waker is captured (`REGIGIGAS.wakers`): `captured` says whether a legend is. */
 export const giantAwake = (captured: (id: LegendId) => boolean) => REGIGIGAS.wakers.every((id) => captured(id))
+
+/**
+ * The Regis the run of `seed` brings the Ruínas da Decisão for, once
+ * Regigigas is captured: the ones still free (`RUINS.odds`); none when the
+ * run brings no Ruins. Drawn first, so a run brings the Ruins or the temple.
+ */
+export const ruinsRun = (seed: number, captured: (id: LegendId) => boolean): RuinsRegi[] => {
+  const free = RUINS_LEGENDS.filter((id) => !captured(id))
+  return captured('regigigas') && free.length > 0 && hash2(seed, 5, 7187) < RUINS.odds ? free : []
+}
 
 /** Whether the run of `seed` brings the temple: only once the trio is captured; often until Regigigas is, now and then after. */
 export const templeRun = (seed: number, awake: boolean, caught: boolean) => awake && hash2(seed, 3, 7187) < (caught ? REGIGIGAS.rematch : REGIGIGAS.temple)

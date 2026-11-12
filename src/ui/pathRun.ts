@@ -4,6 +4,7 @@ import { LEGENDS } from '../data/legends'
 import { ENEMIES } from '../data/enemies'
 import { cubePieces, openForms } from '../game/legendPaths'
 import type { PathNotice } from '../game/pathRun'
+import type { RuinsNotice } from '../game/splitRuins'
 import type { Game } from '../game/types'
 import { formatNumber, t } from '../i18n'
 import { toIconUrl } from '../render/art'
@@ -39,6 +40,21 @@ const announceForms = (root: HTMLElement, before: Save, after: Save, legend: str
   }
 }
 
+/** The Ruínas da Decisão's moments (`game/splitRuins.ts`): risen (which Regis still sleep there), quiet while a boss fights, a ruin picked. */
+const ruinsFeedback = (root: HTMLElement, notice: RuinsNotice) => {
+  const m = t().regisForces.ruins
+  if (notice.moment === 'silent') return say(root, portraitUrl(ENEMIES.regieleki.dex), m.silent, 2600, 'ruins')
+  if (notice.moment === 'chosen') {
+    playSfx('quake')
+    playCry(cryUrl(ENEMIES[notice.pick].dex), 0.7)
+    const name = ENEMIES[notice.pick].name
+    return say(root, portraitUrl(ENEMIES[notice.pick].dex), notice.sealed ? m.chosen(name, ENEMIES[notice.sealed].name) : m.woken(name), 3600, 'ruins')
+  }
+  playSfx('rumble')
+  const only = notice.free.length === 1 ? notice.free[0]! : null
+  return say(root, portraitUrl(ENEMIES[only ?? 'regigigas'].dex), only ? m.one(ENEMIES[only].name) : m.risen, 5200, 'ruins')
+}
+
 export const pathFeedback = (root: HTMLElement, notice: PathNotice) => {
   const m = t().paths.run
   if (notice.kind === 'temple') {
@@ -50,6 +66,7 @@ export const pathFeedback = (root: HTMLElement, notice: PathNotice) => {
     playSfx('rumble')
     return say(root, portraitUrl(ENEMIES.regigigas.dex), m.templeRisen, 4200, 'temple')
   }
+  if (notice.kind === 'ruins') return ruinsFeedback(root, notice)
   const icon = notice.core ? coreIcon() : cellIcon()
   if (notice.moment === 'sighted') {
     playSfx('ping')

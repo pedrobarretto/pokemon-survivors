@@ -37,7 +37,7 @@ export type Scenario = {
   starter: PlayableId
   difficulty: Difficulty
   maxRanks: boolean
-} & Partial<Pick<ReplayStart, 'halloween' | 'bag' | 'tms' | 'evo' | 'caps'>>
+} & Partial<Pick<ReplayStart, 'halloween' | 'bag' | 'tms' | 'evo' | 'caps' | 'wild' | 'ruins'>>
 
 const FULL_RANKS = Object.fromEntries(UPGRADE_IDS.map((id) => [id, UPGRADES[id].maxRank])) as Ranks
 const NO_RANKS_SET = Object.fromEntries(UPGRADE_IDS.map((id) => [id, 0])) as Ranks
@@ -55,6 +55,8 @@ export const scenarioStart = (s: Scenario): ReplayStart => ({
   ...(s.tms ? { tms: s.tms } : {}),
   ...(s.evo ? { evo: s.evo } : {}),
   ...(s.caps ? { caps: s.caps } : {}),
+  ...(s.wild ? { wild: s.wild } : {}),
+  ...(s.ruins ? { ruins: s.ruins } : {}),
   view: { w: 480, h: 270 },
 })
 

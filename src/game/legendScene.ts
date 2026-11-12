@@ -1,6 +1,6 @@
 import { retain } from '../engine/math'
 import { isWaveLegend, WAVE_LEGEND_HP, WAVE_LEGEND_SHINY } from '../data/legendBosses'
-import { LAKE_TRIO, SWORDS } from '../data/legends'
+import { FORCE_LEGENDS, LAKE_TRIO, SWORDS } from '../data/legends'
 import type { EnemyId } from '../data/enemies'
 import { burst, shakeScreen, updateEffects } from './effects'
 import { despawnEnemy } from './enemies'
@@ -92,8 +92,8 @@ export const legendFell = (g: Game, e: Enemy) => {
   return true
 }
 
-/** The legends caught where they fall on the open map besides the wave legendaries: the lake trio, the Swords and Hoopa at the end of its rings. */
-const capturedOnMap = (id: string) => LAKE_TRIO.some((l) => l === id) || SWORDS.some((s) => s === id) || id === 'hoopa'
+/** The legends caught where they fall on the open map besides the wave legendaries: the lake trio, the Forces of Nature, the Swords and Hoopa at the end of its rings. */
+const capturedOnMap = (id: string) => LAKE_TRIO.some((l) => l === id) || FORCE_LEGENDS.some((f) => f === id) || SWORDS.some((s) => s === id) || id === 'hoopa'
 
 /** The boss a scene keeps off the field for now (drawn by the scene itself), or -1. */
 export const sceneHides = (g: Game) => {

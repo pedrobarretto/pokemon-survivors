@@ -296,6 +296,11 @@ export const ABILITIES = {
   shadowShield: { name: 'Shadow Shield', effects: [{ kind: 'fullHp', stats: { damageTaken: -0.45 } }] },
   /** Regigigas's: it starts slow and weak, and grows into its strength over the first minute or so. */
   slowStart: { name: 'Slow Start', effects: [stats({ might: -0.3, speed: -8 }), { kind: 'timer', every: 12, max: 6, stats: { might: 0.1, speed: 2 } }] },
+  // The Ruínas da Decisão's Regis and the Forces of Nature (`data/legends.ts`).
+  transistor: { name: 'Transistor', effects: [stats({ typeDamage: { electric: 0.3 } })] },
+  dragonsMaw: { name: "Dragon's Maw", effects: [stats({ typeDamage: { dragon: 0.3 } })] },
+  prankster: { name: 'Prankster', effects: [stats({ cooldown: -0.08 }), { kind: 'tag', tag: 'status', bonus: 0.15 }] },
+  sandForce: { name: 'Sand Force', effects: [{ kind: 'weather', weather: 'sand', stats: { typeDamage: { ground: 0.3, rock: 0.3, steel: 0.3 } } }, { kind: 'immune', to: ['chip'] }] },
 } as const satisfies Record<string, AbilityDef>
 
 export type AbilityId = keyof typeof ABILITIES
@@ -462,6 +467,12 @@ export const FAMILY_ABILITIES = {
   virizion: ['leafGuard', 'quickFeet', 'sharpness'],
   keldeo: ['swiftSwim', 'sharpness', 'innerFocus'],
   hoopa: ['infiltrator', 'moldBreaker', 'adaptability'],
+  regieleki: ['static', 'quickFeet', 'voltAbsorb'],
+  regidrago: ['sturdy', 'rockHead', 'sheerForce'],
+  tornadus: ['keenEye', 'defiant', 'longReach'],
+  thundurus: ['static', 'defiant', 'voltAbsorb'],
+  landorus: ['intimidate', 'sturdy', 'sheerForce'],
+  enamorus: ['naturalCure', 'pixilate', 'magicGuard'],
   ...SEASON_ONE_EGG_ABILITIES,
   ...SEASON_ONE_KIT_ABILITIES,
   ...GA_FAMILIES_B_ABILITIES,

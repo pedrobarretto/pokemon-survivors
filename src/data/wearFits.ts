@@ -393,4 +393,11 @@ export const WEAR_FITS: Partial<Record<FitKey, SpeciesFit>> = {
   809: { rig: { E: { seat: [-2, -4] } } }, // Melmetal: turned, its little head's seat sat down on its face
   486: { rig: { E: { seat: [-2, -3] }, SE: { seat: [-1, -2] } } }, // Regigigas: turned, the brim came down onto its lights
   892: { rig: { 'SE:Idle': { seat: [0, -2] } } }, // Urshifu: idle, the brim came down to its eyes
+  // The Ruínas da Decisão's Regis and the Forces of Nature.
+  894: { no: ['head:SE'] }, // Regieleki: its body is its head, the Regi dots its face; turned a little, a hat sits over the dots
+  895: { no: ['head'] }, // Regidrago: no head between its dragon-head arms, only its core with the Regi dots on it, where any hat lands
+  642: { no: ['head:E'] }, // Thundurus: in profile its head reaches out over its arm and the hat landed on its chest
+  645: { no: ['head:E', 'head:SE'] }, // Landorus: turned, its mane and horns sweep back over its face, where a brim would sit
+  '645:therian': { no: ['head:S', 'head:SE'] }, // Landorus (Therian): its head is a small mask under a crest of horns; facing south a hat lands on its eyes
+  '905:therian': { no: ['head:E'] }, // Enamorus (Therian): in profile its horned mask juts forward and a brim covers its eyes
 }

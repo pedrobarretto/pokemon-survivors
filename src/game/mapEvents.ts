@@ -23,6 +23,7 @@ import { clearSpot } from './terrain'
 import { createFieldMissions, directMissions, FIELD_MISSIONS, type FieldMissionNotice, type FieldMissionState, type FieldMissionStates } from './fieldMissions'
 import { CASTFORM_EVENT, updateSeasonFinds, type CastformEvent } from './seasonOneFinds'
 import { REGI_TEMPLE_EVENT, updatePathRun, ZYGARDE_CELL_EVENT, ZYGARDE_CORE_EVENT, type PieceEvent, type TempleEvent } from './pathRun'
+import { SPLIT_RUINS_EVENT, type RuinsEvent } from './splitRuins'
 import { openTutor } from './tms'
 import { TUTOR, tutorWeight } from './tmRules'
 import { actAs, anchorPlayer, mostHurt, nearestPlayer, phaseOf, playerWithin, standing } from './players'
@@ -55,6 +56,8 @@ export type MapEventStates = {
   zygardeCell: PieceEvent
   zygardeCore: PieceEvent
   regiTemple: TempleEvent
+  /** The Ruínas da Decisão (`splitRuins.ts`), in the temple's place once Regigigas is captured. */
+  splitRuins: RuinsEvent
 } & FieldMissionStates
 
 export type MapEventKind = keyof MapEventStates
@@ -372,6 +375,7 @@ export const MAP_EVENTS: { [K in MapEventKind]: MapEventDef<K> } = {
   zygardeCell: ZYGARDE_CELL_EVENT,
   zygardeCore: ZYGARDE_CORE_EVENT,
   regiTemple: REGI_TEMPLE_EVENT,
+  splitRuins: SPLIT_RUINS_EVENT,
   ...FIELD_MISSIONS,
 }
 

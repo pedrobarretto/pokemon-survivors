@@ -83,7 +83,7 @@ import { pathSheet } from './ui/legendPaths'
 import { trialHud } from './ui/towerTrial'
 import { startTrial } from './game/towerTrial'
 import { COSMOG_DEX, PATH_IDS, TRIALS, type TrialId } from './data/legendPaths'
-import { clearTrial, cosmogStage, giantAwake, kubfuJoined, openForms, templeRun, towerOf } from './game/legendPaths'
+import { clearTrial, cosmogStage, giantAwake, kubfuJoined, openForms, ruinsRun, templeRun, towerOf } from './game/legendPaths'
 import { FIELD, FIELD_MISSION_KINDS, TOGEPI_DEX, type FieldMissionKind } from './game/fieldMissionRules'
 import { advancePhase, banishOffer, chooseOffer, createGame, offerAbilities, playerDex, rerollOffers, skipLevelUp, step, takeBerryLevelUps } from './game/game'
 import { applyBuild, setDummies, setLens, startTraining } from './game/training'
@@ -1082,14 +1082,16 @@ const showGifts = () => {
 
 /**
  * What the legend paths bring to a run's start (`ReplayStart`): the forms the
- * save opened for this legend (`openForms`), and Regigigas's temple, drawn
+ * save opened for this legend (`openForms`), and Regigigas's temple or the Ruínas da Decisão, drawn
  * from the seed for the Regi trio's captor (never in its own run).
  */
-const pathStart = (save: Save, starter: PlayableId, seed: number): Pick<ReplayStart, 'forms' | 'temple'> => {
+const pathStart = (save: Save, starter: PlayableId, seed: number): Pick<ReplayStart, 'forms' | 'temple' | 'ruins'> => {
   const forms = openForms(save.paths, starter)
   const caught = (id: LegendId) => isCaptured(save.legends, id)
-  const temple = starter !== 'regigigas' && templeRun(seed, giantAwake(caught), caught('regigigas'))
-  return { ...(forms.length > 0 ? { forms } : {}), ...(temple ? { temple } : {}) }
+  // Once Regigigas is captured, the Ruínas da Decisão may come in its temple's place.
+  const ruins = ruinsRun(seed, caught)
+  const temple = ruins.length === 0 && starter !== 'regigigas' && templeRun(seed, giantAwake(caught), caught('regigigas'))
+  return { ...(forms.length > 0 ? { forms } : {}), ...(temple ? { temple } : {}), ...(ruins.length > 0 ? { ruins } : {}) }
 }
 
 /** Moves the run's steps and new eggs into the incubator, once each (a victory banks, then endless banks again). */
@@ -1605,7 +1607,10 @@ const showQuest = (e: Extract<GameEvent, { kind: 'roam' | 'duel' }>) => {
   const q = questNews(e)
   if (q.sfx) playSfx(q.sfx)
   if (q.cry !== null) playCry(cryUrl(q.cry), 0.8)
-  return q.line ? news(rich(q.line), q.ms) : undefined
+  if (!q.line) return undefined
+  // A roaming legend's lines wear its portrait, as the other legends' moments do.
+  const dex = e.kind === 'roam' ? ENEMIES[e.legend].dex : null
+  return news(dex === null ? rich(q.line) : h('span', { class: 'item-toast' }, h('img', { src: portraitUrl(dex), alt: '' }), h('span', {}, rich(q.line))), q.ms)
 }
 
 const aside = (content: HTMLElement | string, ms?: number, key: string | null = null, tone: ToastTone | null = null) => runToast(ui, 'minor', content, ms, key, tone)

@@ -17,6 +17,10 @@ import { HURT_TINT } from './flashes'
 import { sceneryArt } from './scenery'
 import { PATH_ART, TEMPLE, TEMPLE_LIGHTS, TEMPLE_MARKS, TEMPLES } from './pathLegendArt'
 import { TEMPLE_RISE, TEMPLE_WAKE } from '../game/pathRun'
+import { RUINS, RUINS_SIDES } from '../data/forces'
+import { RUINS_LEGENDS } from '../data/legends'
+import { ruinSpot, ruinThreshold, RUINS_SINK, RUINS_WAKE } from '../game/splitRuins'
+import { RUIN, RUIN_GATE, RUINS_ART, ruinsIcon } from './ruinsArt'
 
 /** The temple shrunk to an arrow's icon: its middle, with the three lights on. */
 const templeIcon = lazy(() => {
@@ -353,6 +357,59 @@ const drawTemple = (ctx: Ctx, ev: MapEventOf<'regiTemple'>, t: number, calm: boo
   }
 }
 
+/**
+ * The Ruínas da Decisão: both ruins rise out of the ground like the temple;
+ * asleep, each free ruin's gate breathes its Regi's light inside a dashed
+ * ring (walk into it to choose), its sign bobbing over it; a caught Regi's
+ * ruin stands dark and shut. Once one is chosen, it lights and shakes while
+ * the other sinks back into the earth.
+ */
+const drawRuins = (ctx: Ctx, ev: MapEventOf<'splitRuins'>, t: number, calm: boolean) => {
+  const { free, pick, waking, out } = ev.state
+  const rise = Math.min(1, ev.age / RUINS.rise)
+  const up = 1 - (1 - rise) * (1 - rise)
+  for (const regi of RUINS_LEGENDS) {
+    const at = ruinSpot(ev, regi)
+    const open = free.includes(regi)
+    const chosen = pick === regi
+    const sealed = pick !== null && !chosen
+    const sink = sealed ? Math.min(1, (out ? RUINS_SINK : waking) / RUINS_SINK) : 0
+    const look = !open ? 'dark' : chosen ? 'lit' : 'asleep'
+    const sprite = RUINS_ART()[regi][look]
+    const foot = Math.round(at.y + 2)
+    const left = Math.round(at.x - RUIN.w / 2)
+    const shaking = (rise < 1 || (chosen && !out) || (sealed && sink < 1)) && !calm
+    const jolt = shaking ? (Math.floor(t * 24 + (regi === 'regieleki' ? 0 : 1)) % 2 === 0 ? 1 : -1) : 0
+    const rx = Math.round(RUIN.w / 2 + 3)
+    blitEllipse(ctx, rx, Math.max(1, Math.round(rx * 0.3)), '#5c4428', at.x, foot)
+    const shown = Math.round(RUIN.h * up * (1 - sink))
+    if (shown > 0) ctx.drawImage(sprite, 0, 0, RUIN.w, shown, left + jolt, foot - shown, RUIN.w, shown)
+    if (rise < 1 || !open || sealed) continue
+    const [glow, core] = RUINS_SIDES[regi].light
+    const gx = left + RUIN_GATE.x
+    const gy = foot - RUIN.h + RUIN_GATE.y
+    if (pick === null) {
+      // Asleep and free: the way in, a ring on the ground at its gate, and its sign over it.
+      const step = ruinThreshold(ev, regi)
+      dashedRing(ctx, step.x, step.y, RUINS.wake, t * 1.5, [glow, core], 0.55, 0.45)
+      if (!calm && (t * 1.2 + (regi === 'regieleki' ? 0 : 0.5)) % 1.6 < 0.5) blitEllipse(ctx, 3, 4, glow, gx, gy)
+      const bob = Math.round(Math.sin(t * 3 + (regi === 'regieleki' ? 0 : 1.5)) * 1.5)
+      blitCentered(ctx, RUINS_ICONS()[regi], at.x, foot - RUIN.h - 8 + bob)
+    } else if (chosen && !out) {
+      // Waking: its gate floods with light, brighter as the Regi comes.
+      const k = Math.min(1, waking / RUINS_WAKE)
+      blitEllipse(ctx, Math.round(3 + k * 3), Math.round(4 + k * 6), glow, gx, gy)
+      blitEllipse(ctx, Math.round(1 + k * 2), Math.round(2 + k * 4), core, gx, gy)
+    }
+  }
+}
+
+/** Each Regi's sign over its free ruin: a type mark in its colors on a dark disc. */
+const RUINS_ICONS = lazy(() => ({
+  regieleki: art(['.....22', '....221', '...2221', '..22211', '...221.', '..221..', '.221...', '22.....'], { 1: '#c89818', 2: '#f8e048' }, '#3a2c08'),
+  regidrago: art(['..1111...', '.122221..', '12232221.', '122222211', '1221111..', '1221.....', '.1221....', '..11.....'], { 1: '#3a8a3c', 2: '#78d058', 3: '#f8f8f8' }, '#0c2c10'),
+}))
+
 const near = (g: Game, x: number, y: number, m = 60) =>
   x > g.camera.x - m && x < g.camera.x + g.view.w + m && y > g.camera.y - m && y < g.camera.y + g.view.h + m
 
@@ -369,6 +426,7 @@ const drawEvent = (ctx: Ctx, g: Game, ev: MapEvent, t: number, calm: boolean) =>
     case 'zygardeCell':
     case 'zygardeCore': return drawPiece(ctx, ev, t, calm)
     case 'regiTemple': return drawTemple(ctx, ev, t, calm)
+    case 'splitRuins': return drawRuins(ctx, ev, t, calm)
     case 'tutor': return drawTutor(ctx, ev, t)
   }
 }
@@ -398,6 +456,7 @@ const MARKER: Partial<Record<MapEventKind, { arrow: number; icon: () => PixelSpr
   zygardeCell: { arrow: 4, icon: () => PATH_ART.cell()[0]! },
   zygardeCore: { arrow: 4, icon: () => PATH_ART.core()[0]! },
   regiTemple: { arrow: 2, icon: () => templeIcon() },
+  splitRuins: { arrow: 2, icon: () => ruinsIcon() },
   tutor: { arrow: 1, icon: () => tmDisc('#78c0f8') },
   defense: { arrow: 4, icon: () => missionIcon('defense') },
   collect: { arrow: 4, icon: () => missionIcon('collect') },
@@ -454,7 +513,7 @@ export const drawMapEventMarkers = (ctx: Ctx, g: Game, t: number) => {
     const marker = MARKER[ev.kind]
     if (ev.gone >= 0 || !marker || !MAP_EVENTS[ev.kind].marker) continue
     // The temple's giant is out: it's the boss's fight now.
-    if (ev.kind === 'regiTemple' && ev.state.out) continue
+    if ((ev.kind === 'regiTemple' || ev.kind === 'splitRuins') && ev.state.out) continue
     // A mission points at where to go next (the nearest ball, Togepi's nest).
     const at = isMission(ev) ? missionSpot(g, ev) : ev
     const icon = ev.kind === 'altar' ? consumableSprite(ev.state.buff) : marker.icon()

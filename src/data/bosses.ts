@@ -4,6 +4,7 @@ import { WAVE_LEGEND_PHASES } from './legendBosses'
 import { PERSIAN_PATTERNS, SHADOW_MEWTWO_PHASES } from './rocketHideout'
 import { SWORD_PHASES } from './quests'
 import { RUSH_PHASES } from './rush'
+import { FORCE_BOSS_PHASES } from './forces'
 import type { EnemyId } from './enemies'
 
 /** How an enemy hazard looks (and sounds when it lands). */
@@ -217,7 +218,8 @@ export const PHASE_SHIFT = 1.8
  * Bosses that fight in phases, each with its own patterns, ultimate and look:
  * the rift legendaries with a domain (`data/domains.ts`), the wave legendaries
  * (`data/legendBosses.ts`), the Swords of Justice (`data/quests.ts`), the
- * legends only Hoopa's rings bring and Hoopa itself (`data/rush.ts`), and any
+ * legends only Hoopa's rings bring and Hoopa itself (`data/rush.ts`), the
+ * Forces of Nature there (`data/forces.ts`), and any
  * wave boss given phases here.
  */
 export const BOSS_PHASES: Partial<Record<EnemyId, readonly BossPhase[]>> = {
@@ -226,6 +228,7 @@ export const BOSS_PHASES: Partial<Record<EnemyId, readonly BossPhase[]>> = {
   shadowMewtwo: SHADOW_MEWTWO_PHASES,
   ...SWORD_PHASES,
   ...RUSH_PHASES,
+  ...FORCE_BOSS_PHASES,
 }
 
 /** Every attack a boss has, across its phases (ultimates' steps included), for the guide and the Pokédex. */

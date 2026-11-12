@@ -2004,6 +2004,22 @@ shinies are our own palette swaps, credited in their rows. This file is generate
 | 201 | Unown (N) | [CHUNSOFT](https://www.spike-chunsoft.com/) | — |
 | 201 | Unown (O) | [CHUNSOFT](https://www.spike-chunsoft.com/) | — |
 | 201 | Unown (U) | [CHUNSOFT](https://www.spike-chunsoft.com/) | — |
+| 894 | Regieleki | baronessfaron | [EzerArt](https://twitter.com/EzerArt_), CamusZekeSirius |
+| 894 | Regieleki (shiny) | Ichor, [Caitemis](https://caitemis-art.tumblr.com/) | CamusZekeSirius |
+| 895 | Regidrago | baronessfaron | [EzerArt](https://twitter.com/EzerArt_), CamusZekeSirius |
+| 895 | Regidrago (shiny) | Ichor, ShyStarryRain | CamusZekeSirius, ShyStarryRain |
+| 641 | Tornadus | Top_Kec | [G〜](https://bsky.app/profile/justtr4sh.pmd.social) |
+| 641 | Tornadus (shiny) | Top_Kec | [G〜](https://bsky.app/profile/justtr4sh.pmd.social) |
+| 642 | Thundurus | Top_Kec | [G〜](https://bsky.app/profile/justtr4sh.pmd.social) |
+| 642 | Thundurus (shiny) | Top_Kec | [G〜](https://bsky.app/profile/justtr4sh.pmd.social) |
+| 645 | Landorus | Top_Kec | [G〜](https://bsky.app/profile/justtr4sh.pmd.social) |
+| 645 | Landorus (shiny) | Top_Kec | [G〜](https://bsky.app/profile/justtr4sh.pmd.social) |
+| 645 | Landorus (Therian) | [pi3.14](https://twitter.com/Pi_y_ranitas), baronessfaron | — |
+| 645 | Landorus (Therian, shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
+| 905 | Enamorus | baronessfaron | baronessfaron |
+| 905 | Enamorus (shiny) | [G〜](https://bsky.app/profile/justtr4sh.pmd.social) | [G〜](https://bsky.app/profile/justtr4sh.pmd.social) |
+| 905 | Enamorus (Therian) | baronessfaron | — |
+| 905 | Enamorus (Therian, shiny) | [G〜](https://bsky.app/profile/justtr4sh.pmd.social) | — |
 
 ## Shop art
 

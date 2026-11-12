@@ -131,7 +131,9 @@ export const CAFE_CARDS = [201]
  * Keldeo, and Hoopa of the ring rush (and Hoopa Unbound). All playable in Legend mode, all able to roll shiny.
  */
 export const QUEST_LEGENDS = [484, 480, 481, 482, 638, 639, 640, 647, 720]
-export const DEX = [...new Set([...STARTERS, ...HATCHLINGS, ...ROCKET_FAMILIES, ...ROCKET_CAST, ...HORDE, ...TRAITS, ...BOSSES, ...CRITTERS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...CAMEOS, ...FESTIVAL_LEGENDS, ...REAPER, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...COMPANIONS, ...HALLOWEEN_BOSSES, ...SHOPKEEPERS, ...TERA_LEGENDS, ...ULTRA_BEASTS, ...LEGEND_PATHS, ...QUEST_LEGENDS, ...CAFE_CARDS])]
+/** The Ruínas da Decisão's Regis (Regieleki, Regidrago) and the Forces of Nature (Tornadus, Thundurus, Landorus, Enamorus), src/data/forces.ts. */
+export const RUINS_FORCES = [894, 895, 641, 642, 645, 905]
+export const DEX = [...new Set([...STARTERS, ...HATCHLINGS, ...ROCKET_FAMILIES, ...ROCKET_CAST, ...HORDE, ...TRAITS, ...BOSSES, ...CRITTERS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...CAMEOS, ...FESTIVAL_LEGENDS, ...REAPER, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...COMPANIONS, ...HALLOWEEN_BOSSES, ...SHOPKEEPERS, ...TERA_LEGENDS, ...ULTRA_BEASTS, ...LEGEND_PATHS, ...QUEST_LEGENDS, ...CAFE_CARDS, ...RUINS_FORCES])]
 /**
  * The Arena's emotes (`emote` in src/data/arenaEffects.ts, `EMOTE_ANIMS` there too): extra SpriteCollab
  * animations, only for the species the Arena plays (the starters' lines) and only their front row
@@ -156,8 +158,8 @@ export const SHINY_LEGENDS = [144, 145, 146, 150, 151, 243, 244, 245, 251, 377, 
  * mode's legends (the rift, event, festival and quest legends, the trios, the mythicals, Mewtwo and Arceus). The species whose
  * wearables `npm run rig` fits, with their `FORMS` (`render/wearFit.test.ts` keeps them in sync with `PLAYABLE`).
  */
-export const PLAYERS = [...new Set([...STARTERS, ...HATCHLINGS, ...ROCKET_FAMILIES, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...SHINY_LEGENDS, ...TERA_LEGENDS, ...ULTRA_BEASTS, ...LEGEND_PATHS, ...QUEST_LEGENDS])]
-export const SHINY = new Set([...STARTERS, ...HATCHLINGS, ...ROCKET_FAMILIES, ...HORDE, ...TRAITS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...SHINY_LEGENDS, ...COMPANIONS, ...ULTRA_BEASTS, ...TERA_LEGENDS, ...LEGEND_PATHS, ...QUEST_LEGENDS])
+export const PLAYERS = [...new Set([...STARTERS, ...HATCHLINGS, ...ROCKET_FAMILIES, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...SHINY_LEGENDS, ...TERA_LEGENDS, ...ULTRA_BEASTS, ...LEGEND_PATHS, ...QUEST_LEGENDS, ...RUINS_FORCES])]
+export const SHINY = new Set([...STARTERS, ...HATCHLINGS, ...ROCKET_FAMILIES, ...HORDE, ...TRAITS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...SHINY_LEGENDS, ...COMPANIONS, ...ULTRA_BEASTS, ...TERA_LEGENDS, ...LEGEND_PATHS, ...QUEST_LEGENDS, ...RUINS_FORCES])
 
 /**
  * Alternate formes the game draws, by key, mapped to their SpriteCollab form id
@@ -212,6 +214,9 @@ export const FORMS = {
   892: { rapid: '0001' },
   484: { origin: '0001' }, // Palkia's Origin Forme (its rift's last phase, its second awakening)
   720: { unbound: '0001' }, // Hoopa Unbound (its second awakening, the ring rush's last ring)
+  // The Forces of Nature's Therian Formes (their second awakening): SpriteCollab has them for Landorus and Enamorus only.
+  645: { therian: '0001' },
+  905: { therian: '0001' },
 }
 
 /**
@@ -305,6 +310,8 @@ export const FORM_CRIES = {
   892: { rapid: 'urshifu-rapid-strike' },
   484: { origin: 'palkia-origin' },
   720: { unbound: 'hoopa-unbound' },
+  645: { therian: 'landorus-therian' },
+  905: { therian: 'enamorus-therian' },
   500: { mega: 'emboar-mega' },
   652: { mega: 'chesnaught-mega' },
   208: { mega: 'steelix-mega' },

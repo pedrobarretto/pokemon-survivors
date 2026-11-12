@@ -28,6 +28,7 @@ import { abilityMark, abilityMarkKey } from './abilityMark'
 import { megaIcon } from '../render/megaFx'
 import { h, setStyle, setText } from './dom'
 import { createDuelCard } from './quests'
+import { createRuinsCard } from './ruinsCard'
 import { createRiftHud } from './riftHud'
 import { createPlaceCard } from './placeCard'
 import { createRiftTitle } from './riftTitle'
@@ -63,6 +64,7 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
   const lunge = createLungeControls(onLunge)
   const rift = createRiftHud()
   const duel = createDuelCard()
+  const ruins = createRuinsCard()
   const card = createPlaceCard()
   const title = createRiftTitle()
   const mission = createFieldMissionHud()
@@ -145,6 +147,7 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
     boss,
     rift.el,
     duel.el,
+    ruins.el,
     card.el,
     title.el,
     mission.el,
@@ -260,6 +263,7 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
     lunge.update(g)
     rift.update(g)
     duel.update(g)
+    ruins.update(g)
     card.update(g)
     title.update(g)
     mission.update(g, !rift.el.classList.contains('hidden'))

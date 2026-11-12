@@ -53,7 +53,8 @@ export { decodeSnapshot, diffStates, restore, snapshot, stateHash }
 /**
  * The runs the harness plays: long, busy ones (bosses, rifts, evolutions, a
  * Mega line, a branching one, endless mode, every difficulty, a haunted
- * Legend-mode run, a run with Bag items, armed shop TMs and Bottle Caps), then
+ * Legend-mode run, a run with Bag items, armed shop TMs and Bottle Caps, one
+ * with a Force of Nature and the Ruínas da Decisão), then
  * every playable (legends too) for a few minutes, so each family's own moves
  * get played too.
  */
@@ -76,6 +77,12 @@ export const HARNESS_SCENARIOS: ReadonlyArray<{ name: string; scenario: AnyScena
     name: 'bulbasaur-bag-tms-caps-10min',
     scenario: { seed: 777, starter: 'bulbasaur', difficulty: 'hard', maxRanks: true, bag: ['rareCandy', 'luckyEgg', 'xAttack', 'maxRevive'], tms: ['payDay', 'thief', 'rainDance', 'swordsDance'], caps: 3 },
     minutes: 10,
+  },
+  // A Force of Nature roaming with its weather (its visits, entrance and phases) and the Ruínas da Decisão rising.
+  {
+    name: 'charmander-force-ruins-9min',
+    scenario: { seed: 6000, starter: 'charmander', difficulty: 'normal', maxRanks: true, wild: { lake: {}, swords: [], forces: { tornadus: 0.6, thundurus: 1 } }, ruins: ['regieleki', 'regidrago'] },
+    minutes: 9,
   },
   ...[...PLAYABLE_IDS, ...LEGEND_IDS].map((starter, i) => ({
     name: `${starter}-3min`,

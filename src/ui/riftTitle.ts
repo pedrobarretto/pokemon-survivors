@@ -4,6 +4,7 @@ import type { RiftLegend } from '../data/rifts'
 import { ENCOUNTER, REVEAL_AT } from '../game/domainRules'
 import { ENTRANCE, ENTRANCE_REVEAL } from '../game/legendScene'
 import { isWaveLegend } from '../data/legendBosses'
+import { isForceLegend } from '../data/legends'
 import type { Game } from '../game/types'
 import { t } from '../i18n'
 import type { DomainLines } from '../i18n/pt'
@@ -30,12 +31,13 @@ export const createRiftTitle = () => {
     const d = g.rift.arena?.domain
     // A wave legendary's entrance on the map shows the same card (`legendScene.ts`).
     const s = g.legendScene
-    const wave = s?.kind === 'entrance' && isWaveLegend(s.enemy) && s.t >= ENTRANCE_REVEAL && s.t < ENTRANCE_REVEAL + ENTRANCE.hold + 0.3 ? s.enemy : null
+    // A Force of Nature's first visit plays one too (`roamers.ts`).
+    const wave = s?.kind === 'entrance' && (isWaveLegend(s.enemy) || isForceLegend(s.enemy)) && s.t >= ENTRANCE_REVEAL && s.t < ENTRANCE_REVEAL + ENTRANCE.hold + 0.3 ? s.enemy : null
     const show = wave !== null || (d?.act === 'encounter' && d.scene >= REVEAL_AT && d.scene < REVEAL_AT + ENCOUNTER.hold + 0.4)
     if (show && wave) {
       const boss = g.enemies.find((e) => e.id === s?.bossId)
       setText(name, `${boss?.shiny ? '★ ' : ''}${ENEMIES[wave].name}`)
-      setText(epithet, t().legends.epithets[wave])
+      setText(epithet, isWaveLegend(wave) ? t().legends.epithets[wave] : isForceLegend(wave) ? t().regisForces.epithets[wave] : '')
     } else if (show && d) {
       const partner = partnerOf(d.legend)
       const names = partner ? t().rifts.pairName(ENEMIES[d.legend].name, ENEMIES[partner].name) : ENEMIES[d.legend].name

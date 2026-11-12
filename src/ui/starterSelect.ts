@@ -8,7 +8,7 @@ import { megasOf } from '../data/megas'
 import { bodyOf } from '../data/bodies'
 import { DIFFICULTY_IDS, type Difficulty } from '../game/difficulty'
 import { incubatorSlots, isReady } from '../game/eggs'
-import { giftLegend, isLakeLegend, isLegend, isUltraLegend, LEGEND_IDS, legendEvent, legendFestival, legendPath, LEGENDS, REGULAR_LEGENDS, type LegendId } from '../data/legends'
+import { giftLegend, isRoamer, isLegend, isUltraLegend, LEGEND_IDS, legendEvent, legendFestival, legendPath, LEGENDS, REGULAR_LEGENDS, type LegendId } from '../data/legends'
 import { ULTRA_BEASTS } from '../data/ultraBeasts'
 import { ultraCaptured } from '../game/ultraGifts'
 import { beastBallIcon } from '../render/ultraArt'
@@ -512,7 +512,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
       const missing = legendSource(id) === 'endless' ? stillMissing(save.legends, id) : []
       // A legend caught its own way (`questSource`) says how instead of counting wins; a roamer shows the HP it has left.
       const quest = questSource(id)
-      const roamLeft = legendSource(id) === 'roam' && isLakeLegend(id) ? (save.roamers[id] ?? 1) : null
+      const roamLeft = isRoamer(id) ? (save.roamers[id] ?? 1) : null
       hero.replaceChildren(
         h(
           'div',
