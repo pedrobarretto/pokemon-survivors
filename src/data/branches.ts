@@ -285,8 +285,8 @@ export type BranchId = keyof typeof BRANCHES
 
 export const BRANCH_IDS = Object.keys(BRANCHES) as BranchId[]
 
-/** The Megas only one branch can reach: Glalie's, Gardevoir's, Gallade's, Scizor's and Raichu's (never the Alolan one). */
-export const MEGA_BRANCH: Partial<Record<MegaId, BranchId>> = { glalie: 'glalie', gardevoir: 'gardevoir', gallade: 'gallade', scizor: 'scizor', raichuX: 'raichu', raichuY: 'raichu' }
+/** The Megas only one branch can reach: Glalie's, Froslass's, Gardevoir's, Gallade's, Scizor's and Raichu's (never the Alolan one). */
+export const MEGA_BRANCH: Partial<Record<MegaId, BranchId>> = { glalie: 'glalie', froslass: 'froslass', gardevoir: 'gardevoir', gallade: 'gallade', scizor: 'scizor', raichuX: 'raichu', raichuY: 'raichu' }
 
 /** How much likelier a free branch the run's weather or biome favors is drawn than the others (`evolutionOffers`). */
 export const BRANCH_FAVOR_WEIGHT = 3

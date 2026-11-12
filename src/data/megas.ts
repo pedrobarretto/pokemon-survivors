@@ -1,8 +1,10 @@
 import type { SpecialId } from '../game/special'
 import type { StatDelta } from '../game/stats'
 import type { StatusSpec } from '../game/status'
+import type { AbilityEffect } from './abilities'
 import type { WeatherId } from './biomes'
 import type { PlayableId } from './hatchlings'
+import type { PathFormId } from './legendPaths'
 
 /**
  * Mega Evolutions: the final stage of a line with a Mega can Mega Evolve once
@@ -25,6 +27,20 @@ export type MegaEffect =
   | { kind: 'aura'; radius: number; every: number; status: StatusSpec }
   /** Mega Evolving outside a rift arena starts this weather (Sand Stream, Drought, Swift Swim's rain). */
   | { kind: 'weather'; weather: WeatherId }
+  /**
+   * The ability's own effects, played by the ability engine (`game/abilities.ts`) while the form
+   * lasts, in the picked ability's place: Sharpness's slicing moves, Intimidate's weakening glare.
+   * With `weather`, Mega Evolving outside a rift arena also starts it (Snow Warning).
+   */
+  | { kind: 'ability'; effects: readonly MegaAbilityEffect[]; weather?: WeatherId }
+  /** Commander: Mega Evolving calls Dondozo at once, unless it just left (Tatsugiri's kit, `seasonOneKitSystem.ts`). */
+  | { kind: 'commander' }
+
+/**
+ * The ability effects a Mega can play. Not the ones that live a whole run (a summon tied to the
+ * biome, Sturdy's once-a-run hold, Unburden, Moody, drops, luck): the form lasts seconds.
+ */
+export type MegaAbilityEffect = Exclude<AbilityEffect, { kind: 'summon' | 'sturdy' | 'unburden' | 'moody' | 'drop' | 'luck' }>
 
 export type MegaDef = {
   line: PlayableId
@@ -45,6 +61,11 @@ export type MegaDef = {
   stats: StatDelta
   /** The special while the Mega form lasts (`SPECIALS`). */
   special: SpecialId
+  /**
+   * The path form it Mega Evolves from (Zygarde's Complete Forme, `data/legendPaths.ts`): only a
+   * run that opened that form gets its stone, and it Mega Evolves only while wearing it.
+   */
+  from?: PathFormId
 }
 
 /** Mega Evolutions by id, in Pokédex order. To add one: its entry here, its cry (and sprite, once SpriteCollab has it) in `scripts/dex.mjs`, its special and i18n lines. */
@@ -560,6 +581,163 @@ export const MEGAS = {
     stats: { might: 0.3, speed: 8, typeDamage: { electric: 0.2 } },
     special: 'zapCannon',
   },
+  /* Legends Z-A's and its Mega Dimension's Megas on lines already playable (Mewtwo X and Heracross and Abomasnow from X and Y). */
+  mewtwoX: {
+    line: 'mewtwo',
+    name: 'Mega Mewtwo X',
+    stone: 'Mewtwonite X',
+    form: 'megaX',
+    colors: ['#605870', '#c8c0d8', '#58a8f0'],
+    ability: 'Steadfast',
+    // Each hit taken stacks speed and power, for a few seconds: it fights back harder.
+    effect: { kind: 'ability', effects: [{ kind: 'onHurt', seconds: 4, max: 3, stats: { speed: 8, might: 0.06 } }] },
+    stats: { might: 0.4, speed: 8, armor: 1, typeDamage: { fighting: 0.3 } },
+    special: 'psychoCut',
+  },
+  heracross: {
+    line: 'heracross',
+    name: 'Mega Heracross',
+    stone: 'Heracronite',
+    form: 'mega',
+    colors: ['#2848a0', '#90b0f0', '#f8d048'],
+    ability: 'Skill Link',
+    // Multi-hit moves always land every hit: one more projectile, and the light hits that come in volleys hit harder.
+    effect: { kind: 'ability', effects: [{ kind: 'tag', tag: 'weak', bonus: 0.4 }] },
+    stats: { might: 0.3, armor: 2, amount: 1 },
+    special: 'megahorn',
+  },
+  abomasnow: {
+    line: 'snover',
+    name: 'Mega Abomasnow',
+    stone: 'Abomasite',
+    form: 'mega',
+    colors: ['#c8d8e8', '#ffffff', '#58a058'],
+    ability: 'Snow Warning',
+    // The snow it calls wears the horde down (not it: it's Ice), and ice and water underfoot don't slow it.
+    effect: { kind: 'ability', weather: 'snow', effects: [{ kind: 'immune', to: ['terrain'] }] },
+    stats: { maxHp: 60, armor: 2, might: 0.2, typeDamage: { ice: 0.2, grass: 0.2 } },
+    special: 'avalanche',
+  },
+  /** Only for the runs that took Snorunt to Froslass (`MEGA_BRANCH` in `data/branches.ts`); Mega Glalie is the other branch's. */
+  froslass: {
+    line: 'snorunt',
+    name: 'Mega Froslass',
+    stone: 'Froslassite',
+    form: 'mega',
+    colors: ['#e0e8f8', '#ffffff', '#8858c8'],
+    ability: 'Snow Warning',
+    // The snow it calls and a touch of cold: foes near it may freeze.
+    effect: { kind: 'ability', weather: 'snow', effects: [{ kind: 'aura', radius: 64, every: 1, status: { kind: 'freeze', chance: 0.2, duration: 1, power: 0 } }] },
+    stats: { speed: 12, might: 0.25, typeDamage: { ice: 0.2, ghost: 0.2 } },
+    special: 'icyWind',
+  },
+  scrafty: {
+    line: 'scraggy',
+    name: 'Mega Scrafty',
+    stone: 'Scraftinite',
+    form: 'mega',
+    colors: ['#e0b030', '#f8e898', '#d83838'],
+    ability: 'Intimidate',
+    // Foes near it lose their bite, and bodies that reach it hit softer.
+    effect: { kind: 'ability', effects: [{ kind: 'resist', hits: ['body'], factor: 0.7 }, { kind: 'aura', radius: 80, every: 0.5, status: { kind: 'weaken', chance: 1, duration: 0.8, power: 0.3 } }] },
+    stats: { maxHp: 40, armor: 2, might: 0.25, typeDamage: { fighting: 0.2, dark: 0.2 } },
+    special: 'highJumpKick',
+  },
+  chandelure: {
+    line: 'litwick',
+    name: 'Mega Chandelure',
+    stone: 'Chandelurite',
+    form: 'mega',
+    colors: ['#382848', '#9878c8', '#f8a838'],
+    ability: 'Infiltrator',
+    // Its hits slip past the wards allies put on wild Pokémon, and its flames lick at foes nearby.
+    effect: { kind: 'ability', effects: [{ kind: 'immune', to: ['wards'] }, { kind: 'aura', radius: 80, every: 1, status: { kind: 'burn', chance: 0.35, duration: 2, power: 0.3 } }] },
+    stats: { might: 0.3, statusDamage: 0.3, area: 0.1 },
+    special: 'inferno',
+  },
+  golurk: {
+    line: 'golett',
+    name: 'Mega Golurk',
+    stone: 'Golurkite',
+    form: 'mega',
+    colors: ['#3868a0', '#a8c8e0', '#f8e058'],
+    ability: 'Unseen Fist',
+    // Its fists go through every guard: punches hit harder and slip past the wards on wild Pokémon.
+    effect: { kind: 'ability', effects: [{ kind: 'tag', tag: 'punch', bonus: 0.4 }, { kind: 'immune', to: ['wards'] }] },
+    stats: { maxHp: 50, armor: 2, might: 0.25 },
+    special: 'shadowPunch',
+  },
+  malamar: {
+    line: 'inkay',
+    name: 'Mega Malamar',
+    stone: 'Malamarite',
+    form: 'mega',
+    colors: ['#4848a0', '#a8a8f0', '#f8d838'],
+    ability: 'Contrary',
+    // Every hit taken makes it stronger for the rest of the form, and its lights confuse foes nearby.
+    effect: { kind: 'ability', effects: [{ kind: 'onHurt', seconds: Infinity, max: 10, stats: { might: 0.04 } }, { kind: 'aura', radius: 72, every: 1, status: { kind: 'confuse', chance: 0.25, duration: 1.5, power: 0 } }] },
+    stats: { might: 0.15, cooldown: -0.1, statusChance: 0.08, maxHp: 30 },
+    special: 'foulPlay',
+  },
+  golisopod: {
+    line: 'wimpod',
+    name: 'Mega Golisopod',
+    stone: 'Golisopite',
+    form: 'mega',
+    colors: ['#484c58', '#c0c4d0', '#e8e8f0'],
+    ability: 'Tough Claws',
+    effect: { kind: 'stats' },
+    stats: { might: 0.35, armor: 3, typeDamage: { bug: 0.25, steel: 0.25 } },
+    special: 'firstImpression',
+  },
+  baxcalibur: {
+    line: 'frigibax',
+    name: 'Mega Baxcalibur',
+    stone: 'Baxcalibrite',
+    form: 'mega',
+    colors: ['#5878a0', '#c8e0f0', '#f8c840'],
+    ability: 'Thermal Exchange',
+    // Fire can't burn it: half damage from Fire attacks, and lava doesn't hurt.
+    effect: { kind: 'ability', effects: [{ kind: 'resist', types: ['fire'], factor: 0.5 }, { kind: 'immune', to: ['lava'] }] },
+    stats: { might: 0.35, maxHp: 40, typeDamage: { dragon: 0.2, ice: 0.2 } },
+    special: 'glaiveRush',
+  },
+  absolZ: {
+    line: 'absol',
+    name: 'Mega Absol Z',
+    stone: 'Absolite Z',
+    form: 'megaZ',
+    colors: ['#202838', '#c8c8e0', '#5848c8'],
+    ability: 'Sharpness',
+    effect: { kind: 'ability', effects: [{ kind: 'tag', tag: 'slice', bonus: 0.5 }] },
+    stats: { might: 0.25, speed: 12, cooldown: -0.08 },
+    special: 'kowtowCleave',
+  },
+  /** Its own ability, Commander (PokeAPI lists none for the Mega): Dondozo answers the transformation. */
+  tatsugiri: {
+    line: 'tatsugiri',
+    name: 'Mega Tatsugiri',
+    stone: 'Tatsugirinite',
+    form: 'mega',
+    colors: ['#e87858', '#f8d0b8', '#f8f0e8'],
+    ability: 'Commander',
+    effect: { kind: 'commander' },
+    stats: { might: 0.25, cooldown: -0.12, typeDamage: { dragon: 0.2, water: 0.2 } },
+    special: 'chillingWater',
+  },
+  /** From the Complete Forme only (`from`). Its own ability, Aura Break (PokeAPI lists none for the Mega): the auras of Dark and Fairy break on it. */
+  zygarde: {
+    line: 'zygarde',
+    name: 'Mega Zygarde',
+    stone: 'Zygardite',
+    form: 'mega',
+    colors: ['#284828', '#78c078', '#e84838'],
+    ability: 'Aura Break',
+    effect: { kind: 'ability', effects: [{ kind: 'resist', types: ['dark', 'fairy'], factor: 0.5 }, { kind: 'bossHunter', bonus: 0.2 }] },
+    stats: { maxHp: 50, might: 0.3, armor: 2 },
+    special: 'thousandArrows',
+    from: 'zygardeComplete',
+  },
 } as const satisfies Record<string, MegaDef>
 
 export type MegaId = keyof typeof MEGAS
@@ -571,7 +749,7 @@ export type MegaLine = (typeof MEGAS)[MegaId]['line']
 
 export const MEGA_LINES = [...new Set(MEGA_IDS.map((id) => MEGAS[id].line))]
 
-/** The Mega Evolutions of a line, in data order (empty for the lines without one). Charizard, Raichu, Garchomp and Lucario have two. */
+/** The Mega Evolutions of a line, in data order (empty for the lines without one). Charizard, Raichu, Mewtwo, Absol, Garchomp and Lucario have two. */
 export const megasOf = (line: PlayableId): readonly MegaId[] => MEGA_IDS.filter((id) => MEGAS[id].line === line)
 
 /** Timing and the burst of a Mega Evolution, in seconds and world px. */

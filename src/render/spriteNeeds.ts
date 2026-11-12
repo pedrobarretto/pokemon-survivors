@@ -7,7 +7,7 @@ import { phasesOf } from '../game/bossFight'
 import { ENDLESS, REAPER } from '../game/endless'
 import { playerDex } from '../game/game'
 import { formAfter } from '../game/legend'
-import { heldMega, isFinalStage } from '../game/mega'
+import { atMegaBase, heldMega } from '../game/mega'
 import { placePool } from '../game/place'
 import { actAs } from '../game/players'
 import { bossSummons, type Roster } from '../game/roster'
@@ -126,7 +126,7 @@ export const playerForms = (g: Game): Variant[] =>
   g.players.flatMap((p) => {
     const before = actAs(g, p)
     const dex = playerDex(g)
-    const mega = isFinalStage(p.starter, p.stage) ? heldMega(g) : null
+    const mega = atMegaBase(p) ? heldMega(g) : null
     actAs(g, before)
     // A legend's looks from its first awakening on (from the start with a path's forms: Zygarde 50%, Urshifu): the one it wears and the next.
     // Terapagos's Stellar Form wears its Terastal Form's sheets (`sheetForm`).

@@ -19,7 +19,7 @@ import { fitView, pickViewport } from './engine/viewport'
 import { createRng } from './engine/rng'
 import { BIOMES, type BiomeId, type WeatherId } from './data/biomes'
 import { bodyOf } from './data/bodies'
-import { MEGA_LINES, MEGAS, megasOf, type MegaId } from './data/megas'
+import { MEGA_LINES, MEGAS, megasOf, type MegaDef, type MegaId } from './data/megas'
 import { isRiftLegend } from './data/rifts'
 import { isUltraBeast } from './data/ultraBeasts'
 import { domainTheme } from './game/domain'
@@ -82,7 +82,7 @@ import { pathDevTools } from './ui/pathDev'
 import { pathSheet } from './ui/legendPaths'
 import { trialHud } from './ui/towerTrial'
 import { startTrial } from './game/towerTrial'
-import { COSMOG_DEX, PATH_IDS, TRIALS, type TrialId } from './data/legendPaths'
+import { COSMOG_DEX, PATH_FORMS, PATH_IDS, TRIALS, type TrialId } from './data/legendPaths'
 import { clearTrial, cosmogStage, giantAwake, kubfuJoined, openForms, templeRun, towerOf } from './game/legendPaths'
 import { FIELD, FIELD_MISSION_KINDS, TOGEPI_DEX, type FieldMissionKind } from './game/fieldMissionRules'
 import { advancePhase, banishOffer, chooseOffer, createGame, offerAbilities, playerDex, rerollOffers, skipLevelUp, step, takeBerryLevelUps } from './game/game'
@@ -99,7 +99,7 @@ import { branchesAt, familyDex, MEGA_BRANCH, type BranchId } from './data/branch
 import { abilityStacks, grantAbility } from './game/abilities'
 import { abilityIcon } from './render/abilityArt'
 import { recomputeStats, xpFor } from './game/leveling'
-import { dropMegaStones, grantStone, heldMega, megaBaseName } from './game/mega'
+import { atMegaBase, dropMegaStones, grantStone, heldMega, megaBaseName } from './game/mega'
 import { REAPER } from './game/endless'
 import { continueEndless } from './game/endlessSystem'
 import { levelUpDevTools } from './game/levelUpDev'
@@ -2273,9 +2273,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
     case 'megaStone': {
       const def = heldMega(g)
       if (!def) return
-      const me = localPlayer(g)
-      const line = PLAYABLE[me.starter].line
-      const final = me.stage >= line.length - 1
+      const final = atMegaBase(localPlayer(g))
       playSfx('unlock')
       return news(
         h('span', { class: 'item-toast mega-toast' }, h('img', { src: megaStoneIcon(def), alt: '' }), h('span', {}, rich(t().mega.stone(def.stone)), h('small', {}, rich(final ? t().mega.stoneReady : t().mega.stoneLocked(megaBaseName(g)))))),
@@ -4680,6 +4678,9 @@ const devMega = (mode: 'now' | 'ready' | 'stone' = 'now', mega?: MegaId) => {
   const pick = mega ?? ids[0]
   // A branch's Mega (Gallade's) needs its branch.
   localPlayer(g).branch = MEGA_BRANCH[pick] ?? localPlayer(g).branch
+  // A path form's Mega (Zygarde's) needs that form, opened and worn.
+  const def: MegaDef = MEGAS[pick]
+  if (def.from && p.legend) p.legend = { ...p.legend, forms: [...new Set([...p.legend.forms, def.from])], awakened: Math.max(p.legend.awakened, PATH_FORMS[def.from].at) }
   p.stage = PLAYABLE[localPlayer(g).starter].line.length - 1
   p.radius = Math.max(6, Math.round(bodyOf(playerDex(g)).bodyW * 0.3))
   recomputeStats(g)

@@ -254,6 +254,12 @@ export const updateSeasonKit = (g: Game, dt: number) => {
   }
 }
 
+/** Mega Tatsugiri's Commander: the transformation fills the meter, so Dondozo comes on the next tick, unless it's aboard or just left. */
+export const callDondozo = (g: Game) => {
+  const kit = g.player.kit
+  if (kit?.kind === 'commander' && kit.left <= 0 && kit.lockout <= 0) kit.meter = KIT.commander.need
+}
+
 /** A hit landed on the acting player (HP already taken): Rage stacks, Emergency Exit fires. */
 export const seasonKitHurt = (g: Game, dmg: number) => {
   const p = g.player

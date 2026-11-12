@@ -1,5 +1,6 @@
 import { MEGA, MEGAS, megasOf, type MegaDef, type MegaId } from '../data/megas'
 import { MEGA_BRANCH } from '../data/branches'
+import { PATH_FORMS } from '../data/legendPaths'
 import { PLAYABLE, type PlayableId } from '../data/hatchlings'
 import { formAt } from './branch'
 import { burst, shakeScreen } from './effects'
@@ -13,6 +14,8 @@ import { setWeather } from './weather'
 import * as dm from '../engine/dmath'
 import { roomOf } from './room'
 import { teraBusy } from './tera'
+import { callDondozo } from './seasonOneKitSystem'
+import type { Player } from './types'
 
 /**
  * Mega Evolution in a run. Beating a rift legendary drops the line's Mega
@@ -66,24 +69,41 @@ export const tickMega = (s: Pick<MegaState, 'active' | 'charge'>, dt: number): '
   return s.charge <= 0 ? 'ready' : null
 }
 
-/** Whether a Mega fits the run's branch: a branch's own Mega (Gallade's) only once the run took that branch. */
-const fitsBranch = (g: Game, mega: MegaId) => {
+/**
+ * Whether a Mega fits the run: a branch's own Mega (Gallade's) only once the run took that branch
+ * (or before it branched), one from a path form (Zygarde's) only in a run that opened that form.
+ */
+const fitsRun = (g: Game, mega: MegaId) => {
   const branch = MEGA_BRANCH[mega]
-  return !branch || g.player.branch === null || g.player.branch === branch
+  const def: MegaDef = MEGAS[mega]
+  return (!branch || g.player.branch === null || g.player.branch === branch) && (!def.from || (g.player.legend?.forms.includes(def.from) ?? false))
 }
 
-/** The Megas the run can still reach: the line's, less those of a branch it didn't take. */
-export const runMegas = (g: Game) => megasOf(g.player.starter).filter((id) => fitsBranch(g, id))
+/** The Megas the run can still reach: the line's, less those of a branch it didn't take or a form it didn't open. */
+export const runMegas = (g: Game) => megasOf(g.player.starter).filter((id) => fitsRun(g, id))
 
 /**
  * The Mega the run holds the stone of, or null. A stone of the branch the run
  * didn't take (a Glalitite for a Froslass) is dead weight: the next rift drops a fitting one, if any.
  */
-export const heldMega = (g: Game): MegaDef | null => (g.player.mega.stone && fitsBranch(g, g.player.mega.stone) ? MEGAS[g.player.mega.stone] : null)
+export const heldMega = (g: Game): MegaDef | null => (g.player.mega.stone && fitsRun(g, g.player.mega.stone) ? MEGAS[g.player.mega.stone] : null)
 
-/** The final stage the held Mega Evolves from: the branch's own for a branch's Mega (Gallade), else the run's. */
+/**
+ * Whether player `p` stands where its held Mega Evolves from: the line's final stage and, for a Mega
+ * from a path form, wearing it (Zygarde from its second awakening on, once Complete).
+ */
+export const atMegaBase = (p: Player) => {
+  if (!isFinalStage(p.starter, p.stage)) return false
+  const def: MegaDef | null = p.mega.stone ? MEGAS[p.mega.stone] : null
+  if (!def?.from) return true
+  return p.legend !== null && p.legend.forms.includes(def.from) && p.legend.awakened >= PATH_FORMS[def.from].at
+}
+
+/** What the held Mega Evolves from: the path form (Zygarde Complete), else the final stage, the branch's own for a branch's Mega (Gallade), else the run's. */
 export const megaBaseName = (g: Game) => {
   const stone = g.player.mega.stone
+  const def: MegaDef | null = stone ? MEGAS[stone] : null
+  if (def?.from) return PATH_FORMS[def.from].name
   const line = PLAYABLE[g.player.starter].line
   return formAt(g.player.starter, (stone && MEGA_BRANCH[stone]) || g.player.branch, line.length - 1).name
 }
@@ -136,6 +156,7 @@ const transform = (g: Game, def: MegaDef) => {
   s.active = MEGA.duration
   s.pulse = 0
   s.count++
+  freshStacks(g, def)
   recomputeStats(g)
   g.player.special.cooldown = 0
   p.iframes = Math.max(p.iframes, MEGA.iframes)
@@ -148,14 +169,31 @@ const transform = (g: Game, def: MegaDef) => {
   burst(g, p.x, p.y - 12, { colors: [...rainbow, '#ffffff'], count: 70, speed: 180, ttl: 0.8, size: 2, drag: 3 })
   shakeScreen(g, 8)
   g.flash = Math.max(g.flash, 0.3)
-  // Sand Stream, Drought, Swift Swim: the weather lives outside, so a rift arena keeps its clear skies.
-  if (def.effect.kind === 'weather' && !roomOf(g)) setWeather(g, def.effect.weather)
+  // Sand Stream, Drought, Swift Swim, Snow Warning: the weather lives outside, so a rift arena keeps its clear skies.
+  const weather = def.effect.kind === 'weather' || def.effect.kind === 'ability' ? def.effect.weather : undefined
+  if (weather && !roomOf(g)) setWeather(g, weather)
+  if (def.effect.kind === 'commander') callDondozo(g)
   g.events.push({ kind: 'mega', name: def.name })
 }
 
+/**
+ * A Mega that plays its ability's effects (`MegaEffect` `ability`) shares the picked ability's
+ * stacks and timers while it lasts (`effectsOf` in `abilities.ts`): they start from zero as the form
+ * comes and as it goes, so neither carries the other's stacks (Contrary's into a Moxie).
+ */
+const freshStacks = (g: Game, def: MegaDef) => {
+  if (def.effect.kind !== 'ability') return
+  const s = g.player.ability
+  s.stacks = 0
+  s.clock = 0
+  s.kills = 0
+  s.pulse = 0
+}
+
 /** The form ran out: back to the final stage, with a puff. */
-const revert = (g: Game) => {
+const revert = (g: Game, def: MegaDef) => {
   const p = g.player
+  freshStacks(g, def)
   recomputeStats(g)
   burst(g, p.x, p.y - 12, { colors: ['#ffffff', '#c8c8f8'], count: 24, speed: 80, ttl: 0.5 })
   g.events.push({ kind: 'megaEnd' })
@@ -190,11 +228,11 @@ export const updateMega = (g: Game, pressed: boolean, dt: number) => {
   const def = heldMega(g)
   if (!def) return
   const s = g.player.mega
-  const final = isFinalStage(g.player.starter, g.player.stage)
+  const final = atMegaBase(g.player)
   // A Terastallized Pokémon can't Mega Evolve meanwhile (nor the other way round, `updateTera`).
   if (pressed && megaPhase(s, final) === 'ready' && !teraBusy(g.player)) return startIntro(g)
   const tick = tickMega(s, dt)
-  if (tick === 'end') revert(g)
+  if (tick === 'end') revert(g, def)
   else if (tick === 'ready' && s.stone && final) g.events.push({ kind: 'megaReady' })
   if (s.active > 0) auraTick(g, def, dt)
 }

@@ -10,6 +10,7 @@ import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
+import { GA_MEGAS_WORDS } from './gaMegas'
 import { ROCKET_WORDS } from './rocket/words'
 import { ULTRA_WORDS } from './ultra'
 import { LEGEND_PATHS_WORDS } from './legendPaths'
@@ -2717,6 +2718,7 @@ export const pt = {
       glalie: 'golpes Normal e Gelo +30% e golpes +25%. O especial vira Sheer Cold.',
       salamence: 'golpes Normal e Voador +30%, velocidade +12 e golpes +25%. O especial vira Double-Edge.',
       ...ROCKET_FAMILY_WORDS.pt.megas,
+      ...GA_MEGAS_WORDS.pt.megas,
     } satisfies Record<MegaId, string>,
   },
 
@@ -6219,6 +6221,7 @@ export const pt = {
     phantomForce: 'Investida em cadeia de até 6 saltos; cada pouso solta um anel de sombras.',
     sheerCold: 'Três ondas de frio absoluto ao redor que desaceleram muito.',
     doubleEdge: 'Doze mergulhos aéreos caem nos inimigos mais próximos.',
+    ...GA_MEGAS_WORDS.pt.specials,
   },
 
 

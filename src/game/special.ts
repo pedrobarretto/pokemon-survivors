@@ -416,6 +416,91 @@ export const SPECIALS = {
     base: { name: 'Double-Edge', damage: 72, area: 1.4, count: 12 },
     final: { name: 'Double-Edge', damage: 72, area: 1.4, count: 12 },
   },
+  /** Mega Mewtwo X: a brawler's chain of psychic blades. */
+  psychoCut: {
+    type: 'psychic', kind: 'chain', cooldown: 7, charge: 0, orbs: 8,
+    base: { name: 'Psycho Cut', damage: 60, area: 1.3, count: 6 },
+    final: { name: 'Psycho Cut', damage: 60, area: 1.3, count: 6 },
+  },
+  /** Mega Heracross: Skill Link lands every horn, so it's the most strikes of any bolt. */
+  megahorn: {
+    type: 'bug', kind: 'bolt', cooldown: 7, charge: 0.3,
+    base: { name: 'Megahorn', damage: 66, area: 1.35, count: 16 },
+    final: { name: 'Megahorn', damage: 66, area: 1.35, count: 16 },
+  },
+  /** Mega Abomasnow. */
+  avalanche: {
+    type: 'ice', kind: 'wave', cooldown: 7, charge: 0.3,
+    base: { name: 'Avalanche', damage: 72, area: 1.5, count: 9 },
+    final: { name: 'Avalanche', damage: 72, area: 1.5, count: 9 },
+    status: { kind: 'slow', chance: 1, duration: 1.2, power: 0.6 },
+  },
+  /** Mega Froslass: it glides on, leaving a freezing wake. */
+  icyWind: {
+    type: 'ice', kind: 'trail', cooldown: 8, charge: 0.1,
+    base: { name: 'Icy Wind', damage: 58, area: 1.3, count: 32 },
+    final: { name: 'Icy Wind', damage: 58, area: 1.3, count: 32 },
+    status: { kind: 'freeze', chance: 0.3, duration: 1.2, power: 0 },
+  },
+  /** Mega Scrafty: the kick lands as shock waves around it. */
+  highJumpKick: {
+    type: 'fighting', kind: 'nova', cooldown: 7, charge: 0.3,
+    base: { name: 'High Jump Kick', damage: 74, area: 1.55, count: 2 },
+    final: { name: 'High Jump Kick', damage: 74, area: 1.55, count: 2 },
+    status: { kind: 'weaken', chance: 0.8, duration: 2, power: 0.3 },
+  },
+  /** Mega Chandelure: Inferno always burns. */
+  inferno: {
+    type: 'fire', kind: 'rain', cooldown: 7, charge: 0.3,
+    base: { name: 'Inferno', damage: 62, area: 1.4, count: 18 },
+    final: { name: 'Inferno', damage: 62, area: 1.4, count: 18 },
+    status: { kind: 'burn', chance: 1, duration: 2.5, power: 0.35 },
+  },
+  /** Mega Golurk: few, very heavy fists from above. */
+  shadowPunch: {
+    type: 'ghost', kind: 'bolt', cooldown: 7, charge: 0.35,
+    base: { name: 'Shadow Punch', damage: 80, area: 1.55, count: 8 },
+    final: { name: 'Shadow Punch', damage: 80, area: 1.55, count: 8 },
+  },
+  /** Mega Malamar: a sweep of tentacles that turns foes around. */
+  foulPlay: {
+    type: 'dark', kind: 'wave', cooldown: 7, charge: 0.25,
+    base: { name: 'Foul Play', damage: 68, area: 1.5, count: 9 },
+    final: { name: 'Foul Play', damage: 68, area: 1.5, count: 9 },
+    status: { kind: 'confuse', chance: 0.5, duration: 1.5, power: 0 },
+  },
+  /** Mega Golisopod. */
+  firstImpression: {
+    type: 'bug', kind: 'chain', cooldown: 7, charge: 0, orbs: 6,
+    base: { name: 'First Impression', damage: 62, area: 1.3, count: 6 },
+    final: { name: 'First Impression', damage: 62, area: 1.3, count: 6 },
+  },
+  /** Mega Baxcalibur: its blades sweep forward like the spine it throws. */
+  glaiveRush: {
+    type: 'dragon', kind: 'wave', cooldown: 7, charge: 0.25,
+    base: { name: 'Glaive Rush', damage: 76, area: 1.5, count: 9 },
+    final: { name: 'Glaive Rush', damage: 76, area: 1.5, count: 9 },
+  },
+  /** Mega Absol Z: a ring of cleaving blades. */
+  kowtowCleave: {
+    type: 'dark', kind: 'ring', cooldown: 7, charge: 0.2,
+    base: { name: 'Kowtow Cleave', damage: 66, area: 1.4, count: 20 },
+    final: { name: 'Kowtow Cleave', damage: 66, area: 1.4, count: 20 },
+  },
+  /** Mega Tatsugiri: cold water that saps foes' strength. */
+  chillingWater: {
+    type: 'water', kind: 'ring', cooldown: 7, charge: 0.2,
+    base: { name: 'Chilling Water', damage: 62, area: 1.35, count: 22 },
+    final: { name: 'Chilling Water', damage: 62, area: 1.35, count: 22 },
+    status: { kind: 'weaken', chance: 0.6, duration: 2, power: 0.25 },
+  },
+  /** Mega Zygarde: arrows of earth that pin foes down. */
+  thousandArrows: {
+    type: 'ground', kind: 'rain', cooldown: 7, charge: 0.3,
+    base: { name: 'Thousand Arrows', damage: 72, area: 1.45, count: 24 },
+    final: { name: 'Thousand Arrows', damage: 72, area: 1.45, count: 24 },
+    status: { kind: 'slow', chance: 1, duration: 1, power: 0.5 },
+  },
 } as const satisfies Record<string, SpecialDef>
 
 export type SpecialId = keyof typeof SPECIALS

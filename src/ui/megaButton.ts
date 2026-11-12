@@ -1,6 +1,8 @@
 import { PLAYABLE } from '../data/hatchlings'
 import { MEGA } from '../data/megas'
-import { heldMega, isFinalStage, megaBaseName, megaPhase } from '../game/mega'
+import { AWAKEN_AT } from '../data/legends'
+import { PATH_FORMS } from '../data/legendPaths'
+import { atMegaBase, heldMega, megaBaseName, megaPhase } from '../game/mega'
 import type { Game } from '../game/types'
 import { t } from '../i18n'
 import { megaIcon } from '../render/megaFx'
@@ -36,10 +38,13 @@ export const createMegaControls = (onPress: () => void) => {
 
   const update = (g: Game) => {
     // A stone of the branch the run didn't take (Glalitite on a Froslass) leaves the button off.
-    const phase = heldMega(g) ? megaPhase(localPlayer(g).mega, isFinalStage(localPlayer(g).starter, localPlayer(g).stage)) : 'none'
+    const held = heldMega(g)
+    const phase = held ? megaPhase(localPlayer(g).mega, atMegaBase(localPlayer(g))) : 'none'
     const line = PLAYABLE[localPlayer(g).starter].line
     const before = line[line.length - 2]
-    const tag = phase === 'locked' && before && 'evolveAt' in before ? t().levelShort(before.evolveAt) : phase === 'ready' ? t().mega.button : ''
+    // A Mega from a path form (Zygarde Complete) waits for the awakening that brings the form.
+    const at = held?.from ? AWAKEN_AT[PATH_FORMS[held.from].at - 1] : before && 'evolveAt' in before ? before.evolveAt : undefined
+    const tag = phase === 'locked' && at !== undefined ? t().levelShort(at) : phase === 'ready' ? t().mega.button : ''
     const fill = phase === 'active' ? localPlayer(g).mega.active / MEGA.duration : phase === 'charging' ? 1 - localPlayer(g).mega.charge / MEGA.recharge : 1
     for (const el of [badge, button]) {
       el.classList.toggle('hidden', phase === 'none')

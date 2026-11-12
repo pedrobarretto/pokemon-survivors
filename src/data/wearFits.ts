@@ -390,6 +390,7 @@ export const WEAR_FITS: Partial<Record<FitKey, SpeciesFit>> = {
   '718:ten': { rig: { 'S:Idle': { seat: [0, 6] } } }, // Zygarde 10%: idle, it sits up and its head drops under the seat the Walk frame measured
   718: { rig: { E: { seat: [-2, 0] } } }, // Zygarde 50%: turned, the hat's brim reached its eye
   '718:complete': { rig: { E: { seat: [-2, -1] } } }, // Zygarde Complete: turned, the brim reached its eye
+  '718:mega': { no: ['pirateHat:E'] }, // Mega Zygarde: its head rises to its sheet's top edge, so turned the pirate hat's tall crown is cut off there; every other hat fits
   809: { rig: { E: { seat: [-2, -4] } } }, // Melmetal: turned, its little head's seat sat down on its face
   486: { rig: { E: { seat: [-2, -3] }, SE: { seat: [-1, -2] } } }, // Regigigas: turned, the brim came down onto its lights
   892: { rig: { 'SE:Idle': { seat: [0, -2] } } }, // Urshifu: idle, the brim came down to its eyes
