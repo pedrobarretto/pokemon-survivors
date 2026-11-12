@@ -41,7 +41,7 @@ export const MEGA_FAMILIES_B = {
   },
   skrelp: {
     name: 'Skrelp', color: '#a89868', egg: 'found', stats: { might: 0.04, maxHp: -5, statusChance: 0.03 }, signature: 'venomDrench',
-    learnset: [['venomDrench', 'waterGun', 'toxicSpikes', 'waterPulse'], ['dragonPulse', 'sludgeBomb', 'dragonTail', 'thunder', 'hex']],
+    learnset: [['venomDrench', 'waterGun', 'toxicSpikes', 'waterPulse'], ['twister', 'sludgeBomb', 'dragonTail', 'thunder', 'hex']],
     line: line2(['Skrelp', 690, ['poison', 'water']], ['Dragalge', 691, ['poison', 'dragon']], { maxHp: 45, might: 0.26, statusDamage: 0.12 }),
   },
 } as const satisfies Record<string, HatchlingDef>
