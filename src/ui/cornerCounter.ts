@@ -42,10 +42,13 @@ const SECTIONS: readonly (readonly CornerPrize['kind'][])[] = [['family'], ['sha
 
 export type CornerCounterOpts = { tab: CornerTab; close: () => void }
 
-/** A prize's picture: the family's face (a Shadow's in its aura frame), the Bag item, the title's medal or the frame. */
+/**
+ * A prize's picture: the family standing (a Shadow in its aura), the Bag item, the title's medal or the frame. The
+ * family's canvas is cut short under its feet, so a small one (Cleffa, Gimmighoul) stands whole inside the card's box.
+ */
 const prizeArt = (id: CornerPrizeId): HTMLElement => {
   const def = CORNER_PRIZES[id]
-  if (def.kind === 'family' || def.kind === 'shadow') return standingCanvas(HATCHLINGS[def.family].line[0].dex, def.kind === 'shadow')
+  if (def.kind === 'family' || def.kind === 'shadow') return standingCanvas(HATCHLINGS[def.family].line[0].dex, def.kind === 'shadow', 56, 42)
   return h('img', { src: prizeIcon(id), alt: '' })
 }
 
