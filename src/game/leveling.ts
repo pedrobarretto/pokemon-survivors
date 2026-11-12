@@ -3,6 +3,7 @@ import { seasonKitDeltas } from './seasonOneKitRules'
 import { kitBDeltas } from './gaKitBRules'
 import { gaKitADeltas } from './gaKitARules'
 import { rocketKitDeltas } from './rocketKitRules'
+import { megaKitBDeltas } from './megaKitBRules'
 import { rocketEvolves } from './rocketKitSystem'
 import { variantDeltas } from './shadow'
 import type { Rng } from '../engine/rng'
@@ -291,6 +292,7 @@ export const recomputeStats = (g: Game) => {
     ...kitBDeltas(p.kitB, p.stage),
     ...gaKitADeltas(p.kitA, p.stage),
     ...rocketKitDeltas(p.rocket),
+    ...megaKitBDeltas(p.megaB),
     ...variantDeltas(p.variant),
   ])
   // A held evolution (no item for any branch yet) is as strong as with an Everstone.

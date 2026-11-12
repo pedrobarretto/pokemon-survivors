@@ -7,6 +7,7 @@ import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { TERA_WORDS } from './tera'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
+import { MEGA_FAMILIES_B_WORDS } from './megaFamiliesB'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { ROCKET_WORDS } from './rocket/words'
@@ -2346,6 +2347,7 @@ export const es: Messages = {
       `Vence a un legendario en una grieta para ganar la ${stone}. En la evolución final, megaevoluciona por ${seconds} s (recarga de ${recharge} s):`,
     effects: {
       ...GA_FAMILIES_B_WORDS.es.megas,
+      ...MEGA_FAMILIES_B_WORDS.es.megas,
       venusaur: 'HP +50, defensa +3 y regenera 1 HP/s. El especial pasa a ser Petal Blizzard.',
       charizardX: 'movimientos +30%, velocidad +8 y defensa +1. El especial pasa a ser Dragon Flare, una embestida en llamas azules de dragón.',
       charizardY: 'hace sol fuerte (fuera de las grietas), que deja los movimientos de Fuego ×1,5; movimientos +25% y área +15%. El especial pasa a ser Heat Wave.',
@@ -3181,6 +3183,7 @@ export const es: Messages = {
     teraStarstorm: TERA_WORDS.es.move,
     ...SEASON_ONE_KITS_WORDS.es.moves,
     ...GA_FAMILIES_B_WORDS.es.moves,
+    ...MEGA_FAMILIES_B_WORDS.es.moves,
     ...GA_FAMILIES_A_WORDS.es.moves,
     ...ROCKET_FAMILY_WORDS.es.moves,
     ...GALLOP_WORDS.es,
@@ -5661,6 +5664,7 @@ export const es: Messages = {
     ...REGIONAL_WORDS.es.blurbs,
     ...SEASON_ONE_KITS_WORDS.es.blurbs,
     ...GA_FAMILIES_B_WORDS.es.blurbs,
+    ...MEGA_FAMILIES_B_WORDS.es.blurbs,
     ...GA_FAMILIES_A_WORDS.es.blurbs,
     ...ROCKET_FAMILY_WORDS.es.blurbs,
     ...ULTRA_WORDS.es.blurbs,
@@ -5785,6 +5789,7 @@ export const es: Messages = {
   },
 
   specials: {
+    ...MEGA_FAMILIES_B_WORDS.es.specials,
     blastBurn: 'Embestida en llamas que deja un rastro de fuego.',
     hydroCannon: 'Chorro concentrado en la dirección en que te mueves.',
     frenzyPlant: 'Anillos de raíces brotan del suelo y ralentizan.',

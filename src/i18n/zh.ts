@@ -7,6 +7,7 @@ import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { TERA_WORDS } from './tera'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
+import { MEGA_FAMILIES_B_WORDS } from './megaFamiliesB'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { ROCKET_WORDS } from './rocket/words'
@@ -2342,6 +2343,7 @@ export const zh: Messages = {
       `擊敗裂縫中的傳說寶可夢即可獲得 ${stone}。在最終進化型態時，可超級進化 ${seconds} 秒（充能 ${recharge} 秒）：`,
     effects: {
       ...GA_FAMILIES_B_WORDS.zh.megas,
+      ...MEGA_FAMILIES_B_WORDS.zh.megas,
       venusaur: 'HP+50、護甲+3、每秒回復1 HP。必殺技變為 Petal Blizzard。',
       charizardX: '招式+30%、速度+8、護甲+1。必殺技變為 Dragon Flare，在藍色龍焰中衝刺。',
       charizardY: '讓陽光變成大晴天（裂縫外），火屬性招式×1.5；招式+25%、範圍+15%。必殺技變為 Heat Wave。',
@@ -3176,6 +3178,7 @@ export const zh: Messages = {
     teraStarstorm: TERA_WORDS.zh.move,
     ...SEASON_ONE_KITS_WORDS.zh.moves,
     ...GA_FAMILIES_B_WORDS.zh.moves,
+    ...MEGA_FAMILIES_B_WORDS.zh.moves,
     ...GA_FAMILIES_A_WORDS.zh.moves,
     ...ROCKET_FAMILY_WORDS.zh.moves,
     ...GALLOP_WORDS.zh,
@@ -5655,6 +5658,7 @@ export const zh: Messages = {
     ...REGIONAL_WORDS.zh.blurbs,
     ...SEASON_ONE_KITS_WORDS.zh.blurbs,
     ...GA_FAMILIES_B_WORDS.zh.blurbs,
+    ...MEGA_FAMILIES_B_WORDS.zh.blurbs,
     ...GA_FAMILIES_A_WORDS.zh.blurbs,
     ...ROCKET_FAMILY_WORDS.zh.blurbs,
     ...ULTRA_WORDS.zh.blurbs,
@@ -5779,6 +5783,7 @@ export const zh: Messages = {
   },
 
   specials: {
+    ...MEGA_FAMILIES_B_WORDS.zh.specials,
     blastBurn: '帶著火焰衝鋒，留下一道火焰軌跡。',
     hydroCannon: '朝你移動的方向發射集中的強力水砲。',
     frenzyPlant: '一圈圈樹根從地面竄出，減緩敵人。',

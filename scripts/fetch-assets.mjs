@@ -4,7 +4,7 @@
 import { mkdir, readFile, writeFile, access } from 'node:fs/promises'
 import { join } from 'node:path'
 import { measureBody } from './body.mjs'
-import { DEX, EMOTIONS, FLYERS, FORM_CRIES, FORM_PORTRAITS, FORMS, HANDMADE_SHINIES, HANDMADE_SPECIES_SHINIES, RECOLORED_SHINIES, SHINY, pad, shinyPath } from './dex.mjs'
+import { DEX, EMOTIONS, FLYERS, FORM_CRIES, FORM_PORTRAITS, FORMS, HANDMADE_SHINIES, HANDMADE_SPECIES_SHINIES, RECOLORED_SHINIES, SHINY, formFolder, pad, shinyPath } from './dex.mjs'
 import { readPng, writePng } from './png.mjs'
 
 const ROOT = new URL('..', import.meta.url).pathname
@@ -63,12 +63,12 @@ const resolveAnim = (anims, name) => {
 }
 
 /**
- * Downloads one sprite variant (normal, shiny `/0000/0001` or an alternate form like `/0001`) into `dir`.
+ * Downloads one sprite variant (its SpriteCollab folder: the species', its shiny `/0000/0001` or an alternate form's) into `dir`.
  * Returns the anims found plus whether a portrait exists, or null when the variant is missing.
  * Alternate forms skip the portrait (`withPortrait`) unless `FORM_PORTRAITS` names them: menus mostly show the normal form.
  */
-const fetchVariant = async (dex, form, dir, withPortrait = true) => {
-  const res = await fetch(`${SPRITES}/${pad(dex)}${form}/AnimData.xml`)
+const fetchVariant = async (dex, folder, dir, withPortrait = true) => {
+  const res = await fetch(`${SPRITES}/${folder}/AnimData.xml`)
   if (!res.ok) return null
   await mkdir(dir, { recursive: true })
   const anims = parseAnims(await res.text())
@@ -80,13 +80,13 @@ const fetchVariant = async (dex, form, dir, withPortrait = true) => {
   const entries = await Promise.all(
     wanted.map(async ([name, anim]) => {
       if (!anim) return null
-      const ok = await download(`${SPRITES}/${pad(dex)}${form}/${anim.name}-Anim.png`, join(dir, `${name}.png`))
+      const ok = await download(`${SPRITES}/${folder}/${anim.name}-Anim.png`, join(dir, `${name}.png`))
       if (!ok) return null
       const { name: _, copyOf: __, ...meta } = anim
       return [name, meta]
     }),
   )
-  const portrait = withPortrait && await download(`${PORTRAITS}/${pad(dex)}${form}/Normal.png`, join(dir, 'portrait.png'))
+  const portrait = withPortrait && await download(`${PORTRAITS}/${folder}/Normal.png`, join(dir, 'portrait.png'))
   const walk = Object.fromEntries(entries.filter(Boolean)).Walk
   // Hitboxes come from this, so they don't wait on the image in the game.
   const body = walk ? await measureBody(join(dir, 'Walk.png'), walk.frameWidth, walk.frameHeight) : undefined
@@ -133,8 +133,8 @@ const recoloredShiny = async (normal, dir, colors) => {
  */
 const fetchForm = async (dex, key, id, dir) => {
   const [form, fetched] = await Promise.all([
-    fetchVariant(dex, `/${id}`, join(dir, key), FORM_PORTRAITS[dex]?.includes(key) ?? false),
-    SHINY.has(dex) ? fetchVariant(dex, `/${id}/0001`, join(dir, key, 'shiny'), false) : null,
+    fetchVariant(dex, formFolder(dex, id), join(dir, key), FORM_PORTRAITS[dex]?.includes(key) ?? false),
+    SHINY.has(dex) ? fetchVariant(dex, `${formFolder(dex, id)}/0001`, join(dir, key, 'shiny'), false) : null,
   ])
   if (!form) throw new Error(`#${dex} form ${key}: missing AnimData.xml`)
   const shiny = fetched ?? (SHINY.has(dex) && HANDMADE_SHINIES[dex]?.[key] ? await handmadeShiny(form, join(dir, key, 'shiny')) : null)
@@ -163,8 +163,8 @@ const fetchEmotions = async (dex, dir) => {
 const fetchSpecies = async (dex) => {
   const dir = join(OUT, String(dex))
   const [normal, fetched, cry] = await Promise.all([
-    fetchVariant(dex, '', dir),
-    SHINY.has(dex) ? fetchVariant(dex, shinyPath(dex), join(dir, 'shiny')) : null,
+    fetchVariant(dex, pad(dex), dir),
+    SHINY.has(dex) ? fetchVariant(dex, `${pad(dex)}${shinyPath(dex)}`, join(dir, 'shiny')) : null,
     mkdir(dir, { recursive: true }).then(() => download(`${CRIES}/${dex}.ogg`, join(dir, 'cry.ogg'))),
   ])
   if (!normal) throw new Error(`#${dex}: missing AnimData.xml`)

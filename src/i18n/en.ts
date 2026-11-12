@@ -7,6 +7,7 @@ import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { TERA_WORDS } from './tera'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
+import { MEGA_FAMILIES_B_WORDS } from './megaFamiliesB'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { ROCKET_WORDS } from './rocket/words'
@@ -2344,6 +2345,7 @@ export const en: Messages = {
       `Beat a rift legendary to get the ${stone}. At the final evolution, Mega Evolve for ${seconds} s (${recharge} s recharge):`,
     effects: {
       ...GA_FAMILIES_B_WORDS.en.megas,
+      ...MEGA_FAMILIES_B_WORDS.en.megas,
       venusaur: 'HP +50, armor +3 and 1 HP/s regen. The special becomes Petal Blizzard.',
       charizardX: 'moves +30%, speed +8 and armor +1. The special becomes Dragon Flare, a dash in blue dragon flames.',
       charizardY: 'turns the sunlight harsh (outside rifts), so Fire moves hit ×1.5; moves +25% and area +15%. The special becomes Heat Wave.',
@@ -3179,6 +3181,7 @@ export const en: Messages = {
     teraStarstorm: TERA_WORDS.en.move,
     ...SEASON_ONE_KITS_WORDS.en.moves,
     ...GA_FAMILIES_B_WORDS.en.moves,
+    ...MEGA_FAMILIES_B_WORDS.en.moves,
     ...GA_FAMILIES_A_WORDS.en.moves,
     ...ROCKET_FAMILY_WORDS.en.moves,
     ...GALLOP_WORDS.en,
@@ -5659,6 +5662,7 @@ export const en: Messages = {
     ...REGIONAL_WORDS.en.blurbs,
     ...SEASON_ONE_KITS_WORDS.en.blurbs,
     ...GA_FAMILIES_B_WORDS.en.blurbs,
+    ...MEGA_FAMILIES_B_WORDS.en.blurbs,
     ...GA_FAMILIES_A_WORDS.en.blurbs,
     ...ROCKET_FAMILY_WORDS.en.blurbs,
     ...ULTRA_WORDS.en.blurbs,
@@ -5783,6 +5787,7 @@ export const en: Messages = {
   },
 
   specials: {
+    ...MEGA_FAMILIES_B_WORDS.en.specials,
     blastBurn: 'A flaming charge that leaves a trail of fire.',
     hydroCannon: 'A focused blast in the direction you move.',
     frenzyPlant: 'Rings of roots burst from the ground and slow foes.',

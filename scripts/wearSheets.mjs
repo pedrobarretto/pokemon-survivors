@@ -9,7 +9,7 @@
 // node_modules/.cache/ps-offsets, never committed.
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { FORMS, PLAYERS, RECOLORED_SHINIES, pad, shinyPath } from './dex.mjs'
+import { FORMS, PLAYERS, RECOLORED_SHINIES, formFolder, pad, shinyPath } from './dex.mjs'
 import { readPng } from './png.mjs'
 
 export const ROOT = new URL('..', import.meta.url).pathname
@@ -36,7 +36,7 @@ const tag = (xml, name) => xml.match(new RegExp(`<${name}>([^<]*)</${name}>`))?.
 /** Every variant a player can be: each species and each of its forms (`FORMS`), by its key and its SpriteCollab folder. */
 export const VARIANTS = PLAYERS.flatMap((dex) => [
   { key: String(dex), dex, form: null, path: pad(dex) },
-  ...Object.entries(FORMS[dex] ?? {}).map(([form, id]) => ({ key: `${dex}:${form}`, dex, form, path: `${pad(dex)}/${id}` })),
+  ...Object.entries(FORMS[dex] ?? {}).map(([form, id]) => ({ key: `${dex}:${form}`, dex, form, path: formFolder(dex, id) })),
 ])
 
 /** A variant's sheets in the manifest (`shiny`: its shiny colors'), if the game has them. */

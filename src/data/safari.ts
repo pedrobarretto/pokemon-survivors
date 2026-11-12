@@ -24,9 +24,9 @@ const REGULAR = HATCHLING_IDS.filter((id) => (['common', 'rare', 'ultra'] as con
 
 /** The habitats, in the weekly order (`habitatOfWeek`). A new Safari-only family is one more id in its habitat's `only`. */
 export const SAFARI_HABITATS = {
-  meadow: { types: ['normal', 'flying', 'grass', 'bug', 'fairy'], only: ['tandemaus'] },
-  marsh: { types: ['ghost', 'dark', 'poison', 'psychic'], only: ['mimikyu'] },
-  ridge: { types: ['electric', 'rock', 'ground', 'steel', 'fighting', 'fire', 'dragon'], only: ['morpeko'] },
+  meadow: { types: ['normal', 'flying', 'grass', 'bug', 'fairy'], only: ['tandemaus', 'buneary', 'flabebe'] },
+  marsh: { types: ['ghost', 'dark', 'poison', 'psychic'], only: ['mimikyu', 'meditite', 'skrelp'] },
+  ridge: { types: ['electric', 'rock', 'ground', 'steel', 'fighting', 'fire', 'dragon'], only: ['morpeko', 'numel'] },
   cove: { types: ['water', 'ice'], only: ['lapras'] },
 } as const satisfies Record<string, { types: readonly string[]; only: readonly HatchlingId[] }>
 

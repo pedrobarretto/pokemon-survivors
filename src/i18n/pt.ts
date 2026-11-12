@@ -8,6 +8,7 @@ import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { TERA_WORDS } from './tera'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
+import { MEGA_FAMILIES_B_WORDS } from './megaFamiliesB'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { ROCKET_WORDS } from './rocket/words'
@@ -2674,6 +2675,7 @@ export const pt = {
       `Vença um lendário de fenda para ganhar a ${stone}. Na evolução final, Mega Evolua por ${seconds} s (recarga de ${recharge} s):`,
     effects: {
       ...GA_FAMILIES_B_WORDS.pt.megas,
+      ...MEGA_FAMILIES_B_WORDS.pt.megas,
       venusaur: 'HP +50, defesa +3 e regenera 1 HP/s. O especial vira Petal Blizzard.',
       charizardX: 'golpes +30%, velocidade +8 e defesa +1. O especial vira Dragon Flare, uma investida em chamas azuis de dragão.',
       charizardY: 'faz sol forte (fora das fendas), que deixa golpes de Fogo ×1,5; golpes +25% e área +15%. O especial vira Heat Wave.',
@@ -3552,6 +3554,7 @@ export const pt = {
     teraStarstorm: TERA_WORDS.pt.move,
     ...SEASON_ONE_KITS_WORDS.pt.moves,
     ...GA_FAMILIES_B_WORDS.pt.moves,
+    ...MEGA_FAMILIES_B_WORDS.pt.moves,
     ...GA_FAMILIES_A_WORDS.pt.moves,
     ...ROCKET_FAMILY_WORDS.pt.moves,
     ...GALLOP_WORDS.pt,
@@ -6032,6 +6035,7 @@ export const pt = {
     ...REGIONAL_WORDS.pt.blurbs,
     ...SEASON_ONE_KITS_WORDS.pt.blurbs,
     ...GA_FAMILIES_B_WORDS.pt.blurbs,
+    ...MEGA_FAMILIES_B_WORDS.pt.blurbs,
     ...GA_FAMILIES_A_WORDS.pt.blurbs,
     ...ROCKET_FAMILY_WORDS.pt.blurbs,
     ...ULTRA_WORDS.pt.blurbs,
@@ -6156,6 +6160,7 @@ export const pt = {
   },
 
   specials: {
+    ...MEGA_FAMILIES_B_WORDS.pt.specials,
     blastBurn: 'Investida em chamas que deixa um rastro de fogo.',
     hydroCannon: 'Jato concentrado na direção em que você anda.',
     frenzyPlant: 'Anéis de raízes brotam do chão e desaceleram.',

@@ -7,6 +7,7 @@ import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { TERA_WORDS } from './tera'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
+import { MEGA_FAMILIES_B_WORDS } from './megaFamiliesB'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { ROCKET_WORDS } from './rocket/words'
@@ -2342,6 +2343,7 @@ export const fr: Messages = {
       `Bats un légendaire de faille pour obtenir la ${stone}. Au stade final, méga-évolue pendant ${seconds} s (recharge de ${recharge} s) :`,
     effects: {
       ...GA_FAMILIES_B_WORDS.fr.megas,
+      ...MEGA_FAMILIES_B_WORDS.fr.megas,
       venusaur: 'PV +50, armure +3 et régénère 1 PV/s. L’attaque spéciale devient Petal Blizzard.',
       charizardX: 'capacités +30%, vitesse +8 et armure +1. L’attaque spéciale devient Dragon Flare, une ruée dans des flammes de dragon bleues.',
       charizardY: 'rend le soleil intense (hors des failles), donc les capacités Feu frappent ×1,5 ; capacités +25% et zone +15%. L’attaque spéciale devient Heat Wave.',
@@ -3176,6 +3178,7 @@ export const fr: Messages = {
     teraStarstorm: TERA_WORDS.fr.move,
     ...SEASON_ONE_KITS_WORDS.fr.moves,
     ...GA_FAMILIES_B_WORDS.fr.moves,
+    ...MEGA_FAMILIES_B_WORDS.fr.moves,
     ...GA_FAMILIES_A_WORDS.fr.moves,
     ...ROCKET_FAMILY_WORDS.fr.moves,
     ...GALLOP_WORDS.fr,
@@ -5655,6 +5658,7 @@ export const fr: Messages = {
     ...REGIONAL_WORDS.fr.blurbs,
     ...SEASON_ONE_KITS_WORDS.fr.blurbs,
     ...GA_FAMILIES_B_WORDS.fr.blurbs,
+    ...MEGA_FAMILIES_B_WORDS.fr.blurbs,
     ...GA_FAMILIES_A_WORDS.fr.blurbs,
     ...ROCKET_FAMILY_WORDS.fr.blurbs,
     ...ULTRA_WORDS.fr.blurbs,
@@ -5779,6 +5783,7 @@ export const fr: Messages = {
   },
 
   specials: {
+    ...MEGA_FAMILIES_B_WORDS.fr.specials,
     blastBurn: 'Une charge enflammée qui laisse une traînée de feu.',
     hydroCannon: 'Un jet concentré dans la direction où tu vas.',
     frenzyPlant: 'Des anneaux de racines jaillissent du sol et ralentissent les ennemis.',

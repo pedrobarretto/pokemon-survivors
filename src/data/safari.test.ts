@@ -8,12 +8,12 @@ const WEEK = '2026-11-16'
 const SEASON_ONE: readonly HatchlingId[] = ['snom', 'joltik', 'applin', 'hatenna', 'salandit', 'darumaka', 'wimpod', 'finizen', 'pawniard', 'frigibax']
 
 describe('who the Safari holds', () => {
-  it('has at least four habitats, each with a Safari-only family and a real pool', () => {
+  it('has at least four habitats, each with Safari-only families and a real pool', () => {
     expect(SAFARI_HABITAT_IDS.length).toBeGreaterThanOrEqual(4)
     for (const habitat of SAFARI_HABITAT_IDS) {
       const pool = habitatPool(habitat, WEEK)
       expect(pool.length).toBeGreaterThan(8)
-      expect(pool.filter((e) => e.rarity === 'special')).toHaveLength(1)
+      expect(pool.filter((e) => e.rarity === 'special').length).toBeGreaterThanOrEqual(1)
     }
   })
 
@@ -57,7 +57,7 @@ describe('day and night', () => {
       for (const f of night) expect(whenAbout(f)).not.toBe('day')
       const dusk = new Set(poolAt(habitat, 'dusk', WEEK).map((e) => e.family))
       for (const f of [...day, ...night]) expect(dusk).toContain(f)
-      expect(poolAt(habitat, 'night', WEEK).filter((e) => e.rarity === 'special')).toHaveLength(1)
+      expect(poolAt(habitat, 'night', WEEK).filter((e) => e.rarity === 'special').length).toBeGreaterThanOrEqual(1)
     }
   })
 

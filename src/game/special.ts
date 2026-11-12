@@ -124,6 +124,13 @@ export const SPECIALS = {
     final: { name: 'Draco Meteor', damage: 52, area: 1.3, count: 16 },
     status: { kind: 'burn', chance: 0.3, duration: 2, power: 0.3 },
   },
+  /* Mega Camerupt's (`data/megas.ts`): the volcano on its back lets go. */
+  eruption: {
+    type: 'fire', kind: 'rain', cooldown: 11, charge: 0.5,
+    base: { name: 'Lava Plume', damage: 40, area: 1.1, count: 10 },
+    final: { name: 'Eruption', damage: 66, area: 1.4, count: 16 },
+    status: { kind: 'burn', chance: 0.5, duration: 2.5, power: 0.4 },
+  },
   diamondStorm: {
     type: 'rock', kind: 'rain', cooldown: 10, charge: 0.4,
     base: { name: 'Rock Slide', damage: 32, area: 1, count: 10 },

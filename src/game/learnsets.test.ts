@@ -20,6 +20,7 @@ import { SEASON_ONE_KIT_MOVE_IDS } from './seasonOneKitMoves'
 import { GA_KIT_B_MOVE_IDS } from './gaKitBMoves'
 import { GA_KIT_A_MOVE_IDS } from './gaKitAMoves'
 import { REGIONAL_MOVE_IDS } from './regionalMoves'
+import { MEGA_KIT_B_MOVE_IDS } from './megaKitBMoves'
 import { ROCKET_KIT_MOVE_IDS } from './rocketKitMoves'
 
 /** The egg families' signature moves (the starters' are `SIGNATURE_MOVES`). */
@@ -27,7 +28,7 @@ const EGG_SIGNATURES: readonly MoveId[] = [
   'dreamEater', 'forcePalm', 'dig', 'twister', 'sandTomb', 'meteorMash', 'zenHeadbutt', 'foulPlay', 'bodySlam', 'dynamicPunch', 'rollout',
   'iceBall', 'furyCutter', 'sacredSword', 'dragonDarts', 'snarl', 'gigaImpact', 'flail', 'boneRush', 'metronome', 'echoedVoice', 'curse',
 ]
-const SIGNATURES = new Set<MoveId>([...(Object.keys(SIGNATURE_MOVES) as MoveId[]), ...EGG_SIGNATURES, ...EGG_MOVE_2_IDS, ...EGG_MOVE_3_IDS, ...SKETCH_MOVE_IDS, ...SEASON_ONE_EGG_MOVE_IDS, ...SEASON_ONE_KIT_MOVE_IDS, ...ROCKET_KIT_MOVE_IDS, ...GA_KIT_B_MOVE_IDS, ...GA_KIT_A_MOVE_IDS, ...REGIONAL_MOVE_IDS])
+const SIGNATURES = new Set<MoveId>([...(Object.keys(SIGNATURE_MOVES) as MoveId[]), ...EGG_SIGNATURES, ...EGG_MOVE_2_IDS, ...EGG_MOVE_3_IDS, ...SKETCH_MOVE_IDS, ...SEASON_ONE_EGG_MOVE_IDS, ...SEASON_ONE_KIT_MOVE_IDS, ...ROCKET_KIT_MOVE_IDS, ...GA_KIT_B_MOVE_IDS, ...GA_KIT_A_MOVE_IDS, ...REGIONAL_MOVE_IDS, ...MEGA_KIT_B_MOVE_IDS])
 
 type Role = 'shot' | 'homing' | 'boomerang' | 'aura' | 'wave' | 'strike' | 'arc' | 'counter' | 'charge' | 'sky' | 'chain' | 'cone' | 'beam' | 'field' | 'dash' | 'roll' | 'support' | 'random'
 
@@ -56,6 +57,7 @@ const ROLE: Record<string, Role> = {
   teatime: 'field', falseSurrender: 'strike', nuzzle: 'dash', steelWing: 'arc', thunderPunch: 'strike', flameBurst: 'shot', bugBite: 'strike',
   transform: 'strike', razorWind: 'shot', makeItRain: 'field', viseGrip: 'arc',
   highHorsepower: 'beam', lowKick: 'arc', hornDrill: 'strike', morningSun: 'support', bounce: 'aura',
+  highJumpKick: 'dash', magnitude: 'aura', dizzyPunch: 'strike', fairyWind: 'cone', venomDrench: 'shot',
   sketch: 'random', fieryDance: 'aura', overdrive: 'wave', gigatonHammer: 'strike', bitterBlade: 'arc', leechLife: 'strike', fireFang: 'strike', furySwipes: 'strike', heavySlam: 'dash', bulldoze: 'wave', perishSong: 'support', chargeBeam: 'beam', moonblast: 'shot', frostBreath: 'cone', avalanche: 'field',
 }
 /** The roles that count as a family's utility move: around it, on the ground, a dash or a heal/guard. */

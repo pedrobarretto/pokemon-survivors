@@ -220,7 +220,7 @@ export const EVO_ITEMS = {
   moonStone: { name: 'Moon Stone', branches: ['umbreon'] },
   leafStone: { name: 'Leaf Stone', branches: ['leafeon', 'exeggutor'] },
   iceStone: { name: 'Ice Stone', branches: ['glaceon'] },
-  shinyStone: { name: 'Shiny Stone', branches: ['sylveon'] },
+  shinyStone: { name: 'Shiny Stone', branches: ['sylveon', 'florges'] },
   dawnStone: { name: 'Dawn Stone', branches: ['gallade', 'froslass'] },
   metalCoat: { name: 'Metal Coat', branches: ['scizor'] },
   /** Hisui's stone: Kleavor and every Hisuian evolution of a line already playable. */

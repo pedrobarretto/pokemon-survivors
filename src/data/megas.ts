@@ -560,6 +560,67 @@ export const MEGAS = {
     stats: { might: 0.3, speed: 8, typeDamage: { electric: 0.2 } },
     special: 'zapCannon',
   },
+  /* The big update's Mega families (`data/megaFamiliesB.ts`): each line came in for its Mega. */
+  medicham: {
+    line: 'meditite',
+    name: 'Mega Medicham',
+    stone: 'Medichamite',
+    form: 'mega',
+    colors: ['#c03848', '#f0d8d0', '#f8d048'],
+    ability: 'Pure Power',
+    // Pure Power holds up to 8 focus stacks, and a crash neither breaks them nor costs HP (`megaKitBSystem.ts`).
+    effect: { kind: 'stats' },
+    stats: { might: 0.35, speed: 4 },
+    special: 'focusBlast',
+  },
+  camerupt: {
+    line: 'numel',
+    name: 'Mega Camerupt',
+    stone: 'Cameruptite',
+    form: 'mega',
+    colors: ['#683830', '#e89058', '#f8d040'],
+    ability: 'Sheer Force',
+    // Its single great hump erupts sooner, with more and bigger bombs (`megaKitBSystem.ts`).
+    effect: { kind: 'stats' },
+    stats: { might: 0.25, armor: 2, typeDamage: { fire: 0.2, ground: 0.2 } },
+    special: 'eruption',
+  },
+  lopunny: {
+    line: 'buneary',
+    name: 'Mega Lopunny',
+    stone: 'Lopunnite',
+    form: 'mega',
+    colors: ['#584038', '#e8d0a8', '#f87890'],
+    ability: 'Scrappy',
+    // The hop recharges faster, lands harder and counters with three fists (`megaKitBSystem.ts`).
+    effect: { kind: 'stats' },
+    stats: { might: 0.25, speed: 8, typeDamage: { normal: 0.2, fighting: 0.3 } },
+    special: 'doubleEdge',
+  },
+  floette: {
+    line: 'flabebe',
+    name: 'Mega Floette',
+    stone: 'Floettite',
+    form: 'mega',
+    colors: ['#c83848', '#f8d0d8', '#58b058'],
+    ability: 'Fairy Aura',
+    // Its blossoms fire as fast as light (`megaKitBSystem.ts`). Only the Eternal Flower's line, never Florges (`MEGA_BRANCH`).
+    effect: { kind: 'stats' },
+    stats: { might: 0.2, regen: 0.5, typeDamage: { fairy: 0.35 } },
+    special: 'moonblast',
+  },
+  dragalge: {
+    line: 'skrelp',
+    name: 'Mega Dragalge',
+    stone: 'Dragalgite',
+    form: 'mega',
+    colors: ['#584830', '#c8b070', '#a050c8'],
+    ability: 'Adaptability',
+    // Its venom grows further as it flies and its splash throws droplets (`megaKitBMoves.ts`).
+    effect: { kind: 'stats' },
+    stats: { might: 0.2, statusDamage: 0.2, typeDamage: { poison: 0.3, dragon: 0.3 } },
+    special: 'dracoMeteor',
+  },
 } as const satisfies Record<string, MegaDef>
 
 export type MegaId = keyof typeof MEGAS

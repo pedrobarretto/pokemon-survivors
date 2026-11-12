@@ -2,7 +2,8 @@ import { HATCHLINGS, PLAYABLE, type HatchlingId } from '../data/hatchlings'
 import { RESEARCH, RESEARCH_IDS, type ResearchId } from '../data/seasonOneUnlocks'
 import { COSMOG, COSMOG_DEX } from '../data/legendPaths'
 import { researchStatus } from '../game/seasonOneUnlocks'
-import { formatNumber, t } from '../i18n'
+import { formatNumber, locale, t } from '../i18n'
+import { MEGA_FAMILIES_B_WORDS } from '../i18n/megaFamiliesB'
 import { portraitUrl } from '../render/sprites'
 import { h } from './dom'
 import { loadSave } from './save'
@@ -17,7 +18,8 @@ export const lockedWhere = (id: HatchlingId): string | null => {
   const words = t().seasonUnlocks
   if (HATCHLINGS[id].egg === 'fossil') return words.fossilBlurb
   const where: Partial<Record<HatchlingId, string>> = words.where
-  return where[id] ?? null
+  const megaWhere: Partial<Record<HatchlingId, string>> = MEGA_FAMILIES_B_WORDS[locale()].where
+  return where[id] ?? megaWhere[id] ?? null
 }
 
 /** A step's line. */
