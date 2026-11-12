@@ -18,6 +18,8 @@ export type ArenaShape = Circle | Poly
 
 /** Scenery standing in an arena (cover against the legendary's shots). */
 export type ArenaPiece = 'seaRock' | 'redPillar' | 'bell' | 'stalagmite' | 'basalt' | 'jadeStump' | 'column' | 'marbleStump' | 'palm' | 'meteorCrystal' | 'nightSpire' | 'pearlSpire' | 'pearlPillar' | 'ultraCrystal'
+  /** Hoopa's islands (`data/rushIslands.ts`). */
+  | 'sandPillar' | 'iceSpire' | 'magmaSpire' | 'ringPlinth'
 
 /** What each piece stands on, around its anchor. */
 export const ARENA_FEET: Record<ArenaPiece, Ellipse> = {
@@ -35,6 +37,10 @@ export const ARENA_FEET: Record<ArenaPiece, Ellipse> = {
   ultraCrystal: { x: 0, y: -1, rx: 9, ry: 4 },
   pearlSpire: { x: 0, y: -1, rx: 9, ry: 4 },
   pearlPillar: { x: 0, y: 0, rx: 10, ry: 4 },
+  sandPillar: { x: 0, y: -1, rx: 8, ry: 4 },
+  iceSpire: { x: 0, y: -1, rx: 9, ry: 4 },
+  magmaSpire: { x: 0, y: -1, rx: 9, ry: 4 },
+  ringPlinth: { x: 0, y: -2, rx: 13, ry: 6 },
 }
 
 /** Every few seconds a rule steps the arena (the tide rises, the edge falls), with a warning before. */

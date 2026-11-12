@@ -8,7 +8,7 @@ import { ULTRA_BEASTS } from './ultraBeasts'
 /**
  * Hoopa's Rings (Anéis de Hoopa), the Legend mode's boss rush
  * (`game/rush.ts`): Hoopa's rings bring back the legends the player has
- * captured, one ring after another, in a ring of its golden portals, and the
+ * captured, one ring after another, each on a floating island, and the
  * last ring is Hoopa itself. The rush's level is the difficulty picked
  * (`rings`: legends before Hoopa); clearing it once captures Hoopa.
  *
@@ -18,7 +18,9 @@ import { ULTRA_BEASTS } from './ultraBeasts'
  * that. The player fights at `level` with their Dojo build for the Pokémon
  * (or the family's own moves at max level), is healed `heal` of their max HP
  * between rings, `rest` s, and each ring opens `gate` s before its legend
- * steps through, `arena` px from the middle of the rings.
+ * steps through. Each ring is fought on an island (`data/rushIslands.ts`);
+ * on Hoopa's own, its rings stand round a circle `arena` px out from the
+ * middle.
  */
 export const RUSH = {
   min: 3,
@@ -34,6 +36,8 @@ export const RUSH = {
   arena: 132,
   /** The legend steps out this far north of the middle. */
   enter: 70,
+  /** A ring's legend stands this many times as heavy (knockback is divided by mass), so hits can't drive it against the island's rim. */
+  grip: 3,
 } as const satisfies { rings: Record<Difficulty, number>; hpBy: Record<Difficulty, number>; level: Record<Difficulty, number> } & Record<string, unknown>
 
 /**

@@ -1,7 +1,8 @@
 import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
 import { formatTime } from '../engine/math'
-import { ENEMIES } from '../data/enemies'
+import { ENEMIES, type EnemyId } from '../data/enemies'
+import type { IslandId } from '../data/rushIslands'
 import { RUSH, RUSH_ORDER } from '../data/rush'
 import { DIFFICULTY_IDS, type Difficulty } from '../game/difficulty'
 import type { RushBest } from '../game/questSave'
@@ -63,8 +64,11 @@ export const rushPill = (g: Pick<Game, 'rush' | 'time'>) => {
   return t().quests.rush.hud(Math.min(r.ring + 1, r.lineup.length), r.lineup.length, formatTime(Math.floor(g.time)))
 }
 
-/** The line a ring opening brings. */
-export const rushRingLine = (ring: number, rings: number, legend: string) => (legend === 'hoopa' ? t().quests.rush.hoopa : t().quests.rush.ring(ring + 1, rings, ENEMIES[legend as keyof typeof ENEMIES]?.name ?? legend))
+/** The line a ring opening brings: who comes through, and on which island (Hoopa, on its own). */
+export const rushRingLine = (ring: number, rings: number, legend: EnemyId, island: IslandId) => {
+  const m = t().quests.rush
+  return island === 'hoopa' || legend === 'hoopa' ? m.hoopa : m.ring(ring + 1, rings, ENEMIES[legend].name, m.islands[island])
+}
 
 /**
  * The rush's end: won (the time, a record, Hoopa caught on the first clear)

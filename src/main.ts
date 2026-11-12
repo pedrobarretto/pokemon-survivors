@@ -2428,7 +2428,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
       if (e.moment === 'down') return
       playSfx(e.legend === 'hoopa' ? 'legendary' : 'boss')
       playCry(cryUrl(ENEMIES[e.legend].dex), 0.8)
-      return news(rich(rushRingLine(e.ring, e.rings, e.legend)), 2600)
+      return news(rich(rushRingLine(e.ring, e.rings, e.legend, e.island)), 2600)
     // The Desafio do dia plays the same for everyone: its finales don't count toward the protection.
     case 'mythicalRoll':
       r.mythical = e.enemy ?? 'none'

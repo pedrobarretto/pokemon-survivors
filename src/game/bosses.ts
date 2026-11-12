@@ -19,7 +19,8 @@ import { blastHorde, spawnEnemy } from './enemies'
 import { makeElite, makeRunner } from './horde'
 import { makeSpitter } from './spitters'
 import { isHeld } from './status'
-import { featuresNear, groundAt } from './terrain'
+import { featuresNear, groundAt, standingSpot } from './terrain'
+import { keepOnFloor, roomOf } from './room'
 import { actAs, nearestPlayer, standing } from './players'
 import type { Enemy, Game, Hazard, Player } from './types'
 import { HAZARD_TYPES } from './weather'
@@ -188,7 +189,7 @@ const launch = (g: Game, boss: Enemy, written: BossPattern, fight: BossFight | n
     case 'teleport': {
       if (!fight) return
       const windup = telegraph(pattern.windup, fight)
-      const to = pattern.to === 'player' ? { x: p.x + p.vx * windup * 0.5, y: p.y + p.vy * windup * 0.5 } : farFrom(fight.home, p)
+      const to = pattern.to === 'player' ? { x: p.x + p.vx * windup * 0.5, y: p.y + p.vy * windup * 0.5 } : farFrom(g, fight.home, p, boss.radius)
       burst(g, boss.x, boss.y - boss.radius, { colors: IMPACT[pattern.visual]?.colors ?? ['#ffffff'], count: 36, speed: 140, ttl: 0.45, size: 2 })
       spawnHazard(g, { kind: 'strike', visual: pattern.visual, x: to.x, y: to.y, r: pattern.radius, damage: pattern.damage, armAt: windup, disarmAt: windup + STRIKE_WINDOW, ttl: windup + 0.45, leaper: boss.id })
       fight.motion = { kind: 'away', left: windup }
@@ -350,7 +351,9 @@ const shelters = (g: Game, count: number, p: Player) => {
   return Array.from({ length: count }, (_, i) => {
     const a = offset + (i / count) * TAU
     const d = range(g.rng, SHELTER.near, SHELTER.far)
-    return { x: p.x + dm.cos(a) * d, y: p.y + dm.sin(a) * d * 0.8 }
+    const spot = { x: p.x + dm.cos(a) * d, y: p.y + dm.sin(a) * d * 0.8 }
+    // On Hoopa's islands each shelter lands where a player can stand: on the floor, clear of what stands on it.
+    return g.rush !== null ? standingSpot(g, spot) : spot
   })
 }
 
@@ -371,13 +374,20 @@ export const parked = (boss: Enemy) => boss.fight !== null && boss.y < boss.figh
 /** Whether a boss is off the arena's floor on its script: parked, or out on a swoop's pass (floors and the camera let it be). */
 export const offstage = (boss: Enemy) => parked(boss) || (boss.fight?.motion?.kind === 'dash' && boss.fight.motion.reach > 0)
 
-/** As far from the player as a teleport goes: across the boss's home from them, at most 150 px out. */
-const farFrom = (home: { x: number; y: number }, p: { x: number; y: number }) => {
+/**
+ * As far from the player as a teleport goes: across the boss's home from them,
+ * at most 150 px out; in a room, kept on its floor (a home near the edge, as
+ * Hoopa's gate is, would otherwise send it off the stage, out of reach).
+ */
+const farFrom = (g: Game, home: { x: number; y: number }, p: { x: number; y: number }, radius: number) => {
   const dx = home.x - p.x
   const dy = home.y - p.y
   const d = dm.hypot(dx, dy) || 1
   const out = Math.min(150, d)
-  return { x: home.x + (dx / d) * out, y: home.y + (dy / d) * out }
+  const to = { x: home.x + (dx / d) * out, y: home.y + (dy / d) * out }
+  const room = roomOf(g)
+  if (room) keepOnFloor(to, room, room.layout.floor, room.layout.holes ?? [], radius * 0.5)
+  return to
 }
 
 /** The first scenery (as a circle a bit wider than each foot) a ray from (x, y) along (dx, dy) meets within `len` px: its distance, or `len`. */

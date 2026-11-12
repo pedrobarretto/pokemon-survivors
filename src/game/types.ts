@@ -4,6 +4,7 @@ import type { Grid } from '../engine/spatial'
 import type { HazardVisual } from '../data/bosses'
 import type { WorldHazardState } from './hazards'
 import type { EnemyId } from '../data/enemies'
+import type { IslandId } from '../data/rushIslands'
 import type { BiomeId, WeatherId } from '../data/biomes'
 import type { RiftLegend } from '../data/rifts'
 import type { UltraBeast } from '../data/ultraBeasts'
@@ -919,7 +920,7 @@ export type GameEvent =
   /** A Sword of Justice's duel (`duels.ts`). */
   | { kind: 'duel'; sword: SwordId; moment: DuelMoment }
   /** Hoopa's Rings (`rush.ts`): ring `ring` (from 0) of `rings` opened on `legend`, or its legend went down. */
-  | { kind: 'rush'; moment: 'ring' | 'down'; ring: number; rings: number; legend: EnemyId }
+  | { kind: 'rush'; moment: 'ring' | 'down'; ring: number; rings: number; legend: EnemyId; island: IslandId }
   /** A solo finale rolled its mythical slot: who came, or null. The save counts it (`game/mythicalHunt.ts`). */
   | { kind: 'mythicalRoll'; enemy: EnemyId | null }
   /** A boss with phases moved on to phase `phase` (from 0), or began its ultimate (`move`, the official English name). */
