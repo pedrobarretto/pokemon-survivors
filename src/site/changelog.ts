@@ -28,6 +28,27 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
     title: { pt: 'Temporada 1: Terastal, Pokédex Nacional e lendas novas', en: 'Season 1: Terastal, the National Pokédex and new legends', es: 'Temporada 1: Teracristal, la Pokédex Nacional y leyendas nuevas', fr: 'Saison 1 : Téracristal, le Pokédex National et de nouvelles légendes', zh: '第 1 賽季：太晶化、全國圖鑑和新的傳說' },
     highlights: [
       {
+        pt: 'A Pokédex Nacional chegou: 745 espécies na horda e 104 famílias novas, cada uma com a sua mecânica, de formas regionais a fósseis restaurados na Escavação.',
+        en: 'The National Pokédex is here: 745 species in the horde and 104 new families, each with a mechanic of its own, from regional forms to fossils restored in the Mine Dig.',
+        es: 'Llegó la Pokédex Nacional: 745 especies en la horda y 104 familias nuevas, cada una con su mecánica, de formas regionales a fósiles restaurados en la Excavación.',
+        fr: 'Le Pokédex National est là : 745 espèces dans la horde et 104 nouvelles familles, chacune avec sa mécanique, des formes régionales aux fossiles restaurés à l’Excavation.',
+        zh: '全國圖鑑登場：745 種寶可夢加入怪潮，還有 104 個新的可玩家族，各有獨特機制，從地區形態到在礦坑挖掘復原的化石。',
+      },
+      {
+        pt: 'Lendas novas: Palkia, 10 Ultracriaturas, o trio dos lagos, as Forças da Natureza, Regieleki e Regidrago, Diancie, Zeraora, Ogerpon e Manaphy. São 62 no Modo Lendário.',
+        en: 'New legends: Palkia, 10 Ultra Beasts, the lake trio, the Forces of Nature, Regieleki and Regidrago, Diancie, Zeraora, Ogerpon and Manaphy. That’s 62 in Legend mode.',
+        es: 'Leyendas nuevas: Palkia, 10 Ultraentes, el trío del lago, las Fuerzas de la Naturaleza, Regieleki y Regidrago, Diancie, Zeraora, Ogerpon y Manaphy. Son 62 en el Modo Legendario.',
+        fr: 'De nouvelles légendes : Palkia, 10 Ultra-Chimères, le trio des lacs, les Forces de la Nature, Regieleki et Regidrago, Diancie, Zeraora, Ogerpon et Manaphy. Ça fait 62 en mode Légendaire.',
+        zh: '新的傳說：帕路奇亞、10 隻究極異獸、湖之三神、自然之力、雷吉艾勒奇和雷吉鐸拉戈、蒂安希、捷拉奧拉、厄鬼椪和瑪納霏。傳說模式共有 62 隻。',
+      },
+      {
+        pt: '23 Megas novas, de Mega Heracross a Mega Clefable: agora são 66 Megas em 59 linhagens.',
+        en: '23 new Megas, from Mega Heracross to Mega Clefable: 66 Megas across 59 lines now.',
+        es: '23 Megas nuevas, de Mega Heracross a Mega Clefable: ahora son 66 Megas en 59 líneas.',
+        fr: '23 nouvelles Méga-Évolutions, de Méga-Heracross à Méga-Clefable : 66 Mégas sur 59 lignées.',
+        zh: '23 種新的超級進化，從超級赫拉克羅斯到超級皮可西：現在共有 59 條進化線、66 種超級進化。',
+      },
+      {
         pt: 'Terastal: junte Fragmentos Tera dos chefes, encha o Orbe Tera e vire cristal com uma das 19 coroas. Raide Tera em toda partida, Raide do dia e Terapagos.',
         en: 'Terastal: collect Tera Shards from bosses, fill the Tera Orb and turn to crystal under one of 19 crowns. A Tera Raid every run, the Raid of the Day and Terapagos.',
         es: 'Teracristal: junta Teralitos de los jefes, llena el Orbe Tera y vuélvete cristal con una de las 19 coronas. Teraincursión en cada partida, Incursión del día y Terapagos.',
@@ -35,32 +56,11 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         zh: '太晶化：從頭目身上收集太晶碎塊，集滿太晶珠，戴上 19 種皇冠之一化為結晶。每局都有太晶團體戰，還有每日團體戰和太樂巴戈斯。',
       },
       {
-        pt: 'A Pokédex Nacional chegou: 745 espécies na horda, 898 Pokémon no jogo e 78 famílias novas, cada uma com a sua mecânica.',
-        en: 'The National Pokédex is here: 745 species in the horde, 898 Pokémon in the game and 78 new families, each with a mechanic of its own.',
-        es: 'Llegó la Pokédex Nacional: 745 especies en la horda, 898 Pokémon en el juego y 78 familias nuevas, cada una con su mecánica.',
-        fr: 'Le Pokédex National est là : 745 espèces dans la horde, 898 Pokémon dans le jeu et 78 nouvelles familles, chacune avec sa mécanique.',
-        zh: '全國圖鑑登場：745 種野生寶可夢加入怪潮，遊戲中共有 898 種寶可夢，還有 78 個新的可玩家族，各有獨特機制。',
-      },
-      {
-        pt: '42 formas regionais de Alola, Galar, Hisui e Paldea, com A Viagem: toda segunda uma região nova e o seu Ovo de Viagem.',
-        en: '42 regional forms from Alola, Galar, Hisui and Paldea, with The Trip: a new region every Monday and its Travel Egg.',
-        es: '42 formas regionales de Alola, Galar, Hisui y Paldea, con El Viaje: cada lunes una región nueva y su Huevo de Viaje.',
-        fr: '42 formes régionales d’Alola, Galar, Hisui et Paldea, avec Le Voyage : une nouvelle région chaque lundi et son Œuf de Voyage.',
-        zh: '42 種阿羅拉、伽勒爾、洗翠和帕底亞的地區形態，加上「旅行」：每週一換一個地區，還有該地區的旅行蛋。',
-      },
-      {
-        pt: 'A Equipe Rocket chegou ao Poké Realm: Game Corner com caça-níquel e prêmios exclusivos, Pokémon Sombrios e o Esconderijo com o Mewtwo Sombrio.',
-        en: 'Team Rocket has come to the Poké Realm: a Game Corner with slots and exclusive prizes, Shadow Pokémon and the Hideout with Shadow Mewtwo.',
-        es: 'El Team Rocket llegó al Poké Realm: Casino con tragaperras y premios exclusivos, Pokémon Oscuros y el Escondite con Mewtwo Oscuro.',
-        fr: 'La Team Rocket débarque dans le Poké Realm : une Salle de jeux avec machines à sous et lots exclusifs, des Pokémon Obscurs et le Repaire avec Mewtwo Obscur.',
-        zh: '火箭隊來到 Poké Realm：有拉霸機和限定獎品的遊戲城、黑暗寶可夢，以及有黑暗超夢的火箭隊基地。',
-      },
-      {
-        pt: 'Lendas novas: Palkia, 10 Ultracriaturas, o trio dos lagos, as Espadas da Justiça, os Anéis de Hoopa e cinco caminhos lendários.',
-        en: 'New legends: Palkia, 10 Ultra Beasts, the lake trio, the Swords of Justice, Hoopa’s Rings and five legend paths.',
-        es: 'Leyendas nuevas: Palkia, 10 Ultraentes, el trío del lago, los Espadachines Místicos, los Anillos de Hoopa y cinco caminos legendarios.',
-        fr: 'De nouvelles légendes : Palkia, 10 Ultra-Chimères, le trio des lacs, les Épées de la Justice, les Anneaux de Hoopa et cinq chemins légendaires.',
-        zh: '新的傳說：帕路奇亞、10 隻究極異獸、湖之三神、聖劍士、胡帕的圓環和五條傳說之路。',
+        pt: 'No Poké Realm, a Equipe Rocket abre o Game Corner e a Zona Safári tem famílias que só ela traz, como Kangaskhan, Tyrogue e Vivillon com as asas da sua região.',
+        en: 'In the Poké Realm, Team Rocket opens its Game Corner and the Safari Zone brings families found nowhere else, like Kangaskhan, Tyrogue and Vivillon wearing your region’s wings.',
+        es: 'En el Poké Realm, el Team Rocket abre su Casino y la Zona Safari trae familias que solo ella tiene, como Kangaskhan, Tyrogue y Vivillon con las alas de tu región.',
+        fr: 'Dans le Poké Realm, la Team Rocket ouvre sa Salle de jeux et le Parc Safari a des familles introuvables ailleurs, comme Kangaskhan, Tyrogue et Prismillon aux ailes de ta région.',
+        zh: 'Poké Realm 裡，火箭隊開了遊戲城，狩獵地帶有別處找不到的家族，像袋獸、無畏小子，還有翅膀是你所在地區花紋的彩粉蝶。',
       },
     ],
     changes: [
@@ -145,17 +145,17 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         ],
       },
       {
-        title: { pt: '78 famílias novas', en: '78 new families', es: '78 familias nuevas', fr: '78 nouvelles familles', zh: '78 個新家族' },
+        title: { pt: '104 famílias novas', en: '104 new families', es: '104 familias nuevas', fr: '104 nouvelles familles', zh: '104 個新家族' },
         notes: [
           {
-            pt: 'Agora são 168 famílias jogáveis: os 27 iniciais e 141 que saem de ovos, da Zona Safári, de encontros no mapa e de prêmios. Cada família nova tem golpe assinatura com caminhos no Nv 4 e 7, três habilidades e uma mecânica própria.',
-            en: 'There are now 168 playable families: the 27 starters and 141 from eggs, the Safari Zone, encounters on the map and prizes. Each new family has a signature move with paths at Lv 4 and 7, three abilities and a mechanic of its own.',
-            es: 'Ahora son 168 familias jugables: los 27 iniciales y 141 que salen de huevos, de la Zona Safari, de encuentros en el mapa y de premios. Cada familia nueva tiene movimiento firma con caminos en el Nv 4 y 7, tres habilidades y una mecánica propia.',
+            pt: 'Agora são 194 famílias jogáveis: os 27 iniciais e 167 que saem de ovos, da Zona Safári, da Escavação, de encontros no mapa e de prêmios. Cada família nova tem golpe assinatura com caminhos no Nv 4 e 7, três habilidades e uma mecânica própria.',
+            en: 'There are now 194 playable families: the 27 starters and 167 from eggs, the Safari Zone, the Mine Dig, encounters on the map and prizes. Each new family has a signature move with paths at Lv 4 and 7, three abilities and a mechanic of its own.',
+            es: 'Ahora son 194 familias jugables: los 27 iniciales y 167 que salen de huevos, de la Zona Safari, de la Excavación, de encuentros en el mapa y de premios. Cada familia nueva tiene movimiento firma con caminos en el Nv 4 y 7, tres habilidades y una mecánica propia.',
           },
           {
-            pt: 'Dos ovos: Snom, Joltik, Salandit, Hatenna, Darumaka, Wimpod, Applin (com Dipplin, Flapple e Appletun), Finizen, Pawniard, Frigibax, Ponyta e Ponyta de Galar. Do novo Ovo Fóssil (o Old Amber): Cranidos, Shieldon, Archen, Tyrunt e Amaura.',
-            en: 'From eggs: Snom, Joltik, Salandit, Hatenna, Darumaka, Wimpod, Applin (with Dipplin, Flapple and Appletun), Finizen, Pawniard, Frigibax, Ponyta and Galarian Ponyta. From the new Fossil Egg (Old Amber): Cranidos, Shieldon, Archen, Tyrunt and Amaura.',
-            es: 'De los huevos: Snom, Joltik, Salandit, Hatenna, Darumaka, Wimpod, Applin (con Dipplin, Flapple y Appletun), Finizen, Pawniard, Frigibax, Ponyta y Ponyta de Galar. Del nuevo Huevo Fósil (el Old Amber): Cranidos, Shieldon, Archen, Tyrunt y Amaura.',
+            pt: 'Dos ovos: Snom, Joltik, Salandit, Hatenna, Darumaka, Wimpod, Applin (com Dipplin, Flapple e Appletun), Finizen, Pawniard, Frigibax, Ponyta e Ponyta de Galar. Do novo Ovo Fóssil (o Old Amber): Aerodactyl, com Mega.',
+            en: 'From eggs: Snom, Joltik, Salandit, Hatenna, Darumaka, Wimpod, Applin (with Dipplin, Flapple and Appletun), Finizen, Pawniard, Frigibax, Ponyta and Galarian Ponyta. From the new Fossil Egg (Old Amber): Aerodactyl, with a Mega.',
+            es: 'De los huevos: Snom, Joltik, Salandit, Hatenna, Darumaka, Wimpod, Applin (con Dipplin, Flapple y Appletun), Finizen, Pawniard, Frigibax, Ponyta y Ponyta de Galar. Del nuevo Huevo Fósil (el Old Amber): Aerodactyl, con Mega.',
           },
           {
             pt: 'Achados de outro jeito: Rotom na TV velha das casas abandonadas, Castform no tempo fechado, Wishiwashi na pesca do Realm, Mimikyu, Morpeko e Tandemaus na Zona Safári, e Mankey (até Annihilape), Goomy e Tatsugiri pela nova aba Pesquisa das Missões.',
@@ -173,9 +173,54 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             es: 'Y también: Clauncher, Fletchling, Golett, Nacli, Inkay (que evoluciona boca abajo), Skorupi, Snover, Tynamo, Dewpider, Duraludon, Bounsweet, Sneasel, Heracross, Croagunk, Sinistea, Impidimp, Pawmi, Rookidee, Elekid y Magby.',
           },
           {
-            pt: 'Megas novas: Mega Steelix, Mega Eelektross, Mega Sableye, Mega Absol e Mega Mawile. Agora são 43 Megas em 38 linhagens.',
-            en: 'New Megas: Mega Steelix, Mega Eelektross, Mega Sableye, Mega Absol and Mega Mawile. That’s 43 Megas across 38 lines now.',
-            es: 'Megas nuevas: Mega Steelix, Mega Eelektross, Mega Sableye, Mega Absol y Mega Mawile. Ahora son 43 Megas en 38 líneas.',
+            pt: 'Só na Zona Safári, cada uma no seu habitat: Kangaskhan, Pinsir, Skarmory, Drilbur, Drampa, Meditite, Numel, Buneary, Flabébé e Skrelp, todas com Mega, e Phione, na Baía Gelada, para quem já tem o Manaphy.',
+            en: 'Only in the Safari Zone, each in its habitat: Kangaskhan, Pinsir, Skarmory, Drilbur, Drampa, Meditite, Numel, Buneary, Flabébé and Skrelp, all with Megas, and Phione, in the Frozen Cove, once Manaphy is yours.',
+            es: 'Solo en la Zona Safari, cada una en su hábitat: Kangaskhan, Pinsir, Skarmory, Drilbur, Drampa, Meditite, Numel, Buneary, Flabébé y Skrelp, todas con Mega, y Phione, en la Bahía Helada, para quien ya tiene a Manaphy.',
+          },
+          {
+            pt: 'Famílias com um gancho só delas, também do Safári: o Vivillon usa as asas da região onde você está e solta pós que envenenam, paralisam ou fazem dormir; o Minior perde a casca abaixo da metade do HP e mostra o Núcleo, mais rápido e mais forte; e o Tyrogue evolui pela sua build: mais Ataque vira Hitmonlee, mais Defesa vira Hitmonchan, empate vira Hitmontop.',
+            en: 'Families with a hook of their own, from the Safari too: Vivillon wears the wings of the region you’re in and scatters powders that poison, paralyze or put foes to sleep; Minior drops its shell under half HP and shows its Core, faster and stronger; and Tyrogue evolves by your build: more Attack makes Hitmonlee, more Defense makes Hitmonchan, a tie makes Hitmontop.',
+            es: 'Familias con un gancho propio, también del Safari: Vivillon lleva las alas de la región donde estás y suelta polvos que envenenan, paralizan o duermen; Minior pierde la coraza bajo la mitad de los PS y muestra su Núcleo, más rápido y más fuerte; y Tyrogue evoluciona según tu build: más Ataque da Hitmonlee, más Defensa da Hitmonchan, empate da Hitmontop.',
+          },
+          {
+            pt: 'Prêmios novos do balcão do Game Corner: Nidoran♀, Nidoran♂, Cleffa (com Mega Clefable), Plusle e Minun, e cada um também como Sombrio. No co-op, um Plusle e um Minun no mesmo time se ligam numa corrente que fere a horda.',
+            en: 'New prizes at the Game Corner counter: Nidoran♀, Nidoran♂, Cleffa (with Mega Clefable), Plusle and Minun, and each as a Shadow too. In co-op, a Plusle and a Minun on the same team link up in a current that hurts the horde.',
+            es: 'Premios nuevos en el mostrador del Casino: Nidoran♀, Nidoran♂, Cleffa (con Mega Clefable), Plusle y Minun, y cada uno también como Oscuro. En co-op, un Plusle y un Minun en el mismo equipo se enlazan con una corriente que hiere a la horda.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Megas novas', en: 'New Megas', es: 'Megas nuevas', fr: 'Nouvelles Méga-Évolutions', zh: '新的超級進化' },
+        notes: [
+          {
+            pt: 'Em linhas que já existiam: Mega Steelix, Mega Eelektross, Mega Sableye, Mega Absol e Mega Absol Z, Mega Mawile, Mega Heracross, Mega Abomasnow, Mega Froslass, Mega Scrafty, Mega Chandelure, Mega Golurk, Mega Malamar, Mega Golisopod, Mega Baxcalibur e Mega Tatsugiri.',
+            en: 'On lines already in the game: Mega Steelix, Mega Eelektross, Mega Sableye, Mega Absol and Mega Absol Z, Mega Mawile, Mega Heracross, Mega Abomasnow, Mega Froslass, Mega Scrafty, Mega Chandelure, Mega Golurk, Mega Malamar, Mega Golisopod, Mega Baxcalibur and Mega Tatsugiri.',
+            es: 'En líneas que ya estaban: Mega Steelix, Mega Eelektross, Mega Sableye, Mega Absol y Mega Absol Z, Mega Mawile, Mega Heracross, Mega Abomasnow, Mega Froslass, Mega Scrafty, Mega Chandelure, Mega Golurk, Mega Malamar, Mega Golisopod, Mega Baxcalibur y Mega Tatsugiri.',
+          },
+          {
+            pt: 'Com as famílias novas: Mega Aerodactyl, Mega Kangaskhan, Mega Pinsir, Mega Skarmory, Mega Excadrill, Mega Drampa, Mega Medicham, Mega Camerupt, Mega Lopunny, Mega Floette, Mega Dragalge e Mega Clefable. Agora são 66 Megas em 59 linhagens.',
+            en: 'With the new families: Mega Aerodactyl, Mega Kangaskhan, Mega Pinsir, Mega Skarmory, Mega Excadrill, Mega Drampa, Mega Medicham, Mega Camerupt, Mega Lopunny, Mega Floette, Mega Dragalge and Mega Clefable. That’s 66 Megas across 59 lines now.',
+            es: 'Con las familias nuevas: Mega Aerodactyl, Mega Kangaskhan, Mega Pinsir, Mega Skarmory, Mega Excadrill, Mega Drampa, Mega Medicham, Mega Camerupt, Mega Lopunny, Mega Floette, Mega Dragalge y Mega Clefable. Ahora son 66 Megas en 59 líneas.',
+          },
+          {
+            pt: 'No Modo Lendário, Mewtwo também vira Mega Mewtwo X, Zygarde ganha a sua Mega, Diancie e Zeraora despertam Mega no Nv 28 e Dialga desperta Primal.',
+            en: 'In Legend mode, Mewtwo also becomes Mega Mewtwo X, Zygarde gets its Mega, Diancie and Zeraora awaken Mega at Lv 28 and Dialga awakens Primal.',
+            es: 'En el Modo Legendario, Mewtwo también se vuelve Mega Mewtwo X, Zygarde recibe su Mega, Diancie y Zeraora despiertan Mega en el Nv 28 y Dialga despierta Primigenio.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Fósseis', en: 'Fossils', es: 'Fósiles', fr: 'Fossiles', zh: '化石' },
+        notes: [
+          {
+            pt: 'O Old Amber agora traz o Aerodactyl, como nos jogos, com Mega Aerodactyl.',
+            en: 'Old Amber now brings Aerodactyl, as in the games, with Mega Aerodactyl.',
+            es: 'El Old Amber ahora trae a Aerodactyl, como en los juegos, con Mega Aerodactyl.',
+          },
+          {
+            pt: 'Os outros fósseis saem da Escavação e o laboratório restaura na hora: Omanyte, Kabuto, Lileep, Anorith, Cranidos, Shieldon, Archen, Tyrunt e Amaura. As metades de Galar esperam no laboratório até a outra chegar: junte as duas para o Dracozolt, o Arctozolt ou o Dracovish.',
+            en: 'The other fossils come from the Mine Dig and the lab restores them on the spot: Omanyte, Kabuto, Lileep, Anorith, Cranidos, Shieldon, Archen, Tyrunt and Amaura. Galar’s halves wait in the lab until the other one turns up: put two together for Dracozolt, Arctozolt or Dracovish.',
+            es: 'Los otros fósiles salen de la Excavación y el laboratorio los restaura al instante: Omanyte, Kabuto, Lileep, Anorith, Cranidos, Shieldon, Archen, Tyrunt y Amaura. Las mitades de Galar esperan en el laboratorio hasta que llegue la otra: junta dos para Dracozolt, Arctozolt o Dracovish.',
           },
         ],
       },
@@ -238,9 +283,14 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             es: 'Día y noche según tu reloj, Pokémon visibles en la hierba para acercarte sin que te vean, cadena de shiny, la Pokédex de cada hábitat y el Concurso de Bichos los martes, jueves y sábados, con ranking semanal.',
           },
           {
-            pt: 'A Escavação, com o Excadrill: quebre uma parede e tire o que estiver enterrado antes que ela desabe. Fósseis restauram na hora, e às vezes vem uma parede dourada.',
-            en: 'Mine Dig, with Excadrill: break a wall open and pull out what’s buried before it collapses. Fossils are restored on the spot, and sometimes a golden wall turns up.',
-            es: 'La Excavación, con Excadrill: rompe una pared y saca lo enterrado antes de que se derrumbe. Los fósiles se restauran al instante, y a veces aparece una pared dorada.',
+            pt: 'Complete a Pokédex da Baía Gelada para ganhar o Ovo de Manaphy: ele choca o Manaphy, que joga no Modo Lendário com Heart Swap, e abre o Phione no Safári.',
+            en: 'Complete the Frozen Cove Pokédex to earn the Manaphy Egg: it hatches Manaphy, which plays in Legend mode with Heart Swap, and opens Phione in the Safari.',
+            es: 'Completa la Pokédex de la Bahía Helada para ganar el Huevo de Manaphy: eclosiona a Manaphy, que se juega en el Modo Legendario con Heart Swap, y abre a Phione en el Safari.',
+          },
+          {
+            pt: 'A Escavação, com o Excadrill: quebre uma parede e tire o que estiver enterrado antes que ela desabe. Fósseis vão para o laboratório, às vezes vem uma parede dourada, e o tesouro mais raro é o Pink Diamond, de onde sobe a Diancie.',
+            en: 'Mine Dig, with Excadrill: break a wall open and pull out what’s buried before it collapses. Fossils go to the lab, sometimes a golden wall turns up, and the rarest treasure is the Pink Diamond, out of which Diancie rises.',
+            es: 'La Excavación, con Excadrill: rompe una pared y saca lo enterrado antes de que se derrumbe. Los fósiles van al laboratorio, a veces aparece una pared dorada, y el tesoro más raro es el Pink Diamond, del que surge Diancie.',
           },
           {
             pt: 'A Máquina de Pelúcias no fliperama: mire a garra e leve uma pelúcia para a sua base. Cada erro aproxima a pelúcia da saída, e a décima ficha nela sempre ganha.',
@@ -318,9 +368,34 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             es: 'Regigigas: quien capturó al trío Regi puede encontrar un templo antiguo en sus partidas, donde el gigante despierta para luchar.',
           },
           {
-            pt: 'Com tudo isso, o Modo Lendário chega a 52 lendários, míticos e Ultracriaturas para jogar.',
-            en: 'With all of this, Legend mode reaches 52 legendaries, mythicals and Ultra Beasts to play.',
-            es: 'Con todo esto, el Modo Legendario llega a 52 legendarios, singulares y Ultraentes para jugar.',
+            pt: 'Com tudo isso, o Modo Lendário chega a 62 lendários, míticos e Ultracriaturas para jogar.',
+            en: 'With all of this, Legend mode reaches 62 legendaries, mythicals and Ultra Beasts to play.',
+            es: 'Con todo esto, el Modo Legendario llega a 62 legendarios, singulares y Ultraentes para jugar.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Ruínas, Forças da Natureza e míticos', en: 'Ruins, Forces of Nature and mythicals', es: 'Ruinas, Fuerzas de la Naturaleza y singulares', fr: 'Ruines, Forces de la Nature et Pokémon fabuleux', zh: '遺跡、自然之力與幻之寶可夢' },
+        notes: [
+          {
+            pt: 'Ruínas da Decisão: depois do Regigigas, o templo dele pode trazer duas ruínas, a Elétrica e a Dragão. Entre numa delas para acordar o Regieleki ou o Regidrago: só um desperta por partida.',
+            en: 'Split-Decision Ruins: after Regigigas, its temple may bring two ruins, the Electric and the Dragon. Step into one to wake Regieleki or Regidrago: only one wakes a run.',
+            es: 'Ruinas de la Elección: después de Regigigas, su templo puede traer dos ruinas, la Eléctrica y la Dragón. Entra en una para despertar a Regieleki o a Regidrago: solo uno despierta por partida.',
+          },
+          {
+            pt: 'Forças da Natureza: Tornadus traz a neve, Thundurus a chuva, Landorus a areia e Enamorus o sol da primavera. Vagam pelo mapa como o trio dos lagos, com o HP guardado entre partidas. Landorus vem depois de Tornadus e Thundurus, e Enamorus depois dos três; os dois despertam na Forma Therian.',
+            en: 'Forces of Nature: Tornadus brings snow, Thundurus rain, Landorus sand and Enamorus the spring sun. They roam the map like the lake trio, their HP kept between runs. Landorus comes after Tornadus and Thundurus, and Enamorus after all three; both awaken into their Therian Forme.',
+            es: 'Fuerzas de la Naturaleza: Tornadus trae la nieve, Thundurus la lluvia, Landorus la arena y Enamorus el sol de primavera. Vagan por el mapa como el trío del lago, con los PS guardados entre partidas. Landorus llega después de Tornadus y Thundurus, y Enamorus después de los tres; los dos despiertan en su Forma Tótem.',
+          },
+          {
+            pt: 'Zeraora: fique na Usina enquanto chove e a tempestade traz o Zeraora, com Plasma Fists. Ogerpon tem a sua própria Raide Tera, na máscara do tipo Tera da partida, e no Modo Lendário troca de máscara e Terastaliza com o Embody Aspect. Diancie sobe do Pink Diamond da Escavação, com Diamond Storm.',
+            en: 'Zeraora: stay at the Power Plant while it rains and the storm brings Zeraora, with Plasma Fists. Ogerpon has its own Tera Raid, in the mask of the run’s Tera type, and in Legend mode it swaps masks and Terastallizes with Embody Aspect. Diancie rises from the Mine Dig’s Pink Diamond, with Diamond Storm.',
+            es: 'Zeraora: quédate en la Central Eléctrica mientras llueve y la tormenta trae a Zeraora, con Plasma Fists. Ogerpon tiene su propia Teraincursión, con la máscara del teratipo de la partida, y en el Modo Legendario cambia de máscara y se teracristaliza con Embody Aspect. Diancie surge del Pink Diamond de la Excavación, con Diamond Storm.',
+          },
+          {
+            pt: 'Dialga desperta Primal no Modo Lendário, e no Pesadelo a última fase da fenda dele vira Primal Dialga.',
+            en: 'Dialga awakens Primal in Legend mode, and on Nightmare the last phase of its rift turns into Primal Dialga.',
+            es: 'Dialga despierta Primigenio en el Modo Legendario, y en Pesadilla la última fase de su grieta se vuelve Dialga Primigenio.',
           },
         ],
       },
@@ -336,6 +411,11 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             pt: 'A bola da captura dos lendários ficou maior e brilha a cada sacudida.',
             en: 'The ball in legend captures is bigger and glows with each shake.',
             es: 'La ball de la captura de legendarios es más grande y brilla en cada sacudida.',
+          },
+          {
+            pt: 'O último nível do especial de Pedra agora se chama Stone Edge: Diamond Storm virou o golpe da Diancie.',
+            en: 'The Rock special’s last tier is now called Stone Edge: Diamond Storm became Diancie’s move.',
+            es: 'El último nivel del especial de Roca ahora se llama Stone Edge: Diamond Storm pasó a ser el movimiento de Diancie.',
           },
         ],
       },
