@@ -7,12 +7,10 @@ import { isRegion } from './regionalForms'
 /**
  * The Zona Safári's habitats and who lives in them (`realm/games/safari.rules.ts`
  * has the rules, `server/src/safari.ts` the dice). A habitat is a type theme
- * over the regular egg families, plus the one Safari-only family it shelters
- * and the families of the week's trip (`regionOfWeek`, `game/travel.ts`).
+ * over the regular egg families, plus the Safari-only families it shelters
+ * (`only`, no egg brings them) and the families of the week's trip
+ * (`regionOfWeek`, `game/travel.ts`).
  */
-
-/** The families only the Safari brings: Lapras swims in the cove alone. */
-export const SAFARI_ONLY = ['mimikyu', 'morpeko', 'tandemaus', 'lapras'] as const satisfies readonly HatchlingId[]
 
 /**
  * Regular egg families the Safari leaves out because their shiny is someone's
@@ -24,13 +22,13 @@ const PROMISED: ReadonlySet<HatchlingId> = new Set(['togepi', 'gastly', 'noibat'
 
 const REGULAR = HATCHLING_IDS.filter((id) => (['common', 'rare', 'ultra'] as const).some((tier) => tier === HATCHLINGS[id].egg) && !PROMISED.has(id))
 
-/** The habitats, in the weekly order (`habitatOfWeek`). */
+/** The habitats, in the weekly order (`habitatOfWeek`). A new Safari-only family is one more id in its habitat's `only`. */
 export const SAFARI_HABITATS = {
-  meadow: { types: ['normal', 'flying', 'grass', 'bug', 'fairy'], only: 'tandemaus' },
-  marsh: { types: ['ghost', 'dark', 'poison', 'psychic'], only: 'mimikyu' },
-  ridge: { types: ['electric', 'rock', 'ground', 'steel', 'fighting', 'fire', 'dragon'], only: 'morpeko' },
-  cove: { types: ['water', 'ice'], only: 'lapras' },
-} as const satisfies Record<string, { types: readonly string[]; only: (typeof SAFARI_ONLY)[number] }>
+  meadow: { types: ['normal', 'flying', 'grass', 'bug', 'fairy'], only: ['tandemaus'] },
+  marsh: { types: ['ghost', 'dark', 'poison', 'psychic'], only: ['mimikyu'] },
+  ridge: { types: ['electric', 'rock', 'ground', 'steel', 'fighting', 'fire', 'dragon'], only: ['morpeko'] },
+  cove: { types: ['water', 'ice'], only: ['lapras'] },
+} as const satisfies Record<string, { types: readonly string[]; only: readonly HatchlingId[] }>
 
 export type SafariHabitat = keyof typeof SAFARI_HABITATS
 
@@ -38,10 +36,13 @@ export const SAFARI_HABITAT_IDS = Object.keys(SAFARI_HABITATS) as SafariHabitat[
 
 export const isSafariHabitat = (v: unknown): v is SafariHabitat => typeof v === 'string' && Object.hasOwn(SAFARI_HABITATS, v)
 
+/** The families only the Safari brings, every habitat's `only` in the habitats' order. */
+export const SAFARI_ONLY: readonly HatchlingId[] = SAFARI_HABITAT_IDS.flatMap((habitat) => SAFARI_HABITATS[habitat].only)
+
 const typesOf = (id: HatchlingId): readonly string[] => HATCHLINGS[id].line[0].types
 
 const rarityOf = (id: HatchlingId): SafariRarity => {
-  if ((SAFARI_ONLY as readonly HatchlingId[]).includes(id)) return 'special'
+  if (SAFARI_ONLY.includes(id)) return 'special'
   const tier = HATCHLINGS[id].egg
   // The trip's visitors are as rare as a rare egg's.
   if (isRegion(tier)) return 'rare'
@@ -51,13 +52,13 @@ const rarityOf = (id: HatchlingId): SafariRarity => {
 /** A family as the Safari weighs it (the guarantee can bring one from outside the week's pool). */
 export const safariEntry = (id: HatchlingId): SafariEntry<HatchlingId> => ({ family: id, rarity: rarityOf(id), types: typesOf(id) })
 
-/** Every family a Safari can hold, in the dex's order: the regular eggs' and the Safari-only four. */
+/** Every family a Safari can hold: the regular eggs' and the Safari-only ones. */
 export const SAFARI_FAMILIES: readonly HatchlingId[] = [...REGULAR, ...SAFARI_ONLY]
 
-/** A habitat's own residents, at any time of day: its types' families and its Safari-only one (`poolAt` keeps who's about at one). */
+/** A habitat's own residents, at any time of day: its types' families and its Safari-only ones (`poolAt` keeps who's about at one). */
 const residentPool = (habitat: SafariHabitat): SafariEntry<HatchlingId>[] => {
   const { types, only } = SAFARI_HABITATS[habitat]
-  return [...REGULAR.filter((id) => typesOf(id).some((type) => (types as readonly string[]).includes(type))), only].map(safariEntry)
+  return [...REGULAR.filter((id) => typesOf(id).some((type) => (types as readonly string[]).includes(type))), ...only].map(safariEntry)
 }
 
 /** Who can turn up in a habitat's tall grass in the week starting on `week`, at any time of day: its residents and the trip's region's families. */
