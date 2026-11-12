@@ -12,7 +12,8 @@ import { ULTRA_BEASTS } from './ultraBeasts'
  * last ring is Hoopa itself. The rush's level is the difficulty picked
  * (`rings`: legends before Hoopa); clearing it once captures Hoopa.
  *
- * `min`: captured legends the rings need to open. Each legend comes with
+ * A level opens with as many legends captured as its `rings` (Normal's open
+ * the rings), and always brings that many. Each legend comes with
  * `hp` × `hpBy[difficulty]` × (1 + `ramp` × its ring) HP whatever its species
  * (so a ring of Arceus is as long as a ring of Latias), Hoopa with `hoopa` ×
  * that. The player fights at `level` with their Dojo build for the Pokémon
@@ -21,7 +22,6 @@ import { ULTRA_BEASTS } from './ultraBeasts'
  * steps through, `arena` px from the middle of the rings.
  */
 export const RUSH = {
-  min: 3,
   rings: { normal: 4, hard: 7, nightmare: 10 },
   hp: 3000,
   hpBy: { normal: 0.85, hard: 1.15, nightmare: 1.5 },

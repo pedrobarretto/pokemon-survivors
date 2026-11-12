@@ -3,7 +3,7 @@ import type { Game } from './types'
 
 /**
  * Dev console helpers for Hoopa's Rings (`rush.ts`): `ps.rush('hard')` starts
- * a rush at that level with the partner (the save needs 3 captured legends:
+ * a rush at that level with the partner (the save needs as many captured legends as its rings, 4 for Normal:
  * `ps.captureAll()` first), `ps.rush('select')` opens the partner select on
  * its Lendários tab (the rings' banner), `ps.rushRing(5)` jumps to ring 5 (its
  * legend comes through at once; the last ring is Hoopa).

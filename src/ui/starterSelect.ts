@@ -12,7 +12,7 @@ import { eggLegend, giftLegend, isRoamer, isLegend, isUltraLegend, LEGEND_IDS, l
 import { ULTRA_BEASTS } from '../data/ultraBeasts'
 import { ultraCaptured } from '../game/ultraGifts'
 import { beastBallIcon } from '../render/ultraArt'
-import { RUSH } from '../data/rush'
+import { rushOpen } from '../game/rush'
 import { openRushSheet, rushBanner, rushPool } from './rush'
 import { HALLOWEEN } from '../data/halloween'
 import { brasiliaDay } from '../game/day'
@@ -390,7 +390,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
   const captured = LEGEND_IDS.filter((id) => isCaptured(save.legends, id))
   const openRush = () => {
     const start = actions.rush
-    if (!start || rushSheet || rushPool(captured).length < RUSH.min) return playSfx('denied')
+    if (!start || rushSheet || !rushOpen(rushPool(captured).length, 'normal')) return playSfx('denied')
     playSfx('select')
     rushSheet = openRushSheet(root, input, {
       captured,
