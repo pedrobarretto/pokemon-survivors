@@ -53,17 +53,21 @@ export type RushState = {
   room: Room
 }
 
+/** Whether a level of the rings is open for `captured` legends they can bring: as many as its rings, so each level is always the same fight. */
+export const rushOpen = (captured: number, difficulty: Difficulty) => captured >= RUSH.rings[difficulty]
+
 /**
- * The legends a rush brings at `difficulty` from the captured ones: up to
+ * The legends a rush brings at `difficulty` from the captured ones: exactly
  * `RUSH.rings` of them (drawn from the seed when there are more), in
- * `RUSH_ORDER`, then Hoopa. Null with fewer than `RUSH.min` captured.
+ * `RUSH_ORDER`, then Hoopa. Null while the level is locked (`rushOpen`).
  */
 export const rushLineup = (captured: readonly LegendId[], difficulty: Difficulty, seed: number): EnemyId[] | null => {
   const pool = RUSH_ORDER.filter((id) => captured.includes(id))
-  if (pool.length < RUSH.min) return null
+  const rings = RUSH.rings[difficulty]
+  if (!rushOpen(pool.length, difficulty)) return null
   // More captured than rings: a draw from the seed decides which come (each legend its own roll), the order stays the rings'.
   const rng = createRng(seed)
-  const picked = pool.length > RUSH.rings[difficulty] ? pool.map((id) => [id, rng()] as const).sort((a, b) => a[1] - b[1]).slice(0, RUSH.rings[difficulty]).map(([id]) => id) : pool
+  const picked = pool.length > rings ? pool.map((id) => [id, rng()] as const).sort((a, b) => a[1] - b[1]).slice(0, rings).map(([id]) => id) : pool
   return [...RUSH_ORDER.filter((id) => picked.includes(id)), 'hoopa']
 }
 

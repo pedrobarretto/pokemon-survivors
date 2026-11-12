@@ -102,6 +102,7 @@ const pt = {
       leave: 'Sair',
       build: (name: string) => `Com o build do Dojo de ${name}.`,
       noBuild: 'Sem build no Dojo: os golpes da família no nível máximo.',
+      levelLocked: (n: number, need: number) => `Capture ${need} lendários (${n}/${need})`,
     },
     gifts: { swords: 'Por conquistar o respeito das três Espadas da Justiça', creation: 'Por capturar Dialga e Palkia: o tempo e o espaço' },
     roam: {
@@ -224,6 +225,7 @@ const en: typeof pt = {
       leave: 'Leave',
       build: (name: string) => `With ${name}’s Dojo build.`,
       noBuild: 'No Dojo build: the family’s moves at max level.',
+      levelLocked: (n: number, need: number) => `Catch ${need} legends (${n}/${need})`,
     },
     gifts: { swords: 'For earning the respect of all three Swords of Justice', creation: 'For catching Dialga and Palkia: time and space' },
     roam: {
@@ -345,6 +347,7 @@ const es: typeof pt = {
       leave: 'Salir',
       build: (name: string) => `Con la build del Dojo de ${name}.`,
       noBuild: 'Sin build en el Dojo: los movimientos de la familia al nivel máximo.',
+      levelLocked: (n: number, need: number) => `Captura ${need} legendarios (${n}/${need})`,
     },
     gifts: { swords: 'Por ganarte el respeto de las tres Espadas de la Justicia', creation: 'Por capturar a Dialga y a Palkia: el tiempo y el espacio' },
     roam: {
@@ -466,6 +469,7 @@ const fr: typeof pt = {
       leave: 'Quitter',
       build: (name: string) => `Avec le build du Dojo de ${name}.`,
       noBuild: 'Pas de build au Dojo : les capacités de la famille au niveau max.',
+      levelLocked: (n: number, need: number) => `Capture ${need} légendaires (${n}/${need})`,
     },
     gifts: { swords: 'Pour avoir gagné le respect des trois Épées de la Justice', creation: 'Pour avoir capturé Dialga et Palkia : le temps et l’espace' },
     roam: {
@@ -587,6 +591,7 @@ const zh: typeof pt = {
       leave: '離開',
       build: (name: string) => `使用 ${name} 的道館配置。`,
       noBuild: '道館沒有配置：使用家族招式的最高等級。',
+      levelLocked: (n: number, need: number) => `捕捉${need}隻傳說寶可夢（${n}/${need}）`,
     },
     gifts: { swords: '贏得三把正義之劍的認可', creation: '捕捉了 Dialga 與 Palkia：時間與空間' },
     roam: {
