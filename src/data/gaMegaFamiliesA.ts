@@ -29,7 +29,7 @@ export const GA_MEGA_FAMILIES_A = {
   },
   pinsir: {
     name: 'Pinsir', color: '#a89880', egg: 'found', stats: { maxHp: 25, might: 0.2, speed: -1 }, signature: 'stormThrow',
-    learnset: [['stormThrow', 'xScissor', 'pinMissile', 'uTurn', 'focusPunch', 'rockTomb', 'earthquake', 'crunch', 'quickAttack']],
+    learnset: [['stormThrow', 'furyCutter', 'pinMissile', 'uTurn', 'focusPunch', 'rockTomb', 'earthquake', 'crunch', 'quickAttack']],
     line: [{ name: 'Pinsir', dex: 127, types: ['bug'], bonus: {} }],
   },
   skarmory: {
