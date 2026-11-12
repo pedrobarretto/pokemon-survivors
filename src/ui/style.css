@@ -2934,6 +2934,8 @@ button {
 .special-button {
   display: none;
   position: absolute;
+  /* Its art's layers (`.special img`, the ring) stack inside it, so a dialog on top (the evolution's text box) stays on top. */
+  isolation: isolate;
   right: max(18px, env(safe-area-inset-right));
   bottom: max(18px, env(safe-area-inset-bottom));
   width: 76px;

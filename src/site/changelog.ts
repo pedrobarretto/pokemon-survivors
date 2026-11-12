@@ -28,11 +28,11 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
     title: { pt: 'Temporada 1: Terastal, Pokédex Nacional e lendas novas', en: 'Season 1: Terastal, the National Pokédex and new legends', es: 'Temporada 1: Teracristal, la Pokédex Nacional y leyendas nuevas', fr: 'Saison 1 : Téracristal, le Pokédex National et de nouvelles légendes', zh: '第 1 賽季：太晶化、全國圖鑑和新的傳說' },
     highlights: [
       {
-        pt: 'A Pokédex Nacional chegou: 745 espécies na horda e 104 famílias novas, cada uma com a sua mecânica, de formas regionais a fósseis restaurados na Escavação.',
-        en: 'The National Pokédex is here: 745 species in the horde and 104 new families, each with a mechanic of its own, from regional forms to fossils restored in the Mine Dig.',
-        es: 'Llegó la Pokédex Nacional: 745 especies en la horda y 104 familias nuevas, cada una con su mecánica, de formas regionales a fósiles restaurados en la Excavación.',
-        fr: 'Le Pokédex National est là : 745 espèces dans la horde et 104 nouvelles familles, chacune avec sa mécanique, des formes régionales aux fossiles restaurés à l’Excavation.',
-        zh: '全國圖鑑登場：745 種寶可夢加入怪潮，還有 104 個新的可玩家族，各有獨特機制，從地區形態到在礦坑挖掘復原的化石。',
+        pt: 'A Pokédex Nacional chegou: 745 espécies na horda e 104 famílias novas, cada uma com a sua mecânica.',
+        en: 'The National Pokédex is here: 745 species in the horde and 104 new families, each with a mechanic of its own.',
+        es: 'Llegó la Pokédex Nacional: 745 especies en la horda y 104 familias nuevas, cada una con su mecánica.',
+        fr: 'Le Pokédex National est là : 745 espèces dans la horde et 104 nouvelles familles, chacune avec sa mécanique.',
+        zh: '全國圖鑑登場：745 種寶可夢加入怪潮，還有 104 個新的可玩家族，各有獨特機制。',
       },
       {
         pt: 'Lendas novas: Palkia, 10 Ultracriaturas, o trio dos lagos, as Forças da Natureza, Regieleki e Regidrago, Diancie, Zeraora, Ogerpon e Manaphy. São 62 no Modo Lendário.',
@@ -56,11 +56,11 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         zh: '太晶化：從頭目身上收集太晶碎塊，集滿太晶珠，戴上 19 種皇冠之一化為結晶。每局都有太晶團體戰，還有每日團體戰和太樂巴戈斯。',
       },
       {
-        pt: 'No Poké Realm, a Equipe Rocket abre o Game Corner e a Zona Safári tem famílias que só ela traz, como Kangaskhan, Tyrogue e Vivillon com as asas da sua região.',
-        en: 'In the Poké Realm, Team Rocket opens its Game Corner and the Safari Zone brings families found nowhere else, like Kangaskhan, Tyrogue and Vivillon wearing your region’s wings.',
-        es: 'En el Poké Realm, el Team Rocket abre su Casino y la Zona Safari trae familias que solo ella tiene, como Kangaskhan, Tyrogue y Vivillon con las alas de tu región.',
-        fr: 'Dans le Poké Realm, la Team Rocket ouvre sa Salle de jeux et le Parc Safari a des familles introuvables ailleurs, comme Kangaskhan, Tyrogue et Prismillon aux ailes de ta région.',
-        zh: 'Poké Realm 裡，火箭隊開了遊戲城，狩獵地帶有別處找不到的家族，像袋獸、無畏小子，還有翅膀是你所在地區花紋的彩粉蝶。',
+        pt: 'No Poké Realm: o Game Corner da Equipe Rocket e famílias só do Safári, como o Vivillon com as asas da sua região.',
+        en: 'In the Poké Realm: Team Rocket’s Game Corner and Safari-only families, like Vivillon wearing your region’s wings.',
+        es: 'En el Poké Realm: el Casino del Team Rocket y familias solo del Safari, como Vivillon con las alas de tu región.',
+        fr: 'Dans le Poké Realm : la Salle de jeux de la Team Rocket et des familles propres au Safari, comme Prismillon aux ailes de ta région.',
+        zh: 'Poké Realm 裡：火箭隊的遊戲城，還有狩獵地帶限定的家族，像翅膀是你所在地區花紋的彩粉蝶。',
       },
     ],
     changes: [
