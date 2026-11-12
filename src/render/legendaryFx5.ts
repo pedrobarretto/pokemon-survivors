@@ -2,7 +2,7 @@ import { blitEllipse, blitRing, context2d, createCanvas, type PixelSprite } from
 import { TAU } from '../engine/math'
 import { hash2 } from '../engine/rng'
 import { maskOf, OGERPON_MASKS, type OgerponMask } from '../data/mythicals'
-import { CUDGEL, PLASMA, type LegendaryMove4Id } from '../game/legendaryMoves4'
+import { CUDGEL, PLASMA, type LegendaryMove5Id } from '../game/legendaryMoves5'
 import { ownerOf } from '../game/players'
 import type { Attack, Game } from '../game/types'
 import { medallion } from './legendaryArt'
@@ -11,7 +11,7 @@ import { fadeOut, px, thickLine } from './legendaryFx'
 type Ctx = CanvasRenderingContext2D
 
 /**
- * The fourth batch of legendary moves on screen (`game/legendaryMoves4.ts`)
+ * The fifth batch of legendary moves on screen (`game/legendaryMoves5.ts`)
  * and their icons: Diancie's whirl of diamonds, Zeraora's plasma fists and
  * their arcs, and Ogerpon's cudgel, its slam and its mask's bursts.
  */
@@ -76,7 +76,7 @@ const WOOD = { o: '#30200c', h: '#a87040', m: '#7c4c24', d: '#583418', g: '#58c0
 
 /* ---------------- Icons ---------------- */
 
-export const LEGENDARY_ICONS_4: Record<LegendaryMove4Id, () => PixelSprite> = {
+export const LEGENDARY_ICONS_5: Record<LegendaryMove5Id, () => PixelSprite> = {
   powerGem: () =>
     medallion(paint(11, 11, (dot) => {
       // A pink diamond with a spark, and two small ones whirling round it.
@@ -351,12 +351,12 @@ const drawMaskBurst = (ctx: Ctx, a: Attack, t: number) => {
 }
 
 /** Ground layer: Ivy Cudgel's slams. */
-export const drawLegendary4Ground = (ctx: Ctx, g: Game) => {
+export const drawLegendary5Ground = (ctx: Ctx, g: Game) => {
   for (const a of g.attacks) if (a.age >= 0 && a.visual === 'cudgelSlam') drawCudgelSlam(ctx, a)
 }
 
 /** Air layer (over the Pokémon). The whirl and the swing follow their player, so they draw wherever their middle is. */
-export const drawLegendary4Air = (ctx: Ctx, g: Game, t: number, visible: (x: number, y: number, m?: number) => boolean) => {
+export const drawLegendary5Air = (ctx: Ctx, g: Game, t: number, visible: (x: number, y: number, m?: number) => boolean) => {
   for (const a of g.attacks) {
     if (a.age < 0) continue
     switch (a.visual) {

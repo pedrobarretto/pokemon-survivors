@@ -66,7 +66,7 @@ import type { UltraVisual } from './ultraMoves'
 import type { PathLegendVisual } from './pathLegendMoves'
 import type { PathNotice, PathRun } from './pathRun'
 import type { LegendaryVisual3 } from './legendaryMoves3'
-import type { LegendaryVisual4 } from './legendaryMoves4'
+import type { LegendaryVisual5 } from './legendaryMoves5'
 import type { OgerponMask } from '../data/mythicals'
 import type { QuestState } from './quests'
 import type { RushState } from './rush'
@@ -430,8 +430,8 @@ export type Visual =
   | PathLegendVisual
   /** Legendary moves, third batch (`legendaryMoves3.ts`), drawn by `render/legendaryFx3.ts`. */
   | LegendaryVisual3
-  /** Legendary moves, fourth batch (`legendaryMoves4.ts`, the mythicals'), drawn by `render/legendaryFx4.ts`. */
-  | LegendaryVisual4
+  /** Legendary moves, fifth batch (`legendaryMoves5.ts`, the mythicals'), drawn by `render/legendaryFx5.ts`. */
+  | LegendaryVisual5
   /** Temporada 1's mechanic families, drawn by `render/seasonOneKitFx.ts`. */
   | 'kitCross' | 'kitClaw' | 'dragonPulse' | 'slime' | 'waterPulse' | 'miceBite' | 'auraWheel' | 'zenOrb' | 'commandSlam' | 'orderUp'
   /** The second batch's families (`gaKitBMoves.ts`, `gaKitBSystem.ts`), drawn by `render/gaKitBFx.ts`; `kitBHit` is a kit's unseen hitbox. */

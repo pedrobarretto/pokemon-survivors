@@ -11,7 +11,7 @@ import type { Game, Player } from './types'
  * mask is the run's Tera type among its four (it starts in the Teal Mask,
  * Grass), a boss's shards offer it two other masks instead of the usual pair,
  * and a shard of any other type leaves its mask alone. Its types follow the
- * mask (`legendStage`), and so does Ivy Cudgel's (`legendaryMoves4.ts`).
+ * mask (`legendStage`), and so does Ivy Cudgel's (`legendaryMoves5.ts`).
  * Terastallizing is its Embody Aspect: the mask's crystal sheets, the mask's
  * stat (`OGERPON_MASKS[mask].embody`) while it lasts, and Ivy Cudgel's slams
  * bursting in the mask's element.

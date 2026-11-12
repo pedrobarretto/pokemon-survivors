@@ -11,18 +11,18 @@ import { burst, shakeScreen } from './effects'
 import * as dm from '../engine/dmath'
 
 /**
- * Legendary moves, fourth batch: the capstones of the Grande Atualização's
+ * Legendary moves, fifth batch: the capstones of the Grande Atualização's
  * mythicals (`MYTHICAL_LEGENDS` in `data/legends.ts`): Diancie's Diamond
  * Storm, Zeraora's Plasma Fists and Ogerpon's Ivy Cudgel. Same tier and rules
  * as the first batch (`legendaryMoves.ts`): Lv1–5 with a fork at Lv4,
  * `legendary: true`, never evolve. No per-tick side: every hitbox runs on the
- * regular motions. Their art is `render/legendaryFx4.ts`.
+ * regular motions. Their art is `render/legendaryFx5.ts`.
  *
  * This module must not import `moves.ts` at runtime (it is evaluated first).
  */
 
-/** The visuals of this batch, drawn by `render/legendaryFx4.ts`. */
-export type LegendaryVisual4 = 'diamondShard' | 'diamondHalo' | 'plasmaFist' | 'plasmaArc' | 'cudgelSwing' | 'cudgelSlam' | 'maskBurst'
+/** The visuals of this batch, drawn by `render/legendaryFx5.ts`. */
+export type LegendaryVisual5 = 'diamondShard' | 'diamondHalo' | 'plasmaFist' | 'plasmaArc' | 'cudgelSwing' | 'cudgelSlam' | 'maskBurst'
 
 /** Power Gem: the ring the diamonds form around the player, the beat between them (a spiral), how long they spin before flying out, and the armor each cast lends for its `duration`. */
 export const DIAMOND = { ring: 18, stagger: 0.025, spin: 0.22, armor: 1, r: 5 } as const
@@ -44,7 +44,7 @@ const buff = (g: Game, move: MoveId, seconds: number, delta: StatDelta) => {
 /** Whether the acting player's legend wears its second awakening's form (Mega Diancie, Mega Zeraora). */
 const megaForm = (g: Game) => (g.player.legend?.awakened ?? 0) >= 2
 
-export const LEGENDARY_MOVES_4 = {
+export const LEGENDARY_MOVES_5 = {
   /* Diancie */
   powerGem: {
     name: 'Power Gem',
@@ -189,4 +189,4 @@ export const LEGENDARY_MOVES_4 = {
   },
 } as const satisfies Record<string, MoveDef>
 
-export type LegendaryMove4Id = keyof typeof LEGENDARY_MOVES_4
+export type LegendaryMove5Id = keyof typeof LEGENDARY_MOVES_5

@@ -11,11 +11,11 @@ import { LEGENDARY_MOVES_2 } from './legendaryMoves2'
 import { ULTRA_MOVES } from './ultraMoves'
 import { PATH_LEGEND_MOVES } from './pathLegendMoves'
 import { LEGENDARY_MOVES_3 } from './legendaryMoves3'
-import { LEGENDARY_MOVES_4 } from './legendaryMoves4'
+import { LEGENDARY_MOVES_5 } from './legendaryMoves5'
 import { forkAt, isLegendary, maxMoveLevel, MOVE_IDS, MOVES, type MoveId } from './moves'
 import { SPECIALS } from './special'
 
-const LEGENDARY = Object.keys({ ...LEGENDARY_MOVES, ...LEGENDARY_MOVES_2, ...ULTRA_MOVES, ...PATH_LEGEND_MOVES, ...LEGENDARY_MOVES_3, ...LEGENDARY_MOVES_4 }) as MoveId[]
+const LEGENDARY = Object.keys({ ...LEGENDARY_MOVES, ...LEGENDARY_MOVES_2, ...ULTRA_MOVES, ...PATH_LEGEND_MOVES, ...LEGENDARY_MOVES_3, ...LEGENDARY_MOVES_5 }) as MoveId[]
 
 describe('legendary moves', () => {
   it('are taught by every legendary: rift, trio, Mewtwo, mythical, Arceus, the event, the festival, the Tera, the Ultra Beasts, the path, the quest ones and the mythicals (the lake trio and the Swords share theirs)', () => {
