@@ -5,7 +5,8 @@ import { ENEMIES, type EnemyDef } from '../data/enemies'
 import { domainOf } from '../data/domains'
 import { onFloor } from '../game/arenaFloor'
 import { parked, safeAt } from '../game/bosses'
-import { phasesOf } from '../game/bossFight'
+import { phaseForm, phasesOf } from '../game/bossFight'
+import { maskOf, OGERPON_MASKS } from '../data/mythicals'
 import { arenaPoint, domainHere } from '../game/domain'
 import { groundAt, playerTypes } from '../game/terrain'
 import { pairFighter } from '../game/domainPair'
@@ -257,7 +258,7 @@ export const formChangeAt = (e: Enemy) => {
   const f = e.fight
   const phases = f ? phasesOf(e.kind) : undefined
   const phase = f && phases?.[f.phase]
-  if (!f || !phases || !phase || f.phase === 0 || f.shift <= 0 || phase.form === phases[f.phase - 1]?.form) return -1
+  if (!f || !phases || !phase || f.phase === 0 || f.shift <= 0 || phaseForm(phase, f.difficulty) === phaseForm(phases[f.phase - 1], f.difficulty)) return -1
   return 1 - f.shift / (phase.shift ?? PHASE_SHIFT)
 }
 
@@ -268,11 +269,17 @@ export const FORM_SWAP = 0.5
 export const formFlash = (k: number) => (k < FORM_SWAP ? k / FORM_SWAP : k < FORM_SWAP + 0.12 ? 1 : Math.max(0, 1 - (k - FORM_SWAP - 0.12) / 0.3))
 export const formLift = (k: number) => Math.round(Math.sin(Math.min(1, k / 0.8) * Math.PI) * 8)
 
-/** The sprite form a boss wears in its phase (`BossPhase.form`), if its species has it; through a form change, the old one until `FORM_SWAP`. */
+/**
+ * The sprite form a boss wears in its phase (`BossPhase.form`, or its
+ * `nightmareForm` in a Nightmare fight), if its species has it; through a form
+ * change, the old one until `FORM_SWAP`. Ogerpon's raid giant wears its
+ * mask's Terastallized sheets, the mask of its Tera type.
+ */
 export const bossForm = (e: Enemy) => {
+  if (e.kind === 'ogerpon') return formOf(ENEMIES.ogerpon.dex, OGERPON_MASKS[maskOf(e.types[0] ?? null)].tera)
   const phases = e.fight ? phasesOf(e.kind) : undefined
   const at = e.fight ? e.fight.phase - (formChangeAt(e) >= 0 && formChangeAt(e) < FORM_SWAP ? 1 : 0) : 0
-  return formOf(ENEMIES[e.kind].dex, phases?.[at]?.form)
+  return formOf(ENEMIES[e.kind].dex, e.fight ? phaseForm(phases?.[at], e.fight.difficulty) : phases?.[at]?.form)
 }
 
 /** How a legendary's entrance colors its rings, the tint it rises out of and the spray off its back. */

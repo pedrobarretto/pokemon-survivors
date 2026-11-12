@@ -13,6 +13,7 @@ import { ROCKET_WORDS } from './rocket/words'
 import { ULTRA_WORDS } from './ultra'
 import { LEGEND_PATHS_WORDS } from './legendPaths'
 import { QUEST_WORDS } from './quests'
+import { MYTHICAL_WORDS } from './mythicals'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -3187,6 +3188,7 @@ export const es: Messages = {
     ...ULTRA_WORDS.es.moves,
     ...LEGEND_PATHS_WORDS.es.moves,
     ...QUEST_WORDS.es.moves,
+    ...MYTHICAL_WORDS.es.moves,
     leechSeed: {
       description: 'Lanza semillas a los enemigos más cercanos. La semilla absorbe PS con el tiempo y te cura; cuando el enemigo es derrotado, salta a otros dos.',
       upgrades: [
@@ -5666,6 +5668,7 @@ export const es: Messages = {
     ...ULTRA_WORDS.es.blurbs,
     ...LEGEND_PATHS_WORDS.es.blurbs,
     ...QUEST_WORDS.es.blurbs,
+    ...MYTHICAL_WORDS.es.blurbs,
     bulbasaur: 'Equilibrado. Regenera vida.',
     charmander: 'Ofensivo. Más daño, menos vida.',
     squirtle: 'Defensivo. Más vida y defensa.',
@@ -6385,6 +6388,7 @@ export const es: Messages = {
       path: LEGEND_PATHS_WORDS.es.paths.where.zygarde,
       temple: LEGEND_PATHS_WORDS.es.paths.where.regigigas,
       ...QUEST_WORDS.es.where,
+      ...MYTHICAL_WORDS.es.where,
     },
     rule: (need: number) => (need === 1 ? 'Para capturarlo, vence a este legendario 1 vez como jefe, en una partida solo y en cualquier modo. Las victorias en cooperativo no cuentan.' : `Para capturarlo, vence a este legendario ${need} veces como jefe, en una partida solo y en cualquier modo. Las victorias en cooperativo no cuentan.`),
     shinyRule: 'Vencer a uno shiny en la victoria de la captura, o después, desbloquea su forma shiny.',
@@ -6401,6 +6405,7 @@ export const es: Messages = {
     },
   },
   quests: QUEST_WORDS.es.ui,
+  mythicals: MYTHICAL_WORDS.es.ui,
   legends: {
     epithets: {
       articuno: 'Ave del Hielo Eterno',
@@ -6418,6 +6423,7 @@ export const es: Messages = {
       mewtwo: 'Furia Genética',
       arceus: 'El Primero de Todos',
       regigigas: LEGEND_PATHS_WORDS.es.epithet,
+      zeraora: MYTHICAL_WORDS.es.epithet,
     },
     phases: {
       articuno: ['¡*Articuno* alza el vuelo! Huye de su _sombra_.', '¡Una ventisca! Corre a un _refugio de nieve_ antes del Snowscape.'],
@@ -6435,6 +6441,7 @@ export const es: Messages = {
       mewtwo: ['¡*Mewtwo* libera su poder psíquico! Sal del _círculo_ del Teleport.', '¡Psystrike! Pasa por los _huecos_ y corre a un _refugio_.'],
       arceus: ['¡*Arceus* se teletransporta para juzgarte!', '¡Judgment! Solo los _refugios de luz_ te salvan.'],
       regigigas: LEGEND_PATHS_WORDS.es.phases,
+      zeraora: MYTHICAL_WORDS.es.phases,
     },
   },
   team: {

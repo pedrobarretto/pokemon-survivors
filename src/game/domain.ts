@@ -6,7 +6,7 @@ import { ENEMIES } from '../data/enemies'
 import { ARENAS, isRiftLegend, RIFT, type RiftLegend } from '../data/rifts'
 import { onFloor } from './arenaFloor'
 import { joinAs, offstage } from './bosses'
-import { phasesOf } from './bossFight'
+import { phaseForm, phasesOf } from './bossFight'
 import { hurtPlayer, killEnemy } from './combat'
 import { harmBy } from './harm'
 import { DOMAIN_HOOKS } from './domainHooks'
@@ -417,7 +417,7 @@ const FORM_ROOM = 120
 const changingForm = (boss: Enemy) => {
   const f = boss.fight
   const phases = f ? phasesOf(boss.kind) : null
-  return f !== null && phases !== null && f.phase > 0 && f.shift > 0 && phases[f.phase]?.form !== phases[f.phase - 1]?.form
+  return f !== null && phases !== null && f.phase > 0 && f.shift > 0 && phaseForm(phases[f.phase], f.difficulty) !== phaseForm(phases[f.phase - 1], f.difficulty)
 }
 
 /**

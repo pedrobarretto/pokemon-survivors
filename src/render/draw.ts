@@ -78,6 +78,7 @@ import { drawUltraAir, drawUltraGround } from './ultraFx'
 import { drawPathLegendAir, drawPathLegendGround } from './pathLegendFx'
 import { PATH_ART } from './pathLegendArt'
 import { drawLegendary3Air, drawLegendary3Ground } from './legendaryFx3'
+import { drawLegendary4Air, drawLegendary4Ground } from './legendaryFx4'
 import { drawSignatureAttack, drawSignatureGround, drawSignaturePlayer } from './signatureFx'
 import { drawTraitAir, drawTraitGround, traitLift, traitTint } from './traits'
 import { bolt, dashedRing } from './strokes'
@@ -1099,6 +1100,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
       drawUltraGround(into, v, t)
       drawPathLegendGround(into, v, t)
       drawLegendary3Ground(into, v, t)
+      drawLegendary4Ground(into, v)
     })
   }
   for (const hz of g.hazards) if (hz.kind === 'beam') drawBeamGround(ctx, hz)
@@ -1248,6 +1250,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
       drawUltraAir(into, v, t, visible)
       drawPathLegendAir(into, v, t, visible)
       drawLegendary3Air(into, v, t, visible)
+      drawLegendary4Air(into, v, t, visible)
       drawDrainVines(into, v, t)
     })
   }

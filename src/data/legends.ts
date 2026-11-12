@@ -74,6 +74,14 @@ export const PATH_LEGENDS = ['zygarde', 'solgaleo', 'lunala', 'kubfu', 'meltan',
  */
 export const QUEST_LEGENDS = ['palkia', 'uxie', 'mesprit', 'azelf', 'cobalion', 'terrakion', 'virizion', 'keldeo', 'hoopa'] as const
 
+/**
+ * The Grande Atualização's mythicals (`data/mythicals.ts`), each caught its
+ * own way: Diancie dug up at the Escavação (the API's, `LegendUnlock.dig`),
+ * Zeraora out of the Power Plant's storm (`storm`) and Ogerpon in its own Tera
+ * Raid (`mask`). Out of `REGULAR_LEGENDS` too.
+ */
+export const MYTHICAL_LEGENDS = ['diancie', 'zeraora', 'ogerpon'] as const
+
 /** The roaming lake trio (`game/roamers.ts`). */
 export const LAKE_TRIO = ['uxie', 'mesprit', 'azelf'] as const satisfies readonly (typeof QUEST_LEGENDS)[number][]
 
@@ -87,8 +95,8 @@ export const isLakeLegend = (id: string): id is LakeId => LAKE_TRIO.some((l) => 
 export type SwordId = (typeof SWORDS)[number]
 
 
-/** Every playable legend: the regular ones, then the event ones, the festival ones, Terastal's, the Ultra Beasts, the path ones and the ones with a road of their own. */
-export const LEGEND_IDS = [...REGULAR_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...TERA_LEGENDS, ...ULTRA_LEGENDS, ...PATH_LEGENDS, ...QUEST_LEGENDS] as const
+/** Every playable legend: the regular ones, then the event ones, the festival ones, Terastal's, the Ultra Beasts, the path ones, the ones with a road of their own and the mythicals. */
+export const LEGEND_IDS = [...REGULAR_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...TERA_LEGENDS, ...ULTRA_LEGENDS, ...PATH_LEGENDS, ...QUEST_LEGENDS, ...MYTHICAL_LEGENDS] as const
 
 export type LegendId = (typeof LEGEND_IDS)[number]
 
@@ -97,6 +105,8 @@ export const AWAKEN_AT = [12, 28] as const
 
 /** Asset folder of a legend's alternate form (`<dex>/<form>/`), like the Megas'. Deoxys's formes come with its stance. */
 export type LegendForm = 'primal' | 'mega' | 'attack' | 'defense' | 'speed' | 'terastal' | 'stellar' | 'ten' | 'complete' | 'rapid' | 'origin' | 'unbound'
+  /** Ogerpon's masks and each Terastallized (`OGERPON_MASKS`); the Teal Mask is the species' own sheets. */
+  | 'wellspring' | 'hearthflame' | 'cornerstone' | 'tealTera' | 'wellspringTera' | 'hearthflameTera' | 'cornerstoneTera'
 
 /**
  * The innate: an ability in play from Lv 1, on top of the one picked at the
@@ -122,9 +132,28 @@ export type LegendEvent = 'halloween'
  * carried from run to run, and falls once (the lake trio, `game/roamers.ts`);
  * `duel`: won in its duel (the Swords of Justice, `game/duels.ts`); `swords`:
  * no win counts, the game gives it once every Sword is captured (Keldeo);
- * `rush`: won by clearing Hoopa's ring rush once (`game/rush.ts`).
+ * `rush`: won by clearing Hoopa's ring rush once (`game/rush.ts`); `dig`: no
+ * win counts, the Escavação's rarest treasure brings it (Diancie, sent by the
+ * API); `storm`: beaten in the Power Plant's storm (Zeraora, `game/zeraora.ts`);
+ * `mask`: beaten in its own Tera Raid (Ogerpon, `game/teraRaid.ts`).
  */
-export type LegendUnlock = { wins: number; endless?: true; last?: true; event?: LegendEvent; festival?: FestivalId; ultra?: 'wormhole' | 'gift'; path?: PathId; after?: readonly LegendId[]; roam?: true; duel?: true; swords?: true; rush?: true }
+export type LegendUnlock = {
+  wins: number
+  endless?: true
+  last?: true
+  event?: LegendEvent
+  festival?: FestivalId
+  ultra?: 'wormhole' | 'gift'
+  path?: PathId
+  after?: readonly LegendId[]
+  roam?: true
+  duel?: true
+  swords?: true
+  rush?: true
+  dig?: true
+  storm?: true
+  mask?: true
+}
 
 export type LegendDef = Omit<PlayableDef, 'learnset' | 'line'> & {
   /** One list: every move it can learn is there from Lv 1, its legendary move first. */
@@ -399,6 +428,8 @@ export const LEGENDS = {
     line: stage(483, 'Dialga', ['steel', 'dragon']),
     awakenings: [{ maxHp: 30, armor: 1, might: 0.12 }, { maxHp: 45, might: 0.22, cooldown: -0.05 }],
     innate: { ability: 'pressure' },
+    // The PMD Explorers' last boss: time itself come apart (its rift's last phase on Nightmare too, `data/domains/dialga.ts`).
+    form: { key: 'primal', name: 'Primal Dialga' },
     unlock: RIFT_WINS,
   },
   latias: {
@@ -794,6 +825,51 @@ export const LEGENDS = {
     awakenings: [{ maxHp: 35, armor: 1, might: 0.12 }, { maxHp: 50, might: 0.25, area: 0.1 }],
     innate: { ability: 'slowStart' },
     unlock: { wins: 1, after: ['regirock', 'regice', 'registeel'] },
+  },
+
+  /* ---------- The mythicals (`data/mythicals.ts`) ---------- */
+  /** Diancie: the Escavação's rarest treasure. Its Power Gem guards as it hits; Mega Diancie at the second awakening. */
+  diancie: {
+    name: 'Diancie',
+    color: '#f0a0c8',
+    stats: { maxHp: 40, armor: 2, might: 0.16, area: 0.05, speed: -1 },
+    signature: LEGENDARY_MOVE_OF.diancie,
+    learnset: [[LEGENDARY_MOVE_OF.diancie, 'rockTomb', 'stealthRock', 'dazzlingGleam', 'moonblast', 'ancientPower', 'ironDefense', 'rockSlide']],
+    line: stage(719, 'Diancie', ['rock', 'fairy']),
+    awakenings: [{ maxHp: 25, armor: 1, might: 0.12 }, { maxHp: 35, might: 0.24, area: 0.1, cooldown: -0.04 }],
+    innate: { ability: 'clearBody' },
+    form: { key: 'mega', name: 'Mega Diancie' },
+    unlock: { wins: 1, dig: true },
+  },
+  /** Zeraora: the Power Plant's storm. Fast and furious, Plasma Fists on every foe in reach; Mega Zeraora at the second awakening. */
+  zeraora: {
+    name: 'Zeraora',
+    color: '#f8d048',
+    stats: { maxHp: 25, might: 0.22, speed: 10, cooldown: -0.04 },
+    signature: LEGENDARY_MOVE_OF.zeraora,
+    learnset: [[LEGENDARY_MOVE_OF.zeraora, 'thunder', 'shockWave', 'wildCharge', 'discharge', 'electroBall', 'quickAttack', 'uTurn']],
+    line: stage(807, 'Zeraora', ['electric']),
+    awakenings: [{ maxHp: 25, might: 0.12, speed: 3 }, { maxHp: 35, might: 0.25, cooldown: -0.05 }],
+    innate: { ability: 'voltAbsorb' },
+    form: { key: 'mega', name: 'Mega Zeraora' },
+    unlock: { wins: 1, storm: true },
+  },
+  /**
+   * Ogerpon: its own Tera Raid. It plays Terastal like no other: its mask is
+   * the run's Tera type among its four (`OGERPON_MASKS`), Ivy Cudgel takes the
+   * mask's type, and Terastallizing is its Embody Aspect (`game/ogerpon.ts`).
+   * Its types follow the mask (`legendStage`).
+   */
+  ogerpon: {
+    name: 'Ogerpon',
+    color: '#58c058',
+    stats: { maxHp: 30, might: 0.2, speed: 6, specialRecharge: 0.1 },
+    signature: LEGENDARY_MOVE_OF.ogerpon,
+    learnset: [[LEGENDARY_MOVE_OF.ogerpon, 'leafBlade', 'razorLeaf', 'uTurn', 'swordsDance', 'leechSeed', 'quickAttack', 'crunch']],
+    line: stage(1017, 'Ogerpon', ['grass']),
+    awakenings: [{ maxHp: 25, might: 0.12, speed: 2 }, { maxHp: 35, might: 0.24, cooldown: -0.05 }],
+    innate: { ability: 'defiant' },
+    unlock: { wins: 1, mask: true },
   },
 } as const satisfies Record<LegendId, LegendDef>
 

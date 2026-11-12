@@ -231,8 +231,8 @@ export const createPlayer = (slot: number, setup: PlayerSetup, lucky: boolean, x
     moveBuffs: [],
     special: createSpecialState(),
     mega: createMegaState(),
-    // Terapagos plays Stellar from the start: shards never change it (`tera.ts`).
-    tera: createTeraState(setup.starter === 'terapagos' ? 'stellar' : null),
+    // Terapagos plays Stellar from the start: shards never change it (`tera.ts`). Ogerpon starts in its Teal Mask, Grass (`ogerpon.ts`).
+    tera: createTeraState(setup.starter === 'terapagos' ? 'stellar' : setup.starter === 'ogerpon' ? 'grass' : null),
     ...runCharges(setup.ranks),
     banished: new Set(),
     banishedItems: new Set(),

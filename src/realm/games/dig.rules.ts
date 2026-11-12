@@ -197,13 +197,14 @@ export type DigWall = {
   guaranteed: boolean
 }
 
-/** Who a wall is built for: the week, the partner's powers, the fossils the account lacks, whether its dry streak is due, whether it holds Meltan's Mystery Box (`box`), and what dev forces. */
+/** Who a wall is built for: the week, the partner's powers, the fossils the account lacks, whether its dry streak is due, whether it holds Meltan's Mystery Box (`box`) or Diancie's pink diamond (`diamond`), and what dev forces. */
 export type DigWallCtx = {
   week: string
   powers: DigPowers
   lacking: readonly FossilFamily[]
   due: boolean
   box?: boolean
+  diamond?: boolean
   force?: { golden?: boolean; fossil?: FossilFamily } | undefined
 }
 
@@ -326,8 +327,8 @@ const place = (ids: readonly DigTreasureId[], arrangement: Arrangement, next: ()
 /**
  * The wall of seed `seed` for `ctx`. Golden is rolled on the wall's seed
  * alone. The guarantee puts a fossil the account lacks in; other fossils are
- * rolled from the five, so a repeat can come. `box` puts Meltan's Mystery Box in too. Treasures are placed biggest
- * first so what's rare always fits.
+ * rolled from the five, so a repeat can come. `box` puts Meltan's Mystery Box in too, `diamond` Diancie's pink diamond. Treasures are placed biggest
+ * first so what's rare always fits (a legend's first of all).
  */
 export const buildWall = (seed: number, ctx: DigWallCtx): DigWall => {
   const next = rngFrom(seed)
@@ -338,9 +339,11 @@ export const buildWall = (seed: number, ctx: DigWallCtx): DigWall => {
   const count = slots.min + Math.floor(next() * (slots.extra + 1))
   const forcedFamily = ctx.force?.fossil ?? (ctx.due && ctx.lacking.length > 0 ? ctx.lacking[Math.floor(next() * ctx.lacking.length)] : undefined)
   const forced = forcedFamily === undefined ? [] : DIG_FOSSILS.filter((id) => fossilFamily(id) === forcedFamily)
-  const boxed: DigTreasureId[] = ctx.box ? ['mysteryBox'] : []
+  const boxed: DigTreasureId[] = [...(ctx.box ? ['mysteryBox' as const] : []), ...(ctx.diamond ? ['pinkDiamond' as const] : [])]
   const rolled = Array.from({ length: Math.max(0, count - forced.length - boxed.length) }, () => roll(pool, next))
-  const ids = [...forced, ...boxed, ...rolled].sort((a, b) => shapeCells(b).length - shapeCells(a).length)
+  // A legend's treasure is placed first whatever its size (Diancie's diamond is small), so it always finds room.
+  const legendFirst = (id: DigTreasureId) => (DIG_TREASURES[id].group === 'legend' ? 1 : 0)
+  const ids = [...forced, ...boxed, ...rolled].sort((a, b) => legendFirst(b) - legendFirst(a) || shapeCells(b).length - shapeCells(a).length)
   const treasures = place(ids, ARRANGEMENTS[Math.floor(next() * ARRANGEMENTS.length)]!, next)
   const biggest = treasures[0]
   const hint = ctx.powers.reveal && biggest ? cellHint(biggest, next) : null

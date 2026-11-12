@@ -35,6 +35,7 @@ import { LEGENDARY_MOVES_2 } from './legendaryMoves2'
 import { ULTRA_MOVES } from './ultraMoves'
 import { PATH_LEGEND_MOVES } from './pathLegendMoves'
 import { LEGENDARY_MOVES_3 } from './legendaryMoves3'
+import { LEGENDARY_MOVES_4 } from './legendaryMoves4'
 import { beatOf } from './signatureRules'
 import { stacksOf } from './kitRules'
 import * as dm from '../engine/dmath'
@@ -2316,6 +2317,7 @@ export const MOVES = {
   ...PATH_LEGEND_MOVES,
   /* ---------- Legendary moves, third batch: Palkia, the lake trio, the Swords of Justice, Keldeo and Hoopa (`legendaryMoves3.ts`) ---------- */
   ...LEGENDARY_MOVES_3,
+  ...LEGENDARY_MOVES_4,
   /* ---------- Smeargle's Sketch, the Kecleon Egg's signature (`sketch.ts`) ---------- */
   ...SKETCH_MOVES,
   ...SEASON_ONE_EGG_MOVES,
@@ -2350,6 +2352,7 @@ export const MOVE_TABLES: Readonly<Record<string, Readonly<Record<string, MoveDe
   ULTRA_MOVES,
   PATH_LEGEND_MOVES,
   LEGENDARY_MOVES_3,
+  LEGENDARY_MOVES_4,
   SKETCH_MOVES,
   SEASON_ONE_EGG_MOVES,
   SEASON_ONE_KIT_MOVES,

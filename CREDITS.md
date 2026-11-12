@@ -1895,6 +1895,7 @@ shinies are our own palette swaps, credited in their rows. This file is generate
 | 384 | Rayquaza (Mega, shiny) | Top_Kec | — |
 | 483 | Dialga | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), [G〜](https://bsky.app/profile/justtr4sh.pmd.social) |
 | 483 | Dialga (shiny) | Anonymous | [G〜](https://bsky.app/profile/justtr4sh.pmd.social), Anonymous |
+| 483 | Dialga (Primal) | [CHUNSOFT](https://www.spike-chunsoft.com/) | — |
 | 380 | Latias | [CHUNSOFT](https://www.spike-chunsoft.com/), [Emmuffin](https://twitter.com/Ernmuffin) | [CHUNSOFT](https://www.spike-chunsoft.com/), Sharpen, [Emmuffin](https://twitter.com/Ernmuffin) |
 | 380 | Latias (shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
 | 380 | Latias (Mega) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
@@ -2004,6 +2005,26 @@ shinies are our own palette swaps, credited in their rows. This file is generate
 | 201 | Unown (N) | [CHUNSOFT](https://www.spike-chunsoft.com/) | — |
 | 201 | Unown (O) | [CHUNSOFT](https://www.spike-chunsoft.com/) | — |
 | 201 | Unown (U) | [CHUNSOFT](https://www.spike-chunsoft.com/) | — |
+| 719 | Diancie | [Emmuffin](https://twitter.com/Ernmuffin) | baronessfaron |
+| 719 | Diancie (shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
+| 719 | Diancie (Mega) | baronessfaron | — |
+| 719 | Diancie (Mega, shiny) | Pokejavi. | — |
+| 807 | Zeraora | [Emmuffin](https://twitter.com/Ernmuffin), [Caitemis](https://caitemis-art.tumblr.com/) | [Emmuffin](https://twitter.com/Ernmuffin), Top_Kec |
+| 807 | Zeraora (shiny) | [Emmuffin](https://twitter.com/Ernmuffin), [Caitemis](https://caitemis-art.tumblr.com/) | [Emmuffin](https://twitter.com/Ernmuffin), Top_Kec |
+| 807 | Zeraora (Mega) | [pi3.14](https://twitter.com/Pi_y_ranitas), DeltaL | — |
+| 807 | Zeraora (Mega, shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
+| 1017 | Ogerpon | baronessfaron | ◥θ┴θ◤, baronessfaron |
+| 1017 | Ogerpon (shiny) | ShyStarryRain | baronessfaron |
+| 1017 | Ogerpon (Wellspring) | baronessfaron | — |
+| 1017 | Ogerpon (Wellspring, shiny) | ShyStarryRain | — |
+| 1017 | Ogerpon (Hearthflame) | baronessfaron | — |
+| 1017 | Ogerpon (Hearthflame, shiny) | ShyStarryRain | — |
+| 1017 | Ogerpon (Cornerstone) | baronessfaron | — |
+| 1017 | Ogerpon (Cornerstone, shiny) | ShyStarryRain | — |
+| 1017 | Ogerpon (Teal Mask) | baronessfaron, [pi3.14](https://twitter.com/Pi_y_ranitas) | — |
+| 1017 | Ogerpon (Wellspring Mask) | baronessfaron, [pi3.14](https://twitter.com/Pi_y_ranitas) | — |
+| 1017 | Ogerpon (Hearthflame Mask) | baronessfaron, [pi3.14](https://twitter.com/Pi_y_ranitas) | — |
+| 1017 | Ogerpon (Cornerstone Mask) | baronessfaron, [pi3.14](https://twitter.com/Pi_y_ranitas) | — |
 
 ## Shop art
 

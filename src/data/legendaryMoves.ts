@@ -3,6 +3,7 @@ import type { LegendaryMove2Id } from '../game/legendaryMoves2'
 import type { UltraMoveId } from '../game/ultraMoves'
 import type { PathLegendMoveId } from '../game/pathLegendMoves'
 import type { LegendaryMove3Id } from '../game/legendaryMoves3'
+import type { LegendaryMove4Id } from '../game/legendaryMoves4'
 import type { BiomeId } from './biomes'
 import type { LegendId } from './legends'
 import type { PokeType } from './types'
@@ -72,7 +73,11 @@ export const LEGENDARY_MOVE_OF = {
   virizion: 'retaliate',
   keldeo: 'secretSword',
   hoopa: 'hyperspaceFury',
-} as const satisfies Record<LegendId, LegendaryMoveId | LegendaryMove2Id | UltraMoveId | PathLegendMoveId | LegendaryMove3Id>
+  // The Grande Atualização's mythicals (`game/legendaryMoves4.ts`): each its own signature.
+  diancie: 'powerGem',
+  zeraora: 'plasmaFists',
+  ogerpon: 'ivyCudgel',
+} as const satisfies Record<LegendId, LegendaryMoveId | LegendaryMove2Id | UltraMoveId | PathLegendMoveId | LegendaryMove3Id | LegendaryMove4Id>
 
 export type LegendaryId = keyof typeof LEGENDARY_MOVE_OF
 

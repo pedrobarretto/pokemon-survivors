@@ -44388,6 +44388,43 @@
         "bodyH": 57,
         "footY": 15
       }
+    },
+    "forms": {
+      "primal": {
+        "anims": {
+          "Walk": {
+            "frameWidth": 72,
+            "frameHeight": 104,
+            "durations": [
+              12,
+              14,
+              12,
+              14
+            ]
+          },
+          "Idle": {
+            "frameWidth": 72,
+            "frameHeight": 104,
+            "durations": [
+              80,
+              45
+            ]
+          },
+          "Hurt": {
+            "frameWidth": 80,
+            "frameHeight": 120,
+            "durations": [
+              2,
+              8
+            ]
+          }
+        },
+        "body": {
+          "bodyW": 49,
+          "bodyH": 57,
+          "footY": 15
+        }
+      }
     }
   },
   "484": {
@@ -62034,6 +62071,182 @@
       "complete"
     ]
   },
+  "719": {
+    "anims": {
+      "Walk": {
+        "frameWidth": 32,
+        "frameHeight": 56,
+        "durations": [
+          8,
+          8,
+          10,
+          8,
+          10
+        ]
+      },
+      "Idle": {
+        "frameWidth": 24,
+        "frameHeight": 56,
+        "durations": [
+          12,
+          12,
+          12,
+          12,
+          8,
+          8,
+          8,
+          8
+        ]
+      },
+      "Hurt": {
+        "frameWidth": 32,
+        "frameHeight": 72,
+        "durations": [
+          2,
+          8
+        ]
+      }
+    },
+    "portrait": true,
+    "body": {
+      "bodyW": 19,
+      "bodyH": 26,
+      "footY": 1
+    },
+    "cry": true,
+    "shiny": {
+      "anims": {
+        "Walk": {
+          "frameWidth": 32,
+          "frameHeight": 56,
+          "durations": [
+            8,
+            8,
+            10,
+            8,
+            10
+          ]
+        },
+        "Idle": {
+          "frameWidth": 24,
+          "frameHeight": 56,
+          "durations": [
+            12,
+            12,
+            12,
+            12,
+            8,
+            8,
+            8,
+            8
+          ]
+        },
+        "Hurt": {
+          "frameWidth": 32,
+          "frameHeight": 72,
+          "durations": [
+            2,
+            8
+          ]
+        }
+      },
+      "portrait": true,
+      "body": {
+        "bodyW": 19,
+        "bodyH": 26,
+        "footY": 1
+      }
+    },
+    "forms": {
+      "mega": {
+        "anims": {
+          "Walk": {
+            "frameWidth": 56,
+            "frameHeight": 88,
+            "durations": [
+              4,
+              4,
+              4,
+              4,
+              4,
+              4,
+              4,
+              4,
+              4
+            ]
+          },
+          "Idle": {
+            "frameWidth": 64,
+            "frameHeight": 88,
+            "durations": [
+              16,
+              12,
+              16,
+              12
+            ]
+          },
+          "Hurt": {
+            "frameWidth": 48,
+            "frameHeight": 88,
+            "durations": [
+              2,
+              8
+            ]
+          }
+        },
+        "body": {
+          "bodyW": 49,
+          "bodyH": 39,
+          "footY": 1
+        },
+        "shiny": {
+          "anims": {
+            "Walk": {
+              "frameWidth": 56,
+              "frameHeight": 88,
+              "durations": [
+                4,
+                4,
+                4,
+                4,
+                4,
+                4,
+                4,
+                4,
+                4
+              ]
+            },
+            "Idle": {
+              "frameWidth": 64,
+              "frameHeight": 88,
+              "durations": [
+                16,
+                12,
+                16,
+                12
+              ]
+            },
+            "Hurt": {
+              "frameWidth": 48,
+              "frameHeight": 88,
+              "durations": [
+                2,
+                8
+              ]
+            }
+          },
+          "body": {
+            "bodyW": 49,
+            "bodyH": 39,
+            "footY": 1
+          }
+        }
+      }
+    },
+    "formCries": [
+      "mega"
+    ]
+  },
   "720": {
     "anims": {
       "Walk": {
@@ -68524,6 +68737,178 @@
         "footY": 5
       }
     }
+  },
+  "807": {
+    "anims": {
+      "Walk": {
+        "frameWidth": 48,
+        "frameHeight": 40,
+        "durations": [
+          6,
+          6,
+          6,
+          6
+        ]
+      },
+      "Idle": {
+        "frameWidth": 48,
+        "frameHeight": 48,
+        "durations": [
+          40,
+          2,
+          2,
+          4,
+          2,
+          2
+        ]
+      },
+      "Hurt": {
+        "frameWidth": 48,
+        "frameHeight": 56,
+        "durations": [
+          2,
+          8
+        ]
+      }
+    },
+    "portrait": true,
+    "body": {
+      "bodyW": 23,
+      "bodyH": 25,
+      "footY": 4
+    },
+    "cry": true,
+    "shiny": {
+      "anims": {
+        "Walk": {
+          "frameWidth": 48,
+          "frameHeight": 40,
+          "durations": [
+            6,
+            6,
+            6,
+            6
+          ]
+        },
+        "Idle": {
+          "frameWidth": 48,
+          "frameHeight": 48,
+          "durations": [
+            40,
+            2,
+            2,
+            4,
+            2,
+            2
+          ]
+        },
+        "Hurt": {
+          "frameWidth": 48,
+          "frameHeight": 56,
+          "durations": [
+            2,
+            8
+          ]
+        }
+      },
+      "portrait": true,
+      "body": {
+        "bodyW": 23,
+        "bodyH": 25,
+        "footY": 4
+      }
+    },
+    "forms": {
+      "mega": {
+        "anims": {
+          "Walk": {
+            "frameWidth": 48,
+            "frameHeight": 48,
+            "durations": [
+              6,
+              6,
+              6,
+              6
+            ]
+          },
+          "Idle": {
+            "frameWidth": 48,
+            "frameHeight": 48,
+            "durations": [
+              40,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              12
+            ]
+          },
+          "Hurt": {
+            "frameWidth": 48,
+            "frameHeight": 56,
+            "durations": [
+              2,
+              8
+            ]
+          }
+        },
+        "body": {
+          "bodyW": 25,
+          "bodyH": 25,
+          "footY": 4
+        },
+        "shiny": {
+          "anims": {
+            "Walk": {
+              "frameWidth": 48,
+              "frameHeight": 48,
+              "durations": [
+                6,
+                6,
+                6,
+                6
+              ]
+            },
+            "Idle": {
+              "frameWidth": 48,
+              "frameHeight": 48,
+              "durations": [
+                40,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                12
+              ]
+            },
+            "Hurt": {
+              "frameWidth": 48,
+              "frameHeight": 56,
+              "durations": [
+                2,
+                8
+              ]
+            }
+          },
+          "body": {
+            "bodyW": 25,
+            "bodyH": 25,
+            "footY": 4
+          }
+        }
+      }
+    },
+    "formCries": [
+      "mega"
+    ]
   },
   "808": {
     "anims": {
@@ -81054,6 +81439,640 @@
         "footY": 0
       }
     }
+  },
+  "1017": {
+    "anims": {
+      "Walk": {
+        "frameWidth": 40,
+        "frameHeight": 72,
+        "durations": [
+          10,
+          6,
+          6,
+          8,
+          8,
+          8,
+          4,
+          4,
+          4,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          4,
+          4
+        ]
+      },
+      "Idle": {
+        "frameWidth": 40,
+        "frameHeight": 56,
+        "durations": [
+          40,
+          8,
+          8,
+          8,
+          8,
+          8
+        ]
+      },
+      "Hurt": {
+        "frameWidth": 48,
+        "frameHeight": 64,
+        "durations": [
+          2,
+          8
+        ]
+      }
+    },
+    "portrait": true,
+    "body": {
+      "bodyW": 32,
+      "bodyH": 31,
+      "footY": 5
+    },
+    "cry": true,
+    "shiny": {
+      "anims": {
+        "Walk": {
+          "frameWidth": 40,
+          "frameHeight": 72,
+          "durations": [
+            10,
+            6,
+            6,
+            8,
+            8,
+            8,
+            4,
+            4,
+            4,
+            8,
+            8,
+            8,
+            8,
+            8,
+            8,
+            4,
+            4
+          ]
+        },
+        "Idle": {
+          "frameWidth": 40,
+          "frameHeight": 56,
+          "durations": [
+            40,
+            8,
+            8,
+            8,
+            8,
+            8
+          ]
+        },
+        "Hurt": {
+          "frameWidth": 48,
+          "frameHeight": 64,
+          "durations": [
+            2,
+            8
+          ]
+        }
+      },
+      "portrait": true,
+      "body": {
+        "bodyW": 32,
+        "bodyH": 31,
+        "footY": 5
+      }
+    },
+    "forms": {
+      "wellspring": {
+        "anims": {
+          "Walk": {
+            "frameWidth": 40,
+            "frameHeight": 72,
+            "durations": [
+              10,
+              6,
+              6,
+              8,
+              8,
+              8,
+              4,
+              4,
+              4,
+              8,
+              8,
+              8,
+              8,
+              8,
+              8,
+              4,
+              4
+            ]
+          },
+          "Idle": {
+            "frameWidth": 40,
+            "frameHeight": 56,
+            "durations": [
+              40,
+              8,
+              8,
+              8,
+              8,
+              8
+            ]
+          },
+          "Hurt": {
+            "frameWidth": 48,
+            "frameHeight": 64,
+            "durations": [
+              2,
+              8
+            ]
+          }
+        },
+        "body": {
+          "bodyW": 32,
+          "bodyH": 31,
+          "footY": 5
+        },
+        "shiny": {
+          "anims": {
+            "Walk": {
+              "frameWidth": 40,
+              "frameHeight": 72,
+              "durations": [
+                10,
+                6,
+                6,
+                8,
+                8,
+                8,
+                4,
+                4,
+                4,
+                8,
+                8,
+                8,
+                8,
+                8,
+                8,
+                4,
+                4
+              ]
+            },
+            "Idle": {
+              "frameWidth": 40,
+              "frameHeight": 56,
+              "durations": [
+                40,
+                8,
+                8,
+                8,
+                8,
+                8
+              ]
+            },
+            "Hurt": {
+              "frameWidth": 48,
+              "frameHeight": 64,
+              "durations": [
+                2,
+                8
+              ]
+            }
+          },
+          "body": {
+            "bodyW": 32,
+            "bodyH": 31,
+            "footY": 5
+          }
+        }
+      },
+      "hearthflame": {
+        "anims": {
+          "Walk": {
+            "frameWidth": 40,
+            "frameHeight": 72,
+            "durations": [
+              10,
+              6,
+              6,
+              8,
+              8,
+              8,
+              4,
+              4,
+              4,
+              8,
+              8,
+              8,
+              8,
+              8,
+              8,
+              4,
+              4
+            ]
+          },
+          "Idle": {
+            "frameWidth": 40,
+            "frameHeight": 56,
+            "durations": [
+              40,
+              8,
+              8,
+              8,
+              8,
+              8
+            ]
+          },
+          "Hurt": {
+            "frameWidth": 48,
+            "frameHeight": 64,
+            "durations": [
+              2,
+              8
+            ]
+          }
+        },
+        "body": {
+          "bodyW": 32,
+          "bodyH": 31,
+          "footY": 5
+        },
+        "shiny": {
+          "anims": {
+            "Walk": {
+              "frameWidth": 40,
+              "frameHeight": 72,
+              "durations": [
+                10,
+                6,
+                6,
+                8,
+                8,
+                8,
+                4,
+                4,
+                4,
+                8,
+                8,
+                8,
+                8,
+                8,
+                8,
+                4,
+                4
+              ]
+            },
+            "Idle": {
+              "frameWidth": 40,
+              "frameHeight": 56,
+              "durations": [
+                40,
+                8,
+                8,
+                8,
+                8,
+                8
+              ]
+            },
+            "Hurt": {
+              "frameWidth": 48,
+              "frameHeight": 64,
+              "durations": [
+                2,
+                8
+              ]
+            }
+          },
+          "body": {
+            "bodyW": 32,
+            "bodyH": 31,
+            "footY": 5
+          }
+        }
+      },
+      "cornerstone": {
+        "anims": {
+          "Walk": {
+            "frameWidth": 40,
+            "frameHeight": 72,
+            "durations": [
+              10,
+              6,
+              6,
+              8,
+              8,
+              8,
+              4,
+              4,
+              4,
+              8,
+              8,
+              8,
+              8,
+              8,
+              8,
+              4,
+              4
+            ]
+          },
+          "Idle": {
+            "frameWidth": 40,
+            "frameHeight": 56,
+            "durations": [
+              40,
+              8,
+              8,
+              8,
+              8,
+              8
+            ]
+          },
+          "Hurt": {
+            "frameWidth": 48,
+            "frameHeight": 64,
+            "durations": [
+              2,
+              8
+            ]
+          }
+        },
+        "body": {
+          "bodyW": 32,
+          "bodyH": 31,
+          "footY": 5
+        },
+        "shiny": {
+          "anims": {
+            "Walk": {
+              "frameWidth": 40,
+              "frameHeight": 72,
+              "durations": [
+                10,
+                6,
+                6,
+                8,
+                8,
+                8,
+                4,
+                4,
+                4,
+                8,
+                8,
+                8,
+                8,
+                8,
+                8,
+                4,
+                4
+              ]
+            },
+            "Idle": {
+              "frameWidth": 40,
+              "frameHeight": 56,
+              "durations": [
+                40,
+                8,
+                8,
+                8,
+                8,
+                8
+              ]
+            },
+            "Hurt": {
+              "frameWidth": 48,
+              "frameHeight": 64,
+              "durations": [
+                2,
+                8
+              ]
+            }
+          },
+          "body": {
+            "bodyW": 32,
+            "bodyH": 31,
+            "footY": 5
+          }
+        }
+      },
+      "tealTera": {
+        "anims": {
+          "Walk": {
+            "frameWidth": 40,
+            "frameHeight": 72,
+            "durations": [
+              10,
+              6,
+              6,
+              8,
+              8,
+              8,
+              4,
+              4,
+              4,
+              8,
+              8,
+              8,
+              8,
+              8,
+              8,
+              4,
+              4
+            ]
+          },
+          "Idle": {
+            "frameWidth": 40,
+            "frameHeight": 64,
+            "durations": [
+              40,
+              8,
+              8,
+              8,
+              8,
+              8
+            ]
+          },
+          "Hurt": {
+            "frameWidth": 48,
+            "frameHeight": 64,
+            "durations": [
+              2,
+              8
+            ]
+          }
+        },
+        "body": {
+          "bodyW": 32,
+          "bodyH": 33,
+          "footY": 5
+        }
+      },
+      "wellspringTera": {
+        "anims": {
+          "Walk": {
+            "frameWidth": 40,
+            "frameHeight": 72,
+            "durations": [
+              10,
+              6,
+              6,
+              8,
+              8,
+              8,
+              4,
+              4,
+              4,
+              8,
+              8,
+              8,
+              8,
+              8,
+              8,
+              4,
+              4
+            ]
+          },
+          "Idle": {
+            "frameWidth": 40,
+            "frameHeight": 56,
+            "durations": [
+              40,
+              8,
+              8,
+              8,
+              8,
+              8
+            ]
+          },
+          "Hurt": {
+            "frameWidth": 48,
+            "frameHeight": 64,
+            "durations": [
+              2,
+              8
+            ]
+          }
+        },
+        "body": {
+          "bodyW": 32,
+          "bodyH": 31,
+          "footY": 5
+        }
+      },
+      "hearthflameTera": {
+        "anims": {
+          "Walk": {
+            "frameWidth": 40,
+            "frameHeight": 80,
+            "durations": [
+              10,
+              6,
+              6,
+              8,
+              8,
+              8,
+              4,
+              4,
+              4,
+              8,
+              8,
+              8,
+              8,
+              8,
+              8,
+              4,
+              4
+            ]
+          },
+          "Idle": {
+            "frameWidth": 40,
+            "frameHeight": 64,
+            "durations": [
+              40,
+              8,
+              8,
+              8,
+              8,
+              8
+            ]
+          },
+          "Hurt": {
+            "frameWidth": 48,
+            "frameHeight": 64,
+            "durations": [
+              2,
+              8
+            ]
+          }
+        },
+        "body": {
+          "bodyW": 32,
+          "bodyH": 33,
+          "footY": 5
+        }
+      },
+      "cornerstoneTera": {
+        "anims": {
+          "Walk": {
+            "frameWidth": 40,
+            "frameHeight": 72,
+            "durations": [
+              10,
+              6,
+              6,
+              8,
+              8,
+              8,
+              4,
+              4,
+              4,
+              8,
+              8,
+              8,
+              8,
+              8,
+              8,
+              4,
+              4
+            ]
+          },
+          "Idle": {
+            "frameWidth": 40,
+            "frameHeight": 64,
+            "durations": [
+              40,
+              8,
+              8,
+              8,
+              8,
+              8
+            ]
+          },
+          "Hurt": {
+            "frameWidth": 48,
+            "frameHeight": 72,
+            "durations": [
+              2,
+              8
+            ]
+          }
+        },
+        "body": {
+          "bodyW": 32,
+          "bodyH": 32,
+          "footY": 5
+        }
+      }
+    },
+    "formCries": [
+      "wellspring",
+      "hearthflame",
+      "cornerstone"
+    ]
   },
   "1018": {
     "anims": {

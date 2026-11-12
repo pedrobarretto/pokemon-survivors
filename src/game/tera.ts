@@ -6,6 +6,8 @@ import { spawnAttack } from './spawn'
 import { playerTypes } from './terrain'
 import type { Game, Player } from './types'
 import { dropForEach } from './coop'
+import { isMaskType, OGERPON } from '../data/mythicals'
+import { embodyAspect, maskShards, playsOgerpon } from './ogerpon'
 
 /**
  * Terastal in a run. Tera Shards set the run's Tera type: every boss leaves a
@@ -54,11 +56,12 @@ export const teraPlays = (g: Pick<Game, 'versus' | 'training'>) => !g.versus && 
 /** Terapagos's Stellar is its own: shards never change it. */
 const fixedType = (p: Player) => p.legend?.id === 'terapagos'
 
-/** Fills a player's orb by `share` (not while it's spent: Terastallized or transforming). True when it just filled. */
+/** Fills a player's orb by `share` (not while it's spent: Terastallized or transforming); Ogerpon's twice as fast from its second awakening. True when it just filled. */
 export const chargeOrb = (p: Player, share: number) => {
   const s = p.tera
   if (teraBusy(p) || s.orb >= 1) return false
-  s.orb = Math.min(1, s.orb + share)
+  const k = playsOgerpon(p) && (p.legend?.awakened ?? 0) >= 2 ? OGERPON.orb : 1
+  s.orb = Math.min(1, s.orb + share * k)
   return s.orb >= 1
 }
 
@@ -131,6 +134,8 @@ export const dropBossShards = (g: Game, x: number, y: number, bossType: PokeType
   dropForEach(g, () => {
     if (fixedType(g.player)) return
     const pair = g.nextId
+    // Ogerpon's pair is two masks it doesn't wear (`maskShards`).
+    if (playsOgerpon(g.player)) return maskShards(g, (type, side) => dropShard(g, x + (side * TERA.shardGap) / 2, y + 12, type, pair))
     const other = ownShard(g, bossType)
     dropShard(g, x - TERA.shardGap / 2, y + 12, bossType, pair)
     dropShard(g, x + TERA.shardGap / 2, y + 12, other, pair)
@@ -147,7 +152,8 @@ export const collectShard = (g: Game, tera: TeraType, pair: number) => {
     burst(g, k.x, k.y, { colors: ['#a8a0b8', '#686078', '#ffffff'], count: 12, speed: 60, ttl: 0.45, gravity: 60 })
     k.age = -1
   }
-  if (fixedType(p)) return
+  // Ogerpon's mask only takes its four types; another shard leaves it as it is.
+  if (fixedType(p) || (playsOgerpon(p) && !isMaskType(tera))) return
   const from = p.tera.type
   p.tera.type = tera
   burst(g, p.x, p.y - 12, { colors: ['#ffffff', '#c8f0ff', '#f8c8f8'], count: 28, speed: 110, ttl: 0.6, gravity: -30 })
@@ -173,6 +179,7 @@ const transform = (g: Game) => {
   s.spent = []
   s.count++
   p.special.cooldown = 0
+  if (playsOgerpon(p)) embodyAspect(g)
   p.iframes = Math.max(p.iframes, TERA.iframes)
   const { radius, power, knockback } = TERA.wave
   const type = teraSpecialType(p) ?? playerTypes(g)[0] ?? 'normal'

@@ -354,14 +354,14 @@ export const mergeClaimedGifts = (a: readonly string[], b: readonly string[]): s
 /** Whether a legend only ever comes as a gift (`keepGiven` keeps it only with one): a festival's, Poipole, the paths' and Keldeo. */
 const onlyGiven = (id: LegendId) => {
   const unlock: LegendUnlock = LEGENDS[id].unlock
-  return legendFestival(id) !== null || giftLegend(id) || legendPath(id) !== null || unlock.swords === true
+  return legendFestival(id) !== null || giftLegend(id) || legendPath(id) !== null || unlock.swords === true || unlock.dig === true
 }
 
 /**
  * `save` with only the gift-only rewards the API really sent: `given` is
  * every gift of the player (claimed or not). Gift titles, ribbons, shiny
  * tickets, the styles never sold (a `null` price), the festival legends
- * (Cresselia), Poipole (the Ultra Beasts' gift), Keldeo (the Swords' gift) and the path legends (Zygarde, Kubfu, Meltan, Solgaleo, Lunala) can't be earned on the device, so whatever else a save lists
+ * (Cresselia), Poipole (the Ultra Beasts' gift), Keldeo (the Swords' gift), the path legends (Zygarde, Kubfu, Meltan, Solgaleo, Lunala) and Diancie (the Escavação's) can't be earned on the device, so whatever else a save lists
  * came from editing it. The equipped title and styles fall back when they go,
  * and so does the companion with the Supporter title. The API runs it on
  * every push.

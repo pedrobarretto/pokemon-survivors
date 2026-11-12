@@ -82,6 +82,10 @@ export type BossFight = {
 /** The phases of a boss that fights in phases, or null. */
 export const phasesOf = (kind: EnemyId): readonly BossPhase[] | null => BOSS_PHASES[kind] ?? null
 
+/** The sprite form a phase wears in a fight of `difficulty`: its `nightmareForm` on Nightmare, else its `form`. */
+export const phaseForm = (phase: BossPhase | undefined, difficulty: Difficulty): string | undefined =>
+  (difficulty === 'nightmare' ? phase?.nightmareForm : undefined) ?? phase?.form
+
 /** The phase a boss with `share` of its HP left is in: the last one whose threshold it fell under (a `rebirth` phase is never reached this way). */
 export const phaseAt = (phases: readonly BossPhase[], share: number) => {
   let at = 0
