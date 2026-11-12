@@ -20,6 +20,7 @@ import { ULTRA_WORDS } from './ultra'
 import { LEGEND_PATHS_WORDS } from './legendPaths'
 import { QUEST_WORDS } from './quests'
 import { MYTHICAL_WORDS } from './mythicals'
+import { REGIS_FORCES_WORDS } from './regisForces'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -2486,6 +2487,7 @@ export const es: Messages = {
     ...ULTRA_WORDS.es.abilities,
     ...LEGEND_PATHS_WORDS.es.abilities,
     ...QUEST_WORDS.es.abilities,
+    ...REGIS_FORCES_WORDS.es.abilities,
     overgrow: 'Con menos de 1/3 del HP, los movimientos de Planta hacen +50%.',
     blaze: 'Con menos de 1/3 del HP, los movimientos de Fuego hacen +50%.',
     torrent: 'Con menos de 1/3 del HP, los movimientos de Agua hacen +50%.',
@@ -3206,6 +3208,7 @@ export const es: Messages = {
     ...LEGEND_PATHS_WORDS.es.moves,
     ...QUEST_WORDS.es.moves,
     ...MYTHICAL_WORDS.es.moves,
+    ...REGIS_FORCES_WORDS.es.moves,
     leechSeed: {
       description: 'Lanza semillas a los enemigos más cercanos. La semilla absorbe PS con el tiempo y te cura; cuando el enemigo es derrotado, salta a otros dos.',
       upgrades: [
@@ -5691,6 +5694,7 @@ export const es: Messages = {
     ...LEGEND_PATHS_WORDS.es.blurbs,
     ...QUEST_WORDS.es.blurbs,
     ...MYTHICAL_WORDS.es.blurbs,
+    ...REGIS_FORCES_WORDS.es.blurbs,
     bulbasaur: 'Equilibrado. Regenera vida.',
     charmander: 'Ofensivo. Más daño, menos vida.',
     squirtle: 'Defensivo. Más vida y defensa.',
@@ -6414,6 +6418,7 @@ export const es: Messages = {
       ...QUEST_WORDS.es.where,
       egg: SC_WAVE_WORDS.es.legendWhere,
       ...MYTHICAL_WORDS.es.where,
+      ...REGIS_FORCES_WORDS.es.where,
     },
     rule: (need: number) => (need === 1 ? 'Para capturarlo, vence a este legendario 1 vez como jefe, en una partida solo y en cualquier modo. Las victorias en cooperativo no cuentan.' : `Para capturarlo, vence a este legendario ${need} veces como jefe, en una partida solo y en cualquier modo. Las victorias en cooperativo no cuentan.`),
     shinyRule: 'Vencer a uno shiny en la victoria de la captura, o después, desbloquea su forma shiny.',
@@ -6431,6 +6436,8 @@ export const es: Messages = {
   },
   quests: QUEST_WORDS.es.ui,
   mythicals: MYTHICAL_WORDS.es.ui,
+  /** The Ruínas da Decisão and the Forces of Nature (`game/splitRuins.ts`, `game/roamers.ts`): the choice on screen, the Forces' visits, their title cards and phase lines. */
+  regisForces: { ...REGIS_FORCES_WORDS.es.ui, epithets: REGIS_FORCES_WORDS.es.epithets, phases: REGIS_FORCES_WORDS.es.phases },
   legends: {
     epithets: {
       articuno: 'Ave del Hielo Eterno',
@@ -6449,6 +6456,8 @@ export const es: Messages = {
       arceus: 'El Primero de Todos',
       regigigas: LEGEND_PATHS_WORDS.es.epithet,
       zeraora: MYTHICAL_WORDS.es.epithet,
+      regieleki: REGIS_FORCES_WORDS.es.epithets.regieleki,
+      regidrago: REGIS_FORCES_WORDS.es.epithets.regidrago,
     },
     phases: {
       articuno: ['¡*Articuno* alza el vuelo! Huye de su _sombra_.', '¡Una ventisca! Corre a un _refugio de nieve_ antes del Snowscape.'],
@@ -6467,6 +6476,8 @@ export const es: Messages = {
       arceus: ['¡*Arceus* se teletransporta para juzgarte!', '¡Judgment! Solo los _refugios de luz_ te salvan.'],
       regigigas: LEGEND_PATHS_WORDS.es.phases,
       zeraora: MYTHICAL_WORDS.es.phases,
+      regieleki: REGIS_FORCES_WORDS.es.phases.regieleki,
+      regidrago: REGIS_FORCES_WORDS.es.phases.regidrago,
     },
   },
   team: {

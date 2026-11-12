@@ -27,6 +27,7 @@ export const WAVE_LEGENDS = [
   'articuno', 'zapdos', 'moltres', 'raikou', 'entei', 'suicune', 'regirock', 'regice', 'registeel', 'mew', 'celebi', 'jirachi', 'mewtwo', 'arceus', 'regigigas',
   // Zeraora, out of the Power Plant's storm (`game/zeraora.ts`; its phases in `data/mythicals.ts`).
   'zeraora',
+  'regieleki', 'regidrago',
 ] as const satisfies readonly EnemyId[]
 export type WaveLegend = (typeof WAVE_LEGENDS)[number]
 
@@ -64,6 +65,7 @@ export const ARRIVAL = {
   mewtwo: 'materialize', arceus: 'descend',
   regigigas: 'rise',
   zeraora: 'bound',
+  regieleki: 'rise', regidrago: 'rise',
 } as const satisfies Record<WaveLegend, Arrival>
 
 /** The theme each one plays while it's the boss on the HP bar (`data/music.ts`): one per trio, Mewtwo's finale (the mythicals come with it), and Arceus's. */
@@ -75,6 +77,7 @@ export const LEGEND_THEME = {
   arceus: 'arceus',
   regigigas: 'regis',
   zeraora: 'beasts',
+  regieleki: 'regis', regidrago: 'regis',
 } as const satisfies Record<WaveLegend, ThemeId>
 
 /**
@@ -1019,8 +1022,131 @@ const regigigas: readonly BossPhase[] = [
   },
 ]
 
+/* ---------------- The Ruínas da Decisão's Regis (`game/splitRuins.ts`) ---------------- */
+
+const regieleki: readonly BossPhase[] = [
+  {
+    // Raw speed: it never stops, bolts trailing behind it.
+    below: TRIO[0],
+    steer: { kind: 'chase', pace: 1.15 },
+    patterns: [
+      pin('thunder', 18),
+      { kind: 'trail', every: 1.2, ttl: 2.4, radius: 9, damage: 14, visual: 'thunder' },
+      { stance: 'ranged', kind: 'volley', every: 3.4, count: 5, arc: 0.8, speed: 140, windup: 0.8, radius: 5, damage: 18, visual: 'thunder' },
+      { stance: 'close', kind: 'strikes', every: 3.8, target: 'self', count: 1, spread: 0, radius: 46, delay: 1, damage: 22, visual: 'thunder' },
+      { from: 'nightmare', kind: 'strikes', every: 4.6, target: 'player', count: 4, spread: 60, radius: 14, delay: 1, damage: 18, visual: 'thunder', lead: 1 },
+    ],
+  },
+  {
+    // Faster still: charges across the field in lanes.
+    below: TRIO[1],
+    shift: SHIFT,
+    open: OPEN,
+    haste: 1.15,
+    patterns: [
+      pin('thunder', 20),
+      { kind: 'trail', every: 1, ttl: 2.6, radius: 9, damage: 16, visual: 'thunder' },
+      { kind: 'dash', every: 4.6, windup: 0.8, speed: 320, width: 22, damage: 22, count: 3 },
+      { stance: 'ranged', ...lances('thunder', 3, 1.1, 20, 0, 12), every: 6 },
+      { stance: 'ranged', kind: 'strikes', every: 4, target: 'player', count: 4, spread: 60, radius: 14, delay: 1, damage: 18, visual: 'thunder', lead: 1 },
+    ],
+    ultimate: {
+      move: 'Electro Drift',
+      first: 1.5,
+      every: 16,
+      steps: [
+        { at: 0, pattern: { kind: 'dash', every: 0, windup: 0.8, speed: 380, width: 26, damage: 26, count: 4 } },
+        { at: 3, pattern: { kind: 'ring', every: 0, count: 18, speed: 84, radius: 5, damage: 18, visual: 'thunder' } },
+      ],
+    },
+  },
+  {
+    // Thunder Cage: the bars close in on the player, one way out.
+    below: TRIO[2],
+    shift: SHIFT,
+    open: OPEN,
+    haste: 1.25,
+    patterns: [
+      pin('thunder', 22),
+      { kind: 'trail', every: 0.9, ttl: 2.8, radius: 10, damage: 16, visual: 'thunder' },
+      { kind: 'cage', every: 9, radius: 66, count: 16, size: 9, windup: 1, ttl: 3, damage: 16, visual: 'thunder' },
+      { kind: 'dash', every: 5, windup: 0.8, speed: 330, width: 22, damage: 22, count: 2 },
+      { stance: 'ranged', kind: 'beam', every: 6.5, source: 'lattice', count: 4, spread: 64, windup: 1.2, duration: 0.45, width: 11, length: 520, damage: 22, visual: 'thunder' },
+    ],
+    ultimate: {
+      move: 'Thunder Cage',
+      first: 1.5,
+      every: 17,
+      steps: [
+        { at: 0, pattern: closing('thunder', 22, 22, 0.9) },
+        { at: 1.8, pattern: closing('thunder', 22, 22, 0.9, 0, 132, 70) },
+        { at: 3.6, pattern: { kind: 'strikes', every: 0, target: 'player', count: 7, spread: 90, radius: 16, delay: 1, damage: 24, visual: 'thunder' } },
+      ],
+    },
+  },
+]
+
+const regidrago: readonly BossPhase[] = [
+  {
+    // Slow and huge: its dragon-head arms swing in close and spit energy from afar.
+    below: TRIO[0],
+    steer: { kind: 'chase', pace: 0.7 },
+    patterns: [
+      pin('dragon', 22),
+      { stance: 'close', kind: 'strikes', every: 4.4, target: 'self', count: 1, spread: 0, radius: 56, delay: 1.4, damage: 26, visual: 'dragon' },
+      { stance: 'ranged', kind: 'volley', every: 4, count: 3, arc: 0.4, speed: 110, windup: 0.9, radius: 7, damage: 22, visual: 'dragon' },
+      { far: 130, kind: 'strikes', every: 6, target: 'player', count: 3, spread: 50, radius: 16, delay: 1.3, damage: 22, visual: 'dragon', lead: 1 },
+      { from: 'nightmare', stance: 'close', kind: 'ring', every: 5, count: 12, speed: 60, radius: 6, damage: 20, visual: 'dragon' },
+    ],
+  },
+  {
+    // Dragon's Maw: beams out of its jaws, fanning across the field.
+    below: TRIO[1],
+    shift: SHIFT,
+    open: OPEN,
+    patterns: [
+      pin('dragon', 24),
+      { kind: 'beam', every: 5.2, source: 'boss', count: 3, spread: 0.5, windup: 1.2, duration: 0.55, width: 14, length: 320, damage: 26, visual: 'dragon' },
+      { stance: 'close', kind: 'strikes', every: 4, target: 'self', count: 1, spread: 0, radius: 60, delay: 1.2, damage: 28, visual: 'dragon' },
+      { stance: 'ranged', kind: 'ring', every: 4.6, count: 14, speed: 66, radius: 6, damage: 20, visual: 'dragon', gap: 0.9 },
+      { below: 0.5, kind: 'strikes', every: 6, target: 'player', count: 5, spread: 70, radius: 16, delay: 1.2, damage: 24, visual: 'dragon', lead: 1 },
+    ],
+    ultimate: {
+      move: "Dragon's Maw",
+      first: 1.5,
+      every: 17,
+      steps: [
+        { at: 0, pattern: { kind: 'beam', every: 0, source: 'boss', count: 5, spread: 0.42, windup: 1.4, duration: 0.6, width: 16, length: 360, damage: 32, visual: 'dragon' } },
+        { at: 2.4, pattern: { kind: 'beam', every: 0, source: 'boss', count: 5, spread: 0.42, sweep: 0.21, windup: 1.2, duration: 0.6, width: 16, length: 360, damage: 32, visual: 'dragon' } },
+      ],
+    },
+  },
+  {
+    // Dragon Energy: all its power at once; only distance saves the player.
+    below: TRIO[2],
+    shift: SHIFT,
+    open: OPEN,
+    patterns: [
+      pin('dragon', 26),
+      { kind: 'beam', every: 5, source: 'boss', count: 4, spread: 0.45, windup: 1.1, duration: 0.55, width: 15, length: 340, damage: 28, visual: 'dragon' },
+      { kind: 'cage', every: 11, radius: 72, count: 18, size: 10, windup: 1.1, ttl: 3.2, damage: 18, visual: 'dragon' },
+      { stance: 'close', kind: 'strikes', every: 3.8, target: 'self', count: 1, spread: 0, radius: 62, delay: 1.1, damage: 30, visual: 'dragon' },
+      { from: 'nightmare', kind: 'ring', every: 4.2, count: 16, speed: 72, radius: 6, damage: 22, visual: 'dragon', gap: 0.8 },
+    ],
+    ultimate: {
+      move: 'Dragon Energy',
+      first: 1.5,
+      every: 18,
+      steps: [
+        { at: 0, pattern: { kind: 'blast', every: 0, windup: 2.6, damage: 56, safe: 'far', radius: 120, visual: 'dragon' } },
+        { at: 2.8, pattern: { kind: 'ring', every: 0, count: 20, speed: 80, radius: 6, damage: 22, visual: 'dragon' } },
+      ],
+    },
+  },
+]
+
 /** The phases of every wave legendary, for `BOSS_PHASES`. */
 export const WAVE_LEGEND_PHASES = {
-  articuno, zapdos, moltres, raikou, entei, suicune, regirock, regice, registeel, mew, celebi, jirachi, mewtwo, arceus, regigigas,
+  articuno, zapdos, moltres, raikou, entei, suicune, regirock, regice, registeel, mew, celebi, jirachi, mewtwo, arceus, regigigas, regieleki, regidrago,
   zeraora: ZERAORA_PHASES,
 } as const satisfies Record<WaveLegend, readonly BossPhase[]>

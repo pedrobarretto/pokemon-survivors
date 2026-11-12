@@ -1,3 +1,4 @@
+import { isForceLegend } from '../data/legends'
 import { blitCentered, blitEllipse, blitRing, blitRotated } from '../engine/pixelart'
 import { dir8, TAU } from '../engine/math'
 import { hash2 } from '../engine/rng'
@@ -584,13 +585,14 @@ export const drawLegendScene = (ctx: Ctx, g: Game, t: number) => {
     if (s.capture) drawCaptureScene(ctx, g, s.capture, s.t, LIGHT_CAPTURE, t)
     return
   }
-  if (s.t >= ENTRANCE_REVEAL || !isWaveLegend(s.enemy)) return
+  // The wave legendaries arrive their way; a Force of Nature's first visit comes down out of its weather.
+  const arrival = isWaveLegend(s.enemy) ? ARRIVAL[s.enemy] : isForceLegend(s.enemy) ? 'descend' : null
+  if (s.t >= ENTRANCE_REVEAL || !arrival) return
   const boss = g.enemies.find((e) => e.id === s.bossId)
   if (!boss) return
   const k = entranceBeat(s.t).arrive
   const x = Math.round(boss.x)
   const y = Math.round(boss.y)
-  const arrival = ARRIVAL[s.enemy]
   const dust = ARRIVAL_DUST[arrival]
   for (let i = 0; i < 3; i++) {
     const q = (t * 1.2 + i / 3) % 1

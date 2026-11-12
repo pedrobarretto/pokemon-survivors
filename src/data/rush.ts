@@ -38,8 +38,9 @@ export const RUSH = {
 
 /**
  * The order the rings bring the captured legends in, from the gentler to the
- * fiercer: the trios, the mythicals, the lake trio and the Swords, the Ultra
- * Beasts, then the rift legendaries, Regigigas, Darkrai and Palkia,
+ * fiercer: the trios, the mythicals, the lake trio and the Swords, the Forces
+ * of Nature, the Ultra Beasts, then the rift legendaries, the Ruínas da
+ * Decisão's Regis and Regigigas, Darkrai and Palkia,
  * Terapagos, Mewtwo and Arceus. Every captured legend that fights somewhere
  * comes, on the rings' own stage. Never Hoopa (it's the last ring), nor a
  * legend no fight ever brings: Cresselia (a festival's gift), Poipole (the
@@ -49,8 +50,9 @@ export const RUSH = {
 export const RUSH_ORDER = [
   'articuno', 'zapdos', 'moltres', 'raikou', 'entei', 'suicune', 'regirock', 'regice', 'registeel',
   'mew', 'celebi', 'jirachi', 'uxie', 'mesprit', 'azelf', 'cobalion', 'terrakion', 'virizion', 'keldeo',
+  'tornadus', 'thundurus', 'landorus', 'enamorus',
   ...ULTRA_BEASTS,
-  'lugia', 'hoOh', 'latias', 'latios', 'kyogre', 'groudon', 'rayquaza', 'deoxys', 'regigigas', 'dialga', 'darkrai', 'palkia', 'terapagos', 'mewtwo', 'arceus',
+  'lugia', 'hoOh', 'latias', 'latios', 'kyogre', 'groudon', 'rayquaza', 'deoxys', 'regieleki', 'regidrago', 'regigigas', 'dialga', 'darkrai', 'palkia', 'terapagos', 'mewtwo', 'arceus',
 ] as const satisfies readonly (LegendId & EnemyId)[]
 
 /** Hyperspace Fury: fists raining around the player. */

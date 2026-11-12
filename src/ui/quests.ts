@@ -1,7 +1,7 @@
 import type { Sfx } from '../engine/audio'
 import { formatTime } from '../engine/math'
 import { ENEMIES } from '../data/enemies'
-import type { SwordId } from '../data/legends'
+import { isForceLegend, type SwordId } from '../data/legends'
 import { duelTest } from '../game/duels'
 import type { Game, GameEvent } from '../game/types'
 import { t } from '../i18n'
@@ -27,9 +27,15 @@ export const questNews = (e: QuestEvent): QuestNews => {
   if (e.kind === 'roam') {
     const name = ENEMIES[e.legend].name
     const dex = ENEMIES[e.legend].dex
+    const f = isForceLegend(e.legend) ? e.legend : null
     switch (e.moment) {
       case 'sighted':
-        return { line: m.roam.sighted(name, pct(e.left)), ms: 4200, sfx: 'legendary', cry: dex }
+        // A Force's first visit plays its entrance, cry and card included: its line only.
+        return f ? { line: t().regisForces.force.sighted[f](pct(e.left)), ms: 4600, sfx: null, cry: null } : { line: m.roam.sighted(name, pct(e.left)), ms: 4200, sfx: 'legendary', cry: dex }
+      case 'rage': {
+        const line = f ? t().regisForces.phases[f][Math.max(0, Math.min(1, e.phase - 1))] : undefined
+        return { line: line ?? null, ms: 3800, sfx: 'boss', cry: dex }
+      }
       case 'fled':
         return { line: m.roam.fled(name, pct(e.left)), ms: 3600, sfx: 'escaped', cry: null }
       case 'wiped':

@@ -130,6 +130,9 @@ export const siteZh: SiteMessages = {
     lucky: (name: string, from: string) => `從${name}的草叢或洞裡冒出來，從 ${from} 起：很膽小、很快就跑掉，經驗值很多`,
     places: { cave: '黑暗洞窟', graveyard: '鬧鬼墓地', sky: '雲端之上（限飛行屬性）', grotto: '隱藏洞穴（稀有的隱藏區域）', underground: '地下通道（稀有的隱藏區域）', hideout: '在火箭隊秘密基地，需要遊戲城海報的通行證' },
     roam: (from: string) => `在部分局中於地圖上遊蕩，自 ${from} 起：你一靠近就逃走，你打掉的HP會保留到下一局`,
+    ruins: (from: string, until: string) => `在抉擇遺跡之一甦醒：遺跡會在捕獲 Regigigas 的玩家的對局中於 ${from} 到 ${until} 之間出現，每局只有一座遺跡會甦醒`,
+    force: (from: string, weather: string) => `自然之力：在部分局中自 ${from} 起於地圖上遊蕩，帶來${weather}；你打掉的HP會保留到下一局`,
+    forceWeather: { tornadus: '雪', thundurus: '雨', landorus: '沙暴', enamorus: '陽光' },
     duel: {
       cobalion: (from: string) => `在部分局中於洞窟與山地（月見山、白銀山）等待決鬥，自 ${from} 起：防禦考驗`,
       terrakion: (from: string) => `在部分局中於沙漠與火山等待決鬥，自 ${from} 起：力量考驗`,
@@ -574,7 +577,7 @@ export const siteZh: SiteMessages = {
       opensHead: '傳說招式',
       pressureTitle: '傳說模式的難度',
       pressure: '壓迫感會疊加在每種難度上：以下是傳說模式的倍率。',
-      where: { rift: '傳說裂縫', trio: '傳說三神', mythical: 'Mewtwo 身旁（1/10，每場沒有幻之寶可夢的決戰後提高）', finale: '最終首領', endless: '無盡模式，最後一隻', event: '女巫之夜 2026（活動）', festival: '2026 燈籠祭（獎勵）', roam: '在地圖上遊蕩（HP保留到下一局）', duel: '在相稱的生態區決鬥', swords: '三把正義之劍的禮物', rush: '通關 Hoopa 的圓環', ultra: '究極之洞（單人遊戲每局一個）', ultraGift: '收服10隻究極異獸的禮物', path: '專屬路線（Zygarde Cell、Cosmog、道館之塔、Mystery Box）', temple: '捕捉 Regi 三柱後，對戰中出現的神殿', egg: '瑪納霏之蛋（狩獵地帶冰封海灣圖鑑）', dig: 'Poké Realm 挖掘場最稀有的寶物（Pink Diamond）', storm: '發電廠下雨時的雷暴', mask: 'Ogerpon 的太晶團體戰' },
+      where: { rift: '傳說裂縫', trio: '傳說三神', mythical: 'Mewtwo 身旁（1/10，每場沒有幻之寶可夢的決戰後提高）', finale: '最終首領', endless: '無盡模式，最後一隻', event: '女巫之夜 2026（活動）', festival: '2026 燈籠祭（獎勵）', roam: '在地圖上遊蕩（HP保留到下一局）', duel: '在相稱的生態區決鬥', swords: '三把正義之劍的禮物', rush: '通關 Hoopa 的圓環', ultra: '究極之洞（單人遊戲每局一個）', ultraGift: '收服10隻究極異獸的禮物', path: '專屬路線（Zygarde Cell、Cosmog、道館之塔、Mystery Box）', temple: '捕捉 Regi 三柱後，對戰中出現的神殿', egg: '瑪納霏之蛋（狩獵地帶冰封海灣圖鑑）', dig: 'Poké Realm 挖掘場最稀有的寶物（Pink Diamond）', storm: '發電廠下雨時的雷暴', mask: 'Ogerpon 的太晶團體戰', ruins: '抉擇遺跡，捕獲 Regigigas 後（每局一座）', force: '帶著天氣在地圖上遊蕩（HP 跨局保留）' },
       /** The event legends (`EVENT_LEGENDS`), after the table. */
       eventNote: '在2026年的女巫之夜（10月24日至11月2日），Darkrai 以活動傳說的身分登場：它只出現在夢魘裂縫中，而夢魘裂縫可能在鬧鬼對局中取代一道裂縫，贏得2次即可收服。它使用能讓敵群沉睡的 Dark Void，以及能傷害在它附近睡著的敵人的固有特性 Bad Dreams。活動結束後它會回到黑暗之中，但已收服的玩家仍可繼續使用它。它不計入 Arceus 的條件。',
     },

@@ -32553,3 +32553,163 @@ span.arena-hub-face {
   border-color: #58a8e0;
   box-shadow: 0 0 0 2px #1c4880, 0 0 24px rgba(88, 168, 224, 0.45);
 }
+
+/* The Ruínas da Decisão's choice (`ui/ruinsCard.ts`): the two Regis side by side as their ruins stand; the chosen one lights, the other dims. */
+.ruins-card {
+  position: absolute;
+  bottom: calc(24px + var(--safe-b, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(380px, calc(100 * var(--vw) - 32px));
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+  padding: 7px 10px 9px;
+  text-shadow: none;
+  pointer-events: none;
+}
+
+.ruins-title {
+  text-align: center;
+  font-size: 17px;
+  color: color-mix(in srgb, #6c5e50 var(--dk-lift, 100%), #fff);
+}
+
+.ruins-hint {
+  font-family: var(--body);
+  font-size: 17px;
+  line-height: 1;
+  text-align: center;
+}
+
+.ruins-row {
+  display: flex;
+  gap: 8px;
+}
+
+.ruins-tile {
+  --ruin: #c8a018;
+  --ruin-ink: #7a5a00;
+  --ruin-bg: #fff6c8;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border: 3px solid var(--ruin);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--ruin-bg) var(--dk-lift, 100%), #1c1c28);
+  transition: opacity 0.3s steps(3);
+}
+
+.ruins-tile[data-regi='regidrago'] {
+  --ruin: #3a8a3c;
+  --ruin-ink: #23602a;
+  --ruin-bg: #dcf8d0;
+}
+
+.ruins-tile img {
+  width: 34px;
+  height: 34px;
+  flex: none;
+  image-rendering: pixelated;
+  border-radius: 4px;
+  background: #20202c;
+}
+
+.ruins-words {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.1;
+}
+
+.ruins-name {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ruins-name .type-badge {
+  font-size: 9px;
+  padding: 1px 3px;
+}
+
+.ruins-words b {
+  font-size: 14px;
+  color: color-mix(in srgb, var(--ruin-ink) var(--dk-lift, 100%), #fff);
+}
+
+.ruins-label,
+.ruins-state {
+  font-family: var(--body);
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ruins-state:empty {
+  display: none;
+}
+
+.ruins-tile.caught,
+.ruins-tile.sealed {
+  opacity: 0.45;
+  filter: grayscale(0.8);
+}
+
+.ruins-tile.chosen {
+  box-shadow: 0 0 0 2px #fff, 0 0 10px 2px var(--ruin);
+  animation: rift-pulse 0.6s steps(2) infinite;
+}
+
+@media (max-width: 600px) {
+  .ruins-card {
+    bottom: calc(118px + var(--safe-b, 0px));
+    gap: 4px;
+    padding: 5px 8px 7px;
+  }
+  .ruins-title {
+    font-size: 14px;
+  }
+  .ruins-hint {
+    font-size: 15px;
+  }
+  .ruins-tile img {
+    width: 28px;
+    height: 28px;
+  }
+  .ruins-words b {
+    font-size: 12px;
+  }
+  .ruins-label,
+  .ruins-state {
+    font-size: 13px;
+  }
+}
+
+@media (max-height: 500px) {
+  /* A phone on its side: the left column, under the moves, as the duel's card. */
+  .ruins-card {
+    top: calc(96px + var(--safe-t));
+    bottom: auto;
+    left: max(8px, env(safe-area-inset-left));
+    transform: none;
+    width: min(260px, 34 * var(--vw));
+    gap: 3px;
+    padding: 4px 8px 6px;
+  }
+  .ruins-row {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .ruins-title {
+    font-size: 13px;
+  }
+  .ruins-hint {
+    font-size: 13px;
+  }
+}

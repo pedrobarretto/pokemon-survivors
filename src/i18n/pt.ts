@@ -21,6 +21,7 @@ import { ULTRA_WORDS } from './ultra'
 import { LEGEND_PATHS_WORDS } from './legendPaths'
 import { QUEST_WORDS } from './quests'
 import { MYTHICAL_WORDS } from './mythicals'
+import { REGIS_FORCES_WORDS } from './regisForces'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -2820,6 +2821,7 @@ export const pt = {
     ...ULTRA_WORDS.pt.abilities,
     ...LEGEND_PATHS_WORDS.pt.abilities,
     ...QUEST_WORDS.pt.abilities,
+    ...REGIS_FORCES_WORDS.pt.abilities,
     overgrow: 'Com menos de 1/3 do HP, golpes de Planta causam +50%.',
     blaze: 'Com menos de 1/3 do HP, golpes de Fogo causam +50%.',
     torrent: 'Com menos de 1/3 do HP, golpes de Água causam +50%.',
@@ -3577,6 +3579,7 @@ export const pt = {
     ...LEGEND_PATHS_WORDS.pt.moves,
     ...QUEST_WORDS.pt.moves,
     ...MYTHICAL_WORDS.pt.moves,
+    ...REGIS_FORCES_WORDS.pt.moves,
     leechSeed: {
       description: 'Arremessa sementes nos inimigos mais próximos. A semente suga HP com o tempo e cura você; quando o inimigo cai, ela pula para dois vizinhos.',
       upgrades: [
@@ -6062,6 +6065,7 @@ export const pt = {
     ...LEGEND_PATHS_WORDS.pt.blurbs,
     ...QUEST_WORDS.pt.blurbs,
     ...MYTHICAL_WORDS.pt.blurbs,
+    ...REGIS_FORCES_WORDS.pt.blurbs,
     bulbasaur: 'Equilibrado. Regenera vida.',
     charmander: 'Ofensivo. Mais dano, menos vida.',
     squirtle: 'Defensivo. Mais vida e defesa.',
@@ -6840,6 +6844,7 @@ export const pt = {
       ...QUEST_WORDS.pt.where,
       egg: SC_WAVE_WORDS.pt.legendWhere,
       ...MYTHICAL_WORDS.pt.where,
+      ...REGIS_FORCES_WORDS.pt.where,
     },
     rule: (need: number) => (need === 1 ? 'Para capturar, vença este lendário 1 vez como chefe, numa partida solo, em qualquer modo. Vitórias no co-op não contam.' : `Para capturar, vença este lendário ${need} vezes como chefe, numa partida solo, em qualquer modo. Vitórias no co-op não contam.`),
     shinyRule: 'Vencer um shiny na vitória da captura, ou depois, libera a forma shiny.',
@@ -6860,6 +6865,8 @@ export const pt = {
   /** Wave legendaries on the map (`data/legendBosses.ts`): the epithet on each one's title card, and a line per phase after the first. */
   quests: QUEST_WORDS.pt.ui,
   mythicals: MYTHICAL_WORDS.pt.ui,
+  /** The Ruínas da Decisão and the Forces of Nature (`game/splitRuins.ts`, `game/roamers.ts`): the choice on screen, the Forces' visits, their title cards and phase lines. */
+  regisForces: { ...REGIS_FORCES_WORDS.pt.ui, epithets: REGIS_FORCES_WORDS.pt.epithets, phases: REGIS_FORCES_WORDS.pt.phases },
   legends: {
     epithets: {
       articuno: 'Ave do Gelo Eterno',
@@ -6878,6 +6885,8 @@ export const pt = {
       arceus: 'O Primeiro de Todos',
       regigigas: LEGEND_PATHS_WORDS.pt.epithet,
       zeraora: MYTHICAL_WORDS.pt.epithet,
+      regieleki: REGIS_FORCES_WORDS.pt.epithets.regieleki,
+      regidrago: REGIS_FORCES_WORDS.pt.epithets.regidrago,
     } satisfies Record<WaveLegend, string>,
     phases: {
       articuno: ['*Articuno* alça voo! Fuja da _sombra_ dele.', 'Uma nevasca! Corra para um _abrigo de neve_ antes do Snowscape.'],
@@ -6896,6 +6905,8 @@ export const pt = {
       arceus: ['*Arceus* se teleporta para julgar você!', 'Judgment! Só os _abrigos de luz_ te salvam.'],
       regigigas: LEGEND_PATHS_WORDS.pt.phases,
       zeraora: MYTHICAL_WORDS.pt.phases,
+      regieleki: REGIS_FORCES_WORDS.pt.phases.regieleki,
+      regidrago: REGIS_FORCES_WORDS.pt.phases.regidrago,
     } satisfies Record<WaveLegend, readonly [string, string]>,
   },
   /** Co-op in a run (`ui/team*.ts`): the team's cards, its pauses, the spectator, the endless vote and the end screen. */

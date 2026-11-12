@@ -1,6 +1,7 @@
 import type { EnemyId } from '../data/enemies'
 import { PLAYABLE, type PlayableId } from '../data/hatchlings'
-import { isLegend } from '../data/legends'
+import { isLegend, type RuinsRegi } from '../data/legends'
+import { parseRuins } from './splitRuins'
 import { PATH_FORM_IDS, PATH_FORMS, type PathFormId } from '../data/legendPaths'
 import { createRng } from '../engine/rng'
 import * as dm from '../engine/dmath'
@@ -97,6 +98,8 @@ export type ReplayStart = {
   forms?: readonly PathFormId[]
   /** The run brings Regigigas's temple (`templeRun` in `game/legendPaths.ts`). Not when absent. */
   temple?: boolean
+  /** The run brings the Ruínas da Decisão with these Regis still free in them (`ruinsRun` in `game/legendPaths.ts`). Not when absent. */
+  ruins?: readonly RuinsRegi[]
   /** The legends the save still has to catch on the open map (`game/quests.ts`): none when absent (co-op, the Desafio do dia, all caught). */
   wild?: WildStart
   /** World px the screen showed at the start: spawns and despawns depend on it. */
@@ -257,6 +260,7 @@ export const parseReplay = (raw: unknown): Replay | null => {
   if (forms === null) return null
   const wild = s.wild === undefined ? undefined : parseWild(s.wild)
   if (wild === null) return null
+  const ruins = parseRuins(s.ruins)
   return {
     rules: isWhole(raw.rules) && raw.rules > 0 ? raw.rules : 1,
     start: {
@@ -279,6 +283,7 @@ export const parseReplay = (raw: unknown): Replay | null => {
       ...(isUltraBeast(s.ultra) ? { ultra: s.ultra } : {}),
       ...(forms.length > 0 ? { forms } : {}),
       ...(s.temple === true ? { temple: true } : {}),
+      ...(ruins.length > 0 ? { ruins } : {}),
       ...(wild ? { wild } : {}),
       view,
     },
@@ -320,6 +325,7 @@ export const startGame = (start: ReplayStart, view: Game['view'] = { ...start.vi
     ultra: start.ultra ?? null,
     forms: start.forms ?? [],
     temple: start.temple === true,
+    ruins: start.ruins ?? [],
     wild: start.wild,
   })
 

@@ -30,10 +30,10 @@ export const NO_CAPTURES: Captures = {}
 
 /**
  * Where a legend can be beaten: a rift, the trio's wave, the finale's rare guest, the finale itself, the endless mode's reaper, an
- * event's rift, an Ultra Wormhole, Regigigas's temple, the open map (a roamer, a duel, Zeraora's storm), Hoopa's rush, Ogerpon's own
+ * event's rift, an Ultra Wormhole, Regigigas's temple, the Ruínas da Decisão, the open map (a roamer, a Force of Nature, a duel, Zeraora's storm), Hoopa's rush, Ogerpon's own
  * raid; or the gift that brings it (a festival's, Poipole's, Keldeo's), its path, the Safári's egg (Manaphy), or the Escavação (Diancie).
  */
-export type LegendSource = 'rift' | 'trio' | 'mythical' | 'finale' | 'endless' | 'event' | 'festival' | 'ultra' | 'ultraGift' | 'path' | 'temple' | 'roam' | 'duel' | 'swords' | 'rush' | 'egg' | 'dig' | 'storm' | 'mask'
+export type LegendSource = 'rift' | 'trio' | 'mythical' | 'finale' | 'endless' | 'event' | 'festival' | 'ultra' | 'ultraGift' | 'path' | 'temple' | 'roam' | 'duel' | 'swords' | 'rush' | 'egg' | 'dig' | 'storm' | 'mask' | 'ruins' | 'force'
 
 const inList = (list: readonly string[], id: LegendId) => list.includes(id)
 
@@ -43,6 +43,8 @@ export const legendSource = (id: LegendId): LegendSource => {
   if (unlock.egg) return 'egg'
   if (unlock.ultra) return unlock.ultra === 'gift' ? 'ultraGift' : 'ultra'
   if (unlock.path) return 'path'
+  if (unlock.ruins) return 'ruins'
+  if (unlock.force) return 'force'
   if (unlock.after) return 'temple'
   if (unlock.swords) return 'swords'
   if (unlock.roam) return 'roam'
@@ -88,10 +90,10 @@ export const winCounts = (captures: Captures, id: LegendId, endless: boolean) =>
   )
 }
 
-/** Whether a legend is caught its own way (a roamer worn down, a duel, the Swords' gift, Hoopa's rush, the mythicals' roads) rather than by counting wins. */
+/** Whether a legend is caught its own way (a roamer worn down, a Force of Nature, a duel, the Swords' gift, Hoopa's rush, the mythicals' roads) rather than by counting wins. */
 export const questSource = (id: LegendId) => {
   const source = legendSource(id)
-  return source === 'roam' || source === 'duel' || source === 'swords' || source === 'rush' || source === 'dig' || source === 'storm' || source === 'mask'
+  return source === 'roam' || source === 'force' || source === 'duel' || source === 'swords' || source === 'rush' || source === 'dig' || source === 'storm' || source === 'mask'
 }
 
 /** The captures with `id` captured, as a gift brings it (a festival legend's milestone gift). */

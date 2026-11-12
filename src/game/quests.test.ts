@@ -36,7 +36,7 @@ describe('the open map’s legends', () => {
     expect(bankRoamer({ uxie: 0.4 }, 'uxie', 0)).toEqual({})
     expect(parseRoamers({ uxie: 0.5, mesprit: 2, mew: 0.1 })).toEqual({ uxie: 0.5 })
     const caught = captureByGift(NO_CAPTURES, 'azelf')
-    expect(wildOf({ legends: caught, roamers: { uxie: 0.25 } })).toEqual({ lake: { uxie: 0.25, mesprit: 1 }, swords: [...SWORDS] })
+    expect(wildOf({ legends: caught, roamers: { uxie: 0.25 } })).toEqual({ lake: { uxie: 0.25, mesprit: 1 }, swords: [...SWORDS], forces: { tornadus: 1, thundurus: 1 } })
   })
 
   it('catch each its own way: Keldeo only as the Swords’ gift', () => {

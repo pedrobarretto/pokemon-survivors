@@ -5,6 +5,7 @@ import type { PathLegendMoveId } from '../game/pathLegendMoves'
 import type { LegendaryMove3Id } from '../game/legendaryMoves3'
 import type { LegendaryMove4Id } from '../game/legendaryMoves4'
 import type { LegendaryMove5Id } from '../game/legendaryMoves5'
+import type { LegendaryMove6Id } from '../game/legendaryMoves6'
 import type { BiomeId } from './biomes'
 import type { LegendId } from './legends'
 import type { PokeType } from './types'
@@ -80,7 +81,15 @@ export const LEGENDARY_MOVE_OF = {
   diancie: 'diamondStorm',
   zeraora: 'plasmaFists',
   ogerpon: 'ivyCudgel',
-} as const satisfies Record<LegendId, LegendaryMoveId | LegendaryMove2Id | UltraMoveId | PathLegendMoveId | LegendaryMove3Id | LegendaryMove4Id | LegendaryMove5Id>
+  // The Ruínas da Decisão's Regis and the Forces of Nature (`game/legendaryMoves6.ts`): their own signatures (the Forces' from Legends: Arceus), but
+  // Thundurus's, whose Wildbolt Storm is Thunder's evolution: its Prankster Nasty Plot instead.
+  regieleki: 'thunderCage',
+  regidrago: 'dragonEnergy',
+  tornadus: 'bleakwindStorm',
+  thundurus: 'nastyPlot',
+  landorus: 'sandsearStorm',
+  enamorus: 'springtideStorm',
+} as const satisfies Record<LegendId, LegendaryMoveId | LegendaryMove2Id | UltraMoveId | PathLegendMoveId | LegendaryMove3Id | LegendaryMove4Id | LegendaryMove5Id | LegendaryMove6Id>
 
 export type LegendaryId = keyof typeof LEGENDARY_MOVE_OF
 

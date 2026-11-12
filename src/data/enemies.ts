@@ -120,6 +120,14 @@ export const ENEMIES = {
   keldeo: { dex: 647, name: 'Keldeo', types: ['water', 'fighting'], hp: 2800, speed: 62, damage: 28, xp: 0, mass: 30, boss: true, legendary: true },
   // Hoopa, the last of its own rings (`game/rush.ts`).
   hoopa: { dex: 720, name: 'Hoopa', types: ['psychic', 'ghost'], hp: 4200, speed: 54, damage: 30, xp: 0, mass: 40, boss: true, legendary: true },
+  // The Ruínas da Decisão's Regis (`game/splitRuins.ts`): about Regigigas's size, as they wake from the same times; Regieleki fast and frail, Regidrago slow and huge.
+  regieleki: { dex: 894, name: 'Regieleki', types: ['electric'], hp: 10000, speed: 74, damage: 30, xp: 300, mass: 50, boss: true, legendary: true },
+  regidrago: { dex: 895, name: 'Regidrago', types: ['dragon'], hp: 14500, speed: 36, damage: 36, xp: 300, mass: 60, boss: true, legendary: true },
+  // The Forces of Nature, roaming with their weather (`data/forces.ts`): like the lake trio, HP at 3:30 scaled by `riftScale` as each visit starts.
+  tornadus: { dex: 641, name: 'Tornadus', types: ['flying'], hp: 2800, speed: 76, damage: 24, xp: 0, mass: 32, boss: true, legendary: true },
+  thundurus: { dex: 642, name: 'Thundurus', types: ['electric', 'flying'], hp: 2800, speed: 68, damage: 26, xp: 0, mass: 32, boss: true, legendary: true },
+  landorus: { dex: 645, name: 'Landorus', types: ['ground', 'flying'], hp: 3200, speed: 58, damage: 30, xp: 0, mass: 36, boss: true, legendary: true },
+  enamorus: { dex: 905, name: 'Enamorus', types: ['fairy', 'flying'], hp: 3000, speed: 70, damage: 26, xp: 0, mass: 32, boss: true, legendary: true },
   // The Noite das Bruxas' event rift (`EVENT_RIFTS`): Darkrai, and the shadow clones of its Nightmare (`game/darkraiDomain.ts`), which vanish at a hit and give nothing.
   darkrai: { dex: 491, name: 'Darkrai', types: ['dark'], hp: 3400, speed: 58, damage: 30, xp: 0, mass: 40, boss: true, legendary: true },
   darkraiShade: { dex: 491, name: 'Darkrai', types: ['dark'], hp: 1, speed: 46, damage: 16, xp: 0, mass: 40 },

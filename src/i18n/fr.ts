@@ -20,6 +20,7 @@ import { ULTRA_WORDS } from './ultra'
 import { LEGEND_PATHS_WORDS } from './legendPaths'
 import { QUEST_WORDS } from './quests'
 import { MYTHICAL_WORDS } from './mythicals'
+import { REGIS_FORCES_WORDS } from './regisForces'
 import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
 import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
 import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
@@ -2482,6 +2483,7 @@ export const fr: Messages = {
     ...ULTRA_WORDS.fr.abilities,
     ...LEGEND_PATHS_WORDS.fr.abilities,
     ...QUEST_WORDS.fr.abilities,
+    ...REGIS_FORCES_WORDS.fr.abilities,
     overgrow: 'Sous 1/3 des PV, les capacités Plante font +50%.',
     blaze: 'Sous 1/3 des PV, les capacités Feu font +50%.',
     torrent: 'Sous 1/3 des PV, les capacités Eau font +50%.',
@@ -3201,6 +3203,7 @@ export const fr: Messages = {
     ...LEGEND_PATHS_WORDS.fr.moves,
     ...QUEST_WORDS.fr.moves,
     ...MYTHICAL_WORDS.fr.moves,
+    ...REGIS_FORCES_WORDS.fr.moves,
     leechSeed: {
       description: 'Lance des graines sur les ennemis les plus proches. Une graine draine les PV avec le temps et te soigne ; quand l’ennemi est vaincu, elle saute sur deux voisins.',
       upgrades: [
@@ -5685,6 +5688,7 @@ export const fr: Messages = {
     ...LEGEND_PATHS_WORDS.fr.blurbs,
     ...QUEST_WORDS.fr.blurbs,
     ...MYTHICAL_WORDS.fr.blurbs,
+    ...REGIS_FORCES_WORDS.fr.blurbs,
     bulbasaur: 'Équilibré. Régénère ses PV.',
     charmander: 'Offensif. Plus de dégâts, moins de PV.',
     squirtle: 'Défensif. Plus de PV et de défense.',
@@ -6408,6 +6412,7 @@ export const fr: Messages = {
       ...QUEST_WORDS.fr.where,
       egg: SC_WAVE_WORDS.fr.legendWhere,
       ...MYTHICAL_WORDS.fr.where,
+      ...REGIS_FORCES_WORDS.fr.where,
     },
     rule: (need: number) => (need === 1 ? 'Bats-le une fois comme boss en partie solo, quel que soit le mode, pour le capturer. Les victoires en coop ne comptent pas.' : `Bats-le ${need} fois comme boss en partie solo, quel que soit le mode, pour le capturer. Les victoires en coop ne comptent pas.`),
     shinyRule: 'Battre un chromatique lors de la victoire de capture, ou après, débloque son chromatique.',
@@ -6425,6 +6430,8 @@ export const fr: Messages = {
   },
   quests: QUEST_WORDS.fr.ui,
   mythicals: MYTHICAL_WORDS.fr.ui,
+  /** The Ruínas da Decisão and the Forces of Nature (`game/splitRuins.ts`, `game/roamers.ts`): the choice on screen, the Forces' visits, their title cards and phase lines. */
+  regisForces: { ...REGIS_FORCES_WORDS.fr.ui, epithets: REGIS_FORCES_WORDS.fr.epithets, phases: REGIS_FORCES_WORDS.fr.phases },
   legends: {
     epithets: {
       articuno: 'Oiseau de la Glace Éternelle',
@@ -6443,6 +6450,8 @@ export const fr: Messages = {
       arceus: 'L’Originel',
       regigigas: LEGEND_PATHS_WORDS.fr.epithet,
       zeraora: MYTHICAL_WORDS.fr.epithet,
+      regieleki: REGIS_FORCES_WORDS.fr.epithets.regieleki,
+      regidrago: REGIS_FORCES_WORDS.fr.epithets.regidrago,
     },
     phases: {
       articuno: ['*Articuno* prend son envol ! Fuis son _ombre_.', 'Un blizzard ! Va sous un _abri de neige_ avant Snowscape.'],
@@ -6461,6 +6470,8 @@ export const fr: Messages = {
       arceus: ['*Arceus* se téléporte pour te juger !', 'Judgment ! Seuls les _abris de lumière_ peuvent te sauver.'],
       regigigas: LEGEND_PATHS_WORDS.fr.phases,
       zeraora: MYTHICAL_WORDS.fr.phases,
+      regieleki: REGIS_FORCES_WORDS.fr.phases.regieleki,
+      regidrago: REGIS_FORCES_WORDS.fr.phases.regidrago,
     },
   },
   team: {

@@ -1,5 +1,6 @@
 import { DUEL, ROAM } from '../data/quests'
-import { LAKE_TRIO, SWORDS, type LakeId, type SwordId } from '../data/legends'
+import { FORCE_ROAM } from '../data/forces'
+import { FORCE_LEGENDS, LAKE_TRIO, SWORDS, type ForceId, type LakeId, type SwordId } from '../data/legends'
 import { hash2 } from '../engine/rng'
 import { coopLocked } from '../data/coop'
 import { createDuel, updateDuel, type DuelState } from './duels'
@@ -18,8 +19,13 @@ import type { Game } from './types'
  * open map (`COOP_LOCKS`).
  */
 
-/** The legends still free in the save as a run starts: each lake legend's share of HP left (one caught is left out) and the Swords not caught yet. */
-export type WildStart = { lake: Partial<Record<LakeId, number>>; swords: readonly SwordId[] }
+/**
+ * The legends still free in the save as a run starts: each lake legend's
+ * share of HP left (one caught is left out), the Swords not caught yet, and
+ * each Force of Nature's share that may show (`forces`: only those whose
+ * turn has come, `wildOf`; absent in replays from before them).
+ */
+export type WildStart = { lake: Partial<Record<LakeId, number>>; swords: readonly SwordId[]; forces?: Partial<Record<ForceId, number>> }
 
 export const NO_WILD: WildStart = { lake: {}, swords: [] }
 
@@ -41,6 +47,13 @@ export const rollRoamer = (seed: number, wild: WildStart): LakeId | null => {
   return pickBy(free, seedDraw(seed, 2)) ?? null
 }
 
+/** Which free Force of Nature this seed brings, if any (`FORCE_ROAM.odds`): only in a run whose seed brought no lake legend, so the lake trio's draws stay as they were. */
+export const rollForce = (seed: number, wild: WildStart): ForceId | null => {
+  const free = FORCE_LEGENDS.filter((id) => (wild.forces?.[id] ?? 0) > 0)
+  if (free.length === 0 || rollRoamer(seed, wild) !== null || seedDraw(seed, 6) >= FORCE_ROAM.odds) return null
+  return pickBy(free, seedDraw(seed, 7)) ?? null
+}
+
 /** Which free Sword this seed brings, if any (`DUEL.odds`). */
 export const rollSword = (seed: number, wild: WildStart): SwordId | null => {
   if (wild.swords.length === 0 || seedDraw(seed, 3) >= DUEL.odds) return null
@@ -54,8 +67,10 @@ export const rollStorm = (seed: number) => seedDraw(seed, 5) < ZERAORA.odds
 export const createQuests = (seed: number, wild: WildStart | undefined, coop: boolean): QuestState => {
   if (coop || !wild) return { roam: null, duel: null, storm: null }
   const lake = rollRoamer(seed, wild)
+  const force = rollForce(seed, wild)
   const sword = rollSword(seed, wild)
-  return { roam: lake ? createRoam(seed, lake, wild.lake[lake] ?? 1) : null, duel: sword ? createDuel(sword) : null, storm: rollStorm(seed) ? createStorm() : null }
+  const roam = lake ? createRoam(seed, lake, wild.lake[lake] ?? 1) : force ? createRoam(seed, force, wild.forces?.[force] ?? 1) : null
+  return { roam, duel: sword ? createDuel(sword) : null, storm: rollStorm(seed) ? createStorm() : null }
 }
 
 /** The run's roamer, duel and storm, every tick on the open map (solo). */
@@ -66,16 +81,26 @@ export const updateQuests = (g: Game, dt: number) => {
   updateStorm(g, dt)
 }
 
-/** A replay's `wild`, or null when its shape is wrong: shares within 0..1 for known lake legends, known Swords once each. */
+/** Shares within 0..1 for known ids of `ids`, or null when one is off. */
+const parseShares = <K extends string>(raw: Record<string, unknown>, ids: readonly K[]): Partial<Record<K, number>> | null => {
+  const out: Partial<Record<K, number>> = {}
+  for (const [id, v] of Object.entries(raw)) {
+    const known = ids.find((l) => l === id)
+    if (!known || typeof v !== 'number' || !Number.isFinite(v) || v <= 0 || v > 1) return null
+    out[known] = v
+  }
+  return out
+}
+
+/** A replay's `wild`, or null when its shape is wrong: shares within 0..1 for known lake legends (and Forces, when listed), known Swords once each. */
 export const parseWild = (raw: unknown): WildStart | null => {
   if (!isRecord(raw) || !isRecord(raw.lake) || !Array.isArray(raw.swords)) return null
+  if (raw.forces !== undefined && !isRecord(raw.forces)) return null
   const listed: unknown[] = raw.swords
-  const lake: Partial<Record<LakeId, number>> = {}
-  for (const [id, v] of Object.entries(raw.lake)) {
-    const known = LAKE_TRIO.find((l) => l === id)
-    if (!known || typeof v !== 'number' || !Number.isFinite(v) || v <= 0 || v > 1) return null
-    lake[known] = v
-  }
+  const lake = parseShares(raw.lake, LAKE_TRIO)
+  const forces = isRecord(raw.forces) ? parseShares(raw.forces, FORCE_LEGENDS) : {}
+  if (!lake || !forces) return null
   const swords = SWORDS.filter((s) => listed.includes(s))
-  return swords.length === listed.length ? { lake, swords } : null
+  if (swords.length !== listed.length) return null
+  return Object.keys(forces).length > 0 ? { lake, swords, forces } : { lake, swords }
 }

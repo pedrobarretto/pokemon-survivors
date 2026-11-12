@@ -101,9 +101,38 @@ export type LakeId = (typeof LAKE_TRIO)[number]
 export const isLakeLegend = (id: string): id is LakeId => LAKE_TRIO.some((l) => l === id)
 export type SwordId = (typeof SWORDS)[number]
 
+/**
+ * Regieleki and Regidrago, out of the Ruínas da Decisão (Crown Tundra's
+ * Split-Decision Ruins): once Regigigas is captured its temple may bring the
+ * two ruins instead, and the player wakes one of them a run
+ * (`game/splitRuins.ts`, `data/forces.ts`).
+ */
+export const RUINS_LEGENDS = ['regieleki', 'regidrago'] as const
 
-/** Every playable legend: the regular ones, then the event ones, the festival ones, Terastal's, the Ultra Beasts, the path ones, the ones with a road of their own, the Safári's and the mythicals. */
-export const LEGEND_IDS = [...REGULAR_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...TERA_LEGENDS, ...ULTRA_LEGENDS, ...PATH_LEGENDS, ...QUEST_LEGENDS, ...SAFARI_LEGENDS, ...MYTHICAL_LEGENDS] as const
+export type RuinsRegi = (typeof RUINS_LEGENDS)[number]
+
+export const isRuinsRegi = (id: string): id is RuinsRegi => RUINS_LEGENDS.some((r) => r === id)
+
+/**
+ * The Forces of Nature, roaming the open map like the lake trio, each with its
+ * weather (`data/forces.ts`, `game/roamers.ts`): Landorus only once Tornadus
+ * and Thundurus are captured, Enamorus once all three are.
+ */
+export const FORCE_LEGENDS = ['tornadus', 'thundurus', 'landorus', 'enamorus'] as const
+
+export type ForceId = (typeof FORCE_LEGENDS)[number]
+
+export const isForceLegend = (id: string): id is ForceId => FORCE_LEGENDS.some((f) => f === id)
+
+/** Every legend that roams the open map, its HP carried from run to run: the lake trio and the Forces of Nature. */
+export type RoamerId = LakeId | ForceId
+
+export const ROAMER_IDS = [...LAKE_TRIO, ...FORCE_LEGENDS] as const satisfies readonly RoamerId[]
+
+export const isRoamer = (id: string): id is RoamerId => ROAMER_IDS.some((r) => r === id)
+
+/** Every playable legend: the regular ones, then the event ones, the festival ones, Terastal's, the Ultra Beasts, the path ones, the ones with a road of their own, the Safári's, the mythicals, the Ruins' Regis and the Forces of Nature. */
+export const LEGEND_IDS = [...REGULAR_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...TERA_LEGENDS, ...ULTRA_LEGENDS, ...PATH_LEGENDS, ...QUEST_LEGENDS, ...SAFARI_LEGENDS, ...MYTHICAL_LEGENDS, ...RUINS_LEGENDS, ...FORCE_LEGENDS] as const
 
 export type LegendId = (typeof LEGEND_IDS)[number]
 
@@ -111,7 +140,7 @@ export type LegendId = (typeof LEGEND_IDS)[number]
 export const AWAKEN_AT = [12, 28] as const
 
 /** Asset folder of a legend's alternate form (`<dex>/<form>/`), like the Megas'. Deoxys's formes come with its stance. */
-export type LegendForm = 'primal' | 'mega' | 'attack' | 'defense' | 'speed' | 'terastal' | 'stellar' | 'ten' | 'complete' | 'rapid' | 'origin' | 'unbound'
+export type LegendForm = 'primal' | 'mega' | 'attack' | 'defense' | 'speed' | 'terastal' | 'stellar' | 'ten' | 'complete' | 'rapid' | 'origin' | 'unbound' | 'therian'
   /** Ogerpon's masks and each Terastallized (`OGERPON_MASKS`); the Teal Mask is the species' own sheets. */
   | 'wellspring' | 'hearthflame' | 'cornerstone' | 'tealTera' | 'wellspringTera' | 'hearthflameTera' | 'cornerstoneTera'
 
@@ -143,7 +172,10 @@ export type LegendEvent = 'halloween'
  * counts, it hatches from the egg the Safári's cove Pokédex sends (Manaphy); `dig`: no
  * win counts, the Escavação's rarest treasure brings it (Diancie, sent by the
  * API); `storm`: beaten in the Power Plant's storm (Zeraora, `game/zeraora.ts`);
- * `mask`: beaten in its own Tera Raid (Ogerpon, `game/teraRaid.ts`).
+ * `mask`: beaten in its own Tera Raid (Ogerpon, `game/teraRaid.ts`); `ruins`: woken in
+ * the Ruínas da Decisão, one a run (`game/splitRuins.ts`, with `after`
+ * Regigigas); `force`: a Force of Nature, roaming with its weather (with
+ * `roam`, and `after` the Forces it waits for).
  */
 export type LegendUnlock = {
   wins: number
@@ -162,6 +194,8 @@ export type LegendUnlock = {
   dig?: true
   storm?: true
   mask?: true
+  ruins?: true
+  force?: true
 }
 
 export type LegendDef = Omit<PlayableDef, 'learnset' | 'line'> & {
@@ -893,6 +927,84 @@ export const LEGENDS = {
     awakenings: [{ maxHp: 25, might: 0.12, speed: 2 }, { maxHp: 35, might: 0.24, cooldown: -0.05 }],
     innate: { ability: 'defiant' },
     unlock: { wins: 1, mask: true },
+  },
+
+  /* ---------- The Ruínas da Decisão's Regis (`game/splitRuins.ts`) ---------- */
+  /** Regieleki: raw speed. Transistor and the fastest legs of any legend; its Thunder Cage hits harder the faster it runs. */
+  regieleki: {
+    name: 'Regieleki',
+    color: '#f8d838',
+    stats: { maxHp: 25, might: 0.16, speed: 16, cooldown: -0.06 },
+    signature: LEGENDARY_MOVE_OF.regieleki,
+    learnset: [[LEGENDARY_MOVE_OF.regieleki, 'thunder', 'shockWave', 'electroBall', 'discharge', 'quickAttack', 'wildCharge', 'electroweb']],
+    line: stage(894, 'Regieleki', ['electric']),
+    awakenings: [{ maxHp: 25, might: 0.12, speed: 4 }, { maxHp: 35, might: 0.22, speed: 4, cooldown: -0.04 }],
+    innate: { ability: 'transistor', extra: [{ kind: 'stats', stats: { speed: 6 } }] },
+    unlock: { wins: 1, after: ['regigigas'], ruins: true },
+  },
+  /** Regidrago: Dragon's Maw. Slow and huge, all its power in its jaws; its Dragon Energy hits harder the more HP it has. */
+  regidrago: {
+    name: 'Regidrago',
+    color: '#58a858',
+    stats: { maxHp: 70, might: 0.22, armor: 1, speed: -5 },
+    signature: LEGENDARY_MOVE_OF.regidrago,
+    learnset: [[LEGENDARY_MOVE_OF.regidrago, 'dragonBreath', 'dragonTail', 'dragonPulse', 'crunch', 'earthquake', 'focusPunch', 'twister']],
+    line: stage(895, 'Regidrago', ['dragon']),
+    awakenings: [{ maxHp: 35, might: 0.12, armor: 1 }, { maxHp: 50, might: 0.26, area: 0.1 }],
+    innate: { ability: 'dragonsMaw', extra: [{ kind: 'fullHp', stats: { might: 0.15 } }] },
+    unlock: { wins: 1, after: ['regigigas'], ruins: true },
+  },
+
+  /* ---------- The Forces of Nature, roaming with their weather (`data/forces.ts`) ---------- */
+  /** Tornadus: Prankster's tailwind. Its Bleakwind Storm lends it speed each cast, and the snow it brings only quickens it. */
+  tornadus: {
+    name: 'Tornadus',
+    color: '#78c068',
+    stats: { maxHp: 30, might: 0.18, speed: 10, cooldown: -0.05 },
+    signature: LEGENDARY_MOVE_OF.tornadus,
+    learnset: [[LEGENDARY_MOVE_OF.tornadus, 'gust', 'aerialAce', 'twister', 'uTurn', 'crunch', 'iceShard', 'roost']],
+    line: stage(641, 'Tornadus', ['flying']),
+    awakenings: [{ maxHp: 25, might: 0.12, speed: 3 }, { maxHp: 35, might: 0.24, cooldown: -0.05 }],
+    innate: { ability: 'prankster', extra: [{ kind: 'weather', weather: 'snow', stats: { speed: 10, cooldown: -0.05 } }, { kind: 'immune', to: ['chip'] }] },
+    unlock: { wins: 1, roam: true, force: true },
+  },
+  /** Thundurus: storms. It calls the rain wherever it goes, and in the rain its Wildbolt Storm drops twice the bolts. */
+  thundurus: {
+    name: 'Thundurus',
+    color: '#6898d8',
+    stats: { maxHp: 30, might: 0.22, area: 0.08, cooldown: -0.03 },
+    signature: LEGENDARY_MOVE_OF.thundurus,
+    learnset: [[LEGENDARY_MOVE_OF.thundurus, 'thunder', 'shockWave', 'electroBall', 'discharge', 'thunderWave', 'crunch', 'gust']],
+    line: stage(642, 'Thundurus', ['electric', 'flying']),
+    awakenings: [{ maxHp: 25, might: 0.12, area: 0.05 }, { maxHp: 35, might: 0.24, cooldown: -0.05 }],
+    innate: { ability: 'prankster', extra: [{ kind: 'summon', weather: 'rain' }, { kind: 'weather', weather: 'rain', stats: { might: 0.12, area: 0.08 } }] },
+    unlock: { wins: 1, roam: true, force: true },
+  },
+  /** Landorus: Sand Force. It calls sandstorms wherever it goes, unhurt by them, and in them its Ground, Rock and Steel moves hit harder; Therian at its second awakening. */
+  landorus: {
+    name: 'Landorus',
+    color: '#d8a048',
+    stats: { maxHp: 45, might: 0.22, armor: 1 },
+    signature: LEGENDARY_MOVE_OF.landorus,
+    learnset: [[LEGENDARY_MOVE_OF.landorus, 'earthquake', 'rockTomb', 'stealthRock', 'rockSlide', 'gust', 'focusPunch', 'crunch']],
+    line: stage(645, 'Landorus', ['ground', 'flying']),
+    awakenings: [{ maxHp: 30, might: 0.12, armor: 1 }, { maxHp: 40, might: 0.26, area: 0.1 }],
+    innate: { ability: 'sandForce', extra: [{ kind: 'summon', weather: 'sand' }] },
+    form: { key: 'therian', name: 'Landorus (Therian Forme)' },
+    unlock: { wins: 1, roam: true, force: true, after: ['tornadus', 'thundurus'] },
+  },
+  /** Enamorus: Contrary and Cute Charm. Every hit it takes makes it stronger, and foes that touch it fall for it; Therian at its second awakening. */
+  enamorus: {
+    name: 'Enamorus',
+    color: '#f088b8',
+    stats: { maxHp: 35, might: 0.18, regen: 0.3, speed: 4 },
+    signature: LEGENDARY_MOVE_OF.enamorus,
+    learnset: [[LEGENDARY_MOVE_OF.enamorus, 'moonblast', 'disarmingVoice', 'dazzlingGleam', 'psyshock', 'gust', 'swift', 'playRough']],
+    line: stage(905, 'Enamorus', ['fairy', 'flying']),
+    awakenings: [{ maxHp: 25, might: 0.12, regen: 0.2 }, { maxHp: 40, might: 0.22, area: 0.1 }],
+    innate: { ability: 'contrary', extra: [{ kind: 'contact', status: [{ kind: 'sleep', chance: 0.3, duration: 2, power: 0 }], damage: 0 }] },
+    form: { key: 'therian', name: 'Enamorus (Therian Forme)' },
+    unlock: { wins: 1, roam: true, force: true, after: ['tornadus', 'thundurus', 'landorus'] },
   },
 } as const satisfies Record<LegendId, LegendDef>
 

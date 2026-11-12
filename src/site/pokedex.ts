@@ -1,6 +1,7 @@
 import { RAID, RAID_BOSSES } from '../data/tera'
 import manifest from '../data/sprites.generated.json'
-import { isLakeLegend, SWORDS, type SwordId } from '../data/legends'
+import { isForceLegend, isLakeLegend, isRuinsRegi, SWORDS, type ForceId, type SwordId } from '../data/legends'
+import { FORCE_ROAM, RUINS } from '../data/forces'
 import { DUEL, ROAM } from '../data/quests'
 import { RUSH_ORDER } from '../data/rush'
 
@@ -287,6 +288,10 @@ export type Appearance =
   | { kind: 'retinue'; by: EnemyId }
   /** A roaming lake legend (`game/roamers.ts`): some runs bring it, from about `from`. */
   | { kind: 'roam'; from: number }
+  /** Wakes in one of the Ruínas da Decisão (`RUINS`), which rise between `from` and `until` in the runs of Regigigas's captor. */
+  | { kind: 'ruins'; from: number; until: number }
+  /** A Force of Nature roaming the map with its weather (`data/forces.ts`): some runs bring it, from about `from`. */
+  | { kind: 'force'; from: number; force: ForceId }
   /** A Sword of Justice waiting for its duel in its biomes (`game/duels.ts`), from `from`. */
   | { kind: 'duel'; from: number; sword: SwordId }
   /** Brought back by Hoopa's Rings once captured (`game/rush.ts`), or (`last`) Hoopa itself, the last ring. */
@@ -361,6 +366,8 @@ export const appearances = (id: EnemyId): Appearance[] => {
   // The legends met on the open map, and the ones Hoopa's rings bring back.
   const quest: Appearance[] = [
     ...(isLakeLegend(id) ? [{ kind: 'roam' as const, from: ROAM.first[0] }] : []),
+    ...(isForceLegend(id) ? [{ kind: 'force' as const, from: FORCE_ROAM.first[0], force: id }] : []),
+    ...(isRuinsRegi(id) ? [{ kind: 'ruins' as const, from: RUINS.at[0], until: RUINS.at[1] }] : []),
     ...(isSword(id) ? [{ kind: 'duel' as const, from: DUEL.from, sword: id }] : []),
     ...(id === 'hoopa' || RUSH_ORDER.some((l) => l === id) ? [{ kind: 'rush' as const, last: id === 'hoopa' }] : []),
     ...(id === 'zeraora' ? [{ kind: 'storm' as const, from: ZERAORA.from }] : []),

@@ -72,11 +72,12 @@ import type { LegendaryVisual3 } from './legendaryMoves3'
 import type { LegendaryVisual4 } from './legendaryMoves4'
 import type { LegendaryVisual5 } from './legendaryMoves5'
 import type { OgerponMask } from '../data/mythicals'
+import type { LegendaryVisual6 } from './legendaryMoves6'
 import type { QuestState } from './quests'
 import type { RushState } from './rush'
 import type { RoamMoment } from './roamers'
 import type { DuelMoment } from './duels'
-import type { LakeId, SwordId } from '../data/legends'
+import type { RoamerId, SwordId } from '../data/legends'
 import type { TensionState } from './tension'
 import type { AlphaClock, AlphaState } from './alphas'
 import type { LegendForm, LegendId } from '../data/legends'
@@ -450,6 +451,8 @@ export type Visual =
   | LegendaryVisual4
   /** Legendary moves, fifth batch (`legendaryMoves5.ts`, the mythicals'), drawn by `render/legendaryFx5.ts`. */
   | LegendaryVisual5
+  /** Legendary moves, sixth batch (`legendaryMoves6.ts`), drawn by `render/legendaryFx6.ts`. */
+  | LegendaryVisual6
   /** Temporada 1's mechanic families, drawn by `render/seasonOneKitFx.ts`. */
   | 'kitCross' | 'kitClaw' | 'dragonPulse' | 'slime' | 'waterPulse' | 'miceBite' | 'auraWheel' | 'zenOrb' | 'commandSlam' | 'orderUp'
   /** The second batch's families (`gaKitBMoves.ts`, `gaKitBSystem.ts`), drawn by `render/gaKitBFx.ts`; `kitBHit` is a kit's unseen hitbox. */
@@ -911,8 +914,8 @@ export type GameEvent =
   | { kind: 'awakened'; legend: LegendId; n: number; form: LegendForm | null; changed: boolean }
   /** A legendary boss fell (rift, trio, mythical, Mewtwo, Arceus), once per defeat: the save counts it toward capturing it. */
   | { kind: 'legendBeaten'; legend: EnemyId; shiny: boolean }
-  /** A roaming lake legend (`roamers.ts`): sighted, gone (its HP share `left` is the save's to keep), its memory wipe, or caught. */
-  | { kind: 'roam'; legend: LakeId; moment: RoamMoment; left: number }
+  /** A roaming legend, of the lake trio or a Force of Nature (`roamers.ts`): sighted, gone (its HP share `left` is the save's to keep), its memory wipe, a Force's new `phase`, or caught. */
+  | { kind: 'roam'; legend: RoamerId; moment: RoamMoment; left: number; phase: number }
   /** A Sword of Justice's duel (`duels.ts`). */
   | { kind: 'duel'; sword: SwordId; moment: DuelMoment }
   /** Hoopa's Rings (`rush.ts`): ring `ring` (from 0) of `rings` opened on `legend`, or its legend went down. */

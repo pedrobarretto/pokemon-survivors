@@ -1,4 +1,4 @@
-import { LAKE_TRIO, SWORDS, type LakeId, type SwordId } from '../data/legends'
+import { ROAMER_IDS, SWORDS, type RoamerId, type SwordId } from '../data/legends'
 import { SWORD_DUELS } from '../data/quests'
 import { createDuel } from './duels'
 import { createRoam, roamerBody } from './roamers'
@@ -7,7 +7,9 @@ import { createStorm } from './zeraora'
 
 /**
  * Dev console helpers for the open map's legends (`quests.ts`):
- * `ps.roam('uxie', 0.4)` brings a roaming lake legend with 40% of its HP now,
+ * `ps.roam('uxie', 0.4)` brings a roaming legend (a lake legend or a Force of
+ * Nature: `ps.roam('thundurus', 0.5)`, its weather and, on its first visit,
+ * its entrance) with 40% of its HP now,
  * `ps.duel('cobalion')` puts a Sword waiting 70 px ahead of the player (whatever
  * the biome), `ps.duel('cobalion', 'now')` starts its duel at once,
  * `ps.storm()` gathers Zeraora's storm 110 px ahead of the player now
@@ -22,8 +24,8 @@ export const questDevTools = (game: () => Game | undefined) => {
     return fn(g)
   }
   return {
-    roam: (legend: LakeId = 'uxie', left = 1) => {
-      if (!LAKE_TRIO.includes(legend)) return `Lake trio: ${LAKE_TRIO.join(', ')}`
+    roam: (legend: RoamerId = 'uxie', left = 1) => {
+      if (!ROAMER_IDS.includes(legend)) return `Roamers: ${ROAMER_IDS.join(', ')}`
       return playing((g) => {
         const body = roamerBody(g)
         if (body) body.hp = 0

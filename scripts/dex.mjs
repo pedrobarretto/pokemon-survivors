@@ -165,7 +165,9 @@ export const SAFARI_LEGENDS = [490]
  * its masks and their Terastallized sheets). All playable in Legend mode, all able to roll shiny.
  */
 export const MYTHICAL_LEGENDS = [719, 807, 1017]
-export const DEX = [...new Set([...STARTERS, ...HATCHLINGS, ...ROCKET_FAMILIES, ...ROCKET_CAST, ...HORDE, ...TRAITS, ...BOSSES, ...CRITTERS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...CAMEOS, ...FESTIVAL_LEGENDS, ...REAPER, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...COMPANIONS, ...HALLOWEEN_BOSSES, ...SHOPKEEPERS, ...TERA_LEGENDS, ...ULTRA_BEASTS, ...LEGEND_PATHS, ...QUEST_LEGENDS, ...CAFE_CARDS, ...SAFARI_LEGENDS, ...MYTHICAL_LEGENDS])]
+/** The Ruínas da Decisão's Regis (Regieleki, Regidrago) and the Forces of Nature (Tornadus, Thundurus, Landorus, Enamorus), src/data/forces.ts. */
+export const RUINS_FORCES = [894, 895, 641, 642, 645, 905]
+export const DEX = [...new Set([...STARTERS, ...HATCHLINGS, ...ROCKET_FAMILIES, ...ROCKET_CAST, ...HORDE, ...TRAITS, ...BOSSES, ...CRITTERS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...CAMEOS, ...FESTIVAL_LEGENDS, ...REAPER, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...COMPANIONS, ...HALLOWEEN_BOSSES, ...SHOPKEEPERS, ...TERA_LEGENDS, ...ULTRA_BEASTS, ...LEGEND_PATHS, ...QUEST_LEGENDS, ...CAFE_CARDS, ...SAFARI_LEGENDS, ...MYTHICAL_LEGENDS, ...RUINS_FORCES])]
 /**
  * The Arena's emotes (`emote` in src/data/arenaEffects.ts, `EMOTE_ANIMS` there too): extra SpriteCollab
  * animations, only for the species the Arena plays (the starters' lines) and only their front row
@@ -191,8 +193,8 @@ export const SHINY_LEGENDS = [144, 145, 146, 150, 151, 243, 244, 245, 251, 377, 
  * mode's legends (the rift, event, festival and quest legends, the trios, the mythicals, Mewtwo and Arceus). The species whose
  * wearables `npm run rig` fits, with their `FORMS` (`render/wearFit.test.ts` keeps them in sync with `PLAYABLE`).
  */
-export const PLAYERS = [...new Set([...STARTERS, ...HATCHLINGS, ...ROCKET_FAMILIES, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...SHINY_LEGENDS, ...TERA_LEGENDS, ...ULTRA_BEASTS, ...LEGEND_PATHS, ...QUEST_LEGENDS, ...SAFARI_LEGENDS, ...MYTHICAL_LEGENDS])]
-export const SHINY = new Set([...STARTERS, ...HATCHLINGS, ...ROCKET_FAMILIES, ...HORDE, ...TRAITS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...SHINY_LEGENDS, ...COMPANIONS, ...ULTRA_BEASTS, ...TERA_LEGENDS, ...LEGEND_PATHS, ...QUEST_LEGENDS, ...SAFARI_LEGENDS, ...MYTHICAL_LEGENDS])
+export const PLAYERS = [...new Set([...STARTERS, ...HATCHLINGS, ...ROCKET_FAMILIES, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...SHINY_LEGENDS, ...TERA_LEGENDS, ...ULTRA_BEASTS, ...LEGEND_PATHS, ...QUEST_LEGENDS, ...SAFARI_LEGENDS, ...MYTHICAL_LEGENDS, ...RUINS_FORCES])]
+export const SHINY = new Set([...STARTERS, ...HATCHLINGS, ...ROCKET_FAMILIES, ...HORDE, ...TRAITS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...SHINY_LEGENDS, ...COMPANIONS, ...ULTRA_BEASTS, ...TERA_LEGENDS, ...LEGEND_PATHS, ...QUEST_LEGENDS, ...SAFARI_LEGENDS, ...MYTHICAL_LEGENDS, ...RUINS_FORCES])
 
 /**
  * Alternate formes the game draws, by key, mapped to their SpriteCollab form id
@@ -274,6 +276,9 @@ export const FORMS = {
     archipelago: '0009', highPlains: '0010', sandstorm: '0011', river: '0012', monsoon: '0013', savanna: '0014', sun: '0015', ocean: '0016', jungle: '0017',
   },
   774: { red: '0001', orange: '0002', yellow: '0003', green: '0004', blue: '0005', indigo: '0006', violet: '0007' },
+  // The Forces of Nature's Therian Formes (their second awakening): SpriteCollab has them for Landorus and Enamorus only.
+  645: { therian: '0001' },
+  905: { therian: '0001' },
 }
 
 /**
@@ -367,6 +372,8 @@ export const FORM_CRIES = {
   892: { rapid: 'urshifu-rapid-strike' },
   484: { origin: 'palkia-origin' },
   720: { unbound: 'hoopa-unbound' },
+  645: { therian: 'landorus-therian' },
+  905: { therian: 'enamorus-therian' },
   500: { mega: 'emboar-mega' },
   652: { mega: 'chesnaught-mega' },
   208: { mega: 'steelix-mega' },

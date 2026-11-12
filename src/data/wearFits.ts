@@ -423,4 +423,11 @@ export const WEAR_FITS: Partial<Record<FitKey, SpeciesFit>> = {
   // The hook families (src/data/gaFamiliesHook.ts)
   665: { rig: { E: { seat: [-1, -2] } } }, // Spewpa: turned, the brim came down onto its eye
   311: { rig: { SE: { seat: [0, -3] }, E: { seat: [0, -3] } } }, // Plusle: turned, the seat sat between its ears, down on its eyes
+  // The Ruínas da Decisão's Regis and the Forces of Nature.
+  894: { no: ['head:SE'] }, // Regieleki: its body is its head, the Regi dots its face; turned a little, a hat sits over the dots
+  895: { no: ['head'] }, // Regidrago: no head between its dragon-head arms, only its core with the Regi dots on it, where any hat lands
+  642: { no: ['head:E'] }, // Thundurus: in profile its head reaches out over its arm and the hat landed on its chest
+  645: { no: ['head:E', 'head:SE'] }, // Landorus: turned, its mane and horns sweep back over its face, where a brim would sit
+  '645:therian': { no: ['head:S', 'head:SE'] }, // Landorus (Therian): its head is a small mask under a crest of horns; facing south a hat lands on its eyes
+  '905:therian': { no: ['head:E'] }, // Enamorus (Therian): in profile its horned mask juts forward and a brim covers its eyes
 }
