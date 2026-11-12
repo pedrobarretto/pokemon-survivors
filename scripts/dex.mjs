@@ -208,10 +208,11 @@ export const FORMS = {
   // Terapagos's Terastal Form (its Stellar Form has no sheets: it wears these in Stellar crystal, `render/teraArt.ts`).
   1024: { terastal: '0001' },
   // The legend paths' formes (src/data/legendPaths.ts): Zygarde's 10% and Complete (its 50% is the species' own), Urshifu's Rapid Strike Style.
-  718: { ten: '0001', complete: '0002' },
+  718: { ten: '0001', complete: '0002', mega: '0005' }, // and Mega Zygarde, from its Complete Forme (src/data/megas.ts)
   892: { rapid: '0001' },
   484: { origin: '0001' }, // Palkia's Origin Forme (its rift's last phase, its second awakening)
   720: { unbound: '0001' }, // Hoopa Unbound (its second awakening, the ring rush's last ring)
+  978: { mega: '0003' }, // Mega Tatsugiri: the only one of its three Megas with sheets (its Curly form's)
 }
 
 /**
@@ -291,9 +292,9 @@ export const FORM_CRIES = {
   448: { mega: 'lucario-mega', megaZ: 'lucario-mega-z' },
   475: { mega: 'gallade-mega' },
   302: { mega: 'sableye-mega' },
-  150: { megaY: 'mewtwo-mega-y' },
+  150: { megaY: 'mewtwo-mega-y', megaX: 'mewtwo-mega-x' },
   303: { mega: 'mawile-mega' },
-  359: { mega: 'absol-mega' },
+  359: { mega: 'absol-mega', megaZ: 'absol-mega-z' },
   380: { mega: 'latias-mega' },
   381: { mega: 'latios-mega' },
   382: { primal: 'kyogre-primal' },
@@ -301,7 +302,7 @@ export const FORM_CRIES = {
   384: { mega: 'rayquaza-mega' },
   386: { attack: 'deoxys-attack', defense: 'deoxys-defense', speed: 'deoxys-speed' },
   491: { mega: 'darkrai-mega' },
-  718: { ten: 'zygarde-10', complete: 'zygarde-complete' },
+  718: { ten: 'zygarde-10', complete: 'zygarde-complete', mega: 'zygarde-mega' },
   892: { rapid: 'urshifu-rapid-strike' },
   484: { origin: 'palkia-origin' },
   720: { unbound: 'hoopa-unbound' },
@@ -311,6 +312,17 @@ export const FORM_CRIES = {
   604: { mega: 'eelektross-mega' },
   655: { mega: 'delphox-mega' },
   658: { mega: 'greninja-mega' },
+  // The Grande Atualização's Megas on lines already playable (src/data/megas.ts)
+  214: { mega: 'heracross-mega' },
+  460: { mega: 'abomasnow-mega' },
+  478: { mega: 'froslass-mega' },
+  560: { mega: 'scrafty-mega' },
+  609: { mega: 'chandelure-mega' },
+  623: { mega: 'golurk-mega' },
+  687: { mega: 'malamar-mega' },
+  768: { mega: 'golisopod-mega' },
+  998: { mega: 'baxcalibur-mega' },
+  978: { mega: 'tatsugiri-curly-mega' },
 }
 
 /**

@@ -9,6 +9,7 @@ import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
+import { GA_MEGAS_WORDS } from './gaMegas'
 import { ROCKET_WORDS } from './rocket/words'
 import { ULTRA_WORDS } from './ultra'
 import { LEGEND_PATHS_WORDS } from './legendPaths'
@@ -2385,6 +2386,7 @@ export const zh: Messages = {
       glalie: '一般與冰屬性招式+30%、招式+25%。必殺技變為 Sheer Cold。',
       salamence: '一般與飛行屬性招式+30%、速度+12、招式+25%。必殺技變為 Double-Edge。',
       ...ROCKET_FAMILY_WORDS.zh.megas,
+      ...GA_MEGAS_WORDS.zh.megas,
     },
   },
 
@@ -5842,6 +5844,7 @@ export const zh: Messages = {
     phantomForce: '最多6跳的連鎖衝刺；每次落地都會爆出一圈暗影。',
     sheerCold: '在你周圍放出三波絕對零度，大幅減緩敵人。',
     doubleEdge: '十二次俯衝轟炸砸向最近的敵人。',
+    ...GA_MEGAS_WORDS.zh.specials,
   },
 
 

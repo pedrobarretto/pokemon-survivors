@@ -36,7 +36,7 @@ import {
 import { formAfter, innateAbility } from '../game/legend'
 import type { PathFormId } from '../data/legendPaths'
 import { MEGAS } from '../data/megas'
-import { isFinalStage, runMegas } from '../game/mega'
+import { atMegaBase, runMegas } from '../game/mega'
 import { megaIcon } from '../render/megaFx'
 import { formLocked } from '../game/communityGoal'
 import { AWAKEN_AT, isLegend, LEGENDS } from '../data/legends'
@@ -324,7 +324,7 @@ export const trainingPanel = (root: HTMLElement, g: Game, actions: TrainingActio
           ),
         ),
       ),
-      p.mega.stone !== null && h('p', { class: 'dojo-row-note' }, rich(isFinalStage(p.starter, p.stage) ? m().megaReady : m().megaLocked)),
+      p.mega.stone !== null && h('p', { class: 'dojo-row-note' }, rich(atMegaBase(p) ? m().megaReady : m().megaLocked)),
     ]
     return [
       h('h3', { class: 'dojo-label' }, m().form),

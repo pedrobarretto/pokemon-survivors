@@ -9,6 +9,7 @@ import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
+import { GA_MEGAS_WORDS } from './gaMegas'
 import { ROCKET_WORDS } from './rocket/words'
 import { ULTRA_WORDS } from './ultra'
 import { LEGEND_PATHS_WORDS } from './legendPaths'
@@ -2385,6 +2386,7 @@ export const fr: Messages = {
       glalie: 'capacités Normal et Glace +30% et capacités +25%. L’attaque spéciale devient Sheer Cold.',
       salamence: 'capacités Normal et Vol +30%, vitesse +12 et capacités +25%. L’attaque spéciale devient Double-Edge.',
       ...ROCKET_FAMILY_WORDS.fr.megas,
+      ...GA_MEGAS_WORDS.fr.megas,
     },
   },
 
@@ -5842,6 +5844,7 @@ export const fr: Messages = {
     phantomForce: 'Ruée en chaîne de 6 sauts max ; chaque atterrissage libère un anneau d’ombres.',
     sheerCold: 'Trois vagues de froid absolu autour de toi qui ralentissent fortement les ennemis.',
     doubleEdge: 'Douze piqués s’écrasent sur les ennemis les plus proches.',
+    ...GA_MEGAS_WORDS.fr.specials,
   },
 
 

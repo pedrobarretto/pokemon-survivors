@@ -9,6 +9,7 @@ import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
+import { GA_MEGAS_WORDS } from './gaMegas'
 import { ROCKET_WORDS } from './rocket/words'
 import { ULTRA_WORDS } from './ultra'
 import { LEGEND_PATHS_WORDS } from './legendPaths'
@@ -2389,6 +2390,7 @@ export const es: Messages = {
       glalie: 'movimientos de Normal y Hielo +30% y movimientos +25%. El especial pasa a ser Sheer Cold.',
       salamence: 'movimientos de Normal y Volador +30%, velocidad +12 y movimientos +25%. El especial pasa a ser Double-Edge.',
       ...ROCKET_FAMILY_WORDS.es.megas,
+      ...GA_MEGAS_WORDS.es.megas,
     },
   },
 
@@ -5848,6 +5850,7 @@ export const es: Messages = {
     phantomForce: 'Embestida en cadena de hasta 6 saltos; cada aterrizaje suelta un anillo de sombras.',
     sheerCold: 'Tres ondas de frío absoluto a tu alrededor que ralentizan mucho.',
     doubleEdge: 'Doce picados aéreos caen sobre los enemigos más cercanos.',
+    ...GA_MEGAS_WORDS.es.specials,
   },
 
 

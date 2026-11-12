@@ -669,6 +669,8 @@ shinies are our own palette swaps, credited in their rows. This file is generate
 | 778 | Mimikyu (Busted, shiny) | ShyStarryRain | — |
 | 978 | Tatsugiri | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
 | 978 | Tatsugiri (shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
+| 978 | Tatsugiri (Mega) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
+| 978 | Tatsugiri (Mega, shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
 | 977 | Dondozo | [Soulja](https://twitter.com/OlSoulja) | baronessfaron |
 | 977 | Dondozo (shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | [G〜](https://bsky.app/profile/justtr4sh.pmd.social) |
 | 77 | Ponyta | [CHUNSOFT](https://www.spike-chunsoft.com/), JFain | [CHUNSOFT](https://www.spike-chunsoft.com/), baronessfaron |
@@ -1953,6 +1955,8 @@ shinies are our own palette swaps, credited in their rows. This file is generate
 | 718 | Zygarde (10, shiny) | [Morei](https://bsky.app/profile/murpia57.bsky.social) | — |
 | 718 | Zygarde (Complete) | baronessfaron | — |
 | 718 | Zygarde (Complete, shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
+| 718 | Zygarde (Mega) | [pi3.14](https://twitter.com/Pi_y_ranitas), DeltaL | — |
+| 718 | Zygarde (Mega, shiny) | DeltaL | — |
 | 789 | Cosmog | Emboarger, Yari | XxWindpawxX, Emboarger, [G〜](https://bsky.app/profile/justtr4sh.pmd.social) |
 | 789 | Cosmog (shiny) | Emboarger | [Noo](https://artfight.net/~NooNoo_Skidoo) |
 | 790 | Cosmoem | baronessfaron | Emboarger |
