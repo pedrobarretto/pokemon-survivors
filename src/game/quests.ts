@@ -5,11 +5,13 @@ import { coopLocked } from '../data/coop'
 import { createDuel, updateDuel, type DuelState } from './duels'
 import { isRecord } from './parse'
 import { createRoam, updateRoam, type RoamState } from './roamers'
+import { ZERAORA } from '../data/mythicals'
+import { createStorm, updateStorm, type StormState } from './zeraora'
 import type { Game } from './types'
 
 /**
- * The legends met on the open map: the roaming lake trio (`roamers.ts`) and
- * the Swords of Justice's duels (`duels.ts`). What the save still has to
+ * The legends met on the open map: the roaming lake trio (`roamers.ts`), the
+ * Swords of Justice's duels (`duels.ts`) and Zeraora's storm (`zeraora.ts`). What the save still has to
  * catch comes in with the run (`WildStart`, part of `ReplayStart`), and the
  * run's seed decides whether one shows up, apart from the run's rng: a run
  * that brings none plays exactly as one before them did. Solo only, on the
@@ -21,8 +23,8 @@ export type WildStart = { lake: Partial<Record<LakeId, number>>; swords: readonl
 
 export const NO_WILD: WildStart = { lake: {}, swords: [] }
 
-/** A run's roamer and duel (null when its seed brought neither). */
-export type QuestState = { roam: RoamState | null; duel: DuelState | null }
+/** A run's roamer, duel and storm (each null when its seed didn't bring it). */
+export type QuestState = { roam: RoamState | null; duel: DuelState | null; storm: StormState | null }
 
 const SALT = 4421
 
@@ -45,19 +47,23 @@ export const rollSword = (seed: number, wild: WildStart): SwordId | null => {
   return pickBy(wild.swords, seedDraw(seed, 4)) ?? null
 }
 
+/** Whether this seed brings Zeraora's storm (`ZERAORA.odds`): it comes caught or not, a rematch for an owner. */
+export const rollStorm = (seed: number) => seedDraw(seed, 5) < ZERAORA.odds
+
 /** A run's quests from its seed and the save's free legends; none in co-op. */
 export const createQuests = (seed: number, wild: WildStart | undefined, coop: boolean): QuestState => {
-  if (coop || !wild) return { roam: null, duel: null }
+  if (coop || !wild) return { roam: null, duel: null, storm: null }
   const lake = rollRoamer(seed, wild)
   const sword = rollSword(seed, wild)
-  return { roam: lake ? createRoam(seed, lake, wild.lake[lake] ?? 1) : null, duel: sword ? createDuel(sword) : null }
+  return { roam: lake ? createRoam(seed, lake, wild.lake[lake] ?? 1) : null, duel: sword ? createDuel(sword) : null, storm: rollStorm(seed) ? createStorm() : null }
 }
 
-/** The run's roamer and duel, every tick on the open map (solo). */
+/** The run's roamer, duel and storm, every tick on the open map (solo). */
 export const updateQuests = (g: Game, dt: number) => {
   if (coopLocked(g, 'quests') || g.versus || g.training !== null) return
   updateRoam(g, dt)
   updateDuel(g, dt)
+  updateStorm(g, dt)
 }
 
 /** A replay's `wild`, or null when its shape is wrong: shares within 0..1 for known lake legends, known Swords once each. */

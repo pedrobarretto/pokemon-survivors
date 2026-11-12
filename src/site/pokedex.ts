@@ -24,7 +24,8 @@ import { MEOWTH_DEX } from '../game/mapEventRules'
 import { SPECIAL_COMPANION_IDS, SPECIAL_COMPANIONS, type SpecialCompanionId } from '../data/companions'
 import { TAILOR } from '../data/visitors'
 import { isUltraBeast, WORMHOLE } from '../data/ultraBeasts'
-import { EVENT_LEGENDS, eggLegend, giftLegend, LEGEND_IDS, LEGENDS, legendFestival, PATH_LEGENDS, type LegendId } from '../data/legends'
+import { EVENT_LEGENDS, eggLegend, giftLegend, LEGEND_IDS, LEGENDS, legendFestival, PATH_LEGENDS, type LegendId, type LegendUnlock } from '../data/legends'
+import { ZERAORA } from '../data/mythicals'
 import { COSMOG_DEX, PATH_FORMS, REGIGIGAS } from '../data/legendPaths'
 import { nationalDex } from '../data/regionalForms'
 
@@ -189,9 +190,15 @@ const cosmogEntries = (): DexEntry[] => [
 /** Who a family's mechanic calls in (Tatsugiri's Dondozo), as event Pokémon. */
 const summonEntries = (): DexEntry[] => [{ ...base(977, 'Dondozo', ['water']), role: 'event', source: { kind: 'summon' } }]
 
-/** The legends only ever given, never fought (Poipole, Manaphy from its egg): no wild entry stands for them. */
+/** Whether a legend only ever comes out of the Escavação (Diancie). */
+const dugUp = (id: LegendId) => {
+  const unlock: LegendUnlock = LEGENDS[id].unlock
+  return unlock.dig === true
+}
+
+/** The legends only ever given, never fought (Poipole, Manaphy from its egg, Diancie out of the Escavação): no wild entry stands for them. */
 const giftEntries = (): DexEntry[] =>
-  LEGEND_IDS.filter((id) => giftLegend(id) || eggLegend(id)).map((id) => {
+  LEGEND_IDS.filter((id) => giftLegend(id) || eggLegend(id) || dugUp(id)).map((id) => {
     const own = LEGENDS[id].line[0]
     return { ...base(own.dex, own.name, own.types), role: 'legendary', source: { kind: 'gift', id } }
   })
@@ -284,6 +291,10 @@ export type Appearance =
   | { kind: 'duel'; from: number; sword: SwordId }
   /** Brought back by Hoopa's Rings once captured (`game/rush.ts`), or (`last`) Hoopa itself, the last ring. */
   | { kind: 'rush'; last: boolean }
+  /** Zeraora out of the Power Plant's storm (`game/zeraora.ts`): some runs bring it, from `from`, when it rains there. */
+  | { kind: 'storm'; from: number }
+  /** Ogerpon's own Tera Raid (`OGERPON`): some runs' first den, from `from`, in the mask of the run's Tera type. */
+  | { kind: 'maskRaid'; from: number }
 
 /**
  * When an enemy can show up: the spawn-pool windows of the stages with a slot
@@ -324,7 +335,10 @@ export const appearances = (id: EnemyId): Appearance[] => {
         ? [{ kind: 'rift', from: RIFT.slots[0] }]
         : []
   const reaper: Appearance[] = id === REAPER ? [{ kind: 'reaper', at: ENDLESS.reaperAt }] : []
-  const raid: Appearance[] = id === 'terapagos' ? [{ kind: 'raid', from: RAID.slots[1], stellar: true }] : RAID_BOSSES.some((b) => b === id) ? [{ kind: 'raid', from: RAID.slots[0], stellar: false }] : []
+  const raid: Appearance[] =
+    id === 'terapagos' ? [{ kind: 'raid', from: RAID.slots[1], stellar: true }]
+      : id === 'ogerpon' ? [{ kind: 'maskRaid', from: RAID.slots[0] }]
+        : RAID_BOSSES.some((b) => b === id) ? [{ kind: 'raid', from: RAID.slots[0], stellar: false }] : []
   const temple: Appearance[] = id === 'regigigas' ? [{ kind: 'temple', from: REGIGIGAS.at[0], until: REGIGIGAS.at[1] }] : []
   // A place's dwellers come out once the run's stage has their tier (never before the first entrance; a hidden zone's, never before it can open).
   const placed = PLACE_IDS.flatMap((place): Appearance[] => {
@@ -349,6 +363,7 @@ export const appearances = (id: EnemyId): Appearance[] => {
     ...(isLakeLegend(id) ? [{ kind: 'roam' as const, from: ROAM.first[0] }] : []),
     ...(isSword(id) ? [{ kind: 'duel' as const, from: DUEL.from, sword: id }] : []),
     ...(id === 'hoopa' || RUSH_ORDER.some((l) => l === id) ? [{ kind: 'rush' as const, last: id === 'hoopa' }] : []),
+    ...(id === 'zeraora' ? [{ kind: 'storm' as const, from: ZERAORA.from }] : []),
   ]
   return [...windows, ...events, ...rift, ...raid, ...reaper, ...temple, ...placed, ...summoned, ...retinue, ...quest]
 }

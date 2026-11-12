@@ -64,7 +64,7 @@ describe('appearances', () => {
     for (const id of ids) {
       const found = appearances(id)
       expect(found.length).toBeGreaterThan(0)
-      if ('boss' in ENEMIES[id]) expect(found.some((a) => a.kind === 'boss' || a.kind === 'trio' || a.kind === 'rift' || a.kind === 'eventRift' || a.kind === 'wormhole' || a.kind === 'raid' || a.kind === 'reaper' || a.kind === 'temple' || (a.kind === 'place' && a.boss) || a.kind === 'night' || a.kind === 'roam' || a.kind === 'duel' || a.kind === 'rush')).toBe(true)
+      if ('boss' in ENEMIES[id]) expect(found.some((a) => a.kind === 'boss' || a.kind === 'trio' || a.kind === 'rift' || a.kind === 'eventRift' || a.kind === 'wormhole' || a.kind === 'raid' || a.kind === 'reaper' || a.kind === 'temple' || (a.kind === 'place' && a.boss) || a.kind === 'night' || a.kind === 'roam' || a.kind === 'duel' || a.kind === 'rush' || a.kind === 'storm' || a.kind === 'maskRaid')).toBe(true)
     }
   })
 })

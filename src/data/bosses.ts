@@ -4,6 +4,7 @@ import { WAVE_LEGEND_PHASES } from './legendBosses'
 import { PERSIAN_PATTERNS, SHADOW_MEWTWO_PHASES } from './rocketHideout'
 import { SWORD_PHASES } from './quests'
 import { RUSH_PHASES } from './rush'
+import { OGERPON_RAID_PATTERNS } from './mythicals'
 import type { EnemyId } from './enemies'
 
 /** How an enemy hazard looks (and sounds when it lands). */
@@ -199,6 +200,8 @@ export type BossPhase = {
   ultimate?: BossUltimate
   steer?: BossSteer
   form?: string
+  /** The form it wears instead in a Nightmare fight (`phaseForm`): Dialga's last phase turns Primal. */
+  nightmareForm?: string
   shift?: number
   /** The boss holds on at the phase's end (and can't fall in the last one) until its ultimate has played once: every phase shows its signature, however fast it's hit. */
   hold?: true
@@ -521,4 +524,6 @@ export const BOSS_PATTERNS: Partial<Record<EnemyId, readonly BossPattern[]>> = {
   raidDragapult: raidKit('dragon', 'shadow'),
   raidTinkaton: raidKit('steel', 'mist'),
   terapagos: raidKit('judgment', 'rock', 'beam'),
+  // Ogerpon's own raid (`data/mythicals.ts`): the crystal storm comes in its mask's type.
+  ogerpon: OGERPON_RAID_PATTERNS,
 }

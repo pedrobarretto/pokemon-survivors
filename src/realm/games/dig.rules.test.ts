@@ -17,6 +17,14 @@ describe('wall generation', () => {
     expect(new Set(walls).size).toBeGreaterThan(25)
   })
 
+  it("buries Diancie's Pink Diamond only when the API says so, and it always fits, a guaranteed fossil beside it", () => {
+    for (let s = 1; s < 200; s++) {
+      expect(wall(s).treasures.some((t) => t.id === 'pinkDiamond')).toBe(false)
+      expect(wall(s, { diamond: true }).treasures.map((t) => t.id)).toContain('pinkDiamond')
+      expect(wall(s, { diamond: true, due: true, lacking: [...DIG_FOSSIL_FAMILIES] }).treasures.map((t) => t.id)).toContain('pinkDiamond')
+    }
+  })
+
   it('keeps the rock pattern varied', () => {
     expect(new Set(Array.from({ length: 200 }, (_, i) => wall(i + 1).pattern)).size).toBeGreaterThanOrEqual(5)
   })

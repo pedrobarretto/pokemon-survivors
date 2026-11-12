@@ -5,6 +5,8 @@ import { RIFT } from '../data/rifts'
 import { REVEAL_AT } from '../game/domainRules'
 import type { Game } from '../game/types'
 import { riftDomain } from '../game/rift'
+import { roomOf } from '../game/room'
+import { stormUnderWay } from '../game/zeraora'
 import { PRISM } from './rift'
 
 type Ctx = CanvasRenderingContext2D
@@ -583,7 +585,7 @@ const TINTS: Record<LegendSky, string> = {
 /** The skies painted so far; the others get their tint until theirs are written. */
 const PAINTERS: Partial<Record<LegendSky, Painter>> = { downpour, harshSun, gale, storm, embers, timeWarp, mist, meteors, newMoon, ultraSpace, foldedSpace }
 
-/** The sky in play: a domain legendary's omen or open portal on the map, or its domain once it has shown itself. */
+/** The sky in play: a domain legendary's omen or open portal on the map, its domain once it has shown itself, or Zeraora's storm. */
 export const skyNow = (g: Game): LegendSky | null => {
   const arena = g.rift.arena
   const d = arena?.domain
@@ -592,6 +594,8 @@ export const skyNow = (g: Game): LegendSky | null => {
     return shown ? (domainOf(d.legend)?.omen.sky ?? null) : null
   }
   if (arena) return null
+  // Zeraora's storm darkens the map's sky while it gathers and while it fights (`game/zeraora.ts`).
+  if (!roomOf(g) && stormUnderWay(g.quests.storm)) return 'storm'
   const legend = g.rift.omen?.legend ?? g.rift.portal?.legend
   return legend ? (riftDomain(g, legend)?.omen.sky ?? null) : null
 }

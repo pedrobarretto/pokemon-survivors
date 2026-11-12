@@ -1,4 +1,4 @@
-import { DIG_FOSSIL_FAMILIES, DIG_HALVES, DIG_TREASURES, GALAR_PAIRS, type DigGroup, type DigTreasureId, type FossilFamily, type GalarHalf } from '../../data/digTreasures'
+import { DIG_FOSSIL_FAMILIES, DIG_HALVES, DIG_TREASURES, GALAR_PAIRS, type DigGroup, type DigLegend, type DigTreasureId, type FossilFamily, type GalarHalf } from '../../data/digTreasures'
 import { HATCHLINGS, PLAYABLE, type PlayableId } from '../../data/hatchlings'
 import { BAG_ITEMS, EVO_ITEMS } from '../../data/shop'
 import { playCry, playSfx } from '../../engine/audio'
@@ -34,8 +34,8 @@ const SIZES = { tall: { w: 176, h: 256 }, wide: { w: 300, h: 160 } } as const
 /** Seconds each beat of the wall's end lasts. */
 const TIMES = { collapse: 2.1, stopped: 0.9, reveal: 1.6, meltan: 3.2, fossilGlow: 1.3, fossil: 3.8 } as const
 
-/** Meltan (the legend paths' Mystery Box): its dex, and when in the box's reveal it climbs out. */
-const MELTAN_DEX = 808
+/** The dug-up legends (Meltan out of its Mystery Box, Diancie out of its pink diamond): their dex, and when in the treasure's reveal they climb out. */
+const LEGEND_DEX = { meltan: 808, diancie: 719 } as const satisfies Record<DigLegend, number>
 const MELTAN_PEEK = 0.45
 
 type Rect = { x: number; y: number; w: number; h: number }
@@ -680,7 +680,7 @@ const start = (ctx: SoloCtx): GameRun => {
       if (pair) return m().halfRestored(treasureName(DIG_HALVES[pair.top === prize.half ? pair.bottom : pair.top]))
       return m().halfStored(halfNeeds(prize.half))
     }
-    return prize.kind === 'furniture' ? m().furnitureNote : prize.kind === 'bag' ? m().bagNote : prize.kind === 'stone' ? m().stoneNote : prize.kind === 'legend' ? t().paths.meltan.found : m().fossilNote
+    return prize.kind === 'furniture' ? m().furnitureNote : prize.kind === 'bag' ? m().bagNote : prize.kind === 'stone' ? m().stoneNote : prize.kind === 'legend' ? (prize.legend === 'meltan' ? t().paths.meltan.found : t().mythicals.dig.found) : m().fossilNote
   }
 
   const announce = () => {
@@ -697,15 +697,15 @@ const start = (ctx: SoloCtx): GameRun => {
     )
     playSfx(r.prize.kind === 'coins' ? 'coin' : r.prize.kind === 'fossil' || r.restored !== undefined ? 'shiny' : r.prize.kind === 'legend' && !r.repeat ? 'legendary' : def.group === 'stone' ? 'evolve' : def.group === 'furniture' ? 'unlock' : 'item')
     if (r.prize.kind === 'legend' && !r.repeat) {
-      playCry(cryUrl(MELTAN_DEX), 0.6)
-      void loadSpecies(MELTAN_DEX).catch(() => {})
+      playCry(cryUrl(LEGEND_DEX[r.prize.legend]), 0.6)
+      void loadSpecies(LEGEND_DEX[r.prize.legend]).catch(() => {})
     }
   }
 
-  /** Whether the prize on show is Meltan's Mystery Box opened for the first time: Meltan climbs out of it, and the reveal holds longer. */
-  const meltanOut = () => {
+  /** The legend climbing out of the prize on show (Meltan's Mystery Box, Diancie's pink diamond) the first time it's dug up, so the reveal holds longer; else null. */
+  const legendOut = (): DigLegend | null => {
     const r = end?.kept[revealAt]
-    return r !== undefined && r.prize.kind === 'legend' && !r.repeat
+    return r !== undefined && r.prize.kind === 'legend' && !r.repeat ? r.prize.legend : null
   }
 
   const nextReveal = () => {
@@ -832,7 +832,7 @@ const start = (ctx: SoloCtx): GameRun => {
         break
       }
       case 'reveal':
-        if ((input.pointer.pressed && phaseT > 0.35) || input.pressed('Space') || input.pressed('Enter') || phaseT >= (meltanOut() ? TIMES.meltan : TIMES.reveal)) nextReveal()
+        if ((input.pointer.pressed && phaseT > 0.35) || input.pressed('Space') || input.pressed('Enter') || phaseT >= (legendOut() ? TIMES.meltan : TIMES.reveal)) nextReveal()
         break
       case 'fossil':
         if (phaseT >= TIMES.fossilGlow && phaseT - dt < TIMES.fossilGlow && fossilOn) {
@@ -1063,8 +1063,9 @@ const start = (ctx: SoloCtx): GameRun => {
       const w = img.width * k0
       const hh = img.height * k0
       g.imageSmoothingEnabled = false
-      // Meltan climbs out from behind the box's lid, in whole-pixel steps, and stays perched on it.
-      const meltan = meltanOut() ? sprites(MELTAN_DEX) : null
+      // Meltan climbs out from behind the box's lid (Diancie rises out of its diamond), in whole-pixel steps, and stays perched on it.
+      const out = legendOut()
+      const meltan = out ? sprites(LEGEND_DEX[out]) : null
       if (meltan && meltan.variant !== undefined && phaseT > MELTAN_PEEK) {
         const up = Math.min(1, (phaseT - MELTAN_PEEK) / 0.3)
         const fit = fitSprites(meltan, 40)

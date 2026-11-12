@@ -34,6 +34,9 @@ import { rushLineup, startRush } from './game/rush'
 import { recordRush } from './game/questSave'
 import { domainLines } from './ui/riftTitle'
 import { isWaveLegend, LEGEND_THEME } from './data/legendBosses'
+import { maskOf, OGERPON_MASKS } from './data/mythicals'
+import { phaseForm, phasesOf } from './game/bossFight'
+import { playsOgerpon } from './game/ogerpon'
 import { ENEMIES, type EnemyDef, type EnemyId } from './data/enemies'
 import { ITEMS } from './data/items'
 import type { AchievementId } from './data/achievements'
@@ -2397,6 +2400,16 @@ const handleEvent = (r: Run, e: GameEvent) => {
       return showQuest(e)
     case 'duel':
       return showQuest(e)
+    /* The mythicals (`data/mythicals.ts`): Zeraora's storm gathering or gone, Ogerpon's Embody Aspect. */
+    case 'storm':
+      if (e.moment === 'gathering') {
+        playSfx('legendary')
+        flashScreen(ui)
+        return news(rich(t().mythicals.storm.gathering), 3600)
+      }
+      return aside(rich(t().mythicals.storm.fled), 2800)
+    case 'embodyAspect':
+      return aside(rich(t().mythicals.embody(OGERPON_MASKS[e.mask].name)), 2200, 'tera')
     case 'rush':
       if (e.moment === 'down') return
       playSfx(e.legend === 'hoopa' ? 'legendary' : 'boss')
@@ -2604,7 +2617,9 @@ const handleEvent = (r: Run, e: GameEvent) => {
       const def = ENEMIES[e.enemy]
       playSfx('quake')
       playCry(cryUrl(def.dex), 0.7)
-      const line = isRiftLegend(e.enemy) ? domainLines(e.enemy)?.phases[e.phase - 1] : isWaveLegend(e.enemy) ? t().legends.phases[e.enemy][e.phase - 1] : undefined
+      // Dialga's last phase turns Primal on Nightmare (`nightmareForm`): its own line.
+      const primal = e.enemy === 'dialga' && g.difficulty === 'nightmare' && phaseForm(phasesOf('dialga')?.[e.phase], 'nightmare') === 'primal'
+      const line = primal ? t().mythicals.primal : isRiftLegend(e.enemy) ? domainLines(e.enemy)?.phases[e.phase - 1] : isWaveLegend(e.enemy) ? t().legends.phases[e.enemy][e.phase - 1] : undefined
       return line ? news(rich(line), 3600) : undefined
     }
     case 'bossUltimate':
@@ -2670,6 +2685,8 @@ const handleEvent = (r: Run, e: GameEvent) => {
       return news(rich(t().tera.shardsChoice), 4200, 'tera')
     case 'teraShard':
       playSfx('unlock')
+      // Ogerpon's shard is a mask (`game/ogerpon.ts`).
+      if (playsOgerpon(localPlayer(g))) return news(rich(t().mythicals.mask(OGERPON_MASKS[maskOf(e.tera)].name)), 3200, 'tera')
       return news(shardToast(e.tera, e.from), 3600, 'tera')
     case 'teraReady':
       playSfx('shiny')
@@ -2693,6 +2710,11 @@ const handleEvent = (r: Run, e: GameEvent) => {
       return aside(t().tera.stellarPulse, 1600, 'tera')
     case 'raidOpen':
       playSfx('shiny')
+      // Ogerpon's own den (`ogerponRaid`) says whose it is and in which mask.
+      if (e.raid.boss === 'ogerpon') {
+        playCry(cryUrl(ENEMIES.ogerpon.dex), 0.6)
+        return news(rich(t().mythicals.raid(OGERPON_MASKS[maskOf(e.raid.tera)].name)), 4600, 'raid')
+      }
       return news(denToast(e.raid, e.day), 4200, 'raid')
     case 'raidClosed':
       return aside(t().raid.closed, 2000, 'raid')
@@ -5483,14 +5505,15 @@ if (import.meta.env.DEV) {
       },
       /**
        * The Escavação on fakes (`realm/digApi.ts`): `ps.dig()` opens it with the faked API. `ps.dig('golden')` forces the next wall golden,
-       * `ps.dig('fossil', 'cranidos')` a fossil of that family (a Galar one's half the lab lacks: `ps.dig('fossil', 'dracozolt')`), `ps.dig('box')` Meltan's Mystery Box in it, `ps.dig('dry', 10)` sets the guarantee's streak, `ps.dig('used', 3)` the walls used
+       * `ps.dig('fossil', 'cranidos')` a fossil of that family (a Galar one's half the lab lacks: `ps.dig('fossil', 'dracozolt')`), `ps.dig('box')` Meltan's Mystery Box in it, `ps.dig('diamond')` Diancie's pink diamond, `ps.dig('dry', 10)` sets the guarantee's streak, `ps.dig('used', 3)` the walls used
        * today, `ps.dig('lacking', [])` the fossils lacked (all of them by default), `ps.dig('held', ['bird'])` the Galar halves waiting in the lab (none by default), `ps.dig('crack')` the open wall one hit short of collapse, `ps.dig('peek')` where the open wall hides things and the layers left, `ps.dig('partner', 'ralts')` a partner's powers for the next wall, `ps.dig('soft')` a next wall one layer deep with far more crack, to stage a whole dig.
        */
-      dig: async (what?: 'golden' | 'fossil' | 'box' | 'dry' | 'used' | 'lacking' | 'held' | 'crack' | 'peek' | 'partner' | 'soft', arg?: unknown) => {
+      dig: async (what?: 'golden' | 'fossil' | 'box' | 'diamond' | 'dry' | 'used' | 'lacking' | 'held' | 'crack' | 'peek' | 'partner' | 'soft', arg?: unknown) => {
         const { stageDig, crackFakeWall, peekFakeWall } = await import('./realm/digApi')
         const { DIG_FOSSIL_FAMILIES, GALAR_HALVES } = await import('./data/digTreasures')
         if (what === 'golden') return stageDig({ golden: true })
         if (what === 'box') return stageDig({ box: true })
+        if (what === 'diamond') return stageDig({ diamond: true })
         if (what === 'fossil') return stageDig({ fossil: arg === null ? null : DIG_FOSSIL_FAMILIES.find((f) => f === arg) ?? DIG_FOSSIL_FAMILIES[0] })
         if (what === 'dry') return stageDig({ dry: Number(arg ?? 10) })
         if (what === 'used') return stageDig({ used: Number(arg ?? 0) })

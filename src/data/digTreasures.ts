@@ -51,13 +51,19 @@ export type DigPrize =
   | { kind: 'furniture'; piece: DigPiece }
   | { kind: 'fossil'; family: FossilFamily }
   | { kind: 'half'; half: GalarHalf }
-  | { kind: 'legend'; legend: 'meltan' }
+  | { kind: 'legend'; legend: DigLegend }
+
+/** The legends a treasure brings: Meltan (its Mystery Box) and Diancie (its pink diamond, `DIANCIE` in `data/mythicals.ts`). */
+export type DigLegend = 'meltan' | 'diancie'
 
 /** `legend`: never in the week's pool, only put in on purpose for an account that lacks it (`DigWallCtx.box`). */
 export type DigGroup = 'coins' | 'bag' | 'stone' | 'furniture' | 'fossil' | 'legend'
 
 /** What the Mystery Box pays once its Meltan is already the account's. */
 export const DIG_BOX_REPEAT = 1500
+
+/** What Diancie's pink diamond pays once Diancie is already the account's. */
+export const DIG_DIAMOND_REPEAT = 3000
 
 /** What a repeat fossil pays: its family's Fossil Egg refund. */
 export const DIG_FOSSIL_REPEAT = 800
@@ -123,6 +129,8 @@ export const DIG_TREASURES = {
   fossilizedDino: half('fossilizedDino', 'Fossilized Dino', 'dino'),
   // Meltan's (the legend paths, `data/legendPaths.ts`): the API buries it for an account without Meltan.
   mysteryBox: { group: 'legend', art: 'items/mysteryBox', scale: 3, worth: DIG_BOX_REPEAT, weight: 0, prize: { kind: 'legend', legend: 'meltan' }, name: 'Mystery Box' },
+  // Diancie's (`data/mythicals.ts`), the rarest of all: the API buries it for an account without Diancie.
+  pinkDiamond: { group: 'legend', art: 'items/pinkDiamond', scale: 3, worth: DIG_DIAMOND_REPEAT, weight: 0, prize: { kind: 'legend', legend: 'diancie' }, name: 'Pink Diamond' },
 } as const satisfies Record<string, DigDef>
 
 export type DigTreasureId = keyof typeof DIG_TREASURES

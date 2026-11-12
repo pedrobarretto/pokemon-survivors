@@ -41,7 +41,7 @@ export const devTera = async (g: Game | undefined, press: () => void, cmd?: stri
       return dropBossShards(g, p.x + 40, p.y, POKE_TYPES[Math.floor(Math.random() * POKE_TYPES.length)]!)
     case 'raid':
     case 'enter': {
-      const boss = (RAID_BOSSES as readonly string[]).includes(String(a)) || a === 'terapagos' ? (a as RaidBoss) : null
+      const boss = (RAID_BOSSES as readonly string[]).includes(String(a)) || a === 'terapagos' || a === 'ogerpon' ? (a as RaidBoss) : null
       const day = raidOfDay(brasiliaDay(new Date()))
       const raid = boss ? { boss, tera: isTeraType(b) ? (b as TeraType) : day.tera, stars: (typeof c === 'number' && c >= 3 && c <= 7 ? c : day.stars) as RaidStars } : day
       g.raid.den = null

@@ -198,6 +198,10 @@ export const appearance = (a: Appearance, m: SiteMessages) => {
       return m.pokedex.duel[a.sword](clock(a.from))
     case 'rush':
       return a.last ? m.pokedex.rushLast : m.pokedex.rush
+    case 'storm':
+      return m.pokedex.storm(clock(a.from))
+    case 'maskRaid':
+      return m.pokedex.maskRaid(clock(a.from))
   }
 }
 

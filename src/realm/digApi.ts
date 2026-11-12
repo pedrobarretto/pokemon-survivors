@@ -27,7 +27,7 @@ const fake = {
   open: null as FakeWall | null,
   plays: 0,
   /** What the next wall is forced to be (`ps.dig`). */
-  force: {} as { golden?: boolean; fossil?: FossilFamily; box?: boolean },
+  force: {} as { golden?: boolean; fossil?: FossilFamily; box?: boolean; diamond?: boolean },
   /** Dev: the next wall is one layer deep and holds far more crack, to stage a whole dig (`ps.dig('soft')`). */
   soft: false,
   /** Dev: whose powers the next wall gets, whatever the partner is (`ps.dig('partner', id)`). */
@@ -37,9 +37,10 @@ const fake = {
 const thisWeek = () => weekStart(brasiliaDay(new Date()))
 
 /** Dev (`ps.dig`): forces the next faked wall, the walls used today, the dry streak, the fossils lacked and the halves in the lab. */
-export const stageDig = (patch: { golden?: boolean; fossil?: FossilFamily | null; box?: boolean; used?: number; dry?: number; lacking?: readonly FossilFamily[]; held?: readonly GalarHalf[]; partner?: string | null; soft?: boolean }) => {
+export const stageDig = (patch: { golden?: boolean; fossil?: FossilFamily | null; box?: boolean; diamond?: boolean; used?: number; dry?: number; lacking?: readonly FossilFamily[]; held?: readonly GalarHalf[]; partner?: string | null; soft?: boolean }) => {
   if (patch.golden !== undefined) fake.force.golden = patch.golden
   if (patch.box !== undefined) fake.force.box = patch.box
+  if (patch.diamond !== undefined) fake.force.diamond = patch.diamond
   if (patch.fossil !== undefined) {
     if (patch.fossil === null) delete fake.force.fossil
     else fake.force.fossil = patch.fossil
@@ -141,8 +142,8 @@ export const startWall = async (used: number, partner: string, resuming: boolean
       fake.plays += 1
       const week = thisWeek()
       const powers = fakePartnerPowers(fake.partner ?? partner)
-      const { box, ...force } = fake.force
-      const built = buildWall(1000 + fake.plays * 37 + (Date.now() & 0xffff), { week, powers, lacking: fake.lacking, held: fake.held, due: fake.dry >= DIG.fossilGuarantee && fake.lacking.length > 0, box: box === true, force: Object.keys(force).length > 0 ? force : undefined })
+      const { box, diamond, ...force } = fake.force
+      const built = buildWall(1000 + fake.plays * 37 + (Date.now() & 0xffff), { week, powers, lacking: fake.lacking, held: fake.held, due: fake.dry >= DIG.fossilGuarantee && fake.lacking.length > 0, box: box === true, diamond: diamond === true, force: Object.keys(force).length > 0 ? force : undefined })
       const wall = fake.soft ? { ...built, depths: built.depths.map(() => 1), cap: built.cap + 200 } : built
       fake.soft = false
       fake.force = {}

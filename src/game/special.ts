@@ -134,7 +134,7 @@ export const SPECIALS = {
   diamondStorm: {
     type: 'rock', kind: 'rain', cooldown: 10, charge: 0.4,
     base: { name: 'Rock Slide', damage: 32, area: 1, count: 10 },
-    final: { name: 'Diamond Storm', damage: 52, area: 1.25, count: 16 },
+    final: { name: 'Stone Edge', damage: 52, area: 1.25, count: 16 },
   },
   blizzard: {
     type: 'ice', kind: 'rain', cooldown: 10, charge: 0.4,

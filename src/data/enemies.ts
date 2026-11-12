@@ -176,6 +176,10 @@ export const ENEMIES = {
   raidTinkaton: { dex: 959, name: 'Tinkaton', types: ['fairy', 'steel'], ...RAID_GIANT },
   // The 7★ Stellar raid's giant, captured by beating it once (`LEGENDS.terapagos`).
   terapagos: { dex: 1024, name: 'Terapagos', types: ['normal'], ...RAID_GIANT, hp: 16000, damage: 30, legendary: true },
+  // The Grande Atualização's mythicals (`data/mythicals.ts`): Ogerpon's own Tera Raid (in the mask of the run's Tera type),
+  // and Zeraora, out of the Power Plant's storm. Each captured with one win.
+  ogerpon: { dex: 1017, name: 'Ogerpon', types: ['grass'], ...RAID_GIANT, hp: 14000, damage: 26, legendary: true },
+  zeraora: { dex: 807, name: 'Zeraora', types: ['electric'], hp: 4000, speed: 64, damage: 28, xp: 200, mass: 30, boss: true, legendary: true },
   // The endless mode's reaper (`game/endless.ts`): it hunts the player from 20:00.
   arceus: { dex: 493, name: 'Arceus', types: ['normal'], hp: 300000, speed: 60, damage: 90, xp: 0, mass: 999, boss: true, legendary: true, scale: 2 },
 } as const satisfies Record<string, EnemyDef>

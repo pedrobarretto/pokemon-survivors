@@ -69,6 +69,8 @@ import type { PathLegendVisual } from './pathLegendMoves'
 import type { PathNotice, PathRun } from './pathRun'
 import type { LegendaryVisual3 } from './legendaryMoves3'
 import type { LegendaryVisual4 } from './legendaryMoves4'
+import type { LegendaryVisual5 } from './legendaryMoves5'
+import type { OgerponMask } from '../data/mythicals'
 import type { QuestState } from './quests'
 import type { RushState } from './rush'
 import type { RoamMoment } from './roamers'
@@ -443,6 +445,8 @@ export type Visual =
   | LegendaryVisual3
   /** Legendary moves, fourth batch (`legendaryMoves4.ts`), drawn by `render/legendaryFx4.ts`. */
   | LegendaryVisual4
+  /** Legendary moves, fifth batch (`legendaryMoves5.ts`, the mythicals'), drawn by `render/legendaryFx5.ts`. */
+  | LegendaryVisual5
   /** Temporada 1's mechanic families, drawn by `render/seasonOneKitFx.ts`. */
   | 'kitCross' | 'kitClaw' | 'dragonPulse' | 'slime' | 'waterPulse' | 'miceBite' | 'auraWheel' | 'zenOrb' | 'commandSlam' | 'orderUp'
   /** The second batch's families (`gaKitBMoves.ts`, `gaKitBSystem.ts`), drawn by `render/gaKitBFx.ts`; `kitBHit` is a kit's unseen hitbox. */
@@ -783,6 +787,10 @@ export type GameEvent =
    */
   | { kind: 'teraShards' }
   | { kind: 'teraShard'; tera: TeraType; from: TeraType | null }
+  /** Ogerpon Terastallized in a mask: its Embody Aspect (`game/ogerpon.ts`). */
+  | { kind: 'embodyAspect'; mask: OgerponMask }
+  /** Zeraora's storm on the open map (`game/zeraora.ts`): it gathers, or it ends with Zeraora gone (`fled`: chased off or out of time). */
+  | { kind: 'storm'; moment: 'gathering' | 'fled' }
   | { kind: 'teraReady' }
   | { kind: 'teraStart'; tera: TeraType }
   | { kind: 'tera'; tera: TeraType }

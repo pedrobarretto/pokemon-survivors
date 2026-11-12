@@ -3,6 +3,7 @@ import type { BossPattern, BossPhase, HazardVisual } from './bosses'
 import type { EnemyId } from './enemies'
 import type { ThemeId } from './music'
 import { pin } from './domains/kit'
+import { ZERAORA_PHASES } from './mythicals'
 
 /**
  * The legendaries that fight on the map instead of in a rift: the trio drawn
@@ -24,6 +25,8 @@ import { pin } from './domains/kit'
 /** The legendaries this module gives phases (rift legendaries have theirs in `data/domains`). */
 export const WAVE_LEGENDS = [
   'articuno', 'zapdos', 'moltres', 'raikou', 'entei', 'suicune', 'regirock', 'regice', 'registeel', 'mew', 'celebi', 'jirachi', 'mewtwo', 'arceus', 'regigigas',
+  // Zeraora, out of the Power Plant's storm (`game/zeraora.ts`; its phases in `data/mythicals.ts`).
+  'zeraora',
 ] as const satisfies readonly EnemyId[]
 export type WaveLegend = (typeof WAVE_LEGENDS)[number]
 
@@ -60,6 +63,7 @@ export const ARRIVAL = {
   mew: 'materialize', celebi: 'materialize', jirachi: 'descend',
   mewtwo: 'materialize', arceus: 'descend',
   regigigas: 'rise',
+  zeraora: 'bound',
 } as const satisfies Record<WaveLegend, Arrival>
 
 /** The theme each one plays while it's the boss on the HP bar (`data/music.ts`): one per trio, Mewtwo's finale (the mythicals come with it), and Arceus's. */
@@ -70,6 +74,7 @@ export const LEGEND_THEME = {
   mew: 'mewtwo', celebi: 'mewtwo', jirachi: 'mewtwo', mewtwo: 'mewtwo',
   arceus: 'arceus',
   regigigas: 'regis',
+  zeraora: 'beasts',
 } as const satisfies Record<WaveLegend, ThemeId>
 
 /**
@@ -1017,4 +1022,5 @@ const regigigas: readonly BossPhase[] = [
 /** The phases of every wave legendary, for `BOSS_PHASES`. */
 export const WAVE_LEGEND_PHASES = {
   articuno, zapdos, moltres, raikou, entei, suicune, regirock, regice, registeel, mew, celebi, jirachi, mewtwo, arceus, regigigas,
+  zeraora: ZERAORA_PHASES,
 } as const satisfies Record<WaveLegend, readonly BossPhase[]>

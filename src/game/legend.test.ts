@@ -3,7 +3,7 @@ import { createRng } from '../engine/rng'
 import { ABILITIES, FAMILY_ABILITIES, type AbilityEffect } from '../data/abilities'
 import { EVOLUTIONS } from '../data/evolutions'
 import { PLAYABLE, PLAYABLE_IDS } from '../data/hatchlings'
-import { AWAKEN_AT, EVENT_LEGENDS, FESTIVAL_LEGENDS, TERA_LEGENDS, ULTRA_LEGENDS, LEGEND_IDS, LEGENDS, PATH_LEGENDS, QUEST_LEGENDS, SAFARI_LEGENDS, REGULAR_LEGENDS, type LegendDef } from '../data/legends'
+import { AWAKEN_AT, EVENT_LEGENDS, FESTIVAL_LEGENDS, TERA_LEGENDS, ULTRA_LEGENDS, LEGEND_IDS, LEGENDS, MYTHICAL_LEGENDS, PATH_LEGENDS, QUEST_LEGENDS, SAFARI_LEGENDS, REGULAR_LEGENDS, type LegendDef } from '../data/legends'
 import { ENEMIES, type EnemyDef } from '../data/enemies'
 import { EVENTS, MYTHICALS, STAGES, TRIOS } from '../data/waves'
 import { DIFFICULTIES, DIFFICULTY_IDS } from './difficulty'
@@ -31,10 +31,10 @@ const awakenTo = (g: Game, n: number) => {
 }
 
 describe('legends data', () => {
-  it('has the 23 regular ones, the event, the festival, the Tera, the Ultra Beasts, the path, the quest and the Safari ones, out of the regular cast the Desafio do dia draws from', () => {
+  it('has the 23 regular ones, the event, the festival, the Tera, the Ultra Beasts, the path, the quest and the Safari ones and the mythicals, out of the regular cast the Desafio do dia draws from', () => {
     const regular: readonly string[] = PLAYABLE_IDS
     expect(REGULAR_LEGENDS).toHaveLength(23)
-    expect(LEGEND_IDS).toEqual([...REGULAR_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...TERA_LEGENDS, ...ULTRA_LEGENDS, ...PATH_LEGENDS, ...QUEST_LEGENDS, ...SAFARI_LEGENDS])
+    expect(LEGEND_IDS).toEqual([...REGULAR_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...TERA_LEGENDS, ...ULTRA_LEGENDS, ...PATH_LEGENDS, ...QUEST_LEGENDS, ...SAFARI_LEGENDS, ...MYTHICAL_LEGENDS])
     for (const id of LEGEND_IDS) {
       expect(id in PLAYABLE).toBe(true)
       expect(regular.includes(id)).toBe(false)

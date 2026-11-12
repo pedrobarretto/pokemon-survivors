@@ -3,7 +3,8 @@ import { ENEMIES, type EnemyId } from '../data/enemies'
 import { GRAVEYARD, hiddenCast } from '../data/places'
 import { isSummoner, SUMMONS } from '../data/traits'
 import { EVENTS, STAGES, stageIndexAt, stageStart } from '../data/waves'
-import { phasesOf } from '../game/bossFight'
+import { phaseForm, phasesOf } from '../game/bossFight'
+import { maskOf, OGERPON_MASK_IDS, OGERPON_MASKS } from '../data/mythicals'
 import { ENDLESS, REAPER } from '../game/endless'
 import { playerDex } from '../game/game'
 import { formAfter } from '../game/legend'
@@ -117,6 +118,8 @@ const SHEDINJA = 292
 /** Every stance's name: the ones that are a form of the species (Aegislash's Blade, Deoxys's formes) load, the rest (Shield, Normal) are no form. */
 const STANCE_NAMES = Object.keys(STANCES)
 
+const OGERPON_DEX = ENEMIES.ogerpon.dex
+
 /**
  * The forms each player may wear soon: their Mega once the stone is in hand at
  * the final stage, a legend's awakened form from its first awakening on, and
@@ -132,7 +135,9 @@ export const playerForms = (g: Game): Variant[] =>
     // Terapagos's Stellar Form wears its Terastal Form's sheets (`sheetForm`).
     const s = p.legend
     const looks = s && (s.awakened >= 1 || s.forms.length > 0) ? [formAfter(s.id, s.awakened, s.forms), formAfter(s.id, s.awakened + 1, s.forms) ?? formAfter(s.id, 2, s.forms)] : []
-    const legend = looks.flatMap((l) => (l ? [{ dex: l.dex, shiny: p.shiny, ...(l.key && { form: sheetForm(l.key) }) }] : []))
+    // Ogerpon swaps masks (and Terastallizes) at any time: every mask's sheets, all along.
+    const masks = s?.id === 'ogerpon' ? OGERPON_MASK_IDS.flatMap((m) => [OGERPON_MASKS[m].form, OGERPON_MASKS[m].tera]).flatMap((form) => (form ? [{ dex: OGERPON_DEX, shiny: p.shiny, form }] : [])) : []
+    const legend = [...looks.flatMap((l) => (l ? [{ dex: l.dex, shiny: p.shiny, ...(l.key && { form: sheetForm(l.key) }) }] : [])), ...masks]
     const forms = [...(mega ? [mega.form] : []), ...(p.special.stance !== null ? STANCE_NAMES : []), ...(KIT_FORMS[p.kit?.kind ?? 'none'] ?? [])]
     return [...forms.map((form) => ({ dex, shiny: p.shiny, form })), ...legend, ...(p.kit?.kind === 'commander' ? [{ dex: DONDOZO, shiny: false }] : []), ...(p.kitA?.kind === 'shell' && p.stage >= 1 ? [{ dex: SHEDINJA, shiny: p.shiny }] : [])]
   })
@@ -154,12 +159,16 @@ export const bossForms = (g: Game): Variant[] => {
   const fights = g.enemies.flatMap((e) => {
     const phases = e.fight ? phasesOf(e.kind) : null
     if (!phases || !e.fight) return []
-    const forms = [phases[e.fight.phase - 1]?.form, phases[e.fight.phase]?.form, phases[e.fight.phase + 1]?.form]
+    const d = e.fight.difficulty
+    const forms = [phaseForm(phases[e.fight.phase - 1], d), phaseForm(phases[e.fight.phase], d), phaseForm(phases[e.fight.phase + 1], d)]
     return forms.flatMap((form) => (form ? [{ dex: ENEMIES[e.kind].dex, shiny: e.shiny, form }] : []))
   })
+  // Ogerpon's raid giant wears its mask Terastallized (`bossForm`), from its den's opening on.
+  const raid = g.raid.den?.raid ?? g.raid.arena?.raid
+  const ogerpon = raid?.boss === 'ogerpon' ? [{ dex: ENEMIES.ogerpon.dex, shiny: false, form: OGERPON_MASKS[maskOf(raid.tera)].tera }] : []
   // Shadow Mewtwo wears SpriteCollab's Shadow sheets from the Hideout's door on (`data/rocketHideout.ts`).
   const hideout = g.place.inside?.id === 'hideout' || g.place.entrance?.id === 'hideout' ? [{ dex: ENEMIES.shadowMewtwo.dex, shiny: false, form: 'shadow' as const }] : []
-  return [...rift, ...fights, ...hideout]
+  return [...rift, ...fights, ...hideout, ...ogerpon]
 }
 
 /**

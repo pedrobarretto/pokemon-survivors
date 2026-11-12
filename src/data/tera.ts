@@ -115,7 +115,8 @@ export const RAID_BOSSES = [
   'raidVolcarona', 'raidDragapult', 'raidTinkaton',
 ] as const satisfies readonly EnemyId[]
 
-export type RaidBoss = (typeof RAID_BOSSES)[number] | 'terapagos'
+/** A raid's giant: one of `RAID_BOSSES`, Terapagos (the 7★ Stellar raid's) or Ogerpon (its own raid, `OGERPON` in `data/mythicals.ts`). */
+export type RaidBoss = (typeof RAID_BOSSES)[number] | 'terapagos' | 'ogerpon'
 
 /** A raid: who, in which Tera type, at how many stars. */
 export type RaidPick = { boss: RaidBoss; tera: TeraType; stars: RaidStars }
