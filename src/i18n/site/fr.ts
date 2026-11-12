@@ -91,6 +91,8 @@ export const siteFr: SiteMessages = {
     evolution: 'Lignée d’évolution',
     evolvesAt: (level: number) => `Nv ${level}`,
     hatchNote: (egg) => `Jouable une fois éclos d’un ${egg}.`,
+    safariNote: 'Jouable une fois capturé au Parc Safari du Poké Realm.',
+    cornerNote: 'Jouable une fois échangé contre des jetons au comptoir du Game Corner de la Team Rocket, dans le Poké Realm.',
     stageOf: (stage: number) => ['Forme de base', 'Première évolution', 'Évolution finale'][stage] ?? '',
     signature: 'Capacité de départ',
     special: 'Attaque spéciale',
@@ -169,6 +171,10 @@ export const siteFr: SiteMessages = {
     starterA: (name: string) => `${name} est un starter : il est disponible dès ta toute première partie, sans rien à faire.`,
     eggA: (name: string, egg: string) =>
       `En faisant éclore un ${egg}. Les boss, les coffres verrouillés et les failles lâchent parfois des œufs, qui éclosent dans l’incubateur avec les pas que tu fais pendant les parties ; une fois ${name} éclos, il est à toi pour de bon.`,
+    safariA: (name: string) =>
+      `En le capturant au Parc Safari du Poké Realm : aucun œuf n’apporte ${name}. Il vit dans un des habitats, qui changent chaque semaine ; capture-le une fois et il est à toi pour de bon.`,
+    cornerA: (name: string) =>
+      `En l’échangeant contre des jetons au comptoir du Game Corner de la Team Rocket, dans le Poké Realm : aucun œuf n’apporte ${name}. Une fois ramené, il est à toi pour de bon.`,
     evolveQ: (name: string) => `Comment ${name} évolue-t-il ?`,
     evolveA: (steps: readonly string[]) => `En pleine partie, en montant de niveau : ${list(steps)}.`,
     step: (names: readonly string[], level: number) => `en ${either(names)} au Nv ${level}`,

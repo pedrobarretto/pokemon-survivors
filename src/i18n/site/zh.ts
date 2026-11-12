@@ -93,6 +93,8 @@ export const siteZh: SiteMessages = {
     evolution: '進化路線',
     evolvesAt: (level: number) => `Lv ${level}`,
     hatchNote: (egg) => `從${egg}孵化後即可使用。`,
+    safariNote: '在 Poké Realm 的狩獵地帶捕捉後即可使用。',
+    cornerNote: '在 Poké Realm 火箭隊遊戲城的兌獎櫃台用代幣換到後即可使用。',
     stageOf: (stage: number) => ['第一階段', '第一次進化', '最終進化'][stage] ?? '',
     signature: '初始招式',
     special: '必殺技',
@@ -174,6 +176,10 @@ export const siteZh: SiteMessages = {
     starterA: (name: string) => `${name} 是初始寶可夢：從第一場對局就已解鎖，不需要任何條件。`,
     eggA: (name: string, egg: string) =>
       `孵化${egg}。首領、上鎖的寶箱與裂縫有時會掉落蛋，蛋會靠你在對局中走的步數在孵化器裡孵化；${name} 孵化後就永遠是你的了。`,
+    safariA: (name: string) =>
+      `在 Poké Realm 的狩獵地帶捕捉：沒有任何蛋會孵出 ${name}。它住在其中一個棲地，棲地每週輪換；捕捉一次就永遠是你的了。`,
+    cornerA: (name: string) =>
+      `在 Poké Realm 火箭隊遊戲城的兌獎櫃台用代幣兌換：沒有任何蛋會孵出 ${name}。換到一次就永遠是你的了。`,
     evolveQ: (name: string) => `${name} 如何進化？`,
     evolveA: (steps: readonly string[]) => `在對局中隨等級提升進化：${list(steps)}。`,
     step: (names: readonly string[], level: number) => `Lv ${level} 進化成 ${either(names)}`,

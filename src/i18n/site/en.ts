@@ -90,6 +90,8 @@ export const siteEn: SiteMessages = {
     evolution: 'Evolution line',
     evolvesAt: (level: number) => `Lv ${level}`,
     hatchNote: (egg) => `Playable once it hatches from a ${egg}.`,
+    safariNote: 'Playable once caught in the Poké Realm’s Safari Zone.',
+    cornerNote: 'Playable once traded for tokens at Team Rocket’s Game Corner counter, in the Poké Realm.',
     stageOf: (stage: number) => ['First stage', 'First evolution', 'Final evolution'][stage] ?? '',
     signature: 'Starting move',
     special: 'Special attack',
@@ -168,6 +170,10 @@ export const siteEn: SiteMessages = {
     starterA: (name: string) => `${name} is a starter: it's unlocked from your very first run, nothing needed.`,
     eggA: (name: string, egg: string) =>
       `By hatching a ${egg}. Bosses, locked chests and rifts sometimes drop eggs, which hatch in the incubator with the steps you walk in runs; once ${name} hatches, it's yours to play for good.`,
+    safariA: (name: string) =>
+      `By catching it in the Poké Realm’s Safari Zone: no egg brings ${name}. It lives in one of the habitats, which change every week; catch it once and it's yours to play for good.`,
+    cornerA: (name: string) =>
+      `By trading tokens for it at Team Rocket’s Game Corner counter, in the Poké Realm: no egg brings ${name}. Take it home once and it's yours to play for good.`,
     evolveQ: (name: string) => `How does ${name} evolve?`,
     evolveA: (steps: readonly string[]) => `Mid-run, as it levels up: ${list(steps)}.`,
     step: (names: readonly string[], level: number) => `into ${either(names)} at Lv ${level}`,

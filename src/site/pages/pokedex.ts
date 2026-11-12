@@ -4,7 +4,8 @@ import { RIFT, RIFT_LEGENDS } from '../../data/rifts'
 import { TIERS } from '../../data/roster'
 import { isSummoner, SUMMONS, TRAITS, type TraitId } from '../../data/traits'
 import { SPIT_FLAVORS } from '../../game/spitters'
-import { HATCHLING_IDS, HATCHLINGS, isHatchling, PLAYABLE } from '../../data/hatchlings'
+import { familySource } from '../../data/familySource'
+import { HATCHLING_IDS, isHatchling, PLAYABLE, type HatchlingId } from '../../data/hatchlings'
 import { REGIONS, STARTER_IDS, type PlayableDef } from '../../data/starters'
 import { DEX_REGIONS, dexRegionOf, SHEETLESS, SPRITECOLLAB_URL, type DexRegion } from '../../data/nationalDex'
 import { PENCIL, PENCIL_PALETTE } from '../../render/pencilArt'
@@ -112,6 +113,12 @@ const abilityList = (set: AbilitySet, locale: Locale) => {
     <p class="note">${a.ability.note}</p>`
 }
 
+/** A family's line under its blurb: how it's first had, by its source (`familySource`). */
+const sourceNote = (id: HatchlingId, m: SiteMessages, game: (typeof MESSAGES)[Locale]) => {
+  const source = familySource(id)
+  return source === 'safari' ? m.pokedex.safariNote : source === 'corner' ? m.pokedex.cornerNote : m.pokedex.hatchNote(game.eggs.tiers[source])
+}
+
 const starterBody = (entry: DexEntry & { source: { kind: 'starter' } }, locale: Locale) => {
   const m = SITE_MESSAGES[locale]
   const game = MESSAGES[locale]
@@ -134,7 +141,7 @@ const starterBody = (entry: DexEntry & { source: { kind: 'starter' } }, locale: 
   // A 2-stage line's second stage is already the final one.
   const stageName = m.pokedex.stageOf(i > 0 && i === s.line.length - 1 ? 2 : i)
   return html`<p class="blurb">${stageName} · ${game.blurbs[id]}</p>
-    ${isHatchling(id) && html`<p class="note">${m.pokedex.hatchNote(game.eggs.tiers[HATCHLINGS[id].egg])}</p>`}
+    ${isHatchling(id) && html`<p class="note">${sourceNote(id, m, game)}</p>`}
     <h3>${m.pokedex.stats}</h3>
     ${statBars(entry, locale)}
     <h3>${m.pokedex.evolution}</h3>

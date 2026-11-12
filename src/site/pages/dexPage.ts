@@ -1,5 +1,6 @@
 import { branchesAt, branchesOf, branchStage } from '../../data/branches'
-import { HATCHLINGS, isHatchling, isStarter, PLAYABLE, type PlayableId } from '../../data/hatchlings'
+import { familySource } from '../../data/familySource'
+import { isHatchling, isStarter, PLAYABLE, type HatchlingId, type PlayableId } from '../../data/hatchlings'
 import { LEGEND_IDS, legendEvent, LEGENDS, type LegendId, type LegendUnlock } from '../../data/legends'
 import { MEGAS, megasOf } from '../../data/megas'
 import { STARTER_IDS, type PlayableDef } from '../../data/starters'
@@ -58,13 +59,19 @@ const tierQa = (id: FamilyId, name: string, m: SiteMessages): Qa => {
   }
 }
 
+/** How a family is first had, by its source (`familySource`): the Safári, the Game Corner or its egg. */
+const hatchA = (id: HatchlingId, name: string, m: SiteMessages, game: (typeof MESSAGES)[Locale]) => {
+  const source = familySource(id)
+  return source === 'safari' ? m.dexPage.safariA(name) : source === 'corner' ? m.dexPage.cornerA(name) : m.dexPage.eggA(name, game.eggs.tiers[source])
+}
+
 const familyFaq = (id: FamilyId, base: DexEntry, m: SiteMessages, locale: Locale): Qa[] => {
   const name = base.name
   const game = MESSAGES[locale]
   const steps = evolutionSteps(id, m)
   const needsItem = formLine(id, null).some((st) => st.item) || branchesOf(id).some((b) => branchNeeds(b))
   const megas = megasOf(id).map((mega) => MEGAS[mega].name)
-  const unlock = isHatchling(id) ? m.dexPage.eggA(name, game.eggs.tiers[HATCHLINGS[id].egg]) : m.dexPage.starterA(name)
+  const unlock = isHatchling(id) ? hatchA(id, name, m, game) : m.dexPage.starterA(name)
   return [
     { q: m.dexPage.unlockQ(name), a: unlock },
     ...(steps.length > 0 ? [{ q: m.dexPage.evolveQ(name), a: `${m.dexPage.evolveA(steps)}${needsItem ? ` ${m.dexPage.evolveItem}` : ''}` }] : []),

@@ -90,6 +90,8 @@ export const siteEs: SiteMessages = {
     evolution: 'Línea evolutiva',
     evolvesAt: (level: number) => `Nv. ${level}`,
     hatchNote: (egg: string) => `Jugable después de eclosionar de un ${egg}.`,
+    safariNote: 'Jugable después de atraparlo en la Zona Safari del Poké Realm.',
+    cornerNote: 'Jugable después de cambiarlo por fichas en el mostrador del Game Corner del Team Rocket, en el Poké Realm.',
     stageOf: (stage: number) => ['Etapa inicial', 'Primera evolución', 'Evolución final'][stage] ?? '',
     signature: 'Movimiento inicial',
     special: 'Ataque especial',
@@ -168,6 +170,10 @@ export const siteEs: SiteMessages = {
     starterA: (name: string) => `${name} es un inicial: está desbloqueado desde la primera partida, sin necesitar nada.`,
     eggA: (name: string, egg: string) =>
       `Eclosionando un ${egg}. Los jefes, los cofres cerrados y las grietas a veces sueltan huevos, que eclosionan en la incubadora con los pasos que das en las partidas; cuando ${name} sale del huevo, queda jugable para siempre.`,
+    safariA: (name: string) =>
+      `Atrapándolo en la Zona Safari del Poké Realm: ningún huevo trae a ${name}. Vive en uno de los hábitats, que cambian cada semana; atrápalo una vez y queda jugable para siempre.`,
+    cornerA: (name: string) =>
+      `Cambiando fichas en el mostrador del Game Corner del Team Rocket, en el Poké Realm: ningún huevo trae a ${name}. Una vez que te lo llevas, queda jugable para siempre.`,
     evolveQ: (name: string) => `¿Cómo evoluciona ${name}?`,
     evolveA: (steps: readonly string[]) => `En plena partida, al subir de nivel: ${list(steps)}.`,
     step: (names: readonly string[], level: number) => `a ${either(names)} en el Nv ${level}`,

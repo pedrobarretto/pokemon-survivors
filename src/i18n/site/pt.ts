@@ -124,6 +124,8 @@ export const sitePt = {
     evolution: 'Linha evolutiva',
     evolvesAt: (level: number) => `Nv ${level}`,
     hatchNote: (egg: string) => `Jogável depois de chocar de um ${egg}.`,
+    safariNote: 'Jogável depois de capturado na Zona Safári do Poké Realm.',
+    cornerNote: 'Jogável depois de trocado por fichas no balcão do Game Corner da Equipe Rocket, no Poké Realm.',
     stageOf: (stage: number) => ['Estágio inicial', 'Primeira evolução', 'Evolução final'][stage] ?? '',
     signature: 'Golpe inicial',
     special: 'Ataque especial',
@@ -208,6 +210,10 @@ export const sitePt = {
     starterA: (name: string) => `${name} é um inicial: está liberado desde a primeira partida, sem precisar de nada.`,
     eggA: (name: string, egg: string) =>
       `Chocando um ${egg}. Chefes, baús trancados e fendas às vezes deixam ovos, que chocam na incubadora com os passos dados nas partidas; quando ${name} sai do ovo, fica jogável para sempre.`,
+    safariA: (name: string) =>
+      `Capturando na Zona Safári do Poké Realm: nenhum ovo traz ${name}. Ele vive num dos habitats, que mudam toda semana; capturado uma vez, fica jogável para sempre.`,
+    cornerA: (name: string) =>
+      `Trocando fichas no balcão do Game Corner da Equipe Rocket, no Poké Realm: nenhum ovo traz ${name}. Levou uma vez, fica jogável para sempre.`,
     evolveQ: (name: string) => `Como ${name} evolui?`,
     evolveA: (steps: readonly string[]) => `No meio da partida, ao subir de nível: ${list(steps)}.`,
     /** One evolution step: the forms it can go to (a branching one names all of them) and the level. */
