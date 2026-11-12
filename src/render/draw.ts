@@ -61,6 +61,7 @@ import { drawEgg3Attack, drawEgg3Ground, drawEgg3Player, egg3PlayerLook } from '
 import { drawSeasonKitAttack, drawSeasonKitGround, drawSeasonKitPlayer } from './seasonOneKitFx'
 import { drawKitBAir, drawKitBAttack, drawKitBGround, kitBPlayerLook } from './gaKitBFx'
 import { drawKitFAir, drawKitFAttack, drawKitFGround } from './fossilKitFx'
+import { drawGaKitMAAir, drawGaKitMAAttack, drawGaKitMAGround, drawGaKitMAWaiting, kitMAPlayerLook } from './gaKitMAFx'
 import { drawGaKitAAttack, drawGaKitAGround, drawGaKitAPlayer, drawGaKitAPlayerGround } from './gaKitAFx'
 import { drawRegionalAttack, drawRegionalGround } from './regionalFx'
 import { drawRocketKitAttack, drawRocketKitPlayer } from './rocketKitFx'
@@ -297,6 +298,7 @@ const drawAttack = (ctx: Ctx, a: Attack, t: number) => {
       drawKitFAttack(ctx, a, t)
       drawRegionalAttack(ctx, a, t)
       drawRocketKitAttack(ctx, a, t)
+      drawGaKitMAAttack(ctx, a, t)
       drawGallopAttack(ctx, a, t)
       drawEgg2Attack(ctx, a, t)
       drawSignatureAttack(ctx, a, t)
@@ -666,7 +668,7 @@ const drawPlayer = (ctx: Ctx, g: Game, calm: boolean) => {
   const tint = calm && p.hurt > 0.2 ? HURT_TINT : isAsleep(p) ? SLEEP_TINT : undefined
   // Burrowed or out of sight (Dig): a faint ghost of the player.
   // Moves can lift the sprite (Body Slam's leap, Heavy Slam's hop, Fly) or hide it under the mound (Dig).
-  const egg = flying ?? eggPlayerLook(g) ?? egg3PlayerLook(g) ?? kitBPlayerLook(g)
+  const egg = flying ?? eggPlayerLook(g) ?? egg3PlayerLook(g) ?? kitBPlayerLook(g) ?? kitMAPlayerLook(g)
   // Invulnerable after a hit: blinking, or a steady see-through when calm.
   // The crystal that just shattered stays solid through the shatter's invulnerability: a fresh Terastal form never blinks.
   const fresh = p.tera.active > TERA.duration - TERA.iframes
@@ -979,6 +981,7 @@ const drawPlayerGround = (ctx: Ctx, g: Game, camX: number, camY: number, t: numb
   drawMegaGround(ctx, g, camX, camY, t, own)
   drawKitBGround(ctx, g, t)
   drawKitFGround(ctx, g, t)
+  drawGaKitMAGround(ctx, g, t)
   drawTeraGround(ctx, g, camX, camY, t, own)
 }
 
@@ -992,6 +995,7 @@ const drawPlayerAir = (ctx: Ctx, g: Game, t: number) => {
   drawGaKitAPlayer(ctx, g, t)
   drawKitFAir(ctx, g, t)
   drawRocketKitPlayer(ctx, g, t)
+  drawGaKitMAAir(ctx, g, t)
   drawSignaturePlayer(ctx, g, t)
   drawTmPlayer(ctx, g, t)
   drawShopTm2Player(ctx, g, t, g.player.y - playerSprites(g).bodyH)
@@ -1242,6 +1246,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
       drawImpacts(into, g.now, (owner) => g.coop === null || (side.side === 'own') === (owner === me.slot))
       drawVerbAir(into, v, t, visible)
       drawGallopAir(into, v, visible)
+      drawGaKitMAWaiting(into, v, t, visible)
       drawTmAir(into, v, t, visible)
       drawShopTmAir(into, v, t, visible)
       drawShopTm2Air(into, v, t, visible)

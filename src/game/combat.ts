@@ -42,6 +42,7 @@ import { inPlay } from './players'
 import { knockOut, strikeAvatar, tickAvatar, wildDown } from './versusCombat'
 import { seasonKitBlocks, seasonKitHolds, seasonKitHurt, seasonKitKill } from './seasonOneKitSystem'
 import { kitBBlocks, kitBHurt, kitBKill } from './gaKitBSystem'
+import { kitMAHit } from './gaKitMASystem'
 import { gaKitAHolds, gaKitAHurt, gaKitAKill, gaKitATaken } from './gaKitASystem'
 import { dropBossShards, stellarBurst, teraGuard, teraKill, teraPower } from './tera'
 import { fallInRaid, isRaidBoss, raidHarm, shieldTakes } from './teraRaid'
@@ -99,6 +100,7 @@ export const damageEnemy = (g: Game, e: Enemy, attack: Attack) => {
     moveEvent(g, attack.move, 'hit')
     moveHit(g, attack, e, unhurt)
   }
+  kitMAHit(g, attack, e)
 
   if (e.hp > 0 && executes(attack.execute, e.hp, e.maxHp, e.boss)) {
     shatter(g, e, 'execute')

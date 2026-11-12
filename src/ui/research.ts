@@ -30,7 +30,7 @@ export const lockedWhere = (id: HatchlingId): string | null => {
   const egg = HATCHLINGS[id].egg
   if (egg === 'dig') return words.fossilBlurb(fossilName(id))
   if (egg === 'fossil') return words.amberBlurb
-  const where: Partial<Record<HatchlingId, string>> = words.where
+  const where: Partial<Record<HatchlingId, string>> = { ...words.where, ...t().megaFamiliesWhere }
   return where[id] ?? null
 }
 

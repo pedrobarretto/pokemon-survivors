@@ -750,6 +750,67 @@ export const MEGAS = {
     stats: { might: 0.3, speed: 6, armor: 1 },
     special: 'skyAttack',
   },
+  /* The Grande Atualização's Mega families (`data/gaMegaFamiliesA.ts`); their abilities play in `game/gaKitMASystem.ts`. */
+  kangaskhan: {
+    line: 'kangaskhan',
+    name: 'Mega Kangaskhan',
+    stone: 'Kangaskhanite',
+    form: 'mega',
+    colors: ['#806040', '#e8c890', '#f0a858'],
+    // Parental Bond: the baby fights out of the pouch, punching for more, more often and in a ring.
+    ability: 'Parental Bond',
+    effect: { kind: 'stats' },
+    stats: { might: 0.25, armor: 1, speed: 4 },
+    special: 'focusBlast',
+  },
+  pinsir: {
+    line: 'pinsir',
+    name: 'Mega Pinsir',
+    stone: 'Pinsirite',
+    form: 'mega',
+    colors: ['#685840', '#d8c8a8', '#f86848'],
+    // Aerilate: it takes wing, its pincers snap faster and each snap throws a gust blade.
+    ability: 'Aerilate',
+    effect: { kind: 'stats' },
+    stats: { might: 0.3, speed: 8, typeDamage: { flying: 0.3, normal: 0.3 } },
+    special: 'doubleEdge',
+  },
+  skarmory: {
+    line: 'skarmory',
+    name: 'Mega Skarmory',
+    stone: 'Skarmorite',
+    form: 'mega',
+    colors: ['#384050', '#c0c8d8', '#d84848'],
+    // Stalwart: nothing turns its blades aside (they go through wards) and its feathers lie twice as thick.
+    ability: 'Stalwart',
+    effect: { kind: 'stats' },
+    stats: { armor: 2, might: 0.25, typeDamage: { steel: 0.2, flying: 0.2 } },
+    special: 'hurricane',
+  },
+  excadrill: {
+    line: 'drilbur',
+    name: 'Mega Excadrill',
+    stone: 'Excadrite',
+    form: 'mega',
+    colors: ['#584848', '#c8c0c0', '#e84040'],
+    // Piercing Drill: the drill and the tunnels it caves in go through wards, and Drill Run spins faster.
+    ability: 'Piercing Drill',
+    effect: { kind: 'stats' },
+    stats: { might: 0.3, speed: 6, typeDamage: { ground: 0.2, steel: 0.2 } },
+    special: 'earthPower',
+  },
+  drampa: {
+    line: 'drampa',
+    name: 'Mega Drampa',
+    stone: 'Drampanite',
+    form: 'mega',
+    colors: ['#a8a8a0', '#f8f8f0', '#78b8e8'],
+    // Berserk: it never rages under half, and roars more often.
+    ability: 'Berserk',
+    effect: { kind: 'stats' },
+    stats: { might: 0.2, area: 0.15, typeDamage: { dragon: 0.25 } },
+    special: 'dracoMeteor',
+  },
 } as const satisfies Record<string, MegaDef>
 
 export type MegaId = keyof typeof MEGAS

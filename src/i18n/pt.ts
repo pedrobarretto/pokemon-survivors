@@ -12,6 +12,7 @@ import { GA_FOSSILS_WORDS } from './gaFossils'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { GA_MEGAS_WORDS } from './gaMegas'
+import { GA_MEGA_FAMILIES_A_WORDS } from './gaMegaFamiliesA'
 import { ROCKET_WORDS } from './rocket/words'
 import { ULTRA_WORDS } from './ultra'
 import { LEGEND_PATHS_WORDS } from './legendPaths'
@@ -2721,6 +2722,7 @@ export const pt = {
       salamence: 'golpes Normal e Voador +30%, velocidade +12 e golpes +25%. O especial vira Double-Edge.',
       ...ROCKET_FAMILY_WORDS.pt.megas,
       ...GA_MEGAS_WORDS.pt.megas,
+      ...GA_MEGA_FAMILIES_A_WORDS.pt.megas,
     } satisfies Record<MegaId, string>,
   },
 
@@ -3559,6 +3561,7 @@ export const pt = {
     ...GA_FAMILIES_A_WORDS.pt.moves,
     ...GA_FOSSILS_WORDS.pt.moves,
     ...ROCKET_FAMILY_WORDS.pt.moves,
+    ...GA_MEGA_FAMILIES_A_WORDS.pt.moves,
     ...GALLOP_WORDS.pt,
     ...ULTRA_WORDS.pt.moves,
     ...LEGEND_PATHS_WORDS.pt.moves,
@@ -6040,6 +6043,7 @@ export const pt = {
     ...GA_FAMILIES_A_WORDS.pt.blurbs,
     ...GA_FOSSILS_WORDS.pt.blurbs,
     ...ROCKET_FAMILY_WORDS.pt.blurbs,
+    ...GA_MEGA_FAMILIES_A_WORDS.pt.blurbs,
     ...ULTRA_WORDS.pt.blurbs,
     ...LEGEND_PATHS_WORDS.pt.blurbs,
     ...QUEST_WORDS.pt.blurbs,
@@ -6957,6 +6961,7 @@ export const pt = {
   },
   /** Bibarel, the carpentry's carpenter on the plaza's north-east, as the partner walks up: the first visit, then one of these in turn. */
   seasonUnlocks: SEASON_ONE_UNLOCKS_WORDS.pt,
+  megaFamiliesWhere: GA_MEGA_FAMILIES_A_WORDS.pt.where,
   rocket: ROCKET_WORDS.pt,
   paths: LEGEND_PATHS_WORDS.pt.paths,
   minigames: {

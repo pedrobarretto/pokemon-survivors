@@ -81,6 +81,7 @@ import type { Training } from './training'
 import type { Harm, HarmBy } from './harm'
 import type { SeasonKit } from './seasonOneKitRules'
 import type { GaKitA, GaKitAVisual } from './gaKitARules'
+import type { GaKitMA, GaKitMAVisual } from './gaKitMARules'
 import type { RocketKit } from './rocketKitRules'
 import type { ShadowVariant } from './shadow'
 import type { MythicalHunt } from './mythicalHunt'
@@ -264,6 +265,8 @@ export type Player = {
   kitF?: FossilKit
   /** The Rocket Game Corner's prize families (`rocketKitRules.ts`): their running state. Absent for everyone else. */
   rocket?: RocketKit
+  /** The Grande Atualização's Mega families (`gaKitMARules.ts`): their running state. Absent for everyone else. */
+  kitMA?: GaKitMA
   /** A Shadow or Purified Pokémon (`shadow.ts`), decided as the run starts. Absent for the plain one, so its state hashes as before. */
   variant?: ShadowVariant
 }
@@ -441,6 +444,7 @@ export type Visual =
   | GaKitAVisual
   /** The fossil families (`fossilKitMoves.ts`, `fossilKitSystem.ts`), drawn by `render/fossilKitFx.ts`. */
   | FossilVisual
+  | GaKitMAVisual
   /** The regional forms' moves (`regionalMoves.ts`), drawn by `render/regionalFx.ts`. */
   | 'metalClaw' | 'shellSlam' | 'shellShot' | 'obstructGuard' | 'obstructX' | 'leekJoust' | 'chloroblast' | 'barb' | 'toxicGlob' | 'toxicPool' | 'bullCharge' | 'bitterMalice'
   /** The Rocket Game Corner's prize families, drawn by `render/rocketKitFx.ts`. */

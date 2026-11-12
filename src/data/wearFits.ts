@@ -404,4 +404,12 @@ export const WEAR_FITS: Partial<Record<FitKey, SpeciesFit>> = {
   348: { no: ['bunnyEars'] }, // Armaldo: the ears stand right in its two-pronged head crest
   880: { no: ['head'] }, // Dracozolt: a small bird's head on a big body, its crest of feathers where a hat sits, and the brim reaches its beak
   881: { no: ['head'] }, // Arctozolt: its head peeks out of its icy top half, turned its eye isn't found, and a hat sits on the ice over its face
+  // The Mega families (src/data/gaMegaFamiliesA.ts)
+  115: { rig: { E: { seat: [-2, -3] }, 'S:Idle': { seat: [0, -3] } } }, // Kangaskhan: turned, the brim came down onto its eye; idle facing south, its fists rise round its head and clipped the hat
+  '115:mega': { rig: { E: { seat: [-2, -3] }, 'S:Idle': { seat: [0, -3] } } }, // Mega Kangaskhan: the same as Kangaskhan's
+  227: { no: ['head'] }, // Skarmory: a slim beak of a head, the eye at its crown: every hat sat on the eye
+  '227:mega': { no: ['head'] }, // Mega Skarmory: the same slim head under its crest
+  529: { no: ['head'] }, // Drilbur: its eyes sit right under the steel band a hat would cover
+  '530:mega': { no: ['head'] }, // Mega Excadrill: all drill, its tip where a hat would go
+  '780:mega': { no: ['cap', 'vikingHelmet'] }, // Mega Drampa: facing south the mane's spikes cut a cap's brim and the helmet's horns
 }

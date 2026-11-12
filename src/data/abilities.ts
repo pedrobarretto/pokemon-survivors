@@ -11,6 +11,7 @@ import { GA_FOSSILS_ABILITIES } from './gaFossils'
 import { GA_BRANCHES_A_ABILITIES, GA_FAMILIES_A_ABILITIES } from './gaFamiliesA'
 import { REGIONAL_BRANCH_ABILITIES, REGIONAL_FAMILY_ABILITIES } from './regionalFamilies'
 import { ROCKET_FAMILY_ABILITIES } from './rocketFamilies'
+import { GA_MEGA_FAMILIES_A_ABILITIES } from './gaMegaFamiliesA'
 import type { PokeType } from './types'
 
 /**
@@ -470,6 +471,7 @@ export const FAMILY_ABILITIES = {
   ...REGIONAL_FAMILY_ABILITIES,
   ...ROCKET_FAMILY_ABILITIES,
   ...GA_FOSSILS_ABILITIES,
+  ...GA_MEGA_FAMILIES_A_ABILITIES,
 } as const satisfies Record<PlayableId, AbilitySet>
 
 /** The abilities of a branch picked at the family's first evolution (`data/branches.ts`). */

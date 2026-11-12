@@ -11,6 +11,7 @@ import { GA_FOSSILS_WORDS } from './gaFossils'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { GA_MEGAS_WORDS } from './gaMegas'
+import { GA_MEGA_FAMILIES_A_WORDS } from './gaMegaFamiliesA'
 import { ROCKET_WORDS } from './rocket/words'
 import { ULTRA_WORDS } from './ultra'
 import { LEGEND_PATHS_WORDS } from './legendPaths'
@@ -2389,6 +2390,7 @@ export const fr: Messages = {
       salamence: 'capacités Normal et Vol +30%, vitesse +12 et capacités +25%. L’attaque spéciale devient Double-Edge.',
       ...ROCKET_FAMILY_WORDS.fr.megas,
       ...GA_MEGAS_WORDS.fr.megas,
+      ...GA_MEGA_FAMILIES_A_WORDS.fr.megas,
     },
   },
 
@@ -3183,6 +3185,7 @@ export const fr: Messages = {
     ...GA_FAMILIES_A_WORDS.fr.moves,
     ...GA_FOSSILS_WORDS.fr.moves,
     ...ROCKET_FAMILY_WORDS.fr.moves,
+    ...GA_MEGA_FAMILIES_A_WORDS.fr.moves,
     ...GALLOP_WORDS.fr,
     ...ULTRA_WORDS.fr.moves,
     ...LEGEND_PATHS_WORDS.fr.moves,
@@ -5663,6 +5666,7 @@ export const fr: Messages = {
     ...GA_FAMILIES_A_WORDS.fr.blurbs,
     ...GA_FOSSILS_WORDS.fr.blurbs,
     ...ROCKET_FAMILY_WORDS.fr.blurbs,
+    ...GA_MEGA_FAMILIES_A_WORDS.fr.blurbs,
     ...ULTRA_WORDS.fr.blurbs,
     ...LEGEND_PATHS_WORDS.fr.blurbs,
     ...QUEST_WORDS.fr.blurbs,
@@ -6507,6 +6511,7 @@ export const fr: Messages = {
     },
   },
   seasonUnlocks: SEASON_ONE_UNLOCKS_WORDS.fr,
+  megaFamiliesWhere: GA_MEGA_FAMILIES_A_WORDS.fr.where,
   rocket: ROCKET_WORDS.fr,
   paths: LEGEND_PATHS_WORDS.fr.paths,
   minigames: {

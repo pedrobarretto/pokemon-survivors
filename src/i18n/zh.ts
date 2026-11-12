@@ -11,6 +11,7 @@ import { GA_FOSSILS_WORDS } from './gaFossils'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { GA_MEGAS_WORDS } from './gaMegas'
+import { GA_MEGA_FAMILIES_A_WORDS } from './gaMegaFamiliesA'
 import { ROCKET_WORDS } from './rocket/words'
 import { ULTRA_WORDS } from './ultra'
 import { LEGEND_PATHS_WORDS } from './legendPaths'
@@ -2389,6 +2390,7 @@ export const zh: Messages = {
       salamence: '一般與飛行屬性招式+30%、速度+12、招式+25%。必殺技變為 Double-Edge。',
       ...ROCKET_FAMILY_WORDS.zh.megas,
       ...GA_MEGAS_WORDS.zh.megas,
+      ...GA_MEGA_FAMILIES_A_WORDS.zh.megas,
     },
   },
 
@@ -3183,6 +3185,7 @@ export const zh: Messages = {
     ...GA_FAMILIES_A_WORDS.zh.moves,
     ...GA_FOSSILS_WORDS.zh.moves,
     ...ROCKET_FAMILY_WORDS.zh.moves,
+    ...GA_MEGA_FAMILIES_A_WORDS.zh.moves,
     ...GALLOP_WORDS.zh,
     ...ULTRA_WORDS.zh.moves,
     ...LEGEND_PATHS_WORDS.zh.moves,
@@ -5663,6 +5666,7 @@ export const zh: Messages = {
     ...GA_FAMILIES_A_WORDS.zh.blurbs,
     ...GA_FOSSILS_WORDS.zh.blurbs,
     ...ROCKET_FAMILY_WORDS.zh.blurbs,
+    ...GA_MEGA_FAMILIES_A_WORDS.zh.blurbs,
     ...ULTRA_WORDS.zh.blurbs,
     ...LEGEND_PATHS_WORDS.zh.blurbs,
     ...QUEST_WORDS.zh.blurbs,
@@ -6507,6 +6511,7 @@ export const zh: Messages = {
     },
   },
   seasonUnlocks: SEASON_ONE_UNLOCKS_WORDS.zh,
+  megaFamiliesWhere: GA_MEGA_FAMILIES_A_WORDS.zh.where,
   rocket: ROCKET_WORDS.zh,
   paths: LEGEND_PATHS_WORDS.zh.paths,
   minigames: {
