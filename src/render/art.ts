@@ -16,6 +16,7 @@ import { EGG_MOVE_ICONS } from './eggMoveArt'
 import { EGG_MOVE_3_ICONS } from './eggMove3Art'
 import { SEASON_ONE_KIT_ICONS } from './seasonOneKitArt'
 import { KIT_B_ICONS } from './gaKitBArt'
+import { HOOK_ICONS } from './gaHookArt'
 import { GA_KIT_A_ICONS } from './gaKitAArt'
 import { REGIONAL_ICONS } from './regionalArt'
 import { ROCKET_KIT_ICONS } from './rocketKitArt'
@@ -786,6 +787,7 @@ const MOVE_ICON_ART: Record<MoveId, () => PixelSprite> = {
   ...EGG_MOVE_3_ICONS,
   ...SEASON_ONE_KIT_ICONS,
   ...KIT_B_ICONS,
+  ...HOOK_ICONS,
   ...GA_KIT_A_ICONS,
   ...REGIONAL_ICONS,
   ...ROCKET_KIT_ICONS,

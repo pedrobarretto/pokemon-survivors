@@ -12,6 +12,7 @@ import { createStickPace, paceStick, type StickPace } from './stickPace'
 import { groupHome, measureRelay, median, pickHome, placeOf, relayFor, type RelayProbe, type VpsUrls } from './relays'
 import { closeReason, parseServerMessage } from './wire'
 import { loadoutOf, settingsOf, type CoopPick, type CoopSettings } from './start'
+import { devicePattern } from '../vivillonRegion'
 import { timeoutSignal } from '../net/timeout'
 
 /**
@@ -1046,7 +1047,8 @@ export const createCoopClient = (deps: CoopDeps) => {
     warm: () => void measureVps(),
     join,
     leave,
-    setLoadout: (pick: CoopPick) => send({ t: 'loadout', loadout: loadoutOf(pick) }),
+    // The device's Vivillon pattern rides along for teammates to draw (a look: the simulation never reads it).
+    setLoadout: (pick: CoopPick) => send({ t: 'loadout', loadout: { ...loadoutOf(pick), pattern: devicePattern() } }),
     setReady: (ready: boolean) => send({ t: 'ready', ready }),
     setSettings: (settings: CoopSettings) => send({ t: 'settings', settings: settingsOf(settings) }),
     kick: (seat: number) => send({ t: 'kick', seat }),

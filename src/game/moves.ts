@@ -21,6 +21,7 @@ import { SEASON_ONE_EGG_MOVES } from './seasonOneEggMoves'
 import { SEASON_ONE_KIT_MOVES } from './seasonOneKitMoves'
 import { GA_KIT_B_MOVES } from './gaKitBMoves'
 import { GA_KIT_A_MOVES } from './gaKitAMoves'
+import { GA_HOOK_MOVES } from './gaHookMoves'
 import { REGIONAL_MOVES } from './regionalMoves'
 import { ROCKET_KIT_MOVES } from './rocketKitMoves'
 import { GALLOP_MOVES } from './gallopMoves'
@@ -2326,6 +2327,8 @@ export const MOVES = {
   ...ROCKET_KIT_MOVES,
   /* ---------- Ponyta's gallop batch and its evolutions (`gallopMoves.ts`) ---------- */
   ...GALLOP_MOVES,
+  /* ---------- The wave's hook families (`gaHookMoves.ts`) ---------- */
+  ...GA_HOOK_MOVES,
 } as const satisfies Record<string, MoveDef>
 
 export type MoveId = keyof typeof MOVES
@@ -2358,6 +2361,7 @@ export const MOVE_TABLES: Readonly<Record<string, Readonly<Record<string, MoveDe
   REGIONAL_MOVES,
   ROCKET_KIT_MOVES,
   GALLOP_MOVES,
+  GA_HOOK_MOVES,
 }
 
 export const MOVE_IDS = Object.keys(MOVES) as MoveId[]

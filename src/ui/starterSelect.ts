@@ -31,7 +31,9 @@ import { ownsShiny, pickShinyForm, playsShiny } from '../game/shinyPicks'
 import { dieIcon, eggIcon, moveIcon, PICKUPS, sparkleIcon, trophyIcon } from '../render/art'
 import { capPips, shopIcon } from './shopIcons'
 import { lockedWhere } from './research'
-import { cryUrl, drawPokemon, fitSprites, loadedFormSprites, loadedSprites, loadSpecies, portraitUrl, skinSprites, walkSheet } from '../render/sprites'
+import { cryUrl, drawPokemon, fitSprites, loadedFormSprites, loadedSprites, loadSpecies, portraitUrl, skinSprites, sprites, walkSheet } from '../render/sprites'
+import { VIVILLON_DEX, VIVILLON_PATTERNS } from '../data/vivillon'
+import { devicePattern } from '../vivillonRegion'
 import { pathOfLegend, pathSheet } from './legendPaths'
 import type { PathId } from '../data/legendPaths'
 import { equip, shownOn, skinsOf, takeOff, wearing } from '../arena/gemShop'
@@ -588,6 +590,8 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
           isLegend(id) && h('p', { class: 'partner-legend-mode' }, m.legend.mode, ' · ', `${m.legend.innate}: ${ABILITIES[LEGENDS[id].innate.ability].name}`),
           isLegend(id) && eventLine(id, false),
           h('p', { class: 'partner-blurb' }, m.blurbs[id]),
+          // Scatterbug's line names the pattern its Vivillon wears here (the device's region).
+          id === 'scatterbug' && h('p', { class: 'partner-blurb' }, h('b', {}, m.gaHook.vivillon.pattern(VIVILLON_PATTERNS[devicePattern()].name)), ' · ', m.gaHook.vivillon.why),
           h('div', { class: 'partner-hero-actions' }, canPick(id) && shinyPicker(shinyOf(id), setShiny), more(true), pathAfter(id)),
           !opts.coop && shadowRow(id, () => renderHero()),
         ),
@@ -919,7 +923,10 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
     const ctx = context2d(sprite)
     ctx.clearRect(0, 0, sprite.width, sprite.height)
     const skin = locked ? null : wornSkin(dex)
-    const s = (skin && skinSprites(skin, dex, shinyOf(id))) || (shinyOf(id) && loadedSprites(dex, true)) || loadedSprites(dex)
+    // Vivillon wears the device's pattern on the pedestal too (Meadow is its own sheets).
+    const own = devicePattern()
+    const pattern = !locked && dex === VIVILLON_DEX && own !== 'meadow' ? own : null
+    const s = (skin && skinSprites(skin, dex, shinyOf(id))) || (pattern && sprites(dex, shinyOf(id), pattern)) || (shinyOf(id) && loadedSprites(dex, true)) || loadedSprites(dex)
     // Each skin chip idles on the stage shown (or the skin's first one, when it doesn't dress that stage).
     for (const [canvas, chipSkin] of skinChips) {
       const ctx = context2d(canvas)

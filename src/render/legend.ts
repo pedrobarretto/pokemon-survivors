@@ -4,6 +4,7 @@ import { PLAYABLE } from '../data/hatchlings'
 import { playerDex } from '../game/game'
 import { legendLook } from '../game/legend'
 import { seasonKitForm } from '../game/seasonOneKitRules'
+import { hookForm } from './gaHookLook'
 import { SHADOW_SHEETS } from '../game/shadow'
 import { weatherHere } from '../game/weather'
 import type { Game } from '../game/types'
@@ -43,7 +44,7 @@ export const playerSprites = (g: Game, megaForm?: FormKey): SpeciesSprites => {
   const copy = p.rocket?.kind === 'transform' && p.rocket.dex !== 0 && megaForm === undefined ? loadedSprites(p.rocket.dex) : undefined
   if (copy) return copy
   const stance = p.special.stance
-  const form = sheetForm(megaForm ?? legendLook(g) ?? (stance ? STANCE_FORMS[stance] : undefined) ?? seasonKitForm(p.kit, p.stage, weatherHere(g)) ?? shadowForm(g))
+  const form = sheetForm(megaForm ?? legendLook(g) ?? (stance ? STANCE_FORMS[stance] : undefined) ?? seasonKitForm(p.kit, p.stage, weatherHere(g)) ?? hookForm(g, p) ?? shadowForm(g))
   const dex = playerDex(g)
   const skin = form === undefined ? skinFor(shownLook(g, p.slot), dex) : null
   const s = (skin && skinSprites(skin, dex, p.shiny)) || sprites(dex, p.shiny, form)

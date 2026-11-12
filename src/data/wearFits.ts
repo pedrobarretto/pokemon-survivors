@@ -393,4 +393,7 @@ export const WEAR_FITS: Partial<Record<FitKey, SpeciesFit>> = {
   809: { rig: { E: { seat: [-2, -4] } } }, // Melmetal: turned, its little head's seat sat down on its face
   486: { rig: { E: { seat: [-2, -3] }, SE: { seat: [-1, -2] } } }, // Regigigas: turned, the brim came down onto its lights
   892: { rig: { 'SE:Idle': { seat: [0, -2] } } }, // Urshifu: idle, the brim came down to its eyes
+  // The hook families (src/data/gaFamiliesHook.ts)
+  665: { rig: { E: { seat: [-1, -2] } } }, // Spewpa: turned, the brim came down onto its eye
+  311: { rig: { SE: { seat: [0, -3] }, E: { seat: [0, -3] } } }, // Plusle: turned, the seat sat between its ears, down on its eyes
 }

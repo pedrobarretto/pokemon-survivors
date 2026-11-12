@@ -8,6 +8,7 @@ import { GA_FAMILIES_B } from '../data/gaFamiliesB'
 import { GA_FAMILIES_A } from '../data/gaFamiliesA'
 import { REGIONAL_FAMILIES } from '../data/regionalFamilies'
 import { ROCKET_FAMILIES } from '../data/rocketFamilies'
+import { GA_FAMILIES_HOOK } from '../data/gaFamiliesHook'
 import { continueEndless } from '../game/endlessSystem'
 import { banishOffer, chooseOffer, rerollOffers, skipLevelUp, step } from '../game/game'
 import { UPGRADE_IDS, UPGRADES, type Ranks } from '../game/meta'
@@ -168,7 +169,7 @@ export const tickScenario = (d: Driver) => {
  * stay out so the draw keeps its picks; each
  * event legend plays in the harness's own runs (`harness.ts`).
  */
-const PLAYS: readonly PlayableId[] = [...PLAYABLE_IDS.filter((id) => !(id in SEASON_ONE_EGGS) && !(id in SEASON_ONE_KITS) && !(id in GA_FAMILIES_B) && !(id in GA_FAMILIES_A) && !(id in REGIONAL_FAMILIES) && !(id in ROCKET_FAMILIES)), ...REGULAR_LEGENDS]
+const PLAYS: readonly PlayableId[] = [...PLAYABLE_IDS.filter((id) => !(id in SEASON_ONE_EGGS) && !(id in SEASON_ONE_KITS) && !(id in GA_FAMILIES_B) && !(id in GA_FAMILIES_A) && !(id in REGIONAL_FAMILIES) && !(id in ROCKET_FAMILIES) && !(id in GA_FAMILIES_HOOK)), ...REGULAR_LEGENDS]
 
 /** What a save brings along, by turns: nothing but the usual Lure and Incense, a full Bag, armed shop TMs and Bottle Caps, evolution items, an Everstone. */
 const SAVES: ReadonlyArray<Partial<Scenario>> = [

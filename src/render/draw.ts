@@ -61,6 +61,7 @@ import { drawEgg3Attack, drawEgg3Ground, drawEgg3Player, egg3PlayerLook } from '
 import { drawSeasonKitAttack, drawSeasonKitGround, drawSeasonKitPlayer } from './seasonOneKitFx'
 import { drawKitBAir, drawKitBAttack, drawKitBGround, kitBPlayerLook } from './gaKitBFx'
 import { drawGaKitAAttack, drawGaKitAGround, drawGaKitAPlayer, drawGaKitAPlayerGround } from './gaKitAFx'
+import { drawHookAir, drawHookAttack } from './gaHookFx'
 import { drawRegionalAttack, drawRegionalGround } from './regionalFx'
 import { drawRocketKitAttack, drawRocketKitPlayer } from './rocketKitFx'
 import { drawGallopAir, drawGallopAttack, gallopLift } from './gallopFx'
@@ -201,7 +202,7 @@ const slashArc = (ctx: Ctx, x: number, y: number, r: number, dir: number, sweep:
   }
 }
 
-const drawAttack = (ctx: Ctx, a: Attack, t: number) => {
+const drawAttack = (ctx: Ctx, a: Attack, t: number, g: Game) => {
   const m = a.motion
   if (a.move === 'teraStarstorm') return drawStarstorm(ctx, a, t, false)
   switch (a.visual) {
@@ -293,6 +294,7 @@ const drawAttack = (ctx: Ctx, a: Attack, t: number) => {
       drawSeasonKitAttack(ctx, a, t)
       drawKitBAttack(ctx, a, t)
       drawGaKitAAttack(ctx, a, t)
+      drawHookAttack(ctx, a, t, g)
       drawRegionalAttack(ctx, a, t)
       drawRocketKitAttack(ctx, a, t)
       drawGallopAttack(ctx, a, t)
@@ -987,6 +989,7 @@ const drawPlayerAir = (ctx: Ctx, g: Game, t: number) => {
   drawSeasonKitPlayer(ctx, g, t)
   drawKitBAir(ctx, g, t)
   drawGaKitAPlayer(ctx, g, t)
+  drawHookAir(ctx, g, t)
   drawRocketKitPlayer(ctx, g, t)
   drawSignaturePlayer(ctx, g, t)
   drawTmPlayer(ctx, g, t)
@@ -1234,7 +1237,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   for (const side of sides) {
     paintAttacks(ctx, side.side, side.alpha, g.view, camX, camY, (into) => {
       const v = side.game
-      for (const a of v.attacks) if (a.age >= 0 && visible(a.x, a.y, 200)) drawAttack(into, a, t)
+      for (const a of v.attacks) if (a.age >= 0 && visible(a.x, a.y, 200)) drawAttack(into, a, t, v)
       drawImpacts(into, g.now, (owner) => g.coop === null || (side.side === 'own') === (owner === me.slot))
       drawVerbAir(into, v, t, visible)
       drawGallopAir(into, v, visible)

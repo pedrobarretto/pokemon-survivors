@@ -5,14 +5,18 @@ import type { HitKind } from '../data/abilities'
 import { burst } from './effects'
 import { toSteps, type EggTier } from './eggs'
 import { runBonus, wonRun } from './meta'
-import { inPlay, personal, setPhase } from './players'
+import { actAs, inPlay, personal, setPhase } from './players'
 import { createTally, summarizeRun, type RunSummary } from './tally'
-import type { Game, Player, PlayerRecord } from './types'
+import type { Enemy, Game, Player, PlayerRecord } from './types'
 import type { DexLog } from './dex'
 import type { DayKey } from './day'
 import type { MoveId } from './moves'
 import { TICK } from './tick'
 import * as dm from '../engine/dmath'
+import { isPlusMinus, KIT_H, segmentDist2 } from './gaHookRules'
+import { recomputeStats } from './leveling'
+import { damageEnemy } from './combat'
+import { spawnAttack } from './spawn'
 
 /**
  * Co-op rules (2 to 4 players in one run) the simulation runs. Solo runs have
@@ -51,6 +55,8 @@ export type CoopState = {
   own: Map<number, boolean>[]
   /** The Desafio co-op do dia this run plays (`game/coopBoard.ts`), null for any other run. */
   challenge: DayKey | null
+  /** Plusle and Minun's link (`updatePlusMinus`): on while both stand on the team, and seconds to the current's next hit. */
+  plusMinus: { on: boolean; next: number }
 }
 
 export const createCoopState = (players: number): CoopState => ({
@@ -62,6 +68,7 @@ export const createCoopState = (players: number): CoopState => ({
   awayTicks: Array.from({ length: players }, () => 0),
   own: Array.from({ length: players }, () => new Map<number, boolean>()),
   challenge: null,
+  plusMinus: { on: false, next: 0 },
 })
 
 /**
@@ -208,6 +215,7 @@ export const clearIdleAttacks = (g: Game) => {
 /** Co-op upkeep at the end of a world tick: idle players' hitboxes go, fainted ones fill their revive, and the run ends on a wipe. */
 export const updateCoop = (g: Game, dt: number) => {
   clearIdleAttacks(g)
+  updatePlusMinus(g, dt)
   updateRevives(g, dt)
   checkWipe(g)
 }
@@ -454,4 +462,73 @@ export const coopPayout = (g: Game, slot: number): CoopPayout => {
   }
   const bonus = runBonus({ time: g.time, kills: p.record.kills + p.record.folded, victory: wonRun(g), greed: p.stats.greed, reaperDefeats: g.endless?.reaperDefeats })
   return { coins, bonus, steps, eggs, summary }
+}
+
+/*
+ * Plus and Minus: a Plusle and a Minun on one team give each other a lift
+ * (`KIT_H.link.bonus`, both of them, while both stand) and a current runs
+ * between them, hitting the foes along it, while they keep within
+ * `KIT_H.link.reach` of each other and both are playing. Solo never gets
+ * here (`g.coop !== null`), nor the Arena.
+ */
+
+/** A player standing on the team: up, and not gone. */
+const standing = (p: Player) => p.hp > 0 && !p.gone
+
+const firstStanding = (g: Game, starter: 'plusle' | 'minun') => g.players.find((p) => p.starter === starter && standing(p))
+
+/** The current between Plusle and Minun hits the foes within `KIT_H.link.width` of it, as Plusle's (`plus`). */
+const zapAlong = (g: Game, plus: Player, minus: Player) => {
+  const L = KIT_H.link
+  const targets: Enemy[] = []
+  for (const e of g.enemies) {
+    if (e.dying >= 0 || e.behavior.kind === 'avatar') continue
+    const reach = L.width + e.radius
+    if (segmentDist2(e.x, e.y - e.radius / 2, plus.x, plus.y - 10, minus.x, minus.y - 10) <= reach * reach) targets.push(e)
+  }
+  if (targets.length === 0) return
+  const before = actAs(g, plus)
+  const power = L.power * plus.stats.might * (1 + 0.04 * (plus.level - 1))
+  const zap = spawnAttack(g, {
+    move: 'voltSwitch', type: 'electric', visual: 'hookZap', x: plus.x, y: plus.y - 10, from: { x: minus.x, y: minus.y - 10 },
+    shape: { kind: 'circle', r: 4 }, motion: { kind: 'static' }, damage: power, knockback: 20, ttl: 0.16, activeFrom: Infinity, mod: null,
+  })
+  for (const e of targets) damageEnemy(g, e, zap)
+  actAs(g, before)
+}
+
+/** Per world tick in co-op: the link turns on or off with the team (their stats follow), and the current hits on its clock. */
+export const updatePlusMinus = (g: Game, dt: number) => {
+  const c = g.coop
+  if (c === null || g.versus) return
+  const plus = firstStanding(g, 'plusle')
+  const minus = firstStanding(g, 'minun')
+  const on = plus !== undefined && minus !== undefined
+  if (on !== c.plusMinus.on) {
+    c.plusMinus.on = on
+    if (on) g.events.push({ kind: 'plusMinus' })
+    c.plusMinus.next = KIT_H.link.every
+    const before = g.player
+    for (const p of g.players) {
+      if (!isPlusMinus(p.starter)) continue
+      actAs(g, p)
+      recomputeStats(g)
+    }
+    actAs(g, before)
+  }
+  if (!plus || !minus) return
+  c.plusMinus.next -= dt
+  if (c.plusMinus.next > 0) return
+  c.plusMinus.next += KIT_H.link.every
+  if (!inPlay(plus) || !inPlay(minus) || dm.sq(plus.x - minus.x) + dm.sq(plus.y - minus.y) > dm.sq(KIT_H.link.reach)) return
+  zapAlong(g, plus, minus)
+}
+
+/** Whether the link's current shows between `plus` and `minus` now (the shell's, `render/gaHookFx.ts`). */
+export const plusMinusLink = (g: Game): { plus: Player; minus: Player } | null => {
+  if (g.coop === null || !g.coop.plusMinus.on) return null
+  const plus = firstStanding(g, 'plusle')
+  const minus = firstStanding(g, 'minun')
+  if (!plus || !minus || !inPlay(plus) || !inPlay(minus)) return null
+  return dm.sq(plus.x - minus.x) + dm.sq(plus.y - minus.y) <= dm.sq(KIT_H.link.reach) ? { plus, minus } : null
 }

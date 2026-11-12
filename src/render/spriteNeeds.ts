@@ -14,6 +14,7 @@ import { bossSummons, type Roster } from '../game/roster'
 import { STANCES } from '../game/stance'
 import type { Game } from '../game/types'
 import { sheetForm, type Dex, type KeepSprites, type Variant } from './sprites'
+import { hookVariants } from './gaHookLook'
 
 /**
  * Which species' sheets a run holds: the shell streams the ones it needs now
@@ -134,7 +135,7 @@ export const playerForms = (g: Game): Variant[] =>
     const looks = s && (s.awakened >= 1 || s.forms.length > 0) ? [formAfter(s.id, s.awakened, s.forms), formAfter(s.id, s.awakened + 1, s.forms) ?? formAfter(s.id, 2, s.forms)] : []
     const legend = looks.flatMap((l) => (l ? [{ dex: l.dex, shiny: p.shiny, ...(l.key && { form: sheetForm(l.key) }) }] : []))
     const forms = [...(mega ? [mega.form] : []), ...(p.special.stance !== null ? STANCE_NAMES : []), ...(KIT_FORMS[p.kit?.kind ?? 'none'] ?? [])]
-    return [...forms.map((form) => ({ dex, shiny: p.shiny, form })), ...legend, ...(p.kit?.kind === 'commander' ? [{ dex: DONDOZO, shiny: false }] : []), ...(p.kitA?.kind === 'shell' && p.stage >= 1 ? [{ dex: SHEDINJA, shiny: p.shiny }] : [])]
+    return [...forms.map((form) => ({ dex, shiny: p.shiny, form })), ...legend, ...(p.kit?.kind === 'commander' ? [{ dex: DONDOZO, shiny: false }] : []), ...(p.kitA?.kind === 'shell' && p.stage >= 1 ? [{ dex: SHEDINJA, shiny: p.shiny }] : []), ...hookVariants(g, p)]
   })
 
 /**

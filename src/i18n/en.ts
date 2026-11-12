@@ -8,6 +8,7 @@ import { TERA_WORDS } from './tera'
 import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
 import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
 import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
+import { GA_HOOK_WORDS } from './gaHook'
 import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { ROCKET_WORDS } from './rocket/words'
 import { ULTRA_WORDS } from './ultra'
@@ -3181,6 +3182,7 @@ export const en: Messages = {
     ...GA_FAMILIES_B_WORDS.en.moves,
     ...GA_FAMILIES_A_WORDS.en.moves,
     ...ROCKET_FAMILY_WORDS.en.moves,
+    ...GA_HOOK_WORDS.en.moves,
     ...GALLOP_WORDS.en,
     ...ULTRA_WORDS.en.moves,
     ...LEGEND_PATHS_WORDS.en.moves,
@@ -5661,6 +5663,7 @@ export const en: Messages = {
     ...GA_FAMILIES_B_WORDS.en.blurbs,
     ...GA_FAMILIES_A_WORDS.en.blurbs,
     ...ROCKET_FAMILY_WORDS.en.blurbs,
+    ...GA_HOOK_WORDS.en.blurbs,
     ...ULTRA_WORDS.en.blurbs,
     ...LEGEND_PATHS_WORDS.en.blurbs,
     ...QUEST_WORDS.en.blurbs,
@@ -6503,7 +6506,7 @@ export const en: Messages = {
       awards: { damage: 'Top damage', kills: 'Most defeated', revives: 'Guardian angel', untouched: 'Untouchable', tank: 'Tank', comeback: 'Phoenix', survivor: 'Survivor', specialist: 'Specialist', collector: 'Collector', loyal: 'Team player' },
     },
   },
-  seasonUnlocks: SEASON_ONE_UNLOCKS_WORDS.en,
+  seasonUnlocks: { ...SEASON_ONE_UNLOCKS_WORDS.en, where: { ...SEASON_ONE_UNLOCKS_WORDS.en.where, ...GA_HOOK_WORDS.en.where } },
   rocket: ROCKET_WORDS.en,
   paths: LEGEND_PATHS_WORDS.en.paths,
   minigames: {
@@ -6655,4 +6658,5 @@ export const en: Messages = {
     hello: ['Sawing and sanding, as always. Taking anything home?', 'Good wood, fair prices. Have a look!', 'A base without furniture is just a hole in the wall!', 'I just varnished a few new pieces.'],
   },
   travel: REGIONAL_WORDS.en.travel,
+  gaHook: { tyrogue: GA_HOOK_WORDS.en.tyrogue, vivillon: GA_HOOK_WORDS.en.vivillon, plusMinus: GA_HOOK_WORDS.en.plusMinus },
 }

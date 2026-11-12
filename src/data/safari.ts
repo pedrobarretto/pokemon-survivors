@@ -24,9 +24,9 @@ const REGULAR = HATCHLING_IDS.filter((id) => (['common', 'rare', 'ultra'] as con
 
 /** The habitats, in the weekly order (`habitatOfWeek`). A new Safari-only family is one more id in its habitat's `only`. */
 export const SAFARI_HABITATS = {
-  meadow: { types: ['normal', 'flying', 'grass', 'bug', 'fairy'], only: ['tandemaus'] },
+  meadow: { types: ['normal', 'flying', 'grass', 'bug', 'fairy'], only: ['tandemaus', 'scatterbug'] },
   marsh: { types: ['ghost', 'dark', 'poison', 'psychic'], only: ['mimikyu'] },
-  ridge: { types: ['electric', 'rock', 'ground', 'steel', 'fighting', 'fire', 'dragon'], only: ['morpeko'] },
+  ridge: { types: ['electric', 'rock', 'ground', 'steel', 'fighting', 'fire', 'dragon'], only: ['morpeko', 'minior', 'tyrogue'] },
   cove: { types: ['water', 'ice'], only: ['lapras'] },
 } as const satisfies Record<string, { types: readonly string[]; only: readonly HatchlingId[] }>
 
@@ -72,7 +72,7 @@ export const habitatPool = (habitat: SafariHabitat, week: string): SafariEntry<H
  */
 
 /** Families seen only by night, wherever their types put them. */
-const NIGHT_ONLY: ReadonlySet<HatchlingId> = new Set(['zubat', 'zorua', 'houndour', 'shuppet', 'honedge', 'deino', 'dreepy', 'sableye', 'sneasel'])
+const NIGHT_ONLY: ReadonlySet<HatchlingId> = new Set(['zubat', 'zorua', 'houndour', 'shuppet', 'honedge', 'deino', 'dreepy', 'sableye', 'sneasel', 'minior'])
 
 /** Families asleep by night. */
 const DAY_ONLY: ReadonlySet<HatchlingId> = new Set(['starly', 'pidgey', 'swablu', 'budew', 'larvesta', 'ponyta', 'spheal', 'applin'])

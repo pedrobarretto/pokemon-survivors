@@ -7,6 +7,7 @@ import type { MegaId } from './megas'
 import type { EvolutionStage } from './starters'
 import type { PokeType } from './types'
 import { GA_BRANCHES_A } from './gaFamiliesA'
+import { GA_BRANCHES_HOOK } from './gaFamiliesHook'
 
 /**
  * Branching evolutions: a family whose evolution can go more than one way
@@ -279,6 +280,9 @@ export const BRANCHES = {
     moves: ['waterGun', 'whirlpool'],
     favors: { weather: ['rain'], biome: ['beach'] },
   },
+
+  /* ---------- Tyrogue at Lv 20: where its build sends it (`ruledBranch`), never drawn nor picked ---------- */
+  ...GA_BRANCHES_HOOK,
 } as const satisfies Record<string, BranchDef>
 
 export type BranchId = keyof typeof BRANCHES
