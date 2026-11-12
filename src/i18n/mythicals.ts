@@ -12,7 +12,7 @@ type MoveText = { readonly description: string; readonly upgrades: readonly [str
 
 const pt = {
   moves: {
-    powerGem: {
+    diamondStorm: {
       description: 'Gemas de luz giram num redemoinho ao redor de Diancie e disparam para todos os lados. Cada lançamento endurece a guarda: +1 de defesa por alguns segundos (+2 na Mega Diancie, que lança uma segunda espiral).',
       upgrades: [
         '+8 de dano',
@@ -68,7 +68,7 @@ const pt = {
 
 const en: typeof pt = {
   moves: {
-    powerGem: {
+    diamondStorm: {
       description: 'Gems of light whirl around Diancie and shoot out on every side. Each cast hardens its guard: +1 defense for a few seconds (+2 as Mega Diancie, which throws a second spiral).',
       upgrades: [
         '+8 damage',
@@ -123,7 +123,7 @@ const en: typeof pt = {
 
 const es: typeof pt = {
   moves: {
-    powerGem: {
+    diamondStorm: {
       description: 'Gemas de luz giran en un remolino alrededor de Diancie y salen disparadas hacia todos lados. Cada lanzamiento endurece su guardia: +1 de defensa por unos segundos (+2 como Mega Diancie, que lanza una segunda espiral).',
       upgrades: [
         '+8 de daño',
@@ -178,7 +178,7 @@ const es: typeof pt = {
 
 const fr: typeof pt = {
   moves: {
-    powerGem: {
+    diamondStorm: {
       description: 'Des gemmes de lumière tourbillonnent autour de Diancie et jaillissent de tous côtés. Chaque lancer durcit sa garde : +1 de défense pendant quelques secondes (+2 en Méga Diancie, qui lance une seconde spirale).',
       upgrades: [
         '+8 de dégâts',
@@ -233,7 +233,7 @@ const fr: typeof pt = {
 
 const zh: typeof pt = {
   moves: {
-    powerGem: {
+    diamondStorm: {
       description: '光之寶石在Diancie身邊捲成旋渦，再往四面八方射出。每次施放都會強化防守：數秒內防禦+1（Mega Diancie為+2，並再甩出一道反向螺旋）。',
       upgrades: [
         '傷害+8',

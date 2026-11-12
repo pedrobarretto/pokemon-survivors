@@ -828,7 +828,7 @@ export const LEGENDS = {
   },
 
   /* ---------- The mythicals (`data/mythicals.ts`) ---------- */
-  /** Diancie: the Escavação's rarest treasure. Its Power Gem guards as it hits; Mega Diancie at the second awakening. */
+  /** Diancie: the Escavação's rarest treasure. Its Diamond Storm guards as it hits; Mega Diancie at the second awakening. */
   diancie: {
     name: 'Diancie',
     color: '#f0a0c8',

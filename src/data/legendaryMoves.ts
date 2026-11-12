@@ -74,7 +74,7 @@ export const LEGENDARY_MOVE_OF = {
   keldeo: 'secretSword',
   hoopa: 'hyperspaceFury',
   // The Grande Atualização's mythicals (`game/legendaryMoves5.ts`): each its own signature.
-  diancie: 'powerGem',
+  diancie: 'diamondStorm',
   zeraora: 'plasmaFists',
   ogerpon: 'ivyCudgel',
 } as const satisfies Record<LegendId, LegendaryMoveId | LegendaryMove2Id | UltraMoveId | PathLegendMoveId | LegendaryMove3Id | LegendaryMove5Id>

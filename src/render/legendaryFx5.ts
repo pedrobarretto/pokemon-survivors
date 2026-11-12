@@ -77,7 +77,7 @@ const WOOD = { o: '#30200c', h: '#a87040', m: '#7c4c24', d: '#583418', g: '#58c0
 /* ---------------- Icons ---------------- */
 
 export const LEGENDARY_ICONS_5: Record<LegendaryMove5Id, () => PixelSprite> = {
-  powerGem: () =>
+  diamondStorm: () =>
     medallion(paint(11, 11, (dot) => {
       // A pink diamond with a spark, and two small ones whirling round it.
       const big = ['..ooooo..', '.olplmmo.', 'ollppllmo', '.ollmmdo.', '..olmdo..', '...omo...', '....o....']
@@ -111,7 +111,7 @@ export const LEGENDARY_ICONS_5: Record<LegendaryMove5Id, () => PixelSprite> = {
     }), '#18301c'),
 }
 
-/* ---------------- Power Gem ---------------- */
+/* ---------------- Diamond Storm ---------------- */
 
 /** A shard in flight, point first, a glint off it every few frames and a faint trail of glitter. */
 const drawShard = (ctx: Ctx, a: Attack, t: number) => {

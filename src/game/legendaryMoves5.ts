@@ -24,7 +24,7 @@ import * as dm from '../engine/dmath'
 /** The visuals of this batch, drawn by `render/legendaryFx5.ts`. */
 export type LegendaryVisual5 = 'diamondShard' | 'diamondHalo' | 'plasmaFist' | 'plasmaArc' | 'cudgelSwing' | 'cudgelSlam' | 'maskBurst'
 
-/** Power Gem: the ring the diamonds form around the player, the beat between them (a spiral), how long they spin before flying out, and the armor each cast lends for its `duration`. */
+/** Diamond Storm: the ring the diamonds form around the player, the beat between them (a spiral), how long they spin before flying out, and the armor each cast lends for its `duration`. */
 export const DIAMOND = { ring: 18, stagger: 0.025, spin: 0.22, armor: 1, r: 5 } as const
 
 /** Plasma Fists: how far it reaches for foes, the beat between fists, each fist's radius (× area), and the plasma arc's radius and share of the damage. */
@@ -46,8 +46,8 @@ const megaForm = (g: Game) => (g.player.legend?.awakened ?? 0) >= 2
 
 export const LEGENDARY_MOVES_5 = {
   /* Diancie */
-  powerGem: {
-    name: 'Power Gem',
+  diamondStorm: {
+    name: 'Diamond Storm',
     type: 'rock',
     legendary: true,
     base: stats({ damage: 30, cooldown: 2.8, amount: 8, speed: 170, knockback: 40, duration: 3 }),
@@ -58,7 +58,7 @@ export const LEGENDARY_MOVES_5 = {
       { cooldown: -0.4, damage: 8 },
     ],
     // Diamonds spiral out of a glittering whirl around Diancie and fly out at every side; each cast hardens its guard for a while
-    // (the games' Power Gem raises Defense). Mega Diancie's whirl throws a second spiral the other way.
+    // (the games' Diamond Storm raises Defense). Mega Diancie's whirl throws a second spiral the other way.
     fire: (g, s) => {
       const p = g.player
       const spirals = megaForm(g) ? 2 : 1
@@ -70,19 +70,19 @@ export const LEGENDARY_MOVES_5 = {
           const at = fromAngle(a, DIAMOND.ring * s.area)
           const v = fromAngle(a + dir * 0.35, s.speed)
           spawnAttack(g, {
-            ...look('powerGem', 'rock', 'diamondShard'), x: p.x + at.x, y: p.y - 8 + at.y * 0.8,
+            ...look('diamondStorm', 'rock', 'diamondShard'), x: p.x + at.x, y: p.y - 8 + at.y * 0.8,
             shape: { kind: 'circle', r: DIAMOND.r * s.area }, motion: { kind: 'linear', vx: v.x, vy: v.y },
             damage: s.damage, knockback: s.knockback, pierce: 2, ttl: 1.4, age: -(DIAMOND.spin + i * DIAMOND.stagger + k * 0.1), memo: a, tier: (i + k) % 3,
           })
         }
       }
       spawnAttack(g, {
-        ...look('powerGem', 'rock', 'diamondHalo'), x: p.x, y: p.y - 8,
+        ...look('diamondStorm', 'rock', 'diamondHalo'), x: p.x, y: p.y - 8,
         shape: { kind: 'circle', r: DIAMOND.ring }, motion: { kind: 'follow', ox: 0, oy: -8 },
         damage: 0, activeFrom: Infinity, ttl: DIAMOND.spin + s.amount * DIAMOND.stagger + 0.25, memo: DIAMOND.ring * s.area, flip: spirals > 1,
       })
-      buff(g, 'powerGem', s.duration, { armor: DIAMOND.armor * (megaForm(g) ? 2 : 1) })
-      cast(g, 'powerGem')
+      buff(g, 'diamondStorm', s.duration, { armor: DIAMOND.armor * (megaForm(g) ? 2 : 1) })
+      cast(g, 'diamondStorm')
     },
   },
 
