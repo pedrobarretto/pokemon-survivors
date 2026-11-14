@@ -60,8 +60,8 @@ const OLD_POOL = PLAYABLE_IDS.filter((id) => drawable(id) && !(id in SEASON_ONE_
 /** The pool from Temporada 1 on, with its new egg families. */
 const SEASON_POOL = PLAYABLE_IDS.filter(drawable)
 
-/** Who a day draws from: days before `SEASON_ONE` keep the old pool, so their Pokémon stay where they were. */
-const poolOf = (day: DayKey) => (day < SEASON_ONE.day ? OLD_POOL : SEASON_POOL)
+/** Who a day draws from: days before `SEASON_ONE.challengeDay` keep the old pool, so their Pokémon stay where they were. */
+const poolOf = (day: DayKey) => (day < SEASON_ONE.challengeDay ? OLD_POOL : SEASON_POOL)
 
 /** A seeded shuffle of the pool: one cycle of days gives each one its day. */
 const cycleOrder = (cycle: number, pool: readonly PlayableId[]) => {

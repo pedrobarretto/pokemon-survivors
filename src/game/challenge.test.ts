@@ -43,7 +43,7 @@ describe('dailyChallenge', () => {
       const seen = Array.from({ length: days }, () => dailyChallenge((day = previousDay(day))).starter)
       return seen.filter((s) => s in SEASON_ONE_EGGS || s in SEASON_ONE_KITS || s in GA_FAMILIES_A)
     }
-    expect(newFamilies(SEASON_ONE.day, 300)).toEqual([])
+    expect(newFamilies(SEASON_ONE.challengeDay, 300)).toEqual([])
     expect(newFamilies('2027-11-16', 300).length).toBeGreaterThan(0)
   })
 
