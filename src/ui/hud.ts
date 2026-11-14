@@ -51,13 +51,13 @@ const hpClass = (ratio: number) => (ratio > 0.5 ? 'hp-high' : ratio > 0.2 ? 'hp-
 /**
  * In-run heads-up display. `update` is called every frame and only touches what changed.
  * `onSpecial`, `onMega`, `onTera` and `onLunge` fire when the touch special, Mega, TERA and lunge buttons are pressed;
- * `onPause` backs the on-screen pause button (phones have no Esc key; `menu`: co-op's menu button); `onStickMode` runs when the padlock changes the joystick mode (the status box moves); `isHeld` (the input's)
+ * `onPause` backs the on-screen pause button (phones have no Esc key; `menu`: co-op's menu button); `onLayout` runs when the HUD's frame changes: the padlock changes the joystick mode (the status box moves), or the boss bar or the pill under the timer comes or goes (the shell re-measures it, `syncMarkerInsets`); `isHeld` (the input's)
  * lights the desktop WASD keys. Hovering or holding a move slot opens its card (`withMoveCard`). Labels are
  * read at creation: rebuild the HUD after a language switch.
  */
-export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () => void, onTera: () => void, onLunge: () => void, onPause: () => void, onStickMode: () => void, isHeld: (code: string) => boolean, menu = false) => {
+export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () => void, onTera: () => void, onLunge: () => void, onPause: () => void, onLayout: () => void, isHeld: (code: string) => boolean, menu = false) => {
   const movePad = createMovePad(isHeld)
-  const stickLock = createStickLock(root, onStickMode)
+  const stickLock = createStickLock(root, onLayout)
   const special = createSpecialControls(onSpecial)
   const mega = createMegaControls(onMega)
   const tera = createTeraControls(onTera)
@@ -227,6 +227,8 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
     )
   }
 
+  /** What the HUD's frame last held (`onLayout`). */
+  const framed = { boss: false, pill: '' }
   const update = (g: Game) => {
     const p = localPlayer(g)
     setStyle(xpFill, 'width', `${Math.min(100, (p.xp / p.xpNext) * 100).toFixed(1)}%`)
@@ -331,6 +333,12 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
 
     const b = g.bossId !== null ? g.enemies.find((e) => e.id === g.bossId) : undefined
     boss.classList.toggle('hidden', !b)
+    // The boss bar or the pill coming or going moves what the camera frames under (`frameRush`, `frameRaid`): the shell measures again.
+    if (!!b !== framed.boss || rift.el.className !== framed.pill) {
+      framed.boss = !!b
+      framed.pill = rift.el.className
+      onLayout()
+    }
     const mate = b?.fight && b.fight.link >= 0 ? g.enemies.find((e) => e.id === b.fight!.link) : undefined
     pairBars.classList.toggle('hidden', !mate)
     if (b && mate) {

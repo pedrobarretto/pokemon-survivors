@@ -9115,8 +9115,9 @@ button {
   color: color-mix(in srgb, #1c6c78 var(--dk-lift, 100%), #fff);
 }
 
-/* A roaming lake legend about, or a Sword of Justice's duel (`ui/quests.ts`). */
-.rift-pill.rift-quest {
+/* A roaming lake legend about, or a Sword of Justice's duel (`ui/quests.ts`); Hoopa's rings (`rushPill` in `ui/rush.ts`). */
+.rift-pill.rift-quest,
+.rift-pill.rift-rush {
   color: color-mix(in srgb, #2c6098 var(--dk-lift, 100%), #fff);
 }
 
@@ -9375,6 +9376,19 @@ button {
 
 .mission-pill.urgent {
   animation: rift-pulse 0.5s steps(2) infinite;
+}
+
+/*
+ * Hoopa's Rings on a phone held sideways: the pill (the ring and the same clock) takes the timer's place, so the
+ * top of the HUD ends at the legend's bar and the camera can frame the legend under it (`frameRush` in `render/rush.ts`).
+ */
+@media (max-height: 500px) {
+  .hud:has(.rift-pill.rift-rush) .timer {
+    visibility: hidden;
+  }
+  .rift-pill.rift-rush {
+    top: 14px;
+  }
 }
 
 /* A wave legend's entrance or capture (`g.legendScene`) centers the camera on it: the pills leave it and its name clear. */
