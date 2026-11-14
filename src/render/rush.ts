@@ -2,9 +2,12 @@ import { blitEllipse, blitRing, canvasCache, context2d, createCanvas, lazy } fro
 import { TAU } from '../engine/math'
 import { hash2 } from '../engine/rng'
 import { circle, type Circle } from '../data/arenas'
+import { bodyOf } from '../data/bodies'
 import { ENEMIES } from '../data/enemies'
 import { RUSH } from '../data/rush'
 import { ISLAND_IDS, ISLANDS, type IslandId } from '../data/rushIslands'
+import { drawScale } from '../game/alphas'
+import { localPlayer } from '../game/players'
 import { islandOf, rushGate, type RushState } from '../game/rush'
 import type { Game } from '../game/types'
 import { detail } from './quality'
@@ -634,4 +637,54 @@ const drawHost = (ctx: Ctx, r: RushState, gate: { x: number; y: number }, t: num
   if (r.lineup[r.ring] === 'hoopa' || r.stage === 'cleared') return
   const bob = Math.round(Math.sin(t * 2.4) * 2)
   drawPokemon(ctx, sprites(ENEMIES.hoopa.dex), 'Idle', 0, t, Math.round(gate.x + 40), Math.round(gate.y - 44 + bob))
+}
+
+/* ---------------- Framing the ring's legend ---------------- */
+
+/** How tall the gate's frame keeps room for before its legend comes through (world px over the gate): about a legend's body. */
+const GATE_TALL = 34
+
+/** The screen's room the HUD leaves (world px from the top and the bottom), measured by the shell (`syncMarkerInsets` in `main.ts`). */
+let room = { top: 0, bottom: 8 }
+let nudge = 0
+let nudgedAt = 0
+
+/** The shell measures the HUD's top (the boss bar or the pill under it, whichever ends lower) and what covers the bottom's middle. */
+export const setRushRoom = (next: { top: number; bottom: number }) => {
+  room = next
+}
+
+/**
+ * The drawn camera in Hoopa's Rings, as `frameRaid` does a raid's: the
+ * simulation frames the player and the ring's legend (`rushCamera`) without
+ * knowing the HUD, so on a short screen (a phone held sideways) the legend
+ * coming through the gate, north of the player, would stand under the boss
+ * bar. Where the legend's top (or, while the ring opens, the gate's frame)
+ * would sit under the HUD, the drawn camera rises until it clears it, as far
+ * as the player's feet and HP bar stay above what covers the bottom's middle.
+ * Eased, and only ever up. Writes `g.camera.y` from `base`, the camera as
+ * the simulation aimed it; nothing outside a rush.
+ */
+export const frameRush = (g: Game, t: number, base: number) => {
+  const r = g.rush
+  if (!r) {
+    nudge = 0
+    return
+  }
+  const p = localPlayer(g)
+  const boss = r.stage === 'fight' ? g.enemies.find((e) => e.id === r.bossId && e.dying < 0) : undefined
+  const top = boss ? boss.y - bodyOf(ENEMIES[boss.kind].dex).bodyH * drawScale(boss) : r.stage === 'gate' ? rushGate(r).y - GATE_TALL : null
+  const dt = Math.min(0.1, Math.max(0, t - nudgedAt))
+  nudgedAt = t
+  if (top === null || p.hp <= 0) {
+    // Between rings the frame eases back to the simulation's.
+    nudge -= nudge * Math.min(1, dt * 4)
+  } else {
+    const need = room.top + 2 - (top - base)
+    // The feet, and the HP bar under them, keep above the bottom's cover.
+    const below = g.view.h - room.bottom - (p.y + 8 - base)
+    const want = need > 0 ? -Math.min(need, Math.max(0, below)) : 0
+    nudge += (want - nudge) * Math.min(1, dt * 6)
+  }
+  g.camera.y = base + Math.round(nudge)
 }
