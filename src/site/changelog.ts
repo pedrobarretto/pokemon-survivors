@@ -128,9 +128,9 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             es: 'La horda pasa de 415 a 745 especies: casi todos los Pokémon que existen aparecen en el mundo. Los raros siguen siendo raros, y cada bioma atrae sus tipos.',
           },
           {
-            pt: 'A Pokédex do jogo agora é a Nacional, por região, de Kanto a Paldea: 898 dos 1.025 Pokémon estão no jogo, mais 42 formas regionais. Complete uma região para ganhar o título de Pesquisador(a) dela, e as nove para a moldura Pokédex Nacional.',
-            en: 'The in-game Pokédex is now the National one, region by region, from Kanto to Paldea: 898 of the 1,025 Pokémon are in the game, plus 42 regional forms. Complete a region to earn its Researcher title, and all nine for the National Pokédex frame.',
-            es: 'La Pokédex del juego ahora es la Nacional, por región, de Kanto a Paldea: 898 de los 1.025 Pokémon están en el juego, más 42 formas regionales. Completa una región para ganar su título de Investigador(a), y las nueve para el marco Pokédex Nacional.',
+            pt: 'A Pokédex do jogo agora é a Nacional, por região, de Kanto a Paldea: 909 dos 1.025 Pokémon estão no jogo, mais 43 formas (42 regionais e a Eternal Floette). Complete uma região para ganhar o título de Pesquisador(a) dela, e as nove para a moldura Pokédex Nacional.',
+            en: 'The in-game Pokédex is now the National one, region by region, from Kanto to Paldea: 909 of the 1,025 Pokémon are in the game, plus 43 forms (42 regional ones and Eternal Floette). Complete a region to earn its Researcher title, and all nine for the National Pokédex frame.',
+            es: 'La Pokédex del juego ahora es la Nacional, por región, de Kanto a Paldea: 909 de los 1.025 Pokémon están en el juego, más 43 formas (42 regionales y Eternal Floette). Completa una región para ganar su título de Investigador(a), y las nueve para el marco Pokédex Nacional.',
           },
           {
             pt: 'Os Pokémon que os artistas do SpriteCollab ainda estão desenhando aparecem na Pokédex com um agradecimento e um link para ajudar a desenhar.',

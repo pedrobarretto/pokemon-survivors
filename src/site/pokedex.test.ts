@@ -3,9 +3,14 @@ import manifest from '../data/sprites.generated.json'
 import { ENEMIES, type EnemyId } from '../data/enemies'
 import { GAME_SPECIES } from '../data/species'
 import { RUN_LENGTH } from '../data/waves'
-import { DEX_REGIONS } from '../data/nationalDex'
+import { DEX_REGIONS, dexRegionOf } from '../data/nationalDex'
 import { dexGoal } from '../game/dexRegions'
-import { appearances, clock, gameDex, pokedex, regionCounts, regionOf } from './pokedex'
+import { REGIONAL_DEX } from '../data/regionalForms'
+import { appearances, clock, dexTotals, gameDex, pokedex, regionCounts, regionOf } from './pokedex'
+import { CHANGELOG } from './changelog'
+
+/** The static pages' copy and `llms.txt`, which state the Pokédex's numbers in words. */
+const STATIC_COPY: Record<string, string> = import.meta.glob(['/index.html', '/en/index.html', '/es/index.html', '/fr/index.html', '/zh-tw/index.html', '/public/llms.txt'], { query: '?raw', import: 'default', eager: true })
 
 describe('pokedex', () => {
   it("keeps the in-game Pokédex to exactly the species the save may hold (`GAME_SPECIES`), gift-only companions out", () => {
@@ -19,6 +24,34 @@ describe('pokedex', () => {
       expect(c.inGame).toBeLessThanOrEqual(c.total)
     }
     expect(regionCounts('kanto')).toMatchObject({ inGame: 151, total: 151, goal: 150, left: ['Mew'] })
+  })
+
+  it("counts the in-game Pokédex's species and forms apart, and only the species a run fights as defeatable", () => {
+    const entries = gameDex()
+    const totals = dexTotals(entries)
+    // Every regional form is a card of its own, and so is Eternal Floette, filed after Floette in Kalos.
+    expect(totals.forms).toBe(REGIONAL_DEX.length + 1)
+    expect(dexRegionOf(entries.find((e) => e.name === 'Eternal Floette')?.dex ?? 0)).toBe('kalos')
+    const never = entries.filter((e) => e.source.kind === 'gift' || e.source.kind === 'path' || (e.source.kind === 'starter' && e.source.wild === undefined))
+    expect(totals.defeatable).toBe(entries.length - never.length)
+  })
+
+  it("states the Pokédex's numbers in its copy: the static pages, llms.txt and the update that brought it", () => {
+    const { entries, species, forms, defeatable } = dexTotals()
+    const update = CHANGELOG.flatMap((u) => u.changes.flatMap((c) => c.notes)).find((n) => n.en.includes('in-game Pokédex is now the National one'))
+    const copies = [
+      ...Object.entries(STATIC_COPY),
+      ...(['pt', 'en', 'es'] as const).map((l) => [`changelog ${l}`, update?.[l] ?? ''] as const),
+    ]
+    expect(Object.keys(STATIC_COPY)).toHaveLength(6)
+    for (const [where, text] of copies) {
+      expect(text, where).toContain(String(species))
+      expect(text, where).toContain(`${forms} `)
+    }
+    for (const [where, text] of copies.slice(0, 6)) {
+      expect(text, where).toContain(String(entries))
+      expect(text, where).toContain(String(defeatable))
+    }
   })
 
   const entries = pokedex()

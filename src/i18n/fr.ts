@@ -1533,6 +1533,8 @@ export const fr: Messages = {
   dex: {
     seen: 'Vu',
     defeated: 'Vaincu',
+    /** The defeated counter's tooltip: why its total is smaller than the seen one's. */
+    defeatedHint: 'Seulement ceux qui viennent se battre : ceux que tu joues, fais éclore ou reçois seulement ne comptent pas',
     caught: 'Capturé',
     cleared: 'Terminé',
     clear: 'Terminé',

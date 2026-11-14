@@ -1797,6 +1797,8 @@ export const pt = {
   dex: {
     seen: 'Vistos',
     defeated: 'Derrotados',
+    /** The defeated counter's tooltip: why its total is smaller than the seen one's. */
+    defeatedHint: 'Só os que aparecem para lutar: os que você só joga, choca ou ganha não contam',
     caught: 'Capturados',
     /** Clears (`game/clears.ts`): the Pokémon that beat Mewtwo, the hardest difficulty picking the trophy's metal. */
     cleared: 'Zerados',

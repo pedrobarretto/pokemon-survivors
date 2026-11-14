@@ -222,6 +222,26 @@ export const gameDex = (): DexEntry[] => {
 }
 
 /**
+ * Whether a run can knock the species out, so the Pokédex counts its defeats:
+ * the horde's (wild, or a playable family that also roams it) and the fleeing
+ * Meowth. The families only played or hatched and the legends only given or
+ * walked (`gift`, `path`) are seen but never fought.
+ */
+export const defeatable = (e: DexEntry) => e.source.kind === 'wild' || e.source.kind === 'event' || (e.source.kind === 'starter' && e.source.wild !== undefined)
+
+/**
+ * What the in-game Pokédex's counters count, the numbers its copy states
+ * (the changelog, the static pages, `llms.txt`): its `entries` (seen ones'
+ * total), the National Dex `species` among them and the `forms` on top (a
+ * regional form or another form with its own card, Eternal Floette), and how
+ * many are `defeatable`. `entries` is `gameDex()`, passed in when it's at hand.
+ */
+export const dexTotals = (entries: readonly DexEntry[] = gameDex()) => {
+  const species = new Set(entries.map((e) => nationalDex(e.dex))).size
+  return { entries: entries.length, species, forms: entries.length - species, defeatable: entries.filter(defeatable).length }
+}
+
+/**
  * A region's numbers as the game's Pokédex and the site both show them,
  * counted the same way as the in-game grid's cells (a regional form is its
  * own, in its form's region): the species the game has (`inGame`) of all the

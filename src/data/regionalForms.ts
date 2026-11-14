@@ -39,6 +39,7 @@ const REGIONAL_FORMS: Readonly<Record<number, { national: number; region: Region
 /** Other forms with an id of their own that aren't a region's: their species' number and generation. */
 const OTHER_FORMS: Readonly<Record<number, { national: number; gen: number }>> = {
   10263: { national: 999, gen: 9 }, // Gimmighoul's Roaming Form (SpriteCollab has no Chest Form sheets; the Rocket Game Corner's prize)
+  10061: { national: 670, gen: 6 }, // Eternal Floette (AZ's, a branch of Flabébé's line): a form, filed after Floette in Kalos
 }
 
 /** The national dex number to show for a species (a regional form shows its species'). */

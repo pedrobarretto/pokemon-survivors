@@ -1533,6 +1533,8 @@ export const zh: Messages = {
   dex: {
     seen: '見過',
     defeated: '擊倒',
+    /** The defeated counter's tooltip: why its total is smaller than the seen one's. */
+    defeatedHint: '只計算會出來戰鬥的寶可夢：只能使用、孵化或獲贈的不計入',
     caught: '捕捉',
     cleared: '通關',
     clear: '通關',
