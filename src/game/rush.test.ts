@@ -24,7 +24,7 @@ describe('Hoopa’s Rings', () => {
   })
 
   it('bring every captured legend that fights somewhere, and none a fight never brings', () => {
-    const fought = ['kartana', 'guzzlord', 'regigigas', 'terapagos', 'keldeo', 'mew', 'celebi', 'jirachi', 'uxie', 'azelf'] as const
+    const fought = ['kartana', 'guzzlord', 'regigigas', 'terapagos', 'keldeo', 'mew', 'celebi', 'zeraora', 'jirachi', 'azelf'] as const
     expect(rushLineup([...fought, 'zygarde', 'solgaleo', 'lunala', 'kubfu', 'meltan', 'poipole', 'cresselia'], 'nightmare', 3)).toEqual([...fought.toSorted((a, b) => RUSH_ORDER.indexOf(a) - RUSH_ORDER.indexOf(b)), 'hoopa'])
     // Each fights in the rings with its own phases or patterns.
     for (const id of RUSH_ORDER) expect(BOSS_PHASES[id] ?? BOSS_PATTERNS[id], id).toBeTruthy()
