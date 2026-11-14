@@ -257,7 +257,9 @@ const FRAME = { side: 44, top: 96, bottom: 48, tall: 84, legend: 100, edge: 28 }
 /**
  * The rush's camera (`followPlayers`' frame): on the middle of the player and
  * the ring's legend, a little low so the HUD doesn't cover it, never so far
- * the player leaves the frame, easing there as a domain's does.
+ * the player leaves the frame, easing there as a domain's does. The shell
+ * lifts the drawn camera off it where the HUD it measures would still cover
+ * the legend (`frameRush` in `render/rush.ts`).
  */
 export const rushCamera = (g: Game, dt: number) => {
   const r = g.rush

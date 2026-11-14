@@ -168,6 +168,7 @@ import { cryUrl, loadAll, loadSpecies, overlayStats, portraitUrl, preloadShinies
 import { castNeeds, runSprites, type SpriteNeed } from './render/spriteNeeds'
 import { setMarkerInsets } from './render/mapEvents'
 import { frameRaid, setRaidRoom } from './render/teraFx'
+import { frameRush, setRushRoom } from './render/rush'
 import { consumableIcon } from './render/props'
 import { berryIcon, curseIcon, eggIcon, itemIcon, moveIcon, ribbonIcon, warmIcon } from './render/art'
 import { TYPE_COLORS } from './data/types'
@@ -1942,6 +1943,12 @@ const syncMarkerInsets = () => {
   // A raid frames its giant under the boss bar (`frameRaid` in `render/teraFx.ts`); the touch buttons keep to the corners, so the player's feet may come near the bottom.
   const boss = rect('.hud .boss:not(.hidden)')
   setRaidRoom({ top: boss ? Math.max(0, boss.bottom - box.top) / cssScale : 0, bottom: 14 })
+  // Hoopa's rings frame their legend under the boss bar or the pill, whichever ends lower (`frameRush` in `render/rush.ts`),
+  // and keep the player's feet over what covers the bottom's middle (the status box on a phone held upright; nothing sideways).
+  const pill = rect('.hud .rift-pill:not(.hidden)')
+  const middle = box.left + box.width / 2
+  const cover = [rect('.hud .status'), rect('.special-button')].reduce((top, r) => (r && r.left < middle && r.right > middle ? Math.min(top, r.top) : top), box.bottom)
+  setRushRoom({ top: Math.max(0, Math.max(boss?.bottom ?? box.top, pill?.bottom ?? box.top) - box.top) / cssScale, bottom: (box.bottom - cover) / cssScale + 8 })
 }
 
 /** Settings from the pause menu. The HUD reads its labels once, so a language switch rebuilds it. */
@@ -4345,6 +4352,7 @@ const frame = (now: number) => {
         dirty = false
         runDrawnAt = now
         if (g.raid.arena) frameRaid(g, t, localPlayer(g).screen.y)
+        if (g.rush) frameRush(g, t, localPlayer(g).screen.y)
         render(ctx, g, t, { ...settings(), companion: r.companion })
         firstFrameDrawn()
         firstRunClock(g.time)
