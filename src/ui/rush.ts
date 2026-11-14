@@ -5,10 +5,11 @@ import { ENEMIES, type EnemyId } from '../data/enemies'
 import type { IslandId } from '../data/rushIslands'
 import { RUSH, RUSH_ORDER } from '../data/rush'
 import { DIFFICULTY_IDS, type Difficulty } from '../game/difficulty'
+import { rushOpen } from '../game/rush'
 import type { RushBest } from '../game/questSave'
 import type { Game } from '../game/types'
 import { t } from '../i18n'
-import { moveIcon } from '../render/art'
+import { lockIcon, moveIcon } from '../render/art'
 import { portraitUrl } from '../render/sprites'
 import { h, later, rich } from './dom'
 import { lobbySheet } from './lobbySheet'
@@ -23,32 +24,34 @@ import { menu, type Screen } from './screens'
 /** The legends Hoopa's rings can bring from a save's captures, in their order. */
 export const rushPool = (captured: readonly string[]) => RUSH_ORDER.filter((id) => captured.includes(id))
 
-/** The banner atop the Lendários tab: Hoopa's ring, the name and a line (or how many captures it still needs). */
+/** The banner atop the Lendários tab: Hoopa's ring, the name and a line (or how many captures Normal, the first level, still needs). */
 export const rushBanner = (captured: number, onOpen: () => void) => {
   const m = t().quests.rush
-  const open = captured >= RUSH.min
+  const open = rushOpen(captured, 'normal')
   const el = h(
     'button',
     { class: open ? 'arc-card rush-banner' : 'arc-card rush-banner locked', type: 'button', onclick: () => (open ? (playSfx('select'), onOpen()) : playSfx('denied')) },
     h('img', { class: 'rush-banner-icon', src: moveIcon('hyperspaceFury'), alt: '' }),
-    h('span', { class: 'rush-banner-text' }, h('b', {}, m.title), h('small', {}, open ? m.open : m.locked(captured, RUSH.min))),
+    h('span', { class: 'rush-banner-text' }, h('b', {}, m.title), h('small', {}, open ? m.open : m.locked(captured, RUSH.rings.normal))),
     h('img', { class: 'rush-banner-hoopa', src: portraitUrl(ENEMIES.hoopa.dex, false), alt: '' }),
   )
   return el
 }
 
-/** The sheet picking the rush's level: each with its rings, who comes and the best time. */
+/** The sheet picking the rush's level: each with its rings, who comes and the best time, or, locked, the captures it still needs. */
 export const openRushSheet = (root: HTMLElement, input: Input, opts: { captured: readonly string[]; best: RushBest; start: (difficulty: Difficulty) => void; close: () => void }): Screen => {
   const m = t().quests.rush
   const pool = rushPool(opts.captured)
   const entries = DIFFICULTY_IDS.map((difficulty) => {
-    const legends = Math.min(pool.length, RUSH.rings[difficulty])
+    const legends = RUSH.rings[difficulty]
     const best = opts.best[difficulty]
+    const locked = !rushOpen(pool.length, difficulty)
     return {
       icon: h('img', { class: `rush-level-icon ${difficulty}`, src: moveIcon('hyperspaceFury'), alt: '' }),
       label: m.level(t().difficulty.names[difficulty], legends + 1),
-      sub: `${m.lineup(legends, pool.length)} · ${best !== undefined ? m.best(formatTime(Math.round(best))) : m.never}`,
-      extra: best !== undefined ? h('span', { class: 'rush-cleared', 'aria-hidden': 'true' }, '✓') : null,
+      sub: locked ? m.levelLocked(pool.length, legends) : `${m.lineup(legends, pool.length)} · ${best !== undefined ? m.best(formatTime(Math.round(best))) : m.never}`,
+      extra: locked ? h('span', { class: 'arc-tag lock rush-lock', 'aria-hidden': 'true' }, h('img', { src: lockIcon(), alt: '' })) : best !== undefined ? h('span', { class: 'rush-cleared', 'aria-hidden': 'true' }, '✓') : null,
+      locked,
       run: () => opts.start(difficulty),
     }
   })

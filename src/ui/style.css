@@ -32210,6 +32210,28 @@ span.arena-hub-face {
   color: #2c9848;
 }
 
+/* A level the captures don't open yet: shown grayed, with a padlock, saying how many legends it needs. */
+.lobby-sheet-row.locked {
+  cursor: default;
+  background: var(--kit-paper);
+}
+
+.lobby-sheet-row.locked .rush-level-icon {
+  filter: grayscale(1) brightness(0.8);
+}
+
+.lobby-sheet-row.locked .lobby-sheet-text b {
+  color: var(--kit-ink-2);
+}
+
+.rush-lock {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 5px;
+  background: var(--kit-tinta);
+}
+
 /* The end screen: Hoopa's portrait over the title. */
 .rush-end .dialog {
   text-align: center;
