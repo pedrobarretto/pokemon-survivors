@@ -1,7 +1,7 @@
 import { drawEvoItem } from './evoItemArt'
 import { beginRects, blitCentered, blitPacked, blitEllipse, blitRing, blitRotated, context2d, createCanvas, drawThrew, fillPlotted, lazy, plot, textSprite, traceEllipseAt } from '../engine/pixelart'
 import { HAZARD_COLORS } from './hazardColors'
-import { capturePlaying, drawCapture } from './capture'
+import { capturePlaying, drawCapture, underCapture } from './capture'
 import { drawNightmareAir, drawNightmareDark, drawNightmareGround, shadeAlpha, SLEEP_TINT } from './darkrai'
 import { isAsleep } from '../game/playerSleep'
 import { drawDomainFloor, drawTear, drawWormhole, warmDomain } from './domain'
@@ -79,6 +79,7 @@ import { drawDuoAir, drawDuoGround } from './duoFx'
 import { drawAncientAura, drawLegendaryAir, drawLegendaryGround, drawStoppedFoes } from './legendaryFx'
 import { drawHeatAura, drawIronDefense, drawLegendary2Air, drawLegendary2Ground } from './legendaryFx2'
 import { drawUltraAir, drawUltraGround } from './ultraFx'
+import { drawBeastBoost } from './beastBoost'
 import { drawPathLegendAir, drawPathLegendGround } from './pathLegendFx'
 import { PATH_ART } from './pathLegendArt'
 import { drawLegendary3Air, drawLegendary3Ground } from './legendaryFx3'
@@ -741,15 +742,17 @@ const drawPickups = (ctx: Ctx, g: Game, t: number, visible: (x: number, y: numbe
   const candies = PICKUPS.candy()
   const coins = PICKUPS.coins()
   const capturing = capturePlaying(g)
+  // A capture scene's ball has the stage: the legendary's loot under it waits until the ball settles.
+  const waits = (x: number, y: number) => capturing && underCapture(g, x, y)
   // The shadows first, all as one path: a long endless run leaves a thousand pieces of loot lying in view, and a sprite each
   // was as many draws again. Drawing lean, loot goes without its shadow, like the horde.
   if (!detail.lean) {
     beginRects(ctx, 'rgba(16,40,16,0.25)')
-    for (const k of g.pickups) if (!k.attracted && visible(k.x, k.y)) traceEllipseAt(ctx, 3, 1, k.x, k.y + 4)
+    for (const k of g.pickups) if (!k.attracted && visible(k.x, k.y) && !waits(k.x, k.y)) traceEllipseAt(ctx, 3, 1, k.x, k.y + 4)
     ctx.fill()
   }
   for (const k of g.pickups) {
-    if (!visible(k.x, k.y)) continue
+    if (!visible(k.x, k.y) || waits(k.x, k.y)) continue
     const bob = k.attracted ? 0 : Math.round(Math.sin(t * 4 + k.id) * 1.2)
     if (k.kind === 'consumable') {
       drawConsumable(ctx, k.item, k.x, k.y + bob, k.id, t)
@@ -1015,6 +1018,7 @@ const drawPlayerAir = (ctx: Ctx, g: Game, t: number) => {
   drawVerbPlayerAir(ctx, g, t)
   drawAncientAura(ctx, g, t)
   drawIronDefense(ctx, g, t)
+  drawBeastBoost(ctx, g, t, g.player.y - playerSprites(g).bodyH)
 }
 
 /** The teammates drawn over the moves this frame (`liftsOver`), kept from frame to frame. */

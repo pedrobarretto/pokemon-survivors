@@ -39,9 +39,10 @@ export const captureOutcome = (capture: { kind: EnemyId }) => {
 
 /**
  * The capture balls, 13 px so the ball holds its own beside a legend: `1`
- * outline, `2` the top's color, `7` its light, `4` its lines (the Beast Ball's
- * yellow claws), `3` the band, `6` the button, `5` the white bottom and `8` its
- * shade. Rows 0 to 5 are the top half, 6 to 12 the bottom (`halves`).
+ * outline, `2` the top's color, `7` its light, `3` the band, `6` the button,
+ * `5` the bottom and `8` its shade; the Beast Ball's gold claws grip its four
+ * corners (`4`, `9` their shade). Rows 0 to 5 are the top half, 6 to 12 the
+ * bottom (`halves`).
  */
 const POKE_ROWS = [
   '....11111....',
@@ -59,22 +60,22 @@ const POKE_ROWS = [
   '....11111....',
 ] as const
 const BEAST_ROWS = [
-  '....11111....',
-  '..117242211..',
-  '.17224242221.',
-  '.17242224221.',
-  '1724222224221',
+  '..4.11111.4..',
+  '.94472222449.',
+  '4477222222244',
+  '.47222222224.',
+  '1722222222221',
   '1333311133331',
   '1333166613331',
   '1555311135551',
   '1555555555581',
-  '.15555555881.',
-  '.15555558881.',
-  '..118888811..',
-  '....11111....',
+  '.45555555884.',
+  '4455555588844',
+  '.94488888449.',
+  '..4.11111.4..',
 ] as const
 const POKE_COLORS = { 1: '#181018', 2: '#e83838', 7: '#f88878', 4: '#e83838', 3: '#202020', 6: '#ffffff', 5: '#f0f0f0', 8: '#b8b8c8' }
-const BEAST_COLORS = { 1: '#0c1430', 2: '#2c60d8', 7: '#70a0f8', 4: '#f8d030', 3: '#182040', 6: '#ffffff', 5: '#f0f0f0', 8: '#b8b8c8' }
+const BEAST_COLORS = { 1: '#0c1430', 2: '#3878e8', 7: '#90c8f8', 3: '#182040', 6: '#e8eef8', 5: '#3a3ac0', 8: '#28248c', 4: '#f8d030', 9: '#a86818' }
 
 /** A ball whole and its two halves (the top with the band's upper rows, the bottom with the button's lower ones). */
 const halves = (rows: readonly string[], colors: Record<string, string>) => ({
@@ -83,7 +84,7 @@ const halves = (rows: readonly string[], colors: Record<string, string>) => ({
   bottom: art(rows.slice(6), colors),
 })
 const POKE = lazy(() => halves(POKE_ROWS, POKE_COLORS))
-/** The Beast Ball an Ultra Beast is caught in: blue, its top run through with yellow claws. */
+/** The Beast Ball an Ultra Beast is caught in: blue all over (indigo below the band), held in four gold claws. */
 const BEAST = lazy(() => halves(BEAST_ROWS, BEAST_COLORS))
 
 /** Prism colors: the stars a Beast Ball throws as it clicks shut. */
@@ -102,6 +103,21 @@ export type CaptureTiming = { kneel: number; throw: number; absorb: number; drop
 
 /** Whether a capture scene is playing (a domain's or a legendary's on the map): the ground's pickups beside it (a boss's Tera Shards) wait, so the ball has the stage. */
 export const capturePlaying = (g: Game) => domainHere(g)?.d.act === 'capture' || (g.legendScene?.kind === 'capture' && g.legendScene.capture !== null)
+
+/** How far round a capture ball the loot waits: the legendary's drop (its Poké Balls, coins, candy) lands where it knelt. */
+const STAGE = 30
+
+/**
+ * Whether (x, y) lies under a capture scene's ball while it plays: the loot
+ * there waits until the ball settles, so a Beast Ball never shakes beside the
+ * red Poké Balls the rift drops (which read as the ball it was caught in).
+ */
+export const underCapture = (g: Game, x: number, y: number) => {
+  const near = (s: { x: number; y: number } | null | undefined) => !!s && Math.abs(s.x - x) < STAGE && Math.abs(s.y - y) < STAGE
+  const here = domainHere(g)
+  if (here?.d.act === 'capture') return near(here.d.capture) || near(here.d.capture?.partner)
+  return g.legendScene?.kind === 'capture' && near(g.legendScene.capture)
+}
 
 /** The capture scene in world space (after the entities): the kneeling legendary (and its partner, with a ball of its own), the ball, its shakes and how it ends. */
 export const drawCapture = (ctx: Ctx, g: Game, t: number) => {

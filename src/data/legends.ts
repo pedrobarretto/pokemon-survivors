@@ -240,7 +240,11 @@ const WORMHOLE_WINS = { wins: 1, ultra: 'wormhole' } as const satisfies LegendUn
  * stat (`best`, a stack every 12 KOs, up to 5); without KOs a stack wears
  * off every 4 s.
  */
-const beastBoost = (best: StatDelta): Innate => ({ ability: 'beastBoost', extra: [{ kind: 'onKill', per: 12, max: 5, stats: best, decay: 4 }] })
+export const BEAST_BOOST = { per: 12, max: 5, decay: 4 } as const
+const beastBoost = (best: StatDelta): Innate => ({
+  ability: 'beastBoost',
+  extra: [{ kind: 'onKill', per: BEAST_BOOST.per, max: BEAST_BOOST.max, stats: best, decay: BEAST_BOOST.decay }],
+})
 
 const chill = { kind: 'aura', radius: 56, every: 1, status: { kind: 'slow', chance: 1, duration: 1.2, power: 0.3 } } as const satisfies AbilityEffect
 

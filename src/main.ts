@@ -45,7 +45,7 @@ import { REGIONS, STARTERS } from './data/starters'
 import { nextIsOfficial } from './game/attempt'
 import { challengeStart, type Challenge } from './game/challenge'
 import { HATCHLING_IDS, HATCHLINGS, PLAYABLE, PLAYABLE_IDS, type HatchlingId, type PlayableId } from './data/hatchlings'
-import { isLegend, LEGEND_IDS, type LegendId } from './data/legends'
+import { BEAST_BOOST, isLegend, LEGEND_IDS, type LegendId } from './data/legends'
 import { accountHandle, accountState, accountsEnabled, accountUserId, backFromSignIn, giftInbox, onAccountChange, signIn, stageGifts, stageSyncedSave, startAccount, syncSave } from './account'
 import { devCandyGoal, onCandyGoal, startCandyGoal } from './candyGoal'
 import { devFestival, festivalView, startFestival } from './festival'
@@ -2165,6 +2165,12 @@ const abilityFeedback = (g: Game, id: AbilityId, moment: 'picked' | 'proc') => {
   if (moment === 'picked') {
     playSfx('unlock')
     return aside(icon(m.picked(playerForm(g).name, name)), 3200, 'ability')
+  }
+  // Beast Boost climbs every 12 KOs: its burst plays on the beast (`render/beastBoost.ts`), so only a blip, and a word at the cap.
+  if (id === 'beastBoost') {
+    const stacks = abilityStacks(g)
+    playSfx('stance', 0)
+    return stacks >= BEAST_BOOST.max ? aside(icon(m.stack(name, stacks)), 1800, 'ability') : undefined
   }
   const effects: readonly AbilityEffect[] = ABILITIES[id].effects
   const kind = effects.find((e) => e.kind !== 'immune' && e.kind !== 'stats')?.kind

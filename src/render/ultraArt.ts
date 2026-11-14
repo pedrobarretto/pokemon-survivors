@@ -90,8 +90,12 @@ export const ULTRA_ICONS: Record<UltraMoveId, () => PixelSprite> = {
   ),
 }
 
-/** The Beast Ball as a badge (the partner select's Ultra Beasts, the lobby's beast of the week): blue, its top run through with yellow. */
+/** The Beast Ball as a badge (the partner select's Ultra Beasts, the lobby's beast of the week): the capture's ball (`render/capture.ts`) at 8 px, blue and indigo in gold claws. */
 export const beastBallIcon = () =>
   toIconUrl('ultra:beastBall', () =>
-    art(['..1111..', '.142241.', '12422421', '13333331', '14455441', '14444441', '.144441.', '..1111..'], { 1: '#0c1430', 2: '#2c60d8', 3: '#182040', 4: '#f8d030', 5: '#ffffff' }, '#060a18'),
+    art(
+      ['4.1111.4', '.472224.', '17222221', '13366331', '15555551', '15555881', '.455884.', '4.1111.4'],
+      { 1: '#0c1430', 2: '#3878e8', 7: '#90c8f8', 3: '#182040', 6: '#e8eef8', 5: '#3a3ac0', 8: '#28248c', 4: '#f8d030' },
+      '#060a18',
+    ),
   )
