@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { RAID, RAID_STARS } from '../data/tera'
 import { addDays } from './day'
 import { createGame } from './game'
+import { killEnemy } from './combat'
+import { LIGHT_CAPTURE, updateLegendScene } from './legendScene'
 import { enterRaid, openDen, raidFits, raidOfDay, shieldTakes, updateRaid, updateRaidDen } from './teraRaid'
 
 const DT = 1 / 60
@@ -80,5 +82,22 @@ describe('Tera Raids', () => {
     expect(g.raid.cleared).toEqual([{ boss: 'raidLucario', tera: 'ghost', stars: 4, day: false }])
     for (let t = 0; t <= RAID.lootTime + DT; t += DT) updateRaid(g, DT)
     expect(g.raid.arena).toBeNull()
+  })
+
+  it("plays a legend's capture where the 7★ Terapagos falls, and pays the raid once the ball settles", () => {
+    const g = run()
+    g.raid.den = null
+    enterRaid(g, openDen(g, { boss: 'terapagos', tera: 'stellar', stars: 7 }, { x: 0, y: 0 }))
+    const boss = g.enemies.find((e) => e.id === g.raid.arena!.bossId)!
+    killEnemy(g, boss)
+    expect(g.events.some((e) => e.kind === 'legendBeaten' && e.legend === 'terapagos')).toBe(true)
+    expect(g.legendScene).toMatchObject({ kind: 'capture', enemy: 'terapagos', capture: { x: boss.x, y: boss.y } })
+    updateRaid(g, DT)
+    expect(g.raid.cleared).toEqual([])
+    for (let t = 0; t <= LIGHT_CAPTURE.length + DT; t += DT) updateLegendScene(g, DT)
+    expect(g.events.some((e) => e.kind === 'bossCapture' && e.enemy === 'terapagos')).toBe(true)
+    expect(g.legendScene).toBeNull()
+    updateRaid(g, DT)
+    expect(g.raid.cleared).toEqual([{ boss: 'terapagos', tera: 'stellar', stars: 7, day: false }])
   })
 })

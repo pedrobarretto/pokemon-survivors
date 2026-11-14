@@ -582,7 +582,10 @@ export const drawLegendScene = (ctx: Ctx, g: Game, t: number) => {
   const s = g.legendScene
   if (!s) return
   if (s.kind === 'capture') {
-    if (s.capture) drawCaptureScene(ctx, g, s.capture, s.t, LIGHT_CAPTURE, t)
+    if (!s.capture) return
+    // It kneels as big as it fought (a Tera Raid's giant).
+    const def: EnemyDef = ENEMIES[s.capture.kind]
+    drawCaptureScene(ctx, g, s.capture, s.t, LIGHT_CAPTURE, t, def.scale ?? 1)
     return
   }
   // The wave legendaries arrive their way; a Force of Nature's first visit comes down out of its weather.
