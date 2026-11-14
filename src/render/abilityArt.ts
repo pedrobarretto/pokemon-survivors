@@ -46,6 +46,7 @@ const COLORS = {
   gold: '#e8b830',
   presence: '#d84858',
   reach: '#f0a030',
+  ultra: '#b070f0',
 } as const
 
 /** Glyph and color of a stat block: what it mostly does. */
@@ -118,7 +119,8 @@ const look = (e: AbilityEffect | undefined): string | readonly [Glyph, string] =
 /** An ability's icon as a data URL, cached. */
 export const abilityIcon = (id: AbilityId) => {
   const effects: readonly AbilityEffect[] = ABILITIES[id].effects
-  const l = look(effects[0])
+  // Beast Boost's effect is each Ultra Beast's own (an innate's extra, `data/legends.ts`): a stat-up arrow in Ultra Space's violet.
+  const l = id === 'beastBoost' ? (['arrow', COLORS.ultra] as const) : look(effects[0])
   if (typeof l === 'string') return l
   const [glyph, color] = l
   return toIconUrl(`ability:${id}`, () => art(GLYPHS[glyph], tint(color), '#181818'))
