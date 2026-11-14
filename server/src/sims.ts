@@ -20,7 +20,7 @@ export type Sim = {
   resimulate: (replay: Replay) => Resimulated
   outbreakFits: (outbreak: EnemyId | null, startedAt: Date) => boolean
   halloweenFits: (haunted: boolean, startedAt: Date) => boolean
-  /** Rules 50 on (the Ultra Beast of the week): a frozen simulator from before has none, and its replays name none. */
+  /** Rules 49 on (the Ultra Beast of the week): a frozen simulator from before has none, and its replays name none. */
   ultraFits?: (ultra: UltraBeast | null | undefined, startedAt: Date) => boolean
 }
 
