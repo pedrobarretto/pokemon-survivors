@@ -3613,6 +3613,8 @@ const showRealm = (city: CityId | null) => {
           openRoom: (mode) => realmRoom(mode),
           showRoom: () => showRoom(),
           joinRoom: (_mode, code) => void joinCoop(code, 'link').then((res) => (res.ok ? showRoom() : (toast(ui, closedText(res.why), 4000, 'realmParty'), showRealm(null)))),
+          // Down the Game Corner's stairs: the partner select, and the run picked there opens the Hideout's hatch (the pass, `game/hideoutPass.ts`).
+          hideout: () => showMenu(),
         },
         city,
       )),

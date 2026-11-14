@@ -820,6 +820,7 @@ export const en: Messages = {
       tokens: ROCKET_WORDS.en.corner.spots.tokens,
       rocketPrizes: ROCKET_WORDS.en.corner.spots.prizes,
       poster: ROCKET_WORDS.en.corner.spots.poster,
+      hideoutStairs: ROCKET_WORDS.en.corner.spots.stairs,
     },
     use: 'Use',
     pieces: {

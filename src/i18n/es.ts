@@ -821,6 +821,7 @@ export const es: Messages = {
       tokens: ROCKET_WORDS.es.corner.spots.tokens,
       rocketPrizes: ROCKET_WORDS.es.corner.spots.prizes,
       poster: ROCKET_WORDS.es.corner.spots.poster,
+      hideoutStairs: ROCKET_WORDS.es.corner.spots.stairs,
     },
     use: 'Usar',
     pieces: {

@@ -820,6 +820,7 @@ export const zh: Messages = {
       tokens: ROCKET_WORDS.zh.corner.spots.tokens,
       rocketPrizes: ROCKET_WORDS.zh.corner.spots.prizes,
       poster: ROCKET_WORDS.zh.corner.spots.poster,
+      hideoutStairs: ROCKET_WORDS.zh.corner.spots.stairs,
     },
     use: '使用',
     pieces: {

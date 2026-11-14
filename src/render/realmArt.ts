@@ -1,6 +1,6 @@
 import { canvasCache, context2d, createCanvas, drawable, readPixels } from '../engine/pixelart'
 import { hash2 } from '../engine/rng'
-import { BASE_GRID, BASE_ROOM, REALM_ROOMS, type Point, type Shape, type TownRoomId } from '../data/realmMap'
+import { BASE_GRID, BASE_ROOM, CORNER_STAIRS, REALM_ROOMS, type Point, type Shape, type TownRoomId } from '../data/realmMap'
 import type { BaseExterior } from '../data/secretBases'
 import type { Piece } from './plaza'
 import { ENTRANCE_ART, TOWN_ART, TOWN_FPS, TOWN_FRAMES, TOWN_LAYOUT, type Host, type Prop, type Surface, type TownArt } from './realmLayout'
@@ -847,9 +847,11 @@ const LABEL_LIFT = 34
 /**
  * Where a label over a spot (or a door) at `at` floats: just over the top of
  * the piece it belongs to (the nearest standing piece behind it, a host
- * Pokémon too), else a little over the spot. World px, the label's bottom.
+ * Pokémon too; the Game Corner's stairs, their far rim), else a little over the spot. World px, the label's bottom.
  */
 export const labelTop = (room: TownRoomId, at: Point, exterior: BaseExterior = 'cave'): number => {
+  // The stairs to the Hideout lie in the floor: their label floats over the far rim, off the steps.
+  if (room === 'gameCorner' && at.x === CORNER_STAIRS.spot.at.x && at.y === CORNER_STAIRS.spot.at.y) return CORNER_STAIRS.hole.y - 1
   let best: { d: number; top: number } | null = null
   for (const p of TOWN_LAYOUT[room].props) {
     const { art: id, x } = resolve(p, exterior)
