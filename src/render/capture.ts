@@ -116,16 +116,26 @@ export const drawCapture = (ctx: Ctx, g: Game, t: number) => {
 /**
  * Draws capture `c`, `scene` s into it on `timing`'s beats: the legendary kneels,
  * the ball flies from the player, takes it in, drops, shakes and settles.
+ * `scale`: the size it fought at (a Tera Raid's giant kneels as big as it stood; the ball hangs over its head).
  */
-export const drawCaptureScene = (ctx: Ctx, g: Game, c: { kind: EnemyId; x: number; y: number; shiny: boolean }, scene: number, timing: CaptureTiming, t: number) => {
+export const drawCaptureScene = (
+  ctx: Ctx,
+  g: Game,
+  c: { kind: EnemyId; x: number; y: number; shiny: boolean },
+  scene: number,
+  timing: CaptureTiming,
+  t: number,
+  scale = 1,
+) => {
   // Seconds since the ball left the player's hand (negative while the legendary kneels).
   const s = scene - timing.kneel
   const p = g.player
   const x = Math.round(c.x)
   const y = Math.round(c.y)
   const sp = sprites(ENEMIES[c.kind].dex, c.shiny)
-  // Where the ball's middle rests: its 13 px sit on the legend's feet.
+  // Where the ball's middle rests: its 13 px sit on the legend's feet; where it hangs open, over its head.
   const ground = y - 6
+  const hang = y - (scale > 1 ? Math.round(sp.bodyH * scale * 0.75) + 6 : 40)
   const absorbEnd = timing.throw + timing.absorb
   const dropEnd = absorbEnd + timing.drop
   const settle = timing.settle - timing.kneel
@@ -134,13 +144,13 @@ export const drawCaptureScene = (ctx: Ctx, g: Game, c: { kind: EnemyId; x: numbe
   // The legendary kneels until the ball takes it in: shrinking into its ball's glow.
   if (s < absorbEnd) {
     const k = clamp01((s - timing.throw) / timing.absorb)
-    drawPokemon(ctx, sp, 'Hurt', 0, 0.2, x, y, { loop: false, scale: 1 - k * 0.9, tint: { color: look.glow, amount: k * 0.8 }, flash: k > 0 ? 0.3 + k * 0.6 : 0, alpha: 1 - k * 0.5 })
+    drawPokemon(ctx, sp, 'Hurt', 0, 0.2, x, y, { loop: false, scale: (1 - k * 0.9) * scale, tint: { color: look.glow, amount: k * 0.8 }, flash: k > 0 ? 0.3 + k * 0.6 : 0, alpha: 1 - k * 0.5 })
   }
   if (s < 0) {
     // Knocked out: stars circle its head before the throw.
     for (let i = 0; i < 3; i++) {
       const a = t * 4 + (i / 3) * TAU
-      blitCentered(ctx, STAR(), Math.round(x + Math.cos(a) * 14), Math.round(y - sp.bodyH - 4 + Math.sin(a) * 4))
+      blitCentered(ctx, STAR(), Math.round(x + Math.cos(a) * 14 * scale), Math.round(y - sp.bodyH * scale - 4 + Math.sin(a) * 4))
     }
     return
   }
@@ -148,13 +158,13 @@ export const drawCaptureScene = (ctx: Ctx, g: Game, c: { kind: EnemyId; x: numbe
     // The throw: an arc from the player up and over to the legendary.
     const k = s / timing.throw
     const bx = p.x + (x - p.x) * k
-    const by = p.y - 14 + (y - 40 - (p.y - 14)) * k - Math.sin(k * Math.PI) * 50
+    const by = p.y - 14 + (hang - (p.y - 14)) * k - Math.sin(k * Math.PI) * 50
     blitRotated(ctx, look.ball, Math.round(bx), Math.round(by), k * TAU * 2)
     return
   }
   if (s < absorbEnd) {
     // The ball hangs open over it; a beam of its light pulls it in.
-    const by = y - 40
+    const by = hang
     ctx.fillStyle = look.beam
     for (let yy = by; yy < y - 6; yy += 2) ctx.fillRect(x - 1 + Math.round(Math.sin(yy + t * 30)), yy, 2, 2)
     blitCentered(ctx, look.top, x, by - 4)
@@ -166,7 +176,7 @@ export const drawCaptureScene = (ctx: Ctx, g: Game, c: { kind: EnemyId; x: numbe
   let angle = 0
   if (s < dropEnd) {
     const k = (s - absorbEnd) / timing.drop
-    by = Math.round(y - 40 + (ground - (y - 40)) * k * k)
+    by = Math.round(hang + (ground - hang) * k * k)
   } else if (s < settle) {
     // Each shake: a wobble left and right, then still.
     const k = ((s - dropEnd) % timing.shake) / timing.shake
@@ -208,7 +218,7 @@ export const drawCaptureScene = (ctx: Ctx, g: Game, c: { kind: EnemyId; x: numbe
   blitCentered(ctx, look.top, x - Math.round(k * 18), by - 4 - Math.round(Math.sin(k * Math.PI) * 10))
   blitCentered(ctx, look.bottom, x + Math.round(k * 18), by + 4 - Math.round(Math.sin(k * Math.PI) * 6))
   if (k < 1) {
-    drawPokemon(ctx, sp, 'Idle', 0, t, x, y - Math.round(k * 40), { alpha: 1 - k, flash: 1 - k })
+    drawPokemon(ctx, sp, 'Idle', 0, t, x, y - Math.round(k * 40), { alpha: 1 - k, flash: 1 - k, scale })
     ctx.fillStyle = '#ffffff'
     for (let i = 0; i < 14; i++) {
       const a = hash2(i, 1, 9) * TAU

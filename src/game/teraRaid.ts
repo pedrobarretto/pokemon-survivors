@@ -36,7 +36,7 @@ import { teamLegend } from './legend'
  * that soaks most of a hit until broken (`shieldTakes`: hitting its weakness,
  * or hitting as a Terastallized Pokémon of your own Tera type, breaks it
  * faster); broken, the boss reels and takes more. Beating it pays shards of
- * its Tera type, a full Tera Orb and its loot; Terapagos is captured. The run
+ * its Tera type, a full Tera Orb and its loot; Terapagos is captured (its capture plays first, `legendFell`). The run
  * clock stops inside, like in a rift. Solo and co-op alike (the team goes in
  * together), never in the Arena.
  */
@@ -448,13 +448,17 @@ export const updateRaid = (g: Game, dt: number) => {
     return
   }
   const boss = g.enemies.find((e) => e.id === arena.bossId)
-  if (!boss || boss.dying >= 0) return raidWin(g, arena, boss?.x ?? arena.x, boss?.y ?? arena.y)
+  // The giant holds its ground in the middle of the hollow.
+  const home = { x: arena.x + BOSS_AT.x, y: arena.y + BOSS_AT.y }
+  if (!boss || boss.dying >= 0) {
+    // A legend's capture plays first (`legendFell`); its giant has left play by then, so the loot falls where it stood.
+    if (g.legendScene?.bossId === arena.bossId) return
+    return raidWin(g, arena, boss?.x ?? home.x, boss?.y ?? home.y)
+  }
   const sh = arena.shield
   const at = RAID_STARS[arena.raid.stars].shields
   if (sh.broken > 0) sh.broken = Math.max(0, sh.broken - dt)
   else if (!sh.up && sh.next < at.length && boss.hp / boss.maxHp <= at[sh.next]!) raiseShield(g, boss, arena)
-  // The giant holds its ground in the middle of the hollow.
-  const home = { x: arena.x + BOSS_AT.x, y: arena.y + BOSS_AT.y }
   if (dm.sq(boss.x - home.x) + dm.sq(boss.y - home.y) > dm.sq(40)) {
     boss.kx += (home.x - boss.x) * dt * 2
     boss.ky += (home.y - boss.y) * dt * 2

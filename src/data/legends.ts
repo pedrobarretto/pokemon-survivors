@@ -673,8 +673,8 @@ export const LEGENDS = {
     line: stage(1024, 'Terapagos', ['normal']),
     awakenings: [{ maxHp: 30, might: 0.12, armor: 1 }, { maxHp: 40, might: 0.2, area: 0.1 }],
     innate: { ability: 'multiscale' },
-    early: { key: 'terastal', name: 'Terapagos (Terastal)' },
-    form: { key: 'stellar', name: 'Terapagos (Astral)' },
+    early: { key: 'terastal', name: 'Terapagos (Terastal Form)' },
+    form: { key: 'stellar', name: 'Terapagos (Stellar Form)' },
     unlock: { wins: 1 },
   },
   /* ---------- The Ultra Beasts (`data/ultraBeasts.ts`) ---------- */
