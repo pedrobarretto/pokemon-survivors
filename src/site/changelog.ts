@@ -24,7 +24,7 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
-    date: '2026-11-11',
+    date: '2026-11-16',
     title: { pt: 'Temporada 1: Terastal, Pokédex Nacional e lendas novas', en: 'Season 1: Terastal, the National Pokédex and new legends', es: 'Temporada 1: Teracristal, la Pokédex Nacional y leyendas nuevas', fr: 'Saison 1 : Téracristal, le Pokédex National et de nouvelles légendes', zh: '第 1 賽季：太晶化、全國圖鑑和新的傳說' },
     highlights: [
       {
@@ -333,9 +333,9 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             es: 'Los Espadachines Místicos esperan en su bioma con una prueba: Cobalion de Defensa, Terrakion de Fuerza y Virizion de Velocidad. Captura a los tres y Keldeo llega de regalo.',
           },
           {
-            pt: 'Anéis de Hoopa: com 3 lendários capturados, abra o boss rush na aba Lendários. Os anéis trazem os seus lendários, um depois do outro (das aves às Ultracriaturas, Regigigas e Terapagos), e o último anel é o próprio Hoopa. Vença uma vez para capturá-lo.',
-            en: 'Hoopa’s Rings: with 3 legends captured, open the boss rush on the Legends tab. The rings bring back your legends one after another (from the birds to the Ultra Beasts, Regigigas and Terapagos), and the last ring is Hoopa itself. Win once to capture it.',
-            es: 'Anillos de Hoopa: con 3 legendarios capturados, abre el boss rush en la pestaña Legendarios. Los anillos traen a tus legendarios uno tras otro (de las aves a los Ultraentes, Regigigas y Terapagos), y el último anillo es el propio Hoopa. Gana una vez para capturarlo.',
+            pt: 'Anéis de Hoopa: o boss rush da aba Lendários. Cada nível abre com tantos lendários capturados quanto os seus anéis (Normal 4, Difícil 7, Pesadelo 10) e traz esse tanto deles, um depois do outro (das aves às Ultracriaturas, Regigigas, Zeraora com a sua tempestade e Terapagos). Cada anel é lutado numa ilha flutuante do tipo do lendário, e o último é o próprio Hoopa, na ilha dourada dele. Vença uma vez para capturá-lo.',
+            en: 'Hoopa’s Rings: the boss rush on the Legends tab. Each level opens with as many captured legends as its rings (Normal 4, Hard 7, Nightmare 10) and brings that many of them back, one after another (from the birds to the Ultra Beasts, Regigigas, Zeraora with its storm and Terapagos). Each ring is fought on a floating island of its legend’s type, and the last one is Hoopa itself, on its golden island. Win once to capture it.',
+            es: 'Anillos de Hoopa: el boss rush de la pestaña Legendarios. Cada nivel se abre con tantos legendarios capturados como anillos tiene (Normal 4, Difícil 7, Pesadilla 10) y trae esa cantidad, uno tras otro (de las aves a los Ultraentes, Regigigas, Zeraora con su tormenta y Terapagos). Cada anillo se lucha en una isla flotante del tipo de su legendario, y el último es el propio Hoopa, en su isla dorada. Gana una vez para capturarlo.',
           },
         ],
       },
@@ -411,6 +411,11 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             pt: 'A bola da captura dos lendários ficou maior e brilha a cada sacudida.',
             en: 'The ball in legend captures is bigger and glows with each shake.',
             es: 'La ball de la captura de legendarios es más grande y brilla en cada sacudida.',
+          },
+          {
+            pt: 'No celular deitado, os Anéis de Hoopa mostram o tempo do anel no lugar do cronômetro, e a câmera deixa o lendário inteiro à vista, abaixo da barra do chefe.',
+            en: 'On a phone in landscape, Hoopa’s Rings show the ring’s timer in place of the clock, and the camera keeps the legend in full view, below the boss bar.',
+            es: 'En el celular en horizontal, los Anillos de Hoopa muestran el tiempo del anillo en lugar del cronómetro, y la cámara deja al legendario entero a la vista, debajo de la barra del jefe.',
           },
           {
             pt: 'O último nível do especial de Pedra agora se chama Stone Edge: Diamond Storm virou o golpe da Diancie.',
