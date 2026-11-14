@@ -42,18 +42,21 @@ export const RUSH = {
 
 /**
  * The order the rings bring the captured legends in, from the gentler to the
- * fiercer: the trios, the mythicals, the lake trio and the Swords, the Forces
+ * fiercer: the trios, the mythicals (Zeraora in its storm's phases, before
+ * Jirachi so its Electric keeps the crag), the lake trio and the Swords, the Forces
  * of Nature, the Ultra Beasts, then the rift legendaries, the Ruínas da
  * Decisão's Regis and Regigigas, Darkrai and Palkia,
  * Terapagos, Mewtwo and Arceus. Every captured legend that fights somewhere
  * comes, on the rings' own stage. Never Hoopa (it's the last ring), nor a
  * legend no fight ever brings: Cresselia (a festival's gift), Poipole (the
- * Ultra Beasts' gift) and the path legends but Regigigas (Zygarde, Solgaleo,
- * Lunala, Kubfu and Meltan, each raised on its own path).
+ * Ultra Beasts' gift), Diancie (the Escavação's treasure) and the path
+ * legends but Regigigas (Zygarde, Solgaleo, Lunala, Kubfu and Meltan, each
+ * raised on its own path). Ogerpon isn't in yet: it only fights as its Tera
+ * Raid's giant.
  */
 export const RUSH_ORDER = [
   'articuno', 'zapdos', 'moltres', 'raikou', 'entei', 'suicune', 'regirock', 'regice', 'registeel',
-  'mew', 'celebi', 'jirachi', 'uxie', 'mesprit', 'azelf', 'cobalion', 'terrakion', 'virizion', 'keldeo',
+  'mew', 'celebi', 'zeraora', 'jirachi', 'uxie', 'mesprit', 'azelf', 'cobalion', 'terrakion', 'virizion', 'keldeo',
   'tornadus', 'thundurus', 'landorus', 'enamorus',
   ...ULTRA_BEASTS,
   'lugia', 'hoOh', 'latias', 'latios', 'kyogre', 'groudon', 'rayquaza', 'deoxys', 'regieleki', 'regidrago', 'regigigas', 'dialga', 'darkrai', 'palkia', 'terapagos', 'mewtwo', 'arceus',
