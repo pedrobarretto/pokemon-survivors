@@ -1014,6 +1014,7 @@ export const pt = {
       tokens: ROCKET_WORDS.pt.corner.spots.tokens,
       rocketPrizes: ROCKET_WORDS.pt.corner.spots.prizes,
       poster: ROCKET_WORDS.pt.corner.spots.poster,
+      hideoutStairs: ROCKET_WORDS.pt.corner.spots.stairs,
     } satisfies Record<SpotKind, string>,
     use: 'Usar',
     pieces: {

@@ -41,6 +41,8 @@ export type SpotKind =
   | 'tokens'
   | 'rocketPrizes'
   | 'poster'
+  /** The stairs down to the Rocket Hideout the poster's switch opens (`CORNER_STAIRS`): the screen's own, never in a room's `spots`. */
+  | 'hideoutStairs'
 
 /** The town's rooms (their shapes are `REALM_ROOMS`). */
 export const TOWN_ROOMS = ['plaza', 'pier', 'cafe', 'trail', 'arcade', 'gameCorner'] as const
@@ -141,6 +143,18 @@ export const CORNER_FLOOR = {
   tokens: [30, 58],
   tokenY: 298,
 } as const
+
+/**
+ * The way down to the Rocket Hideout in the Game Corner's floor, east of the
+ * R rug: the poster's switch opens it, and it stays open while the save holds
+ * a pass (`game/hideoutPass.ts`). It's each player's own (the relay never
+ * hears of it, and the room's `spots` keep their indices): the screen adds the
+ * spot at its south edge and keeps its trainer out of the `hole`.
+ */
+export const CORNER_STAIRS = {
+  hole: { x: 258, y: 68, w: 30, h: 24 },
+  spot: { kind: 'hideoutStairs', at: { x: 273, y: 100 }, reach: 14 },
+} as const satisfies { hole: Rect; spot: Spot }
 
 export const REALM_ROOMS = {
   plaza: {

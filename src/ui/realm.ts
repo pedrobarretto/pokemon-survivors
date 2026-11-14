@@ -2,7 +2,7 @@ import { track } from '../analytics'
 import { effectIn } from '../data/arenaEffects'
 import { lookIn, parseLook, type Look } from '../data/cosmetics'
 import { PLAYABLE } from '../data/hatchlings'
-import { BASE_GRID, BASE_ROOM, LANDING, REALM_ROOMS, isTownRoomId, type Door, type Point, type Rect, type Spot, type SpotKind, type TownRoomId } from '../data/realmMap'
+import { BASE_GRID, BASE_ROOM, CORNER_STAIRS, LANDING, REALM_ROOMS, isTownRoomId, type Door, type Point, type Rect, type Spot, type SpotKind, type TownRoomId } from '../data/realmMap'
 import type { BaseExterior, BaseLayout } from '../data/secretBases'
 import { footprint } from '../data/furniture'
 import { FURNITURE_GAMES, hasBoard, isMinigameId, isTableGame, MINIGAME_IDS, MINIGAMES, type MinigameId, type TableGameId } from '../data/minigames'
@@ -79,7 +79,8 @@ import { hasUnseenStamps, openRealmBook } from './realmBook'
 import { openErrandsBoard } from './realmErrands'
 import { openCornerCounter } from './cornerCounter'
 import { loadSave, today, updateSave } from './save'
-import { readPoster } from '../game/hideoutPass'
+import { holdsPass, readPoster } from '../game/hideoutPass'
+import { STAIRS_OPENING, drawCornerStairs } from '../render/cornerStairs'
 import { brasiliaDay } from '../game/day'
 
 /**
@@ -125,6 +126,8 @@ export type RealmDeps = {
   showRoom: () => void
   /** A party member follows the leader into `code`. */
   joinRoom: (mode: PartyMode, code: string) => void
+  /** Down the Game Corner's stairs (the client already left): the partner select, for the run whose map opens the Hideout's hatch. */
+  hideout: () => void
 }
 
 /**
@@ -200,6 +203,9 @@ const posterSpeaker = (): Speaker => ({
   portrait: () => h('img', { src: portraitUrl(53), alt: '', width: 40, height: 40 }),
 })
 
+/** The stairs down to the Hideout, as a dialogue speaker: Giovanni's Persian keeps the way. */
+const stairsSpeaker = (): Speaker => ({ ...posterSpeaker(), name: t().rocket.corner.spots.stairs })
+
 /* ---------------- Rooms ---------------- */
 
 /** A trainer's species: its partner's first form (as the lobby's stage shows it). */
@@ -213,9 +219,12 @@ const trailBy = (kind: SpotKind) => {
   return spot ? { x: spot.at.x, y: spot.at.y + 24 } : REALM_ROOMS.trail.spawn
 }
 
-/** A room's walkable ground (a base's from its layout, once it loaded). */
-const groundOf = (room: RoomKey, base: BaseView | null): Ground =>
-  isTownRoomId(room) ? REALM_ROOMS[room] : { w: BASE_ROOM.w, h: BASE_ROOM.h, solid: base ? baseSolids(base.layout) : [] }
+/** The Game Corner with the stairs to the Hideout open (`CORNER_STAIRS`): the trainer walks round the hole. */
+const STAIRS_GROUND: Ground = { ...REALM_ROOMS.gameCorner, solid: [...REALM_ROOMS.gameCorner.solid, { kind: 'rect', ...CORNER_STAIRS.hole }] }
+
+/** A room's walkable ground (a base's from its layout, once it loaded); `stairs`: the Game Corner's way down is open. */
+const groundOf = (room: RoomKey, base: BaseView | null, stairs = false): Ground =>
+  room === 'gameCorner' && stairs ? STAIRS_GROUND : isTownRoomId(room) ? REALM_ROOMS[room] : { w: BASE_ROOM.w, h: BASE_ROOM.h, solid: base ? baseSolids(base.layout) : [] }
 
 const doorsOf = (room: RoomKey): readonly Door[] => (isTownRoomId(room) ? REALM_ROOMS[room].doors : [{ at: BASE_EXIT, to: 'trail', spawn: trailBy('myBase') }])
 
@@ -233,8 +242,12 @@ export const gameSpots = (layout: BaseLayout): Spot[] =>
     return [{ kind: table ? 'gameTable' : 'cabinet', at, reach: 22, games, ...(table ? { id: baseTableId(p.x, p.y) } : {}) } satisfies Spot]
   })
 
-/** A room's spots: a town room's, or the game spots of a base (once its layout loaded). */
-const spotsOf = (room: RoomKey, base: BaseView | null = null): readonly Spot[] => (isTownRoomId(room) ? REALM_ROOMS[room].spots : base ? gameSpots(base.layout) : [])
+/** The Game Corner's spots with the stairs open: the room's, then the stairs' own. */
+const STAIRS_SPOTS: readonly Spot[] = [...REALM_ROOMS.gameCorner.spots, CORNER_STAIRS.spot]
+
+/** A room's spots: a town room's (`stairs`: the Game Corner's way down is open), or the game spots of a base (once its layout loaded). */
+const spotsOf = (room: RoomKey, base: BaseView | null = null, stairs = false): readonly Spot[] =>
+  room === 'gameCorner' && stairs ? STAIRS_SPOTS : isTownRoomId(room) ? REALM_ROOMS[room].spots : base ? gameSpots(base.layout) : []
 
 const inRect = (r: Rect, x: number, y: number) => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h
 
@@ -269,11 +282,11 @@ type Label = { text: string; at: Point; spot: Spot | null; members?: readonly Po
 const sideBySide = (a: Spot, b: Spot) => a.kind === b.kind && Math.hypot(a.at.x - b.at.x, a.at.y - b.at.y) < 40
 
 /**
- * A room's labels: every spot but the benches (one for spots side by side) (`realm.spots`) and every door
+ * A room's labels (`stairs`: the Game Corner's way down is open): every spot but the benches (one for spots side by side) (`realm.spots`) and every door
  * (the room it leads to, an arrow toward the edge it's on), anchored a little
  * inside the room so an edge door's label shows.
  */
-const labelsOf = (room: RoomKey): Label[] => {
+const labelsOf = (room: RoomKey, stairs = false): Label[] => {
   const m = t().realm
   const { w, h: hgt } = isTownRoomId(room) ? REALM_ROOMS[room] : BASE_ROOM
   // Cabinets side by side playing the same game share one label, between them; a group of spots, one over the member nearest the trainer.
@@ -281,7 +294,7 @@ const labelsOf = (room: RoomKey): Label[] => {
     s.group !== undefined
       ? spotsOf(room).filter((o) => o.group === s.group)
       : spotsOf(room).filter((o) => o.kind === 'cabinet' && s.kind === 'cabinet' && String(o.games) === String(s.games) && Math.abs(o.at.y - s.at.y) < 8 && Math.abs(o.at.x - s.at.x) <= 48)
-  const spots = spotsOf(room)
+  const spots = spotsOf(room, null, stairs)
     .filter((s, i, all) => s.kind !== 'bench' && (s.kind !== 'cabinet' || shared(s)[0] === s) && (s.kind === 'cabinet' || !all.slice(0, i).some((o) => sideBySide(o, s))))
     .map((s) => {
       const row = shared(s)
@@ -372,11 +385,13 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
     })
   }
 
-  const leave = () => {
+  /** Out of the realm: the client leaves, then the shell goes `to`. */
+  const leaveTo = (to: () => void) => {
     endSession()
     client.leave()
-    deps.back()
+    to()
   }
+  const leave = () => leaveTo(deps.back)
 
   /* ---------- The city picker ---------- */
 
@@ -613,6 +628,8 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
     let pending: UsePiece | null = null
     let cam = { x: 0, y: 0 }
     let clock = 0
+    /** The Game Corner's stairs to the Hideout: null closed, else the `clock` they started opening (-Infinity: open as the trainer came in). */
+    let stairs: number | null = null
     /** A room the trainer is walking to on its own (the Hora's banner), and the corners left to walk through in this one. */
     let heading: TownRoomId | null = null
     let route: Point[] = []
@@ -714,6 +731,13 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       if (card.dataset.id === String(id)) card.classList.add('hidden')
     }
 
+    /** The room's labels made again (on arrival, and as the stairs open). */
+    function relabel() {
+      if (room === null) return
+      labels = labelsOf(room, stairs !== null).map((l) => ({ ...l, el: h('div', { class: 'realm-sign' }, l.text) }))
+      signs.replaceChildren(...labels.map((l) => l.el))
+    }
+
     const enterRoom = (key: RoomKey, avatars: readonly Avatar[]) => {
       for (const id of [...trainers.keys()]) removeTrainer(id)
       tables.clear()
@@ -736,8 +760,8 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
           setBase(v)
           if (own) exterior = v.layout.exterior
         })
-      labels = labelsOf(key).map((l) => ({ ...l, el: h('div', { class: 'realm-sign' }, l.text) }))
-      signs.replaceChildren(...labels.map((l) => l.el))
+      stairs = key === 'gameCorner' && holdsPass(loadSave().hideout) ? -Infinity : null
+      relabel()
       // The first time in the grove, its host comes over to explain what a secret base is.
       if (key === 'trail' && !groveSeen()) later(() => !disposed && room === 'trail' && !sub && hostTalk(true))
       where.textContent = `${REALM_CITIES[city].name} · ${owner ? m().base(owner) : isTownRoomId(key) ? m().rooms[key] : key}`
@@ -1157,6 +1181,8 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
           return openSub((r) => openCornerCounter(r, input, { tab: spot.kind === 'tokens' ? 'tokens' : 'prizes', close: closeSub }))
         case 'poster':
           return readTheposter()
+        case 'hideoutStairs':
+          return goDownstairs()
         case 'pool':
           return void toast(root, m().pool, 2600, 'realmSpot')
         case 'bench':
@@ -1232,7 +1258,21 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       if (got.got === 'new') updateSave((s) => ({ ...s, hideout: got.save }))
       const end = got.got === 'new' ? w.hideoutKey : got.got === 'held' ? w.hideoutAgain : w.hideoutTomorrow
       const lines = [...(got.got === 'new' ? [...w.motto, ...w.poster] : [w.poster[0]!]), end]
-      openSub((r) => dialogue(r, input, { speaker: posterSpeaker(), lines: lines.map((text) => ({ text })), onDone: () => later(closeSub) }))
+      openSub((r) => dialogue(r, input, { speaker: posterSpeaker(), lines: lines.map((text) => ({ text })), onDone: () => later(() => (closeSub(), openStairs())) }))
+    }
+
+    /** The switch pulled with a pass held: the stairs open in the floor, the lids sliding apart (`render/cornerStairs.ts`). */
+    function openStairs() {
+      if (disposed || room !== 'gameCorner' || stairs !== null || !holdsPass(loadSave().hideout)) return
+      stairs = clock
+      playSfx('digRumble')
+      setTimeout(() => !disposed && room === 'gameCorner' && relabel(), STAIRS_OPENING * 1000)
+    }
+
+    /** Down the stairs: out of the realm to the partner select, the run it starts bringing the Hideout's hatch onto its map. */
+    function goDownstairs() {
+      const lines = t().rocket.corner.downstairs.map((text) => ({ text }))
+      openSub((r) => dialogue(r, input, { speaker: stairsSpeaker(), lines, onDone: () => later(() => (closeSub(), leaveTo(deps.hideout))) }))
     }
 
     /** Sudowoodo talks: all about secret bases the first time (`first`), else a line of its hellos. */
@@ -1351,7 +1391,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       if (st.kind === 'connecting' || st.kind === 'retrying') status.textContent = st.kind === 'connecting' ? m().status.connecting : m().status.retrying
       if (st.kind === 'refused' && status.childElementCount === 0) refused(st.why)
       const seated = st.kind === 'open' && room !== null
-      const ground = room ? groundOf(room, base) : REALM_ROOMS[LANDING]
+      const ground = room ? groundOf(room, base, stairs !== null) : REALM_ROOMS[LANDING]
       const scale = deps.scale()
 
       if (seated && room && !sub) {
@@ -1402,6 +1442,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       if (!room) return
       const town = isTownRoomId(room) ? room : null
       if (town) drawTownGround(ctx, town, cam.x, cam.y, w, hgt, clock, exterior)
+      if (town === 'gameCorner' && stairs !== null) drawCornerStairs(ctx, cam.x, cam.y, clock - stairs, clock)
       else if (base) drawBaseRoom(ctx, base, cam.x, cam.y, clock)
       const hourHere = hour && town === REALM_EVENTS[hour.kind].room ? hour : null
       if (hourHere) drawHourGround(ctx, hourHere, cam.x, cam.y, w, hgt, clock)
@@ -1413,7 +1454,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       setRealmJukebox(town ? null : roomTheme(usable.all, furniture))
 
       // Everyone where they stand now: the others behind, the trainer as walked, whoever sits at a table on its seat.
-      const spots = spotsOf(room, base)
+      const spots = spotsOf(room, base, stairs !== null)
       const sitting = tables.size > 0 ? seatedAt(tables, spots, town !== null) : null
       const views: (TrainerView & { sortY?: number })[] = []
       for (const tr of trainers.values()) {

@@ -38,7 +38,7 @@ const pt = {
   },
   corner: {
     name: 'Game Corner Rocket',
-    spots: { slots: 'Caça-níqueis', sweep: 'Caça ao Koffing', tokens: 'Fichas', prizes: 'Prêmios', poster: 'Cartaz suspeito' },
+    spots: { slots: 'Caça-níqueis', sweep: 'Caça ao Koffing', tokens: 'Fichas', prizes: 'Prêmios', poster: 'Cartaz suspeito', stairs: 'Escada' },
     balance: (n: string) => `${n} fichas`,
     clerk: 'Meowth',
     hello: [
@@ -106,7 +106,8 @@ const pt = {
       'É um cartaz da Equipe Rocket. Tem um Persian desenhado... e um interruptor escondido atrás!',
       'Clique. Uma escada se abre no chão do Game Corner.',
     ],
-    hideoutKey: 'Você achou o caminho do Esconderijo Rocket! Na sua próxima partida, a entrada aparece no mapa.',
+    hideoutKey: 'Você achou o caminho do Esconderijo Rocket! Desça a escada ou jogue sua próxima partida: a entrada aparece no mapa.',
+    downstairs: ['A escada desce para o Esconderijo Rocket.', 'Escolha quem desce com você: a escotilha do Esconderijo se abre no mapa dessa partida.'],
     hideoutAgain: 'A escada continua lá. A entrada do Esconderijo aparece na sua próxima partida.',
     hideoutTomorrow: 'A escada está trancada por hoje. Volte amanhã para outra passagem.',
     motto: [
@@ -201,7 +202,7 @@ const en: RocketWords = {
   },
   corner: {
     name: 'Rocket Game Corner',
-    spots: { slots: 'Slots', sweep: 'Koffing Sweep', tokens: 'Tokens', prizes: 'Prizes', poster: 'Suspicious poster' },
+    spots: { slots: 'Slots', sweep: 'Koffing Sweep', tokens: 'Tokens', prizes: 'Prizes', poster: 'Suspicious poster', stairs: 'Stairs' },
     balance: (n) => `${n} tokens`,
     clerk: 'Meowth',
     hello: [
@@ -269,7 +270,8 @@ const en: RocketWords = {
       "It's a Team Rocket poster. There's a Persian on it... and a switch hidden behind it!",
       'Click. A staircase opens in the Game Corner floor.',
     ],
-    hideoutKey: "You found the way into the Rocket Hideout! In your next run, its entrance shows up on the map.",
+    hideoutKey: 'You found the way into the Rocket Hideout! Take the stairs down or play your next run: its entrance shows up on the map.',
+    downstairs: ['The stairs lead down to the Rocket Hideout.', 'Pick who goes down with you: the Hideout’s hatch opens on that run’s map.'],
     hideoutAgain: 'The stairs are still there. The Hideout’s entrance shows up in your next run.',
     hideoutTomorrow: 'The stairs are locked for today. Come back tomorrow for another pass.',
     motto: [
@@ -359,7 +361,7 @@ const es: RocketWords = {
   },
   corner: {
     name: 'Casino Rocket',
-    spots: { slots: 'Tragaperras', sweep: 'Caza de Koffing', tokens: 'Fichas', prizes: 'Premios', poster: 'Cartel sospechoso' },
+    spots: { slots: 'Tragaperras', sweep: 'Caza de Koffing', tokens: 'Fichas', prizes: 'Premios', poster: 'Cartel sospechoso', stairs: 'Escalera' },
     balance: (n) => `${n} fichas`,
     clerk: 'Meowth',
     hello: [
@@ -427,7 +429,8 @@ const es: RocketWords = {
       'Es un cartel del Team Rocket. Tiene un Persian dibujado... ¡y un interruptor escondido detrás!',
       'Clic. Se abre una escalera en el suelo del Casino.',
     ],
-    hideoutKey: '¡Encontraste el camino al Escondite Rocket! En tu próxima partida, la entrada aparece en el mapa.',
+    hideoutKey: '¡Encontraste el camino al Escondite Rocket! Baja la escalera o juega tu próxima partida: la entrada aparece en el mapa.',
+    downstairs: ['La escalera baja al Escondite Rocket.', 'Elige quién baja contigo: la escotilla del Escondite se abre en el mapa de esa partida.'],
     hideoutAgain: 'La escalera sigue ahí. La entrada del Escondite aparece en tu próxima partida.',
     hideoutTomorrow: 'La escalera está cerrada por hoy. Vuelve mañana para otro pase.',
     motto: [
@@ -517,7 +520,7 @@ const fr: RocketWords = {
   },
   corner: {
     name: 'Salle de jeux Rocket',
-    spots: { slots: 'Machines à sous', sweep: 'Chasse au Koffing', tokens: 'Jetons', prizes: 'Lots', poster: 'Affiche suspecte' },
+    spots: { slots: 'Machines à sous', sweep: 'Chasse au Koffing', tokens: 'Jetons', prizes: 'Lots', poster: 'Affiche suspecte', stairs: 'Escalier' },
     balance: (n) => `${n} jetons`,
     clerk: 'Meowth',
     hello: [
@@ -585,7 +588,8 @@ const fr: RocketWords = {
       'C’est une affiche de la Team Rocket. Un Persian y est dessiné... et un interrupteur est caché derrière !',
       'Clic. Un escalier s’ouvre dans le sol de la Salle de jeux.',
     ],
-    hideoutKey: 'Vous avez trouvé le chemin du Repaire Rocket ! Lors de votre prochaine partie, son entrée apparaît sur la carte.',
+    hideoutKey: 'Vous avez trouvé le chemin du Repaire Rocket ! Descendez l’escalier ou lancez votre prochaine partie : son entrée apparaît sur la carte.',
+    downstairs: ['L’escalier descend au Repaire Rocket.', 'Choisissez qui descend avec vous : la trappe du Repaire s’ouvre sur la carte de cette partie.'],
     hideoutAgain: 'L’escalier est toujours là. L’entrée du Repaire apparaît lors de votre prochaine partie.',
     hideoutTomorrow: 'L’escalier est verrouillé pour aujourd’hui. Revenez demain pour un autre passage.',
     motto: [
@@ -675,7 +679,7 @@ const zh: RocketWords = {
   },
   corner: {
     name: '火箭隊遊戲城',
-    spots: { slots: '拉霸機', sweep: '瓦斯彈掃雷', tokens: '代幣', prizes: '獎品', poster: '可疑的海報' },
+    spots: { slots: '拉霸機', sweep: '瓦斯彈掃雷', tokens: '代幣', prizes: '獎品', poster: '可疑的海報', stairs: '樓梯' },
     balance: (n) => `${n} 枚代幣`,
     clerk: 'Meowth',
     hello: [
@@ -740,7 +744,8 @@ const zh: RocketWords = {
       ...GA_HOOK_WORDS.zh.prizeBlurbs,
     },
     poster: ['這是火箭隊的海報。上面畫著一隻 Persian……後面還藏著一個開關！', '喀嚓。遊戲城的地板打開了一道樓梯。'],
-    hideoutKey: '你找到了通往火箭隊秘密基地的路！下一局，入口會出現在地圖上。',
+    hideoutKey: '你找到了通往火箭隊秘密基地的路！走下樓梯，或直接開始下一局：入口會出現在地圖上。',
+    downstairs: ['樓梯通往火箭隊秘密基地。', '選擇和你一起下去的寶可夢：秘密基地的艙門會在那一局的地圖上打開。'],
     hideoutAgain: '樓梯還在那裡。秘密基地的入口會在你下一局出現。',
     hideoutTomorrow: '樓梯今天鎖上了。明天再來拿通行證吧。',
     motto: ['為了防止世界被破壞……', '為了守護世界免受誠實拉霸機的危害！', '火箭隊以代幣的速度飛走囉！'],
