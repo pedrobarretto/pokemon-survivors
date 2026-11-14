@@ -1,4 +1,5 @@
 import { DIFFICULTY_IDS, type Difficulty } from './difficulty'
+import { jumpToRing } from './rush'
 import type { Game } from './types'
 
 /**
@@ -6,7 +7,7 @@ import type { Game } from './types'
  * a rush at that level with the partner (the save needs as many captured legends as its rings, 4 for Normal:
  * `ps.captureAll()` first), `ps.rush('select')` opens the partner select on
  * its Lendários tab (the rings' banner), `ps.rushRing(5)` jumps to ring 5 (its
- * legend comes through at once; the last ring is Hoopa).
+ * legend comes through at once, on its island; the last ring is Hoopa).
  */
 export const rushDevTools = (game: () => Game | undefined, start: (difficulty: Difficulty) => void, select: () => void) => ({
   rush: (difficulty: Difficulty | 'select' = 'normal') =>
@@ -19,9 +20,7 @@ export const rushDevTools = (game: () => Game | undefined, start: (difficulty: D
     if (boss) boss.dying = 99
     g.bossId = null
     g.hazards.length = 0
-    r.ring = Math.max(0, Math.min(r.lineup.length - 1, Math.round(n) - 1))
-    r.stage = 'gate'
-    r.clock = 0
-    return `Ring ${r.ring + 1}/${r.lineup.length}: ${r.lineup[r.ring]}`
+    jumpToRing(g, Math.round(n) - 1)
+    return `Ring ${r.ring + 1}/${r.lineup.length}: ${r.lineup[r.ring]} on the ${r.island} island`
   },
 })

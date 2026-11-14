@@ -29,7 +29,7 @@ import { LANDMARK, LANDMARK_IDS, type LandmarkGround, type LandmarkId, type Land
 import { LANDMARK_VARIANTS, landmarkPlan } from './landmarkLayout'
 import { arenaGround, fits } from './arenaFloor'
 import { burst } from './effects'
-import { roomOf } from './room'
+import { keepOnFloor, roomOf } from './room'
 import { isAirborne } from './traits'
 import { actAs, nearestPlayer } from './players'
 import type { Enemy, Game, Pickup, Player } from './types'
@@ -406,6 +406,24 @@ const standable = (g: Game, x: number, y: number, r: number, thin: boolean) => {
 }
 
 /**
+ * Moves a spot to the nearest place a player's foot stands clear: on a room's
+ * floor and out of its holes, clear of every solid (a blast's shelters on
+ * Hoopa's islands). Left where it is when nothing in reach is clear.
+ */
+export const standingSpot = (g: Game, o: Pos, r: number = PLAYER_FOOT) => {
+  if (standable(g, o.x, o.y, r, false)) return o
+  const room = roomOf(g)
+  if (room) keepOnFloor(o, room, room.layout.floor, room.layout.holes ?? [], r)
+  if (standable(g, o.x, o.y, r, false)) return o
+  const spot = nearestOpen(o.x, o.y, (x, y) => standable(g, x, y, r, false), CLEAR_SEARCH.reach, UNSTICK.step)
+  if (spot) {
+    o.x = spot.x
+    o.y = spot.y
+  }
+  return o
+}
+
+/**
  * Keeps a walking player out of the solids; one the pushes can't free (an
  * evolution grew them into a gap, a dash wedged them between two pieces or
  * a piece and a room's edge, each push putting them back into the other)
@@ -664,8 +682,10 @@ export const updateTerrain = (g: Game, dt: number) => {
     const wall = block(g, e, e.radius * 0.8)
     if (wall) slide(g, e, wall, dt)
   }
+  // On Hoopa's islands a boss's phantom streaks over the scenery, as the boss itself does: its lane is marked whole.
+  const ghosts = g.rush !== null
   for (const h of g.hazards) {
-    if (h.kind !== 'shot' || h.age < h.armAt || !inSolid(g, h.x, h.y, h.r * 0.4)) continue
+    if (h.kind !== 'shot' || h.age < h.armAt || (ghosts && h.phantom > 0) || !inSolid(g, h.x, h.y, h.r * 0.4)) continue
     h.age = h.ttl
     burst(g, h.x, h.y, { colors: SHOT_SPARKS, count: 6, speed: 50, ttl: 0.25 })
   }

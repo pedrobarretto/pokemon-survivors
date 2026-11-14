@@ -1,5 +1,5 @@
 import type { ArenaPiece } from '../data/arenas'
-import { cylinder, grid, lathe, limb, outline, shade, toSprite, type Ramp } from './sculpt'
+import { cylinder, grid, lathe, limb, outline, put, shade, toSprite, type Ramp } from './sculpt'
 import { boulder, brokenPillar, stalagmites, type Piece } from './terrain'
 
 /**
@@ -91,6 +91,43 @@ const pearlPillar = (): Piece => {
   return { sprite: toSprite(g), ax: 13, ay: 60 }
 }
 
+const SANDSTONE: Ramp = ['#4a2c14', '#7a4c24', '#a87038', '#cc9a58', '#e8c484']
+const GOLD: Ramp = ['#5c3a08', '#a06a14', '#d8a030', '#f8d860', '#fff4b8']
+
+/**
+ * One of Hoopa's rings standing on a sandstone plinth (its golden island,
+ * `data/rushIslands.ts`): a squat block banded in gold, the ring upright on
+ * top around a dark portal, a glint on its rim.
+ */
+const ringPlinth = (): Piece => {
+  const g = grid(30, 50)
+  const cx = 15
+  const ground = 46
+  cylinder(g, cx, ground, 12, 12, SANDSTONE, {
+    ry: 5,
+    top: SANDSTONE,
+    paint: (x, y, nx, e, l) => (e > 8 && e < 11 ? shade(GOLD, l, x, y) : Math.round((nx + 1) * 3) % 3 === 0 && e < 8 ? shade(SANDSTONE, l - 0.25, x, y) : null),
+  })
+  // The ring: an upright ellipse of gold limbs round a dark portal.
+  const ry = 13
+  const rx = 9
+  const cy = ground - 12 - ry - 1
+  for (let y = -ry + 2; y <= ry - 2; y++) {
+    const w = Math.floor(rx * Math.sqrt(1 - (y / ry) ** 2)) - 2
+    for (let x = -w; x <= w; x++) put(g, cx + x, cy + y, Math.abs(x) + Math.abs(y) < 5 ? '#3c1a58' : '#28103c')
+  }
+  const n = 28
+  for (let i = 0; i < n; i++) {
+    const a0 = (i / n) * Math.PI * 2
+    const a1 = ((i + 1) / n) * Math.PI * 2
+    limb(g, cx + Math.cos(a0) * rx, cy + Math.sin(a0) * ry, cx + Math.cos(a1) * rx, cy + Math.sin(a1) * ry, 1.9, 1.9, GOLD)
+  }
+  put(g, cx - 7, cy - 7, '#ffffff')
+  put(g, cx - 6, cy - 8, '#ffffff')
+  outline(g, '#2a1404')
+  return { sprite: toSprite(g), ax: cx, ay: ground }
+}
+
 export const ARENA_PIECES: Record<ArenaPiece, (variant: number) => Piece> = {
   seaRock: (v) => boulder({ stone: ['#1c2840', '#2c3c5c', '#46608a', '#6c88b0', '#98b4d8'], outline: '#0a1020', moss: ['#1c5050', '#2c7068', '#48907c'] }, 14, v),
   redPillar,
@@ -111,10 +148,14 @@ export const ARENA_PIECES: Record<ArenaPiece, (variant: number) => Piece> = {
     stalagmites({ stone: ['#140c30', '#281c58', '#3c2c7c', '#5a48a4', '#7c6cc8'], outline: '#06021a', crystal: ['#5c3c98', '#c068c8', '#78d8f0', '#f8f0ff'] }, v + 3),
   pearlSpire: (v) => stalagmites({ stone: PEARL, outline: '#1c1028', crystal: ROSE }, v + 3),
   pearlPillar,
+  sandPillar: (v) => brokenPillar({ stone: SANDSTONE, outline: '#241206' }, v + 5),
+  iceSpire: (v) => stalagmites({ stone: ['#1c3050', '#34587c', '#5888b0', '#90c0e0', '#d8f0ff'], outline: '#0a1428', crystal: ['#2c78b0', '#68b8e8', '#b8e8ff', '#ffffff'] }, v + 1),
+  magmaSpire: (v) => stalagmites({ stone: ['#120806', '#2a140c', '#442216', '#603222', '#7c4630'], outline: '#060202', crystal: ['#801808', '#e04810', '#f8a030', '#fff0a0'] }, v + 2),
+  ringPlinth,
 }
 
 /** Shadow width of each piece, and which ones are tall enough to go see-through. */
-export const ARENA_SHADOW: Record<ArenaPiece, number> = { seaRock: 10, redPillar: 7, bell: 16, stalagmite: 8, basalt: 10, jadeStump: 8, column: 9, marbleStump: 8, palm: 9, meteorCrystal: 8, nightSpire: 8, ultraCrystal: 8, pearlSpire: 8, pearlPillar: 9 }
+export const ARENA_SHADOW: Record<ArenaPiece, number> = { seaRock: 10, redPillar: 7, bell: 16, stalagmite: 8, basalt: 10, jadeStump: 8, column: 9, marbleStump: 8, palm: 9, meteorCrystal: 8, nightSpire: 8, ultraCrystal: 8, pearlSpire: 8, pearlPillar: 9, sandPillar: 8, iceSpire: 8, magmaSpire: 8, ringPlinth: 12 }
 export const ARENA_TALL: Record<ArenaPiece, boolean> = {
   seaRock: false,
   redPillar: true,
@@ -130,4 +171,8 @@ export const ARENA_TALL: Record<ArenaPiece, boolean> = {
   ultraCrystal: true,
   pearlSpire: true,
   pearlPillar: true,
+  sandPillar: false,
+  iceSpire: true,
+  magmaSpire: true,
+  ringPlinth: true,
 }
