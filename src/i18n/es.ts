@@ -1535,6 +1535,8 @@ export const es: Messages = {
   dex: {
     seen: 'Vistos',
     defeated: 'Derrotados',
+    /** The defeated counter's tooltip: why its total is smaller than the seen one's. */
+    defeatedHint: 'Solo los que aparecen para luchar: los que solo juegas, eclosionas o recibes no cuentan',
     caught: 'Capturados',
     cleared: 'Superados',
     clear: 'Superado',

@@ -1534,6 +1534,8 @@ export const en: Messages = {
   dex: {
     seen: 'Seen',
     defeated: 'Defeated',
+    /** The defeated counter's tooltip: why its total is smaller than the seen one's. */
+    defeatedHint: 'Only the ones that show up to fight: the ones you only play, hatch or are given don’t count',
     caught: 'Caught',
     cleared: 'Cleared',
     clear: 'Cleared',

@@ -6,7 +6,7 @@ import { dexCounts, dexStatus, type DexStatus } from '../game/dex'
 import { regionDone, regionProgress } from '../game/dexRegions'
 import { isLegend } from '../data/legends'
 import { DEX_REGIONS, dexRegionOf, NATIONAL_LAST, SHEETLESS, SPRITECOLLAB_URL, type DexRegion } from '../data/nationalDex'
-import { gameDex, regionCounts, type DexEntry } from '../site/pokedex'
+import { defeatable, dexTotals, gameDex, regionCounts, type DexEntry } from '../site/pokedex'
 import { pencilIcon, pencilSprite, PICKUPS, pokeballIcon, sparkleIcon, trophyIcon } from '../render/art'
 import { purifiedIcon, shadowIcon } from '../render/shadowAura'
 import { PLAYABLE, type PlayableId } from '../data/hatchlings'
@@ -54,9 +54,6 @@ const FILTER_TEST = {
   missing: (s) => s.kind === 'game' && !s.status.seen,
 } as const satisfies Record<DexFilter, (s: Slot) => boolean>
 
-/** Species the player can knock out: wild ones, plus playable families that also roam the horde. */
-const defeatable = (e: DexEntry) => e.source.kind !== 'starter' || e.source.wild !== undefined
-
 const dexNumber = (n: number) => `#${String(nationalDex(n)).padStart(4, '0')}`
 
 /** The game's species and every National Dex number it lacks, in national order (a regional form right after its species). */
@@ -100,7 +97,7 @@ export const pokedexScreen = (root: HTMLElement, input: Input, onClose: () => vo
   const entries = gameDex()
   const status = entries.map((e) => dexStatus(save, e.dex))
   const slots = nationalSlots(entries, status)
-  const wild = entries.filter(defeatable)
+  const totals = dexTotals(entries)
   const counts = dexCounts(save, entries.map((e) => e.dex))
   const done = DEX_REGIONS.filter((r) => regionDone(save, r))
   const regionNumbers = new Map(DEX_REGIONS.map((r) => [r, regionCounts(r, entries)] as const))
@@ -121,13 +118,15 @@ export const pokedexScreen = (root: HTMLElement, input: Input, onClose: () => vo
   const progress = h(
     'div',
     { class: 'dex-progress' },
-    ...[
-      [m.seen, counts.seen, entries.length],
-      [m.defeated, counts.defeated, wild.length],
-      [m.caught, counts.caught, entries.length],
-      [m.cleared, clearCount(clears), CLEARABLE.length],
-      [m.regionsDone, done.length, DEX_REGIONS.length],
-    ].map(([label, n, total]) => h('span', {}, label, h('b', {}, `${n}/${total}`))),
+    ...(
+      [
+        [m.seen, counts.seen, totals.entries],
+        [m.defeated, counts.defeated, totals.defeatable, m.defeatedHint],
+        [m.caught, counts.caught, entries.length],
+        [m.cleared, clearCount(clears), CLEARABLE.length],
+        [m.regionsDone, done.length, DEX_REGIONS.length],
+      ] satisfies Array<[label: string, n: number, total: number, hint?: string]>
+    ).map(([label, n, total, hint]) => h('span', hint ? { title: hint } : {}, label, h('b', {}, `${n}/${total}`))),
   )
 
   const regionTabs = DEX_REGIONS.map((r) => {
