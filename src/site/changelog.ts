@@ -65,6 +65,25 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
     ],
     changes: [
       {
+        title: { pt: 'Rádio: escolha a música', en: 'Radio: pick the music', es: 'Radio: elige la música', fr: 'Radio : choisis la musique', zh: '收音機：自己選音樂' },
+        notes: [
+          {
+            pt: 'O lobby ganhou um Rádio, apresentado pelo Rotom: monte uma fila com as músicas do jogo, toque na hora, reordene, embaralhe, repita e guarde as favoritas. Ele troca de música a cada duas voltas.',
+            en: 'The lobby has a Radio now, hosted by Rotom: queue up the game’s tunes, play one right away, reorder, shuffle, repeat and keep favorites. It switches tunes every two loops.',
+            es: 'El lobby tiene una Radio, presentada por Rotom: arma una cola con las canciones del juego, reproduce una ya, reordena, mezcla, repite y guarda favoritas. Cambia de canción cada dos vueltas.',
+            fr: 'Le lobby a maintenant une Radio, animée par Rotom : file d’attente avec les morceaux du jeu, lecture immédiate, réordonner, aléatoire, répétition et favoris. Elle change de morceau toutes les deux boucles.',
+            zh: '大廳新增由洛托姆主持的收音機：把遊戲裡的曲子排進佇列、立即播放、調整順序、隨機、重複播放，還能收藏最愛。每首播兩輪就換下一首。',
+          },
+          {
+            pt: 'As músicas dos biomas se liberam quando você passa por eles, e as dos lendários quando você os encontra. Escolha se o Rádio toca só nos menus ou também nas partidas (as lutas contra chefes mantêm a música delas, a não ser que você peça). Fica também em Ajustes › Som.',
+            en: 'Biome tunes unlock as you walk through them, and the legends’ ones as you meet them. Choose whether the Radio plays in the menus only or in runs too (boss fights keep their own music unless you ask). It’s also in Settings › Sound.',
+            es: 'Las canciones de los biomas se desbloquean al recorrerlos, y las de los legendarios al encontrarlos. Elige si la Radio suena solo en los menús o también en las partidas (las peleas contra jefes mantienen su música, salvo que lo pidas). También está en Ajustes › Sonido.',
+            fr: 'Les morceaux des biomes se débloquent en les traversant, ceux des légendaires en les rencontrant. Choisis si la Radio joue seulement dans les menus ou aussi en partie (les combats de boss gardent leur musique, sauf si tu le demandes). Elle est aussi dans Réglages › Son.',
+            zh: '走過地區就能解鎖該地區的曲子，遇見傳說寶可夢就能解鎖牠們的曲子。可以選擇收音機只在選單播放，還是遊戲中也播放（頭目戰會保留原本的音樂，除非你另外開啟）。也可以從設定 › 聲音進入。',
+          },
+        ],
+      },
+      {
         title: {
           pt: 'Escolha do parceiro feita para o celular',
           en: 'A partner select made for phones',

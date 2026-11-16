@@ -39,10 +39,11 @@ type Event = { voice: Voice; sym: string; len: number }
 /** A score flattened into one event list per sixteenth, ready for the scheduler. */
 type Song = { stepDur: number; steps: Event[][]; duty: Score['duty'] }
 
-/** Context-bound resources, built once audio runs. */
-type Kit = { ctx: AudioContext; duck: GainNode; waves: Record<Duty, PeriodicWave>; noise: AudioBuffer }
+/** Context-bound resources, built once audio runs. `meter` sits between the duck and the bus, for the radio's equalizer (`musicLevels`). */
+type Kit = { ctx: AudioContext; duck: GainNode; meter: AnalyserNode; waves: Record<Duty, PeriodicWave>; noise: AudioBuffer }
 
-type Playing = { id: ThemeId; song: Song; out: GainNode; echo: DelayNode; step: number; time: number }
+/** `loops`: how many times the theme came back to its first step since it started (the radio moves on after a few, `src/radio.ts`). */
+type Playing = { id: ThemeId; song: Song; out: GainNode; echo: DelayNode; step: number; time: number; loops: number }
 
 let wanted: ThemeId | null = null
 let ducked = false
@@ -80,11 +81,14 @@ const pulseWave = (ctx: AudioContext, duty: Duty) => {
 const createKit = (ctx: AudioContext, bus: GainNode): Kit => {
   const duck = ctx.createGain()
   duck.gain.value = ducked ? DUCK_LEVEL : 1
-  duck.connect(bus)
+  const meter = ctx.createAnalyser()
+  meter.fftSize = 64
+  meter.smoothingTimeConstant = 0.6
+  duck.connect(meter).connect(bus)
   const noise = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate)
   const data = noise.getChannelData(0)
   for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1
-  return { ctx, duck, noise, waves: { 0.125: pulseWave(ctx, 0.125), 0.25: pulseWave(ctx, 0.25), 0.5: pulseWave(ctx, 0.5) } }
+  return { ctx, duck, meter, noise, waves: { 0.125: pulseWave(ctx, 0.125), 0.25: pulseWave(ctx, 0.25), 0.5: pulseWave(ctx, 0.5) } }
 }
 
 const gainNode = (ctx: AudioContext, value: number) => {
@@ -167,6 +171,7 @@ const schedule = () => {
     for (const e of p.song.steps[p.step]!) note(kit, p, e, p.time)
     p.time += p.song.stepDur
     p.step = (p.step + 1) % p.song.steps.length
+    if (p.step === 0) p.loops++
   }
 }
 
@@ -181,7 +186,7 @@ const start = (k: Kit, id: ThemeId, now: number): Playing => {
   echo.delayTime.value = s.stepDur * 3
   echo.connect(gainNode(k.ctx, 0.3)).connect(echo)
   echo.connect(gainNode(k.ctx, 0.2)).connect(out)
-  return { id, song: s, out, echo, step: 0, time: now + 0.05 }
+  return { id, song: s, out, echo, step: 0, time: now + 0.05, loops: 0 }
 }
 
 const fadeOut = (p: Playing, now: number) => {
@@ -221,6 +226,22 @@ export const playTheme = (id: ThemeId | null) => {
 
 /** Theme actually sounding (null before audio unlocks). */
 export const currentTheme = () => playing?.id ?? null
+
+/** Whole loops the sounding theme has played since it started (0 before audio unlocks). */
+export const loopsPlayed = () => playing?.loops ?? 0
+
+/** Seconds one loop of the sounding theme lasts (0 before audio unlocks). */
+export const loopSeconds = () => (playing ? playing.song.stepDur * playing.song.steps.length : 0)
+
+/** The equalizer's bins, refilled in place on each call (no allocation): 32 levels 0..255, low to high. */
+const levels = new Uint8Array(32)
+
+/** The music's spectrum right now, from the meter on its bus (the radio's equalizer); null while nothing sounds. */
+export const musicLevels = (): Uint8Array | null => {
+  if (!kit || !playing || kit.ctx.state !== 'running') return null
+  kit.meter.getByteFrequencyData(levels)
+  return levels
+}
 
 /** Lowers the music (pause menus) or brings it back. */
 export const duckMusic = (on: boolean) => {

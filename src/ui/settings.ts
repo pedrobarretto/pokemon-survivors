@@ -6,6 +6,7 @@ import { TRANSLATORS } from '../data/translators'
 import { bugReportsEnabled } from '../bugReport'
 import { bugReportForm } from './bugReport'
 import { openControls } from './controls'
+import { openRadio } from './radio'
 import { AIM_ASSISTS } from './arenaAim'
 import { PRIORITIES } from '../game/versusKit'
 import { h, later } from './dom'
@@ -229,7 +230,7 @@ type Tab = (typeof TABS)[number]
 let lastTab: Tab = 'sound'
 
 /**
- * Settings in four tabs: Som (music and effects volume, mute), Jogo
+ * Settings in four tabs: Som (music and effects volume, mute, the Rádio's sheet), Jogo
  * (language, theme, damage numbers, screen shake, flashes, fog, run alerts, the mini map, move opacity, UI size, safe mode), Controles
  * (touch joystick, the buttons' side and the fixed stick's place on touchscreens, and the remap screen) and Sobre
  * (installing the app, what the game is, legal and
@@ -282,6 +283,7 @@ export const openSettings = (root: HTMLElement, input: Input, onClose: () => voi
           slider(m.music, 'musicVolume'),
           slider(m.sfx, 'sfxVolume', () => playSfx('pickup', 90)),
           toggle(m.sound, (s) => !s.muted, (on) => ({ muted: !on })),
+          openRow(t().radio.open, () => showSub(openRadio)),
         ]
       case 'game':
         return [

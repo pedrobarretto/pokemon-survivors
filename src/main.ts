@@ -190,6 +190,9 @@ import { arenaGate, coopGate, playGate, realmGate } from './ui/account'
 import { TOWN_ROOMS, isTownRoomId } from './data/realmMap'
 import { isLocalRealm, realmUrl } from './realmUrl'
 import { realmJukebox } from './realmJukebox'
+import { openTracks, radio, radioOver, radioSounding, unlockAllTracks } from './radio'
+import { nowPlaying, type MusicPlace } from './radioRules'
+import { openRadio } from './ui/radio'
 import { realmFriendsCount, realmTrainersCount } from './realm/friendsCount'
 import { forceHour, isHourKind } from './realm/hours'
 import { realmErrandsCount } from './realm/errandsCount'
@@ -2837,12 +2840,27 @@ const weatherToast = (next: WeatherId, prev: WeatherId) => {
 
 /* ---------------- Music ---------------- */
 
-/** Silence until "press start", then menus play the village theme, a run its biome's theme, and a living boss takes over until it falls. */
+/** Where the music plays: a menu (the results too), a run, or a fight in it (a boss, a rift, a legend's domain), for the Rádio (`radioTheme`). */
+const musicPlace = (r: Run | null): MusicPlace => {
+  if (!r || r.game.phase === 'gameover' || r.game.phase === 'victory') return 'menu'
+  return r.game.rift.arena !== null || r.game.bossId !== null ? 'fight' : 'run'
+}
+
+/**
+ * Silence until "press start". A secret base's music wins; then the Rádio,
+ * where its setting lets it play (`radioOver`); then the game's own (`gameTheme`).
+ */
 const themeFor = (r: Run | null): ThemeId | null => {
   if (!pressedStart) return null
   // A secret base's jukebox (or piano, or DJ booth) plays its track for everyone there (`ui/realm.ts`).
   const base = r ? null : realmJukebox()
   if (base) return base
+  const auto = gameTheme(r)
+  return radioOver(auto, musicPlace(r)) ?? auto
+}
+
+/** The game's own music: menus play the village theme, a run its biome's theme, and a living boss takes over until it falls. */
+const gameTheme = (r: Run | null): ThemeId => {
   // The Noite das Bruxas swaps the village for Lavender Tower's tune.
   if (!r || r.game.phase === 'gameover' || r.game.phase === 'victory') return halloweenToday() ? BIOMES.tower.theme : 'menu'
   // A legendary's domain plays its crossing's theme, then its own from the moment it shows itself.
@@ -5611,6 +5629,19 @@ if (import.meta.env.DEV) {
       showTitle,
       showMenu,
       theme: currentTheme,
+      /**
+       * The Rádio (`src/radio.ts`): `ps.radio()` prints its state, the track playing and the tracks open; `('open')` opens
+       * its sheet (through the lobby's button when it shows); `('unlock')` opens every track for a look, until a reload.
+       */
+      radio: (cmd?: 'open' | 'unlock') => {
+        if (cmd === 'unlock') unlockAllTracks()
+        if (cmd === 'open') {
+          const button = [...ui.querySelectorAll<HTMLElement>('.radio-chip, button.radio-pill')].find((b) => b.offsetParent !== null)
+          if (button) button.click()
+          else openRadio(ui, input, () => {})
+        }
+        return { ...radio(), playing: nowPlaying(radio()), sounding: radioSounding(), theme: currentTheme(), open: openTracks() }
+      },
       /** `ps.quality('lean')` pins lean drawing (`'full'` full detail, `'auto'` back to the governor); returns the governor's state. */
       quality: (pin?: 'auto' | 'lean' | 'full') => {
         if (pin) qualityPin = pin

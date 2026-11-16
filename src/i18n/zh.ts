@@ -2,6 +2,7 @@ import { CAFE_TABLES_WORDS } from './cafeTables'
 import type { DexRegion } from '../data/nationalDex'
 import { GALLOP_WORDS } from './gallop'
 import { ITEM_DROP_WORDS } from './itemDrop'
+import { RADIO_WORDS } from './radio'
 import { realmBookZh as realmBook } from './realmStamps/zh'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { TERA_WORDS } from './tera'
@@ -1071,6 +1072,7 @@ export const zh: Messages = {
   },
 
   itemDrop: ITEM_DROP_WORDS.zh,
+  radio: RADIO_WORDS.zh,
   levelUp: {
     title: (name, level) => `${name} 升到 Lv ${level} 了！`,
     ready: '準備好了！',

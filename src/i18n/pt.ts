@@ -2,6 +2,7 @@ import { CAFE_TABLES_WORDS } from './cafeTables'
 import type { DexRegion } from '../data/nationalDex'
 import { GALLOP_WORDS } from './gallop'
 import { ITEM_DROP_WORDS } from './itemDrop'
+import { RADIO_WORDS } from './radio'
 import type { GameModeId } from '../data/gameModes'
 import { realmBookPt as realmBook } from './realmStamps/pt'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
@@ -1280,6 +1281,7 @@ export const pt = {
   },
 
   itemDrop: ITEM_DROP_WORDS.pt,
+  radio: RADIO_WORDS.pt,
   levelUp: {
     title: (name: string, level: number) => `${name} subiu para o Nv ${level}!`,
     ready: 'PRONTO!',

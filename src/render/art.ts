@@ -1525,6 +1525,52 @@ const KIT_GRID = ['111..111', '111..111', '111..111', '........', '........', '1
 
 export const gridIcon = () => toIconUrl('kit:grid', () => art(KIT_GRID, { 1: '#1b2040' }))
 
+/* ---------------- The Rádio (ui/radio.ts) ---------------- */
+
+/** The lobby's way to the Rádio: a red set with an antenna, a cream speaker and a gold dial. 1 outline, 2 body, 3 its shade, 4 speaker, 5 grille, 6 dial, 7 window. */
+const RADIO_SET = [
+  '.........11..',
+  '........1....',
+  '.......1.....',
+  '1111111111111',
+  '1222222222221',
+  '1244444266721',
+  '1245454277721',
+  '1244444222221',
+  '1245454266621',
+  '1244444222221',
+  '1333333333331',
+  '1111111111111',
+]
+
+export const radioIcon = () => toIconUrl('radio', () => art(RADIO_SET, { 1: '#303040', 2: '#e05848', 3: '#a83838', 4: '#f8e0b0', 5: '#a07850', 6: '#f8d030', 7: '#f8f8f8' }))
+
+/** ⏭, which ⏮ mirrors. */
+const RADIO_NEXT = ['1.....11', '111...11', '11111.11', '11111111', '11111.11', '111...11', '1.....11']
+
+/** The Rádio's controls, one ink color each (`.ink-icon` lights them in the dark theme). */
+const RADIO_KIT = {
+  play: ['11.....', '1111...', '111111.', '1111111', '111111.', '1111...', '11.....'],
+  stop: ['1111111', '1111111', '1111111', '1111111', '1111111', '1111111', '1111111'],
+  next: RADIO_NEXT,
+  prev: RADIO_NEXT.map((row) => [...row].reverse().join('')),
+  shuffle: ['......1..', '11...1111', '..1.1..1.', '...1.....', '..1.1..1.', '11...1111', '......1..'],
+  repeat: ['......1..', '.1111111.', '1.....1..', '1.......1', '..1.....1', '.1111111.', '..1......'],
+  repeatOne: ['......1..', '.1111111.', '1.....1..', '1...1...1', '..1.....1', '.1111111.', '..1......'],
+  up: ['...1...', '..111..', '.11111.', '111.111', '11...11'],
+  down: ['11...11', '111.111', '.11111.', '..111..', '...1...'],
+  add: ['..111..', '..111..', '1111111', '1111111', '1111111', '..111..', '..111..'],
+} as const satisfies Record<string, readonly string[]>
+
+export type RadioKitIcon = keyof typeof RADIO_KIT
+
+export const radioKitIcon = (id: RadioKitIcon) => toIconUrl(`radio:${id}`, () => art(RADIO_KIT[id], { 1: '#1b2040' }))
+
+/** A favorite's star: gold when on, grey when off. */
+const RADIO_STAR = ['....1....', '....1....', '...111...', '111111111', '.1111111.', '..11111..', '..11.11..', '.11...11.', '.1.....1.']
+
+export const radioStarIcon = (on: boolean) => toIconUrl(`radio:star:${on}`, () => (on ? art(RADIO_STAR, { 1: '#f8c030' }, '#a06818') : art(RADIO_STAR, { 1: '#a0a8c0' })))
+
 /* ---------------- Clears ---------------- */
 
 /** A clear's trophy (`game/clears.ts`), on the Pokédex and the partner select. 1 outline, 2 shade, 3 metal, 4 shine. */
