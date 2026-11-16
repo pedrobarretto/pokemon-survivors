@@ -8,8 +8,9 @@ import { megasOf } from '../data/megas'
 import { bodyOf } from '../data/bodies'
 import { DIFFICULTY_IDS, type Difficulty } from '../game/difficulty'
 import { incubatorSlots, isReady } from '../game/eggs'
-import { eggLegend, giftLegend, isRoamer, isLegend, isUltraLegend, LEGEND_IDS, legendEvent, legendFestival, legendPath, LEGENDS, REGULAR_LEGENDS, type LegendId } from '../data/legends'
+import { eggLegend, giftLegend, isRoamer, isLegend, isUltraLegend, LEGEND_IDS, legendEvent, legendFestival, legendPath, LEGENDS, REGULAR_LEGENDS, SWORDS, type LegendId, type SwordId } from '../data/legends'
 import { ULTRA_BEASTS } from '../data/ultraBeasts'
+import { SWORD_DUELS } from '../data/quests'
 import { ultraCaptured } from '../game/ultraGifts'
 import { beastBallIcon } from '../render/ultraArt'
 import { rushOpen } from '../game/rush'
@@ -218,6 +219,15 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
   const pathWhere = (id: LegendId) => {
     const where: Partial<Record<LegendId, string>> = m.paths.where
     return where[id] ?? ''
+  }
+  /** A Sword of Justice's locked line: the biomes it waits in and its test, read from `SWORD_DUELS` so it follows the numbers. */
+  const swordWhere = (id: LegendId) => {
+    const sword = SWORDS.find((s) => s === id)
+    if (!sword) return m.legend.where[legendSource(id)]
+    const { biomes, test }: (typeof SWORD_DUELS)[SwordId] = SWORD_DUELS[sword]
+    const d = t().quests.duel
+    const rule = test.kind === 'endure' ? d.rules.endure(Math.round(test.floor * 100), test.time) : test.kind === 'power' ? d.rules.power(test.time) : d.rules.speed(test.marks, test.time)
+    return d.where(biomes.map((b) => t().world.biomes[b]).join(d.or), d.tests[test.kind], rule)
   }
   /** Opens a path's sheet over the select (its keys wait until it closes). */
   let pathOpen: Screen | null = null
@@ -534,7 +544,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
             h('h3', { class: 'partner-name' }, form.name),
             !gift && !path && !quest && h('p', { class: 'partner-legend-wins' }, m.legend.wins(`${Math.min(save.legends[id] ?? 0, need)}/${need}`)),
             roamLeft !== null && h('p', { class: 'partner-legend-wins' }, t().quests.roam.hpLeft(Math.max(1, Math.round(roamLeft * 100)))),
-            !over && !gift && !path && h('p', { class: 'partner-blurb locked-blurb' }, rich(m.legend.where[legendSource(id)])),
+            !over && !gift && !path && h('p', { class: 'partner-blurb locked-blurb' }, rich(swordWhere(id))),
             path && h('p', { class: 'partner-blurb locked-blurb' }, rich(pathWhere(id))),
             path && pathButton(path),
             missing.length > 0 && h('p', { class: 'partner-blurb locked-blurb' }, m.legend.stillMissing(missing.map((other) => LEGENDS[other].line[0].name))),

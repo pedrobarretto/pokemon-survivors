@@ -132,6 +132,14 @@ const pt = {
         speed: (got: number, of: number) => `Pise nas folhas: ${got}/${of}`,
       },
       hudWaiting: (name: string, time: string) => `${name} espera · ${time}`,
+      /** The locked card of a Sword (`starterSelect`), from `SWORD_DUELS`: `or` joins its biomes, `where` takes them, the test's name and its `rules` line. */
+      or: ' ou ',
+      where: (biomes: string, test: string, rule: string) => `Às vezes espera em *${biomes}* (só em partidas solo, no mapa aberto). Fique no círculo dele para o duelo: _${test}: ${rule}_.`,
+      rules: {
+        endure: (floor: number, s: number) => `HP acima de ${floor}% por ${s} s, ou derrube-o`,
+        power: (s: number) => `derrube-o em ${s} s`,
+        speed: (marks: number, s: number) => `pise em ${marks} folhas em ${s} s, ou derrube-o`,
+      },
     },
   },
 }
@@ -255,6 +263,13 @@ const en: typeof pt = {
         speed: (got: number, of: number) => `Step on the leaves: ${got}/${of}`,
       },
       hudWaiting: (name: string, time: string) => `${name} waits · ${time}`,
+      or: ' or ',
+      where: (biomes: string, test: string, rule: string) => `Sometimes waits in *${biomes}* (solo runs on the open map only). Stand in its circle for the duel: _${test}: ${rule}_.`,
+      rules: {
+        endure: (floor: number, s: number) => `HP above ${floor}% for ${s} s, or knock it out`,
+        power: (s: number) => `knock it out in ${s} s`,
+        speed: (marks: number, s: number) => `step on ${marks} leaves in ${s} s, or knock it out`,
+      },
     },
   },
 }
@@ -378,6 +393,13 @@ const es: typeof pt = {
         speed: (got: number, of: number) => `Pisa las hojas: ${got}/${of}`,
       },
       hudWaiting: (name: string, time: string) => `${name} espera · ${time}`,
+      or: ' o ',
+      where: (biomes: string, test: string, rule: string) => `A veces espera en *${biomes}* (solo en partidas individuales, en el mapa abierto). Párate en su círculo para el duelo: _${test}: ${rule}_.`,
+      rules: {
+        endure: (floor: number, s: number) => `HP por encima del ${floor}% durante ${s} s, o derríbalo`,
+        power: (s: number) => `derríbalo en ${s} s`,
+        speed: (marks: number, s: number) => `pisa ${marks} hojas en ${s} s, o derríbalo`,
+      },
     },
   },
 }
@@ -501,6 +523,13 @@ const fr: typeof pt = {
         speed: (got: number, of: number) => `Marche sur les feuilles : ${got}/${of}`,
       },
       hudWaiting: (name: string, time: string) => `${name} attend · ${time}`,
+      or: ' ou ',
+      where: (biomes: string, test: string, rule: string) => `Attend parfois à *${biomes}* (parties solo sur la carte ouverte uniquement). Place-toi dans son cercle pour le duel : _${test} : ${rule}_.`,
+      rules: {
+        endure: (floor: number, s: number) => `PV au-dessus de ${floor} % pendant ${s} s, ou mets-le K.O.`,
+        power: (s: number) => `mets-le K.O. en ${s} s`,
+        speed: (marks: number, s: number) => `marche sur ${marks} feuilles en ${s} s, ou mets-le K.O.`,
+      },
     },
   },
 }
@@ -624,6 +653,13 @@ const zh: typeof pt = {
         speed: (got: number, of: number) => `踩上葉子：${got}/${of}`,
       },
       hudWaiting: (name: string, time: string) => `${name} 等待中 · ${time}`,
+      or: '或',
+      where: (biomes: string, test: string, rule: string) => `有時會在*${biomes}*等你（僅限單人遊戲的開放地圖）。站進它的圓圈開始決鬥：_${test}：${rule}_。`,
+      rules: {
+        endure: (floor: number, s: number) => `HP保持在${floor}%以上${s}秒，或打倒它`,
+        power: (s: number) => `${s}秒內打倒它`,
+        speed: (marks: number, s: number) => `${s}秒內踩上${marks}片葉子，或打倒它`,
+      },
     },
   },
 }

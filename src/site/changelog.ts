@@ -87,6 +87,13 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             fr: 'Dans l’onglet Légendaires, la bannière des Anneaux de Hoopa défile maintenant avec la liste : on peut glisser jusqu’à n’importe quelle légende sur téléphone.',
             zh: '在傳說分頁中，Hoopa 的圓環橫幅現在會隨清單一起捲動：在手機上可以滑到任何一隻傳說寶可夢。',
           },
+          {
+            pt: 'Os lendários bloqueados explicam melhor como conseguir: cada Espada da Justiça diz em que biomas espera e qual é o teste, o Cosmog diz onde fica a Pesquisa estelar e quantas partidas faltam, e o Meltan diz que a Mystery Box sai em no máximo 12 paredes.',
+            en: 'Locked legends now explain better how to get them: each Sword of Justice names the biomes it waits in and its test, Cosmog says where the Star research is and how many runs it takes, and Meltan says the Mystery Box turns up within 12 walls.',
+            es: 'Los legendarios bloqueados explican mejor cómo conseguirlos: cada Espada de la Justicia dice en qué biomas espera y cuál es su prueba, Cosmog dice dónde está la Investigación estelar y cuántas partidas hacen falta, y Meltan dice que la Mystery Box sale en 12 paredes como máximo.',
+            fr: 'Les légendes verrouillées expliquent mieux comment les obtenir : chaque Épée de la Justice indique ses biomes et son épreuve, Cosmog indique où est la Recherche stellaire et combien de parties il faut, et Meltan que la Mystery Box sort en 12 murs au plus.',
+            zh: '未解鎖的傳說寶可夢會更清楚地說明取得方式：每把正義之劍會寫出牠等待的地區和考驗內容，Cosmog 會說明星空研究在哪裡、需要幾場遊戲，Meltan 則說明最多 12 面岩壁內一定能挖到 Mystery Box。',
+          },
         ],
       },
       {
