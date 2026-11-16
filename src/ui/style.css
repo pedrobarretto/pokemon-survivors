@@ -815,6 +815,16 @@ button {
   overflow: visible;
 }
 
+/* Hoopa's banner leads the scroller and the mode's note ends it: both scroll away with the legends. */
+.partner-legend-scroll > .rush-banner {
+  margin: 4px 6px 2px;
+  width: auto;
+}
+
+.partner-legend-scroll > .partner-legend-note {
+  margin: 8px 6px 4px;
+}
+
 /* The Ultra Beasts' heading: a Beast Ball, the name and how many are captured, on a band of Ultra Space violet. */
 .partner-legend-head {
   display: flex;
@@ -1553,6 +1563,20 @@ button {
   .partner-legend-note b {
     color: #fff;
   }
+  .rush-banner {
+    min-height: 48px;
+    padding: 4px 8px;
+  }
+  .rush-banner-text b {
+    font-size: 20px;
+  }
+  .rush-banner-text small {
+    font-size: 15px;
+  }
+  .rush-banner-hoopa {
+    width: 40px;
+    height: 40px;
+  }
   .partner-pane {
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -1961,6 +1985,16 @@ button {
   .partner-intro {
     -webkit-line-clamp: 3;
   }
+  /* A legend's panel has its mode line too: that line and the blurb take one line each, so the pick stays in sight. */
+  .partner-legend-mode {
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .partner-hero-top:has(.partner-legend-mode) .partner-blurb {
+    -webkit-line-clamp: 1;
+  }
   /* One row always: the pick and Detalhes give up padding before Detalhes would wrap out of sight. */
   .partner-id > .partner-hero-actions {
     grid-column: 1 / -1;
@@ -2018,6 +2052,10 @@ button {
   }
   .partner-blurb {
     -webkit-line-clamp: 1;
+  }
+  /* A legend keeps its mode line; its blurb waits in Details. */
+  .partner-hero-top:has(.partner-legend-mode) .partner-blurb {
+    display: none;
   }
 }
 

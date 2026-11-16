@@ -405,12 +405,19 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
     })
   }
   const rushRow = actions.rush && !plain ? rushBanner(rushPool(captured).length, openRush) : null
+  // Hoopa's banner and the mode's note scroll with the legends: pinned outside the scroller, they left a phone a sliver of it to swipe.
   const legendsPane = h(
     'div',
     { class: 'partner-legends' },
-    rushRow,
-    h('div', { class: 'partner-legend-scroll' }, legendGrid, ultraLegendIds.length > 0 && ultraHead, ultraLegendIds.length > 0 && ultraGrid),
-    h('p', { class: 'partner-legend-note' }, rich(opts.dojo ? m.training.legendNote : m.legend.selectNote)),
+    h(
+      'div',
+      { class: 'partner-legend-scroll' },
+      rushRow,
+      legendGrid,
+      ultraLegendIds.length > 0 && ultraHead,
+      ultraLegendIds.length > 0 && ultraGrid,
+      h('p', { class: 'partner-legend-note' }, rich(opts.dojo ? m.training.legendNote : m.legend.selectNote)),
+    ),
   )
 
   const randomButton = h(

@@ -80,6 +80,13 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             fr: 'Téléphone en portrait, le panneau du Pokémon est compact et la liste prend le reste de l’écran ; en paysage, la liste occupe toute la hauteur, la difficulté et Commencer à côté, sous le pouce. Les onglets affichent leur compte sous le nom, et plus rien ne sort de l’écran.',
             zh: '手機直拿時，寶可夢面板變得精簡，清單佔滿其餘畫面；橫拿時，清單佔滿整個高度，難度和開始按鈕就在旁邊，伸手可及。分頁的數量改顯示在名稱下方，不再有內容超出畫面。',
           },
+          {
+            pt: 'Na aba Lendários, o banner dos Anéis de Hoopa agora rola junto com a lista: dá para deslizar até qualquer lendário no celular.',
+            en: 'In the Legendaries tab, the Hoopa’s Rings banner now scrolls with the list: you can swipe down to any legend on a phone.',
+            es: 'En la pestaña Legendarios, el cartel de los Aros de Hoopa ahora se desplaza con la lista: puedes deslizar hasta cualquier legendario en el celular.',
+            fr: 'Dans l’onglet Légendaires, la bannière des Anneaux de Hoopa défile maintenant avec la liste : on peut glisser jusqu’à n’importe quelle légende sur téléphone.',
+            zh: '在傳說分頁中，Hoopa 的圓環橫幅現在會隨清單一起捲動：在手機上可以滑到任何一隻傳說寶可夢。',
+          },
         ],
       },
       {
