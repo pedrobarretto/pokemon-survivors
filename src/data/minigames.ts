@@ -47,9 +47,13 @@ export type Trophy = { furniture: string; after: { stat: 'plays' | 'wins' | 'bes
 /** The town rooms a game can stand in (a `TownRoomId`, `data/realmMap.ts`, kept as a string so this file imports nothing); `null`: only in bases. */
 type Where = 'plaza' | 'pier' | 'cafe' | 'trail' | 'arcade' | 'gameCorner' | null
 
+/** The music its screen plays: a `ThemeId` (`data/music.ts`), kept as a string so this file imports nothing; `realm/games/frame.ts` hands it to the shell, which type-checks it. */
+type Theme = string
+
 type SoloDef = {
   kind: 'solo'
   where: Where
+  theme: Theme
   pay: SoloPay
   /** A score past this is refused as made up; a game shorter than `minMs` pays nothing. */
   maxScore: number
@@ -66,6 +70,7 @@ type SoloDef = {
 type TableDef = {
   kind: 'table'
   where: Where
+  theme: Theme
   seats: 2 | 4
   pay: TablePay
   minMs: number
@@ -90,6 +95,7 @@ export const MINIGAMES = {
   fishing: {
     kind: 'solo',
     where: 'pier',
+    theme: 'fishing',
     pay: { perPoint: 1, perPlay: 250, daily: 800 },
     maxScore: 2000,
     minMs: 30_000,
@@ -108,6 +114,7 @@ export const MINIGAMES = {
   berryCatch: {
     kind: 'solo',
     where: 'arcade',
+    theme: 'arcade',
     pay: { perPoint: 0.1, perPlay: 200, daily: 600 },
     maxScore: 9000,
     minMs: 20_000,
@@ -122,6 +129,7 @@ export const MINIGAMES = {
   whackDiglett: {
     kind: 'solo',
     where: 'arcade',
+    theme: 'arcade',
     pay: { perPoint: 0.1, perPlay: 200, daily: 600 },
     maxScore: 9000,
     minMs: 20_000,
@@ -138,6 +146,7 @@ export const MINIGAMES = {
   claw: {
     kind: 'solo',
     where: 'arcade',
+    theme: 'arcade',
     pay: { perPoint: 0, perPlay: 0, daily: 0 },
     maxScore: 0,
     minMs: 0,
@@ -156,6 +165,7 @@ export const MINIGAMES = {
   safari: {
     kind: 'solo',
     where: 'trail',
+    theme: 'safariField',
     pay: { perPoint: 0, perPlay: 0, daily: 0 },
     maxScore: 0,
     minMs: 0,
@@ -173,6 +183,7 @@ export const MINIGAMES = {
   dig: {
     kind: 'solo',
     where: 'trail',
+    theme: 'dig',
     pay: { perPoint: 0, perPlay: 0, daily: 0 },
     maxScore: 0,
     minMs: 0,
@@ -190,6 +201,7 @@ export const MINIGAMES = {
   slots: {
     kind: 'solo',
     where: 'gameCorner',
+    theme: 'gameCorner',
     pay: { perPoint: 0, perPlay: 0, daily: 0 },
     maxScore: 0,
     minMs: 0,
@@ -202,6 +214,7 @@ export const MINIGAMES = {
   sweep: {
     kind: 'solo',
     where: 'gameCorner',
+    theme: 'gameCorner',
     pay: { perPoint: 0, perPlay: 0, daily: 0 },
     maxScore: 0,
     minMs: 0,
@@ -214,6 +227,7 @@ export const MINIGAMES = {
   fourInRow: {
     kind: 'table',
     where: 'cafe',
+    theme: 'cafe',
     seats: 2,
     pay: { win: 150, draw: 60, loss: 30, daily: 600 },
     minMs: 20_000,
@@ -227,6 +241,7 @@ export const MINIGAMES = {
   typeDuel: {
     kind: 'table',
     where: 'cafe',
+    theme: 'cafe',
     seats: 2,
     pay: { win: 150, draw: 60, loss: 30, daily: 600 },
     /**
@@ -251,6 +266,7 @@ export const MINIGAMES = {
   ludo: {
     kind: 'table',
     where: 'cafe',
+    theme: 'cafe',
     seats: 4,
     pay: { win: 200, draw: 60, loss: 40, daily: 600 },
     /** Bots alone play a match in 3½ minutes at the quickest (10th percentile of 200 bot matches, at their think). */
@@ -266,6 +282,7 @@ export const MINIGAMES = {
   unown: {
     kind: 'table',
     where: 'cafe',
+    theme: 'cafe',
     seats: 4,
     pay: { win: 150, draw: 60, loss: 30, daily: 600 },
     /** A round of 24 moves (the 10th percentile of 200 bot rounds) takes over 25 s at the bots' think. */

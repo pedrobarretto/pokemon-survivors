@@ -53,6 +53,7 @@ import { teamBuilds } from './teamHud'
 import type { SaveCard } from './onboarding'
 import { confirmDrop } from './itemSwap'
 import { needsSwap } from '../game/itemDrop'
+import { radioPill } from './radio'
 
 export type Screen = {
   el: HTMLElement
@@ -855,6 +856,8 @@ export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: Pau
         'div',
         { class: opening ? 'dialog box pop wide pause' : 'dialog box wide pause' },
         h('div', { class: 'dialog-title' }, coop ? cm.title : m.title),
+        // The Rádio's track, while it plays in the run (`ui/radio.ts`).
+        radioPill(),
         coop && h('p', { class: 'pause-note' }, g.versus ? t().versus.menu.note : cm.note),
         // A match has no difficulty: everyone plays the same.
         !g.versus && difficultyTag(g.difficulty),

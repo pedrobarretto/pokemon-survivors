@@ -17,7 +17,7 @@ import { missionStatus } from '../game/missions'
 import { pendingPicks, playsShiny } from '../game/shinyPicks'
 import { pollToVote, supporterCount, tierRank, type WallEntry } from '../game/supporters'
 import { formatNumber, LOCALES, locale, t, formatDay } from '../i18n'
-import { arenaIcon, bulbIcon, chevronIcon, coopIcon, discordIcon, eggsIcon, friendEggIcon, gearIcon, giftIcon, gridIcon, heartIcon, helpIcon, itemIcon, medalIcon, moveIcon, newsIcon, pokeballIcon, rankingIcon, ribbonIcon, shopIcon, socialIcon, sparkleIcon, supporterIcon, surveyIcon } from '../render/art'
+import { arenaIcon, bulbIcon, chevronIcon, coopIcon, discordIcon, eggsIcon, friendEggIcon, gearIcon, giftIcon, gridIcon, heartIcon, helpIcon, itemIcon, medalIcon, moveIcon, newsIcon, pokeballIcon, radioIcon, rankingIcon, ribbonIcon, shopIcon, socialIcon, sparkleIcon, supporterIcon, surveyIcon } from '../render/art'
 import { CAFE_PATRONS, cafeBubbles, cafePose, newCafePose } from '../render/cafeLife'
 import { logoScale, titleLogo } from '../render/logo'
 import { drawPokemon, fitSprites, loadedSprites, loadSpecies, portraitUrl, type Dex } from '../render/sprites'
@@ -59,6 +59,7 @@ import { realmIconUrl } from '../render/realmScene'
 import { modeFacts, type ModeFacts } from './gameModes'
 import { lobbyModeIn, loadLobbyMode, modeBeside, saveLobbyMode, shownModes } from './lobbyMode'
 import { lobbySheet, type SheetEntry } from './lobbySheet'
+import { openRadio, radioButton, radioPill } from './radio'
 import { nearestInDirection, type Direction } from './spatial'
 import { toast } from './toasts'
 import { trainerChip } from './trainer'
@@ -73,6 +74,7 @@ export type LobbyFocus =
   | 'discord'
   | 'help'
   | 'settings'
+  | 'radio'
   | 'halloween'
   | 'festival'
   | 'outbreak'
@@ -681,7 +683,7 @@ const lobbyCovers = (screen: HTMLElement, slot: DOMRect, cast: { half: number; t
 const DIRECTIONS: Readonly<Record<string, Direction>> = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', [ACTIONS.up.key]: 'up', [ACTIONS.down.key]: 'down', [ACTIONS.left.key]: 'left', [ACTIONS.right.key]: 'right' }
 
 /** Shortcuts, shown as key hints on what they press (`C` belongs to the Trainer chip; `Q`/`E` cycle the modes, 1 to 7 pick one). */
-const HOTKEYS: Readonly<Record<string, LobbyFocus>> = { KeyF: 'festival', KeyG: 'gifts', KeyN: 'news', KeyX: 'pokedex', KeyO: 'eggs', KeyL: 'mart', KeyR: 'ranking', KeyU: 'community', KeyB: 'friends', KeyM: 'missions', KeyH: 'hall' }
+const HOTKEYS: Readonly<Record<string, LobbyFocus>> = { KeyJ: 'radio', KeyF: 'festival', KeyG: 'gifts', KeyN: 'news', KeyX: 'pokedex', KeyO: 'eggs', KeyL: 'mart', KeyR: 'ranking', KeyU: 'community', KeyB: 'friends', KeyM: 'missions', KeyH: 'hall' }
 
 /**
  * How the lobby goes to the Kecleon's shop: `shop` (the Loja tile and card, `?loja`) greets and
@@ -724,6 +726,7 @@ const playLine = (id: GameModeId, facts: ModeFacts) => [t().gameModes.names[id],
  * Title screen: the pixel logo and a blinking "press start", then the lobby,
  * both on the top-down meadow. The top bar holds the Trainer chip, the wallet, the
  * gems, a survey while one waits for an answer (each opens by itself once),
+ * the Rádio (`J`; its now-playing pill while it plays, `ui/radio.ts`),
  * Novidades and the gear. Hoje has the day's cards (Presentes, Desafio, Ovos,
  * Missões, Surto; events too), Na Praça the Festival, the Kecleon shop, the
  * Boutique, the carpentry and the Hall da Fama. In the middle stands the mode
@@ -879,6 +882,15 @@ export const titleScreen = (
   const runs: Record<Exclude<LobbyFocus, 'trainer' | 'hall'>, () => void> = {
     help: () => location.assign(ROUTES.guide[lang]),
     settings: () => openOver(actions.settings),
+    radio: () => {
+      if (sheet || visit) return
+      offKeys?.()
+      offKeys = null
+      sheet = openRadio(root, input, () => {
+        sheet = null
+        offKeys = restKeys()
+      })
+    },
     news: () => openOver(actions.news),
     survey: () => openOver(waitingSurvey() === 'design' ? actions.designSurvey : actions.survey),
     halloween: () => openOver(actions.halloween),
@@ -1055,6 +1067,7 @@ export const titleScreen = (
           { icon: iconImg(medalIcon('gold')), label: t().trainer.open, run: () => (lobbyPress('trainer'), openOver(actions.trainer)) },
           ...(ranking ? [entry('ranking', rankingIcon(), m.ranking)] : []),
           ...(gems ? [entry('gems', gemIconUrl(), t().gems.chipGuest)] : []),
+          entry('radio', radioIcon(), t().radio.open),
           entry('settings', gearIcon(), t().shell.settings),
         ],
       },
@@ -1081,6 +1094,8 @@ export const titleScreen = (
         (wallet = walletChip(save.wallet, undefined, shortWallet)),
         ...(gems && kind !== 'narrow' ? [navigable(gems, 'gems')] : []),
         ...(survey ? [navigable(surveyButton(survey, press('survey')), 'survey')] : []),
+        // An upright phone's bar has no room for it: there the now-playing pill sits with the mode's pills, and the Perfil tab has the way in.
+        ...(kind !== 'narrow' ? [navigable(radioButton(press('radio'), 'J'), 'radio')] : []),
         navigable(newsButton(press('news')), 'news'),
         navigable(gearButton(press('settings')), 'settings'),
       ],
@@ -1160,7 +1175,7 @@ export const titleScreen = (
     const partnerPill = pressable(h('button', { class: 'lobby-pill lobby-pill-go', type: 'button' }, h('span', { class: 'lobby-pill-label' }), h('b'), ' ▸'), 'partner')
     const partnerName = partnerPill.querySelector('b')!
     const partnerLabel = partnerPill.querySelector('.lobby-pill-label')!
-    const pills = h('div', { class: 'lobby-pills' }, blurb, tags, partnerPill)
+    const pills = h('div', { class: 'lobby-pills' }, blurb, tags, partnerPill, ...(kind === 'narrow' ? [pressable(radioPill(true), 'radio')] : []))
 
     const stageEl = h('div', { class: 'lobby-stage' })
     slot = stageEl

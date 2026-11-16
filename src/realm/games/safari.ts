@@ -15,6 +15,7 @@ import { closeIcon } from '../../render/art'
 import { loadSpecies, portraitUrl, walkSheet } from '../../render/sprites'
 import { h, rich } from '../../ui/dom'
 import { loadSave } from '../../ui/save'
+import { setRealmGame } from '../../realmMusic'
 import { isFailure } from '../api'
 import { actSafari, fetchSafari, localDaypart, savedOpen, startSafari } from '../safariApi'
 import { openGameBoard } from './board'
@@ -137,6 +138,8 @@ const start = (ctx: SoloCtx): GameRun => {
   const go = (next: Phase) => {
     phase = next
     phaseT = 0
+    // The battle's music from the "!" until the wipe back out; a contest entry walks the grass to its own tune.
+    setRealmGame(next === 'alert' || next === 'wipeIn' || next === 'battle' ? 'safariBattle' : session?.mode === 'contest' ? 'contest' : 'safariField')
     // The Ranger's booth and its messages wear the kit's sheet; the walk and the battle keep their own look.
     hud.classList.toggle('sz-lobby', next === 'lobby' || next === 'trouble')
     if (next !== 'lobby') hud.classList.remove('sz-three')

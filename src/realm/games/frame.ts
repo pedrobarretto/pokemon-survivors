@@ -13,6 +13,7 @@ import { HATCHLING_IDS, HATCHLINGS } from '../../data/hatchlings'
 import { openGameBoard } from './board'
 import { pieceName } from '../furniture'
 import { closeIcon } from '../../render/art'
+import { setRealmGame } from '../../realmMusic'
 
 /**
  * The Poké Realm's mini game frame: an overlay holding the game's canvas at
@@ -371,6 +372,7 @@ export const openSoloGame = (root: HTMLElement, game: SoloGameId, def: SoloGame,
     stop()
     run?.dispose?.()
     opts.realm?.act(null)
+    setRealmGame(null)
     s.dispose()
     opts.close()
   }
@@ -388,6 +390,8 @@ export const openSoloGame = (root: HTMLElement, game: SoloGameId, def: SoloGame,
     s.sheet.classList.add('hidden')
   }
   opts.realm?.act(actOf(game))
+  // Before the game starts, so one that changes its music as it plays (the Safári's battles) has the last word.
+  setRealmGame(MINIGAMES[game].theme)
   start()
   stop = loop((dt) => {
     if (!run) return
@@ -420,6 +424,7 @@ export const openTableGame = (root: HTMLElement, game: TableGameId, ui: TableUi,
     run.dispose?.()
     source.leave()
     opts.realm?.act(null)
+    setRealmGame(null)
     s.dispose()
     opts.close()
   }
@@ -427,6 +432,7 @@ export const openTableGame = (root: HTMLElement, game: TableGameId, ui: TableUi,
   const run = ui.start({ source, partner: opts.partner, shiny: opts.shiny, who: (id) => opts.realm?.who(id) ?? null })
   const lobby = lobbyBar(s, source)
   opts.realm?.act(actOf(game))
+  setRealmGame(MINIGAMES[game].theme)
   let clock = 0
   let phase: TableView['phase'] | null = null
   let startedAt = performance.now()

@@ -2,6 +2,7 @@ import { CAFE_TABLES_WORDS } from './cafeTables'
 import type { DexRegion } from '../data/nationalDex'
 import { GALLOP_WORDS } from './gallop'
 import { ITEM_DROP_WORDS } from './itemDrop'
+import { RADIO_WORDS } from './radio'
 import { realmBookFr as realmBook } from './realmStamps/fr'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { TERA_WORDS } from './tera'
@@ -1071,6 +1072,7 @@ export const fr: Messages = {
   },
 
   itemDrop: ITEM_DROP_WORDS.fr,
+  radio: RADIO_WORDS.fr,
   levelUp: {
     title: (name, level) => `${name} passe au Nv ${level} !`,
     ready: 'PRET!',

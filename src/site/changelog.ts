@@ -11,7 +11,7 @@ export type ChangelogUpdate = {
   /** ISO date (`YYYY-MM-DD`) the update went live. One update per day, so it also names the update. */
   date: string
   title: Localized
-  /** 3 to 5 one-liners, what a player most wants to hear: the lobby's Novidades shows the newest update's. */
+  /** 3 to 6 one-liners, what a player most wants to hear: the lobby's Novidades shows the newest update's. */
   highlights: readonly Localized[]
   changes: readonly ChangelogChange[]
 }
@@ -61,6 +61,13 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         es: 'En el Poké Realm: el Casino del Team Rocket y familias solo del Safari, como Vivillon con las alas de tu región.',
         fr: 'Dans le Poké Realm : la Salle de jeux de la Team Rocket et des familles propres au Safari, comme Prismillon aux ailes de ta région.',
         zh: 'Poké Realm 裡：火箭隊的遊戲城，還有狩獵地帶限定的家族，像翅膀是你所在地區花紋的彩粉蝶。',
+      },
+      {
+        pt: 'Rádio no lobby: escolha a música e monte a sua fila. E trilha nova no lobby, no Poké Realm, na Zona Safári, nas Tera Raids e no Dojo.',
+        en: 'A Radio in the lobby: pick the music and build your queue. Plus new music in the lobby, the Poké Realm, the Safari Zone, Tera Raids and the Dojo.',
+        es: 'Radio en el lobby: elige la música y arma tu cola. Y música nueva en el lobby, el Poké Realm, la Zona Safari, las Teraincursiones y el Dojo.',
+        fr: 'Une Radio dans le lobby : choisis la musique et compose ta file. Et de nouvelles musiques dans le lobby, le Poké Realm, le Parc Safari, les Raids Téracristal et le Dojo.',
+        zh: '大廳新增收音機：自己選音樂、排播放佇列。大廳、Poké Realm、狩獵地帶、太晶團體戰和道場也都有了新音樂。',
       },
     ],
     changes: [
@@ -500,6 +507,39 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             pt: 'Os moderadores do Discord redesenharam os ícones do lobby: a Poké Ball da Pokédex, o ovo de Ovos, a barraca da Loja, a medalha do Ranking, a lâmpada de Ideias, as duas Poké Balls do Co-op, o ovo da amizade dos Convites e os ícones do Discord, TikTok, YouTube e Instagram. Valeu, mods!',
             en: 'Our Discord moderators redrew the lobby icons: the Pokédex Poké Ball, the Eggs egg, the Shop stall, the Ranking medal, the Ideas bulb, the two Co-op Poké Balls, the Invites friendship egg and the Discord, TikTok, YouTube and Instagram icons. Thanks, mods!',
             es: 'Los moderadores de Discord redibujaron los íconos del lobby: la Poké Ball de la Pokédex, el huevo de Huevos, el puesto de la Tienda, la medalla del Ranking, la bombilla de Ideas, las dos Poké Balls del Co-op, el huevo de la amistad de Invitaciones y los íconos de Discord, TikTok, YouTube e Instagram. ¡Gracias, mods!',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Rádio e músicas novas', en: 'The Radio and new music', es: 'La Radio y música nueva', fr: 'La Radio et de nouvelles musiques', zh: '收音機和新音樂' },
+        notes: [
+          {
+            pt: 'O lobby ganhou um Rádio, apresentado pelo Rotom: monte uma fila com as músicas do jogo, reordene, embaralhe, repita e guarde as favoritas, só nos menus ou também nas partidas. As músicas se liberam conforme você passa pelos biomas e encontra os lendários. Fica também em Ajustes › Som.',
+            en: 'The lobby has a Radio now, hosted by Rotom: queue up the game’s tunes, reorder, shuffle, repeat and keep favorites, in the menus only or in runs too. Tunes unlock as you walk through biomes and meet legends. It’s also in Settings › Sound.',
+            es: 'El lobby tiene una Radio, presentada por Rotom: arma una cola con las canciones del juego, reordena, mezcla, repite y guarda favoritas, solo en los menús o también en las partidas. Las canciones se desbloquean al recorrer los biomas y encontrar a los legendarios. También está en Ajustes › Sonido.',
+            fr: 'Le lobby a maintenant une Radio, animée par Rotom : une file d’attente avec les morceaux du jeu, réordonner, aléatoire, répétition et favoris, dans les menus seulement ou aussi en partie. Les morceaux se débloquent en traversant les biomes et en rencontrant les légendaires. Elle est aussi dans Réglages › Son.',
+            zh: '大廳新增由洛托姆主持的收音機：把遊戲裡的曲子排進佇列、調整順序、隨機、重複播放，還能收藏最愛，可以只在選單播放，也可以在遊戲中播放。走過地區、遇見傳說寶可夢就能解鎖更多曲子。也可以從設定 › 聲音進入。',
+          },
+          {
+            pt: 'O lobby não toca mais a mesma música o tempo todo: cinco temas novos se revezam com o da vila conforme a hora do seu dia (manhã, tarde, noite e chuva), e um tema de festa toca enquanto o Festival da Praça acontece.',
+            en: 'The lobby no longer plays the same tune all the time: five new themes take turns with the village one by the hour of your day (morning, afternoon, night and rain), and a festive one plays while the Festival da Praça runs.',
+            es: 'El lobby ya no toca la misma música todo el tiempo: cinco temas nuevos se turnan con el de la aldea según la hora de tu día (mañana, tarde, noche y lluvia), y uno de fiesta suena mientras dura el Festival da Praça.',
+            fr: 'Le lobby ne joue plus toujours le même air : cinq nouveaux thèmes alternent avec celui du village selon l’heure de ta journée (matin, après-midi, nuit et pluie), et un thème de fête joue pendant le Festival da Praça.',
+            zh: '大廳不再一直播同一首歌：五首新曲會依你當地的時段（早上、下午、晚上和雨天）和村莊主題輪流播放，廣場慶典期間還有一首慶典曲。',
+          },
+          {
+            pt: 'O Poké Realm ganhou trilha própria: a cidade, o píer, o café, o fliperama, o Game Corner e cada mini game tocam a sua. Na Zona Safári, o mato tem música de aventura, um Pokémon selvagem traz a música de batalha e o Concurso de Insetos tem a sua.',
+            en: 'The Poké Realm has its own soundtrack: the town, the pier, the café, the arcade, the Game Corner and every mini game play their own. In the Safari Zone, the tall grass has adventure music, a wild Pokémon brings the battle theme and the Bug-Catching Contest has one of its own.',
+            es: 'El Poké Realm tiene banda sonora propia: la ciudad, el muelle, el café, el Arcade, el Game Corner y cada minijuego tocan la suya. En la Zona Safari, la hierba alta tiene música de aventura, un Pokémon salvaje trae la música de batalla y el Concurso de Bichos tiene la suya.',
+            fr: 'Le Poké Realm a sa propre bande-son : la ville, le ponton, le café, la salle d’arcade, la Salle de jeux et chaque mini-jeu ont la leur. Dans le Parc Safari, les hautes herbes ont une musique d’aventure, un Pokémon sauvage amène le thème de combat et le Concours de capture d’insectes a le sien.',
+            zh: 'Poké Realm 有了專屬配樂：城鎮、碼頭、咖啡館、電玩間、遊戲城和每個小遊戲都有自己的曲子。在狩獵地帶，草叢裡是冒險的音樂，遇到野生寶可夢會換成對戰曲，捕蟲大會也有自己的曲子。',
+          },
+          {
+            pt: 'As Tera Raids ganharam música própria, épica e cristalina, da entrada no covil até a saída. O Dojo do Machoke treina ao som de um koto calmo e tambores, e a Torre do Kubfu tem uma versão tensa e acelerada.',
+            en: 'Tera Raids have their own epic, crystalline music, from walking into the den until you leave it. Machoke’s Dojo trains to a calm koto and drums, and Kubfu’s Tower has a tense, faster take on it.',
+            es: 'Las Teraincursiones tienen su propia música, épica y cristalina, desde que entras en la guarida hasta que sales. El Dojo de Machoke entrena al son de un koto tranquilo y tambores, y la Torre de Kubfu tiene una versión tensa y más rápida.',
+            fr: 'Les Raids Téracristal ont leur propre musique, épique et cristalline, de l’entrée dans la tanière jusqu’à la sortie. Le Dojo de Machoke s’entraîne sur un koto calme et des tambours, et la Tour de Kubfu en a une version tendue et plus rapide.',
+            zh: '太晶團體戰有了專屬音樂，史詩又晶瑩，從走進洞窟一直播到離開。Machoke 的道場伴著平靜的古箏和太鼓訓練，Kubfu 之塔則是緊張、更快的版本。',
           },
         ],
       },
