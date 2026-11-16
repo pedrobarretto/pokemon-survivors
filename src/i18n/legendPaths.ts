@@ -104,7 +104,8 @@ export type PathWords = {
       locked: string
       cleared: string
       chosen: string
-      closed: string
+      /** The button on a climbed tower that isn't the style worn: wear its style. */
+      use: string
       /** The trial under way and how it ended. */
       timeLeft: (s: string) => string
       progress: (n: string, need: string) => string
@@ -197,7 +198,7 @@ const pt: PathWords = {
       kubfu: [
         'Tenho um aluno especial esperando: um *Kubfu*. Ele só segue quem passa pela minha *Torre*.',
         'São três provas aqui no Dojo, com os golpes que eu te der. Vença as três e o Kubfu vem com você.',
-        'Depois, uma última prova numa torre: a *da Escuridão* ou a *das Águas*. Ela decide o estilo do Urshifu, para sempre.',
+        'Depois, uma última prova numa torre: a *da Escuridão* ou a *das Águas*. Cada uma ensina um estilo ao Urshifu.',
       ],
       meltan: [
         'Psst, freguês! Um minerador da *Escavação* jura que viu uma *Mystery Box* lá embaixo.',
@@ -225,7 +226,7 @@ const pt: PathWords = {
       step: { meltan: '400 porcas', kubfu: 'Torre' },
       how: {
         meltan: 'O Meltan vira *Melmetal* no 2º despertar: jogue com ele e junte 400 *Porcas Sextavadas*, que os inimigos derrubam.',
-        kubfu: 'O Kubfu vira *Urshifu* no 2º despertar, no estilo da torre que ele subir no Dojo.',
+        kubfu: 'O Kubfu vira *Urshifu* no 2º despertar, no estilo da torre que você escolher no Dojo.',
       },
     },
     close: 'Fechar',
@@ -294,15 +295,15 @@ const pt: PathWords = {
       back: 'Voltar',
       locked: 'Trancada',
       cleared: 'Vencida',
-      chosen: 'Escolhida',
-      closed: 'Fechada',
+      chosen: 'Em uso',
+      use: 'Usar este estilo',
       timeLeft: (s: string) => `${s} s`,
       progress: (n: string, need: string) => `${n}/${need}`,
       won: 'Prova vencida!',
       lost: 'O tempo acabou.',
       kubfu: 'O *Kubfu* quer ir com você! Abra o Presente no lobby.',
       urshifu: (style: string) => `O Kubfu escolheu o *${style}*: no 2º despertar ele vira *Urshifu*.`,
-      chooseNote: 'Só dá para subir uma das duas torres. A escolhida decide o estilo do Urshifu para sempre.',
+      chooseNote: 'Suba as duas torres para ter os dois estilos do Urshifu. Depois, troque aqui quando quiser: vale a partir da próxima partida.',
       floorsHead: 'Os três andares',
       styles: { dark: 'Estilo Golpe Único', water: 'Estilo Golpe Fluido' },
     },
@@ -382,7 +383,7 @@ const en: PathWords = {
       kubfu: [
         'I have a special student waiting: a *Kubfu*. It only follows those who pass my *Tower*.',
         'Three trials here at the Dojo, with the moves I give you. Win all three and Kubfu comes with you.',
-        'Then one last trial in a tower: *Darkness* or *Waters*. It decides Urshifu’s style, for good.',
+        'Then one last trial in a tower: *Darkness* or *Waters*. Each one teaches Urshifu a style.',
       ],
       meltan: [
         'Psst, customer! A miner at the *Mine Dig* swears they saw a *Mystery Box* down there.',
@@ -410,7 +411,7 @@ const en: PathWords = {
       step: { meltan: '400 Hex Nuts', kubfu: 'Tower' },
       how: {
         meltan: 'Meltan turns into *Melmetal* at its 2nd awakening: play it and gather 400 *Hex Nuts*, which foes drop.',
-        kubfu: 'Kubfu turns into *Urshifu* at its 2nd awakening, in the style of the tower it climbs at the Dojo.',
+        kubfu: 'Kubfu turns into *Urshifu* at its 2nd awakening, in the style of the tower you pick at the Dojo.',
       },
     },
     close: 'Close',
@@ -479,15 +480,15 @@ const en: PathWords = {
       back: 'Back',
       locked: 'Locked',
       cleared: 'Cleared',
-      chosen: 'Chosen',
-      closed: 'Closed',
+      chosen: 'In use',
+      use: 'Use this style',
       timeLeft: (s: string) => `${s} s`,
       progress: (n: string, need: string) => `${n}/${need}`,
       won: 'Trial cleared!',
       lost: 'Time’s up.',
       kubfu: '*Kubfu* wants to come with you! Open the Gift in the lobby.',
       urshifu: (style: string) => `Kubfu chose the *${style}*: at its 2nd awakening it becomes *Urshifu*.`,
-      chooseNote: 'Only one of the two towers can be climbed. The one chosen decides Urshifu’s style for good.',
+      chooseNote: 'Climb both towers to get both of Urshifu’s styles. Then switch here whenever you like: it applies from the next run.',
       floorsHead: 'The three floors',
       styles: { dark: 'Single Strike Style', water: 'Rapid Strike Style' },
     },
@@ -567,7 +568,7 @@ const es: PathWords = {
       kubfu: [
         'Tengo un alumno especial esperando: un *Kubfu*. Solo sigue a quien supera mi *Torre*.',
         'Son tres pruebas aquí en el Dojo, con los movimientos que te dé. Gana las tres y Kubfu va contigo.',
-        'Después, una última prueba en una torre: la *de la Oscuridad* o la *de las Aguas*. Decide el estilo de Urshifu, para siempre.',
+        'Después, una última prueba en una torre: la *de la Oscuridad* o la *de las Aguas*. Cada una le enseña un estilo a Urshifu.',
       ],
       meltan: [
         '¡Psst, cliente! Un minero de la *Excavación* jura que vio una *Mystery Box* allá abajo.',
@@ -595,7 +596,7 @@ const es: PathWords = {
       step: { meltan: '400 tuercas', kubfu: 'Torre' },
       how: {
         meltan: 'Meltan se vuelve *Melmetal* en su 2.º despertar: juega con él y junta 400 *Tuercas Hexagonales*, que sueltan los enemigos.',
-        kubfu: 'Kubfu se vuelve *Urshifu* en su 2.º despertar, en el estilo de la torre que suba en el Dojo.',
+        kubfu: 'Kubfu se vuelve *Urshifu* en su 2.º despertar, en el estilo de la torre que elijas en el Dojo.',
       },
     },
     close: 'Cerrar',
@@ -664,15 +665,15 @@ const es: PathWords = {
       back: 'Volver',
       locked: 'Cerrada',
       cleared: 'Superada',
-      chosen: 'Elegida',
-      closed: 'Cerrada',
+      chosen: 'En uso',
+      use: 'Usar este estilo',
       timeLeft: (s: string) => `${s} s`,
       progress: (n: string, need: string) => `${n}/${need}`,
       won: '¡Prueba superada!',
       lost: 'Se acabó el tiempo.',
       kubfu: '¡*Kubfu* quiere ir contigo! Abre el Regalo en el lobby.',
       urshifu: (style: string) => `Kubfu eligió el *${style}*: en su 2.º despertar se vuelve *Urshifu*.`,
-      chooseNote: 'Solo se puede subir una de las dos torres. La elegida decide el estilo de Urshifu para siempre.',
+      chooseNote: 'Sube las dos torres para tener los dos estilos de Urshifu. Después, cámbialo aquí cuando quieras: vale desde la próxima partida.',
       floorsHead: 'Los tres pisos',
       styles: { dark: 'Estilo Brusco', water: 'Estilo Fluido' },
     },
@@ -752,7 +753,7 @@ const fr: PathWords = {
       kubfu: [
         'J’ai un élève spécial qui attend : un *Kubfu*. Il ne suit que ceux qui réussissent ma *Tour*.',
         'Trois épreuves ici au Dojo, avec les capacités que je vous donne. Gagnez-les toutes et Kubfu vient avec vous.',
-        'Puis une dernière épreuve dans une tour : celle *des Ténèbres* ou celle *des Eaux*. Elle décide du style d’Urshifu, pour de bon.',
+        'Puis une dernière épreuve dans une tour : celle *des Ténèbres* ou celle *des Eaux*. Chacune enseigne un style à Urshifu.',
       ],
       meltan: [
         'Psst, client ! Un mineur de l’*Excavation* jure avoir vu une *Mystery Box* là-dessous.',
@@ -780,7 +781,7 @@ const fr: PathWords = {
       step: { meltan: '400 écrous', kubfu: 'Tour' },
       how: {
         meltan: 'Meltan devient *Melmetal* à son 2e éveil : jouez-le et ramassez 400 *Écrous Hexagonaux*, que lâchent les ennemis.',
-        kubfu: 'Kubfu devient *Urshifu* à son 2e éveil, dans le style de la tour qu’il gravit au Dojo.',
+        kubfu: 'Kubfu devient *Urshifu* à son 2e éveil, dans le style de la tour choisie au Dojo.',
       },
     },
     close: 'Fermer',
@@ -849,15 +850,15 @@ const fr: PathWords = {
       back: 'Retour',
       locked: 'Verrouillée',
       cleared: 'Réussie',
-      chosen: 'Choisie',
-      closed: 'Fermée',
+      chosen: 'Actif',
+      use: 'Prendre ce style',
       timeLeft: (s: string) => `${s} s`,
       progress: (n: string, need: string) => `${n}/${need}`,
       won: 'Épreuve réussie !',
       lost: 'Temps écoulé.',
       kubfu: '*Kubfu* veut venir avec vous ! Ouvrez le Cadeau dans le lobby.',
       urshifu: (style: string) => `Kubfu a choisi le *${style}* : à son 2e éveil il devient *Urshifu*.`,
-      chooseNote: 'On ne peut gravir qu’une des deux tours. Celle choisie décide du style d’Urshifu pour de bon.',
+      chooseNote: 'Gravissez les deux tours pour avoir les deux styles d’Urshifu. Ensuite, changez-le ici quand vous voulez : il s’applique dès la partie suivante.',
       floorsHead: 'Les trois étages',
       styles: { dark: 'Style Poing Final', water: 'Style Mille Poings' },
     },
@@ -937,7 +938,7 @@ const zh: PathWords = {
       kubfu: [
         '我有個特別的學生在等：一隻 *Kubfu*。它只跟隨通過我 *塔* 的人。',
         '在道館這裡有三場考驗，用我給你的招式。三場都贏，Kubfu就跟你走。',
-        '最後還有一場在塔裡的考驗：*惡之塔* 或 *水之塔*。它會永遠決定Urshifu的流派。',
+        '最後還有一場在塔裡的考驗：*惡之塔* 或 *水之塔*。每座塔都會教Urshifu一種流派。',
       ],
       meltan: [
         '噓，客人！*礦坑挖掘* 的礦工發誓在底下看到一個 *Mystery Box*。',
@@ -965,7 +966,7 @@ const zh: PathWords = {
       step: { meltan: '400 個螺帽', kubfu: '塔' },
       how: {
         meltan: 'Meltan會在第 2 次覺醒變成 *Melmetal*：用它對戰，收集敵人掉落的 400 個 *六角螺帽*。',
-        kubfu: 'Kubfu會在第 2 次覺醒變成 *Urshifu*，流派取決於它在道館爬的塔。',
+        kubfu: 'Kubfu會在第 2 次覺醒變成 *Urshifu*，流派取決於你在道館選的塔。',
       },
     },
     close: '關閉',
@@ -1034,15 +1035,15 @@ const zh: PathWords = {
       back: '返回',
       locked: '未解鎖',
       cleared: '已通過',
-      chosen: '已選擇',
-      closed: '已關閉',
+      chosen: '使用中',
+      use: '使用這個流派',
       timeLeft: (s: string) => `${s} 秒`,
       progress: (n: string, need: string) => `${n}/${need}`,
       won: '考驗通過！',
       lost: '時間到了。',
       kubfu: '*Kubfu* 想跟你走！到大廳打開禮物吧。',
       urshifu: (style: string) => `Kubfu選擇了 *${style}*：第 2 次覺醒時會變成 *Urshifu*。`,
-      chooseNote: '兩座塔只能爬一座。選擇的那座會永遠決定Urshifu的流派。',
+      chooseNote: '爬完兩座塔就能擁有Urshifu的兩種流派。之後隨時可以在這裡切換，從下一場開始生效。',
       floorsHead: '三層樓',
       styles: { dark: '一擊流', water: '連擊流' },
     },
