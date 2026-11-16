@@ -4,6 +4,8 @@
   // It serves `cdn/dist` (`npm run cdn:build`: public/assets/ under /assets/, plus versions.json and _headers)
   // at https://ps-assets.<account>.workers.dev; the game's build points at it with VITE_ASSET_ORIGIN (src/assets.ts).
   // Deployed by `npm run cdn:deploy`, and on every push to main that touches public/assets (.github/workflows/cdn.yml).
+  // `npm run cdn:dev` serves it locally on :8796 with its watcher polling (CHOKIDAR_USEPOLLING): on macOS, watching the
+  // ~11k files one by one breaks wrangler dev's spawns (EBADF) past about 10k.
   // A deploy replaces the whole set: never roll it back to an older one (a group's version would then name other bytes).
   "name": "ps-assets",
   "account_id": "a55a1ff9d78296b70afe6d06782d6d79",

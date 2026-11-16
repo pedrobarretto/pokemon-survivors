@@ -1,4 +1,5 @@
 import { openGift, stageGifts } from '../../account'
+import { assetUrl } from '../../assets'
 import { HATCHLINGS, PLAYABLE, type HatchlingId } from '../../data/hatchlings'
 import { isRegion } from '../../data/regionalForms'
 import { regionOfWeek } from '../../game/travel'
@@ -238,8 +239,8 @@ const start = (ctx: SoloCtx): GameRun => {
     const best = bestCatch(session.catches)
     pouch.replaceChildren(
       h('img', { class: 'sz-hour', src: daypartIcon(daypart), alt: w.dayparts[daypart], title: w.dayparts[daypart], width: 14, height: 14 }),
-      h('span', {}, h('img', { src: `${import.meta.env.BASE_URL}assets/safari/ball.png`, alt: '', width: 16, height: 16 }), String(session.balls)),
-      h('span', {}, h('img', { src: `${import.meta.env.BASE_URL}assets/safari/berry.png`, alt: '', width: 14, height: 16 }), String(session.berries)),
+      h('span', {}, h('img', { src: assetUrl('safari/ball.png'), alt: '', width: 16, height: 16 }), String(session.balls)),
+      h('span', {}, h('img', { src: assetUrl('safari/berry.png'), alt: '', width: 14, height: 16 }), String(session.berries)),
       h('em', {}, w.left(session.left)),
       ...(session.mode === 'contest' ? [h('b', { class: 'sz-score' }, h('img', { src: ICONS.net(), alt: '', width: 14, height: 14 }), w.contest.points(best?.score ?? 0))] : []),
       ...chainChip(),
@@ -666,8 +667,8 @@ const start = (ctx: SoloCtx): GameRun => {
       if (!on || !session) return commands([])
       const w = m()
       commands([
-        { label: w.ballCmd, count: session.balls, icon: `${import.meta.env.BASE_URL}assets/safari/ball.png`, run: () => battle?.throwBall(), hot: true, off: session.balls === 0 },
-        { label: w.berryCmd, count: session.berries, icon: `${import.meta.env.BASE_URL}assets/safari/berry.png`, run: () => battle?.giveBerry(), off: session.berries === 0 },
+        { label: w.ballCmd, count: session.balls, icon: assetUrl('safari/ball.png'), run: () => battle?.throwBall(), hot: true, off: session.balls === 0 },
+        { label: w.berryCmd, count: session.berries, icon: assetUrl('safari/berry.png'), run: () => battle?.giveBerry(), off: session.berries === 0 },
         { label: w.rockCmd, icon: ICONS.rock(), run: () => battle?.throwRock() },
         { label: w.baitCmd, icon: ICONS.bait(), run: () => battle?.throwBait() },
         { label: w.runCmd, run: () => battle?.run() },
