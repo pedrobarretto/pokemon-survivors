@@ -35,6 +35,11 @@ const legend = (...ids: readonly EnemyId[]) => ({ kind: 'legend', ids }) as cons
 
 export const RADIO_TRACKS = [
   { theme: 'menu', group: 'menus', unlock: open },
+  { theme: 'lobbyMorning', group: 'menus', unlock: open },
+  { theme: 'lobbyAfternoon', group: 'menus', unlock: open },
+  { theme: 'lobbyNight', group: 'menus', unlock: open },
+  { theme: 'lobbyRain', group: 'menus', unlock: open },
+  { theme: 'lobbyFestival', group: 'menus', unlock: { kind: 'heard' } },
   { theme: 'realmTown', group: 'realm', unlock: open },
   { theme: 'cafe', group: 'realm', unlock: { kind: 'heard' } },
   { theme: 'fishing', group: 'realm', unlock: { kind: 'heard' } },

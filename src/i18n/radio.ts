@@ -63,6 +63,7 @@ export const RADIO_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Words> = {
     groups: { menus: 'Menus', realm: 'Poké Realm', biomes: 'Biomas', bosses: 'Chefes', legends: 'Lendários' },
     tracks: {
       menu: 'Vila Tranquila', run: 'Primeiros Passos', forest: 'Entre as Folhas', beach: 'Maré de Verão', cave: 'Gotas no Escuro', plant: 'Alta Voltagem', desert: 'Areias Sem Fim', snow: 'Cume Gelado', volcano: 'Rio de Lava', tower: 'Caixinha da Torre',
+      lobbyMorning: 'Manhã na Vila', lobbyAfternoon: 'Tarde na Varanda', lobbyNight: 'Noite Estrelada', lobbyRain: 'Chuva na Janela', lobbyFestival: 'Festa na Praça',
       realmTown: 'Cidade do Realm', cafe: 'Café da Esquina', fishing: 'Píer ao Entardecer', arcade: 'Fliperama', gameCorner: 'Game Corner', dig: 'Escavação', safariField: 'Zona Safári', safariBattle: 'Batalha Safári', contest: 'Concurso de Insetos',
       boss: 'Chefe Selvagem', birds: 'Asas Lendárias', beasts: 'Corrida das Feras', regis: 'Gigantes Despertos', mewtwo: 'Clone Furioso', arceus: 'O Primeiro',
       lugia: 'Mergulho Prateado', hoOh: 'Arco-Íris em Chamas', kyogre: 'Oceano Primordial', groudon: 'Terra Primordial', rayquaza: 'Dragão do Céu', latis: 'Voo Eon', deoxys: 'Sinal do Espaço', dialga: 'Ponteiros Parados', palkia: 'Espaço Dobrado', ultraSpace: 'Ultraespaço',
@@ -105,6 +106,7 @@ export const RADIO_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Words> = {
     groups: { menus: 'Menus', realm: 'Poké Realm', biomes: 'Biomes', bosses: 'Bosses', legends: 'Legendaries' },
     tracks: {
       menu: 'Quiet Village', run: 'First Steps', forest: 'Under the Leaves', beach: 'Summer Tide', cave: 'Drops in the Dark', plant: 'High Voltage', desert: 'Endless Sands', snow: 'Frozen Peak', volcano: 'Lava River', tower: 'Tower Music Box',
+      lobbyMorning: 'Village Morning', lobbyAfternoon: 'Porch Afternoon', lobbyNight: 'Starry Night', lobbyRain: 'Rain on the Window', lobbyFestival: 'Plaza Festival',
       realmTown: 'Realm Town', cafe: 'Corner Café', fishing: 'Pier at Dusk', arcade: 'Arcade', gameCorner: 'Game Corner', dig: 'The Dig', safariField: 'Safari Zone', safariBattle: 'Safari Battle', contest: 'Bug-Catching Contest',
       boss: 'Wild Boss', birds: 'Legendary Wings', beasts: 'Run of the Beasts', regis: 'Giants Awake', mewtwo: 'Furious Clone', arceus: 'The Original One',
       lugia: 'Silver Dive', hoOh: 'Burning Rainbow', kyogre: 'Primal Ocean', groudon: 'Primal Land', rayquaza: 'Sky Dragon', latis: 'Eon Flight', deoxys: 'Signal from Space', dialga: 'Frozen Hands', palkia: 'Folded Space', ultraSpace: 'Ultra Space',
@@ -147,6 +149,7 @@ export const RADIO_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Words> = {
     groups: { menus: 'Menús', realm: 'Poké Realm', biomes: 'Biomas', bosses: 'Jefes', legends: 'Legendarios' },
     tracks: {
       menu: 'Pueblo Tranquilo', run: 'Primeros Pasos', forest: 'Entre las Hojas', beach: 'Marea de Verano', cave: 'Gotas en la Oscuridad', plant: 'Alto Voltaje', desert: 'Arenas sin Fin', snow: 'Cumbre Helada', volcano: 'Río de Lava', tower: 'Cajita de la Torre',
+      lobbyMorning: 'Mañana en el Pueblo', lobbyAfternoon: 'Tarde en el Porche', lobbyNight: 'Noche Estrellada', lobbyRain: 'Lluvia en la Ventana', lobbyFestival: 'Fiesta en la Plaza',
       realmTown: 'Ciudad del Realm', cafe: 'Café de la Esquina', fishing: 'Muelle al Atardecer', arcade: 'Arcade', gameCorner: 'Game Corner', dig: 'La Excavación', safariField: 'Zona Safari', safariBattle: 'Batalla Safari', contest: 'Concurso de Bichos',
       boss: 'Jefe Salvaje', birds: 'Alas Legendarias', beasts: 'Carrera de las Bestias', regis: 'Gigantes Despiertos', mewtwo: 'Clon Furioso', arceus: 'El Primero',
       lugia: 'Inmersión Plateada', hoOh: 'Arcoíris en Llamas', kyogre: 'Océano Primigenio', groudon: 'Tierra Primigenia', rayquaza: 'Dragón del Cielo', latis: 'Vuelo Eón', deoxys: 'Señal del Espacio', dialga: 'Manecillas Quietas', palkia: 'Espacio Plegado', ultraSpace: 'Ultraespacio',
@@ -189,6 +192,7 @@ export const RADIO_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Words> = {
     groups: { menus: 'Menus', realm: 'Poké Realm', biomes: 'Biomes', bosses: 'Boss', legends: 'Légendaires' },
     tracks: {
       menu: 'Village paisible', run: 'Premiers pas', forest: 'Sous les feuilles', beach: 'Marée d’été', cave: 'Gouttes dans le noir', plant: 'Haute tension', desert: 'Sables sans fin', snow: 'Sommet gelé', volcano: 'Rivière de lave', tower: 'Boîte à musique de la tour',
+      lobbyMorning: 'Matin au village', lobbyAfternoon: 'Après-midi sur la véranda', lobbyNight: 'Nuit étoilée', lobbyRain: 'Pluie à la fenêtre', lobbyFestival: 'Fête sur la place',
       realmTown: 'Ville du Realm', cafe: 'Le café du coin', fishing: 'Ponton au crépuscule', arcade: 'Salle d’arcade', gameCorner: 'Game Corner', dig: 'Les fouilles', safariField: 'Parc Safari', safariBattle: 'Combat Safari', contest: 'Concours de capture d’insectes',
       boss: 'Boss sauvage', birds: 'Ailes légendaires', beasts: 'La course des bêtes', regis: 'Les géants s’éveillent', mewtwo: 'Le clone furieux', arceus: 'Le Premier',
       lugia: 'Plongée argentée', hoOh: 'Arc-en-ciel en flammes', kyogre: 'Océan primitif', groudon: 'Terre primitive', rayquaza: 'Dragon du ciel', latis: 'Vol Éon', deoxys: 'Signal de l’espace', dialga: 'Aiguilles figées', palkia: 'Espace replié', ultraSpace: 'Ultra-Dimension',
@@ -231,6 +235,7 @@ export const RADIO_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Words> = {
     groups: { menus: '選單', realm: 'Poké Realm', biomes: '地區', bosses: '頭目', legends: '傳說' },
     tracks: {
       menu: '寧靜小鎮', run: '踏出第一步', forest: '林葉之間', beach: '夏日潮汐', cave: '黑暗中的水滴', plant: '高壓電', desert: '無盡沙海', snow: '冰封山巔', volcano: '熔岩之河', tower: '高塔音樂盒',
+      lobbyMorning: '小鎮早晨', lobbyAfternoon: '門廊午後', lobbyNight: '星光之夜', lobbyRain: '窗邊細雨', lobbyFestival: '廣場慶典',
       realmTown: 'Realm 城鎮', cafe: '街角咖啡館', fishing: '黃昏碼頭', arcade: '電玩間', gameCorner: '遊戲城', dig: '挖掘場', safariField: '狩獵地帶', safariBattle: '狩獵地帶對戰', contest: '捕蟲大會',
       boss: '野生頭目', birds: '傳說之翼', beasts: '神獸疾馳', regis: '巨人甦醒', mewtwo: '憤怒的複製體', arceus: '起源之神',
       lugia: '銀色潛流', hoOh: '燃燒的彩虹', kyogre: '原始之海', groudon: '原始大地', rayquaza: '天空之龍', latis: '夢幻飛行', deoxys: '來自太空的訊號', dialga: '靜止的指針', palkia: '摺疊的空間', ultraSpace: '究極空間',
