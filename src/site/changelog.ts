@@ -85,11 +85,11 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
       },
       {
         title: {
-          pt: 'O lobby ganhou músicas novas',
-          en: 'New music in the lobby',
-          es: 'Música nueva en el lobby',
-          fr: 'De nouvelles musiques dans le lobby',
-          zh: '大廳有了新音樂',
+          pt: 'Músicas novas no lobby, nas Tera Raids e no Dojo',
+          en: 'New music in the lobby, Tera Raids and the Dojo',
+          es: 'Música nueva en el lobby, las Teraincursiones y el Dojo',
+          fr: 'De nouvelles musiques dans le lobby, les Raids Téracristal et le Dojo',
+          zh: '大廳、太晶團體戰和道場有了新音樂',
         },
         notes: [
           {
@@ -98,6 +98,13 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             es: 'El lobby ya no toca la misma música todo el tiempo: cinco temas nuevos se turnan con el de la aldea según la hora de tu día (mañana, tarde, noche y una música de lluvia al final del día), y uno de fiesta mientras dura el Festival da Praça. En la Noite das Bruxas, sigue sonando la Torre.',
             fr: 'Le lobby ne joue plus toujours le même air : cinq nouveaux thèmes alternent avec celui du village selon l’heure de ta journée (matin, après-midi, nuit et un air de pluie en fin de journée), plus un thème de fête pendant le Festival da Praça. Pendant la Noite das Bruxas, c’est toujours la Tour qui joue.',
             zh: '大廳不再一直播同一首歌：五首新曲會依你當地的時段（早上、下午、晚上，傍晚和夜裡還有一首雨天曲）和村莊主題輪流播放，廣場慶典期間還有一首慶典曲。萬聖之夜期間依然播放高塔的音樂。',
+          },
+          {
+            pt: 'As Tera Raids ganharam música própria, épica e cristalina, da entrada no covil até a saída. O Dojo do Machoke treina ao som de um koto calmo e tambores, e a Torre do Kubfu tem uma versão tensa e acelerada. As três entram no Rádio quando você as ouve.',
+            en: 'Tera Raids have their own epic, crystalline music, from walking into the den until you leave it. Machoke’s Dojo trains to a calm koto and drums, and Kubfu’s Tower has a tense, faster take on it. All three join the Radio once you hear them.',
+            es: 'Las Teraincursiones tienen su propia música, épica y cristalina, desde que entras en la guarida hasta que sales. El Dojo de Machoke entrena al son de un koto tranquilo y tambores, y la Torre de Kubfu tiene una versión tensa y más rápida. Las tres entran en la Radio cuando las escuchas.',
+            fr: 'Les Raids Téracristal ont leur propre musique, épique et cristalline, de l’entrée dans la tanière jusqu’à la sortie. Le Dojo de Machoke s’entraîne sur un koto calme et des tambours, et la Tour de Kubfu en a une version tendue et plus rapide. Les trois rejoignent la Radio dès que tu les entends.',
+            zh: '太晶團體戰有了專屬音樂，史詩又晶瑩，從走進洞窟一直播到離開。Machoke 的道場伴著平靜的古箏和太鼓訓練，Kubfu 之塔則是緊張、更快的版本。三首聽過一次就會加入收音機。',
           },
         ],
       },
