@@ -3139,7 +3139,7 @@ export const pt = {
         epithet: 'Senhor do Tempo',
         omen: 'O tempo começa a tropeçar…',
         crossing: 'O tempo está se desfazendo! Avance pelo Pilar Lança!',
-        phases: ['O tempo se distorce! No Roar of Time, seus golpes congelam no ar.', 'O tempo acelera! Dialga fica cada vez mais rápido.'],
+        phases: ['O tempo se distorce! No Roar of Time, seus golpes congelam no ar.', 'Forma Origem! O tempo acelera e Dialga fica cada vez mais rápido.'],
         cues: { stop: 'O tempo parou!', forward: 'O tempo saltou para frente!', rewind: 'O tempo voltou!' },
       },
       palkia: {

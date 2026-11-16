@@ -2785,7 +2785,7 @@ export const fr: Messages = {
         epithet: 'Seigneur du Temps',
         omen: 'Le temps commence à trébucher…',
         crossing: 'Le temps se disloque ! Fonce à travers les Colonnes Lances !',
-        phases: ['Le temps se déforme ! Pendant Roar of Time, tes attaques se figent en l’air.', 'Le temps s’accélère ! Dialga va de plus en plus vite.'],
+        phases: ['Le temps se déforme ! Pendant Roar of Time, tes attaques se figent en l’air.', 'Forme Originelle ! Le temps s’accélère et Dialga va de plus en plus vite.'],
         cues: { stop: 'Le temps s’est arrêté !', forward: 'Le temps a fait un bond !', rewind: 'Le temps est revenu en arrière !' },
       },
       palkia: {

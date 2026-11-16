@@ -431,6 +431,7 @@ export const WEAR_FITS: Partial<Record<FitKey, SpeciesFit>> = {
   '645:therian': { no: ['head:S', 'head:SE'] }, // Landorus (Therian): its head is a small mask under a crest of horns; facing south a hat lands on its eyes
   '905:therian': { no: ['head:E'] }, // Enamorus (Therian): in profile its horned mask juts forward and a brim covers its eyes
   // The mythicals (src/data/mythicals.ts)
+  '483:origin': { rig: { 'S:Hurt': { seat: [0, 12] }, 'SE:Hurt': { seat: [0, 4] } }, no: ['head:E'] }, // Origin Dialga: the same in profile, the hat sits among its crest's spikes, against the eye
   '483:primal': { no: ['head:E'] }, // Primal Dialga: in profile a hat wedges down among its crest's spikes, over the face
   // Ogerpon: its mask is its face (the Teal Mask on its own sheets, each other mask a form, Terastallized ones too), and a hat
   // sits on the mask's horns and down over it, so no mask wears one.

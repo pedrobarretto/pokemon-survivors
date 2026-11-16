@@ -2789,7 +2789,7 @@ export const es: Messages = {
         epithet: 'Señor del Tiempo',
         omen: 'El tiempo empieza a tropezar…',
         crossing: '¡El tiempo se deshace! ¡Avanza por la Columna Lanza!',
-        phases: ['¡El tiempo se distorsiona! Con el Roar of Time tus ataques se congelan en el aire.', '¡El tiempo se acelera! Dialga es cada vez más rápido.'],
+        phases: ['¡El tiempo se distorsiona! Con el Roar of Time tus ataques se congelan en el aire.', '¡Forma Origen! El tiempo se acelera y Dialga es cada vez más rápido.'],
         cues: { stop: '¡El tiempo se detuvo!', forward: '¡El tiempo saltó hacia adelante!', rewind: '¡El tiempo retrocedió!' },
       },
       palkia: {

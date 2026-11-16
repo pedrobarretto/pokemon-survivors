@@ -5,7 +5,7 @@ import { EVENTS } from '../data/waves'
 import { phaseForm } from './bossFight'
 import { legendSource, winCounts } from './capture'
 import { createGame } from './game'
-import { legendStage } from './legend'
+import { formAfter, legendStage } from './legend'
 import { NO_WILD, createQuests } from './quests'
 import { collectShard, dropBossShards } from './tera'
 import { openDen } from './teraRaid'
@@ -89,15 +89,21 @@ describe('Ogerpon', () => {
   })
 })
 
-describe('Diancie and Primal Dialga', () => {
+describe("Diancie and Dialga's forms", () => {
   it('Diancie comes only out of the Escavação: no win counts', () => {
     expect(legendSource('diancie')).toBe('dig')
     expect(winCounts({}, 'diancie', false)).toBe(false)
   })
 
-  it("Dialga's last phase turns Primal on Nightmare only", () => {
+  it("Dialga's last phase turns Origin, and Primal on Nightmare", () => {
     const last = DIALGA_DOMAIN.phases.at(-1)
     expect(phaseForm(last, 'nightmare')).toBe('primal')
-    expect(phaseForm(last, 'hard')).toBe(undefined)
+    expect(phaseForm(last, 'hard')).toBe('origin')
+    expect(phaseForm(DIALGA_DOMAIN.phases.at(-2), 'hard')).toBe(undefined)
+  })
+
+  it('Dialga awakens Origin first, then Primal', () => {
+    expect(formAfter('dialga', 1)?.key).toBe('origin')
+    expect(formAfter('dialga', 2)?.key).toBe('primal')
   })
 })

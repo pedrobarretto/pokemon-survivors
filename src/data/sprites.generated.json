@@ -44927,6 +44927,92 @@
       }
     },
     "forms": {
+      "origin": {
+        "anims": {
+          "Walk": {
+            "frameWidth": 56,
+            "frameHeight": 136,
+            "durations": [
+              8,
+              10,
+              8,
+              10,
+              8,
+              10,
+              8,
+              10
+            ]
+          },
+          "Idle": {
+            "frameWidth": 56,
+            "frameHeight": 136,
+            "durations": [
+              12,
+              12,
+              12,
+              12,
+              12,
+              12
+            ]
+          },
+          "Hurt": {
+            "frameWidth": 80,
+            "frameHeight": 136,
+            "durations": [
+              2,
+              8
+            ]
+          }
+        },
+        "body": {
+          "bodyW": 47,
+          "bodyH": 69,
+          "footY": 5
+        },
+        "shiny": {
+          "anims": {
+            "Walk": {
+              "frameWidth": 56,
+              "frameHeight": 136,
+              "durations": [
+                8,
+                10,
+                8,
+                10,
+                8,
+                10,
+                8,
+                10
+              ]
+            },
+            "Idle": {
+              "frameWidth": 56,
+              "frameHeight": 136,
+              "durations": [
+                12,
+                12,
+                12,
+                12,
+                12,
+                12
+              ]
+            },
+            "Hurt": {
+              "frameWidth": 80,
+              "frameHeight": 136,
+              "durations": [
+                2,
+                8
+              ]
+            }
+          },
+          "body": {
+            "bodyW": 47,
+            "bodyH": 69,
+            "footY": 5
+          }
+        }
+      },
       "primal": {
         "anims": {
           "Walk": {
@@ -44962,7 +45048,10 @@
           "footY": 15
         }
       }
-    }
+    },
+    "formCries": [
+      "origin"
+    ]
   },
   "484": {
     "anims": {

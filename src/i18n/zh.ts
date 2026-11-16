@@ -2785,7 +2785,7 @@ export const zh: Messages = {
         epithet: '時間之主',
         omen: '時間開始錯亂…',
         crossing: '時間正在崩解！快穿過槍之柱！',
-        phases: ['時間扭曲了！Roar of Time 期間，你的攻擊會凍結在半空中。', '時間加速了！Dialga 越來越快。'],
+        phases: ['時間扭曲了！Roar of Time 期間，你的攻擊會凍結在半空中。', '起源形態！時間加速了，Dialga 越來越快。'],
         cues: { stop: '時間停止了！', forward: '時間快轉了！', rewind: '時間倒流了！' },
       },
       palkia: {
