@@ -12,6 +12,7 @@ import { castSound } from './ui/castSounds'
 import { createInput } from './engine/input'
 import type { Vec } from './engine/math'
 import { currentTheme, duckMusic, playTheme, type ThemeId } from './engine/music'
+import { devLobbyTheme, leaveLobby, lobbyTheme } from './lobbyMusic'
 import { advancePacer, pacer, resetPacer } from './engine/pacing'
 import { canvasLosses, canvasRestored, checkCanvases, context2d, drawThrew, dropLobbyArt, heldCanvases, heldCanvasesBy, onCanvasReset, readPixels, resetCanvases, sweepArt, wipeCanvases } from './engine/pixelart'
 import { frameStats, recentFrameMs, recordFrame, resetRunFrames, runFrames } from './engine/frameStats'
@@ -2864,13 +2865,14 @@ const themeFor = (r: Run | null): ThemeId | null => {
   return radioOver(auto, musicPlace(r)) ?? auto
 }
 
-/** The game's own music: menus play the village theme (the Poké Realm its own), a run its biome's theme, and a living boss takes over until it falls. */
+/** The game's own music: menus play the lobby's pick (`lobbyTheme`; the Poké Realm its own), a run its biome's theme, and a living boss takes over until it falls. */
 const gameTheme = (r: Run | null): ThemeId => {
   // The Poké Realm plays its own: the mini game open, else the room (`realmMusic.ts`).
   const realm = r ? null : realmTheme()
   if (realm) return realm
-  // The Noite das Bruxas swaps the village for Lavender Tower's tune.
-  if (!r || r.game.phase === 'gameover' || r.game.phase === 'victory') return halloweenToday() ? BIOMES.tower.theme : 'menu'
+  // The lobby's rotation by the hour (the Noite das Bruxas' tower and the Festival da Praça's tune on their days), held until a run starts.
+  if (!r || r.game.phase === 'gameover' || r.game.phase === 'victory') return lobbyTheme()
+  leaveLobby()
   // A legendary's domain plays its crossing's theme, then its own from the moment it shows itself.
   const domain = r.game.rift.arena?.domain
   if (domain) return domainTheme(domain)
@@ -5650,6 +5652,7 @@ if (import.meta.env.DEV) {
         }
         return { ...radio(), playing: nowPlaying(radio()), sounding: radioSounding(), theme: currentTheme(), open: openTracks() }
       },
+      lobbyTheme: devLobbyTheme,
       /** `ps.quality('lean')` pins lean drawing (`'full'` full detail, `'auto'` back to the governor); returns the governor's state. */
       quality: (pin?: 'auto' | 'lean' | 'full') => {
         if (pin) qualityPin = pin

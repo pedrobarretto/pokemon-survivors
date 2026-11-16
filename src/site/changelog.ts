@@ -85,6 +85,24 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
       },
       {
         title: {
+          pt: 'O lobby ganhou músicas novas',
+          en: 'New music in the lobby',
+          es: 'Música nueva en el lobby',
+          fr: 'De nouvelles musiques dans le lobby',
+          zh: '大廳有了新音樂',
+        },
+        notes: [
+          {
+            pt: 'O lobby não toca mais a mesma música o tempo todo: são cinco temas novos que se revezam com o da vila conforme a hora do seu dia (manhã, tarde, noite e uma música de chuva no fim do dia), e um tema de festa enquanto o Festival da Praça acontece. Na Noite das Bruxas, a Torre continua tocando.',
+            en: 'The lobby no longer plays the same tune all the time: five new themes take turns with the village one by the hour of your day (morning, afternoon, night and a rainy tune late in the day), plus a festive one while the Festival da Praça runs. On the Noite das Bruxas, the Tower still plays.',
+            es: 'El lobby ya no toca la misma música todo el tiempo: cinco temas nuevos se turnan con el de la aldea según la hora de tu día (mañana, tarde, noche y una música de lluvia al final del día), y uno de fiesta mientras dura el Festival da Praça. En la Noite das Bruxas, sigue sonando la Torre.',
+            fr: 'Le lobby ne joue plus toujours le même air : cinq nouveaux thèmes alternent avec celui du village selon l’heure de ta journée (matin, après-midi, nuit et un air de pluie en fin de journée), plus un thème de fête pendant le Festival da Praça. Pendant la Noite das Bruxas, c’est toujours la Tour qui joue.',
+            zh: '大廳不再一直播同一首歌：五首新曲會依你當地的時段（早上、下午、晚上，傍晚和夜裡還有一首雨天曲）和村莊主題輪流播放，廣場慶典期間還有一首慶典曲。萬聖之夜期間依然播放高塔的音樂。',
+          },
+        ],
+      },
+      {
+        title: {
           pt: 'Escolha do parceiro feita para o celular',
           en: 'A partner select made for phones',
           es: 'Elección de compañero hecha para el celular',
