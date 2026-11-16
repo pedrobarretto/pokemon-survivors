@@ -36,6 +36,11 @@ export type PathWords = {
     /** The button that opens a path's sheet, and the sheet's own. */
     open: string
     close: string
+    /**
+     * A path form of another species (Melmetal, Urshifu) on the evolution
+     * line: the awakening that brings it, the short step under it, and how it opens, in full.
+     */
+    forms: { at: (n: number) => string; step: { meltan: string; kubfu: string }; how: { meltan: string; kubfu: string } }
     /** Run toasts. */
     run: {
       cellSighted: string
@@ -215,6 +220,14 @@ const pt: PathWords = {
     },
     gift: { zygarde: 'Pelas Zygarde Cells', cosmog: 'O seu Cosmog cresceu', kubfu: 'Pelas provas da Torre', meltan: 'Da Mystery Box', regigigas: 'Do templo' },
     open: 'Ver caminho',
+    forms: {
+      at: (n: number) => `Despertar ${n}`,
+      step: { meltan: '400 porcas', kubfu: 'Torre' },
+      how: {
+        meltan: 'O Meltan vira *Melmetal* no 2º despertar: jogue com ele e junte 400 *Porcas Sextavadas*, que os inimigos derrubam.',
+        kubfu: 'O Kubfu vira *Urshifu* no 2º despertar, no estilo da torre que ele subir no Dojo.',
+      },
+    },
     close: 'Fechar',
     run: {
       cellSighted: 'Uma *Zygarde Cell* brotou por perto! Siga a seta.',
@@ -392,6 +405,14 @@ const en: PathWords = {
     },
     gift: { zygarde: 'For the Cube’s Cells', cosmog: 'Your Cosmog grew up', kubfu: 'For the Tower’s trials', meltan: 'From the Mystery Box', regigigas: 'From the temple' },
     open: 'See path',
+    forms: {
+      at: (n: number) => `Awakening ${n}`,
+      step: { meltan: '400 Hex Nuts', kubfu: 'Tower' },
+      how: {
+        meltan: 'Meltan turns into *Melmetal* at its 2nd awakening: play it and gather 400 *Hex Nuts*, which foes drop.',
+        kubfu: 'Kubfu turns into *Urshifu* at its 2nd awakening, in the style of the tower it climbs at the Dojo.',
+      },
+    },
     close: 'Close',
     run: {
       cellSighted: 'A *Zygarde Cell* popped up nearby! Follow the arrow.',
@@ -569,6 +590,14 @@ const es: PathWords = {
     },
     gift: { zygarde: 'Por las Zygarde Cells', cosmog: 'Tu Cosmog creció', kubfu: 'Por las pruebas de la Torre', meltan: 'De la Mystery Box', regigigas: 'Del templo' },
     open: 'Ver camino',
+    forms: {
+      at: (n: number) => `Despertar ${n}`,
+      step: { meltan: '400 tuercas', kubfu: 'Torre' },
+      how: {
+        meltan: 'Meltan se vuelve *Melmetal* en su 2.º despertar: juega con él y junta 400 *Tuercas Hexagonales*, que sueltan los enemigos.',
+        kubfu: 'Kubfu se vuelve *Urshifu* en su 2.º despertar, en el estilo de la torre que suba en el Dojo.',
+      },
+    },
     close: 'Cerrar',
     run: {
       cellSighted: '¡Una *Zygarde Cell* brotó cerca! Sigue la flecha.',
@@ -746,6 +775,14 @@ const fr: PathWords = {
     },
     gift: { zygarde: 'Pour les Zygarde Cells', cosmog: 'Votre Cosmog a grandi', kubfu: 'Pour les épreuves de la Tour', meltan: 'De la Mystery Box', regigigas: 'Du temple' },
     open: 'Voir le chemin',
+    forms: {
+      at: (n: number) => `${n}e éveil`,
+      step: { meltan: '400 écrous', kubfu: 'Tour' },
+      how: {
+        meltan: 'Meltan devient *Melmetal* à son 2e éveil : jouez-le et ramassez 400 *Écrous Hexagonaux*, que lâchent les ennemis.',
+        kubfu: 'Kubfu devient *Urshifu* à son 2e éveil, dans le style de la tour qu’il gravit au Dojo.',
+      },
+    },
     close: 'Fermer',
     run: {
       cellSighted: 'Une *Zygarde Cell* est sortie tout près ! Suivez la flèche.',
@@ -923,6 +960,14 @@ const zh: PathWords = {
     },
     gift: { zygarde: '來自 Zygarde Cell', cosmog: '你的 Cosmog 長大了', kubfu: '塔的考驗', meltan: '來自 Mystery Box', regigigas: '來自神殿' },
     open: '查看路線',
+    forms: {
+      at: (n: number) => `第 ${n} 次覺醒`,
+      step: { meltan: '400 個螺帽', kubfu: '塔' },
+      how: {
+        meltan: 'Meltan會在第 2 次覺醒變成 *Melmetal*：用它對戰，收集敵人掉落的 400 個 *六角螺帽*。',
+        kubfu: 'Kubfu會在第 2 次覺醒變成 *Urshifu*，流派取決於它在道館爬的塔。',
+      },
+    },
     close: '關閉',
     run: {
       cellSighted: '附近冒出了一個 *Zygarde Cell*！跟著箭頭走。',

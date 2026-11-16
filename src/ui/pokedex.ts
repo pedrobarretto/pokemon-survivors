@@ -241,12 +241,16 @@ export const pokedexScreen = (root: HTMLElement, input: Input, onClose: () => vo
     name.replaceChildren(h('small', {}, dexNumber(e.dex)), st.seen ? e.name : '???')
     types.replaceChildren(...(st.seen ? e.types.map(typeBadge) : []))
     const clear = clearOf(e)
+    // A path legend that turns into another species (Meltan, Kubfu) says how, on its entry and its form's.
+    const formHow: Partial<Record<string, string>> = t().paths.forms.how
+    const how = e.source.kind === 'path' && e.source.legend ? formHow[e.source.legend] : undefined
     const lines = [
       h('span', { class: 'tag' }, m.roles[e.role]),
       !st.seen && h('p', { class: 'dex-tip' }, m.unseen),
       st.seen && defeatable(e) && row(m.defeated, String(st.defeated)),
       st.seen && row(m.owned, st.caught ? m.yes : m.no),
       st.seen && e.source.kind === 'starter' && (clear ? row(m.clear, h('img', { class: 'dex-clear-icon', src: trophyIcon(clear), alt: '' }), levels[clear]) : row(m.clear, m.no)),
+      st.seen && how !== undefined && h('p', { class: 'dex-tip' }, rich(how)),
       st.shiny && h('span', { class: 'tag tag-shiny' }, h('img', { src: sparkleIcon(), alt: '' }), m.shiny),
       variantOf(e.dex) === 'shadow' && h('span', { class: 'tag tag-shadow' }, h('img', { src: shadowIcon(), alt: '' }), t().rocket.shadow.tag),
       variantOf(e.dex) === 'purified' && h('span', { class: 'tag tag-purified' }, h('img', { src: purifiedIcon(), alt: '' }), t().rocket.shadow.purifiedTag),
