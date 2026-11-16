@@ -85,8 +85,8 @@ import { pathDevTools } from './ui/pathDev'
 import { pathSheet } from './ui/legendPaths'
 import { trialHud } from './ui/towerTrial'
 import { startTrial } from './game/towerTrial'
-import { COSMOG_DEX, PATH_FORMS, PATH_IDS, TRIALS, type TrialId } from './data/legendPaths'
-import { clearTrial, cosmogStage, giantAwake, kubfuJoined, openForms, ruinsRun, templeRun, towerOf } from './game/legendPaths'
+import { COSMOG_DEX, PATH_FORMS, PATH_IDS, TOWERS, TRIALS, type TrialId } from './data/legendPaths'
+import { clearTrial, cosmogStage, giantAwake, kubfuJoined, openForms, ruinsRun, templeRun } from './game/legendPaths'
 import { FIELD, FIELD_MISSION_KINDS, TOGEPI_DEX, type FieldMissionKind } from './game/fieldMissionRules'
 import { advancePhase, banishOffer, chooseOffer, createGame, offerAbilities, playerDex, rerollOffers, skipLevelUp, step, takeBerryLevelUps } from './game/game'
 import { applyBuild, setDummies, setLens, startTraining } from './game/training'
@@ -535,13 +535,14 @@ const openTower = () => {
 /** A Torre trial won: into the save; returns a word on what it brought (Kubfu joining, Urshifu's style), or null. */
 const bankTrial = (id: TrialId): string | null => {
   const before = loadSave().paths.trials
-  updateSave((s) => ({ ...s, paths: { ...s.paths, trials: clearTrial(s.paths.trials, id) } }))
+  // A tower climbed for the first time becomes the style Urshifu wears.
+  const tower = TOWERS.find((tw) => tw === id && !before.includes(tw)) ?? null
+  updateSave((s) => ({ ...s, paths: { ...s.paths, trials: clearTrial(s.paths.trials, id), ...(tower && { style: tower }) } }))
   void syncSave()
   const after = loadSave().paths.trials
   const m = t().paths.tower
-  const tower = towerOf(after)
   if (!kubfuJoined(before) && kubfuJoined(after)) return m.kubfu
-  return tower && !towerOf(before) ? m.urshifu(m.styles[tower]) : null
+  return tower && after.includes(tower) ? m.urshifu(m.styles[tower]) : null
 }
 
 /**

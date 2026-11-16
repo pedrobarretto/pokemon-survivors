@@ -94,6 +94,13 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             fr: 'Les légendes verrouillées expliquent mieux comment les obtenir : chaque Épée de la Justice indique ses biomes et son épreuve, Cosmog indique où est la Recherche stellaire et combien de parties il faut, et Meltan que la Mystery Box sort en 12 murs au plus.',
             zh: '未解鎖的傳說寶可夢會更清楚地說明取得方式：每把正義之劍會寫出牠等待的地區和考驗內容，Cosmog 會說明星空研究在哪裡、需要幾場遊戲，Meltan 則說明最多 12 面岩壁內一定能挖到 Mystery Box。',
           },
+          {
+            pt: 'Os dois estilos do Urshifu: na Torre do Dojo, quem já subiu uma torre agora pode subir a outra, e o cartão da torre troca entre o Estilo Golpe Único e o Estilo Golpe Fluido quando você quiser.',
+            en: 'Both of Urshifu’s styles: at the Dojo Tower, whoever climbed one tower can now climb the other, and the tower’s card switches between the Single Strike and Rapid Strike Styles whenever you like.',
+            es: 'Los dos estilos de Urshifu: en la Torre del Dojo, quien ya subió una torre ahora puede subir la otra, y la tarjeta de la torre cambia entre el Estilo Brusco y el Estilo Fluido cuando quieras.',
+            fr: 'Les deux styles d’Urshifu : à la Tour du Dojo, qui a gravi une tour peut maintenant gravir l’autre, et la carte de la tour passe du Style Poing Final au Style Mille Poings quand vous voulez.',
+            zh: 'Urshifu 的兩種流派：在道館之塔，爬過一座塔的人現在可以爬另一座，並隨時在塔的卡片上切換一擊流和連擊流。',
+          },
         ],
       },
       {
