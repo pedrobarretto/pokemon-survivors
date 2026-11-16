@@ -1,3 +1,4 @@
+import { assetUrl } from '../../assets'
 import { PLAYABLE } from '../../data/hatchlings'
 import { TIER_SNAPSHOT } from '../../data/tierRuns'
 import type { Locale } from '../../i18n'
@@ -18,7 +19,7 @@ const familyUrl = (id: FamilyId, locale: Locale) => {
 }
 
 const portrait = (id: FamilyId, size: number) =>
-  html`<img src="/assets/pokemon/${PLAYABLE[id].line[0].dex}/portrait.png" width="${size}" height="${size}" loading="lazy" alt="" />`
+  html`<img src="${assetUrl(`pokemon/${PLAYABLE[id].line[0].dex}/portrait.png`)}" width="${size}" height="${size}" loading="lazy" alt="" />`
 
 const longDate = (iso: string, m: SiteMessages) =>
   new Date(`${iso}T12:00:00Z`).toLocaleDateString(m.lang.tag, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })

@@ -1,7 +1,8 @@
 import { execSync } from 'node:child_process'
 import { readFileSync, statSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { defineConfig, runnerImport, type Plugin } from 'vite'
+import { defineConfig, loadEnv, runnerImport, type Plugin } from 'vite'
+import { servedVersions } from './cdn/versions.mjs'
 import { SIM_ROOTS, simBuildId } from './src/coop/simBuild'
 
 type Site = typeof import('./src/site/index.ts')
@@ -29,7 +30,8 @@ const sitePages = (): Plugin => {
     async config(config, { command }) {
       if (command !== 'build') return
       root = resolve(config.root ?? process.cwd())
-      site = (await runnerImport<Site>(SITE_ENTRY, { configFile: false, root })).module
+      // The pages render with the game's build constants (the asset CDN's, `src/assets.ts`).
+      site = (await runnerImport<Site>(SITE_ENTRY, { configFile: false, root, define: config.define })).module
       pages = new Map(documents(site).map((p) => [resolve(root, p.file), p]))
       // Entry names from the output file: `en/guide/index.html` → `en-guide`, `404.html` → `404`.
       const name = (file: string) => file.replace(/(\/?index)?\.html$/, '').replace(/\//g, '-')
@@ -191,12 +193,26 @@ const atelier = (): Plugin => ({
   },
 })
 
+/**
+ * `__ASSET_CDN__` (`src/assets.ts`): with `VITE_ASSET_ORIGIN` set, the asset CDN
+ * and the groups of `public/assets/` it serves as they are here; unset (dev,
+ * tests, previews), none, and every asset loads from the site.
+ */
+const assetCdn = async (mode: string) => {
+  const origin = (loadEnv(mode, import.meta.dirname, 'VITE_').VITE_ASSET_ORIGIN ?? '').replace(/\/+$/, '')
+  return { origin, versions: origin ? await servedVersions(origin) : {} }
+}
+
 // One page per language for the game (index.html, en/, es/, fr/ and zh-tw/index.html); the site pages are added by `sitePages`.
-export default defineConfig({
+export default defineConfig(async ({ mode }) => ({
   plugins: [sitePages(), simBuildFile(), atelier()],
   // The co-op relay (`relay/`) is its own package with its own Workers test runner.
   test: { exclude: ['**/node_modules/**', '**/.git/**', 'relay/**'] },
-  define: { __GAME_VERSION__: JSON.stringify(gameVersion()), __SIM_BUILD__: JSON.stringify(SIM_BUILD) },
+  define: {
+    __GAME_VERSION__: JSON.stringify(gameVersion()),
+    __SIM_BUILD__: JSON.stringify(SIM_BUILD),
+    __ASSET_CDN__: JSON.stringify(await assetCdn(mode)),
+  },
   // PostHog's proxy, as vercel.json has it, to try analytics locally (`ps:analytics` set to `on` in localStorage).
   server: { proxy: { '/ingest': { target: 'https://us.i.posthog.com', changeOrigin: true, rewrite: (path) => path.replace(/^\/ingest/, '') } } },
   build: {
@@ -206,4 +222,4 @@ export default defineConfig({
       input: { main: 'index.html', en: 'en/index.html', es: 'es/index.html', fr: 'fr/index.html', zh: 'zh-tw/index.html' },
     },
   },
-})
+}))

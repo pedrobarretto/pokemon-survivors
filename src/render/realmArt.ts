@@ -1,3 +1,4 @@
+import { assetImage, assetUrl } from '../assets'
 import { canvasCache, context2d, createCanvas, drawable, readPixels } from '../engine/pixelart'
 import { hash2 } from '../engine/rng'
 import { BASE_GRID, BASE_ROOM, REALM_ROOMS, type Point, type Shape, type TownRoomId } from '../data/realmMap'
@@ -61,8 +62,7 @@ const measure = (img: HTMLImageElement): Art => {
 }
 
 const loadArt = (id: TownArt, tries = 3) => {
-  const img = new Image()
-  img.src = `${import.meta.env.BASE_URL}assets/${TOWN_ART[id]}.png`
+  const img = assetImage(assetUrl(`${TOWN_ART[id]}.png`))
   const landed = () => {
     if (drawable(img)) arts.set(id, measure(img))
     else if (tries > 1) setTimeout(() => loadArt(id, tries - 1), 5000)
@@ -71,7 +71,7 @@ const loadArt = (id: TownArt, tries = 3) => {
 }
 
 /** An exterior's entrance PNG (the grove's centerpiece), for the base editor's exterior picker. */
-export const entranceUrl = (exterior: BaseExterior) => `${import.meta.env.BASE_URL}assets/${TOWN_ART[ENTRANCE_ART[exterior].art]}.png`
+export const entranceUrl = (exterior: BaseExterior) => assetUrl(`${TOWN_ART[ENTRANCE_ART[exterior].art]}.png`)
 
 /** Starts loading the town's PNGs (once): pieces show up as they arrive. */
 export const loadTownArt = () => {

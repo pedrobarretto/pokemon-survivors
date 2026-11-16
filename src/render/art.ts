@@ -1,3 +1,4 @@
+import { assetImage, assetUrl } from '../assets'
 import { canvasCache, context2d, createCanvas, fromStrings, lazy, type Palette, type PixelSprite } from '../engine/pixelart'
 import type { Medal } from '../data/achievements'
 import { ITEMS, type ItemId } from '../data/items'
@@ -769,7 +770,7 @@ export type ItemArtId = ItemId | UpgradeId | BagItem | ConsumableId | EvoItemId 
  * (PokeAPI's `sprites/items`), trimmed to square in `public/assets/items/<id>.png`.
  * The few that only exist as HD art were turned into pixel art with PixelLab.
  */
-export const itemArt = (id: ItemArtId) => `${import.meta.env.BASE_URL}assets/items/${id}.png`
+export const itemArt = (id: ItemArtId) => assetUrl(`items/${id}.png`)
 
 /** The TM disc in a move type's color, as the games paint it. */
 export const tmArtId = (type: PokeType) => `tm${type.charAt(0).toUpperCase()}${type.slice(1)}` as TmArtId
@@ -802,7 +803,7 @@ let unmadeIcons: (() => unknown)[] | null = null
 export const warmIcon = () => {
   unmadeIcons ??= [
     ...(Object.keys(MOVE_ICON_ART) as MoveId[]).map((id) => () => moveIcon(id)),
-    ...(Object.keys(ITEMS) as ItemId[]).map((id) => () => (new Image().src = itemIcon(id))),
+    ...(Object.keys(ITEMS) as ItemId[]).map((id) => () => assetImage(itemIcon(id))),
   ]
   const next = unmadeIcons.pop()
   next?.()

@@ -1,3 +1,4 @@
+import { assetImage } from '../assets'
 import { formatTime } from '../engine/math'
 import { blitPacked, canvasCache, context2d, createCanvas, ellipse, fromStrings, onCanvasReset, type PixelSprite } from '../engine/pixelart'
 import { MEDALS, type Medal } from '../data/achievements'
@@ -326,10 +327,9 @@ const spritesOf = (mon: CardMon): Promise<SpeciesSprites | null> =>
 
 const loadImage = (src: string) =>
   new Promise<HTMLImageElement | null>((resolve) => {
-    const img = new Image()
+    const img = assetImage(src)
     img.onload = () => resolve(img)
     img.onerror = () => resolve(null)
-    img.src = src
   })
 
 /** Largest whole scale that keeps the body inside `maxW`×`maxH`, from 1 to 4. */

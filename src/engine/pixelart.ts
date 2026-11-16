@@ -1,3 +1,4 @@
+import { assetImage } from '../assets'
 /**
  * Code-authored pixel art. Sprites are written as string rows where each
  * character maps to a palette color ('.' or ' ' = transparent).
@@ -102,7 +103,7 @@ const copyLoaded = (img: HTMLImageElement) => {
 const ART_RETRY_MS = [3_000, 15_000, 60_000] as const
 
 /**
- * Pictures loaded by key, once each, that a cache copies to canvases as they land (`copy`). One that
+ * Asset pictures (`assetUrl`) loaded by key, once each, with CORS (`assetImage`), that a cache copies to canvases as they land (`copy`). One that
  * fails to load, or that the browser calls broken even after it loaded, is fetched again a few times
  * (`?retry=n`, past the HTTP cache, which may hold the bad copy); the caller's stand-in shows meanwhile.
  */
@@ -115,8 +116,8 @@ export const artImages = <K>(src: (key: K) => string) => {
     if (held) return held
     const failed = failures.get(key)
     if (failed && (failed.tries > ART_RETRY_MS.length || performance.now() - failed.at < ART_RETRY_MS[failed.tries - 1]!)) return null
-    const img = new Image()
-    img.src = failed ? `${src(key)}?retry=${failed.tries}` : src(key)
+    const url = src(key)
+    const img = assetImage(failed ? `${url}${url.includes('?') ? '&' : '?'}retry=${failed.tries}` : url)
     images.set(key, img)
     return img
   }

@@ -1,3 +1,4 @@
+import { assetUrl } from '../assets'
 import type { GameModeId } from '../data/gameModes'
 import { artImages } from '../engine/pixelart'
 import type { Dex } from './sprites'
@@ -28,7 +29,7 @@ type ModeScene = {
   fine?: true
 }
 
-const pictures = artImages((name: SceneArt) => `${import.meta.env.BASE_URL}assets/${name}`)
+const pictures = artImages((name: SceneArt) => assetUrl(name))
 const copies = new Map<SceneArt, HTMLCanvasElement>()
 
 const picture = (name: SceneArt) => {

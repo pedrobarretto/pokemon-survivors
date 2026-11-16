@@ -6,3 +6,5 @@ dist
 .env.local
 determinism-out
 .fit-check/
+cdn/dist
+.wrangler
