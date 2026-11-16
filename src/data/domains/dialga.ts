@@ -19,10 +19,10 @@ import type { LegendDomain } from '../domains'
  * three beam fans whose gaps and columns are safe; (2) it skips through time
  * (teleports), the marks thicken, and Roar of Time stops the player's shots
  * mid-air while marks bloom everywhere and the roar spares only those behind
- * a column, then lets the shots fly on; (3) time itself speeds up
- * (`BossPhase.haste`): tears open in the floor, it warps onto the player,
- * and Roar of Time spares only those far from it. On Nightmare that last
- * phase is Primal Dialga's (`nightmareForm`, the PMD Explorers' last boss):
+ * a column, then lets the shots fly on; (3) it turns Origin Forme and time
+ * itself speeds up (`BossPhase.haste`): tears open in the floor, it warps onto
+ * the player, and Roar of Time spares only those far from it. On Nightmare that
+ * last phase is Primal Dialga's (`nightmareForm`, the PMD Explorers' last boss):
  * time collapses, marks of the future fall everywhere and its rings close in.
  */
 
@@ -165,6 +165,7 @@ export const DIALGA_DOMAIN: LegendDomain = {
       below: 0.33,
       shift: 2.6,
       haste: 1.3,
+      form: 'origin',
       nightmareForm: 'primal',
       steer: { kind: 'chase', pace: 0.55 },
       // Space-time tears open in the nave.

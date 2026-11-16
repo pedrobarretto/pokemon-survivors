@@ -2787,7 +2787,7 @@ export const en: Messages = {
         epithet: 'Lord of Time',
         omen: 'Time begins to stumble…',
         crossing: 'Time is coming apart! Push on through Spear Pillar!',
-        phases: ['Time warps! During Roar of Time your attacks freeze in mid-air.', 'Time speeds up! Dialga keeps getting faster.'],
+        phases: ['Time warps! During Roar of Time your attacks freeze in mid-air.', 'Origin Forme! Time speeds up and Dialga keeps getting faster.'],
         cues: { stop: 'Time stopped!', forward: 'Time skipped ahead!', rewind: 'Time rewound!' },
       },
       palkia: {

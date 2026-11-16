@@ -393,9 +393,9 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             es: 'Zeraora: quédate en la Central Eléctrica mientras llueve y la tormenta trae a Zeraora, con Plasma Fists. Ogerpon tiene su propia Teraincursión, con la máscara del teratipo de la partida, y en el Modo Legendario cambia de máscara y se teracristaliza con Embody Aspect. Diancie surge del Pink Diamond de la Excavación, con Diamond Storm.',
           },
           {
-            pt: 'Dialga desperta Primal no Modo Lendário, e no Pesadelo a última fase da fenda dele vira Primal Dialga.',
-            en: 'Dialga awakens Primal in Legend mode, and on Nightmare the last phase of its rift turns into Primal Dialga.',
-            es: 'Dialga despierta Primigenio en el Modo Legendario, y en Pesadilla la última fase de su grieta se vuelve Dialga Primigenio.',
+            pt: 'Dialga ganhou a Forma Origem: desperta nela no Nv 12 do Modo Lendário e vira Origem na última fase da fenda. No Nv 28 desperta Primal, e no Pesadelo a última fase da fenda vira Primal Dialga.',
+            en: 'Dialga gets its Origin Forme: it awakens into it at Lv 12 in Legend mode and turns Origin in its rift’s last phase. At Lv 28 it awakens Primal, and on Nightmare the rift’s last phase turns into Primal Dialga.',
+            es: 'Dialga recibe su Forma Origen: despierta en ella en el Nv 12 del Modo Legendario y se vuelve Origen en la última fase de su grieta. En el Nv 28 despierta Primigenio, y en Pesadilla la última fase de la grieta se vuelve Dialga Primigenio.',
           },
         ],
       },

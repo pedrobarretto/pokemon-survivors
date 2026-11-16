@@ -475,7 +475,9 @@ export const LEGENDS = {
     line: stage(483, 'Dialga', ['steel', 'dragon']),
     awakenings: [{ maxHp: 30, armor: 1, might: 0.12 }, { maxHp: 45, might: 0.22, cooldown: -0.05 }],
     innate: { ability: 'pressure' },
-    // The PMD Explorers' last boss: time itself come apart (its rift's last phase on Nightmare too, `data/domains/dialga.ts`).
+    // Legends: Arceus's Origin Forme first (its rift's last phase too), then the PMD Explorers' last boss: time itself
+    // come apart (its rift's last phase on Nightmare, `data/domains/dialga.ts`).
+    early: { key: 'origin', name: 'Dialga (Origin Forme)' },
     form: { key: 'primal', name: 'Primal Dialga' },
     unlock: RIFT_WINS,
   },

@@ -263,9 +263,9 @@ export const FORMS = {
   428: { mega: '0001' },
   10061: { mega: '0670/0006' },
   691: { mega: '0001' },
-  // The Grande Atualização's mythicals (src/data/mythicals.ts): Primal Dialga (its second awakening, its rift's last phase on
-  // Nightmare), Mega Diancie and Mega Zeraora (their second awakenings), Ogerpon's masks and each mask Terastallized.
-  483: { primal: '0002' },
+  // The Grande Atualização's mythicals (src/data/mythicals.ts): Dialga's Origin Forme (its first awakening, its rift's last
+  // phase) and Primal Dialga (its second awakening, its rift's last phase on Nightmare), Mega Diancie and Mega Zeraora (their second awakenings), Ogerpon's masks and each mask Terastallized.
+  483: { origin: '0001', primal: '0002' },
   719: { mega: '0001' },
   807: { mega: '0001' },
   1017: { wellspring: '0001', hearthflame: '0002', cornerstone: '0003', tealTera: '0004', wellspringTera: '0005', hearthflameTera: '0006', cornerstoneTera: '0007' },
@@ -372,6 +372,7 @@ export const FORM_CRIES = {
   491: { mega: 'darkrai-mega' },
   718: { ten: 'zygarde-10', complete: 'zygarde-complete', mega: 'zygarde-mega' },
   892: { rapid: 'urshifu-rapid-strike' },
+  483: { origin: 'dialga-origin' },
   484: { origin: 'palkia-origin' },
   720: { unbound: 'hoopa-unbound' },
   645: { therian: 'landorus-therian' },

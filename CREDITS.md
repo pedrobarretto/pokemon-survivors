@@ -1017,39 +1017,39 @@ shinies are our own palette swaps, credited in their rows. This file is generate
 | 665 | Spewpa (shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
 | 666 | Vivillon | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
 | 666 | Vivillon (shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
-| 666 | Vivillon (Icy Snow) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
+| 666 | Vivillon (Icy Snow) | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
 | 666 | Vivillon (Icy Snow, shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
-| 666 | Vivillon (Polar) | baronessfaron, [Emmuffin](https://twitter.com/Ernmuffin) | — |
+| 666 | Vivillon (Polar) | baronessfaron, [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
 | 666 | Vivillon (Polar, shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
-| 666 | Vivillon (Tundra) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
+| 666 | Vivillon (Tundra) | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
 | 666 | Vivillon (Tundra, shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
-| 666 | Vivillon (Continental) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
+| 666 | Vivillon (Continental) | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
 | 666 | Vivillon (Continental, shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
-| 666 | Vivillon (Garden) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
+| 666 | Vivillon (Garden) | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
 | 666 | Vivillon (Garden, shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
-| 666 | Vivillon (Elegant) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
+| 666 | Vivillon (Elegant) | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
 | 666 | Vivillon (Elegant, shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
-| 666 | Vivillon (Modern) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
+| 666 | Vivillon (Modern) | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
 | 666 | Vivillon (Modern, shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
-| 666 | Vivillon (Marine) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
+| 666 | Vivillon (Marine) | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
 | 666 | Vivillon (Marine, shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
-| 666 | Vivillon (Archipelago) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
+| 666 | Vivillon (Archipelago) | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
 | 666 | Vivillon (Archipelago, shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
-| 666 | Vivillon (High Plains) | ◥θ┴θ◤, [Emmuffin](https://twitter.com/Ernmuffin) | — |
+| 666 | Vivillon (High Plains) | ◥θ┴θ◤, [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
 | 666 | Vivillon (High Plains, shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
-| 666 | Vivillon (Sandstorm) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
+| 666 | Vivillon (Sandstorm) | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
 | 666 | Vivillon (Sandstorm, shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
-| 666 | Vivillon (River) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
+| 666 | Vivillon (River) | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
 | 666 | Vivillon (River, shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
-| 666 | Vivillon (Monsoon) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
+| 666 | Vivillon (Monsoon) | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
 | 666 | Vivillon (Monsoon, shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
-| 666 | Vivillon (Savannah) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
+| 666 | Vivillon (Savannah) | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
 | 666 | Vivillon (Savannah, shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
-| 666 | Vivillon (Sun) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
+| 666 | Vivillon (Sun) | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
 | 666 | Vivillon (Sun, shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
-| 666 | Vivillon (Ocean) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
+| 666 | Vivillon (Ocean) | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
 | 666 | Vivillon (Ocean, shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
-| 666 | Vivillon (Jungle) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
+| 666 | Vivillon (Jungle) | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
 | 666 | Vivillon (Jungle, shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
 | 774 | Minior | baronessfaron | baronessfaron |
 | 774 | Minior (shiny) | Top_Kec | Top_Kec, [Emmuffin](https://twitter.com/Ernmuffin) |
@@ -1960,6 +1960,8 @@ shinies are our own palette swaps, credited in their rows. This file is generate
 | 384 | Rayquaza (Mega, shiny) | Top_Kec | — |
 | 483 | Dialga | [CHUNSOFT](https://www.spike-chunsoft.com/) | [CHUNSOFT](https://www.spike-chunsoft.com/), [G〜](https://bsky.app/profile/justtr4sh.pmd.social) |
 | 483 | Dialga (shiny) | Anonymous | [G〜](https://bsky.app/profile/justtr4sh.pmd.social), Anonymous |
+| 483 | Dialga (Origin) | baronessfaron | — |
+| 483 | Dialga (Origin, shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | — |
 | 483 | Dialga (Primal) | [CHUNSOFT](https://www.spike-chunsoft.com/) | — |
 | 380 | Latias | [CHUNSOFT](https://www.spike-chunsoft.com/), [Emmuffin](https://twitter.com/Ernmuffin) | [CHUNSOFT](https://www.spike-chunsoft.com/), Sharpen, [Emmuffin](https://twitter.com/Ernmuffin) |
 | 380 | Latias (shiny) | [Emmuffin](https://twitter.com/Ernmuffin) | [Emmuffin](https://twitter.com/Ernmuffin) |
