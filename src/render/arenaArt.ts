@@ -1,3 +1,4 @@
+import { assetUrl } from '../assets'
 import type { TierId } from '../data/arenaRanked'
 import type { Role, Team } from '../data/versus'
 import type { MapTheme } from '../data/versusMaps'
@@ -51,7 +52,7 @@ export const valeArtFiles = () => THEMES.flatMap((theme) => VALE_ART.map((id) =>
 /** A team's file name in the art's names. */
 export const teamFile = (team: Team): TeamFile => TEAM_FILES[team]
 
-const pictures = artImages((file: string) => `${import.meta.env.BASE_URL}assets/arena/${file}.png`)
+const pictures = artImages((file: string) => assetUrl(`arena/${file}.png`))
 const started = new Set<MapTheme>()
 
 /** Starts loading a scenery's pictures (once each): about 60 KB, a match's or the Arena screen's first frame asks. */
@@ -125,7 +126,7 @@ export const ARENA_ICONS = {
 export type ArenaIcon = keyof typeof ARENA_ICONS
 
 /** An icon's URL, for an `<img>` (the browser fetches it when the screen shows it). */
-export const arenaIconUrl = (id: ArenaIcon) => `${import.meta.env.BASE_URL}assets/arena/icons/${ARENA_ICONS[id]}.png`
+export const arenaIconUrl = (id: ArenaIcon) => assetUrl(`arena/icons/${ARENA_ICONS[id]}.png`)
 
 /** Each role's icon. */
 export const ROLE_ICONS = {

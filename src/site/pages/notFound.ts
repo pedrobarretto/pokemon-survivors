@@ -1,3 +1,4 @@
+import { assetUrl } from '../../assets'
 import { LOCALE_IDS, type Locale } from '../../i18n'
 import { SITE_MESSAGES } from '../../i18n/site'
 import { escape, html, jsonLd } from '../html'
@@ -120,7 +121,7 @@ export const notFoundPage = () => {
     <meta name="color-scheme" content="dark" />
     <meta name="robots" content="noindex" />
     <title>${escape(pt.notFound.title)}</title>
-    <link rel="icon" href="/assets/pokemon/4/portrait.png" />
+    <link rel="icon" href="${assetUrl('pokemon/4/portrait.png')}" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <link rel="stylesheet" href="/src/site/site.css" />
     <script type="module" src="/src/site/client.ts"></script>

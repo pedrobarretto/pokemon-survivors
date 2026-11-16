@@ -1,3 +1,4 @@
+import { assetImage, assetUrl } from '../assets'
 import { drawable } from '../engine/pixelart'
 import type { FurnitureId } from '../data/furniture'
 
@@ -23,8 +24,7 @@ const asked = new Set<FurnitureId>()
 export const hasFurnitureArt = (id: FurnitureId) => !id.startsWith('doll:') && !id.startsWith('plush:')
 
 const load = (id: FurnitureId, tries: number) => {
-  const img = new Image()
-  img.src = `${import.meta.env.BASE_URL}assets/furniture/${id}.png`
+  const img = assetImage(assetUrl(`furniture/${id}.png`))
   const landed = () => {
     if (drawable(img)) images.set(id, img)
     else if (tries > 1) setTimeout(() => load(id, tries - 1), RETRY_MS)

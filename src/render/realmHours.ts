@@ -1,3 +1,4 @@
+import { assetImage, assetUrl } from '../assets'
 import { REALM_ROOMS, type TownRoomId } from '../data/realmMap'
 import type { RealmHour } from '../data/realmEvents'
 import { canvasCache, context2d, createCanvas, drawable, fromStrings } from '../engine/pixelart'
@@ -160,8 +161,7 @@ const loadBerries = () => {
   if (berriesAsked) return
   berriesAsked = true
   for (const kind of BERRY_KINDS) {
-    const img = new Image()
-    img.src = `${import.meta.env.BASE_URL}assets/realm/arcade/berry-${kind}.png`
+    const img = assetImage(assetUrl(`realm/arcade/berry-${kind}.png`))
     void img.decode().then(() => void (drawable(img) && berries.push(img)), () => {})
   }
 }

@@ -1,3 +1,4 @@
+import { assetImage, assetUrl } from '../assets'
 import { clamp, dir8, type Dir8, type Vec } from '../engine/math'
 import { blitCentered, blitPacked, canvasCache, context2d, createCanvas, drawable, drawLoaded, ellipse, glow, onCanvasReset, readPixels } from '../engine/pixelart'
 import { EMOTES, type Emote } from './art'
@@ -119,7 +120,7 @@ const ART_FILES = {
 } as const satisfies Record<string, string>
 type ArtId = keyof typeof ART_FILES
 const ART_IDS = Object.keys(ART_FILES) as ArtId[]
-const artFile = (id: ArtId) => `${import.meta.env.BASE_URL}assets/shop/${ART_FILES[id]}.png`
+const artFile = (id: ArtId) => assetUrl(`shop/${ART_FILES[id]}.png`)
 
 /** The fountain's water frames for each stage (stage 2 keeps stage 1's fountain, stage 4 stage 3's). */
 const FOUNTAIN_FRAMES = {
@@ -185,8 +186,7 @@ const ART_RETRY_MS = 5000
 
 const loadArt = (ids: Iterable<ArtId>, tries = ART_TRIES) => {
   for (const id of ids) {
-    const img = new Image()
-    img.src = artFile(id)
+    const img = assetImage(artFile(id))
     const landed = () => {
       if (drawable(img)) arts.set(id, measure(img))
       else if (tries > 1) setTimeout(() => loadArt([id], tries - 1), ART_RETRY_MS)

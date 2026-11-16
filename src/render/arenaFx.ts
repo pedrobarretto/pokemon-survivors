@@ -1,3 +1,4 @@
+import { assetUrl } from '../assets'
 import { effectIn, type BurstKind, type EmoteAnim, type EffectOf, type Flourish, type TrailKind } from '../data/arenaEffects'
 import type { Look } from '../data/cosmetics'
 import { bodyOf } from '../data/bodies'
@@ -622,7 +623,7 @@ export const emoteAnimOf = (dex: number, anims: readonly EmoteAnim[]): EmoteAnim
   return anims.find((a) => has?.[a] !== undefined) ?? null
 }
 
-const emoteUrl = (dex: number, anim: EmoteAnim) => `${import.meta.env.BASE_URL}assets/pokemon/${dex}/emote/${anim}.png`
+const emoteUrl = (dex: number, anim: EmoteAnim) => assetUrl(`pokemon/${dex}/emote/${anim}.png`)
 
 /** Emote sheets by `dex:anim`: loaded, on their way (null) or failed (false). Freed when the match ends. */
 const sheets = new Map<string, Sheet | null | false>()

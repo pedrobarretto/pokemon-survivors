@@ -1,3 +1,4 @@
+import { assetImage, assetUrl } from '../assets'
 import { bodyOf, type Body } from '../data/bodies'
 import type { MegaForm } from '../data/megas'
 import type { LegendForm } from '../data/legends'
@@ -68,7 +69,8 @@ export type Form = { [K in keyof Manifest]: Manifest[K] extends { forms: infer F
  */
 export type FormKey = Form | MegaForm | LegendForm
 
-const base = (dex: Dex) => `${import.meta.env.BASE_URL}assets/pokemon/${dex}`
+/** A species' folder under `public/assets/` (`assetUrl`). */
+const base = (dex: Dex) => `pokemon/${dex}`
 /** Alternate forms live in a `<form>/` subfolder, shinies in a `shiny/` one below the form's, each with their own sheets. */
 const variantBase = (dex: Dex, shiny: boolean, form?: FormKey) => `${base(dex)}${form ? `/${form}` : ''}${shiny ? '/shiny' : ''}`
 /**
@@ -128,8 +130,7 @@ const pump = () => {
 const loadImage = (src: string, key: Key, rank: number) =>
   new Promise<HTMLImageElement>((resolve, reject) => {
     const start = () => {
-      const img = new Image()
-      img.src = src
+      const img = assetImage(src)
       // A browser that can't decode ahead (a rejected `decode` on an image that did load) still gets the image,
       // but never a broken or empty one, which would throw on every frame that draws it (`drawable`).
       const fail = () => Promise.reject(new Error(`Failed to load ${src}`))
@@ -590,7 +591,7 @@ const fetchSpecies = async (dex: Dex, shiny: boolean, form: FormKey | undefined,
   if (!anims || !walkMeta) throw new Error(`Missing ${shiny ? 'shiny ' : ''}${form ?? ''} sprites for #${dex}. Run npm run assets.`)
   const dir = variantBase(dex, shiny, form)
   const loadSheet = async (name: AnimName, meta: { frameWidth: number; frameHeight: number; durations: number[] }) =>
-    sheetOf(await loadImage(`${dir}/${name}.png`, key, rank), meta.frameWidth, meta.frameHeight, meta.durations)
+    sheetOf(await loadImage(assetUrl(`${dir}/${name}.png`), key, rank), meta.frameWidth, meta.frameHeight, meta.durations)
   // A missing animation plays the walk: the same sheet, not a second copy of its image.
   const walk = loadSheet('Walk', walkMeta)
   const [Walk, Idle, Hurt, Fly] = await Promise.allSettled([
@@ -630,9 +631,9 @@ const fetchSkin = async (skin: string, dex: Dex, shiny: boolean, key: Key, rank:
   const anims = manifestVariant(dex, false)?.anims
   const walkMeta = anims?.Walk
   if (!anims || !walkMeta) throw new Error(`Missing sprites for #${dex}`)
-  const dir = `${import.meta.env.BASE_URL}assets/skins/${skin}/${dex}${shiny ? '/shiny' : ''}`
-  const load = async (src: string, meta: { frameWidth: number; frameHeight: number; durations: number[] }) =>
-    sheetOf(await loadImage(src, key, rank), meta.frameWidth, meta.frameHeight, meta.durations)
+  const dir = `skins/${skin}/${dex}${shiny ? '/shiny' : ''}`
+  const load = async (path: string, meta: { frameWidth: number; frameHeight: number; durations: number[] }) =>
+    sheetOf(await loadImage(assetUrl(path), key, rank), meta.frameWidth, meta.frameHeight, meta.durations)
   // The sky's Fly is the species' own: the shiny's when SpriteCollab has it, else the normal colors'.
   const shinyFly = shiny ? manifestVariant(dex, true)?.anims.Fly : undefined
   const fly = shinyFly ?? anims.Fly
@@ -1007,18 +1008,18 @@ export const sprites = (dex: Dex, shiny = false, form?: FormKey) => {
 }
 
 export const portraitUrl = (dex: Dex, shiny = false) =>
-  `${variantBase(dex, shiny && MANIFEST[String(dex)]?.shiny?.portrait === true)}/portrait.png`
+  assetUrl(`${variantBase(dex, shiny && MANIFEST[String(dex)]?.shiny?.portrait === true)}/portrait.png`)
 
 /** A form's own portrait (`FORM_PORTRAITS` in `scripts/dex.mjs`), else the species'. Shown whether or not the form is open: screens tease a locked one. */
 export const formPortraitUrl = (dex: Dex, form: FormKey) => {
   const v = MANIFEST[String(dex)]?.forms?.[form]
-  return v && 'portrait' in v && v.portrait === true ? `${variantBase(dex, false, form)}/portrait.png` : portraitUrl(dex)
+  return v && 'portrait' in v && v.portrait === true ? assetUrl(`${variantBase(dex, false, form)}/portrait.png`) : portraitUrl(dex)
 }
 
 /** A species' Walk sheet and frame size, for DOM art drawn from its first frame (facing down). */
 export const walkSheet = (dex: Dex) => {
   const walk = MANIFEST[String(dex)]?.anims.Walk
-  return walk && { url: `${base(dex)}/Walk.png`, fw: walk.frameWidth, fh: walk.frameHeight }
+  return walk && { url: assetUrl(`${base(dex)}/Walk.png`), fw: walk.frameWidth, fh: walk.frameHeight }
 }
 
 /** Sprites if already loaded, without throwing (menus draw progressively). Unlike `sprites`, asking doesn't keep them: drawing does. */
@@ -1026,7 +1027,7 @@ export const loadedSprites = (dex: Dex, shiny = false): SpeciesSprites | undefin
 
 /** A species' cry, or its form's own (Megas) when PokeAPI has one. */
 export const cryUrl = (dex: Dex, form?: FormKey) =>
-  form && !sheetsLocked(dex, form) && MANIFEST[String(dex)]?.formCries?.includes(form) ? `${base(dex)}/${form}/cry.ogg` : `${base(dex)}/cry.ogg`
+  form && !sheetsLocked(dex, form) && MANIFEST[String(dex)]?.formCries?.includes(form) ? assetUrl(`${base(dex)}/${form}/cry.ogg`) : assetUrl(`${base(dex)}/cry.ogg`)
 
 /** True when a form has sheets of its own; without them `sprites` draws the normal form. */
 export const hasSheets = (dex: Dex, form: FormKey) => manifestVariant(dex, false, form) !== undefined

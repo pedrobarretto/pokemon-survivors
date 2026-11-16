@@ -1,3 +1,4 @@
+import { assetUrl } from '../assets'
 import type { Locale } from '../i18n'
 import { suggest, type NotFoundIndex, type Walker } from './notFound'
 import { startRoute404, type Exit, type SignIcon } from './route404'
@@ -15,7 +16,7 @@ const EXIT_ICONS: Readonly<Record<string, SignIcon>> = { play: 'ball', pokedex: 
 /** The walker used when the URL meant no Pokémon: the site's own Charmander. */
 const DEFAULT_SLUG = 'charmander'
 
-const sprite = ({ dex, walk }: Walker) => ({ src: `/assets/pokemon/${dex}/Walk.png`, sheet: walk })
+const sprite = ({ dex, walk }: Walker) => ({ src: assetUrl(`pokemon/${dex}/Walk.png`), sheet: walk })
 
 const indexEl = document.getElementById('nf-index')
 const index: NotFoundIndex | null = indexEl?.textContent ? JSON.parse(indexEl.textContent) : null
@@ -51,7 +52,7 @@ if (index) {
     const name = mean.querySelector('b')
     if (name) name.textContent = meant.name
     const portrait = mean.querySelector('img')
-    if (portrait && meant.dex !== null) portrait.src = `/assets/pokemon/${meant.dex}/portrait.png`
+    if (portrait && meant.dex !== null) portrait.src = assetUrl(`pokemon/${meant.dex}/portrait.png`)
     else portrait?.remove()
     mean.hidden = false
   }
