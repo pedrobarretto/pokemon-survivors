@@ -2843,13 +2843,13 @@ const weatherToast = (next: WeatherId, prev: WeatherId) => {
 
 /**
  * Where the music plays, for the Rádio (`radioTheme`): a menu (the results and the
- * Poké Realm's rooms too), a run, or a fight (a boss, a rift, a legend's domain,
- * and a Realm mini game, whose theme is part of the game, like the Safári's battles).
+ * Poké Realm's rooms too), a run, or a fight (a boss, a rift, a legend's domain, a
+ * Tera Raid's den, and a Realm mini game, whose theme is part of the game, like the Safári's battles).
  */
 const musicPlace = (r: Run | null): MusicPlace => {
   if (!r) return realmGame() ? 'fight' : 'menu'
   if (r.game.phase === 'gameover' || r.game.phase === 'victory') return 'menu'
-  return r.game.rift.arena !== null || r.game.bossId !== null ? 'fight' : 'run'
+  return r.game.rift.arena !== null || r.game.raid.arena !== null || r.game.bossId !== null ? 'fight' : 'run'
 }
 
 /**
@@ -2865,7 +2865,7 @@ const themeFor = (r: Run | null): ThemeId | null => {
   return radioOver(auto, musicPlace(r)) ?? auto
 }
 
-/** The game's own music: menus play the lobby's pick (`lobbyTheme`; the Poké Realm its own), a run its biome's theme, and a living boss takes over until it falls. */
+/** The game's own music: menus play the lobby's pick (`lobbyTheme`; the Poké Realm its own), a run its biome's theme, a raid's den and the Dojo theirs (`raidDojoMusic.ts`), and a living boss takes over until it falls. */
 const gameTheme = (r: Run | null): ThemeId => {
   // The Poké Realm plays its own: the mini game open, else the room (`realmMusic.ts`).
   const realm = r ? null : realmTheme()
@@ -2876,6 +2876,10 @@ const gameTheme = (r: Run | null): ThemeId => {
   // A legendary's domain plays its crossing's theme, then its own from the moment it shows itself.
   const domain = r.game.rift.arena?.domain
   if (domain) return domainTheme(domain)
+  // A Tera Raid's den plays its own from the way in to the way out, its giant (the run's `bossId`) included.
+  if (r.game.raid.arena) return 'teraRaid'
+  // The Dojo trains to its own, a Torre trial to the Torre's.
+  if (r.game.training) return r.game.training.trial ? 'kubfuTower' : 'dojo'
   // A rift arena keeps the boss theme until the player is back, loot window included; a place plays its own.
   const inside = r.game.place.inside
   // A wave legendary plays its own theme from its entrance on.

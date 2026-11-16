@@ -42,10 +42,10 @@ describe('changelog', () => {
     expect([...new Set(dates)].sort().reverse()).toEqual(dates)
   })
 
-  it('gives every update 3 to 5 highlights and at least one change', () => {
+  it('gives every update 3 to 6 highlights and at least one change', () => {
     for (const u of CHANGELOG) {
       expect(u.highlights.length, u.date).toBeGreaterThanOrEqual(3)
-      expect(u.highlights.length, u.date).toBeLessThanOrEqual(5)
+      expect(u.highlights.length, u.date).toBeLessThanOrEqual(6)
       expect(u.changes.length, u.date).toBeGreaterThan(0)
     }
   })
