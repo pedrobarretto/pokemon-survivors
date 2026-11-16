@@ -1,3 +1,4 @@
+import { assetUrl } from '../../assets'
 import { BOSS_PATTERNS, BOSS_PHASES, bossKit, type BossPattern } from '../../data/bosses'
 import { ENEMIES, type EnemyDef, type EnemyId } from '../../data/enemies'
 import { RIFT, RIFT_LEGENDS } from '../../data/rifts'
@@ -31,7 +32,7 @@ import { createSpriteCss, spriteScale } from '../spriteCss'
 
 export type SpriteCss = ReturnType<typeof createSpriteCss>
 
-const asset = (dex: number, file: string, shiny = false) => `/assets/pokemon/${dex}/${shiny ? 'shiny/' : ''}${file}`
+const asset = (dex: number, file: string, shiny = false) => assetUrl(`pokemon/${dex}/${shiny ? 'shiny/' : ''}${file}`)
 
 const dexNo = (dex: number) => `#${String(dex).padStart(3, '0')}`
 

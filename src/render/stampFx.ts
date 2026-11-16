@@ -1,3 +1,4 @@
+import { assetUrl } from '../assets'
 import { artImages, canvasCache } from '../engine/pixelart'
 import { sceneStamp, type StampLook } from './stampArt'
 import type { StampId } from '../data/realmStamps'
@@ -22,7 +23,7 @@ const STAMPER_H = 32
 /** The stamp over a head is drawn this big, world px: a poster-sized one would hide the room. */
 const SHOWN = 32
 
-const stamperArt = artImages<'stamper'>(() => `${import.meta.env.BASE_URL}assets/shop/icons/stamp.png`)
+const stamperArt = artImages<'stamper'>(() => assetUrl('shop/icons/stamp.png'))
 const STAMPER = canvasCache<'stamper', HTMLCanvasElement>('shared')
 
 const stamper = () => {

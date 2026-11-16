@@ -1,3 +1,4 @@
+import { assetImage, assetUrl } from '../assets'
 import { dir8, type Dir8, type Vec } from '../engine/math'
 import { blitCentered, blitPacked, context2d, createCanvas, drawable, drawLoaded, ellipse, lazy } from '../engine/pixelart'
 import { EMOTES } from './art'
@@ -42,8 +43,7 @@ const loadDojoArt = () => {
 
 /** Loads one of the hall's PNGs into `arts` (replacing the one there once it lands). */
 const loadArt = (id: ArtId) => {
-  const img = new Image()
-  img.src = `${import.meta.env.BASE_URL}assets/dojo/${ART_FILES[id]}.png`
+  const img = assetImage(assetUrl(`dojo/${ART_FILES[id]}.png`))
   const landed = () => void (drawable(img) && arts.set(id, { img, w: img.width, h: img.height }))
   void img.decode().then(landed, landed)
 }

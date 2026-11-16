@@ -1,3 +1,4 @@
+import { assetUrl } from '../../assets'
 import { CREATOR_IDS, CREATOR_VIDEOS, creatorOf, embedUrl, PLATFORM_IDS, PLATFORMS, videoOf, type Creator } from '../../data/creators'
 import { VIDEO_META } from '../../data/creatorVideos.generated'
 import type { Locale } from '../../i18n'
@@ -38,14 +39,14 @@ export const creatorsPage = (locale: Locale) => {
         <img src="${meta.thumb}" alt="" loading="lazy" decoding="async" /><span class="video-play-icon" aria-hidden="true"></span>
       </a>
       <h3 lang="${SITE_MESSAGES[who.lang].lang.tag}">${meta.title}</h3>
-      <p class="video-by"><img src="/assets/pokemon/${who.partner.dex}/portrait.png" width="24" height="24" alt="" /> <b>${who.name}</b> · ${c.langs[who.lang]}</p>
+      <p class="video-by"><img src="${assetUrl(`pokemon/${who.partner.dex}/portrait.png`)}" width="24" height="24" alt="" /> <b>${who.name}</b> · ${c.langs[who.lang]}</p>
       <p class="video-foot">${meta.date && html`<time class="note" datetime="${meta.date}">${longDate(meta.date.slice(0, 10), m)}</time>`}<a href="${url}" target="_blank" rel="noopener">${c.watchOn(PLATFORMS[video.platform].name)} ↗</a></p>
     </article>`
   })
   const creatorCards = CREATOR_IDS.map((id) => {
     const who = creatorOf(id)
     return html`<li class="box creator-card">
-      <img class="portrait" src="/assets/pokemon/${who.partner.dex}/portrait.png" width="64" height="64" alt="${who.partner.name}" />
+      <img class="portrait" src="${assetUrl(`pokemon/${who.partner.dex}/portrait.png`)}" width="64" height="64" alt="${who.partner.name}" />
       <div><h3>${who.name}</h3><p class="note">${c.langs[who.lang]}</p><p class="links">${platformLinks(who.links)}</p></div>
     </li>`
   })
