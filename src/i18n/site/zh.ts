@@ -571,7 +571,7 @@ export const siteZh: SiteMessages = {
       whereHead: '在哪裡擊敗',
       winsHead: '捕捉條件',
       wins: (n: number) => `${n} 場勝利`,
-      pathWhere: { zygarde: '單人遊戲中的 Zygarde Cells 與 Cores', solgaleo: 'Lanturn 的星空研究（白天）', lunala: 'Lanturn 的星空研究（夜晚）', kubfu: 'Machoke 的道館之塔', meltan: 'Poké Realm 的挖掘場' },
+      pathWhere: { cobalion: '月見山或白銀山的決鬥，單人遊戲（防禦考驗）', terrakion: '沙漠或煙囪山的決鬥，單人遊戲（力量考驗）', virizion: '常青森林或1號道路的決鬥，單人遊戲（速度考驗）', zygarde: '單人遊戲中的 Zygarde Cells 與 Cores', solgaleo: 'Lanturn 的星空研究（白天）', lunala: 'Lanturn 的星空研究（夜晚）', kubfu: 'Machoke 的道館之塔', meltan: 'Poké Realm 的挖掘場' },
       need: { zygarde: 'Cube裡集滿 10 個 Zygarde Cells', solgaleo: '養大 Cosmog（24 場，白天）', lunala: '養大 Cosmog（24 場，夜晚）', kubfu: '道館之塔的 3 層', meltan: '打開挖掘場的 Mystery Box', regigigas: '在神殿勝利 1 場（已捕捉 Regi 三柱）', diancie: '挖出挖掘場的 Pink Diamond' },
       innateHead: '固有特性',
       opensHead: '傳說招式',
