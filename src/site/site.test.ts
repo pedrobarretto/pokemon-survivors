@@ -14,7 +14,8 @@ describe('site pages', () => {
       for (const l of LOCALE_IDS) expect(doc).toContain(`hreflang="${HREFLANG[l]}" href="${absolute(page.paths[l])}"`)
       expect(doc.match(/<h1>/g)).toHaveLength(1)
     }
-  })
+    // Renders every page of the site: over a second alone, past 5 s on a busy CI runner.
+  }, 30_000)
 
   it('are all in the sitemap, along with the game pages', () => {
     const xml = sitemap()
