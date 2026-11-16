@@ -1,4 +1,6 @@
 import { CAVE, GRAVEYARD, HIDDEN_PLACE_IDS, isHiddenPlace, PLACE_IDS, type PlaceId } from '../data/places'
+import { HIDEOUT } from '../data/rocketHideout'
+import { descendHideout, stageLair } from './hideout'
 import { descendCave } from './cave'
 import { openHidden } from './hidden'
 import { openEntrance } from './placeEntrance'
@@ -27,10 +29,26 @@ export const placeDevTools = (game: () => Game | undefined) => {
       playing((g) => {
         for (let i = 0; i < times; i++) {
           const inside = g.place.inside
-          if (inside?.id !== 'cave' || inside.state.floor >= CAVE.floors) break
-          descendCave(g, inside)
+          if (inside?.id === 'hideout' && inside.state.floor < HIDEOUT.floors) descendHideout(g, inside)
+          else if (inside?.id !== 'cave' || inside.state.floor >= CAVE.floors) break
+          else descendCave(g, inside)
         }
-        return g.place.inside?.id === 'cave' ? g.place.inside.state.floor : 'ps: not in the cave'
+        const inside = g.place.inside
+        return inside?.id === 'cave' || inside?.id === 'hideout' ? inside.state.floor : 'ps: not in the cave or the Hideout'
+      }),
+    /**
+     * The Rocket Hideout: `ps.hideout()` steps in, `ps.hideout('lair')` straight into the boss's room (Giovanni, then Persian),
+     * `ps.hideout('persian')` or `ps.hideout('mewtwo')` that boss's fight now; `ps.bossHp(0.35)` then reaches Mewtwo's last phase.
+     */
+    hideout: (to?: 'lair' | 'persian' | 'mewtwo') =>
+      playing((g) => {
+        if (g.place.inside?.id !== 'hideout') enterPlace(g, 'hideout', Math.round(g.player.x), Math.round(g.player.y))
+        const inside = g.place.inside
+        if (inside?.id !== 'hideout') return 'ps: no Hideout'
+        if (to) while (inside.state.floor < HIDEOUT.floors) descendHideout(g, inside)
+        if (to === 'persian' || to === 'mewtwo') stageLair(g, inside, to === 'mewtwo' ? 'shadowMewtwo' : 'giovanniPersian')
+        inside.intro = 0
+        return inside.state.stage ?? `B${inside.state.floor + 1}F`
       }),
     /** Opens a hidden zone's entrance 70 px to the right of the player, unannounced (`ps.hidden('underground')`; the biome's pick without an argument); `found` marks it found at once. */
     hidden: (id?: PlaceId, found = false) => {

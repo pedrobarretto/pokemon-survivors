@@ -1,6 +1,11 @@
 import type { Difficulty } from '../game/difficulty'
 import { DOMAIN_PHASES, type RetinueRole } from './domains'
 import { WAVE_LEGEND_PHASES } from './legendBosses'
+import { PERSIAN_PATTERNS, SHADOW_MEWTWO_PHASES } from './rocketHideout'
+import { SWORD_PHASES } from './quests'
+import { RUSH_PHASES } from './rush'
+import { OGERPON_RAID_PATTERNS } from './mythicals'
+import { FORCE_BOSS_PHASES } from './forces'
 import type { EnemyId } from './enemies'
 
 /** How an enemy hazard looks (and sounds when it lands). */
@@ -12,6 +17,8 @@ export type HazardVisual =
   | SpitVisual
   /** The Eon duo's colors: Latias's red Mist Ball, Latios's blue Luster Purge (both Psychic). */
   | 'mist' | 'luster'
+  /** Palkia's Spacial Rend: tears in space, pearl and pink (Dragon). */
+  | 'space'
 
 export type SpitVisual = 'fireball' | 'bubble' | 'sludge' | 'spark' | 'seed' | 'orb'
 
@@ -194,6 +201,8 @@ export type BossPhase = {
   ultimate?: BossUltimate
   steer?: BossSteer
   form?: string
+  /** The form it wears instead in a Nightmare fight (`phaseForm`): Dialga's last phase turns Primal. */
+  nightmareForm?: string
   shift?: number
   /** The boss holds on at the phase's end (and can't fall in the last one) until its ultimate has played once: every phase shows its signature, however fast it's hit. */
   hold?: true
@@ -210,12 +219,19 @@ export const PHASE_SHIFT = 1.8
 
 /**
  * Bosses that fight in phases, each with its own patterns, ultimate and look:
- * the rift legendaries with a domain (`data/domains.ts`), and any wave boss
- * given phases here.
+ * the rift legendaries with a domain (`data/domains.ts`), the wave legendaries
+ * (`data/legendBosses.ts`), the Swords of Justice (`data/quests.ts`), the
+ * legends only Hoopa's rings bring and Hoopa itself (`data/rush.ts`), the
+ * Forces of Nature there (`data/forces.ts`), and any
+ * wave boss given phases here.
  */
 export const BOSS_PHASES: Partial<Record<EnemyId, readonly BossPhase[]>> = {
   ...DOMAIN_PHASES,
   ...WAVE_LEGEND_PHASES,
+  shadowMewtwo: SHADOW_MEWTWO_PHASES,
+  ...SWORD_PHASES,
+  ...RUSH_PHASES,
+  ...FORCE_BOSS_PHASES,
 }
 
 /** Every attack a boss has, across its phases (ultimates' steps included), for the guide and the Pokédex. */
@@ -290,6 +306,21 @@ export const BOSS_DIFFICULTY = {
  * player who keeps away (`far`), an attack its enrage unlocks (`below: 0.5`) and
  * one more on Nightmare (`from: 'nightmare'`).
  */
+/**
+ * A Tera Raid giant's kit (`RAID_BOSSES` in `data/tera.ts`), from its own two
+ * looks: strikes along the player's path, a ring out of it, a slam at its feet,
+ * and a fan of shots or (`beam`) a sweeping beam. They fire as written (a raid
+ * boss fights in no stance); the stars and the clock scale what they do (`raidHarm`).
+ */
+const raidKit = (a: HazardVisual, b: HazardVisual, big: 'volley' | 'beam' = 'volley'): readonly BossPattern[] => [
+  { kind: 'strikes', every: 3.6, target: 'player', count: 4, spread: 54, radius: 14, delay: 1.1, damage: 18, visual: a, lead: 1 },
+  { kind: 'ring', every: 4.4, count: 12, speed: 66, radius: 5, damage: 15, visual: b, gap: 0.9 },
+  { kind: 'strikes', every: 6.5, target: 'self', count: 1, spread: 0, radius: 54, delay: 1.3, damage: 22, visual: 'slam' },
+  big === 'beam'
+    ? { kind: 'beam', every: 7.5, source: 'boss', count: 1, spread: 0, sweep: 1.1, windup: 1.1, duration: 1.4, width: 14, length: 260, damage: 18, visual: a }
+    : { kind: 'volley', every: 5.2, count: 5, arc: 0.9, speed: 120, windup: 0.9, radius: 5, damage: 15, visual: b },
+]
+
 export const BOSS_PATTERNS: Partial<Record<EnemyId, readonly BossPattern[]>> = {
   /** Onix: Rock Throw along your path, a slam up close, Dig under you from afar, Rock Tomb rings once enraged. */
   onix: [
@@ -463,11 +494,39 @@ export const BOSS_PATTERNS: Partial<Record<EnemyId, readonly BossPattern[]>> = {
     { kind: 'volley', every: 4.4, count: 3, arc: 0.6, speed: 86, windup: 1, radius: 7, damage: 10, visual: 'shadow', sleep: 1.1 },
     { kind: 'strikes', every: 4, target: 'player', count: 4, spread: 60, radius: 15, delay: 1.1, damage: 20, visual: 'shadow' },
   ],
+  /** Palkia (its old arena, in co-op): Spacial Rend tears across the hall, Aqua Tail rings and Hydro Pump on the player. */
+  palkia: [
+    { kind: 'beam', every: 4.6, source: 'edge', count: 3, spread: 60, windup: 1.2, duration: 0.45, width: 11, length: 420, damage: 22, visual: 'space' },
+    { kind: 'ring', every: 3.6, count: 16, speed: 60, radius: 5, damage: 18, visual: 'water' },
+    { kind: 'strikes', every: 4.2, target: 'player', count: 3, spread: 50, radius: 16, delay: 1.1, damage: 22, visual: 'water' },
+  ],
   /** Spiritomb, the graveyard's boss (`data/places.ts`): Shadow Ball rings, Hex on the player and Dark Pulse around itself. */
   spiritomb: [
     { kind: 'ring', every: 3.4, count: 10, speed: 68, radius: 5, damage: 16, visual: 'shadow' },
     { kind: 'strikes', every: 4, target: 'player', count: 3, spread: 46, radius: 14, delay: 1.1, damage: 18, visual: 'shadow' },
     { kind: 'strikes', every: 6, target: 'self', count: 1, spread: 0, radius: 46, delay: 1.3, damage: 20, visual: 'shadow' },
   ],
+  /** Giovanni's Persian, the Rocket Hideout's first lair boss (`data/rocketHideout.ts`). */
+  giovanniPersian: PERSIAN_PATTERNS,
   // Arceus, the reaper, fights in phases too (`data/legendBosses.ts`).
+  // The Tera Raids' giants (`data/tera.ts`): each its own pair of visuals (and typings), whatever its Tera type,
+  // which brings the crystal storm on top (`game/teraRaid.ts`). Their hits grow with the stars and the clock (`raidHarm`).
+  raidCharizard: raidKit('fire', 'aero'),
+  raidBlastoise: raidKit('water', 'water', 'beam'),
+  raidVenusaur: raidKit('grass', 'poison'),
+  raidGengar: raidKit('shadow', 'poison'),
+  raidGyarados: raidKit('water', 'dragon', 'beam'),
+  raidDragonite: raidKit('dragon', 'aero'),
+  raidTyranitar: raidKit('rock', 'shadow'),
+  raidGardevoir: raidKit('psychic', 'mist'),
+  raidMetagross: raidKit('steel', 'psychic', 'beam'),
+  raidGarchomp: raidKit('dragon', 'rock'),
+  raidLucario: raidKit('slam', 'steel'),
+  raidHydreigon: raidKit('shadow', 'dragon', 'beam'),
+  raidVolcarona: raidKit('fire', 'grass'),
+  raidDragapult: raidKit('dragon', 'shadow'),
+  raidTinkaton: raidKit('steel', 'mist'),
+  terapagos: raidKit('judgment', 'rock', 'beam'),
+  // Ogerpon's own raid (`data/mythicals.ts`): the crystal storm comes in its mask's type.
+  ogerpon: OGERPON_RAID_PATTERNS,
 }

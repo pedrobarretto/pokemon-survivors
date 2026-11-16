@@ -1,4 +1,5 @@
 import { chance, type Rng } from '../engine/rng'
+import { NO_ROAMERS, NO_RUSH, parseRoamers, parseRushBest, type Roamers, type RushBest } from './questSave'
 import { ACHIEVEMENTS, MEDAL_EGG, MEDAL_REWARD, type AchievementId, type GiftTitleId, type TitleId } from '../data/achievements'
 import { parseAttempt, type Attempt } from './attempt'
 import { NO_ACHIEVEMENTS, parseAchievements, parseGiftTitles, parseTitle, recordAchievements, recordHatchAchievements, type AchievementsSave } from './achievements'
@@ -17,6 +18,9 @@ import { learnTms, NO_TMS, parseTms, type TmCase } from './tmShelf'
 import { parseCaps, parseEvoItems, type Caps } from './evoItems'
 import { parseCaravan, type CaravanSave } from './caravan'
 import { parseBuilds, type Builds } from './builds'
+import type { FindId } from '../data/seasonOneUnlocks'
+import { NO_RESEARCH, parseFinds, parseResearch, recordResearch, type ResearchSave } from './seasonOneUnlocks'
+import { NO_PATHS, parsePaths, recordCosmog, type PathsSave } from './legendPaths'
 import type { EvoItemId } from '../data/shop'
 import { isRecord, wholeNumber } from './parse'
 import { parseRibbons, type Ribbon } from './ribbons'
@@ -34,6 +38,8 @@ import type { RunSummary } from './tally'
 import type { Game } from './types'
 import * as dm from '../engine/dmath'
 import { NO_MYTHICAL_PITY, parseMythicalPity, type MythicalPity } from './mythicalHunt'
+import { NO_SHADOWS, parseShadows, type ShadowSave } from './shadow'
+import { NO_HIDEOUT, parseHideout, type HideoutSave } from './hideoutPass'
 
 /**
  * Meta progression: Poké Dollars (₽) earned across runs and the Poké Mart's
@@ -165,6 +171,10 @@ export type Save = {
   halloween: HalloweenSave
   /** Wins toward capturing each legend for the Legend mode (`game/capture.ts`); its shiny lives in `shinyStarters`. */
   legends: Captures
+  /** Each roaming lake legend's share of HP left, carried from run to run (`game/questSave.ts`). */
+  roamers: Roamers
+  /** Hoopa's Rings: each level's best time (`game/questSave.ts`). */
+  rush: RushBest
   /** Finales played and how many had been when a mythical last fell (`game/mythicalHunt.ts`). */
   mythicalPity: MythicalPity
   /** The TM case (`game/tmShelf.ts`): TMs bought at the shop, the ones armed for the next runs and the TM moves runs ever taught. */
@@ -179,6 +189,16 @@ export type Save = {
   attempt: Attempt | null
   /** Builds planned at the Dojo (`game/builds.ts`), one per family: the level-up screen marks the cards that follow one. */
   builds: Builds
+  /** Temporada 1's map encounters ever made (`game/seasonOneFinds.ts`): each brings its family as a gift. */
+  finds: readonly FindId[]
+  /** Temporada 1's research chains (`game/seasonOneUnlocks.ts`), tracked from run results. */
+  research: ResearchSave
+  /** Shadow Pokémon owned (`game/shadow.ts`): each one's heart gauge, purified or not, and the Normal/Shadow pick. */
+  shadows: ShadowSave
+  /** The Rocket Hideout (`game/hideoutPass.ts`): the poster's pass and Giovanni beaten. */
+  hideout: HideoutSave
+  /** The legend paths (`game/legendPaths.ts`): the Zygarde Cube, Cosmog, the Torre's trials and Meltan's Hex Nuts. */
+  paths: PathsSave
 }
 
 /** The branch each branching family took in its latest run that got there. */
@@ -224,6 +244,8 @@ export const EMPTY_SAVE: Save = {
   clears: {},
   halloween: NO_HALLOWEEN,
   legends: NO_CAPTURES,
+  roamers: NO_ROAMERS,
+  rush: NO_RUSH,
   mythicalPity: NO_MYTHICAL_PITY,
   tms: NO_TMS,
   evo: [],
@@ -232,6 +254,11 @@ export const EMPTY_SAVE: Save = {
   caravan: { week: '', bought: [], haggled: false },
   attempt: null,
   builds: {},
+  finds: [],
+  research: NO_RESEARCH,
+  shadows: NO_SHADOWS,
+  hideout: NO_HIDEOUT,
+  paths: NO_PATHS,
 }
 
 /** Brings any older save shape up to the current version. Add a case per schema bump. */
@@ -300,6 +327,8 @@ export const parseSaveData = (json: unknown): Save => {
     clears: mergeClears(pastClears(achievements.lifetime), parseClears(data.clears)),
     halloween: parseHalloween(data.halloween),
     legends: parseCaptures(data.legends),
+    roamers: parseRoamers(data.roamers),
+    rush: parseRushBest(data.rush),
     mythicalPity: parseMythicalPity(data.mythicalPity),
     tms: parseTms(data.tms),
     evo: parseEvoItems(data.evo),
@@ -307,6 +336,11 @@ export const parseSaveData = (json: unknown): Save => {
     caravan: parseCaravan(data.caravan),
     attempt: parseAttempt(data.attempt),
     builds: parseBuilds(data.builds),
+    finds: parseFinds(data.finds),
+    research: parseResearch(data.research),
+    shadows: parseShadows(data.shadows),
+    hideout: parseHideout(data.hideout),
+    paths: parsePaths(data.paths),
   }
 }
 
@@ -430,14 +464,23 @@ const settle = (save: Save, m: Progress, a: Medals, eggRoom: number) => {
 
 /**
  * Records a run (or what changed since `before`, the snapshot already recorded
- * for it) into the missions, lifetime records, clears, the Caça aos Fantasmas
- * and the TM shelf's list of TMs found in runs, and pays the rewards. `save`
+ * for it) into the missions, lifetime records, clears, the Caça aos Fantasmas,
+ * the TM shelf's list of TMs found in runs and Cosmog (by the hour of `date`
+ * on the device's clock, `recordCosmog`), and pays the rewards. `save`
  * already has the run's Pokédex log; `eggRoom` is how many reward eggs the run
  * can still take (`EGGS.perRun` minus the eggs it found or got already).
  */
 export const recordRun = (save: Save, summary: RunSummary, before: RunSummary | null, date: Date, eggRoom: number = EGGS.perRun) => {
   const m = recordMissions(save.missions, summary, before, date)
-  const ticked = { ...save, clears: addClear(save.clears, summary), halloween: recordHunt(save.halloween, summary.nightBosses), tms: learnTms(save.tms, summary.tms) }
+  const cosmog = recordCosmog(save.paths.cosmog, { time: summary.time, victory: summary.victory, rift: summary.legends.length > 0 }, date.getHours(), before === null)
+  const ticked = {
+    ...save,
+    clears: addClear(save.clears, summary),
+    halloween: recordHunt(save.halloween, summary.nightBosses),
+    tms: learnTms(save.tms, summary.tms),
+    research: recordResearch(save.research, summary, before),
+    paths: { ...save.paths, cosmog },
+  }
   return settle(ticked, m, recordAchievements(save.achievements, summary, before, m.completed.length, save.dex), eggRoom)
 }
 

@@ -8,7 +8,12 @@ import { megasOf } from '../data/megas'
 import { bodyOf } from '../data/bodies'
 import { DIFFICULTY_IDS, type Difficulty } from '../game/difficulty'
 import { incubatorSlots, isReady } from '../game/eggs'
-import { isLegend, legendEvent, legendFestival, LEGENDS, REGULAR_LEGENDS, type LegendId } from '../data/legends'
+import { eggLegend, giftLegend, isRoamer, isLegend, isUltraLegend, LEGEND_IDS, legendEvent, legendFestival, legendPath, LEGENDS, REGULAR_LEGENDS, type LegendId } from '../data/legends'
+import { ULTRA_BEASTS } from '../data/ultraBeasts'
+import { ultraCaptured } from '../game/ultraGifts'
+import { beastBallIcon } from '../render/ultraArt'
+import { rushOpen } from '../game/rush'
+import { openRushSheet, rushBanner, rushPool } from './rush'
 import { HALLOWEEN } from '../data/halloween'
 import { brasiliaDay } from '../game/day'
 import { claimOpen, festivalById, festivalEnd, shownLegends } from '../game/festival'
@@ -16,7 +21,7 @@ import { halloweenStanding } from '../game/halloween'
 import { festivalIcon } from './festival'
 import { eventLegendIcon } from '../render/halloweenArt'
 import { ABILITIES } from '../data/abilities'
-import { canPlay, capturedCount, isCaptured, legendSource, stillMissing, winsNeeded } from '../game/capture'
+import { canPlay, capturedCount, isCaptured, legendSource, questSource, stillMissing, winsNeeded } from '../game/capture'
 import { armBlock, armedItems, armItem, BAG_ITEM_IDS, bagCount, type BagItem } from '../game/bag'
 import { SHOP_LEVELS } from '../data/shop'
 import { capLevel } from '../game/evoItems'
@@ -25,7 +30,12 @@ import { armedTms, armTm, tmLimit, type ShelfTm } from '../game/tmShelf'
 import { ownsShiny, pickShinyForm, playsShiny } from '../game/shinyPicks'
 import { dieIcon, eggIcon, moveIcon, PICKUPS, sparkleIcon, trophyIcon } from '../render/art'
 import { capPips, shopIcon } from './shopIcons'
-import { cryUrl, drawPokemon, fitSprites, loadedSprites, loadSpecies, portraitUrl, skinSprites, walkSheet } from '../render/sprites'
+import { lockedWhere } from './research'
+import { cryUrl, drawPokemon, fitSprites, loadedFormSprites, loadedSprites, loadSpecies, portraitUrl, skinSprites, sprites, walkSheet } from '../render/sprites'
+import { VIVILLON_DEX, VIVILLON_PATTERNS } from '../data/vivillon'
+import { devicePattern } from '../vivillonRegion'
+import { pathOfLegend, pathSheet } from './legendPaths'
+import type { PathId } from '../data/legendPaths'
 import { equip, shownOn, skinsOf, takeOff, wearing } from '../arena/gemShop'
 import { cosmeticPrice, skinFor } from '../data/cosmetics'
 import { SKIN_LINES, SKINS, type SkinId, type SkinLine } from '../data/skinCatalog'
@@ -34,11 +44,15 @@ import { localLook } from '../render/looks'
 import { gemAmount, itemName } from './gemBits'
 import { formatDay, formatPokeDollarsShort, t } from '../i18n'
 import { h, later, rich } from './dom'
-import { loadSave, today, updateSave } from './save'
+import { loadSave, today, ultraToday, updateSave } from './save'
 import { typeBadge, type Screen } from './screens'
 import { actionBar, backButton, gearButton, segmented, shellScreen, topBar, walletChip } from './shell'
 import { detailsSheet, evoLine, shinyPicker, statBars } from './partnerDetails'
-import { stepGrid, type Step } from './gridNav'
+import { shadowRow } from './shadowPick'
+import { runVariant, SHADOW_SHEETS } from '../game/shadow'
+import { drawShadowAura } from '../render/shadowAura'
+import { isRegion, nationalDex, REGION_IDS, REGIONS as FORM_REGIONS, type RegionId } from '../data/regionalForms'
+import { stepGrid, stepSections, type Step } from './gridNav'
 
 /**
  * Phones held upright get the transposed roster (a row per region, three
@@ -59,6 +73,19 @@ const BAG_KEYS: Partial<Record<BagItem, string>> = { lure: 'KeyC', incense: 'Key
 /** How many hatched families the desktop's "Hatched" teaser row shows before "+n". */
 const TEASER = 7
 
+/**
+ * The Eggs tab's sections, each starting a new row: the families of the
+ * regular eggs, then each region's forms under its header (the families its
+ * Ovo de Viagem hatches; most have no playable base form to sit beside).
+ */
+const EGG_SECTIONS: readonly { region: RegionId | null; ids: readonly HatchlingId[] }[] = [
+  { region: null, ids: HATCHLING_IDS.filter((id) => !isRegion(HATCHLINGS[id].egg)) },
+  ...REGION_IDS.map((region) => ({ region, ids: HATCHLING_IDS.filter((id) => HATCHLINGS[id].egg === region) })),
+].filter((section) => section.ids.length > 0)
+
+/** The Eggs tab's families in grid order (the sections one after another): what its arrows walk. */
+const EGG_ORDER = EGG_SECTIONS.flatMap((section) => section.ids)
+
 /** The roster's tabs, in Tab / E order: the starters, the egg families and the legends (Legend mode). */
 const TABS = ['starters', 'eggs', 'legends'] as const
 
@@ -75,6 +102,8 @@ type SelectActions = {
   incubator: () => void
   /** The Boutique's Skins on a skin not owned yet (the skins row); without it (co-op, the Dojo) the row doesn't show. */
   boutique?: (skin: SkinId) => void
+  /** Hoopa's Rings with the Pokémon selected, at a level (the Lendários tab's banner, H); without it (co-op, the Dojo) the banner doesn't show. */
+  rush?: (id: PlayableId, difficulty: Difficulty) => void
 }
 
 /**
@@ -116,6 +145,11 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
   const firstHatched = HATCHLING_IDS.find((id) => save.hatched[id]) ?? HATCHLING_IDS[0]!
   // A festival legend stays out of the tab until its festival is announced (`legendShown`).
   const legendIds = shownLegends(brasiliaDay(today()))
+  /** The legends' grid and, under their own heading, the Ultra Beasts' (`ULTRA_LEGENDS`). */
+  const regularLegendIds = legendIds.filter((id) => !isUltraLegend(id))
+  const ultraLegendIds = legendIds.filter(isUltraLegend)
+  /** The beast of the week (`game/ultraWeek.ts`) wears a ring of prism light on its cell. */
+  const weekBeast = ultraToday()
   const firstCaptured = legendIds.find((id) => isCaptured(save.legends, id)) ?? REGULAR_LEGENDS[0]
   const cursor: { starters: StarterId; eggs: HatchlingId; legends: LegendId } = {
     starters: isStarter(initial) ? initial : 'charmander',
@@ -180,6 +214,20 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
     const ev = m.legend.event
     return standing === 'before' ? ev.soon(formatDay(HALLOWEEN.from), formatDay(HALLOWEEN.to)) : standing === 'on' ? ev.live(formatDay(HALLOWEEN.to)) : ev.gone
   }
+  /** A path legend's locked line (`paths.where`). */
+  const pathWhere = (id: LegendId) => {
+    const where: Partial<Record<LegendId, string>> = m.paths.where
+    return where[id] ?? ''
+  }
+  /** Opens a path's sheet over the select (its keys wait until it closes). */
+  let pathOpen: Screen | null = null
+  const pathButton = (path: PathId) =>
+    h('button', { class: 'arc-chip partner-path', type: 'button', onclick: () => (playSfx('select'), (pathOpen = pathSheet(root, input, path, { close: () => (pathOpen = null) }))) }, m.paths.open, ' ▸')
+  /** A captured path legend with forms still ahead (Zygarde, Kubfu, Meltan): the way to see where its path stands. */
+  const pathAfter = (id: PlayableId) => {
+    const path = isLegend(id) ? pathOfLegend(id) : null
+    return path === 'zygarde' || path === 'kubfu' || path === 'meltan' ? pathButton(path) : null
+  }
   const eventLine = (id: LegendId, withText: boolean) => {
     const badge = legendBadge(id)
     const standing = eventStanding(id)
@@ -239,18 +287,20 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
     const open = unlocked(id)
     const name = PLAYABLE[id].name
     const wins = `${Math.min(save.legends[id] ?? 0, winsNeeded(id))}/${winsNeeded(id)}`
+    const week = id === weekBeast
     const el = h(
       'button',
       {
-        class: open ? 'partner-cell legend' : 'partner-cell legend locked',
+        class: `${open ? 'partner-cell legend' : 'partner-cell legend locked'}${week ? ' ultra-week' : ''}`,
         type: 'button',
-        title: open ? cellTitle(id, name) : legendFestival(id) ? name : `${name} · ${m.legend.wins(wins)}`,
+        title: [open ? cellTitle(id, name) : legendFestival(id) || giftLegend(id) || eggLegend(id) ? name : `${name} · ${m.legend.wins(wins)}`, week ? m.ultra.week.title : null].filter((s) => s !== null).join(' · '),
         style: `--t:${open ? PLAYABLE[id].color : '#8890b0'}`,
         onclick: () => select(id),
       },
       open ? cellPortrait(id) : cellSilhouette(id),
-      !open && !legendFestival(id) && h('b', { class: 'partner-cell-count' }, wins),
+      !open && !legendFestival(id) && !giftLegend(id) && !eggLegend(id) && !legendPath(id) && h('b', { class: 'partner-cell-count' }, wins),
       eventTag(id),
+      isUltraLegend(id) && h('img', { class: 'partner-cell-ultra', src: beastBallIcon(), alt: '' }),
       shinyOf(id) && shinyTag(),
       clearTag(id),
       capTag(id),
@@ -295,7 +345,16 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
     h('button', { class: 'partner-teaser-more', type: 'button', onclick: () => setTab('eggs') }, owned.length > TEASER ? `+${owned.length - TEASER} ▸` : '▸'),
   )
 
-  const eggGrid = h('div', { class: 'partner-egg-grid' }, ...HATCHLING_IDS.map(eggCell))
+  /** A region's header over its forms in the Eggs grid: its Ovo de Viagem, its name in its color and how many of them are hatched. */
+  const regionHead = (region: RegionId, ids: readonly HatchlingId[]) =>
+    h(
+      'h3',
+      { class: 'partner-egg-head', style: `--rc:${FORM_REGIONS[region].color}` },
+      h('img', { src: eggIcon(region), alt: '', width: 32, height: 32 }),
+      h('span', {}, t().travel.forms(t().travel.regions[region])),
+      h('small', {}, `${ids.filter((id) => save.hatched[id]).length}/${ids.length}`),
+    )
+  const eggGrid = h('div', { class: 'partner-egg-grid' }, ...EGG_SECTIONS.flatMap((s) => [s.region && regionHead(s.region, s.ids), ...s.ids.map(eggCell)]))
   const ready = save.eggs.filter(isReady).length
   const openIncubator = () => (playSfx('select'), later(actions.incubator))
   const eggsPane = h(
@@ -312,9 +371,47 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
     ),
   )
 
-  /** Lendários: every legend, captured or not, and what the mode is about. ↑ ↓ read the column count from the grid. */
-  const legendGrid = h('div', { class: 'partner-egg-grid partner-legend-grid' }, ...legendIds.map(legendCell))
-  const legendsPane = h('div', { class: 'partner-legends' }, legendGrid, h('p', { class: 'partner-legend-note' }, rich(opts.dojo ? m.training.legendNote : m.legend.selectNote)))
+  /**
+   * Lendários: every legend, captured or not, then the Ultra Beasts under their
+   * own heading, in one scroller, and what the mode is about. ↑ ↓ read the
+   * column count from each grid and cross between the two.
+   */
+  const legendGrid = h('div', { class: 'partner-egg-grid partner-legend-grid' }, ...regularLegendIds.map(legendCell))
+  const ultraGrid = h('div', { class: 'partner-egg-grid partner-legend-grid' }, ...ultraLegendIds.map(legendCell))
+  const ultraHead = h(
+    'h4',
+    { class: 'partner-legend-head' },
+    h('img', { src: beastBallIcon(), alt: '' }),
+    m.ultra.heading,
+    h('small', {}, `${capturedCount(save.legends, ultraLegendIds)}/${ultraLegendIds.length}`),
+  )
+  /** Hoopa's Rings (`ui/rush.ts`): its level sheet over this screen, which holds its keys while it's open. */
+  let rushSheet: Screen | null = null
+  const captured = LEGEND_IDS.filter((id) => isCaptured(save.legends, id))
+  const openRush = () => {
+    const start = actions.rush
+    if (!start || rushSheet || !rushOpen(rushPool(captured).length, 'normal')) return playSfx('denied')
+    playSfx('select')
+    rushSheet = openRushSheet(root, input, {
+      captured,
+      best: save.rush,
+      start: (difficulty) => {
+        const id = current()
+        if (!unlocked(id)) return playSfx('denied')
+        picked = true
+        start(id, difficulty)
+      },
+      close: () => (rushSheet = null),
+    })
+  }
+  const rushRow = actions.rush && !plain ? rushBanner(rushPool(captured).length, openRush) : null
+  const legendsPane = h(
+    'div',
+    { class: 'partner-legends' },
+    rushRow,
+    h('div', { class: 'partner-legend-scroll' }, legendGrid, ultraLegendIds.length > 0 && ultraHead, ultraLegendIds.length > 0 && ultraGrid),
+    h('p', { class: 'partner-legend-note' }, rich(opts.dojo ? m.training.legendNote : m.legend.selectNote)),
+  )
 
   const randomButton = h(
     'button',
@@ -409,10 +506,15 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
       const need = winsNeeded(id)
       // Once its event is over, an event legend can't be caught: only the line saying it's gone stays.
       const over = eventStanding(id) === 'after'
-      // A festival legend is never fought: no wins to count, only its festival's line.
-      const gift = legendFestival(id) !== null
+      // A festival legend is never fought: no wins to count, only its festival's line. Poipole neither: its line counts the Ultra Beasts captured. Manaphy hatches from its egg.
+      const gift = legendFestival(id) !== null || giftLegend(id) || eggLegend(id)
+      // A path legend comes from its path (Regigigas by its temple): its sheet says where it stands.
+      const path = pathOfLegend(id)
       // The last legend (Arceus) names the regular ones it still waits for.
       const missing = legendSource(id) === 'endless' ? stillMissing(save.legends, id) : []
+      // A legend caught its own way (`questSource`) says how instead of counting wins; a roamer shows the HP it has left.
+      const quest = questSource(id)
+      const roamLeft = isRoamer(id) ? (save.roamers[id] ?? 1) : null
       hero.replaceChildren(
         h(
           'div',
@@ -421,15 +523,22 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
           h(
             'div',
             { class: 'partner-id' },
-            h('small', { class: 'partner-dex' }, `#${String(form.dex).padStart(3, '0')}`),
+            h('small', { class: 'partner-dex' }, `#${String(nationalDex(form.dex)).padStart(3, '0')}`),
             h('h3', { class: 'partner-name' }, form.name),
-            !gift && h('p', { class: 'partner-legend-wins' }, m.legend.wins(`${Math.min(save.legends[id] ?? 0, need)}/${need}`)),
-            !over && !gift && h('p', { class: 'partner-blurb locked-blurb' }, rich(m.legend.where[legendSource(id)])),
+            !gift && !path && !quest && h('p', { class: 'partner-legend-wins' }, m.legend.wins(`${Math.min(save.legends[id] ?? 0, need)}/${need}`)),
+            roamLeft !== null && h('p', { class: 'partner-legend-wins' }, t().quests.roam.hpLeft(Math.max(1, Math.round(roamLeft * 100)))),
+            !over && !gift && !path && h('p', { class: 'partner-blurb locked-blurb' }, rich(m.legend.where[legendSource(id)])),
+            path && h('p', { class: 'partner-blurb locked-blurb' }, rich(pathWhere(id))),
+            path && pathButton(path),
             missing.length > 0 && h('p', { class: 'partner-blurb locked-blurb' }, m.legend.stillMissing(missing.map((other) => LEGENDS[other].line[0].name))),
+            giftLegend(id) && h('p', { class: 'partner-blurb locked-blurb' }, rich(m.legend.where.ultraGift)),
+            eggLegend(id) && h('p', { class: 'partner-blurb locked-blurb' }, rich(m.legend.where.egg)),
+            giftLegend(id) && h('p', { class: 'partner-legend-wins' }, m.ultra.progress(ultraCaptured(save), ULTRA_BEASTS.length)),
+            id === weekBeast && h('p', { class: 'partner-legend-event' }, h('img', { class: 'ultra-ball-icon', src: beastBallIcon(), alt: '' }), h('b', {}, m.ultra.week.title)),
             eventLine(id, true),
           ),
         ),
-        ...(over || gift ? [] : [h('p', { class: 'partner-blurb partner-intro' }, m.legend.rule(need), ' ', m.legend.shinyRule)]),
+        ...(over || gift || quest || (path && path !== 'regigigas') ? [] : [h('p', { class: 'partner-blurb partner-intro' }, m.legend.rule(need), ' ', m.legend.shinyRule)]),
       )
       return
     }
@@ -444,10 +553,11 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
             'div',
             { class: 'partner-id' },
             h('h3', { class: 'partner-name' }, m.eggs.locked),
-            h('p', { class: 'partner-blurb locked-blurb' }, h('img', { src: eggIcon(tier), alt: '' }), rich(tier === 'friend' ? m.eggs.friendBlurb : tier === 'haunted' ? m.eggs.hauntedBlurb : tier === 'kecleon' ? m.eggs.kecleonBlurb : m.eggs.lockedBlurb(m.eggs.tiers[tier]))),
+            h('p', { class: 'partner-blurb locked-blurb' }, tier !== 'found' && h('img', { src: eggIcon(tier), alt: '' }), rich(lockedWhere(id) ?? (tier === 'friend' ? m.eggs.friendBlurb : tier === 'haunted' ? m.eggs.hauntedBlurb : tier === 'kecleon' ? m.eggs.kecleonBlurb : m.eggs.lockedBlurb(m.eggs.tiers[tier])))),
           ),
         ),
-        h('p', { class: 'partner-blurb partner-intro' }, m.eggs.intro),
+        // No egg to walk for a family found another way.
+        ...(tier === 'found' ? [] : [h('p', { class: 'partner-blurb partner-intro' }, m.eggs.intro)]),
       )
       return
     }
@@ -474,14 +584,17 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
         h(
           'div',
           { class: 'partner-id' },
-          h('small', { class: 'partner-dex' }, `#${String(form.dex).padStart(3, '0')}`),
+          h('small', { class: 'partner-dex' }, `#${String(nationalDex(form.dex)).padStart(3, '0')}`),
           h('h3', { class: 'partner-name' }, form.name),
           h('div', { class: 'types' }, ...form.types.map(typeBadge)),
           level && h('p', { class: 'partner-clear' }, h('img', { src: trophyIcon(level), alt: '' }), m.dex.clearedOn(m.difficulty.names[level])),
           isLegend(id) && h('p', { class: 'partner-legend-mode' }, m.legend.mode, ' · ', `${m.legend.innate}: ${ABILITIES[LEGENDS[id].innate.ability].name}`),
           isLegend(id) && eventLine(id, false),
           h('p', { class: 'partner-blurb' }, m.blurbs[id]),
-          h('div', { class: 'partner-hero-actions' }, canPick(id) && shinyPicker(shinyOf(id), setShiny), more(true)),
+          // Scatterbug's line names the pattern its Vivillon wears here (the device's region).
+          id === 'scatterbug' && h('p', { class: 'partner-blurb' }, h('b', {}, m.gaHook.vivillon.pattern(VIVILLON_PATTERNS[devicePattern()].name)), ' · ', m.gaHook.vivillon.why),
+          h('div', { class: 'partner-hero-actions' }, canPick(id) && shinyPicker(shinyOf(id), setShiny), more(true), pathAfter(id)),
+          !opts.coop && shadowRow(id, () => renderHero()),
         ),
       ),
       ...[skinsRow(id)].filter((row) => row !== null),
@@ -692,16 +805,21 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
   const step = (dir: Step) => {
     if (tab === 'eggs') {
       const cols = getComputedStyle(eggGrid).gridTemplateColumns.split(' ').length || 1
-      const next = stepGrid(HATCHLING_IDS.indexOf(cursor.eggs), dir, cols, HATCHLING_IDS.length)
+      const next = stepSections(EGG_ORDER.indexOf(cursor.eggs), dir, cols, EGG_SECTIONS.map((section) => section.ids.length))
       if (next === 'above') return setTab('starters')
       if (next === 'below') return tabs.includes('legends') ? setTab('legends') : undefined
-      return select(HATCHLING_IDS[next]!)
+      return select(EGG_ORDER[next]!)
     }
     if (tab === 'legends') {
-      const cols = getComputedStyle(legendGrid).gridTemplateColumns.split(' ').length || 1
-      const next = stepGrid(legendIds.indexOf(cursor.legends), dir, cols, legendIds.length)
-      if (next === 'above') return setTab('eggs')
-      if (next !== 'below') select(legendIds[next]!)
+      // The Ultra Beasts' grid sits under the legends': ↓ off the legends' last row goes into it, ↑ off its first comes back.
+      const ultra = ultraLegendIds.includes(cursor.legends)
+      const list = ultra ? ultraLegendIds : regularLegendIds
+      const cols = getComputedStyle(ultra ? ultraGrid : legendGrid).gridTemplateColumns.split(' ').length || 1
+      const at = list.indexOf(cursor.legends)
+      const next = stepGrid(at, dir, cols, list.length)
+      if (next === 'above') return ultra ? select(regularLegendIds[Math.min(regularLegendIds.length - 1, (Math.ceil(regularLegendIds.length / cols) - 1) * cols + (at % cols))]!) : setTab('eggs')
+      if (next === 'below') return !ultra && ultraLegendIds.length > 0 ? select(ultraLegendIds[Math.min(ultraLegendIds.length - 1, at % cols)]!) : undefined
+      select(list[next]!)
       return
     }
     const i = STARTER_IDS.indexOf(cursor.starters)
@@ -753,6 +871,9 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
   const back = () => (playSfx('move'), later(actions.back))
 
   const off = input.onKey((key) => {
+    if (pathOpen) return
+    if (rushSheet) return
+    if (key === 'KeyH' && rushRow) return openRush()
     if (sheet?.onKey(key)) return
     if (key === 'KeyX' && !plain) return setDifficulty(DIFFICULTY_IDS[(DIFFICULTY_IDS.indexOf(difficulty) + 1) % DIFFICULTY_IDS.length]!)
     if (key === 'KeyZ') return setShiny(!shinyOf(current()))
@@ -803,7 +924,10 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
     const ctx = context2d(sprite)
     ctx.clearRect(0, 0, sprite.width, sprite.height)
     const skin = locked ? null : wornSkin(dex)
-    const s = (skin && skinSprites(skin, dex, shinyOf(id))) || (shinyOf(id) && loadedSprites(dex, true)) || loadedSprites(dex)
+    // Vivillon wears the device's pattern on the pedestal too (Meadow is its own sheets).
+    const own = devicePattern()
+    const pattern = !locked && dex === VIVILLON_DEX && own !== 'meadow' ? own : null
+    const s = (skin && skinSprites(skin, dex, shinyOf(id))) || (pattern && sprites(dex, shinyOf(id), pattern)) || (shinyOf(id) && loadedSprites(dex, true)) || loadedSprites(dex)
     // Each skin chip idles on the stage shown (or the skin's first one, when it doesn't dress that stage).
     for (const [canvas, chipSkin] of skinChips) {
       const ctx = context2d(canvas)
@@ -812,9 +936,14 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
       const art = skinSprites(chipSkin, covers.includes(dex) ? dex : covers[0]!, shinyOf(id))
       if (art) drawPokemon(ctx, fitSprites(art, canvas.width - 4, 0), 'Idle', 0, time, canvas.width / 2, canvas.height - 3)
     }
-    if (s) drawPokemon(ctx, s, 'Idle', 0, locked ? 0 : time, sprite.width / 2, sprite.height - 6, { tint: locked ? { color: '#283048', amount: 1 } : undefined })
+    // A Shadow played as one burns in its aura on the pedestal too (SpriteCollab's Shadow Mewtwo wears its own sheets).
+    const variant = locked ? null : runVariant(loadSave().shadows, id)
+    const shadowSheets = variant === 'shadow' ? SHADOW_SHEETS[dex] : undefined
+    const look = (shadowSheets && loadedFormSprites(dex, shadowSheets)) || s
+    if (look && variant === 'shadow' && !shadowSheets) drawShadowAura(ctx, look, 'Idle', 0, time, sprite.width / 2, sprite.height - 6, time)
+    if (look) drawPokemon(ctx, look, 'Idle', 0, locked ? 0 : time, sprite.width / 2, sprite.height - 6, { tint: locked ? { color: '#283048', amount: 1 } : undefined })
     else blitCentered(ctx, PICKUPS.pokeball(), sprite.width / 2, sprite.height / 2 + Math.round(Math.sin(time * 6) * 2))
   }
 
-  return { el, tick, selected: current, dispose: () => (off(), offGems(), clearTimeout(cryTimer), window.removeEventListener('keydown', holdTab), el.remove()) }
+  return { el, tick, selected: current, dispose: () => (off(), offGems(), pathOpen?.dispose(), clearTimeout(cryTimer), window.removeEventListener('keydown', holdTab), rushSheet?.dispose(), el.remove()) }
 }

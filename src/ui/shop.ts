@@ -1,7 +1,8 @@
 import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
 import { formatDay, formatNumber, formatPokeDollars, t } from '../i18n'
-import { HATCHLINGS, PLAYABLE, type PlayableId } from '../data/hatchlings'
+import { HATCHLINGS, PLAYABLE, type HatchlingId, type PlayableId } from '../data/hatchlings'
+import { isRegion } from '../data/regionalForms'
 import { BRANCHES, branchesAt } from '../data/branches'
 import type { EvolutionStage } from '../data/starters'
 import { STYLE_SLOTS, styleIds, stylePrice, type StyleId, type StyleSlot } from '../data/style'
@@ -13,6 +14,8 @@ import { branchNeeds, buyCap, buyEvoItem, capBlock, capLevel, capPrice, evoBlock
 import { MOVES } from '../game/moves'
 import { armedTms, armTm, buyTm, isRegularTm, nextTmDay, shelfOf, tmBlock, tmLimit, tmListing, tmPrice, type ShelfTm, type TmBlock } from '../game/tmShelf'
 import { EGG_TIERS, EGGS, hatchOdds, incubatorSlots, MAX_SLOTS, type EggTier } from '../game/eggs'
+import { buyTravelEgg, nextTrip, regionProgress, travelEggBlock } from '../game/travel'
+import { tripOf } from './travelDev'
 import { buyQuick, buySlot, quickCount, slotBlock } from '../game/incubator'
 import { buyUpgrade, refundAll, totalSpent, UPGRADE_IDS, UPGRADES, upgradePrice, type Save } from '../game/meta'
 import {
@@ -267,6 +270,58 @@ const kecleonEggCard = (v: Vitrine): Card => {
     },
     act: (save) => buyKecleonEgg(save, v),
     said: (before, after) => (after.wallet < before.wallet ? { text: t().plaza.lines.kecleonEgg, emotion: 'Inspired' } : null),
+  }
+}
+
+/**
+ * The Ovo de Viagem's fixed card, beside the Kecleon Egg's: the week's
+ * region's egg (`regionOfWeek`, or the dev's `ps.travel` pick), one a day at any level. It shows the
+ * region, the odds of its families for this save, how many of them the save
+ * has and where next Monday's trip goes. Kecleon has a word for it.
+ */
+const travelEggCard = (v: Vitrine): Card => {
+  const sh = t().shop
+  const tr = t().travel
+  const region = tripOf(v.day)
+  const where = tr.regions[region]
+  const name = t().eggs.tiers[region]
+  // The card says only "Travel Egg" (its line below names the region, and a narrow card fits it); the strip, the egg's full name.
+  const { el, badges, sub, price } = shell(img(eggIcon(region), 'shop-egg'), tr.card)
+  el.classList.add('travel-egg', `travel-${region}`)
+  const blocked = (save: Save) => {
+    const block = travelEggBlock(save, v)
+    return block === null || block === 'poor' ? null : sh.blocks[block]
+  }
+  return {
+    el,
+    refresh: (save) => {
+      const block = travelEggBlock(save, v)
+      setBadges(badges, [badge('exclusive', sh.badges.exclusive)])
+      setText(sub, tr.week(where))
+      setText(price, blocked(save) ?? formatPokeDollars(VITRINE.travelEgg.price))
+      el.classList.toggle('sold', block === 'soldOut' || block === 'full')
+      el.classList.toggle('poor', block === 'poor')
+    },
+    describe: (save) => {
+      const next = nextTrip(v.day)
+      const { got, of } = regionProgress(region, save.hatched)
+      return {
+        icon: img(eggIcon(region), 'shop-egg'),
+        title: name,
+        // Short, so it fits the strip on a phone: the odds (a full incubator's hint before them), then steps, progress and the next trip. The title names the region and the badge says it's exclusive.
+        text: [
+          travelEggBlock(save, v) === 'full' && sh.kecleonEgg.full,
+          eggOdds(region, save),
+          tr.text(formatNumber(EGG_TIERS[region].steps), got, of, tr.regions[next.region], t().plaza.weekdays[weekdayOf(next.day)]!),
+        ]
+          .filter((l): l is string => typeof l === 'string')
+          .join(' '),
+        action: blocked(save) ?? t().mart.buy(formatPokeDollars(VITRINE.travelEgg.price)),
+        disabled: travelEggBlock(save, v) !== null,
+      }
+    },
+    act: (save) => buyTravelEgg(save, v, region),
+    said: (before, after) => (after.wallet < before.wallet ? { text: tr.said, emotion: 'Joyous' } : null),
   }
 }
 
@@ -893,10 +948,15 @@ const haggleCard = (): Card => {
  * for this save, as `hatchEgg` draws them: each family (✓ once hatched) with
  * its share, or the one share when all are alike, then the shiny odds.
  */
+/** The regional forms' English adjective, as their names start. */
+const REGIONAL_ADJECTIVE = /^(Alolan|Galarian|Hisuian|Paldean) /
+
 const eggOdds = (egg: EggTier, save: Save) => {
   const s = t().shop.stall
   const shares = hatchOdds(egg, save.hatched, save.eggPity)
-  const family = ([id]: (typeof shares)[number]) => `${HATCHLINGS[id].name}${save.hatched[id] ? ' ✓' : ''}`
+  // An Ovo de Viagem's title already names the region: its families read without the adjective (Vulpix, not Alolan Vulpix).
+  const name = (id: HatchlingId) => (isRegion(egg) ? HATCHLINGS[id].name.replace(REGIONAL_ADJECTIVE, '') : HATCHLINGS[id].name)
+  const family = ([id]: (typeof shares)[number]) => `${name(id)}${save.hatched[id] ? ' ✓' : ''}`
   const list = shares.every(([, share]) => share === shares[0]?.[1])
     ? s.even(shares.map(family).join(', '), Math.round((shares[0]?.[1] ?? 0) * 100))
     : shares.map((entry) => `${family(entry)} ${Math.round(entry[1] * 100)}%`).join(', ')
@@ -1098,7 +1158,7 @@ const SHELVES: readonly Shelf[] = [
     stock: (save) => {
       const v = vitrineToday()
       const style = dayStyle(v, save.style)
-      return [giftCard(v), kecleonEggCard(v), ...v.cards.map((key, i) => vitrineCard(v, key, i, style))]
+      return [giftCard(v), kecleonEggCard(v), travelEggCard(v), ...v.cards.map((key, i) => vitrineCard(v, key, i, style))]
     },
     intro: (save) => t().shop.vitrineOf(t().plaza.dayNames[weekdayOf(vitrineToday().day)]!, t().shop.level(t().shop.levels[save.shop.level], save.shop.level)),
     countdown: true,

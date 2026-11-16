@@ -19,7 +19,8 @@ import { blastHorde, spawnEnemy } from './enemies'
 import { makeElite, makeRunner } from './horde'
 import { makeSpitter } from './spitters'
 import { isHeld } from './status'
-import { featuresNear, groundAt } from './terrain'
+import { featuresNear, groundAt, standingSpot } from './terrain'
+import { keepOnFloor, roomOf } from './room'
 import { actAs, nearestPlayer, standing } from './players'
 import type { Enemy, Game, Hazard, Player } from './types'
 import { HAZARD_TYPES } from './weather'
@@ -46,11 +47,15 @@ const fire = (g: Game, boss: Enemy, written: BossPattern, fight: BossFight | nul
   const by = harmBy(boss, move)
   for (let i = from; i < g.hazards.length; i++) {
     const h = g.hazards[i]!
-    h.by = by
+    // Each its own copy: hazards sharing one object would come back apart from a snapshot.
+    h.by = { ...by }
     if (written.sleep) h.sleep = written.sleep
   }
   if (written.kind === 'blast' && fight?.blast) fight.blast.by = by
 }
+
+/** Throws one pattern of `boss` at player `p` outside any fight (a roaming Azelf standing its ground). */
+export const throwPattern = (g: Game, boss: Enemy, pattern: BossPattern, p: Player) => fire(g, boss, pattern, null, p)
 
 /** Launches a boss's attack at player `p`, pressed by its fight's difficulty (`attackCount`, `telegraph`); a rift legendary in the old arena passes no fight. */
 const launch = (g: Game, boss: Enemy, written: BossPattern, fight: BossFight | null, p: Player) => {
@@ -184,7 +189,7 @@ const launch = (g: Game, boss: Enemy, written: BossPattern, fight: BossFight | n
     case 'teleport': {
       if (!fight) return
       const windup = telegraph(pattern.windup, fight)
-      const to = pattern.to === 'player' ? { x: p.x + p.vx * windup * 0.5, y: p.y + p.vy * windup * 0.5 } : farFrom(fight.home, p)
+      const to = pattern.to === 'player' ? { x: p.x + p.vx * windup * 0.5, y: p.y + p.vy * windup * 0.5 } : farFrom(g, fight.home, p, boss.radius)
       burst(g, boss.x, boss.y - boss.radius, { colors: IMPACT[pattern.visual]?.colors ?? ['#ffffff'], count: 36, speed: 140, ttl: 0.45, size: 2 })
       spawnHazard(g, { kind: 'strike', visual: pattern.visual, x: to.x, y: to.y, r: pattern.radius, damage: pattern.damage, armAt: windup, disarmAt: windup + STRIKE_WINDOW, ttl: windup + 0.45, leaper: boss.id })
       fight.motion = { kind: 'away', left: windup }
@@ -346,7 +351,9 @@ const shelters = (g: Game, count: number, p: Player) => {
   return Array.from({ length: count }, (_, i) => {
     const a = offset + (i / count) * TAU
     const d = range(g.rng, SHELTER.near, SHELTER.far)
-    return { x: p.x + dm.cos(a) * d, y: p.y + dm.sin(a) * d * 0.8 }
+    const spot = { x: p.x + dm.cos(a) * d, y: p.y + dm.sin(a) * d * 0.8 }
+    // On Hoopa's islands each shelter lands where a player can stand: on the floor, clear of what stands on it.
+    return g.rush !== null ? standingSpot(g, spot) : spot
   })
 }
 
@@ -367,13 +374,20 @@ export const parked = (boss: Enemy) => boss.fight !== null && boss.y < boss.figh
 /** Whether a boss is off the arena's floor on its script: parked, or out on a swoop's pass (floors and the camera let it be). */
 export const offstage = (boss: Enemy) => parked(boss) || (boss.fight?.motion?.kind === 'dash' && boss.fight.motion.reach > 0)
 
-/** As far from the player as a teleport goes: across the boss's home from them, at most 150 px out. */
-const farFrom = (home: { x: number; y: number }, p: { x: number; y: number }) => {
+/**
+ * As far from the player as a teleport goes: across the boss's home from them,
+ * at most 150 px out; in a room, kept on its floor (a home near the edge, as
+ * Hoopa's gate is, would otherwise send it off the stage, out of reach).
+ */
+const farFrom = (g: Game, home: { x: number; y: number }, p: { x: number; y: number }, radius: number) => {
   const dx = home.x - p.x
   const dy = home.y - p.y
   const d = dm.hypot(dx, dy) || 1
   const out = Math.min(150, d)
-  return { x: home.x + (dx / d) * out, y: home.y + (dy / d) * out }
+  const to = { x: home.x + (dx / d) * out, y: home.y + (dy / d) * out }
+  const room = roomOf(g)
+  if (room) keepOnFloor(to, room, room.layout.floor, room.layout.holes ?? [], radius * 0.5)
+  return to
 }
 
 /** The first scenery (as a circle a bit wider than each foot) a ray from (x, y) along (dx, dy) meets within `len` px: its distance, or `len`. */
@@ -703,7 +717,7 @@ export const finaleEntrance = (g: Game) => {
  * fight, `bossInFight`). In a rift the arena bounds the fight, which is
  * bigger than a phone's screen: there it attacks from anywhere.
  */
-export const bossReach = (g: Game) => (g.rift.arena ? Infinity : dm.hypot(g.view.w, g.view.h) * 0.6)
+export const bossReach = (g: Game) => (g.rift.arena || g.raid.arena ? Infinity : dm.hypot(g.view.w, g.view.h) * 0.6)
 
 /** A wave boss under half HP enrages: a red burst, a jolt and a cue for the shell (cry, flash, toast). */
 const enrage = (g: Game, e: Enemy) => {
@@ -724,7 +738,8 @@ const enrage = (g: Game, e: Enemy) => {
 export const updateBosses = (g: Game, tick: number) => {
   const reach = bossReach(g)
   for (const e of g.enemies) {
-    if (e.dying >= 0) continue
+    // A roaming lake legend runs, it doesn't fight (its phases are Hoopa's rings', `data/rush.ts`).
+    if (e.dying >= 0 || e.behavior.kind === 'roam') continue
     const phases = phasesOf(e.kind)
     if (e.fight === null && (phases || fightsInStances(e.kind))) {
       e.fight = createFight(g.rng, g.difficulty, { x: e.x, y: e.y })

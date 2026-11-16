@@ -44,6 +44,22 @@ export const EGG_TIERS = {
   kecleon: { steps: 4000, refund: 2500, even: true },
   /** The loyalty card's 100-stamp gift (`LOYALTY`): a Kecleon Egg whose hatch is always shiny. */
   kecleonShiny: { steps: 4000, refund: 2500, even: true, families: 'kecleon', shiny: true },
+  /** The Fossil Egg: Old Amber dug up in the Underground, and only Aerodactyl, the amber's own fossil, comes out. */
+  fossil: { steps: 3000, refund: 800, even: true },
+  /**
+   * The Ovo de Viagem, one tier per region: only the Vitrine's travel card
+   * sells it, the week's region's (`game/travel.ts`), and only that region's
+   * families come out (`data/regionalFamilies.ts`), the ones not hatched yet
+   * likelier, as any regular egg.
+   */
+  alola: { steps: 3000, refund: 1500 },
+  galar: { steps: 3000, refund: 1500 },
+  hisui: { steps: 3000, refund: 1500 },
+  paldea: { steps: 3000, refund: 1500 },
+  /** No egg at all: the families whose way in is their own (an encounter, research, the Realm). Never laid; it only names their source. */
+  found: { steps: 2000, refund: 600 },
+  /** No egg either: the fossils the Escavação restores (`data/digTreasures.ts`), each its own family. Never laid; it only names their source. */
+  dig: { steps: 3000, refund: 800 },
 } as const satisfies Record<string, EggTierRule>
 
 export type EggTier = keyof typeof EGG_TIERS
@@ -75,8 +91,8 @@ export const EGG_SOURCES = {
   place: { chance: 0.25, odds: { common: 55, rare: 40, ultra: 5 } },
   final: { chance: 1, odds: { rare: 70, ultra: 30 } },
   reaper: { chance: 1, odds: { ultra: 1 } },
-  /** Old Amber dug up in the Underground (`DIG_FINDS`): it rolls its own odds first. */
-  fossil: { chance: 1, odds: { common: 35, rare: 50, ultra: 15 } },
+  /** Old Amber dug up in the Underground (`DIG_FINDS`): it rolls its own odds first, and lays the Fossil Egg. */
+  fossil: { chance: 1, odds: { fossil: 1 } },
   /** A defended nest (`fieldMissions.ts`): the mission rolls its own odds per difficulty first. */
   mission: { chance: 1, odds: { common: 60, rare: 35, ultra: 5 } },
 } as const satisfies Record<string, DropRule>

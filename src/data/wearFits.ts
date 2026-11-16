@@ -310,6 +310,17 @@ export const WEAR_FITS: Partial<Record<FitKey, SpeciesFit>> = {
   745: { rig: { SE: { seat: [6, 0, -1], eyesAt: [[0, 6]] }, 'S:Walk': { eyesAt: [[-3, 11], [3, 11]] }, 'S:Idle': { eyesAt: [[-3, 4], [3, 4]] }, 'E:Walk': { seat: [3, -2, -8], eyesAt: [[1, 5]] }, 'E:Idle': { eyesAt: [[0, 4]], neck: [-2, 5] }, 'E:Hurt': { seat: [3, -2, -8], eyesAt: [[1, 5]] } } }, // Lycanroc: facing us its eyes are read off its mane's edges; turned, the seat and the eyes are read off its white mane, behind the head (in profile the seat spans the mane too and sits on its eye's line, and idle its mouth marker sits up on its brow)
   '745s': { rig: { S: { seat: [0, 0, -2], neck: [0, 4] }, SE: { seat: [6, 0, -1], eyesAt: [[0, 6]], neck: [1, 2] }, N: { seat: [0, 0, 4], neck: [0, 1] }, 'S:Walk': { eyesAt: [[-3, 11], [3, 11]] }, 'S:Idle': { seat: [0, 4, 4], eyesAt: [[-3, 4], [3, 4]], neck: [0, -4] }, 'S:Hurt': { eyesAt: [[-4, 14], [4, 14]] }, 'SE:Idle': { seat: [0, -2, -3] }, 'N:Idle': { seat: [0, 0, -4] }, 'E:Walk': { seat: [9, -1, 5], eyesAt: [[1, 5]], neck: [4, 4] }, 'E:Idle': { eyesAt: [[0, 4]], neck: [-2, 5] }, 'E:Hurt': { seat: [8, -3, 5], eyesAt: [[1, 5]], neck: [3, 2] } } }, // Lycanroc's shiny: as its normal colors, but its rig drifts off theirs (in profile the seat and the eye slide back onto its mane, the necks rise onto its face)
   770: { rig: { S: { seat: [0, -3, -16], eyesAt: [[-3, 5], [2, 5]] }, SE: { eyesAt: [[-1, 4], [4, 3]] } }, no: NO_BODY }, // Palossand: a sand castle; the hat goes on its middle tower, not over its walls, and its eyes are the tower's windows
+  // The Ultra Beasts (`data/ultraBeasts.ts`): built nothing like a head with a hat on it, so most go bare up top.
+  793: { no: ['head'] }, // Nihilego: its bell is its whole head, the eyes glowing in its crown; a hat sits over them
+  794: { no: ['head'] }, // Buzzwole: a tiny head between swollen arms; a hat sinks into its proboscis and is cut by its shoulders
+  795: { no: ['head:E'] }, // Pheromosa: in profile its antennae sweep back over where a brim would go
+  796: { no: ['head:SE'] }, // Xurkitree: its head is a star of wires; turned a little, a hat lands on its eyes
+  797: { no: ['head', 'back'] }, // Celesteela: its head is a rocket's nose cone, too narrow and too high for a hat, and its back its boosters
+  798: { no: ['head'] }, // Kartana: its head is a paper blade, its face a fold of it; a hat covers the face
+  799: { no: ['head:S'] }, // Guzzlord: facing us its head is its maw, and a hat sits on its teeth
+  804: { no: ['head'] }, // Naganadel: its head's crest and needle fill the seat; a hat covers its eyes
+  805: { no: ['head:E'] }, // Stakataka: in profile the top block that reads as its head is one of its stones
+  806: { no: ['head'] }, // Blacephalon: its head is the bomb it throws, its hair a flame
   810: { rig: { NE: { seat: [0, -4] }, N: { seat: [0, -4] } } }, // Grookey: from behind the seat drops onto the back of its head
   811: { rig: { S: { seat: [0, -3], eyesAt: [[-3, 5], [3, 5]] }, SE: { seat: [0, -3] }, E: { seat: [0, -4] } } }, // Thwackey: the seat drops past its forehead to its eyes' line (facing us, its ears' tufts read as the eyes)
   812: { rig: { S: { seat: [0, 0, 4] }, SE: { seat: [0, 0, -5], left: 'none' }, E: { seat: [0, 0, -8] }, NE: { seat: [0, 0, -8] }, N: { seat: [0, 0, -3] } } }, // Rillaboom: the seat spans its mane, wider turned than facing us (a hat sized to all of it swallowed the head); turned a little, a dark tuft reads as an eye
@@ -340,4 +351,95 @@ export const WEAR_FITS: Partial<Record<FitKey, SpeciesFit>> = {
   957: { rig: { S: { eyesAt: [[-2, 5], [2, 5]], neck: [0, 3] }, SE: { eyesAt: [[0, 5], [4, 5]], neck: [-1, 3] }, E: { eyesAt: [[2, 5]], neck: [0, 3] }, N: { seat: [-2, 4, 4] } } }, // Tinkatink: its small dark eyes, under the hair's tuft, aren't found, and its mouth marker sits between them, so the neck is read at their line; from behind the seat perches on the tuft's tip
   958: { rig: { S: { eyesAt: [[-2, 7], [2, 7]] }, E: { eyesAt: [[6, 6]] }, 'S:Hurt': { neck: [0, 1] } } }, // Tinkatuff: facing us and in profile the eyes are read off its hood's rim, over the small dark ones; hurt, facing us, the neck is read at its mouth
   959: { rig: { 'S:Hurt': { seat: [-2, 4] }, 'SE:Hurt': { seat: [3, 5] } }, no: ['back'] }, // Tinkaton: the hammer on its back; hurt, the seat lands on the hammer's head over its own
+  // Temporada 1: the new species the fit check failed most (140+ failing checks each); no hats until they're fitted by hand.
+  856: { no: ['head'] }, // Hatenna
+  857: { no: ['head'] }, // Hattrem
+  925: { no: ['head'] }, // Maushold
+  567: { no: ['head'] }, // Archeops
+  758: { no: ['head'] }, // Salazzle
+  595: { no: ['head'] }, // Joltik
+  998: { no: ['head'] }, // Baxcalibur
+  757: { no: ['head'] }, // Salandit
+  696: { no: ['head'] }, // Tyrunt
+  746: { no: ['head'] }, // Wishiwashi
+  997: { no: ['head'] }, // Arctibax
+  351: { no: ['head'] }, // Castform
+  // The big update's first families (data/gaFamiliesA.ts), the same rule: 140+ failing checks, no hats until fitted by hand.
+  859: { no: ['head'] }, // Impidimp
+  860: { no: ['head'] }, // Morgrem
+  292: { no: ['head'] }, // Shedinja: its halo floats where a hat would sit
+  922: { no: ['head'] }, // Pawmo
+  240: { no: ['head'] }, // Magby
+  215: { no: ['head'] }, // Sneasel
+  '302:mega': { no: ['head'] }, // Mega Sableye: the gem covers its face
+  823: { no: ['head'] }, // Corviknight
+  // The regional forms the fit check failed most (140+ failing checks each, `npm run fit-check -- --only` on REGIONAL_LINES): no hats until they're fitted by hand.
+  10168: { no: ['head'] }, // Galarian Mr. Mime
+  10166: { no: ['head'] }, // Galarian Farfetch'd: the leek's leaves read as its head
+  10176: { no: ['head'] }, // Galarian Darumaka
+  10100: { no: ['head'] }, // Alolan Raichu
+  10253: { no: ['head'] }, // Paldean Wooper
+  10103: { no: ['head'] }, // Alolan Vulpix
+  // The Rocket Game Corner's families (`data/rocketFamilies.ts`) and Shadow Mewtwo's sheets (`fit-check` 11-11):
+  132: { no: ['head:E'] }, // Ditto: turned, its one eye sits on its top edge, right where a hat's brim comes down
+  303: { no: ['head'] }, // Mawile: its great jaw grows out of the back of its head, where a hat sits, and the rig reads the jaw as the skull
+  '303:mega': { no: ['head'] }, // Mega Mawile: two jaws for a crown, and its face under them
+  10263: { no: ['head:E'] }, // Gimmighoul (Roaming): turned, its eye is its head's whole side
+  '150:shadow': { no: ['head:E'] }, // Shadow Mewtwo: turned, its sheets' crest reads as its eyes
+  // The Mega families (data/megaFamiliesB.ts), `fit-check` 11-12: off where a quarter or more of the checks failed in a direction.
+  669: { no: ['head'] }, // Flabébé: a head no bigger than the flower's heart, and the hat sat down on its eyes
+  '10061:mega': { no: ['head:SE'] }, // Mega Floette: turned half away, its crown of petals reads as its head
+  '428:mega': { no: ['head'] }, // Mega Lopunny: its ears' tufts frame the face, and the brim came down over its eyes
+  308: { no: ['head:E'] }, // Medicham: turned, its round head is mostly face and the brim reached its eye
+  691: { no: ['head:E'] }, // Dragalge: turned, its fin-crest reads as the skull and the hat sat on its eye
+  // The legend paths (data/legendPaths.ts)
+  '718:ten': { rig: { 'S:Idle': { seat: [0, 6] } } }, // Zygarde 10%: idle, it sits up and its head drops under the seat the Walk frame measured
+  718: { rig: { E: { seat: [-2, 0] } } }, // Zygarde 50%: turned, the hat's brim reached its eye
+  '718:complete': { rig: { E: { seat: [-2, -1] } } }, // Zygarde Complete: turned, the brim reached its eye
+  '718:mega': { no: ['pirateHat:E'] }, // Mega Zygarde: its head rises to its sheet's top edge, so turned the pirate hat's tall crown is cut off there; every other hat fits
+  809: { rig: { E: { seat: [-2, -4] } } }, // Melmetal: turned, its little head's seat sat down on its face
+  486: { rig: { E: { seat: [-2, -3] }, SE: { seat: [-1, -2] } } }, // Regigigas: turned, the brim came down onto its lights
+  892: { rig: { 'SE:Idle': { seat: [0, -2] } } }, // Urshifu: idle, the brim came down to its eyes
+  // The fossil families (data/gaFossils.ts)
+  142: { no: ['bunnyEars:E'] }, // Aerodactyl: turned, its swept-back crest pokes through the ears' gap
+  '142:mega': { no: ['head'] }, // Mega Aerodactyl: its jagged rock crest and jaw fill where a hat sits, and the brim lands on its face
+  138: { no: ['strawHat:S', 'cap:S', 'cowboyHat:S', 'santaHat:S', 'vikingHelmet:S'] }, // Omanyte: facing us it's all shell over two eyes, and a wide brim comes down onto them
+  345: { no: ['head'] }, // Lileep: its head is a ring of tentacles round a mouth, with no eyes the rig can find, and a hat covers the ring
+  346: { no: ['head:S', 'head:SE'] }, // Cradily: facing us its tentacle crown is where a hat would sit, and the hat sinks into it
+  347: { no: ['head'] }, // Anorith: its eyes ride on stalks at the head's sides, never found, and a hat lands between them on its face
+  348: { no: ['bunnyEars'] }, // Armaldo: the ears stand right in its two-pronged head crest
+  880: { no: ['head'] }, // Dracozolt: a small bird's head on a big body, its crest of feathers where a hat sits, and the brim reaches its beak
+  881: { no: ['head'] }, // Arctozolt: its head peeks out of its icy top half, turned its eye isn't found, and a hat sits on the ice over its face
+  // The Mega families (src/data/gaMegaFamiliesA.ts)
+  115: { rig: { E: { seat: [-2, -3] }, 'S:Idle': { seat: [0, -3] } } }, // Kangaskhan: turned, the brim came down onto its eye; idle facing south, its fists rise round its head and clipped the hat
+  '115:mega': { rig: { E: { seat: [-2, -3] }, 'S:Idle': { seat: [0, -3] } } }, // Mega Kangaskhan: the same as Kangaskhan's
+  227: { no: ['head'] }, // Skarmory: a slim beak of a head, the eye at its crown: every hat sat on the eye
+  '227:mega': { no: ['head'] }, // Mega Skarmory: the same slim head under its crest
+  529: { no: ['head'] }, // Drilbur: its eyes sit right under the steel band a hat would cover
+  '530:mega': { no: ['head'] }, // Mega Excadrill: all drill, its tip where a hat would go
+  '780:mega': { no: ['cap', 'vikingHelmet'] }, // Mega Drampa: facing south the mane's spikes cut a cap's brim and the helmet's horns
+  33: { no: ['head:S'] }, // Nidorino: facing south, its big ears stand over the skull and cut every hat in half between them
+  35: { no: ['cap:S'] }, // Clefairy: facing south, the cap's peak runs into its ear and is cut off
+  // The hook families (src/data/gaFamiliesHook.ts)
+  665: { rig: { E: { seat: [-1, -2] } } }, // Spewpa: turned, the brim came down onto its eye
+  311: { rig: { SE: { seat: [0, -3] }, E: { seat: [0, -3] } } }, // Plusle: turned, the seat sat between its ears, down on its eyes
+  // The Ruínas da Decisão's Regis and the Forces of Nature.
+  894: { no: ['head:SE'] }, // Regieleki: its body is its head, the Regi dots its face; turned a little, a hat sits over the dots
+  895: { no: ['head'] }, // Regidrago: no head between its dragon-head arms, only its core with the Regi dots on it, where any hat lands
+  642: { no: ['head:E'] }, // Thundurus: in profile its head reaches out over its arm and the hat landed on its chest
+  645: { no: ['head:E', 'head:SE'] }, // Landorus: turned, its mane and horns sweep back over its face, where a brim would sit
+  '645:therian': { no: ['head:S', 'head:SE'] }, // Landorus (Therian): its head is a small mask under a crest of horns; facing south a hat lands on its eyes
+  '905:therian': { no: ['head:E'] }, // Enamorus (Therian): in profile its horned mask juts forward and a brim covers its eyes
+  // The mythicals (src/data/mythicals.ts)
+  '483:primal': { no: ['head:E'] }, // Primal Dialga: in profile a hat wedges down among its crest's spikes, over the face
+  // Ogerpon: its mask is its face (the Teal Mask on its own sheets, each other mask a form, Terastallized ones too), and a hat
+  // sits on the mask's horns and down over it, so no mask wears one.
+  1017: { no: ['head'] },
+  '1017:wellspring': { no: ['head'] },
+  '1017:hearthflame': { no: ['head'] },
+  '1017:cornerstone': { no: ['head'] },
+  '1017:tealTera': { no: ['head'] },
+  '1017:wellspringTera': { no: ['head'] },
+  '1017:hearthflameTera': { no: ['head'] },
+  '1017:cornerstoneTera': { no: ['head'] },
 }

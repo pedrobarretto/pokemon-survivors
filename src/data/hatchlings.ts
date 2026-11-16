@@ -1,35 +1,18 @@
 import type { EggTier } from '../game/eggs'
-import type { StatDelta } from '../game/stats'
-import { LEGENDS, type LegendId } from './legends'
-import { STARTER_IDS, STARTERS, type EvolutionStage, type PlayableDef, type StarterId } from './starters'
-import type { PokeType } from './types'
-
-/**
- * Playable families that hatch from eggs (`game/eggs.ts`), on top of the 27
- * starters. They share the starters' shape; `egg` is the egg tier they hatch from
- * (Munchlax alone hatches from the Friendship Egg, which only invites bring;
- * the Haunted Egg's ghosts only from the egg Duskull's stall sells on the
- * Noite das Bruxas, and the Kecleon Egg's four only from the Vitrine's fixed
- * card, so both stay out of the Desafio do dia and the shiny tickets).
- */
-export type HatchlingDef = PlayableDef & { egg: EggTier }
-
-type Stage = readonly [name: string, dex: number, types: readonly PokeType[]]
-
-/** A 3-stage line that evolves at Lv 12 and Lv 28, like the starters. */
-const line3 = (a: Stage, b: Stage, c: Stage, bonuses: readonly [StatDelta, StatDelta]) =>
-  [
-    { name: a[0], dex: a[1], types: a[2], evolveAt: 12, bonus: {} },
-    { name: b[0], dex: b[1], types: b[2], evolveAt: 28, bonus: bonuses[0] },
-    { name: c[0], dex: c[1], types: c[2], bonus: bonuses[1] },
-  ] as const satisfies readonly EvolutionStage[]
-
-/** A 2-stage line evolves once, at Lv 20, and gets the whole bonus there. */
-const line2 = (a: Stage, b: Stage, bonus: StatDelta) =>
-  [
-    { name: a[0], dex: a[1], types: a[2], evolveAt: 20, bonus: {} },
-    { name: b[0], dex: b[1], types: b[2], bonus },
-  ] as const satisfies readonly EvolutionStage[]
+import { isLegend, LEGENDS, type LegendDef, type LegendId } from './legends'
+import { line2, line3, type HatchlingDef } from './playableLines'
+import { SEASON_ONE_EGGS } from './seasonOneEggs'
+import { SEASON_ONE_KITS } from './seasonOneKits'
+import { GA_FAMILIES_B } from './gaFamiliesB'
+import { GA_FOSSILS } from './gaFossils'
+import { GA_FAMILIES_A } from './gaFamiliesA'
+import { REGIONAL_FAMILIES } from './regionalFamilies'
+import { ROCKET_FAMILIES } from './rocketFamilies'
+import { GA_MEGA_FAMILIES_A } from './gaMegaFamiliesA'
+import { MEGA_FAMILIES_B } from './megaFamiliesB'
+import { SC_FAMILIES } from './scFamilies'
+import { GA_FAMILIES_HOOK } from './gaFamiliesHook'
+import { STARTER_IDS, STARTERS, type StarterId } from './starters'
 
 export const HATCHLINGS = {
   /* ---------- Common eggs ---------- */
@@ -94,7 +77,7 @@ export const HATCHLINGS = {
     name: 'Starly',
     color: '#a08868',
     egg: 'common',
-    stats: { speed: 8, magnet: 10, maxHp: -10 },
+    stats: { speed: 8, magnet: 10, maxHp: 5 },
     signature: 'braveBird',
     learnset: [['braveBird', 'gust', 'electroBall', 'swift', 'roost', 'uTurn'], ['gyroBall', 'flashCannon'], ['focusPunch', 'selfDestruct']],
     line: line3(['Starly', 396, ['normal', 'flying']], ['Staravia', 397, ['normal', 'flying']], ['Staraptor', 398, ['normal', 'flying']], [
@@ -153,7 +136,7 @@ export const HATCHLINGS = {
     name: 'Zubat',
     color: '#5878c8',
     egg: 'common',
-    stats: { speed: 6, statusDamage: 0.1, maxHp: -10 },
+    stats: { speed: 6, statusDamage: 0.1, maxHp: 5 },
     signature: 'crossPoison',
     learnset: [['crossPoison', 'crunch', 'gust', 'venoshock', 'swift', 'sludgeBomb'], ['uTurn', 'hex'], ['roost', 'toxicSpikes', 'pinMissile']],
     line: line3(['Zubat', 41, ['poison', 'flying']], ['Golbat', 42, ['poison', 'flying']], ['Crobat', 169, ['poison', 'flying']], [
@@ -446,7 +429,8 @@ export const HATCHLINGS = {
   kabuto: {
     name: 'Kabuto',
     color: '#b08848',
-    egg: 'rare',
+    // The Escavação's Dome Fossil restores it (it left the Rare Egg; those who hatched it keep it).
+    egg: 'dig',
     stats: { armor: 2, maxHp: 10, speed: -4 },
     signature: 'leechLife',
     learnset: [['leechLife', 'rockTomb', 'waterGun', 'razorShell', 'mudShot', 'stealthRock'], ['brine', 'pinMissile', 'leafBlade']],
@@ -540,7 +524,7 @@ export const HATCHLINGS = {
     name: 'Larvitar',
     color: '#88a058',
     egg: 'ultra',
-    stats: { maxHp: 30, armor: 2, speed: -7 },
+    stats: { maxHp: 20, armor: 1, speed: -7 },
     signature: 'sandTomb',
     learnset: [['sandTomb', 'crunch', 'rockTomb', 'earthquake', 'stealthRock', 'focusPunch'], ['suckerPunch', 'pyroBall'], ['thunder', 'dragonTail']],
     line: line3(['Larvitar', 246, ['rock', 'ground']], ['Pupitar', 247, ['rock', 'ground']], ['Tyranitar', 248, ['rock', 'dark']], [
@@ -712,11 +696,8 @@ export const HATCHLINGS = {
     stats: { area: 0.1, regen: 0.15, speed: -4 },
     signature: 'razorLeaf',
     learnset: [['razorLeaf', 'vineWhip', 'futureSight', 'selfDestruct', 'toxicSpikes'], ['leafBlade', 'drumBeating', 'dragonBreath', 'sludgeBomb']],
-    // Exeggutor needs the Leaf Stone (the one that opens Leafeon too).
-    line: [
-      { name: 'Exeggcute', dex: 102, types: ['grass', 'psychic'], evolveAt: 20, bonus: {} },
-      { name: 'Exeggutor', dex: 103, types: ['grass', 'psychic'], item: 'leafStone', bonus: { maxHp: 70, might: 0.25, area: 0.15, armor: 1 } },
-    ],
+    // Exeggutor needs the Leaf Stone (the one that opens Leafeon too), Alolan Exeggutor the Sparkling Stone (`data/branches.ts`).
+    line: line2(['Exeggcute', 102, ['grass', 'psychic']], ['Exeggutor', 103, ['grass', 'psychic']], { maxHp: 70, might: 0.25, area: 0.15, armor: 1 }),
   },
   scraggy: {
     name: 'Scraggy',
@@ -738,6 +719,17 @@ export const HATCHLINGS = {
     learnset: [['sketch', 'weatherBall', 'furySwipes', 'selfDestruct', 'waterShuriken', 'torchSong', 'drumBeating', 'dragonBreath', 'disarmingVoice', 'venoshock']],
     line: [{ name: 'Smeargle', dex: 235, types: ['normal'], bonus: {} }],
   },
+  ...SEASON_ONE_EGGS,
+  ...SEASON_ONE_KITS,
+  ...GA_FAMILIES_B,
+  ...GA_FAMILIES_A,
+  ...REGIONAL_FAMILIES,
+  ...ROCKET_FAMILIES,
+  ...GA_FOSSILS,
+  ...GA_MEGA_FAMILIES_A,
+  ...MEGA_FAMILIES_B,
+  ...SC_FAMILIES,
+  ...GA_FAMILIES_HOOK,
 } as const satisfies Record<string, HatchlingDef>
 
 export type HatchlingId = keyof typeof HATCHLINGS
@@ -758,8 +750,8 @@ export const PLAYABLE_IDS: readonly (StarterId | HatchlingId)[] = [...STARTER_ID
 
 export const isHatchling = (id: PlayableId): id is HatchlingId => id in HATCHLINGS
 
-/** The eggs whose families come from nowhere else: the Haunted Egg (Duskull's stall) and the Kecleon Egg (the Vitrine's fixed card). */
-const EXCLUSIVE_EGGS: readonly EggTier[] = ['haunted', 'kecleon']
+/** The eggs whose families come from nowhere else: the Haunted Egg (Duskull's stall), the Kecleon Egg (the Vitrine's fixed card), the Fossil Egg (the Underground's Old Amber), the Ovo de Viagem's regions (the Vitrine's travel card), the families found without one and the Escavação's fossils. */
+const EXCLUSIVE_EGGS: readonly EggTier[] = ['haunted', 'kecleon', 'fossil', 'alola', 'galar', 'hisui', 'paldea', 'found', 'dig']
 
 /**
  * A family only its own egg brings (the Haunted Egg's ghosts, the Kecleon
@@ -771,5 +763,10 @@ export const isExclusiveFamily = (id: PlayableId) => isHatchling(id) && EXCLUSIV
 /** A starter: neither a hatched family nor a legend. */
 export const isStarter = (id: PlayableId): id is StarterId => id in STARTERS
 
-/** Dex numbers of a playable Pokémon's whole evolution line. */
-export const playableDex = (id: PlayableId) => PLAYABLE[id].line.map((s) => s.dex)
+/** Dex numbers of a playable Pokémon's whole evolution line (a legend's evolution too: Poipole's Naganadel). */
+export const playableDex = (id: PlayableId) => {
+  const own = PLAYABLE[id].line.map((s) => s.dex)
+  if (!isLegend(id)) return own
+  const legend: LegendDef = LEGENDS[id]
+  return legend.evolve ? [...own, legend.evolve.dex] : own
+}

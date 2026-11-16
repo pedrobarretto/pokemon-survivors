@@ -224,12 +224,18 @@ describe('egg families', () => {
     expect(gens.size).toBe(9)
   })
 
-  it('evolve mid-run and grow stronger (Smeargle aside: one stage, it paints moves instead)', () => {
-    expect(HATCHLING_IDS.filter((id) => PLAYABLE[id].line.length === 1)).toEqual(['smeargle'])
+  it('hatch only Aerodactyl from the Fossil Egg (Old Amber), even one laid before the Escavação restored the rest', () => {
+    expect(hatchPool('fossil', {}).map(([id]) => id)).toEqual(['aerodactyl'])
+    expect(HATCHLING_IDS.filter((id) => HATCHLINGS[id].egg === 'dig')).toEqual(expect.arrayContaining(['kabuto', 'cranidos', 'omanyte', 'dracovish']))
+  })
+
+  it('evolve mid-run and grow stronger (Smeargle aside, and the one-stage Temporada 1, big update, Game Corner, fossil, Mega and hook families and Galarian Farfetch\'d: their mechanics take the place of evolving)', () => {
+    expect(HATCHLING_IDS.filter((id) => PLAYABLE[id].line.length === 1)).toEqual(['smeargle', 'wishiwashi', 'morpeko', 'rotom', 'castform', 'mimikyu', 'tatsugiri', 'lapras', 'heracross', 'sableye', 'spiritomb', 'farfetchdGalar', 'ditto', 'absol', 'mawile', 'aerodactyl', 'dracozolt', 'arctozolt', 'dracovish', 'kangaskhan', 'pinsir', 'skarmory', 'drampa', 'phione', 'minior', 'plusle', 'minun'])
     for (const id of HATCHLING_IDS) {
       const line: readonly EvolutionStage[] = PLAYABLE[id].line
       if (line.length === 1) continue
-      expect(line[0]!.evolveAt).toBeLessThanOrEqual(20)
+      // Gimmighoul evolves on its coins (`rocketEvolves`); its Lv 40 is only a floor.
+      if (id !== 'gimmighoul') expect(line[0]!.evolveAt).toBeLessThanOrEqual(20)
       expect(starterStats(id, line.length - 1).maxHp).toBeGreaterThan(starterStats(id, 0).maxHp)
     }
   })

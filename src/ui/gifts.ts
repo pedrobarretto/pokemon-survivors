@@ -1,17 +1,21 @@
+import { isSafariHabitat } from '../data/safari'
 import { HATCHLINGS } from '../data/hatchlings'
-import { LEGENDS } from '../data/legends'
-import { BAG_ITEMS } from '../data/shop'
+import { eggLegend, LEGENDS, type LegendId } from '../data/legends'
+import type { CosmogLegend } from '../game/legendPaths'
+import { BAG_ITEMS, EVO_ITEMS } from '../data/shop'
 import { giftInbox, nextGift, openGift } from '../account'
-import { playSfx } from '../engine/audio'
+import { playCry, playSfx } from '../engine/audio'
+import { blitEllipse, context2d } from '../engine/pixelart'
 import type { Input } from '../engine/input'
 import type { Hatch } from '../game/eggs'
 import type { Gift, StyleRef } from '../game/gifts'
 import { companionForm } from '../game/supporters'
 import { formatDay, formatPokeDollars, formatPokeDollarsShort, t } from '../i18n'
-import { bagIcon, coinIcon, eggIcon, giftIcon, medalIcon, ribbonIcon, sparkleIcon } from '../render/art'
+import { bagIcon, coinIcon, eggIcon, giftIcon, itemArt, medalIcon, ribbonIcon, sparkleIcon } from '../render/art'
+import { manaphyEggIcon } from '../render/manaphyEggArt'
 import { styleThumb } from '../render/card'
-import { frameIcon, wallpaperUrl } from '../render/cosmetics'
-import { portraitUrl } from '../render/sprites'
+import { frameArtUrl, frameIcon, titleMark, wallpaperUrl } from '../render/cosmetics'
+import { cryUrl, drawPokemon, loadedSprites, loadSpecies, portraitUrl } from '../render/sprites'
 import { h, later, rich } from './dom'
 import { hint, menu, type Screen } from './screens'
 
@@ -37,14 +41,18 @@ export const contentLine = (gift: Pick<Gift, 'content'>): { src: string; text: s
       return { src: eggIcon(c.tier), text: m.egg(t().eggs.tiers[c.tier]) }
     case 'coins':
       return { src: coinIcon(2), text: m.coins(formatPokeDollars(c.amount)) }
-    case 'title':
-      return { src: medalIcon('gold'), text: m.newTitle(t().achievements.titles[c.title]) }
+    case 'title': {
+      const mark = titleMark(c.title)
+      return { src: mark ? frameArtUrl(mark) : medalIcon('gold'), text: m.newTitle(t().achievements.titles[c.title]) }
+    }
     case 'style': {
       const names: Readonly<Record<string, string>> = t().mart.styles[c.style.slot]
       return { src: styleIcon(c.style), text: m.style[c.style.slot](names[c.style.id] ?? c.style.id) }
     }
     case 'shinyHatch':
       return { src: portraitUrl(HATCHLINGS[c.family].line[0].dex, true), text: m.shinyHatch(HATCHLINGS[c.family].name) }
+    case 'family':
+      return { src: portraitUrl(HATCHLINGS[c.family].line[0].dex, false), text: HATCHLINGS[c.family].name }
     case 'ribbon':
       return { src: ribbonIcon(c.ribbon.tier), text: m.ribbon(t().ribbons.names[c.ribbon.tier]) }
     case 'shinyPick':
@@ -56,11 +64,16 @@ export const contentLine = (gift: Pick<Gift, 'content'>): { src: string; text: s
     case 'bag':
       return { src: bagIcon(c.item), text: m.bag(c.count, BAG_ITEMS[c.item].name) }
     case 'legend':
-      return { src: portraitUrl(LEGENDS[c.legend].line[0].dex), text: m.legend(LEGENDS[c.legend].name) }
+      // Manaphy comes as its egg, and hatches when opened (`ui/manaphyEgg.ts`).
+      return eggLegend(c.legend) ? { src: manaphyEggIcon(), text: t().scWave.egg.gift } : { src: portraitUrl(LEGENDS[c.legend].line[0].dex), text: m.legend(LEGENDS[c.legend].name) }
+    case 'evoItem':
+      return { src: itemArt(c.item), text: EVO_ITEMS[c.item].name }
+    case 'shadow':
+      return { src: portraitUrl(HATCHLINGS[c.family].line[0].dex), text: t().rocket.gifts.shadow(HATCHLINGS[c.family].name) }
   }
 }
 
-/** Why it came: an invite, friends brought, a donation, the admin's present, joining the Discord, the Noite das Bruxas candy jar, its Caça aos Fantasmas or its supporters' gift, the Kecleon Shop, a Festival da Praça's pot or its Mecenas, being an OG Supporter, an Arena season's peak tier, finding a hidden zone, or a day of the challenge (the place is in the ribbon). */
+/** Why it came: an invite, friends brought, a donation, the admin's present, joining the Discord, the Noite das Bruxas candy jar, its Caça aos Fantasmas or its supporters' gift, the Kecleon Shop, a Festival da Praça's pot or its Mecenas, being an OG Supporter, an Arena season's peak tier, finding a hidden zone, completing a region's Pokédex, or a day of the challenge (the place is in the ribbon). */
 export const reasonLine = (gift: Gift) => {
   const c = gift.content
   if (c.kind === 'ribbon') return t().gifts.ribbonWhy(formatDay(c.ribbon.day), c.ribbon.rank, c.ribbon.total)
@@ -97,6 +110,25 @@ export const reasonLine = (gift: Gift) => {
       return t().gifts.arenaSeason(r.season)
     case 'hiddenZone':
       return t().gifts.hiddenZone[r.zone]
+    case 'season':
+      return t().seasonUnlocks.way[r.way]
+    case 'dex':
+      return t().gifts.dex(r.region === 'national' ? null : t().dex.regions[r.region])
+    case 'rocket':
+      return t().rocket.gifts.reason
+    case 'bugContest':
+      return t().gifts.bugContest(r.rank)
+    case 'safariDex':
+      return isSafariHabitat(r.habitat) ? t().gifts.safariDex(t().minigames.safari.habitats[r.habitat].name) : t().gifts.safariDexAll
+    case 'path':
+      return t().paths.gift[r.path]
+    case 'quest':
+      return t().quests.gifts[r.way]
+    case 'era1': {
+      const rk = t().ranking
+      const side = r.side === 'standard' || r.side === 'legend' ? rk.modes[r.side] : rk.sizes[r.side]
+      return t().gifts.era1(r.rank, `${side} · ${t().difficulty.names[r.difficulty]}`)
+    }
   }
 }
 
@@ -110,6 +142,10 @@ export type GiftScreenActions = {
   hatch: (hatch: Hatch) => void
   /** A shiny ticket came out and the player wants to pick now: the Hall's shiny picker. */
   pick: () => void
+  /** Cosmog's legend came out (its path's gift): the evolution scene plays. */
+  evolve: (legend: CosmogLegend) => void
+  /** A legend's egg came out (the Ovo de Manaphy): its hatching scene plays (`ui/manaphyEgg.ts`). */
+  legendEgg: (legend: LegendId) => void
   /** Back to the lobby. */
   close: () => void
 }
@@ -128,6 +164,9 @@ export const giftScreen = (root: HTMLElement, input: Input, actions: GiftScreenA
   let timer = 0
   let busy = false
   let closed = false
+
+  /** A legend that came as a gift stands on a lit stage, alive (`tick`), instead of a portrait. */
+  let stage: { canvas: HTMLCanvasElement; dex: number } | null = null
 
   const show = (gift: Gift, body: readonly (HTMLElement | false)[], buttons: readonly Action[], opening = true) => {
     const m = t().gifts
@@ -186,10 +225,31 @@ export const giftScreen = (root: HTMLElement, input: Input, actions: GiftScreenA
       dispose()
       return later(() => actions.hatch(hatch))
     }
+    const content = gift.content
+    if (content.kind === 'legend' && eggLegend(content.legend)) {
+      const legend = content.legend
+      dispose()
+      return later(() => actions.legendEgg(legend))
+    }
+    if (gift.reason?.kind === 'path' && gift.reason.path === 'cosmog' && content.kind === 'legend' && (content.legend === 'solgaleo' || content.legend === 'lunala')) {
+      const legend = content.legend
+      dispose()
+      return later(() => actions.evolve(legend))
+    }
     playSfx('unlock')
     const line = contentLine(gift)
     const left = giftInbox().length
-    const prize = h('div', { class: 'gift-prize' }, h('span', { class: 'gift-burst', 'aria-hidden': 'true' }), h('img', { src: line.src, alt: '' }))
+    stage = null
+    const c = gift.content
+    let shown: HTMLElement = h('img', { src: line.src, alt: '' })
+    if (c.kind === 'legend') {
+      const dex = LEGENDS[c.legend].line[0].dex
+      stage = { canvas: h('canvas', { class: 'gift-stage', width: STAGE.w, height: STAGE.h, 'aria-hidden': 'true' }), dex }
+      shown = stage.canvas
+      void loadSpecies(dex)
+      playCry(cryUrl(dex), 0.5)
+    }
+    const prize = h('div', { class: c.kind === 'legend' ? 'gift-prize gift-legend' : 'gift-prize' }, h('span', { class: 'gift-burst', 'aria-hidden': 'true' }), shown)
     const buttons: Action[] = [
       ...(gift.content.kind === 'shinyPick' ? [{ label: m.pickNow, run: () => (dispose(), later(actions.pick)) }] : []),
       left > 0 ? { label: m.next(left), run: closedBox } : { label: m.ok, run: close },
@@ -214,7 +274,33 @@ export const giftScreen = (root: HTMLElement, input: Input, actions: GiftScreenA
     later(actions.close)
   }
 
+  /** The legend's stage: a pool of gold light, sparkles winking round it, and the legend at twice its size when it fits. */
+  const tick = (time: number) => {
+    if (!stage || !stage.canvas.isConnected) return
+    const ctx = context2d(stage.canvas)
+    const { w, h: height } = STAGE
+    ctx.clearRect(0, 0, w, height)
+    blitEllipse(ctx, 40, 9, 'rgba(248,208,72,0.35)', w / 2, height - 12)
+    blitEllipse(ctx, 26, 6, 'rgba(255,244,192,0.55)', w / 2, height - 12)
+    for (let i = 0; i < 8; i++) {
+      if (Math.floor(time * 3 + i * 1.7) % 4 === 0) continue
+      const a = (i / 8) * Math.PI * 2 + time * 0.4
+      const x = Math.round(w / 2 + Math.cos(a) * 46)
+      const y = Math.round(height / 2 - 4 + Math.sin(a) * 30)
+      ctx.fillStyle = '#fff4c0'
+      ctx.fillRect(x, y - 1, 1, 3)
+      ctx.fillRect(x - 1, y, 3, 1)
+    }
+    const s = loadedSprites(stage.dex)
+    if (!s) return
+    const scale = Math.max(s.bodyW, s.bodyH) * 2 <= height - 16 ? 2 : 1
+    drawPokemon(ctx, s, 'Idle', 0, time, w / 2, height - 12, { scale })
+  }
+
   root.append(el)
   closedBox()
-  return { el, dispose }
+  return { el, dispose, tick }
 }
+
+/** The legend gift's stage canvas, px (shown at twice that, `.gift-stage`). */
+const STAGE = { w: 112, h: 96 } as const

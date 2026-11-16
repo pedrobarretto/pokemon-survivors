@@ -25,7 +25,7 @@ export type BiomeDef = {
  */
 export const BIOMES = {
   meadow: { affinity: ['normal', 'flying', 'bug', 'grass'], weather: { clear: 5, sun: 3, rain: 2 }, theme: 'run' },
-  forest: { affinity: ['grass', 'bug', 'poison'], weather: { clear: 3, rain: 4, fog: 2, sun: 1 }, theme: 'forest' },
+  forest: { affinity: ['grass', 'bug', 'poison', 'fairy'], weather: { clear: 3, rain: 4, fog: 2, sun: 1 }, theme: 'forest' },
   /** Route 109's beach: Wingull over the waves, Krabby in the tide pools. */
   beach: { affinity: ['water', 'flying', 'normal'], weather: { clear: 3, sun: 4, rain: 3 }, theme: 'beach' },
   cave: { affinity: ['rock', 'ground', 'fighting', 'poison'], weather: { clear: 3, sand: 4, fog: 1 }, theme: 'cave' },

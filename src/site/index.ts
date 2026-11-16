@@ -1,4 +1,5 @@
 import { TIER_SNAPSHOT } from '../data/tierRuns'
+import { DEX_REGIONS } from '../data/nationalDex'
 import { LOCALE_IDS, type Locale } from '../i18n'
 import { CHANGELOG } from './changelog'
 import { alternativesPage } from './pages/alternatives'
@@ -9,11 +10,11 @@ import { dexPage } from './pages/dexPage'
 import { guidePage } from './pages/guide'
 import { legalPage } from './pages/legal'
 import { notFoundPage } from './pages/notFound'
-import { pokedexPage } from './pages/pokedex'
+import { pokedexPage, regionPage } from './pages/pokedex'
 import { supportPage } from './pages/support'
 import { tierListPage } from './pages/tierList'
 import { dexPages } from './pokedex'
-import { dexPaths, PAGE_IDS, ROUTE_IDS, ROUTES, sitemap as routesSitemap, type PageId, type Paths, type RouteId } from './routes'
+import { dexPaths, dexRegionPaths, PAGE_IDS, ROUTE_IDS, ROUTES, sitemap as routesSitemap, type PageId, type Paths, type RouteId } from './routes'
 
 const RENDER: Record<PageId, (locale: Locale) => string> = {
   pokedex: pokedexPage,
@@ -41,12 +42,13 @@ const pagesOf = (paths: Paths, render: (locale: Locale) => string): SitePage[] =
   LOCALE_IDS.map((locale) => ({ path: paths[locale], paths, file: `${paths[locale].slice(1)}index.html`, render: () => render(locale) }))
 
 /**
- * Every static page in every language: the routes, then one page per playable
+ * Every static page in every language: the routes, the Pokédex's regions, then one page per playable
  * Pokémon (`dexPages`). `vite.config.ts` renders them at build time (and on
  * request in dev), so the HTML ships complete, without client JS.
  */
 export const SITE_PAGES: readonly SitePage[] = [
   ...PAGE_IDS.flatMap((id) => pagesOf(ROUTES[id], RENDER[id])),
+  ...DEX_REGIONS.flatMap((region) => pagesOf(dexRegionPaths(region), (locale) => regionPage(region, locale))),
   ...dexPages().flatMap((page) => pagesOf(dexPaths(page.slug), (locale) => dexPage(page, locale))),
 ]
 
@@ -67,6 +69,10 @@ const LASTMOD: Partial<Record<RouteId, string>> = {
   tierList: TIER_SNAPSHOT.date,
 }
 
-/** sitemap.xml: every route and every Pokémon page. */
+/** sitemap.xml: every route, every region's Pokédex and every Pokémon page. */
 export const sitemap = () =>
-  routesSitemap([...ROUTE_IDS.map((id) => ({ paths: ROUTES[id], lastmod: LASTMOD[id] })), ...dexPages().map((p) => ({ paths: dexPaths(p.slug) }))])
+  routesSitemap([
+    ...ROUTE_IDS.map((id) => ({ paths: ROUTES[id], lastmod: LASTMOD[id] })),
+    ...DEX_REGIONS.map((r) => ({ paths: dexRegionPaths(r) })),
+    ...dexPages().map((p) => ({ paths: dexPaths(p.slug) })),
+  ])

@@ -3,11 +3,12 @@ import { dir8, type Vec } from '../engine/math'
 import { createRng } from '../engine/rng'
 import { createGrid } from '../engine/spatial'
 import { bodyOf } from '../data/bodies'
-import { isLegend } from '../data/legends'
+import { isLegend, LEGENDS, type LegendDef, type RuinsRegi } from '../data/legends'
 import type { EnemyId } from '../data/enemies'
 import { isHidden } from '../data/abilities'
 import { branchesAt } from '../data/branches'
 import type { EvoItemId } from '../data/shop'
+import type { PathFormId } from '../data/legendPaths'
 import type { EvolutionStage } from '../data/starters'
 import { runBoost } from './evoItems'
 import { evolutionFreed, missingEvoItems, runEvoItems, stepOpen } from './evoGate'
@@ -21,6 +22,25 @@ import { updateBiomes } from './biomes'
 import { START_BIOME } from '../data/biomes'
 import { healPlayer } from './combat'
 import { createDexLog } from './dex'
+import { createSeasonKit } from './seasonOneKitRules'
+import { updateSeasonKit } from './seasonOneKitSystem'
+import { createKitB } from './gaKitBRules'
+import { updateKitB } from './gaKitBSystem'
+import { createKitF } from './fossilKitRules'
+import { updateKitF } from './fossilKitSystem'
+import { createKitMA } from './gaKitMARules'
+import { updateKitMA } from './gaKitMASystem'
+import { createKitSC } from './scKitRules'
+import { updateKitSC } from './scKitSystem'
+import { createGaKitA } from './gaKitARules'
+import { updateGaKitA } from './gaKitASystem'
+import { createKitH } from './gaHookRules'
+import { ruledBranch, updateKitH } from './gaHookSystem'
+import { createRocketKit } from './rocketKitRules'
+import { createMegaKitB } from './megaKitBRules'
+import { updateMegaKitB } from './megaKitBSystem'
+import { updateRocketKit } from './rocketKitSystem'
+import type { ShadowVariant } from './shadow'
 import { FRESH_LEVELUPS } from './learnsets'
 import { DEFAULT_DIFFICULTY, type Difficulty } from './difficulty'
 import { updateBosses, updateHazards } from './bosses'
@@ -34,11 +54,15 @@ import {
   type RollOptions,
 } from './leveling'
 import { createMapEvents, updateMapEvents } from './mapEvents'
+import { createQuests, updateQuests, type WildStart } from './quests'
+import { rushCamera, updateRush } from './rush'
 import { createCurseState } from './curses'
 import { curseCast, decideCurse, updateCurses } from './curseSystem'
 import { updateDuos } from './duoMoves'
 import { recipeOf } from './duoRules'
 import { createMegaState, updateMega, updateMegaIntro } from './mega'
+import { createTeraState, stellarForm, updateTera, updateTeraIntro } from './tera'
+import { createRaidState, raidCamera, updateRaid, updateRaidDen, updateRaidFall } from './teraRaid'
 import { NO_RANKS, runCharges, type Ranks } from './meta'
 import { afterCast as afterModCast, echoStats, hasMod, MOD } from './mods'
 import { forkAt, isManual, MOVES, moveStats, type CastStats, type MoveDef, type MoveId } from './moves'
@@ -49,14 +73,18 @@ import { createTmState, pickTm } from './tms'
 import { updateVerbEvolved } from './verbEvolutions'
 import { updateLegendary } from './legendary'
 import { createSpecialState, specialBusy, specialSpeedFactor, updateSpecial } from './special'
-import { AWAKENING, avoidLegend, createLegendState, formAfter, pendingAwakening, updateLegend } from './legend'
+import { AWAKENING, avoidLegend, createLegendState, formAfter, legendLook, pendingAwakening, updateLegend } from './legend'
 import { decidePokeball, updatePickups } from './pickups'
+import { restTurnedDown } from './itemDrop'
 import { rollShiny, SHINY_ODDS, shinyBoost } from './shiny'
 import { updateProps } from './props'
 import { withHoney, withOutbreak } from './outbreak'
+import type { UltraBeast } from '../data/ultraBeasts'
 import { withHaunts } from './halloween'
 import { createTerrain, groundAt, groundPace, slidesOnIce, updateTerrain } from './terrain'
 import { createLandmarkState, createPlayerLandmarks, updateLandmarks, updateTunnel } from './landmarks'
+import { createSeasonFinds } from './seasonOneFinds'
+import { createPathRun } from './pathRun'
 import { drawRoster, type Roster } from './roster'
 import { clockRuns, createRiftState } from './rift'
 import { createPlaceState } from './place'
@@ -103,6 +131,20 @@ export const playerRadius = (dex: number, legend: boolean) => {
   return legend ? Math.min(LEGEND_RADIUS, r) : r
 }
 
+/** `Player.kit` for a family with a mechanic of its own; nothing at all for anyone else, so their state hashes the same (`createSeasonKit`). */
+const kitField = (starter: PlayableId) => {
+  const kit = createSeasonKit(starter)
+  const kitB = createKitB(starter)
+  const kitA = createGaKitA(starter)
+  const rocket = createRocketKit(starter)
+  const kitF = createKitF(starter)
+  const kitMA = createKitMA(starter)
+  const megaB = createMegaKitB(starter)
+  const kitSC = createKitSC(starter)
+  const kitH = createKitH(starter)
+  return { ...(kit && { kit }), ...(kitB && { kitB }), ...(kitA && { kitA }), ...(rocket && { rocket }), ...(kitF && { kitF }), ...(kitMA && { kitMA }), ...(megaB && { megaB }), ...(kitSC && { kitSC }), ...(kitH && { kitH }) }
+}
+
 /** What the save brings into a run besides the Poké Mart ranks. */
 export type RunOptions = {
   /** Picked on the starter select screen; Normal when omitted. */
@@ -125,8 +167,24 @@ export type RunOptions = {
   caps?: number
   /** The mythicals' bad-luck protection (`game/mythicalHunt.ts`); the plain odds when absent. */
   mythical?: MythicalHunt
+  /** The Ultra Beast of the week (`game/ultraWeek.ts`): its wormhole comes more often. None when absent. */
+  ultra?: UltraBeast | null
+  /** The legends the save still has to catch on the open map (`game/quests.ts`); none when absent. */
+  wild?: WildStart
   /** Opens the run on the opening draft (`draftOffers`): three moves of the learnset to pick the second move from. */
   draft?: boolean
+  /** The day whose Tera Raid the late den holds (`raidOfDay`); the run draws its own there when absent. */
+  raidDay?: DayKey | null
+  /** A Shadow or Purified Pokémon (`shadow.ts`); the plain one when absent. */
+  variant?: ShadowVariant | null
+  /** The Game Corner poster's pass: the Rocket Hideout's hatch opens on this run's map (`data/rocketHideout.ts`). */
+  hideout?: boolean
+  /** The forms a legend's path opened (`data/legendPaths.ts`): it wears them from their awakenings on. */
+  forms?: readonly PathFormId[]
+  /** The run brings Regigigas's temple (`game/pathRun.ts`). */
+  temple?: boolean
+  /** The run brings the Ruínas da Decisão, these Regis free in them (`game/splitRuins.ts`). */
+  ruins?: readonly RuinsRegi[]
 }
 
 /**
@@ -142,6 +200,9 @@ export type PlayerSetup = {
   tms?: readonly MoveId[]
   evo?: readonly EvoItemId[]
   caps?: number
+  variant?: ShadowVariant | null
+  /** A legend's path forms (`RunOptions.forms`). */
+  forms?: readonly PathFormId[]
 }
 
 /**
@@ -187,9 +248,12 @@ export const createPlayer = (slot: number, setup: PlayerSetup, lucky: boolean, x
     moveBuffs: [],
     special: createSpecialState(),
     mega: createMegaState(),
+    // Terapagos plays Stellar from the start: shards never change it (`tera.ts`). Ogerpon starts in its Teal Mask, Grass (`ogerpon.ts`).
+    tera: createTeraState(setup.starter === 'terapagos' ? 'stellar' : setup.starter === 'ogerpon' ? 'grass' : null),
     ...runCharges(setup.ranks),
     banished: new Set(),
     banishedItems: new Set(),
+    dropped: [],
     castMods: 0,
     damageByMove: {},
     pendingLevelUps: 0,
@@ -210,7 +274,7 @@ export const createPlayer = (slot: number, setup: PlayerSetup, lucky: boolean, x
     evoFound: [],
     evoHeld: false,
     boost: runBoost(setup.caps ?? 0, bag),
-    legend: createLegendState(setup.starter),
+    legend: createLegendState(setup.starter, setup.forms),
     wings: {},
     landmark: createPlayerLandmarks(),
     biome: START_BIOME,
@@ -221,6 +285,8 @@ export const createPlayer = (slot: number, setup: PlayerSetup, lucky: boolean, x
     revive: 0,
     record: createRecord(),
     hits: [],
+    ...kitField(setup.starter),
+    ...(setup.variant ? { variant: setup.variant } : {}),
   }
 }
 
@@ -285,14 +351,20 @@ export const createRun = (view: Game['view'], seed: number, setups: readonly Pla
     weather: createWeather(),
     traits: { seen: new Set(), nextIntro: 0 },
     rift: createRiftState(),
-    place: createPlaceState(seed),
+    raid: createRaidState(seed, options.raidDay ?? null),
+    place: options.hideout ? { ...createPlaceState(seed), hideout: true } : createPlaceState(seed),
     landmarks: createLandmarkState(),
+    finds: createSeasonFinds(seed),
+    paths: createPathRun(seed, options.temple === true && !coop, coop ? [] : (options.ruins ?? [])),
+    quests: createQuests(seed, options.wild, coop),
+    rush: null,
     tutors: 0,
     endless: null,
     tally: createTally(),
     eggs: { found: [], lucky: options.luckyEgg === true, boost: bag.includes('incense') ? BAG_ITEMS.incense.effect.eggOdds : 1 },
     outbreak: options.outbreak ?? null,
     halloween: options.halloween === true,
+    ultraWeek: options.ultra ?? null,
     mythicalHunt: options.mythical ?? null,
     candies: 0,
     shinyBoost: shinyBoost(Math.max(...setups.map((s) => s.ranks.shinyCharm)), bag.includes('lure')),
@@ -343,7 +415,7 @@ export const createGame = (
   roster?: Roster,
   options: RunOptions = {},
 ): Game => {
-  const setup: PlayerSetup = { starter, ranks, shiny: options.shiny === true, bag: options.bag ?? [], tms: options.tms, evo: options.evo, caps: options.caps }
+  const setup: PlayerSetup = { starter, ranks, shiny: options.shiny === true, bag: options.bag ?? [], tms: options.tms, evo: options.evo, caps: options.caps, variant: options.variant, forms: options.forms }
   return createRun(view, seed, [setup], roster, options, false)
 }
 
@@ -359,7 +431,7 @@ export type CoopLoadout = { starter: (typeof PLAYABLE_IDS)[number]; ranks: Ranks
  * view, a roster drawn ahead and the Desafio co-op do dia it plays (`game/coopBoard.ts`; the caller deals its seed,
  * difficulty and upgrades off).
  */
-export type CoopOptions = { difficulty?: Difficulty; draft?: boolean; view?: Game['view']; roster?: Roster; challenge?: DayKey }
+export type CoopOptions = { difficulty?: Difficulty; draft?: boolean; view?: Game['view']; roster?: Roster; challenge?: DayKey; raidDay?: DayKey }
 
 /**
  * A fresh co-op run for 1 to `COOP.maxPlayers` loadouts (by slot). Every
@@ -373,7 +445,7 @@ export const createCoopGame = (seed: number, loadouts: readonly CoopLoadout[], o
   if (loadouts.length < 1 || loadouts.length > COOP.maxPlayers) throw new RangeError(`co-op takes 1 to ${COOP.maxPlayers} players, got ${loadouts.length}`)
   const setups: PlayerSetup[] = loadouts.map(({ starter, ranks, shiny }) => ({ starter, ranks, shiny }))
   const view = { ...(options.view ?? COOP.view) }
-  const g = createRun(view, seed, setups, options.roster, { difficulty: options.difficulty, draft: options.draft ?? true }, true)
+  const g = createRun(view, seed, setups, options.roster, { difficulty: options.difficulty, draft: options.draft ?? true, raidDay: options.raidDay ?? null }, true)
   g.coop!.names = loadouts.map((l) => l.name)
   g.coop!.challenge = options.challenge ?? null
   return g
@@ -394,11 +466,11 @@ const rolling = (g: Game): RollOptions => {
 
 /**
  * Per-tick player input, as plain data so the simulation stays DOM-free. `mega`
- * presses the Mega button and `lunge` fires the manual moves (Quick Attack).
+ * presses the Mega button, `tera` the TERA button (`tera.ts`) and `lunge` fires the manual moves (Quick Attack).
  * `casts` are the Arena kit's aimed casts this tick (`versusKit.ts`), at most one per skill;
  * `locked`, a target locked or let go this tick (only Fair Play's idle count, `trackIdle`, reads it).
  */
-export type StepInput = { move: Vec; special: boolean; mega?: boolean; lunge?: boolean; casts?: Cast[]; locked?: boolean }
+export type StepInput = { move: Vec; special: boolean; mega?: boolean; tera?: boolean; lunge?: boolean; casts?: Cast[]; locked?: boolean }
 
 /** A player with no input this tick: stands still, presses nothing. */
 const STILL: StepInput = { move: { x: 0, y: 0 }, special: false }
@@ -574,6 +646,13 @@ export const advancePhase = (g: Game): void => {
   }
   const branches = p.branch === null ? branchesAt(p.starter, p.stage + 1) : []
   if (branches.length > 0) {
+    // A family that decides its own branch (Tyrogue, by the build) goes there without asking or drawing.
+    const ruled = ruledBranch(g)
+    if (ruled !== null) {
+      p.evoHeld = false
+      p.branch = ruled
+      return startEvolution(g)
+    }
     const offers = evolutionOffers(g.rng, branches, branchContext(g), runEvoItems(g))
     if (offers.length === 0) return holdEvolution(g)
     p.evoHeld = false
@@ -643,8 +722,10 @@ const startAwakening = (g: Game): void => {
   const n = pendingAwakening(g)
   if (!s || n === 0) return advancePhase(g)
   const dex = playerDex(g)
-  const form = formAfter(s.id, n)?.key
-  p.evolution = { from: dex, to: dex, t: 0, awakening: n, ...(form && { form }) }
+  // It lands in the look it reaches (a path form may be another species: Urshifu, Melmetal), else keeps the one it has.
+  const next = formAfter(s.id, n, s.forms)
+  const form = next ? next.key : legendLook(g)
+  p.evolution = { from: dex, to: next?.dex ?? dex, t: 0, awakening: n, ...(form && { form }) }
   setPhase(g, 'evolving')
   g.events.push({ kind: 'awaken', legend: s.id, n })
 }
@@ -660,6 +741,8 @@ const awaken = (g: Game, n: number): void => {
   if (!s) return advancePhase(g)
   s.awakened = n
   recomputeStats(g)
+  // Terapagos's second awakening lands it in its Stellar Form, Terastallized for good (`tera.ts`).
+  if (s.id === 'terapagos' && n >= 2) stellarForm(g)
   healPlayer(g, p.stats.maxHp * AWAKENING.heal)
   p.banishes++
   blastHorde(g, AWAKENING.push)
@@ -668,7 +751,9 @@ const awaken = (g: Game, n: number): void => {
   shakeScreen(g, 8)
   g.flash = Math.max(g.flash, 0.4)
   p.evolution = null
-  g.events.push({ kind: 'awakened', legend: s.id, n, form: formAfter(s.id, n)?.key ?? null })
+  const look = formAfter(s.id, n, s.forms)
+  const def: LegendDef = LEGENDS[s.id]
+  g.events.push({ kind: 'awakened', legend: s.id, n, form: look?.key ?? null, changed: (look !== null && look.name !== formAfter(s.id, n - 1, s.forms)?.name) || def.evolve?.at === n })
   if (p.ability.id === null) offerAbilities(g)
   else advancePhase(g)
 }
@@ -721,6 +806,7 @@ const pickOffer = (g: Game, offer: Offer) => {
     p.offers = branchOffers(offer)
     return
   }
+  restTurnedDown(p, p.offers, offer)
   applyOffer(g, offer)
   if ('rarity' in offer && offer.rarity === 'shiny') {
     p.offers = rollOffers(loadout(g), g.rng, 3, rolling(g))
@@ -838,13 +924,14 @@ export const updateEvolution = (g: Game, dt: number) => {
   else advancePhase(g)
 }
 
-/** Any player's Mega Evolution holds the world while it plays. True while one still does. */
+/** Any player's Mega Evolution or Terastallization holds the world while it plays. True while one still does. */
 const updateMegaIntros = (g: Game, dt: number) => {
   const before = g.player
   let busy = false
   for (const p of g.players) {
     g.player = p
     if (updateMegaIntro(g, dt)) busy = true
+    if (updateTeraIntro(g, dt)) busy = true
   }
   g.player = before
   return busy
@@ -863,6 +950,7 @@ export const stepPlayer = (g: Game, input: StepInput, dt: number) => {
   updateCurses(g)
   if (updateLegend(g)) recomputeStats(g)
   updateMega(g, !asleep && input.mega === true, dt)
+  updateTera(g, !asleep && input.tera === true, dt)
   if (updateAbility(g, dt)) recomputeStats(g)
   updateSpecial(g, !asleep && input.special, dt)
 }
@@ -870,6 +958,15 @@ export const stepPlayer = (g: Game, input: StepInput, dt: number) => {
 /** A player's moves: their kit's running state, signatures, shop TMs, legendary move, the casts and duo moves. */
 export const stepMoves = (g: Game, input: StepInput, dt: number) => {
   updateMoveKit(g, dt)
+  updateSeasonKit(g, dt)
+  updateKitB(g, dt)
+  updateKitSC(g, dt)
+  updateGaKitA(g, dt)
+  updateKitF(g, dt)
+  updateKitH(g, dt)
+  updateRocketKit(g, dt)
+  updateKitMA(g, dt)
+  updateMegaKitB(g, dt)
   updateSignatures(g, dt)
   updateShopTms(g, dt)
   updateLegendary(g)
@@ -932,11 +1029,13 @@ export const stepTeam = (g: Game, inputs: readonly StepInput[], dt: number) => {
   if (updatePlaceIntro(g, dt)) return
   // So does the rift throwing a fainted player back out, or a rescue out of a place, a domain's encounter and capture scenes and a wave legendary's.
   if (updateArenaFall(g, dt)) return
+  if (updateRaidFall(g, dt)) return
   if (updateDomainScene(g, dt)) return
   if (updateLegendScene(g, dt)) return
   if (updatePlaceFall(g, dt)) return
   if (hitstopHolds(g, dt)) return
   if (g.training !== null) return stepTraining(g, inputs, dt)
+  if (g.rush !== null) return stepRush(g, inputs, dt)
 
   // The run clock stops inside a rift (`clockRuns`); `now` never does.
   g.now += dt
@@ -966,6 +1065,8 @@ export const stepTeam = (g: Game, inputs: readonly StepInput[], dt: number) => {
   updateStatuses(g, dt)
   updateRiftPortal(g, dt)
   updateArena(g, dt)
+  updateRaidDen(g, dt)
+  updateRaid(g, dt)
   updatePlaceEntrance(g, dt)
   updatePlace(g, dt)
   eachPlayer(g, updateLandmarks, dt)
@@ -986,13 +1087,14 @@ export const stepTeam = (g: Game, inputs: readonly StepInput[], dt: number) => {
     updateProps(g, dt)
     updateMapEvents(g, dt)
   }
+  updateQuests(g, dt)
   updatePickups(g, dt)
   updateConsumables(g, dt)
   updateEffects(g, dt)
   if (g.coop !== null) updateCoop(g, dt)
 
   // In a legendary's domain the camera looks ahead and frames the fight (`domainCamera`); elsewhere it sits on the player.
-  followPlayers(g, dt, domainCamera)
+  followPlayers(g, dt, (g, dt) => domainCamera(g, dt) || raidCamera(g, dt))
   updateSightings(g, dt)
 
   // Level-ups earned this tick, or a held evolution whose item was just found, open everyone's next pick at once
@@ -1035,6 +1137,41 @@ const stepTraining = (g: Game, inputs: readonly StepInput[], dt: number) => {
   updateEffects(g, dt)
   updateTraining(g, dt)
   followPlayers(g, dt, trainingCamera)
+}
+
+/**
+ * Hoopa's Rings' tick (`rush.ts`): the players and their moves against the
+ * ring's legend and its attacks, and the rings themselves. No horde, map
+ * events, weather or level-ups; the clock counts the rush.
+ */
+const stepRush = (g: Game, inputs: readonly StepInput[], dt: number) => {
+  g.now += dt
+  g.time += dt
+  const actor = g.player
+  for (const p of g.players) {
+    g.player = p
+    stepPlayer(g, inputs[p.slot] ?? STILL, dt)
+  }
+  g.player = actor
+  rebuildGrid(g)
+  updateEnemies(g, dt)
+  updateBosses(g, dt)
+  updateHazards(g, dt)
+  updateStatuses(g, dt)
+  rebuildGrid(g)
+  for (const p of g.players) {
+    g.player = p
+    stepMoves(g, inputs[p.slot] ?? STILL, dt)
+  }
+  g.player = actor
+  updateAttacks(g, dt)
+  updateVerbEvolved(g, dt)
+  updateTerrain(g, dt)
+  updatePickups(g, dt)
+  updateConsumables(g, dt)
+  updateEffects(g, dt)
+  updateRush(g, dt)
+  followPlayers(g, dt, rushCamera)
 }
 
 /**

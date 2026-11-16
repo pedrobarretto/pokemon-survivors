@@ -11,9 +11,6 @@ import { anchorPlayer } from '../players'
  * Their beat follows the crossing's clock, so no state is kept.
  */
 
-/** Rayquaza signs its sky's wind shears (`Hazard.by`). */
-const RAYQUAZA = harmBy('rayquaza')
-
 const SHEAR = { every: 3.4, ahead: [60, 130], windup: 1.15, duration: 0.3, width: 10, damage: 9, span: 640 } as const
 
 export const RAYQUAZA_HOOKS: DomainHooks = {
@@ -30,7 +27,7 @@ export const RAYQUAZA_HOOKS: DomainHooks = {
       const dx = fromWest ? 1 : -1
       spawnHazard(g, {
         kind: 'beam', visual: 'aero', x: p.x - dx * (SHEAR.span / 2), y, r: SHEAR.width / 2, damage: SHEAR.damage, angle, len: SHEAR.span,
-        armAt: SHEAR.windup, disarmAt: SHEAR.windup + SHEAR.duration, ttl: SHEAR.windup + SHEAR.duration + 0.25, by: RAYQUAZA,
+        armAt: SHEAR.windup, disarmAt: SHEAR.windup + SHEAR.duration, ttl: SHEAR.windup + SHEAR.duration + 0.25, by: harmBy('rayquaza'),
       })
     }
   },

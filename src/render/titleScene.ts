@@ -128,6 +128,8 @@ export type TitleScene = {
   partner: Partner | null
   /** The supporter's companion (`render/companion.ts`), trotting after the partner on a trip. */
   companion: CompanionView | null
+  /** Cosmog or Cosmoem while one grows (the legend paths), floating beside the partner on a trip. */
+  cosmog: CompanionView | null
   /** Cries for the shell to play (a shopkeeper's hello), drained every frame. */
   cries: Dex[]
   /** Dust where the partner landed, by scene time. */
@@ -217,20 +219,28 @@ export const createTitleScene = (seed: number): TitleScene => {
     spawned: 0,
     partner: null,
     companion: null,
+    cosmog: null,
     cries: [],
     puffs: [],
     haunted: false,
   }
 }
 
-/** The lobby's partner takes its place at home, with the supporter's companion if one walks along (`null`: the lobby closed, both are gone). */
-export const meetPartner = (s: TitleScene, partner: { dex: Dex; shiny: boolean } | null, companion: CompanionView | null = null) => {
+/** Where Cosmog keeps beside the partner (world px, from its feet), and how high it floats over its shadow. */
+const COSMOG_SIDE = { x: -20, y: 2 } as const
+const COSMOG_FLOAT = 8
+/** How far (px) it may trail its spot while the partner hops along. */
+const COSMOG_LAG = 36
+
+/** The lobby's partner takes its place at home, with the supporter's companion if one walks along and Cosmog if one grows (`null`: the lobby closed, they're all gone). */
+export const meetPartner = (s: TitleScene, partner: { dex: Dex; shiny: boolean } | null, companion: CompanionView | null = null, cosmog: CompanionView | null = null) => {
   // A new lobby starts at home: any trip it didn't finish is called off.
   if (partner) {
     s.trip = null
     s.rest = 'home'
   }
   s.companion = partner && companion
+  s.cosmog = partner && cosmog
   s.partner = partner && { ...partner, state: 'home', x: s.home.x, y: s.home.y, dir: 0, moving: false, hopAt: -1 }
 }
 
@@ -506,6 +516,21 @@ export const stepTitleScene = (s: TitleScene, dt: number, w: number, h: number, 
   const c = s.companion
   if (c && p && p.state === 'home') Object.assign(c, createCompanion(c.dex, c.shiny, p, c.sparkles))
   else if (c && p) stepCompanion(c, p, dt)
+  // Cosmog drifts at the partner's shoulder, on the side it faces away from (left of it at home, as the lobby's cast stands).
+  const cg = s.cosmog
+  if (cg && p) {
+    const beside = { x: p.x + COSMOG_SIDE.x, y: p.y + COSMOG_SIDE.y }
+    // It glides rather than walks: eased onto its spot, a touch behind the partner while it hops.
+    const k = p.state === 'home' ? 1 : Math.min(1, dt * 8)
+    cg.x += (beside.x - cg.x) * k
+    cg.y += (beside.y - cg.y) * k
+    const lag = Math.hypot(beside.x - cg.x, beside.y - cg.y)
+    if (lag > COSMOG_LAG) {
+      cg.x = beside.x + ((cg.x - beside.x) / lag) * COSMOG_LAG
+      cg.y = beside.y + ((cg.y - beside.y) / lag) * COSMOG_LAG
+    }
+    cg.dir = Math.abs(beside.x - cg.x) > 1 ? (beside.x > cg.x ? 2 : 6) : 0
+  }
   const { cam, rng } = s
   for (const wd of s.wanderers) {
     if (wd.goneAt !== null) continue
@@ -570,6 +595,17 @@ export const drawTitleScene = (ctx: CanvasRenderingContext2D, s: TitleScene, w: 
     shadow(ctx, x, y, sprite.bodyW)
     drawPokemon(ctx, sprite, p.moving ? 'Walk' : 'Idle', p.dir, s.time, x, y - hopHeight(s.time - p.hopAt))
   }
+  const cg = p && s.cosmog
+  // Cosmog floats: a bob over a small shadow that stays on the ground.
+  const drawCosmog = () => {
+    const sprite = cg && loadedSprites(cg.dex, cg.shiny)
+    if (!cg || !sprite) return
+    shadow(ctx, Math.round(cg.x) - camX, Math.round(cg.y) - camY, Math.max(6, sprite.bodyW - 4))
+    ctx.save()
+    ctx.translate(-camX, -camY)
+    drawCompanion(ctx, { ...cg, moving: false }, s.time, COSMOG_FLOAT + Math.round((Math.sin(s.time * 2.4) + 1) * 1.5))
+    ctx.restore()
+  }
   const drawFollower = () => {
     const sprite = c && loadedSprites(c.dex, c.shiny)
     if (!c || !sprite) return
@@ -583,6 +619,7 @@ export const drawTitleScene = (ctx: CanvasRenderingContext2D, s: TitleScene, w: 
   pending.length = 0
   if (p) pending.push({ y: p.y, draw: drawPartner })
   if (c) pending.push({ y: c.y, draw: drawFollower })
+  if (cg) pending.push({ y: cg.y, draw: drawCosmog })
   for (const piece of plazaPieces(s.plaza)) pending.push(piece)
   for (const piece of dojoPieces(s.dojo)) pending.push(piece)
   for (const piece of stadiumPieces(s.stadium)) pending.push(piece)

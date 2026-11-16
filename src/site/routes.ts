@@ -1,4 +1,5 @@
 import { LOCALE_IDS, type Locale } from '../i18n'
+import type { DexRegion } from '../data/nationalDex'
 
 export const SITE_URL = 'https://www.pokemonsurvivors.com'
 
@@ -94,6 +95,9 @@ export const dexPaths = (slug: string): Paths => ({
   fr: `${ROUTES.pokedex.fr}${slug}/`,
   zh: `${ROUTES.pokedex.zh}${slug}/`,
 })
+
+/** A region's Pokédex, below the Pokédex: `/pokedex/kanto/`, `/en/pokedex/kanto/` (no species is named after a region). */
+export const dexRegionPaths = (region: DexRegion): Paths => dexPaths(region)
 
 /** One page of the sitemap in every language, with the day its content last changed when we know it for sure. */
 export type SitemapEntry = { paths: Paths; lastmod?: string | undefined }

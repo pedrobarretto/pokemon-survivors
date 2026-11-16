@@ -1,5 +1,6 @@
 import { TYPE_COLORS } from '../data/types'
 import { burst } from './effects'
+import { gaKitACast } from './gaKitASystem'
 import { nextStacks, type StackEvent } from './kitRules'
 import { stampWard, wardHolder } from './moveKit'
 import { MOVES, moveStats, type CastStats, type MoveDef, type MoveId } from './moves'
@@ -25,10 +26,10 @@ export const moveEvent = (g: Game, move: MoveId | null, event: StackEvent) => {
 }
 
 /** A hit by `attack` landed on `e`: the move's `onHit` reacts (Rollout's ramp, Ice Ball's growth). */
-export const moveHit = (g: Game, attack: Attack, e: Enemy) => {
+export const moveHit = (g: Game, attack: Attack, e: Enemy, unhurt = false) => {
   if (attack.move === 'special' || attack.move === 'ability') return
   const def: MoveDef = MOVES[attack.move]
-  def.onHit?.(g, attack, e)
+  def.onHit?.(g, attack, e, unhurt)
 }
 
 /** After `owned` fired: spends or grows its stacks on the cast and stamps where it fired from. */
@@ -36,6 +37,7 @@ export const afterCast = (g: Game, owned: OwnedMove) => {
   const def: MoveDef = MOVES[owned.id]
   if (def.stacks) owned.stacks = nextStacks(def.stacks, owned.stacks ?? 0, 'cast')
   owned.walkedAt = g.player.walked
+  gaKitACast(g)
 }
 
 const ownedOf = (g: Game, w: MoveWindow) => g.player.moves.find((m) => m.id === w.move)

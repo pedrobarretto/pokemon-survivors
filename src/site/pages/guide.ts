@@ -23,7 +23,7 @@ import { BOT_PAY, FURNITURE_GAMES, MINIGAME_DAILY, MINIGAME_IDS, MINIGAMES, type
 import { BASE_GRID } from '../../data/realmMap'
 import { BASE_MAX_ITEMS } from '../../data/secretBases'
 import { REALM, REALM_CITIES } from '../../net/realm'
-import { AWAKEN_AT, LEGEND_IDS, legendFestival, LEGENDS, REGULAR_LEGENDS, type LegendId } from '../../data/legends'
+import { AWAKEN_AT, LEGEND_IDS, legendFestival, LEGENDS, type LegendId } from '../../data/legends'
 import { legendSource } from '../../game/capture'
 import { legendMods } from '../../game/legend'
 import { CAVE, GRAVEYARD, HIDDEN, PLACE, PLACES, REGULAR_PLACE_IDS, SKY, WING_IDS, WINGS } from '../../data/places'
@@ -57,9 +57,9 @@ import { MESSAGES } from '../../i18n/messages'
 import { SITE_MESSAGES, type SiteMessages } from '../../i18n/site'
 import { html, type Child, type Html } from '../html'
 import { layout } from '../layout'
-import { clock, gameDex, slugOf } from '../pokedex'
+import { clock, gameDex, pokedex, slugOf } from '../pokedex'
 import { ROUTES } from '../routes'
-import { bossAttacks, patternText, traitText, typeBadge } from './pokedex'
+import { bossAttacks, dexHref, patternText, traitText, typeBadge } from './pokedex'
 
 type Section = keyof SiteMessages['guide']['sections']
 
@@ -73,8 +73,14 @@ const paragraphs = (texts: readonly string[]) => texts.map((t) => html`<p>${t}</
 
 const portrait = (dex: number) => html`<img class="mini" src="${assetUrl(`pokemon/${dex}/portrait.png`)}" width="40" height="40" loading="lazy" alt="" />`
 
-/** Anchor of a species in the Pokédex. */
-const dexLink = (locale: Locale, name: string) => `${ROUTES.pokedex[locale]}#${slugOf(name)}`
+/** The Pokédex's cards by anchor, for `dexLink`. */
+const CARDS = new Map(pokedex().map((e) => [e.slug, e]))
+
+/** Anchor of a species in its region's Pokédex page (the hub when the name has no card). */
+const dexLink = (locale: Locale, name: string) => {
+  const entry = CARDS.get(slugOf(name))
+  return entry ? dexHref(locale, entry) : ROUTES.pokedex[locale]
+}
 
 const bossName = (locale: Locale, enemy: keyof typeof ENEMIES) =>
   html`<a class="with-mini" href="${dexLink(locale, ENEMIES[enemy].name)}">${portrait(ENEMIES[enemy].dex)}${ENEMIES[enemy].name}</a>`
@@ -376,10 +382,15 @@ const rifts = (locale: Locale, m: SiteMessages) => {
 const legends = (locale: Locale, m: SiteMessages) => {
   const g = m.guide.legends
   // A festival legend (Cresselia) is a surprise for now: its row comes with its festival's announcement.
-  const rows = LEGEND_IDS.filter((id) => !legendFestival(id)).map((id) => [
+  // A path legend is never won in fights: its column says what its path asks instead.
+  const need: Partial<Record<LegendId, string>> = g.need
+  const capture = (id: LegendId) => need[id] ?? g.wins(LEGENDS[id].unlock.wins)
+  const pathWhere: Partial<Record<LegendId, string>> = g.pathWhere
+  const shown = LEGEND_IDS.filter((id) => !legendFestival(id))
+  const rows = shown.map((id) => [
     legendName(locale, id),
-    g.where[legendSource(id)],
-    String(LEGENDS[id].unlock.wins),
+    pathWhere[id] ?? g.where[legendSource(id)],
+    capture(id),
     ABILITIES[LEGENDS[id].innate.ability].name,
     MOVES[LEGENDS[id].signature].name,
   ])
@@ -389,7 +400,7 @@ const legends = (locale: Locale, m: SiteMessages) => {
     const d = legendMods(id)
     return [names[id], times(d.enemyHp), times(d.enemyDamage), times(d.spawnRate), times(d.enemySpeed), times(d.ramp), times(d.healing)]
   })
-  return html`${paragraphs(g.paragraphs({ count: REGULAR_LEGENDS.length, awaken: AWAKEN_AT }))}
+  return html`${paragraphs(g.paragraphs({ count: shown.length, awaken: AWAKEN_AT }))}
     ${table([g.legendHead, g.whereHead, g.winsHead, g.innateHead, g.opensHead], rows)}
     <p>${g.eventNote}</p>
     <h3>${g.pressureTitle}</h3>

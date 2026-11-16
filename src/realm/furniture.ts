@@ -1,5 +1,7 @@
 import { type FurnitureCounts, type FurnitureId } from '../data/furniture'
 import { LEGENDS } from '../data/legends'
+import { DIG_PIECES, type DigPiece } from '../data/digTreasures'
+import { plushFamily, plushForm } from '../data/plushes'
 import { fetchGems } from '../gems'
 import { t } from '../i18n'
 import { buyFurniture, buyWithCoins, isFailure } from './api'
@@ -10,10 +12,13 @@ import { dollLegend } from './placement'
  * at the carpentry (`ui/carpentry.ts`). Where pieces go is `placement.ts`.
  */
 
-/** A piece's name in the player's language (a doll's is its legend's). */
+/** A piece's name in the player's language (a doll's is its legend's, a plush's its family's). */
 export const pieceName = (id: FurnitureId): string => {
   const legend = dollLegend(id)
   if (legend) return t().furniture.doll(LEGENDS[legend].name)
+  const family = plushFamily(id)
+  if (family) return t().furniture.plush(plushForm(family).name)
+  if ((DIG_PIECES as readonly string[]).includes(id)) return t().furniture.dig[id as DigPiece]
   const names: Readonly<Record<string, string>> = t().furniture.names
   return names[id] ?? id
 }

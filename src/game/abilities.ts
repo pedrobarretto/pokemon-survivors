@@ -4,6 +4,7 @@ import { ABILITIES, ABILITY, BRANCH_ABILITIES, FAMILY_ABILITIES, type AbilityEff
 import type { BiomeId } from '../data/biomes'
 import type { BranchId } from '../data/branches'
 import type { PlayableId } from '../data/hatchlings'
+import { MEGAS, type MegaAbilityEffect } from '../data/megas'
 import { POKE_TYPES, type PokeType } from '../data/types'
 import { formOf, playerForm } from './branch'
 import { healPlayer, killEnemy } from './combat'
@@ -66,13 +67,30 @@ export const activeAbility = (g: Game): AbilityId | null => (g.player.mega.activ
 const NONE: readonly AbilityEffect[] = []
 const joined = new Map<string, readonly AbilityEffect[]>()
 
+/** The ability effects a Mega form plays while it lasts (`MegaEffect` `ability`: Mega Absol Z's Sharpness), or null. */
+const megaEffects = (g: Game): readonly MegaAbilityEffect[] | null => {
+  const { stone, active } = g.player.mega
+  if (active <= 0 || !stone) return null
+  const effect = MEGAS[stone].effect
+  return effect.kind === 'ability' ? effect.effects : null
+}
+
 /**
  * The effects in play: a legend's innate (`legend.ts`, always on) and the
- * ability picked. Cached per pair, since the hits and ticks ask all the time.
+ * ability picked, or in its place a Mega form's own (`megaEffects`). Cached
+ * per pair, since the hits and ticks ask all the time.
  */
 const effectsOf = (g: Game): readonly AbilityEffect[] => {
-  const id = activeAbility(g)
   const innate = innateEffects(g.player.starter)
+  const mega = megaEffects(g)
+  if (mega) {
+    if (innate.length === 0) return mega
+    const key = `${g.player.starter}|mega:${g.player.mega.stone}`
+    let effects = joined.get(key)
+    if (!effects) joined.set(key, (effects = [...innate, ...mega]))
+    return effects
+  }
+  const id = activeAbility(g)
   if (innate.length === 0) return id ? ABILITIES[id].effects : NONE
   if (!id) return innate
   const key = `${g.player.starter}|${id}`

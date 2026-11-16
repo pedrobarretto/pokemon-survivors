@@ -57,6 +57,21 @@ export const drawDressed = (
   drawPokemon(ctx, s, anim, dir, seconds, x, y, opts)
 }
 
+/**
+ * The head's seat on the frame `drawPokemon` would draw, in the frame's px
+ * (`seatOf` in `render/wearEngine.ts`): Terastal's crown rides it as a hat
+ * does. Null until the engine and the species' rig land (the first call
+ * starts them) and wherever a hat would draw bare.
+ */
+export const headSeat = (s: SpeciesSprites, anim: AnimName, dir: Dir8, seconds: number, loop = true) => {
+  if (engine) return engine.seatOf(s, anim, dir, seconds, loop)
+  void loadWearables().catch(() => {})
+  return null
+}
+
+/** A variant's skull width from its head rig (`skullOf`); null until the engine and its rig land, or without one. */
+export const skullWidth = (s: SpeciesSprites) => engine?.skullOf(s) ?? null
+
 /** Whether a species (by dex) can wear an item: the locker greys out the ones it can't (`data/wearFits.ts`). */
 export const fitsWearer = (dex: number, id: WearableId) => wears(fitOf(dex), WEARABLES[id].slot, id)
 

@@ -8,8 +8,8 @@ import { pushToast, runToastShows, stepToasts, type QueuedToast, type RunToasts 
  * while it's up, since it sits where the column grows.
  */
 
-/** `wait`: seconds before the column is measured again after it had no room (`hasRoom`). */
-type Stack = { host: HTMLElement; toasts: QueuedToast<HTMLElement>[]; banners: QueuedToast<HTMLElement>[]; wait: number }
+/** `wait`: seconds before the column is measured again after it had no room (`hasRoom`); `focus`: a fight that needs the boss in view (`focusToasts`). */
+type Stack = { host: HTMLElement; toasts: QueuedToast<HTMLElement>[]; banners: QueuedToast<HTMLElement>[]; wait: number; focus: boolean }
 
 const MAX_TOASTS = 3
 /** Phones held upright get the compact toasts (style.css, same query) and two at a time, so the news never covers the middle of the screen. */
@@ -23,7 +23,7 @@ const stacks = new WeakMap<HTMLElement, Stack>()
 const stackOf = (root: HTMLElement) => {
   const known = stacks.get(root)
   if (known?.host.isConnected) return known
-  const stack: Stack = { host: h('div', { class: 'toasts' }), toasts: [], banners: [], wait: 0 }
+  const stack: Stack = { host: h('div', { class: 'toasts' }), toasts: [], banners: [], wait: 0, focus: false }
   root.append(stack.host)
   stacks.set(root, stack)
   return stack
@@ -140,7 +140,7 @@ export const tickToasts = (root: HTMLElement, dt: number, held: boolean, banners
   // One newcomer per frame at most, so each one is measured against the room left.
   const onScreen = stack.toasts.filter((q) => q.shown).length
   const waiting = onScreen < stack.toasts.length
-  const max = COMPACT?.matches ? COMPACT_MAX_TOASTS : MAX_TOASTS
+  const max = stack.focus ? 1 : COMPACT?.matches ? COMPACT_MAX_TOASTS : MAX_TOASTS
   let fits = false
   if (waiting && onScreen < max) {
     stack.wait -= dt
@@ -150,6 +150,20 @@ export const tickToasts = (root: HTMLElement, dt: number, held: boolean, banners
     }
   }
   advance(stack.toasts, dt, fits ? onScreen + 1 : 0, stack.host)
+}
+
+/**
+ * A fight that needs its boss in view (a rift's legend, Hoopa's rings, a Sword's duel): the
+ * news shows one line at a time, the rest waiting its turn, and the column
+ * leaves the top of the screen, where the boss and its bar are (style.css,
+ * `.toasts.focus`: to the bottom on a wide screen, the right column on a
+ * phone on its side).
+ */
+export const focusToasts = (root: HTMLElement, on: boolean) => {
+  const stack = stackOf(root)
+  if (stack.focus === on) return
+  stack.focus = on
+  stack.host.classList.toggle('focus', on)
 }
 
 /** Drops all news, on screen or waiting (the run is over). */

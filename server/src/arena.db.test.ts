@@ -3,6 +3,7 @@ import { ARENA_RANKED } from '../../src/data/arenaRanked'
 import { seasonById, seasonReset, type ArenaResult } from '../../src/game/arenaRank'
 import { arenaStore, parseArenaReport, planMatch, type ParsedReport } from './arena'
 import type { Sql } from './db'
+import { ownTestDatabase } from './testDatabase'
 
 /**
  * The Arena's store against a real Postgres: set `ARENA_TEST_DATABASE_URL`
@@ -42,7 +43,7 @@ describe.skipIf(!url)('arena store (Postgres)', () => {
 
   beforeAll(async () => {
     const { connect, migrate } = await import('./db')
-    sql = connect(url!, 4)
+    sql = connect(await ownTestDatabase(url!, 'arena'), 4)
     await migrate(sql, new URL('../migrations/', import.meta.url))
     arena = arenaStore(sql)
   })

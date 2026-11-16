@@ -18,6 +18,8 @@ import { COSMETIC_IDS, slotOf, type CosmeticSlot } from '../data/cosmetics'
 import { PLAYABLE_IDS } from '../data/hatchlings'
 import { BASE_ROOM, REALM_ROOMS, isTownRoomId, type Door, type Point, type Shape, type Spot, type TownRoomId } from '../data/realmMap'
 import { tableAt } from '../../relay/src/realmTables'
+import { isMinigameId, isTableGame } from '../data/minigames'
+import { TABLE_GAMES } from './games/tables'
 import type { TableView } from '../net/realmTables'
 import { REALM, REALM_LINES, REALM_EMOTES, baseRoom, type CityId, type Facing, type RealmIdentity, type RealmServerMessage, type RoomKey } from '../net/realm'
 import type { PresenceReport } from '../net/realmRelay'
@@ -368,7 +370,8 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
       }
     }
     const table = staged ? staged.spot : tableToSit(bot)
-    bot.sitGame = staged ? bot.stageGame : null
+    // The staged game, else one the table plays.
+    bot.sitGame = (staged ? bot.stageGame : null) ?? (table?.games && table.games.length > 0 ? pick(table.games) : null)
     if (staged) bot.stage = null
     if (table?.id && clearPath(bot.room, from, table.at)) {
       bot.target = { ...table.at }
@@ -443,14 +446,19 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
     const seat = bot.id === null ? -1 : tb.seats.indexOf(bot.id)
     const city = state.cities.get(opts.city)
     if (seat < 0 || !city) return
-    const alone = tb.seats.some((s) => s === null)
+    const open = isMinigameId(tb.game) && isTableGame(tb.game) && TABLE_GAMES[tb.game].open !== null
+    const people = tb.seats.filter((s) => s !== null).length
+    // An open table needs two people (bots fill the rest); a 2-seat one, both seats.
+    const alone = open ? tb.phase !== 'playing' && people < 2 : tb.seats.some((s) => s === null)
     bot.aloneSince = alone ? (bot.aloneSince ?? t) : null
     if (alone && t - (bot.aloneSince ?? t) > 45_000) {
       bot.aloneSince = null
       bot.restUntil = t + between(2_000, 6_000)
       return step(() => message(state, bot.conn, { t: 'stand' }, t))
     }
-    const due = (tb.phase === 'playing' && tb.pending.includes(seat)) || (tb.phase === 'over' && bot.id !== null && !tb.ready.includes(bot.id))
+    const due =
+      (tb.phase === 'playing' && tb.pending.includes(seat)) ||
+      ((tb.phase === 'over' || (open && tb.phase === 'waiting' && people >= 2)) && bot.id !== null && !tb.ready.includes(bot.id))
     if (!due) {
       bot.actAt = null
       return
@@ -458,6 +466,7 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
     if (bot.actAt === null) bot.actAt = t + (tb.phase === 'over' ? between(2_500, 5_000) : between(900, 2_600))
     if (t < bot.actAt) return
     bot.actAt = null
+    if (tb.phase === 'waiting') return step(() => message(state, bot.conn, { t: 'ready' }, t))
     if (tb.phase === 'over') return step(() => message(state, bot.conn, random() < 0.75 ? { t: 'ready' } : { t: 'stand' }, t))
     const match = tableAt(city, bot.room, tb.id)?.match
     if (match) step(() => message(state, bot.conn, { t: 'play', move: match.bot(seat, Math.floor(random() * 2 ** 31)) }, t))

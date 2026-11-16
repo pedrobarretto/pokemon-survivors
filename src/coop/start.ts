@@ -39,9 +39,10 @@ export type RoomMode = 'run' | 'versus'
  * in a Versus room (`data/arenaFormats.ts`, the standard 4v4 when left out;
  * the map one of the format's, drawn from the seed when left out: Random).
  * `challenge` only in a run room: it plays that day's Desafio co-op do dia
- * (`dailyCoopChallenge`), whose difficulty replaces `difficulty`.
+ * (`dailyCoopChallenge`), whose difficulty replaces `difficulty`. `raid`: the day
+ * whose Tera Raid the run's late den holds (`raidOfDay`), set by the host's Start.
  */
-export type CoopSettings = { difficulty: Difficulty; mode?: RoomMode; format?: ArenaFormat; map?: MapId; challenge?: DayKey }
+export type CoopSettings = { difficulty: Difficulty; mode?: RoomMode; format?: ArenaFormat; map?: MapId; challenge?: DayKey; raid?: DayKey }
 
 export const loadoutOf = (pick: CoopPick): Loadout => ({
   starter: pick.starter,
@@ -58,6 +59,7 @@ export const settingsOf = (s: CoopSettings): Settings => ({
   ...(s.mode === 'versus' && s.format !== undefined && s.format !== 'standard' && { format: s.format }),
   ...(s.mode === 'versus' && s.map !== undefined && { map: s.map }),
   ...(s.mode !== 'versus' && s.challenge !== undefined && { challenge: s.challenge }),
+  ...(s.mode !== 'versus' && s.raid !== undefined && { raid: s.raid }),
 })
 
 const rankOf = (raw: unknown, max: number) => (typeof raw === 'number' && Number.isInteger(raw) && raw >= 0 ? Math.min(raw, max) : 0)
@@ -78,7 +80,8 @@ export const parseSettings = (raw: Settings): CoopSettings => {
   const map = (Object.keys(MAPS) as MapId[]).find((id) => id === raw.map)
   const mode = raw.mode === 'versus' ? 'versus' : 'run'
   const challenge = mode === 'run' && isDayKey(raw.challenge) ? raw.challenge : undefined
-  return { difficulty: parseDifficulty(raw.difficulty), mode, format: parseArenaFormat(raw.format), ...(map && { map }), ...(challenge && { challenge }) }
+  const raid = mode === 'run' && isDayKey(raw.raid) ? raw.raid : undefined
+  return { difficulty: parseDifficulty(raw.difficulty), mode, format: parseArenaFormat(raw.format), ...(map && { map }), ...(challenge && { challenge }), ...(raid && { raid }) }
 }
 
 /** The loadouts of a run, by slot (`RunStart.players` order), with each player's name. */
@@ -108,7 +111,7 @@ export const startGame = (start: RunStart): Game => {
     // The Desafio co-op do dia: the day's seed and difficulty, whatever the relay dealt, and every upgrade off.
     const c = dailyCoopChallenge(settings.challenge)
     const loadouts = runLoadouts(start).map((l) => ({ ...l, ranks: { ...NO_RANKS } }))
-    return createCoopGame(c.seed, loadouts, { difficulty: c.difficulty, view: { ...COOP.view }, challenge: c.day })
+    return createCoopGame(c.seed, loadouts, { difficulty: c.difficulty, view: { ...COOP.view }, challenge: c.day, ...(settings.raid && { raidDay: settings.raid }) })
   }
-  return createCoopGame(start.seed, runLoadouts(start), { difficulty: settings.difficulty, view: { ...COOP.view } })
+  return createCoopGame(start.seed, runLoadouts(start), { difficulty: settings.difficulty, view: { ...COOP.view }, ...(settings.raid && { raidDay: settings.raid }) })
 }

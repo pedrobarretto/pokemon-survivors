@@ -4,6 +4,7 @@ import type { ClerkUIConstructor } from '@clerk/shared/types'
 import { track } from './analytics'
 import { readToken } from './clerkClock'
 import { applyGift, giftToOpen, parseGift, type Gift, type GiftOutcome } from './game/gifts'
+import type { Hatch } from './game/eggs'
 import { parseSaveData, type Save } from './game/meta'
 import { isRecord } from './game/parse'
 import type { ProfileName } from './game/ranking'
@@ -574,6 +575,24 @@ export const openGift = (id: string): GiftOutcome | null => {
   if (!isGameGift(id)) void claimGifts([id])
   if (out.status === 'applied') void syncSave()
   return out
+}
+
+/**
+ * Applies `gifts` at once (a mini game's prizes, on the spot instead of the
+ * box), in order, marking the save's copy; each comes back with its hatch, if
+ * any. A gift that can't land yet (an egg with the incubator full) stays in
+ * the inbox for later. `local`: made up by the dev fakes, never claimed.
+ */
+export const landGifts = (gifts: readonly Gift[], how: 'claim' | 'local'): { gift: Gift; hatch: Hatch | null }[] => {
+  const out = gifts.map((gift) => {
+    const res = applyGift(loadSave(), gift)
+    if (res.status === 'applied') writeSave(res.save)
+    return { gift, res }
+  })
+  setInbox([...inbox.filter((g) => !out.some((o) => o.gift.id === g.id && o.res.status !== 'wait')), ...out.filter((o) => o.res.status === 'wait').map((o) => o.gift)])
+  if (how === 'claim') void claimGifts(out.filter((o) => o.res.status !== 'wait').map((o) => o.gift.id))
+  if (out.some((o) => o.res.status === 'applied')) void syncSave()
+  return out.map(({ gift, res }) => ({ gift, hatch: res.status === 'applied' ? res.hatch : null }))
 }
 
 /** Puts gifts in the inbox as if a sync listed them (the dev helpers stage gifts with it). */

@@ -1,4 +1,5 @@
 import { ROSTER, type Tier } from './roster'
+import { HIDEOUT_BOSSES } from './rocketHideoutFoes'
 import type { TraitId } from './traits'
 import type { PokeType } from './types'
 
@@ -23,6 +24,11 @@ export type EnemyDef = {
   trait?: TraitId
   /** Integer draw scale (and body size) for Pokémon that must loom over the rest, like the reaper. */
   scale?: number
+  /**
+   * Relative odds (0..1] of being drawn into a run's cast against the rest of its tier (`drawRoster`),
+   * from the species' capture rate (`rarityOf` in `data/roster.ts`): Rattata 1, Dratini 0.35. Missing = 1.
+   */
+  rarity?: number
 }
 
 /**
@@ -44,6 +50,9 @@ const NIGHT_SLOTS = [
   { hp: 1100, damage: 18, xp: 50, mass: 20, boss: true },
   { hp: 2800, damage: 24, xp: 90, mass: 30, boss: true },
 ] as const
+
+/** A Tera Raid's giant (`data/tera.ts`), before its stars and the run clock: slow, heavy and twice the size. */
+const RAID_GIANT = { hp: 14000, speed: 20, damage: 24, xp: 0, mass: 60, boss: true, scale: 2 } as const
 
 /** Stats of the rare mythical that may join Mewtwo at the end. */
 const MYTHICAL = { hp: 9000, speed: 70, damage: 30, xp: 300, mass: 40, boss: true, legendary: true } as const
@@ -87,6 +96,8 @@ export const ENEMIES = {
   celebi: { dex: 251, name: 'Celebi', types: ['psychic', 'grass'], ...MYTHICAL },
   jirachi: { dex: 385, name: 'Jirachi', types: ['steel', 'psychic'], ...MYTHICAL },
   mewtwo: { dex: 150, name: 'Mewtwo', types: ['psychic'], hp: 22000, speed: 62, damage: 45, xp: 0, mass: 50, boss: true, legendary: true },
+  // The Regi trio's maker, out of its temple (`game/pathRun.ts`): above the last trio slot, as it wakes from 4:00 on.
+  regigigas: { dex: 486, name: 'Regigigas', types: ['normal'], hp: 13000, speed: 44, damage: 34, xp: 300, mass: 60, boss: true, legendary: true },
   // Rift legendaries (`data/rifts.ts`): HP and contact damage are their 3:30 values, scaled by `riftScale`.
   lugia: { dex: 249, name: 'Lugia', types: ['psychic', 'flying'], hp: 3400, speed: 56, damage: 28, xp: 0, mass: 40, boss: true, legendary: true },
   hoOh: { dex: 250, name: 'Ho-Oh', types: ['fire', 'flying'], hp: 3400, speed: 56, damage: 30, xp: 0, mass: 40, boss: true, legendary: true },
@@ -97,13 +108,46 @@ export const ENEMIES = {
   latias: { dex: 380, name: 'Latias', types: ['dragon', 'psychic'], hp: 3200, speed: 64, damage: 28, xp: 0, mass: 40, boss: true, legendary: true },
   latios: { dex: 381, name: 'Latios', types: ['dragon', 'psychic'], hp: 3200, speed: 66, damage: 30, xp: 0, mass: 40, boss: true, legendary: true },
   deoxys: { dex: 386, name: 'Deoxys', types: ['psychic'], hp: 2800, speed: 70, damage: 32, xp: 0, mass: 40, boss: true, legendary: true },
+  palkia: { dex: 484, name: 'Palkia', types: ['water', 'dragon'], hp: 3600, speed: 50, damage: 30, xp: 0, mass: 40, boss: true, legendary: true },
+  // The roaming lake trio (`game/roamers.ts`): HP at 3:30, scaled by `riftScale` as each visit starts; the share left carries from run to run.
+  uxie: { dex: 480, name: 'Uxie', types: ['psychic'], hp: 2600, speed: 66, damage: 22, xp: 0, mass: 30, boss: true, legendary: true },
+  mesprit: { dex: 481, name: 'Mesprit', types: ['psychic'], hp: 2600, speed: 70, damage: 22, xp: 0, mass: 30, boss: true, legendary: true },
+  azelf: { dex: 482, name: 'Azelf', types: ['psychic'], hp: 2600, speed: 64, damage: 26, xp: 0, mass: 30, boss: true, legendary: true },
+  // The Swords of Justice, in their duels (`game/duels.ts`), and Keldeo (only Hoopa's rings bring it back to fight).
+  cobalion: { dex: 638, name: 'Cobalion', types: ['steel', 'fighting'], hp: 3400, speed: 52, damage: 26, xp: 0, mass: 36, boss: true, legendary: true },
+  terrakion: { dex: 639, name: 'Terrakion', types: ['rock', 'fighting'], hp: 3000, speed: 50, damage: 30, xp: 0, mass: 38, boss: true, legendary: true },
+  virizion: { dex: 640, name: 'Virizion', types: ['grass', 'fighting'], hp: 2600, speed: 70, damage: 26, xp: 0, mass: 32, boss: true, legendary: true },
+  keldeo: { dex: 647, name: 'Keldeo', types: ['water', 'fighting'], hp: 2800, speed: 62, damage: 28, xp: 0, mass: 30, boss: true, legendary: true },
+  // Hoopa, the last of its own rings (`game/rush.ts`).
+  hoopa: { dex: 720, name: 'Hoopa', types: ['psychic', 'ghost'], hp: 4200, speed: 54, damage: 30, xp: 0, mass: 40, boss: true, legendary: true },
+  // The Ruínas da Decisão's Regis (`game/splitRuins.ts`): about Regigigas's size, as they wake from the same times; Regieleki fast and frail, Regidrago slow and huge.
+  regieleki: { dex: 894, name: 'Regieleki', types: ['electric'], hp: 10000, speed: 74, damage: 30, xp: 300, mass: 50, boss: true, legendary: true },
+  regidrago: { dex: 895, name: 'Regidrago', types: ['dragon'], hp: 14500, speed: 36, damage: 36, xp: 300, mass: 60, boss: true, legendary: true },
+  // The Forces of Nature, roaming with their weather (`data/forces.ts`): like the lake trio, HP at 3:30 scaled by `riftScale` as each visit starts.
+  tornadus: { dex: 641, name: 'Tornadus', types: ['flying'], hp: 2800, speed: 76, damage: 24, xp: 0, mass: 32, boss: true, legendary: true },
+  thundurus: { dex: 642, name: 'Thundurus', types: ['electric', 'flying'], hp: 2800, speed: 68, damage: 26, xp: 0, mass: 32, boss: true, legendary: true },
+  landorus: { dex: 645, name: 'Landorus', types: ['ground', 'flying'], hp: 3200, speed: 58, damage: 30, xp: 0, mass: 36, boss: true, legendary: true },
+  enamorus: { dex: 905, name: 'Enamorus', types: ['fairy', 'flying'], hp: 3000, speed: 70, damage: 26, xp: 0, mass: 32, boss: true, legendary: true },
   // The Noite das Bruxas' event rift (`EVENT_RIFTS`): Darkrai, and the shadow clones of its Nightmare (`game/darkraiDomain.ts`), which vanish at a hit and give nothing.
   darkrai: { dex: 491, name: 'Darkrai', types: ['dark'], hp: 3400, speed: 58, damage: 30, xp: 0, mass: 40, boss: true, legendary: true },
   darkraiShade: { dex: 491, name: 'Darkrai', types: ['dark'], hp: 1, speed: 46, damage: 16, xp: 0, mass: 40 },
+  // The Ultra Wormholes' beasts (`data/ultraBeasts.ts`), fought in their Ultra Space domains (`data/domains/ultra.ts`).
+  nihilego: { dex: 793, name: 'Nihilego', types: ['rock', 'poison'], hp: 2000, speed: 44, damage: 26, xp: 0, mass: 40, boss: true, legendary: true },
+  buzzwole: { dex: 794, name: 'Buzzwole', types: ['bug', 'fighting'], hp: 2200, speed: 50, damage: 30, xp: 0, mass: 40, boss: true, legendary: true },
+  pheromosa: { dex: 795, name: 'Pheromosa', types: ['bug', 'fighting'], hp: 1700, speed: 76, damage: 26, xp: 0, mass: 40, boss: true, legendary: true },
+  xurkitree: { dex: 796, name: 'Xurkitree', types: ['electric'], hp: 1900, speed: 44, damage: 26, xp: 0, mass: 40, boss: true, legendary: true },
+  celesteela: { dex: 797, name: 'Celesteela', types: ['steel', 'flying'], hp: 2300, speed: 48, damage: 28, xp: 0, mass: 40, boss: true, legendary: true },
+  kartana: { dex: 798, name: 'Kartana', types: ['grass', 'steel'], hp: 1700, speed: 70, damage: 30, xp: 0, mass: 40, boss: true, legendary: true },
+  guzzlord: { dex: 799, name: 'Guzzlord', types: ['dark', 'dragon'], hp: 2600, speed: 36, damage: 30, xp: 0, mass: 40, boss: true, legendary: true },
+  stakataka: { dex: 805, name: 'Stakataka', types: ['rock', 'steel'], hp: 2400, speed: 30, damage: 28, xp: 0, mass: 40, boss: true, legendary: true },
+  blacephalon: { dex: 806, name: 'Blacephalon', types: ['fire', 'ghost'], hp: 1800, speed: 56, damage: 28, xp: 0, mass: 40, boss: true, legendary: true },
+  naganadel: { dex: 804, name: 'Naganadel', types: ['poison', 'dragon'], hp: 2000, speed: 64, damage: 28, xp: 0, mass: 40, boss: true, legendary: true },
   // Deoxys's retinue in its domain (`data/domains/deoxys.ts`), never in the horde (no tier).
   beldum: { dex: 374, name: 'Beldum', types: ['steel', 'psychic'], hp: 20, speed: 44, damage: 10, xp: 2, mass: 1.8 },
   metang: { dex: 375, name: 'Metang', types: ['steel', 'psychic'], hp: 60, speed: 40, damage: 13, xp: 5, mass: 2.6 },
   // A place's boss (`data/places.ts`): HP and contact damage are its 1:30 values, scaled by `placeBossScale`.
+  // The Rocket Hideout's lair (`data/rocketHideout.ts`): Giovanni's Persian and Shadow Mewtwo, place bosses scaled by `placeBossScale`.
+  ...HIDEOUT_BOSSES,
   spiritomb: { dex: 442, name: 'Spiritomb', types: ['ghost', 'dark'], hp: 1100, speed: 34, damage: 18, xp: 0, mass: 30, boss: true },
   // The hidden zones' own (`hidden` in `data/places.ts`), never in the horde (no tier): Audino out of the grotto's
   // shaking grass, shy and gone in a while. Its EXP is set as it comes out (`luckyXp`).
@@ -121,6 +165,29 @@ export const ENEMIES = {
   trevenantBoss: { dex: 709, name: 'Trevenant', types: ['ghost', 'grass'], speed: 28, ...NIGHT_SLOTS[1] },
   honchkrowBoss: { dex: 430, name: 'Honchkrow', types: ['dark', 'flying'], speed: 38, ...NIGHT_SLOTS[1] },
   dusknoirBoss: { dex: 477, name: 'Dusknoir', types: ['ghost'], speed: 30, ...NIGHT_SLOTS[1] },
+  // The Tera Raids' giants (`RAID_BOSSES` in `data/tera.ts`): drawn twice the size in crystal, their Tera type set as they come
+  // out (`game/teraRaid.ts`), stats tuned for a 4★ den at 8:10 and scaled by the stars and the run clock (`raidScale`).
+  raidCharizard: { dex: 6, name: 'Charizard', types: ['fire', 'flying'], ...RAID_GIANT },
+  raidBlastoise: { dex: 9, name: 'Blastoise', types: ['water'], ...RAID_GIANT },
+  raidVenusaur: { dex: 3, name: 'Venusaur', types: ['grass', 'poison'], ...RAID_GIANT },
+  raidGengar: { dex: 94, name: 'Gengar', types: ['ghost', 'poison'], ...RAID_GIANT },
+  raidGyarados: { dex: 130, name: 'Gyarados', types: ['water', 'flying'], ...RAID_GIANT },
+  raidDragonite: { dex: 149, name: 'Dragonite', types: ['dragon', 'flying'], ...RAID_GIANT },
+  raidTyranitar: { dex: 248, name: 'Tyranitar', types: ['rock', 'dark'], ...RAID_GIANT },
+  raidGardevoir: { dex: 282, name: 'Gardevoir', types: ['psychic', 'fairy'], ...RAID_GIANT },
+  raidMetagross: { dex: 376, name: 'Metagross', types: ['steel', 'psychic'], ...RAID_GIANT },
+  raidGarchomp: { dex: 445, name: 'Garchomp', types: ['dragon', 'ground'], ...RAID_GIANT },
+  raidLucario: { dex: 448, name: 'Lucario', types: ['fighting', 'steel'], ...RAID_GIANT },
+  raidHydreigon: { dex: 635, name: 'Hydreigon', types: ['dark', 'dragon'], ...RAID_GIANT },
+  raidVolcarona: { dex: 637, name: 'Volcarona', types: ['bug', 'fire'], ...RAID_GIANT },
+  raidDragapult: { dex: 887, name: 'Dragapult', types: ['dragon', 'ghost'], ...RAID_GIANT },
+  raidTinkaton: { dex: 959, name: 'Tinkaton', types: ['fairy', 'steel'], ...RAID_GIANT },
+  // The 7★ Stellar raid's giant, captured by beating it once (`LEGENDS.terapagos`).
+  terapagos: { dex: 1024, name: 'Terapagos', types: ['normal'], ...RAID_GIANT, hp: 16000, damage: 30, legendary: true },
+  // The Grande Atualização's mythicals (`data/mythicals.ts`): Ogerpon's own Tera Raid (in the mask of the run's Tera type),
+  // and Zeraora, out of the Power Plant's storm. Each captured with one win.
+  ogerpon: { dex: 1017, name: 'Ogerpon', types: ['grass'], ...RAID_GIANT, hp: 14000, damage: 26, legendary: true },
+  zeraora: { dex: 807, name: 'Zeraora', types: ['electric'], hp: 4000, speed: 64, damage: 28, xp: 200, mass: 30, boss: true, legendary: true },
   // The endless mode's reaper (`game/endless.ts`): it hunts the player from 20:00.
   arceus: { dex: 493, name: 'Arceus', types: ['normal'], hp: 300000, speed: 60, damage: 90, xp: 0, mass: 999, boss: true, legendary: true, scale: 2 },
 } as const satisfies Record<string, EnemyDef>

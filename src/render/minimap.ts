@@ -1,4 +1,6 @@
 import { context2d, createCanvas, fromStrings, lazy, blitPacked, textSprite, type Palette, type PixelSprite } from '../engine/pixelart'
+import type { RoamerId } from '../data/legends'
+import { roamerShown } from '../game/roamers'
 import { hash2 } from '../engine/rng'
 import type { BiomeId } from '../data/biomes'
 import { biomeAt } from '../game/biomeMap'
@@ -109,18 +111,23 @@ const MAZE = ['mmmmm', 'm...m', 'm.m.m', 'm.m..', 'mmmmm']
 const RUINS = ['sssss', '.s.s.', '.s.s.', 'sssss']
 const TENT = ['..o..', '.ooo.', 'oo.oo', 'oo.oo']
 const STAR = ['..y..', '.yyy.', 'yywyy', '.yyy.', '.y.y.']
+const ORB = ['.kkk.', 'kwcck', 'kccdk', 'kcddk', '.kkk.']
+const BLADE = ['....w', '...w.', 'w.w..', '.y...', 'y.y..']
 
 const GLYPHS = lazy(() => ({
   boss: [glyph(SKULL, { w: '#f8f0e0', k: DARK }), glyph(SKULL, { w: '#f86858', k: DARK })],
   alpha: [glyph(DIAMOND, { c: '#e02838', w: '#f8e0b0' }), glyph(DIAMOND, { c: '#f8a020', w: '#f8f0d0' })],
   shiny: [glyph(STAR, { y: '#f8d030', w: '#ffffff' }), glyph(STAR, { y: '#fff4a8', w: '#f8d030' })],
   portal: [glyph(PORTAL, { p: '#7850c8', l: '#c8a8f8', w: '#ffffff' }), glyph(PORTAL, { p: '#c8a8f8', l: '#7850c8', w: '#ffffff' })],
+  /** A Tera Raid's den (`game/teraRaid.ts`): the portal's shape in Tera crystal pink and cyan. */
+  den: [glyph(PORTAL, { p: '#e058c0', l: '#98f0f8', w: '#ffffff' }), glyph(PORTAL, { p: '#98f0f8', l: '#e058c0', w: '#ffffff' })],
   place: {
     cave: glyph(DOOR, { c: '#a87848', k: '#281810' }),
     graveyard: glyph(DOOR, { c: '#9888b0', k: '#201830' }),
     sky: glyph(DOOR, { c: '#a8d8f8', k: '#f8f8f8' }),
     grotto: glyph(DOOR, { c: '#68b048', k: '#102808' }),
     underground: glyph(DOOR, { c: '#b89470', k: '#281808' }),
+    hideout: glyph(DOOR, { c: '#d83030', k: '#181018' }),
   } satisfies Record<PlaceId, PixelSprite>,
   landmark: {
     cottage: glyph(HOUSE, { r: '#d05838', w: '#f0e0b8', k: '#583018' }),
@@ -136,6 +143,11 @@ const GLYPHS = lazy(() => ({
     spikes: glyph(CROSS, { r: '#e8e8e8' }),
     bomb: glyph(DOT, { c: '#383848', w: '#f84838' }),
     meowth: glyph(COIN, { y: '#f8d030', o: '#c89018' }),
+    castform: glyph(DROP, { b: '#c8e0f8', w: '#ffffff' }),
+    zygardeCell: glyph(DOT, { c: '#4cc068', w: '#b8f8c8' }),
+    zygardeCore: glyph(DOT, { c: '#4cc068', w: '#e84830' }),
+    regiTemple: glyph(RUINS, { s: '#c8bca0' }),
+    splitRuins: glyph(RUINS, { s: '#e0d878' }),
     tutor: glyph(DISC, { b: '#78c0f8', w: '#ffffff' }),
     defense: glyph(FLAG, { g: '#58d878', k: '#e8e8e8' }),
     collect: glyph(FLAG, { g: '#58d878', k: '#e8e8e8' }),
@@ -149,6 +161,17 @@ const GLYPHS = lazy(() => ({
   stone: glyph(['.p.', 'pwp', '.p.'], { p: '#f070d0', w: '#ffffff' }),
   evo: glyph(['.g.', 'gwg', '.g.'], { g: '#68d858', w: '#ffffff' }),
   prize: glyph(['.c.', 'cwc', '.c.'], { c: '#e02838', w: '#f8e0b0' }),
+  /** A roaming legend (a lake legend's gem's color, a Force's weather's) and a Sword waiting for its duel (`game/quests.ts`). */
+  roamer: {
+    uxie: glyph(ORB, { c: '#f8d048', d: '#c09018', w: '#ffffff', k: DARK }),
+    mesprit: glyph(ORB, { c: '#f878b0', d: '#c04880', w: '#ffffff', k: DARK }),
+    azelf: glyph(ORB, { c: '#58a0f8', d: '#2860c0', w: '#ffffff', k: DARK }),
+    tornadus: glyph(ORB, { c: '#98e0f0', d: '#3c8aa8', w: '#ffffff', k: DARK }),
+    thundurus: glyph(ORB, { c: '#f8e048', d: '#4868c0', w: '#ffffff', k: DARK }),
+    landorus: glyph(ORB, { c: '#f0b050', d: '#a06020', w: '#ffffff', k: DARK }),
+    enamorus: glyph(ORB, { c: '#f8a0c8', d: '#c05890', w: '#ffffff', k: DARK }),
+  } satisfies Record<RoamerId, PixelSprite>,
+  sword: glyph(BLADE, { w: '#f0f4ff', y: '#f8d048' }),
 }))
 
 /**
@@ -572,6 +595,10 @@ export const drawMinimap = (ctx: Ctx, g: Game, shape: MinimapShape, t: number) =
     if (door?.open && entranceShown(door)) marker(ctx, v, shape, art.place[door.id], door.x, door.y, true)
     const portal = g.rift.portal
     if (portal) marker(ctx, v, shape, art.portal[blink]!, portal.x, portal.y, true)
+    const den = g.raid.den
+    if (den) marker(ctx, v, shape, art.den[blink]!, den.x, den.y, true)
+    const duel = g.quests.duel
+    if (duel?.stage === 'waiting') marker(ctx, v, shape, art.sword, duel.x, duel.y, true)
   }
 
   for (const p of g.pickups) {
@@ -580,6 +607,12 @@ export const drawMinimap = (ctx: Ctx, g: Game, shape: MinimapShape, t: number) =
   }
   for (const e of g.enemies) {
     if (e.dying >= 0) continue
+    // A roaming lake legend shows as its gem, unless it just wiped the player's memory (Uxie).
+    if (e.behavior.kind === 'roam') {
+      const roam = g.quests.roam
+      if (roam && roamerShown(g)) marker(ctx, v, shape, art.roamer[roam.legend], e.x, e.y, true)
+      continue
+    }
     if (e.alpha) marker(ctx, v, shape, art.alpha[e.alpha.enraged ? blink : 0]!, e.x, e.y, true)
     else if (e.boss) marker(ctx, v, shape, art.boss[blink]!, e.x, e.y, true)
     else if (e.shiny) marker(ctx, v, shape, art.shiny[blink]!, e.x, e.y, true)

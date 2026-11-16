@@ -1,8 +1,9 @@
-import { blitCentered, blitEllipse, blitRing, blitRotated, drawPacked, type PixelSprite } from '../engine/pixelart'
+import { blitCentered, blitEllipse, blitRing, blitRotated, context2d, createCanvas, drawPacked, type PixelSprite } from '../engine/pixelart'
 import { TAU } from '../engine/math'
 import type { BuffId } from '../data/consumables'
 import { MAP_EVENTS, type MapEvent, type MapEventKind, type MapEventOf } from '../game/mapEvents'
 import { BOMB, CHEST, FADE, FOUNTAIN, MEOWTH_DEX, SPIKES } from '../game/mapEventRules'
+import { CASTFORM_FIND } from '../data/seasonOneUnlocks'
 import type { Game } from '../game/types'
 import { art, lazy, PICKUPS, SPARKLE, toIconUrl } from './art'
 import { consumableSprite } from './props'
@@ -14,6 +15,19 @@ import { isMission } from '../game/fieldMissions'
 import { drawFieldMission, missionIcon, missionSpot } from './fieldMissions'
 import { HURT_TINT } from './flashes'
 import { sceneryArt } from './scenery'
+import { PATH_ART, TEMPLE, TEMPLE_LIGHTS, TEMPLE_MARKS, TEMPLES } from './pathLegendArt'
+import { TEMPLE_RISE, TEMPLE_WAKE } from '../game/pathRun'
+import { RUINS, RUINS_SIDES } from '../data/forces'
+import { RUINS_LEGENDS } from '../data/legends'
+import { ruinSpot, ruinThreshold, RUINS_SINK, RUINS_WAKE } from '../game/splitRuins'
+import { RUIN, RUIN_GATE, RUINS_ART, ruinsIcon } from './ruinsArt'
+
+/** The temple shrunk to an arrow's icon: its middle, with the three lights on. */
+const templeIcon = lazy(() => {
+  const canvas = createCanvas(14, 12)
+  context2d(canvas).drawImage(TEMPLES()[3]!, 25, 1, 14, 12, 0, 0, 14, 12)
+  return canvas
+})
 
 /**
  * Map events on the ground (altar, fountain, chest, traps, Meowth, the Move Tutor) and the
@@ -208,6 +222,15 @@ const drawMeowth = (ctx: Ctx, ev: MapEventOf<'meowth'>, t: number, calm: boolean
   if (ev.gone < 0 && (t + ev.id * 0.2) % 0.9 < 0.15) blitCentered(ctx, PICKUPS.coins()[0]!, ev.x + 7, ev.y - s.bodyH - 4)
 }
 
+/** Temporada 1's Castform, floating and bobbing; it blinks (or dims, Flashes: reduced) in its last seconds. */
+const drawCastform = (ctx: Ctx, ev: MapEventOf<'castform'>, t: number, calm: boolean) => {
+  const s = loadedSprites(CASTFORM_FIND.dex)
+  if (!s) return
+  const leaving = ev.gone < 0 && ev.ttl - ev.age < 3 && (calm || Math.floor(t * 10) % 2 === 0)
+  groundShadow(ctx, ev.x, ev.y, Math.max(4, Math.round(s.bodyW * 0.36)))
+  drawPokemon(ctx, s, 'Walk', ev.state.dir, ev.age * 1.6, ev.x, ev.y - 5 - Math.round(Math.sin(t * 3) * 2), { alpha: leaving ? (calm ? 0.7 : 0.5) : 1 })
+}
+
 /**
  * The Move Tutor's striped tent with the old tutor beside it, waving a TM.
  * Standing in the ring fills it; the disc above the tent spins faster as it does.
@@ -231,6 +254,162 @@ const drawTutor = (ctx: Ctx, ev: MapEventOf<'tutor'>, t: number) => {
   if (ev.gone < 0 && (t + ev.id * 0.3) % 1.6 < 0.2) blitCentered(ctx, SPARKLE()[1]!, ev.x + 7, ev.y - tent.height - 10)
 }
 
+/** A Zygarde Cell or Core: bobbing over its shadow, its glow beating, green motes rising; a Core's eye glints. It blinks out in its last seconds, burrowing. */
+const drawPiece = (ctx: Ctx, ev: MapEventOf<'zygardeCell' | 'zygardeCore'>, t: number, calm: boolean) => {
+  const core = ev.kind === 'zygardeCore'
+  const frames = core ? PATH_ART.core() : PATH_ART.cell()
+  const beat = Math.floor(t * 3 + ev.id) % 2
+  const leaving = ev.gone < 0 && ev.ttl - ev.age < 4 && (calm || Math.floor(t * 10) % 2 === 0)
+  const bob = Math.round(Math.sin(t * 3 + ev.id) * 1.5)
+  groundShadow(ctx, ev.x, ev.y, core ? 7 : 5)
+  // Zygarde's hexagon on the ground under it, a light running round its edge: it stands out on any biome.
+  const rx = core ? 15 : 12
+  const run = calm ? -1 : Math.floor((t * 1.5 + ev.id * 0.1) % 1 * 36)
+  const corners = [0, 1, 2, 3, 4, 5, 6].map((i) => ({ x: Math.cos((i / 6) * TAU) * rx, y: Math.sin((i / 6) * TAU) * rx * 0.45 }))
+  for (let side = 0; side < 6; side++) {
+    const a = corners[side]!
+    const b = corners[side + 1]!
+    for (let k = 0; k < 6; k++) {
+      const n = side * 6 + k
+      const lit = run >= 0 && (n - run + 36) % 36 < 4
+      const x = Math.round(ev.x + a.x + ((b.x - a.x) * k) / 6)
+      const y = Math.round(ev.y + a.y + ((b.y - a.y) * k) / 6)
+      ctx.fillStyle = '#1f5a2c'
+      ctx.fillRect(x, y + 1, 2, 1)
+      ctx.fillStyle = lit ? '#ffffff' : n % 2 === 0 ? '#e8ffd8' : '#a8f090'
+      ctx.fillRect(x, y, 2, 1)
+    }
+  }
+  ctx.globalAlpha *= leaving ? 0.55 : 1
+  const sprite = frames[beat]!
+  ctx.drawImage(sprite, Math.round(ev.x - sprite.width / 2), Math.round(ev.y - sprite.height - 3 + bob))
+  ctx.globalAlpha = ev.gone >= 0 ? Math.max(0, 1 - ev.gone / FADE) : 1
+  if (calm) return
+  for (let i = 0; i < 3; i++) {
+    const k = (t * 0.7 + i / 3 + ev.id * 0.13) % 1
+    ctx.fillStyle = i === 1 ? '#ffffff' : '#78e098'
+    ctx.fillRect(Math.round(ev.x - 5 + i * 5 + Math.sin(t * 2 + i) * 1.5), Math.round(ev.y - 6 - k * 18), 1, k > 0.6 ? 1 : 2)
+  }
+  if (core && (t + ev.id * 0.37) % 1.4 < 0.14) blitCentered(ctx, SPARKLE()[1]!, ev.x + 5, ev.y - sprite.height - 2)
+}
+
+/** A fixed scatter of `n` values in 0..1 for the temple's dust and stones, so they need no rng. */
+const scatter = (i: number, k: number) => {
+  const v = Math.sin(i * 127.1 + k * 311.7) * 43758.5453
+  return v - Math.floor(v)
+}
+
+/** The churned earth ringing the temple's foot: a dark ring of dirt with clods, the ground it broke through. */
+const drawBrokenGround = (ctx: Ctx, x: number, y: number, spread: number) => {
+  const rx = Math.round((TEMPLE.w / 2 + 4) * spread)
+  if (rx < 2) return
+  blitEllipse(ctx, rx, Math.max(1, Math.round(rx * 0.3)), '#5c4428', x, y)
+  blitEllipse(ctx, rx - 2, Math.max(1, Math.round(rx * 0.3) - 1), '#7a5c38', x, y - 1)
+  for (let i = 0; i < 12; i++) {
+    const a = scatter(i, 1) * TAU
+    ctx.fillStyle = i % 3 === 0 ? '#9c7c50' : '#4a3620'
+    ctx.fillRect(Math.round(x + Math.cos(a) * (rx + 1)), Math.round(y + Math.sin(a) * (rx * 0.3 + 1)), 2, 1)
+  }
+}
+
+/**
+ * Regigigas's temple: it rises out of the ground over `TEMPLE_RISE` (only the part above the
+ * ground shows, the earth churning at its foot, dust rolling out and stones falling off it),
+ * then waits, a mark pulsing now and then; woken, its three Regi marks light one by one and
+ * it shakes, and once the giant is out it stands lit behind it.
+ */
+const drawTemple = (ctx: Ctx, ev: MapEventOf<'regiTemple'>, t: number, calm: boolean) => {
+  const { waking, out } = ev.state
+  const rise = Math.min(1, ev.age / TEMPLE_RISE)
+  const up = 1 - (1 - rise) * (1 - rise)
+  const lit = out ? 3 : waking < 0 ? 0 : Math.min(3, 1 + Math.floor((waking / TEMPLE_WAKE) * 3))
+  const sprite = TEMPLES()[lit]!
+  const foot = Math.round(ev.y + 2)
+  const left = Math.round(ev.x - TEMPLE.w / 2)
+  const rumbling = rise < 1 || (waking >= 0 && !out)
+  const jolt = rumbling && !calm ? (Math.floor(t * 24) % 2 === 0 ? 1 : -1) * (rise < 1 ? 1 : Math.min(2, 1 + Math.floor(waking))) : 0
+  drawBrokenGround(ctx, ev.x, foot, Math.min(1, rise * 3))
+  const shown = Math.round(TEMPLE.h * up)
+  if (shown > 0) ctx.drawImage(sprite, 0, 0, TEMPLE.w, shown, left + jolt, foot - shown, TEMPLE.w, shown)
+  if (rise < 1 && !calm) {
+    // Dust rolling out from its foot, and stones knocked off its top falling back down.
+    for (let i = 0; i < 16; i++) {
+      const k = (ev.age * 1.6 + scatter(i, 2)) % 1
+      const side = i % 2 === 0 ? -1 : 1
+      const r = 2 + Math.round(k * 3)
+      ctx.fillStyle = i % 3 === 0 ? '#e0d4b8' : '#b8a888'
+      ctx.globalAlpha = 1 - k
+      ctx.fillRect(Math.round(ev.x + side * (TEMPLE.w / 2 - 6 + k * 18) * scatter(i, 3)), Math.round(foot - 2 - k * 8 - scatter(i, 4) * 4), r, r - 1)
+    }
+    ctx.globalAlpha = 1
+    for (let i = 0; i < 6; i++) {
+      const k = (ev.age * 1.1 + scatter(i, 5)) % 1
+      ctx.fillStyle = i % 2 === 0 ? '#6c5e50' : '#8e7e6a'
+      ctx.fillRect(Math.round(left + 6 + scatter(i, 6) * (TEMPLE.w - 12)), Math.round(foot - shown + k * k * shown), 2, 2)
+    }
+  }
+  // Asleep, one mark at a time breathes a faint glow: something stirs inside.
+  if (rise >= 1 && waking < 0 && !calm && (t + ev.id * 0.2) % 2.4 < 0.3) {
+    const i = Math.floor(t / 2.4) % 3
+    const spot = TEMPLE_MARKS[i]!
+    ctx.fillStyle = TEMPLE_LIGHTS[i]![0]
+    ctx.fillRect(left + spot.at[0] + 3, foot - TEMPLE.h + spot.at[1] + 3, 2, 2)
+  }
+}
+
+/**
+ * The Ruínas da Decisão: both ruins rise out of the ground like the temple;
+ * asleep, each free ruin's gate breathes its Regi's light inside a dashed
+ * ring (walk into it to choose), its sign bobbing over it; a caught Regi's
+ * ruin stands dark and shut. Once one is chosen, it lights and shakes while
+ * the other sinks back into the earth.
+ */
+const drawRuins = (ctx: Ctx, ev: MapEventOf<'splitRuins'>, t: number, calm: boolean) => {
+  const { free, pick, waking, out } = ev.state
+  const rise = Math.min(1, ev.age / RUINS.rise)
+  const up = 1 - (1 - rise) * (1 - rise)
+  for (const regi of RUINS_LEGENDS) {
+    const at = ruinSpot(ev, regi)
+    const open = free.includes(regi)
+    const chosen = pick === regi
+    const sealed = pick !== null && !chosen
+    const sink = sealed ? Math.min(1, (out ? RUINS_SINK : waking) / RUINS_SINK) : 0
+    const look = !open ? 'dark' : chosen ? 'lit' : 'asleep'
+    const sprite = RUINS_ART()[regi][look]
+    const foot = Math.round(at.y + 2)
+    const left = Math.round(at.x - RUIN.w / 2)
+    const shaking = (rise < 1 || (chosen && !out) || (sealed && sink < 1)) && !calm
+    const jolt = shaking ? (Math.floor(t * 24 + (regi === 'regieleki' ? 0 : 1)) % 2 === 0 ? 1 : -1) : 0
+    const rx = Math.round(RUIN.w / 2 + 3)
+    blitEllipse(ctx, rx, Math.max(1, Math.round(rx * 0.3)), '#5c4428', at.x, foot)
+    const shown = Math.round(RUIN.h * up * (1 - sink))
+    if (shown > 0) ctx.drawImage(sprite, 0, 0, RUIN.w, shown, left + jolt, foot - shown, RUIN.w, shown)
+    if (rise < 1 || !open || sealed) continue
+    const [glow, core] = RUINS_SIDES[regi].light
+    const gx = left + RUIN_GATE.x
+    const gy = foot - RUIN.h + RUIN_GATE.y
+    if (pick === null) {
+      // Asleep and free: the way in, a ring on the ground at its gate, and its sign over it.
+      const step = ruinThreshold(ev, regi)
+      dashedRing(ctx, step.x, step.y, RUINS.wake, t * 1.5, [glow, core], 0.55, 0.45)
+      if (!calm && (t * 1.2 + (regi === 'regieleki' ? 0 : 0.5)) % 1.6 < 0.5) blitEllipse(ctx, 3, 4, glow, gx, gy)
+      const bob = Math.round(Math.sin(t * 3 + (regi === 'regieleki' ? 0 : 1.5)) * 1.5)
+      blitCentered(ctx, RUINS_ICONS()[regi], at.x, foot - RUIN.h - 8 + bob)
+    } else if (chosen && !out) {
+      // Waking: its gate floods with light, brighter as the Regi comes.
+      const k = Math.min(1, waking / RUINS_WAKE)
+      blitEllipse(ctx, Math.round(3 + k * 3), Math.round(4 + k * 6), glow, gx, gy)
+      blitEllipse(ctx, Math.round(1 + k * 2), Math.round(2 + k * 4), core, gx, gy)
+    }
+  }
+}
+
+/** Each Regi's sign over its free ruin: a type mark in its colors on a dark disc. */
+const RUINS_ICONS = lazy(() => ({
+  regieleki: art(['.....22', '....221', '...2221', '..22211', '...221.', '..221..', '.221...', '22.....'], { 1: '#c89818', 2: '#f8e048' }, '#3a2c08'),
+  regidrago: art(['..1111...', '.122221..', '12232221.', '122222211', '1221111..', '1221.....', '.1221....', '..11.....'], { 1: '#3a8a3c', 2: '#78d058', 3: '#f8f8f8' }, '#0c2c10'),
+}))
+
 const near = (g: Game, x: number, y: number, m = 60) =>
   x > g.camera.x - m && x < g.camera.x + g.view.w + m && y > g.camera.y - m && y < g.camera.y + g.view.h + m
 
@@ -243,6 +422,11 @@ const drawEvent = (ctx: Ctx, g: Game, ev: MapEvent, t: number, calm: boolean) =>
     case 'spikes': return drawSpikes(ctx, ev, t)
     case 'bomb': return drawBomb(ctx, ev, t)
     case 'meowth': return drawMeowth(ctx, ev, t, calm)
+    case 'castform': return drawCastform(ctx, ev, t, calm)
+    case 'zygardeCell':
+    case 'zygardeCore': return drawPiece(ctx, ev, t, calm)
+    case 'regiTemple': return drawTemple(ctx, ev, t, calm)
+    case 'splitRuins': return drawRuins(ctx, ev, t, calm)
     case 'tutor': return drawTutor(ctx, ev, t)
   }
 }
@@ -268,6 +452,11 @@ const MARKER: Partial<Record<MapEventKind, { arrow: number; icon: () => PixelSpr
   fountain: { arrow: 1, icon: () => ART().drop },
   chest: { arrow: 2, icon: () => ART().chest },
   meowth: { arrow: 3, icon: () => PICKUPS.coins()[0]! },
+  castform: { arrow: 1, icon: () => ART().drop },
+  zygardeCell: { arrow: 4, icon: () => PATH_ART.cell()[0]! },
+  zygardeCore: { arrow: 4, icon: () => PATH_ART.core()[0]! },
+  regiTemple: { arrow: 2, icon: () => templeIcon() },
+  splitRuins: { arrow: 2, icon: () => ruinsIcon() },
   tutor: { arrow: 1, icon: () => tmDisc('#78c0f8') },
   defense: { arrow: 4, icon: () => missionIcon('defense') },
   collect: { arrow: 4, icon: () => missionIcon('collect') },
@@ -287,36 +476,47 @@ export const setMarkerInsets = (next: MarkerInsets) => {
 export const markerInsets = () => inset
 
 /**
+ * An arrow on the screen edge pointing at (x, y) (world px), `icon` in its
+ * disc and arrow `arrow` of the set; nothing while the spot is on screen.
+ * `seed` sets its bob apart from the others'.
+ */
+export const drawEdgeMarker = (ctx: Ctx, g: Game, t: number, x: number, y: number, icon: CanvasImageSource & { width: number; height: number }, arrow: number, seed: number) => {
+  const { w, h } = g.view
+  const cx = w / 2
+  const cy = h / 2
+  const sx = x - g.camera.x
+  const sy = y - 8 - g.camera.y
+  if (sx > 4 && sx < w - 4 && sy > 4 && sy < h - 4) return
+  const dx = sx - cx
+  const dy = sy - cy
+  const kx = dx === 0 ? Infinity : (cx - inset.side) / Math.abs(dx)
+  const ky = dy === 0 ? Infinity : (dy > 0 ? h - inset.bottom - cy : cy - inset.top) / Math.abs(dy)
+  const k = Math.min(kx, ky)
+  const angle = Math.atan2(dy, dx)
+  const bob = Math.round(Math.sin(t * 6 + seed) * 1.5)
+  const ax = cx + dx * k + Math.cos(angle) * (6 + bob)
+  const ay = cy + dy * k + Math.sin(angle) * (6 + bob)
+  const ix = cx + dx * k - Math.cos(angle) * 7
+  const iy = cy + dy * k - Math.sin(angle) * 7
+  blitEllipse(ctx, 8, 8, 'rgba(16,24,48,0.7)', ix, iy)
+  blitRing(ctx, 8, 1, '#f8f8f8', ix, iy)
+  blitCentered(ctx, icon, ix, iy)
+  blitRotated(ctx, ART().arrows[arrow]!, ax, ay, angle)
+}
+
+/**
  * Screen layer: an arrow on the screen edge for every important event that's
  * off-screen, with its icon, pointing the way.
  */
 export const drawMapEventMarkers = (ctx: Ctx, g: Game, t: number) => {
-  const { w, h } = g.view
-  const cx = w / 2
-  const cy = h / 2
   for (const ev of g.mapEvents.list) {
     const marker = MARKER[ev.kind]
     if (ev.gone >= 0 || !marker || !MAP_EVENTS[ev.kind].marker) continue
+    // The temple's giant is out: it's the boss's fight now.
+    if ((ev.kind === 'regiTemple' || ev.kind === 'splitRuins') && ev.state.out) continue
     // A mission points at where to go next (the nearest ball, Togepi's nest).
     const at = isMission(ev) ? missionSpot(g, ev) : ev
-    const sx = at.x - g.camera.x
-    const sy = at.y - 8 - g.camera.y
-    if (sx > 4 && sx < w - 4 && sy > 4 && sy < h - 4) continue
-    const dx = sx - cx
-    const dy = sy - cy
-    const kx = dx === 0 ? Infinity : (cx - inset.side) / Math.abs(dx)
-    const ky = dy === 0 ? Infinity : (dy > 0 ? h - inset.bottom - cy : cy - inset.top) / Math.abs(dy)
-    const k = Math.min(kx, ky)
-    const angle = Math.atan2(dy, dx)
-    const bob = Math.round(Math.sin(t * 6 + ev.id) * 1.5)
-    const ax = cx + dx * k + Math.cos(angle) * (6 + bob)
-    const ay = cy + dy * k + Math.sin(angle) * (6 + bob)
     const icon = ev.kind === 'altar' ? consumableSprite(ev.state.buff) : marker.icon()
-    const ix = cx + dx * k - Math.cos(angle) * 7
-    const iy = cy + dy * k - Math.sin(angle) * 7
-    blitEllipse(ctx, 8, 8, 'rgba(16,24,48,0.7)', ix, iy)
-    blitRing(ctx, 8, 1, '#f8f8f8', ix, iy)
-    blitCentered(ctx, icon, ix, iy)
-    blitRotated(ctx, ART().arrows[marker.arrow]!, ax, ay, angle)
+    drawEdgeMarker(ctx, g, t, at.x, at.y, icon, marker.arrow, ev.id)
   }
 }

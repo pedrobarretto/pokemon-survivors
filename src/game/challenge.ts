@@ -1,6 +1,12 @@
 import { createRng, seedFrom, weightedPick } from '../engine/rng'
 import type { EnemyId } from '../data/enemies'
 import { isExclusiveFamily, PLAYABLE_IDS, type PlayableId } from '../data/hatchlings'
+import { SEASON_ONE } from '../data/seasons'
+import { SEASON_ONE_EGGS } from '../data/seasonOneEggs'
+import { SEASON_ONE_KITS } from '../data/seasonOneKits'
+import { GA_FAMILIES_B } from '../data/gaFamiliesB'
+import { MEGA_FAMILIES_B } from '../data/megaFamiliesB'
+import { GA_FAMILIES_A } from '../data/gaFamiliesA'
 import { brasiliaDay, dayNumber, msSinceDayStart, previousDay, type DayKey } from './day'
 import type { Difficulty } from './difficulty'
 import { NO_RANKS, UPGRADE_IDS } from './meta'
@@ -38,17 +44,29 @@ export const CHALLENGE = {
 export type Challenge = { day: DayKey; seed: number; starter: PlayableId; difficulty: Difficulty; outbreak: EnemyId; halloween: boolean }
 
 /**
+ * Kabuto left the Rare Egg for the Escavação's Dome Fossil after the draw
+ * began: it stays in, so every day keeps its Pokémon.
+ */
+const drawable = (id: PlayableId) => !isExclusiveFamily(id) || id === 'kabuto'
+
+/**
  * Who the challenge draws from: every playable Pokémon but the exclusive
  * families, which only their own egg brings (the Haunted Egg's, the Kecleon
  * Egg's; they also joined after the draw began: leaving them out keeps every
  * day's Pokémon where it was).
  */
-const POOL = PLAYABLE_IDS.filter((id) => !isExclusiveFamily(id))
+const OLD_POOL = PLAYABLE_IDS.filter((id) => drawable(id) && !(id in SEASON_ONE_EGGS) && !(id in SEASON_ONE_KITS) && !(id in GA_FAMILIES_B) && !(id in GA_FAMILIES_A) && !(id in MEGA_FAMILIES_B))
+
+/** The pool from Temporada 1 on, with its new egg families. */
+const SEASON_POOL = PLAYABLE_IDS.filter(drawable)
+
+/** Who a day draws from: days before `SEASON_ONE.challengeDay` keep the old pool, so their Pokémon stay where they were. */
+const poolOf = (day: DayKey) => (day < SEASON_ONE.challengeDay ? OLD_POOL : SEASON_POOL)
 
 /** A seeded shuffle of the pool: one cycle of days gives each one its day. */
-const cycleOrder = (cycle: number) => {
+const cycleOrder = (cycle: number, pool: readonly PlayableId[]) => {
   const rng = createRng(seedFrom(`challenge:${cycle}`))
-  const order = [...POOL]
+  const order = [...pool]
   for (let i = order.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1))
     ;[order[i], order[j]] = [order[j]!, order[i]!]
@@ -59,13 +77,14 @@ const cycleOrder = (cycle: number) => {
 /** The challenge of a Brasília day. The Pokémon walk through seeded cycles, so none repeats within one; no Nightmare after `CHALLENGE.nightmareUntil`. */
 export const dailyChallenge = (day: DayKey): Challenge => {
   const n = dayNumber(day)
-  const size = POOL.length
+  const pool = poolOf(day)
+  const size = pool.length
   const rng = createRng(seedFrom(`challenge-day:${day}`))
   const drawn = weightedPick(rng, CHALLENGE.difficulty)
   return {
     day,
     seed: seedFrom(`challenge-seed:${day}`),
-    starter: cycleOrder(Math.floor(n / size))[((n % size) + size) % size]!,
+    starter: cycleOrder(Math.floor(n / size), pool)[((n % size) + size) % size]!,
     difficulty: drawn === 'nightmare' && day > CHALLENGE.nightmareUntil ? 'hard' : drawn,
     outbreak: outbreakOf(day),
     halloween: isHalloweenDay(day),

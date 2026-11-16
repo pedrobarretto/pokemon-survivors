@@ -1,11 +1,14 @@
+import { SEASON_ONE } from '../../src/data/seasons'
 import { createHash, randomInt } from 'node:crypto'
 import { challengeProblem, dailyChallenge } from '../../src/game/challenge'
 import { brasiliaDay, type DayKey } from '../../src/game/day'
-import type { Difficulty } from '../../src/game/difficulty'
 import { dexCounts } from '../../src/game/dex'
 import { parseSaveData } from '../../src/game/meta'
+import { DIFFICULTY_IDS, type Difficulty } from '../../src/game/difficulty'
+import { ERA1, type Era1Standing } from '../../src/game/era1'
 import {
-  BOARD_PERIODS,
+  LIVE_PERIODS,
+  RUN_MODES,
   BOARD_SIZE,
   BOARD_TIME_ZONE,
   clockAllows,
@@ -142,21 +145,22 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
   const touchUser = (userId: string) => sql`insert into users (id) values (${userId}) on conflict (id) do update set seen_at = now()`
 
   /**
-   * Every player's best run on a board, ranked, as a fragment to select from.
-   * `self` ranks that player too before they pick a handle (where their run
-   * would stand once they do), for the checks.
+   * Every player's best run on a board, ranked, with how many players it holds
+   * (`total`), as a fragment to select from. `self` ranks that player too before
+   * they pick a handle (where their run would stand once they do), for the checks.
    */
   const ranked = ({ mode, difficulty, period, starter, friends, viewer }: BoardQuery, q: Q = sql, self: string | null = null) => q`
     with best as (
       select distinct on (r.user_id) r.id, r.user_id, r.starter, r.stage, r.branch, r.difficulty, r.survived, r.outcome, r.started_at, r.bag
       from runs r
       where r.finished_at is not null and r.verified is not false and not r.unlisted and r.mode = ${mode} and r.difficulty = ${difficulty}
-        ${period === 'all' ? q`` : q`and r.started_at >= (date_trunc(${period}, now() at time zone ${BOARD_TIME_ZONE}) at time zone ${BOARD_TIME_ZONE})`}
+        ${period === 'all' ? q`and r.started_at >= ${SEASON_ONE.start}::timestamptz` : period === 'era1' ? q`and r.started_at < ${SEASON_ONE.start}::timestamptz` : q`and r.started_at >= (date_trunc(${period}, now() at time zone ${BOARD_TIME_ZONE}) at time zone ${BOARD_TIME_ZONE})`}
         ${starter ? q`and r.starter = ${starter}` : q``}
         ${friends && viewer ? q`and (r.user_id = ${viewer} or r.user_id in (select followee_id from follows where follower_id = ${viewer}))` : q``}
       order by r.user_id, r.survived desc, r.started_at
     )
-    select b.*, u.handle, u.name, u.supporter_points, u.og_tier, u.patreon_tier, u.patreon_best, u.supporter_public, u.supporter_since, (row_number() over (order by b.survived desc, b.started_at))::int as rank
+    select b.*, u.handle, u.name, u.supporter_points, u.og_tier, u.patreon_tier, u.patreon_best, u.supporter_public, u.supporter_since, (row_number() over (order by b.survived desc, b.started_at))::int as rank,
+      (count(*) over ())::int as total
     from best b join users u on u.id = b.user_id
     where (u.handle is not null ${self ? q`or u.id = ${self}` : q``}) and u.banned_at is null`
 
@@ -185,7 +189,7 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
       from runs r join users u on u.id = r.user_id where r.id = ${id} and r.finished_at is not null`
     if (!run) return null
     const lines = await Promise.all(
-      BOARD_PERIODS.flatMap((period) =>
+      LIVE_PERIODS.flatMap((period) =>
         (['global', 'starter'] as const).map(async (board): Promise<BoardLine & { period: BoardPeriod }> => {
           const query = { mode: run.mode, difficulty: run.difficulty, period, starter: board === 'starter' ? run.starter : null, friends: false, viewer: null }
           const [line] = await q<{ rank: number; id: string }[]>`select rank, id from (${ranked(query, q, run.user_id)}) board where user_id = ${run.user_id}`
@@ -540,15 +544,32 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
       return { places: rows.map((r) => ({ rank: r.rank, handle: r.handle, name: r.name ?? r.handle, survived: r.survived })), total: rows[0]?.total ?? 0 }
     },
 
-    /** The top of a board, and the viewer's own line wherever they are. */
+    /** The top of a board, the viewer's own line wherever they are, and how many players it holds. */
     board: async (query: BoardQuery): Promise<Board> => {
-      const rows = await sql<EntryRow[]>`
+      const rows = await sql<(EntryRow & { total: number })[]>`
         select * from (${ranked(query)}) board
         where rank <= ${BOARD_SIZE} or user_id = ${query.viewer ?? ''}
         order by rank`
       const mine = rows.find((r) => r.user_id === query.viewer)
-      return { entries: rows.filter((r) => r.rank <= BOARD_SIZE).map(toEntry), me: mine ? toEntry(mine) : null }
+      return { entries: rows.filter((r) => r.rank <= BOARD_SIZE).map(toEntry), me: mine ? toEntry(mine) : null, total: rows[0]?.total ?? 0 }
     },
+
+    /**
+     * Each solo Era 1 board (every mode and difficulty, all Pokémon, `ranked` as the boards list it:
+     * players with a handle, never banned, no failed or unlisted run) as `era1Awards` reads it: its
+     * players near the top with their place, and how many it holds.
+     */
+    era1Standings: (): Promise<Era1Standing[]> =>
+      Promise.all(
+        RUN_MODES.flatMap((mode) =>
+          DIFFICULTY_IDS.map(async (difficulty): Promise<Era1Standing> => {
+            const rows = await sql<{ user_id: string; rank: number; total: number }[]>`
+              select user_id, rank, total from (${ranked({ mode, difficulty, period: 'era1', starter: null, friends: false, viewer: null })}) board
+              where rank <= ${ERA1.top} order by rank`
+            return { board: { side: mode, difficulty }, field: rows[0]?.total ?? 0, places: rows.map((r) => ({ userId: r.user_id, rank: r.rank })) }
+          }),
+        ),
+      ),
 
     /**
      * A public profile by handle, as `viewer` sees it, or null (also for a

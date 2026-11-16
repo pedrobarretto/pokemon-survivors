@@ -741,6 +741,36 @@ button {
   scrollbar-width: thin;
 }
 
+/* A region's header over its forms in the Eggs grid (`regionHead`): a full row, the region's color down its edge. */
+.partner-egg-head {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0 8px 0 4px;
+  font-family: var(--title);
+  font-size: 16px;
+  font-weight: normal;
+  line-height: 1;
+  color: color-mix(in srgb, #283048 var(--dk-lift, 100%), #fff);
+  background: color-mix(in srgb, var(--rc) 22%, var(--dk-surface-1, #f8f8f8));
+  border-left: 4px solid var(--rc);
+  border-radius: 4px;
+}
+
+.partner-egg-head img {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+}
+
+.partner-egg-head small {
+  margin-left: auto;
+  font-size: 14px;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
+}
+
 .partner-eggs .incubator-entry {
   flex: none;
   align-self: center;
@@ -763,6 +793,76 @@ button {
   line-height: 1.1;
   color: var(--dk-ink-2, #505068);
   text-align: center;
+}
+
+/* The legends' grid and, under their heading, the Ultra Beasts': one scroller for both (the grids keep the eggs' columns). */
+.partner-legend-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  scrollbar-width: thin;
+}
+
+.partner-legend-scroll > .partner-egg-grid {
+  flex: none;
+  min-height: auto;
+  overflow: visible;
+}
+
+/* The Ultra Beasts' heading: a Beast Ball, the name and how many are captured, on a band of Ultra Space violet. */
+.partner-legend-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 6px 0;
+  padding: 4px 10px;
+  font-family: var(--title);
+  font-size: 18px;
+  font-weight: normal;
+  line-height: 1;
+  color: #f8f0ff;
+  background: #2c1c5c;
+  border: 2px solid #8870d0;
+  border-radius: 6px;
+}
+
+.partner-legend-head img {
+  width: 20px;
+  height: 20px;
+  image-rendering: pixelated;
+}
+
+.partner-legend-head small {
+  margin-left: auto;
+  font-size: 16px;
+  color: #c8b8f8;
+}
+
+/* An Ultra Beast's Beast Ball (10 px at 2×), in the bottom left corner like an event legend's badge. */
+.partner-cell-ultra {
+  position: absolute;
+  left: 2px;
+  bottom: 2px;
+  width: 20px;
+  height: 20px;
+  image-rendering: pixelated;
+}
+
+.partner-legend-event img.ultra-ball-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* The Ultra Beast of the week: a ring of prism light around its cell. */
+.partner-cell.ultra-week:not(.selected) {
+  border-color: #c8a8f8;
+  box-shadow:
+    0 0 0 2px #f8a0d0,
+    0 0 0 4px #98d8f8;
 }
 
 /* An event legend's badge (13×12 px at 2×: Darkrai's Noite das Bruxas 2026), in the bottom left corner. */
@@ -2834,6 +2934,8 @@ button {
 .special-button {
   display: none;
   position: absolute;
+  /* Its art's layers (`.special img`, the ring) stack inside it, so a dialog on top (the evolution's text box) stays on top. */
+  isolation: isolate;
   right: max(18px, env(safe-area-inset-right));
   bottom: max(18px, env(safe-area-inset-bottom));
   width: 76px;
@@ -2969,6 +3071,65 @@ button {
   }
 }
 
+/* ---------- Terastal (HUD badge + touch button, shown once the run has a Tera type; `ui/teraButton.ts`) ---------- */
+
+/* The rim takes the Tera type's crystal (`--type`, `--tera-light`, `--tera-dark` from its ramp). */
+.tera.ready {
+  animation: tera-glint 0.5s steps(1, jump-none) infinite;
+}
+
+.tera.active {
+  box-shadow: inset 0 0 0 2px var(--tera-light), 0 0 0 3px var(--tera-dark);
+}
+
+@keyframes tera-glint {
+  0% {
+    box-shadow: inset 0 0 0 2px var(--tera-light), 0 0 0 3px var(--type);
+  }
+  50% {
+    box-shadow: inset 0 0 0 2px var(--type), 0 0 0 3px var(--tera-light);
+  }
+}
+
+.tera-button {
+  display: none;
+  position: absolute;
+  right: calc(max(18px, env(safe-area-inset-right)) + 88px);
+  bottom: calc(max(18px, env(safe-area-inset-bottom)) + 88px);
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border-radius: 50%;
+  pointer-events: auto;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tera-button img {
+  width: 34px;
+  height: 34px;
+}
+
+.tera-button::after {
+  background: conic-gradient(transparent calc(var(--fill) * 360deg), rgba(8, 8, 20, 0.62) 0);
+}
+
+.tera-button:active {
+  transform: translateY(2px);
+}
+
+.tera-button .special-tag {
+  top: auto;
+  bottom: 2px;
+  font-size: 13px;
+}
+
+@media (pointer: coarse) {
+  .tera-button {
+    display: grid;
+  }
+}
+
 /* ---------- Manual lunge (Quick Attack, Extreme Speed): HUD badge + touch button left of the special ---------- */
 
 .lunge-button {
@@ -3007,6 +3168,7 @@ button {
 /* A menu or the results screen is up: the touch buttons step aside so they never cover its buttons. */
 .hud.menu-open .special-button,
 .hud.menu-open .mega-button,
+.hud.menu-open .tera-button,
 .hud.menu-open .lunge-button {
   display: none;
 }
@@ -3216,6 +3378,10 @@ button {
     right: auto;
     left: calc(max(18px, env(safe-area-inset-left)) + 90px);
   }
+  [data-hand='left'] .tera-button {
+    right: auto;
+    left: calc(max(18px, env(safe-area-inset-left)) + 88px);
+  }
   [data-hand='left'] .status {
     left: auto;
     right: 12px;
@@ -3238,6 +3404,10 @@ button {
   [data-hand='left'] .hud.with-team .mega-button {
     left: calc(max(18px, env(safe-area-inset-left)) + 160px);
     bottom: calc(max(18px, env(safe-area-inset-bottom)) + 10px);
+  }
+  [data-hand='left'] .hud.with-team .tera-button {
+    left: calc(max(18px, env(safe-area-inset-left)) + 226px);
+    bottom: calc(max(18px, env(safe-area-inset-bottom)) + 12px);
   }
   /* The toasts' column on the right stops above the fixed stick, however high it sits. */
   [data-hand='left'][data-stick='fixed'] .toasts {
@@ -3286,6 +3456,28 @@ button {
 .toasts.held,
 .banner.held {
   display: none;
+}
+
+/* A fight that needs its boss in view (`focusToasts`): one line at a time, off the top where the boss and its bar are. */
+.toasts.focus {
+  top: auto;
+  bottom: calc(24px + var(--safe-b));
+  max-height: none;
+}
+
+@media (max-width: 759px) and (orientation: portrait) {
+  /* Over the status box and the special button; the rush's camera keeps the Pokémon above it (`rushCamera`). */
+  .toasts.focus {
+    bottom: calc(112px + var(--safe-b));
+  }
+}
+
+@media (max-height: 500px) {
+  /* A phone on its side keeps the right column, clear of the middle. */
+  .toasts.focus {
+    top: calc(80px + var(--safe-t));
+    bottom: auto;
+  }
 }
 
 .toast {
@@ -3871,6 +4063,27 @@ button {
 }
 
 .lobby-walker {
+  image-rendering: pixelated;
+}
+
+/* The Ultra Beast of the week's card: its portrait at 1× (cropped to the slot on the small ones) and a Beast Ball (10 px at 2×). */
+.lobby-ultra-portrait {
+  width: 40px;
+  height: 40px;
+  object-fit: none;
+  image-rendering: pixelated;
+  border-radius: 6px;
+}
+
+.lobby-landscape .lobby-ultra-portrait {
+  width: 30px;
+  height: 30px;
+}
+
+.lobby-day-ball {
+  flex: none;
+  width: 20px;
+  height: 20px;
   image-rendering: pixelated;
 }
 
@@ -4740,6 +4953,31 @@ button {
 
 .lobby-narrow .lobby-day-text small {
   font-size: 16px;
+}
+
+/* The Ultra Beast of the week as a square badge up front (`ultraBadge` in `ui/title.ts`): its portrait in the prism ring of its partner cell, a Beast Ball on the corner. */
+.lobby-narrow .lobby-day.ultra {
+  width: auto;
+  padding: 4px;
+  gap: 0;
+}
+
+.lobby-narrow .lobby-day.ultra .lobby-day-text {
+  display: none;
+}
+
+.lobby-narrow .lobby-day.ultra .lobby-day-icon {
+  border-color: #c8a8f8;
+  box-shadow:
+    0 0 0 2px #f8a0d0,
+    0 0 0 4px #98d8f8;
+  margin: 4px;
+}
+
+.lobby-narrow .lobby-day.ultra .lobby-day-ball {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
 }
 
 .lobby-narrow .lobby-center {
@@ -6102,6 +6340,7 @@ button {
   color: #f8d030;
 }
 
+/* Room for a card's whole text (5 lines here, 4 on a short panel or a landscape phone, 6 in portrait); it scrolls only past that. */
 .shop-desc-text {
   max-height: 5.25em;
   margin: 4px 0 0;
@@ -6218,7 +6457,7 @@ button {
     height: 32px;
   }
   .shop-desc-text {
-    max-height: 2.1em;
+    max-height: 4.2em;
     font-size: 16px;
   }
   .btn.shop-buy,
@@ -6352,7 +6591,7 @@ button {
     font-size: 16px;
   }
   .shop-desc-text {
-    max-height: 3.2em;
+    max-height: 6.3em;
     font-size: 17px;
   }
   .btn.shop-buy,
@@ -6469,7 +6708,7 @@ button {
     height: 46px;
   }
   .shop-desc-text {
-    max-height: 2.1em;
+    max-height: 4.2em;
     font-size: 16px;
   }
   .btn.shop-buy,
@@ -7488,6 +7727,289 @@ button {
   font-style: normal;
 }
 
+/*
+ * The Terastal strip (`teraStrip` in `ui/teraNews.ts`): a band across the screen under the Pokémon, cut in the type's crystal.
+ * Its colors come from the ramp: `--tera-dark` (the band), `--tera-deep` (its facets), `--tera-mid`, `--tera-light`, `--tera-glint`.
+ * It opens like a slit (steps, on the pixel grid's beat), the crown and the words slide in, a glint crosses the letters, and it closes.
+ */
+.tera-strip {
+  --strip-h: clamp(88px, 18 * var(--vh), 150px);
+  position: absolute;
+  z-index: 3;
+  left: 0;
+  right: 0;
+  /* Under the Pokémon (the screen's middle) and its feet, clear of its crown. */
+  top: calc(50% + 6 * var(--vh) + 18px);
+  height: var(--strip-h);
+  pointer-events: none;
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .tera-strip {
+    --strip-h: clamp(70px, 24 * var(--vh), 100px);
+    top: calc(50% + 34px);
+  }
+}
+
+/* A phone held upright: the words size to the width (the longest type names fit), the band to the words. */
+@media (max-aspect-ratio: 3/4) {
+  .tera-strip {
+    --strip-h: clamp(76px, 25 * var(--vw), 128px);
+  }
+
+  .tera-strip-title {
+    font-size: min(calc(var(--strip-h) * 0.62), calc(11 * var(--vw)));
+  }
+
+  .tera-strip-crown {
+    height: min(calc(var(--strip-h) * 0.62), calc(15 * var(--vw)));
+  }
+}
+
+.tera-strip-band {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 2.4 * var(--vw), 26px);
+  height: 100%;
+  padding: 0 calc(5 * var(--vw));
+  overflow: hidden;
+  /* Facets: two crossing runs of hard-edged wedges in the band's own tones. */
+  background:
+    linear-gradient(180deg, transparent 0 46%, color-mix(in srgb, var(--tera-deep) 28%, transparent) 46% 100%),
+    repeating-linear-gradient(118deg, transparent 0 34px, color-mix(in srgb, var(--tera-deep) 34%, var(--tera-dark)) 34px 62px, transparent 62px 96px),
+    repeating-linear-gradient(62deg, transparent 0 48px, color-mix(in srgb, var(--tera-deep) 20%, var(--tera-dark)) 48px 70px, transparent 70px 110px),
+    var(--tera-dark);
+  border-block: 3px solid var(--kit-tinta);
+  box-shadow:
+    inset 0 3px 0 var(--tera-light),
+    inset 0 6px 0 var(--tera-mid),
+    inset 0 -3px 0 var(--tera-mid),
+    inset 0 -6px 0 var(--tera-deep),
+    0 5px 0 rgba(10, 8, 30, 0.45);
+  transform-origin: 50% 50%;
+  animation: tera-strip-slit 2.6s steps(6, jump-none) both;
+}
+
+.tera-strip-crown {
+  flex: none;
+  height: calc(var(--strip-h) * 0.62);
+  aspect-ratio: 1;
+  object-fit: contain;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 3px 0 rgba(10, 8, 30, 0.5));
+  animation: tera-strip-crown 2.6s cubic-bezier(0.2, 0.9, 0.2, 1) both;
+}
+
+.tera-strip-words {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  animation: tera-strip-words 2.6s cubic-bezier(0.2, 0.9, 0.2, 1) both;
+}
+
+.tera-strip-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+  font-family: var(--body);
+  font-size: calc(var(--strip-h) * 0.2);
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 0 var(--kit-tinta);
+}
+
+/* A little cut gem either side of the name, in the type's light. */
+.tera-strip-gem {
+  width: 9px;
+  height: 9px;
+  background: var(--tera-light);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+
+/* "TERA <TYPE>": the outline layer (the kit's ink round the type's dark) under a fill layer of the crystal's hard-stepped gradient, a glint crossing it. */
+.tera-strip-title {
+  position: relative;
+  font-family: var(--kit-title);
+  font-size: calc(var(--strip-h) * 0.62);
+  line-height: 0.92;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--tera-dark);
+  --o: max(3px, calc(var(--strip-h) * 0.03));
+  text-shadow:
+    calc(var(--o) * -1) 0 0 var(--tera-dark),
+    var(--o) 0 0 var(--tera-dark),
+    0 calc(var(--o) * -1) 0 var(--tera-dark),
+    0 var(--o) 0 var(--tera-dark),
+    calc(var(--o) * -1) calc(var(--o) * -1) 0 var(--tera-dark),
+    var(--o) calc(var(--o) * -1) 0 var(--tera-dark),
+    calc(var(--o) * -1) var(--o) 0 var(--tera-dark),
+    var(--o) var(--o) 0 var(--tera-dark),
+    0 calc(var(--o) * 2.4) 0 var(--kit-tinta);
+}
+
+.tera-strip-title::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  color: transparent;
+  text-shadow: none;
+  background:
+    linear-gradient(105deg, transparent 0 42%, var(--tera-glint) 42% 47%, transparent 47% 52%, var(--tera-glint) 52% 54%, transparent 54% 100%) no-repeat,
+    linear-gradient(180deg, var(--tera-glint) 0 14%, var(--tera-light) 14% 44%, var(--tera-glint) 44% 50%, var(--tera-mid) 50% 78%, var(--tera-deep) 78% 100%);
+  background-size: 300% 100%, 100% 100%;
+  background-position: 160% 0, 0 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: tera-strip-glint 2.6s linear both;
+}
+
+/* Stellar: the seven crystals in hard bands across the letters, white at their tops. */
+.tera-strip.stellar .tera-strip-title::after {
+  background:
+    linear-gradient(105deg, transparent 0 42%, #fff 42% 47%, transparent 47% 52%, #fff 52% 54%, transparent 54% 100%) no-repeat,
+    linear-gradient(180deg, #fff 0 14%, transparent 14% 100%),
+    linear-gradient(90deg, #f85858 0 17%, #f8a838 17% 33%, #f8e858 33% 50%, #58e898 50% 67%, #58a8f8 67% 83%, #a878f8 83% 100%);
+  background-size: 300% 100%, 100% 100%, 100% 100%;
+  background-position: 160% 0, 0 0, 0 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+/* Sparkles: four-pointed pixel stars round the words, each twinkling on its own beat. */
+.tera-spark {
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  background:
+    linear-gradient(var(--tera-glint), var(--tera-glint)) 50% 50% / 3px 15px no-repeat,
+    linear-gradient(var(--tera-glint), var(--tera-glint)) 50% 50% / 15px 3px no-repeat,
+    linear-gradient(var(--tera-light), var(--tera-light)) 50% 50% / 9px 9px no-repeat;
+  clip-path: polygon(40% 0, 60% 0, 60% 40%, 100% 40%, 100% 60%, 60% 60%, 60% 100%, 40% 100%, 40% 60%, 0 60%, 0 40%, 40% 40%);
+  animation: tera-spark 0.6s steps(1, jump-none) infinite;
+  opacity: 0;
+}
+
+.tera-spark-0 { left: 14%; top: 18%; animation-delay: 0.25s; }
+.tera-spark-1 { left: 31%; top: 70%; animation-delay: 0.45s; transform: scale(0.6); }
+.tera-spark-2 { left: 52%; top: 12%; animation-delay: 0.35s; }
+.tera-spark-3 { left: 68%; top: 74%; animation-delay: 0.55s; transform: scale(0.6); }
+.tera-spark-4 { left: 84%; top: 22%; animation-delay: 0.3s; }
+.tera-spark-5 { left: 92%; top: 64%; animation-delay: 0.5s; transform: scale(0.6); }
+
+@keyframes tera-strip-slit {
+  0% { transform: scaleY(0); }
+  6% { transform: scaleY(1); }
+  90% { transform: scaleY(1); }
+  100% { transform: scaleY(0); }
+}
+
+@keyframes tera-strip-crown {
+  0% { transform: translateX(-60vw); }
+  14% { transform: translateX(0); }
+  88% { transform: translateX(0); opacity: 1; }
+  96% { transform: translateX(-12vw); opacity: 0; }
+  100% { opacity: 0; }
+}
+
+@keyframes tera-strip-words {
+  0% { transform: translateX(70vw); }
+  16% { transform: translateX(0); }
+  88% { transform: translateX(0); opacity: 1; }
+  96% { transform: translateX(12vw); opacity: 0; }
+  100% { opacity: 0; }
+}
+
+@keyframes tera-strip-glint {
+  0%, 18% { background-position: 160% 0; }
+  44%, 100% { background-position: -60% 0; }
+}
+
+@keyframes tera-spark {
+  0% { opacity: 1; }
+  34% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tera-strip-crown,
+  .tera-strip-words {
+    animation: none;
+  }
+}
+
+/* Terastal's banner and a Tera Raid's title card (`ui/teraNews.ts`): the banner box re-cut in the type's crystal. */
+.banner.tera-box {
+  /* Higher than other banners: the crown it announces hovers over the Pokémon at the screen's middle. */
+  top: 14%;
+  border-color: var(--tera-dark);
+  box-shadow:
+    inset 0 0 0 var(--px) var(--paper),
+    inset 0 0 0 calc(var(--px) * 2) var(--tera-mid),
+    inset 0 0 0 calc(var(--px) * 3) var(--tera-light),
+    0 calc(var(--px) * 2) 0 rgba(0, 0, 0, 0.35);
+}
+
+.tera-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+}
+
+.tera-crown {
+  width: calc(var(--px, 3px) * 19);
+  height: calc(var(--px, 3px) * 19);
+  min-width: 48px;
+  min-height: 48px;
+  image-rendering: pixelated;
+}
+
+.tera-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tera-kicker {
+  font-family: var(--body);
+  font-size: clamp(14px, 2.6 * var(--vw), 20px);
+  letter-spacing: 0.08em;
+  color: color-mix(in srgb, var(--ink, #383028) var(--dk-lift, 100%), #fff);
+}
+
+.tera-type {
+  text-transform: uppercase;
+  color: var(--tera-mid);
+  text-shadow:
+    calc(var(--px) * 1) calc(var(--px) * 1) 0 var(--tera-dark),
+    0 calc(var(--px) * -1) 0 var(--tera-light);
+}
+
+/* Stellar: the seven crystals in hard bands across the letters. */
+.tera-banner.stellar .tera-type {
+  color: transparent;
+  text-shadow: none;
+  background: linear-gradient(90deg, #f85858 0 16%, #f8a838 16% 32%, #f8e858 32% 48%, #58e898 48% 64%, #58a8f8 64% 80%, #a878f8 80% 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.tera-stars {
+  display: flex;
+  gap: 3px;
+}
+
+.tera-stars img {
+  width: 21px;
+  height: 21px;
+  image-rendering: pixelated;
+}
+
 /* Presente Misterioso (ui/gifts.ts): the closed box, shaking open, and what came out. */
 .gift-dialog {
   width: min(420px, 94vw);
@@ -7567,6 +8089,20 @@ button {
   width: 72px;
   height: 72px;
   object-fit: contain;
+  animation: gift-pop 0.4s steps(4) both;
+}
+
+/* A legend that came as a gift: alive on its lit stage (`giftScreen`'s tick), the burst behind it. */
+.gift-prize.gift-legend {
+  width: 224px;
+  height: 192px;
+}
+
+.gift-stage {
+  position: relative;
+  width: 224px;
+  height: 192px;
+  image-rendering: pixelated;
   animation: gift-pop 0.4s steps(4) both;
 }
 
@@ -8579,6 +9115,186 @@ button {
   color: color-mix(in srgb, #1c6c78 var(--dk-lift, 100%), #fff);
 }
 
+/* A roaming lake legend about, or a Sword of Justice's duel (`ui/quests.ts`); Hoopa's rings (`rushPill` in `ui/rush.ts`). */
+.rift-pill.rift-quest,
+.rift-pill.rift-rush {
+  color: color-mix(in srgb, #2c6098 var(--dk-lift, 100%), #fff);
+}
+
+/* A Sword of Justice's duel (`createDuelCard` in `ui/quests.ts`): the test in the Sword's color, its goal, its clock draining. */
+.duel-card {
+  --sword: #3868b8;
+  --sword-lit: #78a8f0;
+  position: absolute;
+  top: 98px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(360px, calc(100 * var(--vw) - 32px));
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+  padding: 7px 12px 9px;
+  text-shadow: none;
+  pointer-events: none;
+}
+
+.duel-card[data-sword='terrakion'] {
+  --sword: #b0581c;
+  --sword-lit: #f0a050;
+}
+
+.duel-card[data-sword='virizion'] {
+  --sword: #2a8a34;
+  --sword-lit: #70d060;
+}
+
+.duel-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 20px;
+  color: color-mix(in srgb, var(--sword) var(--dk-lift, 100%), #fff);
+}
+
+.duel-icon {
+  width: 24px;
+  height: 24px;
+  image-rendering: pixelated;
+}
+
+.duel-goal {
+  font-family: var(--body);
+  font-size: 18px;
+  line-height: 1;
+  text-align: center;
+}
+
+.duel-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.duel-tag {
+  font-size: 13px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  background: var(--kit-tinta);
+  color: #f8f0c8;
+}
+
+.duel-bar,
+.duel-hp {
+  position: relative;
+  flex: 1;
+  height: 12px;
+  background: #202030;
+  border: 3px solid var(--kit-tinta);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.duel-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(var(--sword-lit) 0 40%, var(--sword) 40%);
+}
+
+.duel-clock {
+  min-width: 3.2em;
+  font-size: 16px;
+  text-align: right;
+  color: color-mix(in srgb, var(--sword) var(--dk-lift, 100%), #fff);
+}
+
+.duel-card.urgent .duel-fill {
+  background: linear-gradient(#f87070 0 40%, #d02838 40%);
+}
+
+.duel-card.urgent .duel-clock {
+  animation: rift-pulse 0.5s steps(2) infinite;
+}
+
+/* Cobalion's test: the player's HP against the line it mustn't fall under. */
+.duel-hp-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(#90e890 0 40%, #38b048 40%);
+}
+
+.duel-row.low .duel-hp-fill {
+  background: linear-gradient(#f8d070 0 40%, #e09020 40%);
+}
+
+.duel-floor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--floor, 30%);
+  width: 3px;
+  margin-left: -1px;
+  background: #f83030;
+  box-shadow: 0 0 0 1px #101018;
+}
+
+/* Virizion's test: the leaves stepped on so far. */
+.duel-leaves {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.duel-leaves img {
+  width: 22px;
+  height: 22px;
+  image-rendering: pixelated;
+}
+
+@media (max-width: 600px) {
+  .duel-card {
+    top: 108px;
+    gap: 4px;
+    padding: 5px 10px 7px;
+  }
+  .duel-head {
+    font-size: 16px;
+  }
+  .duel-goal {
+    font-size: 15px;
+  }
+  .duel-clock {
+    font-size: 13px;
+  }
+  .duel-leaves img {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-height: 500px) {
+  /* A phone on its side: the left column, under the moves, mirroring the news on the right; the middle stays clear. */
+  .duel-card {
+    top: calc(96px + var(--safe-t));
+    left: max(8px, env(safe-area-inset-left));
+    transform: none;
+    width: min(250px, 32 * var(--vw));
+    gap: 3px;
+    padding: 4px 10px 6px;
+  }
+  .duel-head {
+    font-size: 15px;
+  }
+  .duel-goal {
+    font-size: 14px;
+  }
+  .duel-bar,
+  .duel-hp {
+    height: 10px;
+  }
+}
+
 /* Mystery Dungeon's floor card: black, the dungeon's name and its floor. */
 .floor-card {
   position: absolute;
@@ -8660,6 +9376,25 @@ button {
 
 .mission-pill.urgent {
   animation: rift-pulse 0.5s steps(2) infinite;
+}
+
+/*
+ * Hoopa's Rings on a phone held sideways: the pill (the ring and the same clock) takes the timer's place, so the
+ * top of the HUD ends at the legend's bar and the camera can frame the legend under it (`frameRush` in `render/rush.ts`).
+ */
+@media (max-height: 500px) {
+  .hud:has(.rift-pill.rift-rush) .timer {
+    visibility: hidden;
+  }
+  .rift-pill.rift-rush {
+    top: 14px;
+  }
+}
+
+/* A wave legend's entrance or capture (`g.legendScene`) centers the camera on it: the pills leave it and its name clear. */
+.hud.legend-scene .rift-pill,
+.hud.legend-scene .mission-pill {
+  visibility: hidden;
 }
 
 @media (max-width: 600px) {
@@ -9559,6 +10294,137 @@ button {
   font-size: 16px;
 }
 
+/* The regions, Kanto to Paldea: each tab its goal seen so far, a completed one in green. */
+.dex-regions {
+  gap: 4px;
+  padding: 2px 2px 4px;
+}
+
+.dex-region {
+  font-size: 12px;
+  padding: 5px 6px 4px;
+  gap: 3px;
+  border-radius: 8px;
+}
+
+.dex-region small {
+  font-size: 12px;
+}
+
+.dex-region.done:not(.selected) {
+  background: color-mix(in srgb, #2f8a4a var(--dk-lift, 100%), #fff);
+}
+
+.dex-region.done small {
+  color: #c8f8c0;
+}
+
+.dex-region.done.selected small {
+  color: #1c6a30;
+}
+
+.dex-region.selected.focused {
+  box-shadow: 0 0 0 3px #e83838, 0 3px 0 #2a5aa8;
+}
+
+/* The filters and, beside them, what the region's goal brings (wrapping under them on narrow screens). */
+.dex-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px 12px;
+  flex-wrap: wrap;
+}
+
+.dex-bar .dex-tabs {
+  flex: 0 1 auto;
+}
+
+.dex-goal {
+  flex: 1 1 260px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 2px 12px;
+  flex-wrap: wrap;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--dk-ink-2, #404058);
+}
+
+.dex-goal b {
+  color: color-mix(in srgb, #c83030 var(--dk-lift, 100%), #fff);
+}
+
+.dex-goal.done .dex-goal-region b {
+  color: color-mix(in srgb, #2f8a4a var(--dk-lift, 100%), #fff);
+}
+
+.dex-goal-national {
+  color: var(--dk-ink-3, #707088);
+}
+
+/* A species SpriteCollab's artists are still drawing: a pencil on paper, a thank-you rather than a gap. */
+.dex-cell.drawing {
+  background: #e8dcc0;
+  border-style: dashed;
+  border-color: #b8a070;
+}
+
+.dex-cell.drawing > img:first-child {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+}
+
+.dex-cell.drawing small {
+  color: #5a4828;
+  text-shadow: none;
+}
+
+/* Not in the game yet: fainter than an unseen species, which a run can still bring. */
+.dex-cell.soon {
+  background: #1c2238;
+  border-style: dashed;
+  border-color: #283048;
+}
+
+.dex-cell.soon .dex-unknown {
+  opacity: 0.45;
+}
+
+.dex-cell.soon small {
+  opacity: 0.6;
+}
+
+.dex-detail .tag-drawing {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: color-mix(in srgb, #8a6a20 var(--dk-lift, 100%), #fff);
+}
+
+.dex-detail .tag-drawing img {
+  width: 16px;
+  height: 16px;
+  image-rendering: pixelated;
+}
+
+/* Nothing to draw for a species not in the game yet: its words take the panel. */
+.dex-detail.soon .dex-sprite {
+  display: none;
+}
+
+a.btn.dex-contribute {
+  align-self: stretch;
+  justify-content: center;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
 /* The filter row has the keyboard focus: ring the active tab. */
 .dex-tab.selected.focused {
   box-shadow: 0 0 0 3px #e83838, 0 3px 0 #2a5aa8;
@@ -9613,6 +10479,18 @@ button {
   line-height: 1;
   color: #e8e8f8;
   text-shadow: 1px 1px 0 #101020, -1px -1px 0 #101020;
+}
+/* A regional form's region initial after its national number (`regionTag`). */
+.dex-cell .dex-region-tag {
+  display: inline-block;
+  margin-left: 2px;
+  padding: 0 2px;
+  font-size: 11px;
+  line-height: 12px;
+  color: #101020;
+  text-shadow: none;
+  border: 1px solid #101020;
+  vertical-align: 1px;
 }
 
 .dex-cell.unseen {
@@ -9764,67 +10642,309 @@ a.btn.dex-site {
   height: 16px;
 }
 
-/* Phones in portrait: the detail becomes a strip above the grid. */
-@media (max-width: 600px) {
+/* The region's counts and who doesn't count (`regionCounts`), the same line as the site's region tile. */
+.dex-goal-rule {
+  color: var(--dk-ink-2, #404058);
+}
+
+/* The thank-you's short form shows only on phones, where the detail is a strip. */
+.dex-tip-short {
+  display: none;
+}
+
+/* Phones in portrait: one scrolling row of counters, the detail a short strip above the grid, the grid the rest. */
+@media (max-width: 600px) and (orientation: portrait) {
   .dialog.dex {
     height: 100%;
     padding: 10px;
-    gap: 8px;
+    gap: 6px;
+  }
+  .dex-head {
+    flex-wrap: nowrap;
+    gap: 6px;
   }
   .dex-head .dialog-title {
-    font-size: 24px;
+    flex: none;
+    font-size: 20px;
+  }
+  .dex-progress {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    touch-action: pan-x;
+  }
+  .dex-progress::-webkit-scrollbar {
+    display: none;
   }
   .dex-progress span {
-    font-size: 16px;
+    flex: none;
+    font-size: 14px;
     padding: 3px 6px;
+  }
+  .dex-progress b {
+    font-size: 14px;
+  }
+  .dex-region {
+    flex-direction: row;
+    gap: 6px;
+    padding: 6px 8px;
+  }
+  .dex-goal {
+    flex-direction: column;
+    gap: 3px;
+    font-size: 16px;
   }
   .dex-body {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 6px;
   }
   .dex-detail {
     order: -1;
     flex-direction: row;
-    align-items: flex-start;
+    align-items: center;
+    gap: 6px;
     padding: 6px;
     overflow: visible;
   }
   .dex-detail .inspect-sprite {
-    width: 96px;
-    height: 96px;
+    flex: none;
+    width: 72px;
+    height: 72px;
   }
   .dex-detail .inspect-name {
-    font-size: 22px;
+    font-size: 20px;
+  }
+  .dex-facts {
+    gap: 4px;
+  }
+  .dex-fact,
+  .dex-fact b {
+    font-size: 16px;
+  }
+  .dex-detail .dex-tip {
+    font-size: 16px;
+  }
+  .dex-detail .dex-tip-long {
+    display: none;
+  }
+  .dex-detail .dex-tip-short {
+    display: block;
+  }
+  .dex-detail a.btn.dex-contribute {
+    min-height: 44px;
+    padding: 4px 12px;
+    font-size: 16px;
   }
   .dex-grid {
     grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
   }
-  .dex .buttons .btn {
-    flex: 1;
-    justify-content: center;
-  }
-}
-
-/* Phones in landscape: everything side by side, no hint. */
-@media (max-height: 500px) and (orientation: landscape) {
-  .dialog.dex {
-    height: 100%;
-    padding: 8px 12px;
+  .dex .buttons {
+    flex-wrap: nowrap;
     gap: 6px;
   }
-  .dex-body {
-    grid-template-columns: 1fr 210px;
-  }
-  .dex-detail .inspect-sprite {
-    width: 96px;
-    height: 96px;
+  .dex .buttons .btn {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 44px;
+    padding: 4px 6px;
+    font-size: 15px;
+    line-height: 1.1;
+    text-align: center;
+    justify-content: center;
   }
   .dex .hint {
     display: none;
   }
-  .dex .buttons .btn {
+}
+
+/*
+ * Phones in landscape: the grid takes the left column from the regions down;
+ * the detail, the goal and the buttons stack on the right. The bar and the
+ * body give their children to the dialog's grid.
+ */
+@media (max-height: 500px) and (orientation: landscape) {
+  .dialog.dex {
+    height: 100%;
+    padding: 8px 10px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(200px, 34vw, 270px);
+    grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      'head head'
+      'regions regions'
+      'tabs detail'
+      'list detail'
+      'list goal'
+      'list buttons';
+    gap: 6px 8px;
+  }
+  .dex-head {
+    grid-area: head;
+    flex-wrap: nowrap;
+  }
+  .dex-head .dialog-title {
+    flex: none;
+    font-size: 18px;
+  }
+  .dex-progress {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    touch-action: pan-x;
+  }
+  .dex-progress::-webkit-scrollbar {
+    display: none;
+  }
+  .dex-progress span {
+    flex: none;
+    font-size: 14px;
+    padding: 3px 6px;
+  }
+  .dex-progress b {
+    font-size: 14px;
+  }
+  .dex-regions {
+    grid-area: regions;
+    padding: 0 2px 2px;
+  }
+  .dex-region {
+    flex-direction: row;
+    gap: 6px;
+    padding: 4px 6px;
+  }
+  .dex-bar,
+  .dex-body {
+    display: contents;
+  }
+  .dex-bar .dex-tabs {
+    grid-area: tabs;
+    padding: 0 2px;
+  }
+  .dex-tab {
+    font-size: 14px;
+    padding: 5px 8px;
+  }
+  .dex-goal {
+    grid-area: goal;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 3px;
+    font-size: 14px;
+  }
+  .dex-list {
+    grid-area: list;
+  }
+  /* The sprite beside the name and types, the facts under both at full width, scrolling when a species says more than fits. */
+  .dex-detail {
+    grid-area: detail;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-content: start;
+    align-items: center;
+    padding: 6px;
+    gap: 4px 8px;
+  }
+  .dex-detail .inspect-sprite {
+    grid-row: 1 / span 2;
+    width: 64px;
+    height: 64px;
+  }
+  .dex-detail .inspect-id {
+    display: contents;
+  }
+  .dex-detail .dex-facts {
+    grid-column: 1 / -1;
+  }
+  /* The thank-you: the tag and the link on one row, the words under them. */
+  .dex-detail.drawing .dex-facts {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .dex-detail.drawing .dex-tip-short {
+    order: 1;
+    flex-basis: 100%;
+  }
+  .dex-detail .inspect-name {
+    font-size: 16px;
+    line-height: 1.25;
+  }
+  .dex-detail .inspect-name small {
+    font-size: 14px;
+    margin-bottom: 0;
+  }
+  .dex-facts {
+    gap: 4px;
+  }
+  .dex-fact,
+  .dex-fact b,
+  .dex-detail .dex-tip {
+    font-size: 14px;
+  }
+  .dex-detail .dex-tip-long {
+    display: none;
+  }
+  .dex-detail .dex-tip-short {
+    display: block;
+  }
+  .dex-detail a.btn.dex-contribute {
     min-height: 36px;
-    padding: 6px 12px;
+    padding: 4px 10px;
+    font-size: 14px;
+  }
+  .dex-grid {
+    grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+  }
+  /* Back and the PC side by side, where to find under them. */
+  .dex .buttons {
+    grid-area: buttons;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+  .dex .buttons .btn {
+    min-width: 0;
+    min-height: 36px;
+    padding: 4px 6px;
+    font-size: 14px;
+    white-space: nowrap;
+    justify-content: center;
+  }
+  .dex .buttons .btn:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+  .dex .hint {
+    display: none;
+  }
+}
+
+/* Very short landscape screens (568×320): the counters and the National Dex line give their room to the grid and the detail. */
+@media (max-height: 360px) and (orientation: landscape) {
+  .dialog.dex {
+    grid-template-areas:
+      'regions regions'
+      'tabs detail'
+      'list detail'
+      'list goal'
+      'list buttons';
+    grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+  }
+  .dex-head {
+    display: none;
+  }
+  .dex-goal-national {
+    display: none;
+  }
+  .dex-detail .inspect-sprite {
+    width: 48px;
+    height: 48px;
+  }
+  /* The pencil, the tag and the link still say it; the words wait for a taller screen. */
+  .dex-detail .dex-tip-short {
+    display: none;
   }
 }
 
@@ -15954,6 +17074,61 @@ button.hall-tile:hover {
 /* A boss with phases: a notch on its HP bar at each phase's threshold. */
 .boss-bar {
   position: relative;
+}
+
+/* A Tera Raid's giant on the boss bar (`ui/hud.ts`): its crown by its name, its Tera shield in crystal under the HP. */
+.boss-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.boss-crown {
+  width: 28px;
+  height: 28px;
+  image-rendering: pixelated;
+}
+
+/* The hollow's clock: the den throws the team out when it runs down. */
+.boss-clock {
+  padding: 1px 6px;
+  font-size: 16px;
+  line-height: 1;
+  color: #ffffff;
+  background: #482080;
+  border: 2px solid var(--kit-tinta);
+  border-radius: 4px;
+}
+
+.boss-clock.urgent {
+  animation: rift-pulse 0.5s steps(2) infinite;
+}
+
+.boss-shield {
+  position: relative;
+  width: 100%;
+  height: 10px;
+  margin-top: 3px;
+  background: #181030;
+  border: 3px solid var(--kit-tinta);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.boss-shield-fill {
+  height: 100%;
+  background: repeating-linear-gradient(90deg, var(--tera-light) 0 6px, var(--tera-mid) 6px 12px);
+}
+
+.boss-shield-label {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  line-height: 1;
+  color: #101018;
 }
 
 .boss-tick {
@@ -23373,6 +24548,7 @@ span.arena-hub-face {
 /* A match plays its kit: the run's own special, Mega and lunge controls step aside. */
 [data-arena] .special-button,
 [data-arena] .mega-button,
+[data-arena] .tera-button,
 [data-arena] .lunge-button,
 [data-arena] .special-badge:not(.kit-badge) {
   display: none !important;
@@ -26866,7 +28042,8 @@ span.arena-hub-face {
   /* Stretched, so the stage's size (not the canvas's) sets the scale. */
   align-items: stretch;
   gap: 0;
-  background: rgba(16, 20, 32, 0.92);
+  /* Solid: what's behind (the realm, a menu) would only be noise around the game. */
+  background: #141a2e;
   padding: max(8px, var(--safe-t)) max(8px, var(--safe-r)) max(8px, var(--safe-b)) max(8px, var(--safe-l));
   font-size: 18px;
   touch-action: none;
@@ -26883,16 +28060,44 @@ span.arena-hub-face {
 }
 
 .minigame-head h2 {
+  --kit-o: 2px;
   margin: 0;
-  font-family: var(--title);
-  font-size: 26px;
+  font-size: 32px;
   font-weight: normal;
+  overflow: hidden;
+  padding: 2px 2px 6px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.minigame-close {
-  min-width: 44px;
-  min-height: 44px;
-  font-size: 22px;
+/* The kit's red round close, as the Modos de jogo modal's. */
+.minigame-close.arc-icon-btn {
+  flex: none;
+  background: var(--kit-survivors);
+  border-radius: 50%;
+}
+
+.minigame-close img {
+  width: 18px;
+  height: 18px;
+  filter: brightness(0) invert(1);
+}
+
+/* Each game wears a color of its own (its primary buttons, the odds' highlight); the realm's otherwise. */
+.minigame-screen {
+  --mode: var(--kit-realm);
+}
+
+.minigame-screen[data-game='dig'] {
+  --mode: var(--kit-dojo);
+}
+
+.minigame-screen[data-game='claw'] {
+  --mode: #e2457a;
+}
+
+.minigame-screen[data-game='safari'] {
+  --mode: #3e9c48;
 }
 
 .minigame-stage {
@@ -27073,8 +28278,7 @@ span.arena-hub-face {
 /* Phones held upright: the header holds the name, the tag and the close button on one line. */
 @media (max-width: 480px) {
   .minigame-head h2 {
-    font-size: 20px;
-    line-height: 1;
+    font-size: 26px;
   }
   .minigame-head .minigame-tag {
     gap: 6px;
@@ -27110,7 +28314,7 @@ span.arena-hub-face {
   min-height: 44px;
   padding: 0 12px;
   font-family: var(--title);
-  font-size: 18px;
+  font-size: 20px;
   white-space: nowrap;
 }
 
@@ -28219,4 +29423,3339 @@ span.arena-hub-face {
 
 .lobby-realm-hour.on {
   background: #d08018;
+}
+
+/* The research chains (the Missions dialog's third tab, `ui/research.ts`). */
+.research-head b { display: inline-flex; align-items: center; gap: 6px; }
+.research-head img { width: 24px; height: 24px; image-rendering: pixelated; }
+.research-later { opacity: 0.55; }
+.research-note { margin: 4px 0; font-size: 0.85em; opacity: 0.85; }
+
+/* The Zona Safári (`realm/games/safari.ts`): DOM over the canvas, sized by its scale (`--k`, set every frame). */
+.sz-hud {
+  position: absolute;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+  font-size: calc(var(--k, 2) * 9px);
+  line-height: 1.15;
+}
+
+.sz-hud .hidden {
+  display: none !important;
+}
+
+.sz-hud > * {
+  pointer-events: auto;
+}
+
+.sz-text {
+  position: absolute;
+  left: calc(var(--k, 2) * 4px);
+  right: calc(var(--k, 2) * 4px);
+  bottom: calc(var(--k, 2) * 44px);
+  display: flex;
+  align-items: flex-start;
+  gap: calc(var(--k, 2) * 4px);
+  padding: calc(var(--k, 2) * 4px) calc(var(--k, 2) * 6px);
+  min-height: calc(var(--k, 2) * 26px);
+  text-align: left;
+}
+
+.sz-text-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.sz-text p {
+  margin: 0;
+}
+
+.sz-text small {
+  display: block;
+  margin-top: 2px;
+  opacity: 0.75;
+  font-size: 0.8em;
+}
+
+.sz-face {
+  flex: none;
+  width: calc(var(--k, 2) * 20px);
+  height: calc(var(--k, 2) * 20px);
+  image-rendering: pixelated;
+  border: var(--px) solid #283040;
+  background: #dfe8c8;
+}
+
+.sz-cmds {
+  position: absolute;
+  left: calc(var(--k, 2) * 4px);
+  right: calc(var(--k, 2) * 4px);
+  bottom: calc(var(--k, 2) * 4px);
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: calc(var(--k, 2) * 3px);
+}
+
+.sz-cmds button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--k, 2) * 2px);
+  min-height: max(44px, calc(var(--k, 2) * 26px));
+  padding: 4px;
+  font-size: 1em;
+  color: var(--ink);
+}
+
+.sz-cmds button img {
+  width: calc(var(--k, 2) * 11px);
+  height: calc(var(--k, 2) * 11px);
+  image-rendering: pixelated;
+}
+
+.sz-cmds button.sz-sel {
+  outline: 2px solid #f8c030;
+  outline-offset: 1px;
+}
+
+.sz-cmds button:disabled {
+  opacity: 0.45;
+}
+
+.sz-hot {
+  background: #f8e088;
+}
+
+.sz-pouch {
+  position: absolute;
+  left: calc(var(--k, 2) * 4px);
+  top: calc(var(--k, 2) * 4px);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--k, 2) * 4px);
+  padding: 2px calc(var(--k, 2) * 4px);
+  border-radius: 4px;
+  background: rgba(16, 20, 32, 0.72);
+  color: #fff;
+  pointer-events: none;
+  font-size: 0.95em;
+}
+
+.sz-pouch span {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.sz-pouch img {
+  width: calc(var(--k, 2) * 9px);
+  height: calc(var(--k, 2) * 9px);
+  image-rendering: pixelated;
+}
+
+.sz-pouch em {
+  font-style: normal;
+  opacity: 0.8;
+  font-size: 0.85em;
+}
+
+.sz-end {
+  position: absolute;
+  right: calc(var(--k, 2) * 4px);
+  top: calc(var(--k, 2) * 4px);
+  min-height: 34px;
+  padding: 2px calc(var(--k, 2) * 5px);
+  font-size: 0.85em;
+  color: var(--ink);
+}
+
+.sz-read {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--k, 2) * 8px);
+  transform: translateX(-50%);
+  min-height: 44px;
+  padding: 2px calc(var(--k, 2) * 8px);
+  color: var(--ink);
+}
+
+.sz-board {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 12px 12px;
+  background: rgba(16, 20, 46, 0.6);
+}
+
+.sz-board.hidden {
+  display: none;
+}
+
+/* While the board is up, its ✕ is the only way out: the page's close and Placar step aside. */
+.minigame-screen.sz-board-up .minigame-head button {
+  visibility: hidden;
+}
+
+/* The notice board: the kit's paper card, its residents as tiles grouped by rarity. */
+.sz-board-frame {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 640px;
+  max-height: 100%;
+  padding: 14px 14px 16px;
+  color: var(--kit-ink);
+  font-family: var(--kit-body);
+  font-size: 18px;
+  line-height: 1.15;
+  background: var(--kit-paper);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: var(--kit-radius);
+  box-shadow: 0 var(--kit-lip) 0 var(--kit-tinta);
+}
+
+.sz-board-frame > small {
+  color: var(--kit-ink-2);
+  font-size: 17px;
+}
+
+.sz-notes {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  touch-action: pan-y;
+}
+
+.sz-notes h4 {
+  align-self: flex-start;
+  margin: 0 0 6px;
+  padding: 3px 9px 4px;
+  color: #fff;
+  font-family: var(--kit-title);
+  font-size: 19px;
+  font-weight: 400;
+  line-height: 1;
+  background: var(--mode);
+  border-radius: 8px;
+}
+
+.sz-notes section {
+  display: flex;
+  flex-direction: column;
+}
+
+.sz-notes ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 6px;
+}
+
+.sz-note {
+  position: relative;
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  grid-template-areas: 'i b' 'i s';
+  column-gap: 8px;
+  align-items: center;
+  min-width: 0;
+  padding: 5px 8px 5px 5px;
+  background: var(--kit-tag);
+  border-radius: 10px;
+}
+
+.sz-note img {
+  grid-area: i;
+  width: 40px;
+  height: 40px;
+  image-rendering: pixelated;
+  border-radius: 6px;
+}
+
+.sz-note b {
+  grid-area: b;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 400;
+  font-size: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sz-note span {
+  grid-area: s;
+  font-family: var(--kit-title);
+  font-size: 20px;
+  line-height: 1;
+}
+
+/* NOVO rides the share's line, where there's room whatever the name. */
+.sz-note .arc-tag {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  padding: 1px 5px 2px;
+  font-size: 15px;
+}
+
+.sz-board-frame {
+  position: relative;
+}
+
+/* The kit's round ✕ on the board's corner. */
+.sz-board-close.arc-icon-btn {
+  position: absolute;
+  top: -12px;
+  right: -8px;
+  background: var(--kit-survivors);
+  border-radius: 50%;
+}
+
+.sz-board-close img {
+  width: 18px;
+  height: 18px;
+  filter: brightness(0) invert(1);
+}
+
+.sz-board-frame > .mg-title,
+.sz-board-frame > small {
+  padding-right: 34px;
+}
+
+/* Sideways the height is short: the place over the title on the left, the tabs beside them on the right. */
+.sz-board.sz-wide .sz-board-frame > .mg-title {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  justify-items: start;
+  gap: 6px 12px;
+}
+
+.sz-board.sz-wide .sz-board-frame > .mg-title .sz-tabs {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  justify-self: end;
+  flex-wrap: nowrap;
+}
+
+.sz-board-frame > .mg-title .sz-tabs {
+  margin-top: 4px;
+}
+
+.sz-board.sz-wide .sz-board-frame > .mg-title .sz-tabs {
+  margin: 0;
+}
+
+/* The session's end: what came along, and another session. */
+.sz-report {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(calc(100% - 16px), 420px);
+  max-height: calc(100% - 20px);
+  overflow-y: auto;
+  padding: 14px 14px 16px;
+  color: var(--kit-ink);
+  font-family: var(--kit-body);
+  font-size: 19px;
+  line-height: 1.15;
+  text-align: left;
+}
+
+.sz-report p {
+  margin: 0;
+}
+
+.sz-caught {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 6px;
+}
+
+.sz-caught li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 4px;
+  font-size: 17px;
+  text-align: center;
+  background: var(--kit-tag);
+  border-radius: 10px;
+}
+
+.sz-caught img {
+  width: 48px;
+  height: 48px;
+  image-rendering: pixelated;
+}
+
+.sz-caught b {
+  font-weight: normal;
+}
+
+.sz-report .arc-btn {
+  flex: none;
+  width: 100%;
+  min-width: 0;
+}
+
+/* The Ranger's booth (`sz-lobby`, also its error message): the kit's card and buttons, at sizes that read on a phone. */
+.sz-hud.sz-lobby {
+  font-size: max(18px, calc(var(--k, 2) * 9px));
+}
+
+.sz-hud.sz-lobby .sz-text {
+  gap: 12px;
+  padding: 10px 12px 12px;
+  line-height: 1.15;
+  border-width: var(--kit-edge);
+  border-color: var(--kit-tinta);
+  border-radius: var(--kit-radius);
+  box-shadow: 0 var(--kit-lip) 0 var(--kit-tinta);
+}
+
+.sz-hud.sz-lobby .sz-text small {
+  margin-top: 6px;
+  color: var(--kit-ink-2);
+  font-size: 17px;
+  opacity: 1;
+}
+
+.sz-hud.sz-lobby .sz-face {
+  width: 52px;
+  height: 52px;
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 10px;
+  background: var(--dk-wash-green, #dff0c8);
+}
+
+.sz-hud.sz-lobby .sz-cmds {
+  gap: 10px;
+  grid-auto-columns: auto;
+  grid-template-columns: 3fr 2fr;
+}
+
+/* Upright the buttons sit under the box: the box stands clear of them and their lip. */
+.sz-hud.sz-lobby.sz-tall .sz-text.sz-text {
+  bottom: calc(var(--k, 2) * 4px + 68px);
+}
+
+/* Sideways they stack in the column beside the box. */
+.sz-hud.sz-lobby.sz-wide .sz-cmds {
+  grid-template-columns: none;
+  gap: 8px;
+}
+
+.sz-hud.sz-lobby.sz-wide .sz-cmds button,
+.sz-hud.sz-lobby.sz-wide .sz-cmds button.sz-hot {
+  font-size: 22px;
+}
+
+.sz-hud.sz-lobby .sz-cmds button {
+  min-height: 52px;
+  padding: 6px 12px 9px;
+  color: var(--kit-ink);
+  font-family: var(--kit-title);
+  font-size: 24px;
+  line-height: 1;
+  background: var(--kit-paper);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 12px;
+  box-shadow: 0 4px 0 var(--kit-tinta);
+  outline: none;
+}
+
+.sz-hud.sz-lobby .sz-cmds button.sz-hot {
+  color: #fff;
+  font-size: 28px;
+  text-shadow:
+    -1.5px -1.5px 0 var(--kit-tinta),
+    1.5px -1.5px 0 var(--kit-tinta),
+    -1.5px 1.5px 0 var(--kit-tinta),
+    1.5px 1.5px 0 var(--kit-tinta),
+    0 3px 0 var(--kit-tinta);
+  background: var(--mode);
+  box-shadow:
+    inset 0 2px 0 color-mix(in srgb, var(--mode) 62%, #fff),
+    inset 0 -6px 0 color-mix(in srgb, var(--mode) 74%, #000),
+    0 4px 0 var(--kit-tinta);
+}
+
+.sz-hud.sz-lobby .sz-cmds button:active:not(:disabled) {
+  translate: 0 3px;
+}
+
+:root[data-cursor='keys'] .sz-hud.sz-lobby .sz-cmds button.sz-sel {
+  border-color: var(--kit-cursor);
+}
+
+/* Sideways, the commands stand in a column to the right of the scene and the box under the scene. */
+.sz-hud.sz-wide .sz-text {
+  right: calc(var(--k, 2) * (var(--w-side, 112) + 4) * 1px);
+  bottom: calc(var(--k, 2) * 2px);
+  min-height: calc(var(--k, 2) * 34px);
+}
+
+.sz-hud.sz-wide .sz-cmds {
+  left: auto;
+  right: calc(var(--k, 2) * 3px);
+  bottom: calc(var(--k, 2) * 4px);
+  width: calc(var(--k, 2) * 104px);
+  grid-auto-flow: row;
+  grid-auto-rows: max(44px, calc(var(--k, 2) * 30px));
+}
+
+.sz-hud.sz-wide .sz-read {
+  bottom: calc(var(--k, 2) * 4px);
+}
+
+.sz-hud.sz-tall .sz-text.sz-text {
+  bottom: calc(var(--k, 2) * 46px);
+}
+
+/* The battle screen: a solid band under the scene with the message and the commands, and two sturdy info panels. The game's kit colors, kept light so the scene stays quiet. */
+.sz-hud {
+  --sz-ink: #303040;
+  --sz-paper: #f8f8f8;
+  --sz-edge: #283040;
+  --sz-frame: #6878a8;
+}
+
+.sz-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--band-px, 160px);
+  background: var(--sz-edge);
+  border-top: 3px solid var(--sz-frame);
+}
+
+.sz-panel {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 212px;
+  max-width: calc(100% - 16px);
+  padding: 8px 10px;
+  border: 3px solid var(--sz-edge);
+  border-radius: 10px;
+  background: var(--sz-paper);
+  box-shadow: inset 0 0 0 2px #dfe4f0, 0 3px 0 rgba(16, 20, 32, 0.4);
+  color: var(--sz-ink);
+  pointer-events: none;
+}
+
+.sz-panel-wild {
+  left: 8px;
+  top: 8px;
+}
+
+.sz-panel-near {
+  right: 8px;
+  bottom: calc(var(--band-px, 160px) + 10px);
+}
+
+.sz-panel-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sz-panel b {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--title);
+  font-weight: normal;
+  font-size: 16px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.sz-lv {
+  font-family: var(--title);
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.sz-panel small {
+  font-family: var(--title);
+  font-size: 12px;
+  line-height: 1;
+}
+
+.sz-readout {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.sz-pip {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--sz-edge);
+  border-radius: 3px;
+  background: #fff;
+}
+
+.sz-pip-on {
+  background: #e05888;
+}
+
+.sz-star {
+  color: #e0a818;
+  font-size: 14px;
+}
+
+.sz-panel em {
+  padding: 2px 5px 1px;
+  border: 2px solid var(--sz-edge);
+  border-radius: 4px;
+  background: #f8d030;
+  font-style: normal;
+  font-family: var(--title);
+  font-size: 12px;
+  line-height: 1;
+}
+
+.sz-hud.sz-battle.sz-battle .sz-text {
+  left: 12px;
+  right: auto;
+  bottom: 0;
+  width: 50%;
+  height: var(--band-px, 160px);
+  min-height: 0;
+  padding: 18px 8px 12px 0;
+  align-items: flex-start;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  color: #fff;
+}
+
+.sz-hud.sz-battle.sz-battle .sz-text p {
+  font-family: var(--title);
+  font-size: 16px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.sz-hud.sz-battle.sz-battle .sz-text small {
+  display: none;
+}
+
+.sz-hud.sz-battle.sz-battle .sz-cmds {
+  left: auto;
+  right: 8px;
+  top: auto;
+  bottom: 8px;
+  width: calc(50% - 16px);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 4px;
+  border: 3px solid var(--sz-frame);
+  border-radius: 8px;
+  background: var(--sz-paper);
+}
+
+.sz-hud.sz-battle.sz-battle .sz-cmds button {
+  justify-content: flex-start;
+  gap: 8px;
+  min-height: 44px;
+  padding: 2px 8px 2px 24px;
+  position: relative;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  box-shadow: none;
+  font-family: var(--title);
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--sz-ink);
+}
+
+.sz-hud.sz-battle.sz-battle .sz-cmds button img {
+  width: 20px;
+  height: 20px;
+}
+
+.sz-hud.sz-battle.sz-battle .sz-cmds button.sz-sel {
+  outline: 0;
+  background: #e2e7f2;
+}
+
+.sz-hud.sz-battle.sz-battle .sz-cmds button.sz-sel::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  margin-top: -6px;
+  border-left: 8px solid var(--sz-edge);
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+}
+
+/* Sideways, the commands go two across (Ball, Berry; then Run), so the band stays short. */
+.sz-hud.sz-battle.sz-battle.sz-wide .sz-cmds {
+  width: calc(56% - 16px);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: auto;
+  gap: 0 4px;
+}
+
+.sz-hud.sz-battle.sz-wide .sz-cmds button:only-child,
+.sz-hud.sz-battle.sz-wide .sz-cmds button:nth-child(3):last-child {
+  grid-column: span 2;
+}
+
+/* A short phone held sideways: tighter command cells, so "Fruta ×3" fits on its row. */
+@media (max-height: 340px) {
+  .sz-hud.sz-battle.sz-battle.sz-wide .sz-cmds {
+    width: calc(60% - 16px);
+  }
+
+  .sz-hud.sz-battle.sz-battle.sz-wide .sz-cmds button {
+    gap: 4px;
+    padding: 2px 4px 2px 18px;
+  }
+
+  .sz-hud.sz-battle.sz-battle.sz-wide .sz-cmds button img {
+    width: 16px;
+    height: 16px;
+  }
+
+  .sz-hud.sz-battle.sz-battle.sz-wide .sz-cmds button.sz-sel::before {
+    left: 5px;
+  }
+}
+
+.sz-hud.sz-battle.sz-battle.sz-wide .sz-text {
+  width: 40%;
+  padding-top: 16px;
+}
+
+/* The booth with three ways (a contest day): upright, Enter across the top and the other two under it; the box stands clear of both rows. */
+.sz-hud.sz-lobby.sz-tall.sz-three .sz-cmds {
+  grid-template-columns: 1fr 1fr;
+  grid-auto-flow: row;
+}
+
+.sz-hud.sz-lobby.sz-tall.sz-three .sz-cmds button:first-child {
+  grid-column: span 2;
+}
+
+.sz-hud.sz-lobby.sz-tall.sz-three .sz-cmds button:not(.sz-hot) {
+  font-size: 20px;
+}
+
+.sz-hud.sz-lobby.sz-tall.sz-three .sz-text.sz-text {
+  bottom: calc(var(--k, 2) * 4px + 132px);
+}
+
+.sz-best small {
+  color: var(--kit-ink-2);
+  font-size: 14px;
+}
+
+/* The battle's five commands: Ball, Berry, Rock / Bait, Run in a grid of three; the count rides small after the name. */
+.sz-hud.sz-battle.sz-battle .sz-cmds {
+  display: grid;
+  grid-auto-flow: row;
+  grid-auto-columns: auto;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: 44px;
+  gap: 2px 4px;
+}
+
+.sz-hud.sz-battle.sz-battle .sz-cmds button {
+  min-width: 0;
+  padding: 2px 6px 2px 20px;
+  gap: 6px;
+}
+
+.sz-hud.sz-battle.sz-battle .sz-cmds button.sz-sel::before {
+  left: 6px;
+}
+
+.sz-cmd-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sz-count {
+  flex: none;
+  margin-left: auto;
+  font-family: var(--title);
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+/* Upright, the band holds the message on top and the commands across its whole width under it. */
+.sz-hud.sz-battle.sz-battle.sz-tall .sz-text {
+  left: 12px;
+  right: 12px;
+  width: auto;
+  height: calc(var(--band-px, 176px) - 104px);
+  bottom: 104px;
+  padding: 12px 0 0;
+}
+
+.sz-hud.sz-battle.sz-battle.sz-tall .sz-text p {
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.sz-hud.sz-battle.sz-battle.sz-tall .sz-cmds {
+  left: 8px;
+  right: 8px;
+  width: auto;
+}
+
+.sz-hud.sz-battle.sz-battle.sz-wide .sz-cmds {
+  width: calc(58% - 16px);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.sz-hud.sz-battle.sz-wide .sz-cmds button:nth-child(3):last-child {
+  grid-column: auto;
+}
+
+@media (max-height: 340px) {
+  .sz-hud.sz-battle.sz-battle.sz-wide .sz-cmds {
+    width: calc(62% - 16px);
+  }
+
+  .sz-hud.sz-battle.sz-battle.sz-wide .sz-cmds button {
+    padding: 2px 4px 2px 16px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 360px) {
+  .sz-hud.sz-battle.sz-battle.sz-tall .sz-cmds button {
+    padding: 2px 4px 2px 16px;
+    font-size: 11px;
+    gap: 4px;
+  }
+
+  .sz-hud.sz-battle.sz-battle.sz-tall .sz-cmds button img {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* The wild one's mood: a chip in its color, its turns as dots. */
+.sz-panel em.sz-mood {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #fff;
+}
+
+.sz-panel em.sz-mood-angry {
+  background: #e04848;
+}
+
+.sz-panel em.sz-mood-eating {
+  background: #4a9a3c;
+}
+
+.sz-mood-pip {
+  width: 5px;
+  height: 5px;
+  background: #fff;
+}
+
+/* The chain: its sparkle twinkles in two steps, never a fade. */
+.sz-chain {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--title);
+  font-size: 11px;
+  line-height: 1;
+  color: #8a5a08;
+}
+
+.sz-spark {
+  width: 14px;
+  height: 14px;
+  image-rendering: pixelated;
+  animation: sz-twinkle 0.9s steps(1) infinite;
+}
+
+@keyframes sz-twinkle {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.72);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sz-spark {
+    animation: none;
+  }
+}
+
+.sz-pouch .sz-chain {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #fff4c8;
+  color: #6a4204;
+}
+
+.sz-pouch .sz-chain img:last-child {
+  width: 18px;
+  height: 18px;
+}
+
+.sz-pouch .sz-hour {
+  width: calc(var(--k, 2) * 7px);
+  height: calc(var(--k, 2) * 7px);
+}
+
+.sz-board-frame .sz-hour {
+  width: 28px;
+  height: 28px;
+  margin-right: 6px;
+  vertical-align: -2px;
+  image-rendering: pixelated;
+}
+
+.sz-pouch .sz-score {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: normal;
+  color: #f8e088;
+}
+
+/* The sneak toggle, bottom left of the walk: lit while on. */
+.sz-sneak {
+  position: absolute;
+  left: calc(var(--k, 2) * 4px);
+  bottom: calc(var(--k, 2) * 4px);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 2px 12px;
+  color: var(--ink);
+  font-size: 0.85em;
+}
+
+.sz-sneak img {
+  width: 18px;
+  height: 18px;
+  image-rendering: pixelated;
+}
+
+.sz-sneak.sz-on {
+  background: #283040;
+  color: #fff;
+  box-shadow: inset 0 0 0 2px #f8c030;
+}
+
+.sz-sneak.sz-on img {
+  filter: brightness(0) invert(1);
+}
+
+/* While the box speaks the sneak button steps aside: it sits over the box upright. */
+.sz-hud.sz-tall .sz-text:not(.hidden) ~ .sz-sneak {
+  display: none;
+}
+
+/* The board's tabs (Now, Pokédex, Contest) and the Pokédex's habitats, the kit's pill tabs. */
+.sz-tabs,
+.sz-dex-places {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.sz-tabs button,
+.sz-dex-places button {
+  min-height: 40px;
+  padding: 4px 12px 5px;
+  color: var(--kit-ink);
+  font-family: var(--kit-title);
+  font-size: 18px;
+  line-height: 1;
+  background: var(--kit-tag);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 10px;
+}
+
+.sz-tabs button.sz-on,
+.sz-dex-places button.sz-on {
+  color: #fff;
+  background: var(--mode);
+}
+
+.sz-dex-places button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: 44px;
+  padding: 4px 10px 5px;
+  font-size: 15px;
+}
+
+.sz-dex-places small {
+  font-family: var(--kit-body);
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+.sz-board-frame .sz-dex-done {
+  color: #2e7a2e;
+}
+
+/* The Exclusivos tab: a habitat's count rides its heading; this week's habitat stands out. */
+.sz-only-count {
+  margin-left: 8px;
+  padding: 0 6px;
+  font-style: normal;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+}
+
+.sz-only section {
+  padding: 6px;
+  border-radius: 12px;
+}
+
+.sz-only section.sz-only-now {
+  background: rgba(255, 216, 72, 0.18);
+  box-shadow: inset 0 0 0 2px rgba(216, 168, 56, 0.6);
+}
+
+/* What a habitat's Pokédex gives: small chips, an icon and its words, wrapping on a phone. */
+.sz-rewards {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.sz-rewards > small {
+  color: var(--kit-ink-2);
+  font-size: 15px;
+}
+
+.sz-rewards ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+}
+
+.sz-reward {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 2px 8px 2px 3px;
+  font-size: 15px;
+  line-height: 1.1;
+  background: var(--kit-tag);
+  border-radius: 8px;
+}
+
+.sz-reward img {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  image-rendering: pixelated;
+}
+
+.sz-reward.legend {
+  background: rgba(88, 168, 224, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(28, 72, 128, 0.5);
+}
+
+/* A resident not caught yet: its portrait as a flat silhouette. */
+.sz-note .sz-sil {
+  background: var(--kit-paper);
+}
+
+.sz-note-unknown b {
+  color: var(--kit-ink-2);
+}
+
+.sz-note-when {
+  font-family: var(--kit-body) !important;
+  font-size: 15px !important;
+  color: var(--kit-ink-2);
+}
+
+.sz-dex {
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+}
+
+/* The contest's card: its day, its rules, its prizes and the way to the board. */
+.sz-contest {
+  padding-bottom: 8px;
+}
+
+.sz-contest p {
+  margin: 0;
+}
+
+.sz-contest-day {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sz-contest-day img {
+  width: 30px;
+  height: 30px;
+  image-rendering: pixelated;
+}
+
+.sz-contest-day b {
+  font-family: var(--kit-title);
+  font-weight: normal;
+  font-size: 21px;
+}
+
+.sz-contest-day span {
+  color: var(--kit-ink-2);
+  text-transform: capitalize;
+}
+
+.sz-contest-prizes,
+.sz-contest-best {
+  padding: 6px 10px 7px;
+  border-radius: 10px;
+  background: var(--kit-tag);
+}
+
+.sz-contest .arc-btn {
+  align-self: flex-start;
+}
+
+/* A contest entry's end: its best bug, the score big on the right. */
+.sz-best {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--kit-tag);
+}
+
+.sz-best img {
+  width: 56px;
+  height: 56px;
+  image-rendering: pixelated;
+}
+
+.sz-best div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: 16px;
+}
+
+.sz-best b {
+  font-weight: normal;
+  font-size: 19px;
+}
+
+.sz-best-score {
+  font-family: var(--kit-title);
+  font-weight: normal;
+  font-size: 24px;
+  white-space: nowrap;
+}
+
+.sz-report-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+
+
+
+/*
+ * ---------- The kit's sheet over a canvas mini game (`realm/games/gameSheet.ts`) ----------
+ * The Escavação and the Máquina de Pelúcias. A paper card with the kit's outline and hard shadow, its body scrolling
+ * when a phone can't fit it and its buttons pinned under it. The game tracks its canvas into `--cv-l`, `--cv-t`,
+ * `--cv-w`, `--cv-h` (CSS px) and `--cv-k` (CSS px per game px); `--keep-x`, `--keep-y` are the game px the dock
+ * leaves in view, beside the scene sideways and above it upright.
+ */
+.minigame-screen:is([data-game='dig'], [data-game='claw']) .minigame-canvas {
+  border-radius: 8px;
+  box-shadow:
+    0 0 0 var(--kit-edge) var(--kit-tinta),
+    0 6px 0 var(--kit-edge) var(--kit-tinta);
+}
+
+.mg-sheet {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  color: var(--kit-ink);
+  font-family: var(--kit-body);
+  font-size: 18px;
+  line-height: 1.15;
+  text-align: left;
+  background: var(--kit-paper);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: var(--kit-radius);
+  box-shadow: 0 var(--kit-lip) 0 var(--kit-tinta);
+}
+
+.mg-sheet-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 14px 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+
+.mg-sheet-foot {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 2px 14px 16px;
+}
+
+.mg-sheet-foot .mg-go {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+
+.mg-sheet-foot .mg-go small {
+  font-size: 17px;
+}
+
+.mg-sheet-foot .mg-alt {
+  flex: 1 1 0;
+  min-height: 48px;
+}
+
+/* Upright: at the stage's foot, as wide as the canvas, never over the rows it keeps; `mg-hug` hangs it right under them instead. */
+.mg-sheet.mg-dock.mg-tall {
+  bottom: 0;
+  left: 50%;
+  translate: -50% 0;
+  width: max(var(--cv-w, 100%), min(340px, 100%));
+  max-height: calc(100% - var(--cv-t, 0px) - var(--keep-y) * var(--cv-k, 2) * 1px);
+}
+
+.mg-sheet.mg-dock.mg-tall.mg-hug {
+  top: calc(var(--cv-t, 0px) + var(--keep-y) * var(--cv-k, 2) * 1px);
+  bottom: auto;
+}
+
+/* Sideways: at the stage's right, past the columns it keeps (never narrower than 220 px, never wider than 380 px). */
+.mg-sheet.mg-dock.mg-wide {
+  top: 50%;
+  right: 0;
+  left: min(max(calc(var(--cv-l, 0px) + var(--keep-x) * var(--cv-k, 2) * 1px + 8px), calc(100% - 380px)), calc(100% - 220px));
+  translate: 0 -50%;
+  max-height: 100%;
+}
+
+.mg-sheet.mg-card {
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  width: min(420px, 100%);
+  max-height: 100%;
+}
+
+/* A line while the scene plays: under it, and taps go through to the game. */
+.mg-sheet.mg-banner {
+  left: 50%;
+  bottom: 0;
+  translate: -50% 0;
+  width: min(440px, 100%);
+  pointer-events: none;
+  text-align: center;
+}
+
+.mg-sheet.mg-banner .mg-sheet-body {
+  gap: 2px;
+  padding: 8px 16px 10px;
+}
+
+.mg-sheet.mg-banner p {
+  margin: 0;
+  font-size: 19px;
+}
+
+/* The round ✕ on a card's corner, as on the Modos de jogo modal. */
+.mg-sheet .mg-close {
+  position: absolute;
+  top: -14px;
+  right: -10px;
+  background: var(--kit-survivors);
+  border-radius: 50%;
+}
+
+.mg-sheet .mg-close img {
+  width: 18px;
+  height: 18px;
+  filter: brightness(0) invert(1);
+}
+
+.mg-sheet:has(.mg-close:not(.hidden)) .mg-sheet-body {
+  padding-right: 40px;
+}
+
+.mg-title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.mg-kicker {
+  padding: 3px 9px 4px;
+  color: var(--kit-tinta);
+  font-family: var(--kit-title);
+  font-size: 19px;
+  line-height: 1;
+  background: var(--kit-ouro);
+  border: 2px solid var(--kit-tinta);
+  border-radius: 8px;
+  rotate: -1.5deg;
+}
+
+.mg-title h3,
+.mg-banner-title {
+  margin: 0;
+  font-family: var(--kit-title);
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 0.95;
+}
+
+.mg-banner-title.gold {
+  color: color-mix(in srgb, #b07800 var(--dk-lift, 100%), #fff);
+}
+
+.mg-lead {
+  margin: 0;
+  font-size: 20px;
+}
+
+.mg-lead.hot {
+  padding: 6px 10px;
+  background: var(--dk-wash-gold, #fff1c2);
+  border-radius: 10px;
+}
+
+.mg-note {
+  margin: 0;
+  color: var(--kit-ink-2);
+  font-size: 17px;
+}
+
+.mg-callout {
+  margin: 0;
+  padding: 8px 12px;
+  color: color-mix(in srgb, #b02414 var(--dk-lift, 100%), #fff);
+  font-family: var(--kit-title);
+  font-size: 22px;
+  line-height: 1;
+  background: var(--dk-wash-red, #ffe2dc);
+  border-radius: 10px;
+}
+
+/* Someone talking: their portrait in a sticker, the words in a bubble pointing at it. */
+.mg-speech {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.mg-speech img {
+  width: 52px;
+  height: 52px;
+  image-rendering: pixelated;
+  background: var(--dk-wash-cyan, #d8f0f8);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 10px;
+}
+
+.mg-speech p {
+  position: relative;
+  margin: 0;
+  padding: 8px 11px 9px;
+  font-size: 18px;
+  background: var(--kit-tag);
+  border-radius: 10px;
+}
+
+.mg-speech p::before {
+  content: '';
+  position: absolute;
+  top: 16px;
+  left: -8px;
+  border: 8px solid transparent;
+  border-left: 0;
+  border-right-color: var(--kit-tag);
+}
+
+.mg-speech b {
+  font-family: var(--kit-title);
+  font-weight: 400;
+  font-size: 1.12em;
+}
+
+/* A small paper button inside a sheet's body, for what belongs to the line above it (the vein's odds). */
+.mg-sheet .mg-link {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 20px;
+}
+
+.mg-link img {
+  width: 24px;
+  height: 24px;
+  image-rendering: pixelated;
+}
+
+/* Facts in rows, an icon each (the partner's help, the fossil guarantee). */
+.mg-facts {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mg-facts li {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 10px;
+  font-size: 17px;
+  background: var(--kit-tag);
+  border-radius: 10px;
+}
+
+.mg-facts li.hot {
+  background: var(--dk-wash-gold, #fff1c2);
+}
+
+.mg-facts img {
+  width: 28px;
+  height: 28px;
+  image-rendering: pixelated;
+}
+
+/* The Escavação (`realm/games/dig.ts`): the vein, its odds as tiles, the loot. */
+.dig-vein {
+  margin: 0;
+  font-size: 19px;
+}
+
+.dig-vein b {
+  font-family: var(--kit-title);
+  font-weight: 400;
+  font-size: 1.12em;
+}
+
+.dig-odds {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dig-odds li {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 8px 4px 9px;
+  text-align: center;
+  background: var(--kit-tag);
+  border: var(--kit-edge) solid transparent;
+  border-radius: 12px;
+}
+
+.dig-odds li.boost {
+  background: var(--dk-wash-gold, #fff1c2);
+  border-color: var(--mode);
+}
+
+.dig-odds img {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+}
+
+.dig-odds b {
+  font-family: var(--kit-title);
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.dig-odds span {
+  font-size: 16px;
+  line-height: 1.05;
+}
+
+.dig-odds li.golden {
+  color: var(--kit-tinta);
+  background: var(--kit-ouro);
+  border-color: var(--kit-tinta);
+}
+
+/* Chinese odds ("20 分之 1") run wider than the digits: smaller, so they hold one line. */
+:lang(zh) .dig-odds b {
+  font-size: 22px;
+  white-space: nowrap;
+}
+
+.dig-loot {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dig-loot li {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 10px;
+  font-size: 18px;
+  line-height: 1.05;
+  background: var(--kit-tag);
+  border-radius: 10px;
+}
+
+.dig-loot img,
+.dig-buried img {
+  image-rendering: pixelated;
+}
+
+.dig-coins {
+  margin: 0;
+  color: color-mix(in srgb, #9a6a00 var(--dk-lift, 100%), #fff);
+  font-family: var(--kit-title);
+  font-size: 28px;
+  line-height: 1;
+}
+
+.dig-buried {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: var(--kit-ink-2);
+  font-size: 17px;
+}
+
+.dig-buried span:last-child {
+  display: inline-flex;
+  gap: 4px;
+  filter: grayscale(0.85);
+  opacity: 0.75;
+}
+
+/* Sideways, height is what's short: the buttons share a row, the headline comes before the keeper's word, the odds lie flat. */
+.mg-sheet.mg-wide .mg-sheet-foot .mg-go {
+  flex: 2 1 0;
+}
+
+.mg-sheet.mg-wide .mg-title {
+  order: -2;
+}
+
+.mg-sheet.mg-wide :is(.dig-vein, .mg-link) {
+  order: -1;
+}
+
+.mg-sheet.mg-card.mg-wide {
+  width: min(560px, 100%);
+}
+
+.mg-sheet.mg-wide .mg-title {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 10px;
+}
+
+.mg-sheet.mg-wide .dig-odds li {
+  grid-template-columns: 32px 1fr;
+  grid-template-areas: 'i b' 'i s';
+  justify-items: start;
+  align-items: center;
+  column-gap: 8px;
+  row-gap: 0;
+  padding: 6px 8px;
+  text-align: left;
+}
+
+.mg-sheet.mg-wide .dig-odds li img {
+  grid-area: i;
+}
+
+.mg-sheet.mg-wide .dig-odds li b {
+  grid-area: b;
+  font-size: 26px;
+}
+
+.mg-sheet.mg-wide .dig-odds li span {
+  grid-area: s;
+}
+
+/* A phone on its side or a small one: tighter, so more of it fits before the body scrolls. */
+@media (max-height: 520px) {
+  .mg-sheet-body {
+    gap: 8px;
+    padding: 10px 12px 8px;
+  }
+  .mg-sheet-foot {
+    padding: 2px 12px 12px;
+  }
+  .mg-title h3,
+  .mg-banner-title {
+    font-size: 28px;
+  }
+  .mg-speech {
+    grid-template-columns: 44px 1fr;
+    gap: 10px;
+  }
+  .mg-speech img {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/*
+ * ---------- The Era 1 Hall da Fama (ui/era1Hall.ts) ----------
+ * The Ranking's Era 1 tab as a stage of its own, in the kit: a navy stage, the header on paper with the
+ * crest, the prizes as they look (frame thumbs, whole-pixel ×2), the podium as three stickers (gold,
+ * silver, bronze; the #1 taller and crowned) and the lines below as paper rows. The cursor is the
+ * sticker's border turning gold, white on the gold #1.
+ */
+.region-tab.era-tab:not(.selected) {
+  color: var(--kit-ouro);
+}
+
+.rank-list.era-hall {
+  gap: 8px;
+  padding: 10px 10px 14px;
+  background: var(--kit-evento);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: var(--kit-radius);
+}
+
+.era-hall img {
+  image-rendering: pixelated;
+}
+
+.era-head {
+  flex: none;
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 4px 10px;
+  padding: 10px 14px 12px;
+  color: var(--kit-ink);
+  background: var(--kit-paper);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: var(--kit-radius);
+  box-shadow: 0 var(--kit-lip) 0 var(--kit-tinta);
+}
+
+.era-crest {
+  width: 66px;
+  height: 30px;
+}
+
+.era-kicker {
+  justify-self: start;
+  padding: 3px 10px 4px;
+  color: var(--kit-tinta);
+  font-family: var(--kit-title);
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  background: var(--kit-ouro);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 999px;
+}
+
+.era-name {
+  --kit-o: 3px;
+  justify-self: end;
+  margin-bottom: 4px;
+  font-size: 46px;
+  white-space: nowrap;
+}
+
+.era-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-family: var(--kit-body);
+  font-size: 17px;
+  line-height: 1.2;
+  color: var(--kit-ink-2);
+}
+
+.era-prizes {
+  flex: none;
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px 14px;
+  margin: 6px 0 4px;
+  padding: 12px 14px;
+  color: var(--kit-ink);
+  background: var(--kit-paper);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: var(--kit-radius);
+  box-shadow: 0 var(--kit-lip) 0 var(--kit-tinta);
+}
+
+.era-prizes:has(> .era-prize:only-of-type) {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.era-prize {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.era-prize-card {
+  width: 108px;
+  height: 136px;
+  image-rendering: pixelated;
+  border-radius: 6px;
+  box-shadow: 0 4px 0 var(--kit-tinta);
+}
+
+.era-prize figcaption {
+  max-width: 120px;
+  padding: 2px 8px 3px;
+  font-family: var(--kit-title);
+  font-size: 17px;
+  line-height: 1;
+  text-align: center;
+  color: var(--kit-tinta);
+  background: var(--kit-ouro);
+  border-radius: 7px;
+}
+
+.era-prize.champion figcaption {
+  color: #fff;
+  background: #c8203e;
+}
+
+.era-prize-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: var(--kit-body);
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.era-prize-text small {
+  font-size: 16px;
+  color: var(--kit-ink-2);
+}
+
+.era-podium {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+  gap: 10px;
+  padding: 46px 2px 6px;
+}
+
+.era-podium.n1 {
+  grid-template-columns: minmax(0, 240px);
+  justify-content: center;
+}
+
+.era-podium.n2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.era-step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 12px 6px 14px;
+  color: var(--kit-tinta);
+  font-family: var(--kit-body);
+  text-align: center;
+  background: #e4e8f4;
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: var(--kit-radius);
+  box-shadow: 0 var(--kit-lip) 0 var(--kit-tinta);
+}
+
+.era-step.p1 {
+  order: 2;
+  padding-bottom: 34px;
+  background: var(--kit-ouro);
+}
+
+.era-step.p2 {
+  order: 1;
+}
+
+.era-step.p3 {
+  order: 3;
+  background: #f2b98c;
+}
+
+.era-podium.n1 .era-step.p1,
+.era-podium.n2 .era-step.p1 {
+  order: 0;
+}
+
+.era-step.selected,
+.era-row.selected,
+.era-member.selected {
+  border-color: var(--kit-cursor);
+}
+
+.era-step.p1.selected {
+  border-color: #fff;
+}
+
+.era-crown {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  width: 87px;
+  height: 51px;
+  transform: translateX(-50%);
+}
+
+.era-mon {
+  display: grid;
+  place-items: center;
+  width: 88px;
+  height: 88px;
+  background: var(--kit-papel);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 12px;
+}
+
+.era-mon img {
+  width: 80px;
+  height: 80px;
+}
+
+.era-medal {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  margin-top: -18px;
+  color: var(--kit-tinta);
+  font-family: var(--kit-title);
+  font-size: 28px;
+  line-height: 1;
+  background: var(--kit-papel);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 50%;
+}
+
+.era-step.p1 .era-medal {
+  color: #fff;
+  background: #c8203e;
+}
+
+.era-who {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  max-width: 100%;
+  font-family: var(--kit-title);
+  font-size: 24px;
+  font-weight: normal;
+  line-height: 1;
+}
+
+.era-who > span,
+.era-row-who b > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.era-handle {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 16px;
+  color: color-mix(in srgb, var(--kit-tinta) 70%, transparent);
+}
+
+.era-time {
+  font-family: var(--kit-title);
+  font-size: 28px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.era-step.p1 .era-time {
+  font-size: 34px;
+}
+
+.era-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px 4px 6px;
+  color: var(--kit-ouro);
+  font-family: var(--kit-title);
+  font-size: 17px;
+  line-height: 1;
+  white-space: nowrap;
+  background: var(--kit-tinta);
+  border-radius: 999px;
+}
+
+.era-tag img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.era-tag.champion {
+  color: #fff;
+  background: #c8203e;
+}
+
+.era-tag.champion img {
+  width: 22px;
+  height: 22px;
+  margin: -3px 0;
+}
+
+.era-step .era-tag {
+  position: absolute;
+  bottom: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 2px solid var(--kit-tinta);
+}
+
+.era-step.team .era-tag {
+  bottom: -14px;
+}
+
+.era-team {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+}
+
+.era-member {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  max-width: 64px;
+  padding: 2px;
+  color: inherit;
+  background: none;
+  border: 2px solid transparent;
+  border-radius: 8px;
+}
+
+.era-member img {
+  width: 40px;
+  height: 40px;
+  background: var(--kit-papel);
+  border: 2px solid var(--kit-tinta);
+  border-radius: 8px;
+}
+
+.era-member small {
+  max-width: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--kit-body);
+  font-size: 15px;
+}
+
+.era-step.team .era-medal {
+  margin-top: 4px;
+}
+
+.era-row {
+  flex: none;
+  display: grid;
+  grid-template-columns: 40px 44px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 60px;
+  padding: 6px 12px 6px 6px;
+  color: var(--kit-ink);
+  text-align: left;
+  background: var(--kit-paper);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 12px;
+  box-shadow: 0 4px 0 var(--kit-tinta);
+}
+
+.era-row.earned {
+  background: color-mix(in srgb, var(--kit-ouro) 22%, var(--kit-paper));
+}
+
+.era-row.me {
+  background: color-mix(in srgb, var(--kit-realm) 22%, var(--kit-paper));
+}
+
+.era-pos {
+  font-family: var(--kit-title);
+  font-size: 30px;
+  line-height: 1;
+  text-align: center;
+  color: var(--kit-ink);
+}
+
+.era-row > img {
+  width: 40px;
+  height: 40px;
+}
+
+.era-row-who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.era-row-who b {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--kit-title);
+  font-size: 23px;
+  font-weight: normal;
+  line-height: 1.05;
+}
+
+.era-row-who small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 16px;
+  color: var(--kit-ink-2);
+}
+
+.era-row .era-time {
+  font-size: 26px;
+}
+
+.era-hall .rank-row.rank-team {
+  color: var(--kit-ink);
+  background: var(--kit-paper);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 12px;
+  box-shadow: 0 4px 0 var(--kit-tinta);
+}
+
+.era-hall .rank-row.rank-team .rank-who small,
+.era-hall .rank-row.rank-team .rank-pos {
+  color: var(--kit-ink-2);
+}
+
+.era-hall .rank-gap,
+.era-hall .rank-status {
+  color: #c8d0f0;
+}
+
+@media (max-width: 520px) {
+  .era-head {
+    padding: 8px 10px 10px;
+  }
+  .era-crest {
+    display: none;
+  }
+  .era-name {
+    font-size: 40px;
+  }
+  .era-prizes {
+    grid-template-columns: auto auto;
+    justify-content: center;
+  }
+  .era-prize-text {
+    grid-column: 1 / -1;
+    text-align: center;
+  }
+  .era-podium {
+    gap: 6px;
+  }
+  .era-prizes {
+    padding: 10px;
+  }
+  .era-step {
+    padding: 10px 3px 14px;
+  }
+  .era-step.p1 {
+    padding-bottom: 30px;
+  }
+  .era-mon {
+    width: 72px;
+    height: 72px;
+  }
+  .era-mon img {
+    width: 80px;
+    height: 80px;
+    margin: -4px;
+  }
+  .era-who {
+    font-size: 20px;
+  }
+  .era-who img {
+    display: none;
+  }
+  .era-time {
+    font-size: 23px;
+  }
+  .era-step.p1 .era-time {
+    font-size: 28px;
+  }
+  .era-row {
+    grid-template-columns: 30px 40px minmax(0, 1fr) auto;
+    gap: 8px;
+    padding-right: 10px;
+  }
+  .era-row > :is(.era-tag, .era-slot) {
+    display: none;
+  }
+  /* Teams: one under the other, the members in a row. */
+  .era-podium.teams {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+    padding-top: 8px;
+  }
+  .era-podium.teams .era-step {
+    order: 0;
+    padding: 10px 8px 22px;
+  }
+  .era-podium.teams .era-medal {
+    position: absolute;
+    top: -12px;
+    left: -8px;
+    width: 34px;
+    height: 34px;
+    margin: 0;
+    font-size: 24px;
+  }
+  .era-podium.teams .era-time {
+    margin-top: 2px;
+  }
+  .era-team {
+    flex-wrap: nowrap;
+  }
+  .era-row .era-time {
+    font-size: 22px;
+  }
+}
+
+/* Phones in landscape: the header in one line, the crest and the prizes smaller, and the screen's title gives the Hall its room. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .dialog.rank:has(.era-hall) > .dialog-title {
+    display: none;
+  }
+  .era-head {
+    grid-template-columns: auto auto auto minmax(0, 1fr);
+    padding: 6px 12px 8px;
+  }
+  .era-name {
+    font-size: 36px;
+  }
+  .era-note {
+    grid-column: auto;
+    font-size: 16px;
+  }
+  .era-prize-card {
+    width: 54px;
+    height: 68px;
+  }
+  .era-prize figcaption {
+    font-size: 15px;
+  }
+  /* The podium as three short stickers: the Pokémon beside the name and time. */
+  .era-podium {
+    align-items: stretch;
+    padding-top: 22px;
+  }
+  .era-step,
+  .era-step.p1 {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    align-items: center;
+    column-gap: 8px;
+    padding: 8px 10px 16px 8px;
+    text-align: left;
+  }
+  .era-step > .era-mon {
+    grid-row: 1 / 4;
+    width: 52px;
+    height: 52px;
+  }
+  .era-mon img {
+    width: 40px;
+    height: 40px;
+  }
+  .era-medal {
+    position: absolute;
+    top: -14px;
+    left: -10px;
+    width: 32px;
+    height: 32px;
+    margin: 0;
+    font-size: 22px;
+  }
+  .era-crown {
+    top: -24px;
+    left: auto;
+    right: 10px;
+    width: 58px;
+    height: 34px;
+    transform: none;
+  }
+  .era-who {
+    justify-content: flex-start;
+    font-size: 21px;
+  }
+  .era-step .era-time,
+  .era-step.p1 .era-time {
+    font-size: 24px;
+  }
+  .era-step .era-tag {
+    left: auto;
+    right: 8px;
+    transform: none;
+  }
+  .era-step.team {
+    grid-template-columns: minmax(0, 1fr);
+    text-align: center;
+  }
+}
+
+/*
+ * The Trainer Card in an Era 1 frame (ui/trainer.ts): the frame's colors on the card, its seal hung on top
+ * (whole-pixel ×3), and an Era 1 title's mark beside it in a pill of its own (navy and gold, gold and ruby).
+ */
+.trainer-card.era1,
+.trainer-card.era1Champion {
+  position: relative;
+  margin-top: 30px;
+}
+
+.trainer-card.era1 {
+  background: linear-gradient(135deg, #2c44a0, #22357e 55%, #141e52);
+  border-color: #120e26;
+  box-shadow:
+    inset 0 0 0 3px #f8d878,
+    inset 0 0 0 7px #22357e,
+    inset 0 0 0 9px #c89028,
+    0 4px 0 rgba(0, 0, 0, 0.4);
+}
+
+.trainer-card.era1Champion {
+  background: linear-gradient(135deg, #461c40, #30143a 55%, #140a24);
+  border-color: #2a1404;
+  box-shadow:
+    inset 0 0 0 3px #fff4c0,
+    inset 0 0 0 8px #e8b030,
+    inset 0 0 0 10px #2a1404,
+    inset 0 0 0 12px #f8d030,
+    0 4px 0 rgba(0, 0, 0, 0.4);
+}
+
+.trainer-card:is(.era1, .era1Champion) {
+  padding: 22px 20px 20px;
+}
+
+.trainer-seal {
+  position: absolute;
+  top: -32px;
+  left: 50%;
+  transform: translateX(-50%);
+  image-rendering: pixelated;
+}
+
+.trainer-card.era1 .trainer-seal {
+  width: 99px;
+  height: 45px;
+  top: -26px;
+}
+
+.trainer-card.era1Champion .trainer-seal {
+  width: 87px;
+  height: 51px;
+}
+
+.trainer-card:is(.era1, .era1Champion) .trainer-id h3 {
+  text-shadow: 2px 2px 0 #0a0a1c;
+}
+
+.trainer-card:is(.era1, .era1Champion) .trainer-id small {
+  color: #f8e8c0;
+}
+
+.trainer-title.era1Legend,
+.trainer-title.era1Champion {
+  gap: 6px;
+  padding: 4px 8px 4px 5px;
+  font-size: 18px;
+  border: 2px solid var(--kit-tinta);
+  border-radius: 999px;
+}
+
+.trainer-title.era1Legend {
+  color: #f8d030;
+  background: #22357e;
+}
+
+.trainer-title.era1Champion {
+  color: #fff;
+  background: #c8203e;
+}
+
+.trainer-title img.mark {
+  width: 18px;
+  height: 18px;
+  image-rendering: pixelated;
+}
+
+.trainer-title.era1Champion img.mark {
+  width: 22px;
+  height: 22px;
+  margin: -3px 0;
+}
+
+.trainer-chip-sub img.mark {
+  width: 18px;
+  height: 18px;
+  image-rendering: pixelated;
+}
+
+/* The Ovo de Viagem's card shows its egg at 4× (64 px), as big as the Kecleon Egg's beside it, so the region's stamp reads. */
+.shop-items.grid .shop-card.travel-egg .shop-pic,
+.shop-items.grid .shop-card.travel-egg .shop-pic > img:not(.shop-icon) {
+  width: 64px;
+  height: 64px;
+}
+
+/* ---------------- The Rocket Game Corner (`ui/cornerCounter.ts`, `realm/games/slots.ts`, `realm/games/sweep.ts`) ---------------- */
+
+/* The counter's header: the tokens beside the wallet, in Team Rocket's red. */
+.corner-tokens-chip {
+  color: #f8d030;
+  background: #2a1014;
+}
+
+.corner-rail {
+  justify-content: center;
+}
+
+.corner-tab {
+  min-width: 140px;
+  min-height: 44px;
+}
+
+/* A prize's picture on a casino plate: the family's face, a Shadow's on a purple flame, the item or the frame. */
+.corner-art {
+  background: radial-gradient(circle at 50% 60%, #6a1420 0 55%, #3a0c14 56%);
+  border-color: #1c0c10;
+}
+
+.corner-art img {
+  width: 56px;
+  height: 56px;
+  image-rendering: pixelated;
+}
+
+.corner-art canvas {
+  width: 112px;
+  height: 84px;
+  image-rendering: pixelated;
+}
+
+.carpentry-detail-art.corner-art canvas {
+  width: 168px;
+  height: 126px;
+}
+
+.corner-art.bag img,
+.corner-art.title img,
+.corner-art.pack img {
+  width: 40px;
+  height: 40px;
+}
+
+.corner-art.shadow {
+  background: radial-gradient(circle at 50% 60%, #3a1050 0 55%, #1c0828 56%);
+}
+
+.corner-kind {
+  font-family: var(--title);
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  padding: 1px 6px;
+  color: #fff;
+  background: #6878a8;
+  border-radius: 4px;
+}
+
+.corner-kind.family {
+  background: #2f7a3a;
+}
+
+.corner-kind.shadow {
+  background: #5a1c90;
+}
+
+.corner-kind.bag {
+  background: #b06818;
+}
+
+.corner-kind.title,
+.corner-kind.frame {
+  background: #b81c24;
+}
+
+.corner-card.owned {
+  opacity: 0.6;
+}
+
+/* The prize page's sections (families, Shadows, Bag, card), each a heading across the grid. */
+.corner-section {
+  grid-column: 1 / -1;
+  margin: 8px 2px 0;
+  font-family: var(--title);
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  color: color-mix(in srgb, #2a3050 var(--dk-lift, 100%), #fff);
+}
+
+.corner-section:first-child {
+  margin-top: 0;
+}
+
+/* A family not owned yet: the NOVO tag on the art's corner. */
+.corner-card .corner-new {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  padding: 1px 5px 2px;
+  font-size: 13px;
+  font-style: normal;
+  background: #2f7a3a;
+}
+
+.corner-card.short .corner-price {
+  color: color-mix(in srgb, #a83030 var(--dk-lift, 100%), #fff);
+}
+
+.corner-card.pack {
+  min-height: 150px;
+}
+
+.corner-card.pack .carpentry-name {
+  font-size: 20px;
+}
+
+.corner-only {
+  font-size: 18px;
+  color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
+}
+
+/* The mini games' sheets: the tokens line. */
+.corner-tokens {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.corner-tokens img {
+  image-rendering: pixelated;
+}
+
+/* Giovanni's lines in the Hideout (`ui/places.ts`): off the top, where the boss and its bar stand, over the partner's card at the bottom left. */
+.giovanni-speech {
+  position: absolute;
+  z-index: 30;
+  bottom: calc(150px + env(safe-area-inset-bottom));
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(420px, 42vw);
+  padding: 10px 14px;
+  pointer-events: none;
+  animation: toast-in 0.2s steps(4) both;
+  transition: opacity 0.4s steps(4);
+}
+
+.giovanni-speech.out {
+  opacity: 0;
+}
+
+.giovanni-speech img {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  image-rendering: pixelated;
+}
+
+.giovanni-speech p {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+@media (max-height: 520px) {
+  .giovanni-speech {
+    bottom: calc(118px + env(safe-area-inset-bottom));
+    gap: 8px;
+    width: min(320px, 38vw);
+    padding: 6px 10px;
+  }
+
+  .giovanni-speech img {
+    width: 28px;
+    height: 28px;
+  }
+
+  .giovanni-speech p {
+    font-size: 14px;
+  }
+}
+
+@media (orientation: portrait) {
+  .giovanni-speech {
+    right: 16px;
+    width: auto;
+  }
+}
+
+/* ---------------- Shadow Pokémon (`ui/shadowPick.ts`) ---------------- */
+
+.shadow-row {
+  display: grid;
+  gap: 4px;
+  margin-top: 6px;
+  padding: 6px 8px;
+  color: #f0e4ff;
+  background: #2a1438;
+  border: 2px solid #1c0828;
+  border-radius: 8px;
+}
+
+.shadow-row.purified {
+  color: #3a2848;
+  background: #f4ecf8;
+  border-color: #c8b0d8;
+}
+
+.shadow-picker .shiny-option.selected {
+  color: #fff;
+  background: #7a2cc0;
+}
+
+.shadow-row.purified .shadow-picker .shiny-option.selected {
+  background: #e888b8;
+}
+
+.shadow-note {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.1;
+}
+
+.shadow-gauge {
+  position: relative;
+  height: 18px;
+  overflow: hidden;
+  background: #14081c;
+  border: 2px solid #0c0410;
+  border-radius: 4px;
+}
+
+.shadow-gauge i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: repeating-linear-gradient(90deg, #b468f0 0 6px, #9a50d8 6px 12px);
+}
+
+.shadow-gauge span {
+  position: relative;
+  display: block;
+  padding: 0 6px;
+  font-size: 15px;
+  line-height: 14px;
+  color: #fff;
+  text-shadow: 1px 1px 0 #14081c;
+}
+
+.shadow-ready {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 17px;
+}
+
+.shadow-purify {
+  min-height: 44px;
+  margin-left: auto;
+  color: #fff;
+  background: #e888b8;
+}
+
+.shadow-keep {
+  flex-basis: 100%;
+  font-size: 15px;
+  opacity: 0.85;
+}
+
+/* The PC box's and the Pokédex's marks: a Shadow's violet flame, a Purified one's lotus. */
+.shadow-mark {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  image-rendering: pixelated;
+}
+
+.dex-variant {
+  position: absolute;
+  left: 2px;
+  bottom: 2px;
+  width: 14px;
+  height: 14px;
+  image-rendering: pixelated;
+}
+
+.tag-shadow {
+  color: #fff;
+  background: #5a1c90;
+}
+
+.tag-purified {
+  color: #3a2848;
+  background: #f8d8ea;
+}
+
+.tag-shadow img,
+.tag-purified img {
+  width: 14px;
+  height: 14px;
+  image-rendering: pixelated;
+}
+
+/* ---------------- Hoopa's Rings (`ui/rush.ts`) ---------------- */
+
+/* The banner atop the Lendários tab: Hoopa's ring, the rush's name and a line, Hoopa's portrait. */
+.rush-banner {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 56px;
+  padding: 6px 10px 7px 8px;
+  text-align: left;
+  cursor: pointer;
+  background: linear-gradient(90deg, color-mix(in srgb, #f8d048 22%, var(--kit-paper)), var(--kit-paper) 70%);
+}
+
+.rush-banner.locked {
+  cursor: default;
+  background: var(--kit-paper);
+}
+
+.rush-banner.locked > img {
+  filter: grayscale(1) brightness(0.8);
+}
+
+.rush-banner-icon,
+.rush-level-icon {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  image-rendering: pixelated;
+}
+
+.rush-banner-text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rush-banner-text b {
+  font-family: var(--kit-title);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1;
+  color: color-mix(in srgb, #8a4cc0 var(--dk-lift, 100%), #fff);
+}
+
+.rush-banner-text small {
+  font-family: var(--kit-body);
+  font-size: 17px;
+  line-height: 1.05;
+  color: var(--kit-ink-2);
+}
+
+/* A level's line names who comes and the best time: it wraps instead of cutting off. */
+.lobby-sheet-row:has(.rush-level-icon) .lobby-sheet-text small {
+  white-space: normal;
+}
+
+.rush-banner-hoopa {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  image-rendering: pixelated;
+  border: 2px solid var(--kit-tinta);
+  border-radius: 6px;
+  background: #e8d8f8;
+}
+
+/* The level sheet: its line under the title, the levels tinted like the difficulty, a check on the ones cleared. */
+.rush-sheet-blurb {
+  margin: 0 4px 8px;
+  font-family: var(--kit-body);
+  font-size: 18px;
+  line-height: 1.15;
+  color: #dce0f8;
+}
+
+.rush-level-icon.hard {
+  filter: hue-rotate(-40deg) saturate(1.3);
+}
+
+.rush-level-icon.nightmare {
+  filter: hue-rotate(200deg) saturate(1.4) brightness(0.85);
+}
+
+.rush-cleared {
+  flex: none;
+  font-size: 22px;
+  color: #2c9848;
+}
+
+/* A level the captures don't open yet: shown grayed, with a padlock, saying how many legends it needs. */
+.lobby-sheet-row.locked {
+  cursor: default;
+  background: var(--kit-paper);
+}
+
+.lobby-sheet-row.locked .rush-level-icon {
+  filter: grayscale(1) brightness(0.8);
+}
+
+.lobby-sheet-row.locked .lobby-sheet-text b {
+  color: var(--kit-ink-2);
+}
+
+.rush-lock {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 5px;
+  background: var(--kit-tinta);
+}
+
+/* The end screen: Hoopa's portrait over the title. */
+.rush-end .dialog {
+  text-align: center;
+}
+
+.rush-end-hoopa {
+  display: block;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 6px;
+  image-rendering: pixelated;
+  border: 2px solid var(--kit-tinta);
+  border-radius: 8px;
+  background: #e8d8f8;
+}
+
+.rush-end-line {
+  margin: 6px 0;
+  font-size: 19px;
+}
+
+.rush-end-record {
+  margin: 4px 0;
+  font-family: var(--title);
+  font-size: 20px;
+  color: #c08810;
+}
+
+/* ---------- Largar item (`ui/itemSwap.ts`) ---------- */
+
+/* The pause menu's held items are buttons: a tap asks to let one go. */
+.loadout-row.drop-row {
+  /* The padding and border hang outside the column, so the icons line up with the moves'. */
+  width: calc(100% + 16px);
+  margin: 0 -8px;
+  min-height: 34px;
+  padding: 2px 6px;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: none;
+  border: 2px solid transparent;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+/* A finger's worth: the whole row is the target (the × only marks it). */
+@media (pointer: coarse) {
+  .loadout-row.drop-row {
+    min-height: 44px;
+  }
+}
+
+/* A phone held upright: the moves and the items come first, so dropping one needs no scrolling; the ability, the map and the stats follow. */
+@media (max-width: 600px) {
+  .pause-grid {
+    display: contents;
+  }
+  .pause-column {
+    order: -1;
+  }
+}
+
+/* A phone on its side: the loadout (stats | moves and items) before the ability and the map. */
+@media (max-height: 500px) {
+  .pause-body > .pause-ability,
+  .pause-body > .pause-map {
+    order: 1;
+  }
+}
+
+.loadout-row.drop-row:hover,
+.loadout-row.drop-row:focus-visible {
+  border-color: var(--dk-line, #c8d0e0);
+  background: var(--dk-surface-1, #f4f6fb);
+}
+
+.loadout-row .drop-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  font-family: var(--title);
+  font-size: 16px;
+  line-height: 1;
+  color: var(--dk-ink-3, #808898);
+  border: 2px solid currentColor;
+  border-radius: 3px;
+}
+
+.loadout-row.drop-row:hover .drop-mark {
+  color: color-mix(in srgb, #c03030 var(--dk-lift, 100%), #fff);
+}
+
+.drop-hint {
+  margin: 4px 0 0;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--dk-ink-3, #808898);
+}
+
+/* A full build's new-item card: swap it in. */
+.tag-swap {
+  color: color-mix(in srgb, #2878c8 var(--dk-lift, 100%), #fff);
+}
+
+.offer.offer-swap {
+  border-style: dashed;
+}
+
+.swap-note {
+  color: color-mix(in srgb, #2868b0 var(--dk-lift, 100%), #fff);
+}
+
+.item-swap .swap-box {
+  max-width: min(460px, 94vw);
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  border-color: #2878c8;
+  box-shadow: 0 0 0 2px #10284a, 0 0 22px rgba(40, 120, 200, 0.35);
+}
+
+.swap-incoming,
+.swap-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+}
+
+.swap-incoming {
+  align-self: center;
+  padding: 6px 14px 6px 8px;
+  background: var(--dk-wash-blue, #e8f0ff);
+  border: 2px solid #2878c8;
+  border-radius: 3px;
+}
+
+.swap-icon {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  image-rendering: pixelated;
+}
+
+.swap-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.swap-body b {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  white-space: nowrap;
+  font-weight: normal;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.swap-pair {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--dk-ink-3, #707088);
+}
+
+.swap-pair.ready {
+  color: color-mix(in srgb, #2868b0 var(--dk-lift, 100%), #fff);
+}
+
+.swap-pair img {
+  width: 16px;
+  height: 16px;
+  image-rendering: pixelated;
+}
+
+.swap-prompt,
+.swap-note {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.05;
+  text-align: center;
+  color: var(--dk-ink-2, #505870);
+}
+
+.item-swap .swap-note,
+.drop-confirm .swap-note {
+  font-size: 15px;
+  color: var(--dk-ink-3, #808898);
+}
+
+.swap-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.swap-row {
+  min-width: 0;
+  min-height: 48px;
+  padding: 6px 8px;
+  font: inherit;
+  color: inherit;
+  background: var(--dk-surface-0, #fff);
+  border: 2px solid var(--dk-line, #c8d0e0);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.swap-row.selected,
+.swap-row:hover {
+  border-color: #c03030;
+  background: var(--dk-wash-red, #fff0f0);
+}
+
+.drop-confirm .dialog {
+  max-width: min(420px, 94vw);
+  align-items: center;
+}
+
+.drop-confirm .swap-note {
+  max-width: 34ch;
+}
+
+/* A phone held upright: one item a row. On its side: the note and the hint go so the six fit. */
+@media (max-width: 420px) {
+  .swap-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .item-swap .swap-box {
+    padding: 8px 14px;
+    gap: 5px;
+  }
+  .item-swap .swap-box {
+    max-width: min(600px, 94vw);
+  }
+  .swap-row {
+    min-height: 44px;
+    padding: 4px 8px;
+  }
+  .swap-incoming {
+    padding: 4px 12px 4px 6px;
+  }
+  .item-swap .swap-note,
+  .item-swap .hint,
+  .swap-prompt {
+    display: none;
+  }
+}
+
+/* The Escavação's fossil lab (`labSheet` in `realm/games/dig.ts`): Galar's halves, the waiting ones bright, and the pairs. */
+.dig-lab-halves {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 10px;
+  align-items: center;
+}
+
+.dig-lab-halves b {
+  font-family: var(--kit-title);
+  font-weight: 400;
+  font-size: 18px;
+}
+
+.dig-lab-halves ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dig-lab-halves li {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 8px;
+  font-size: 16px;
+  line-height: 1.05;
+  background: var(--kit-tag);
+  border: var(--kit-edge) solid transparent;
+  border-radius: 10px;
+}
+
+.dig-lab-halves li:not(.held) img {
+  filter: grayscale(0.9);
+  opacity: 0.5;
+}
+
+.dig-lab-halves li.held {
+  background: var(--dk-wash-gold, #fff1c2);
+  border-color: var(--mode);
+}
+
+.dig-lab-pairs {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dig-lab-pairs li {
+  display: grid;
+  grid-template-columns: 28px auto 28px auto 32px 1fr;
+  gap: 4px;
+  align-items: center;
+  padding: 4px 10px;
+  font-size: 17px;
+  background: var(--kit-tag);
+  border-radius: 10px;
+}
+
+.dig-lab-pairs li.owned small {
+  color: color-mix(in srgb, #2e7d32 var(--dk-lift, 100%), #fff);
+}
+
+.dig-lab-pairs img,
+.dig-lab-halves img {
+  image-rendering: pixelated;
+}
+
+.dig-lab-plus {
+  font-family: var(--kit-title);
+  font-size: 20px;
+  text-align: center;
+}
+
+/* The Ovo de Manaphy's hatching (`ui/manaphyEgg.ts`): the hatch dialog, in the sea's blue. */
+.dialog.hatch.manaphy-egg {
+  border-color: #58a8e0;
+  box-shadow: 0 0 0 2px #1c4880, 0 0 24px rgba(88, 168, 224, 0.45);
+}
+
+/* The Ruínas da Decisão's choice (`ui/ruinsCard.ts`): the two Regis side by side as their ruins stand; the chosen one lights, the other dims. */
+.ruins-card {
+  position: absolute;
+  bottom: calc(24px + var(--safe-b, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(380px, calc(100 * var(--vw) - 32px));
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+  padding: 7px 10px 9px;
+  text-shadow: none;
+  pointer-events: none;
+}
+
+.ruins-title {
+  text-align: center;
+  font-size: 17px;
+  color: color-mix(in srgb, #6c5e50 var(--dk-lift, 100%), #fff);
+}
+
+.ruins-hint {
+  font-family: var(--body);
+  font-size: 17px;
+  line-height: 1;
+  text-align: center;
+}
+
+.ruins-row {
+  display: flex;
+  gap: 8px;
+}
+
+.ruins-tile {
+  --ruin: #c8a018;
+  --ruin-ink: #5c4300;
+  /* The name's color in the dark theme, bright on the deep wash. */
+  --ruin-lit: #f8d848;
+  /* The theme's washes: a light tint by day, a deep one in the dark. */
+  --ruin-bg: var(--dk-wash-gold, #fff6c8);
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border: 3px solid var(--ruin);
+  border-radius: 8px;
+  background: var(--ruin-bg);
+  transition: opacity 0.3s steps(3);
+}
+
+.ruins-tile[data-regi='regidrago'] {
+  --ruin: #3a8a3c;
+  --ruin-ink: #23602a;
+  --ruin-lit: #98e890;
+  --ruin-bg: var(--dk-wash-green, #dcf8d0);
+}
+
+.ruins-tile img {
+  width: 34px;
+  height: 34px;
+  flex: none;
+  image-rendering: pixelated;
+  border-radius: 4px;
+  background: #20202c;
+}
+
+.ruins-words {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.1;
+}
+
+.ruins-name {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ruins-name .type-badge {
+  font-size: 9px;
+  padding: 1px 3px;
+}
+
+.ruins-words b {
+  font-size: 14px;
+  color: var(--ruin-ink);
+}
+
+:root[data-theme='dark'] .ruins-words b {
+  color: var(--ruin-lit);
+}
+
+.ruins-label,
+.ruins-state {
+  font-family: var(--body);
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ruins-state:empty {
+  display: none;
+}
+
+.ruins-tile.caught,
+.ruins-tile.sealed {
+  opacity: 0.45;
+  filter: grayscale(0.8);
+}
+
+.ruins-tile.chosen {
+  box-shadow: 0 0 0 2px #fff, 0 0 10px 2px var(--ruin);
+  animation: rift-pulse 0.6s steps(2) infinite;
+}
+
+@media (max-width: 600px) {
+  .ruins-card {
+    bottom: calc(118px + var(--safe-b, 0px));
+    gap: 4px;
+    padding: 5px 8px 7px;
+  }
+  .ruins-title {
+    font-size: 14px;
+  }
+  .ruins-hint {
+    font-size: 15px;
+  }
+  .ruins-tile img {
+    width: 28px;
+    height: 28px;
+  }
+  .ruins-words b {
+    font-size: 12px;
+  }
+  .ruins-label,
+  .ruins-state {
+    font-size: 13px;
+  }
+}
+
+@media (max-height: 500px) {
+  /* A phone on its side: the left column, under the moves, as the duel's card. */
+  .ruins-card {
+    top: calc(96px + var(--safe-t));
+    bottom: auto;
+    left: max(8px, env(safe-area-inset-left));
+    transform: none;
+    width: min(260px, 34 * var(--vw));
+    gap: 3px;
+    padding: 4px 8px 6px;
+  }
+  .ruins-row {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .ruins-title {
+    font-size: 13px;
+  }
+  .ruins-hint {
+    font-size: 13px;
+  }
 }

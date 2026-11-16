@@ -6,6 +6,7 @@ import { isPingKind, isQuickChat, pingAt, playEmote, sayQuick, voteSurrender, ty
 import { MEGAS, type MegaId } from '../data/megas'
 import { castVote, countAway, leaveRun, setAway, updateVote, worldHeld } from './coop'
 import { continueEndless } from './endlessSystem'
+import { dropItem, needsSwap } from './itemDrop'
 import { banishOffer, chooseOffer, openPendingPicks, rerollOffers, skipLevelUp, stepTeam, updateEvolution, type StepInput } from './game'
 import { nothingToChoose } from './leveling'
 import { grantStone } from './mega'
@@ -30,8 +31,8 @@ export type PickScreen = Exclude<PlayerPhase, 'playing' | 'evolving'>
 export type TickEntry =
   /** The stick changed: `moveCode` (0 stands still, 1..224 are 32 directions × 7 speeds). It holds until the next one. */
   | { slot: number; kind: 'move'; code: number }
-  /** The special attack, the Mega button and the manual moves (Quick Attack), pressed this tick. */
-  | { slot: number; kind: 'special' | 'mega' | 'lunge' }
+  /** The special attack, the Mega button, the TERA button and the manual moves (Quick Attack), pressed this tick. */
+  | { slot: number; kind: 'special' | 'mega' | 'tera' | 'lunge' }
   /**
    * A card of the pick screen `screen`, shown as `round` (`Player.round`):
    * a level-up's card or a fork's branch, an evolution's branch, an Ability,
@@ -43,6 +44,8 @@ export type TickEntry =
   | { slot: number; kind: 'reroll' | 'skip'; round: number }
   /** Esquecer: forgets the level-up's card at `index`, on the screen of `round`. */
   | { slot: number; kind: 'banish'; round: number; index: number }
+  /** Largar item: lets go of the held item at `index` (`dropItem`), from the menu or before a swap card's pick. */
+  | { slot: number; kind: 'drop'; index: number }
   /** Takes one of the player's Mega Stones on the ground (a choice of two: Charizard, Raichu, Garchomp, Lucario). */
   | { slot: number; kind: 'stone'; mega: MegaId }
   /** The tab went to the background or the connection dropped (`away`), came back (`back`), or the player left for good. */
@@ -93,6 +96,7 @@ export const parseTickEntry = (raw: unknown, players: number): TickEntry | null 
       return isIndex(raw.code, MAX_CODE) ? { slot, kind, code: raw.code } : null
     case 'special':
     case 'mega':
+    case 'tera':
     case 'lunge':
     case 'emote':
     case 'away':
@@ -109,6 +113,8 @@ export const parseTickEntry = (raw: unknown, players: number): TickEntry | null 
       return isIndex(raw.round, Number.MAX_SAFE_INTEGER) ? { slot, kind, round: raw.round } : null
     case 'banish':
       return isIndex(raw.round, Number.MAX_SAFE_INTEGER) && isIndex(raw.index, 15) ? { slot, kind, round: raw.round, index: raw.index } : null
+    case 'drop':
+      return isIndex(raw.index, 15) ? { slot, kind, index: raw.index } : null
     case 'stone':
       return typeof raw.mega === 'string' && Object.hasOwn(MEGAS, raw.mega) ? { slot, kind, mega: raw.mega as MegaId } : null
     case 'endless':
@@ -139,7 +145,9 @@ export const onScreen = (p: Player) => SCREENS.has(p.phase)
 const defaultOffer = (p: Player): Offer | undefined => {
   if (p.phase === 'curse') return p.offers.find((o) => o.kind === 'curse' && !o.take) ?? p.offers[0]
   if (p.phase === 'tm') return p.offers.find((o) => o.kind === 'pass') ?? p.offers[0]
-  return p.offers[0]
+  // A swap card asks which item goes (`needsSwap`): the clock never drops one, so it leaves the ball's and takes another card.
+  if (p.phase === 'pokeball') return needsSwap(p, p.offers[0]) ? p.offers.find((o) => o.kind === 'pass') : p.offers[0]
+  return p.offers.find((o) => !needsSwap(p, o)) ?? p.offers[0]
 }
 
 /** Closes a screen that can't be picked from (no cards, or a pick that changes nothing): a guard so the team never waits forever. */
@@ -228,6 +236,7 @@ const applyEntry = (g: Game, e: TickEntry, inputs: StepInput[]) => {
       return
     case 'special':
     case 'mega':
+    case 'tera':
     case 'lunge':
       if (!p.away) input[e.kind] = true
       return
@@ -253,6 +262,8 @@ const applyEntry = (g: Game, e: TickEntry, inputs: StepInput[]) => {
       banishOffer(g, e.index, p)
       return nextRound(p, before, p.banishes !== charges, true)
     }
+    case 'drop':
+      return dropItem(g, e.index, p)
     case 'stone':
       return takeStone(g, p, e.mega)
     case 'away':
@@ -293,7 +304,7 @@ const applyEntry = (g: Game, e: TickEntry, inputs: StepInput[]) => {
 }
 
 /** A tick's input per slot, nothing pressed yet (the stick comes from `held` once the entries are in). */
-const inputsOf = (g: Game): StepInput[] => g.players.map(() => ({ move: moveOf(0), special: false, mega: false, lunge: false }))
+const inputsOf = (g: Game): StepInput[] => g.players.map(() => ({ move: moveOf(0), special: false, mega: false, tera: false, lunge: false }))
 
 /**
  * One co-op tick: applies `entries` in order (malformed or stale ones are

@@ -1,4 +1,5 @@
 import { mergeAchievements, mergeGiftTitles } from './achievements'
+import { mergeRoamers, mergeRushBest } from './questSave'
 import { mergeAttempts } from './attempt'
 import { mergeClaimedGifts } from './gifts'
 import { mergeClears } from './clears'
@@ -17,9 +18,13 @@ import { mergeIncubator, slotsInvested } from './incubator'
 import { SAVE_VERSION, totalSpent, UPGRADE_IDS, type Ranks, type Save, type UpgradeId } from './meta'
 import { mergeMissions } from './missions'
 import { mergeRibbons } from './ribbons'
+import { mergeFinds, mergeResearch } from './seasonOneUnlocks'
+import { mergePaths } from './legendPaths'
 import { mergeShinyStarters } from './shinyStarters'
 import { mergeShinyPicks } from './shinyPicks'
 import { mergeCompanions } from './supporters'
+import { mergeShadows } from './shadow'
+import { mergeHideout } from './hideoutPass'
 
 /**
  * Account sync rules, shared by the game and the API (`server/`): how two
@@ -79,6 +84,11 @@ const worth = (s: Save) => s.wallet + totalSpent(s.ranks) + shopInvested(s.shop.
  * - Meowth's caravan: the later weekend's; on the same weekend, what either
  *   side bought (a union) and the haggle made on either (`mergeCaravan`).
  * - The Desafio do dia attempt: the later day (`base`'s on the same day).
+ * - Temporada 1's encounters: a union; its research: each chain at the side further along, the partners a union (`mergeResearch`).
+ * - The Rocket Hideout's pass: the later day it was given and the later it was used, Giovanni's clears the higher (`mergeHideout`).
+ * - Shadow Pokémon: a union, purified for good once either side purified, the further heart gauge, `incoming`'s pick (`mergeShadows`).
+ * - The legend paths: the Cube's Cells and Cores and Meltan's Hex Nuts at the larger side; Cosmog's research and the
+ *   legends it grew into, unions, its run counts the side further along's; the Torre's trials a union (`mergePaths`).
  */
 export const mergeSaves = (base: Save, incoming: Save): Save => {
   const ranks: Ranks = Object.fromEntries(UPGRADE_IDS.map((id) => [id, Math.max(base.ranks[id], incoming.ranks[id])])) as Record<UpgradeId, number>
@@ -114,6 +124,8 @@ export const mergeSaves = (base: Save, incoming: Save): Save => {
     clears: mergeClears(base.clears, incoming.clears),
     halloween: mergeHalloween(base.halloween, incoming.halloween),
     legends: mergeCaptures(base.legends, incoming.legends),
+    roamers: mergeRoamers(base.roamers, incoming.roamers),
+    rush: mergeRushBest(base.rush, incoming.rush),
     mythicalPity: mergeMythicalPity(base.mythicalPity, incoming.mythicalPity),
     tms: mergeTms(base.tms, incoming.tms),
     evo: mergeEvoItems(base.evo, incoming.evo),
@@ -122,6 +134,11 @@ export const mergeSaves = (base: Save, incoming: Save): Save => {
     attempt: mergeAttempts(base.attempt, incoming.attempt),
     // A build saved again on another device replaces this one's for its family.
     builds: { ...base.builds, ...incoming.builds },
+    finds: mergeFinds(base.finds, incoming.finds),
+    research: mergeResearch(base.research, incoming.research),
+    shadows: mergeShadows(base.shadows, incoming.shadows),
+    hideout: mergeHideout(base.hideout, incoming.hideout),
+    paths: mergePaths(base.paths, incoming.paths),
   }
 }
 

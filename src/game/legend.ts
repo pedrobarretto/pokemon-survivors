@@ -4,6 +4,8 @@ import { BIOMES } from '../data/biomes'
 import type { EnemyId } from '../data/enemies'
 import type { PlayableId } from '../data/hatchlings'
 import { AWAKEN_AT, isLegend, LEGENDS, type Innate, type LegendDef, type LegendForm, type LegendId } from '../data/legends'
+import { PATH_FORMS, type PathFormDef, type PathFormId } from '../data/legendPaths'
+import type { PokeType } from '../data/types'
 import type { EvolutionStage } from '../data/starters'
 import { TIER_STATS, type Tier } from '../data/roster'
 import { EVENTS, MYTHICALS, STAGES, stageIndexAt, TRIO_IDS, TRIOS, type WaveEvent, type WaveStage } from '../data/waves'
@@ -13,6 +15,7 @@ import { withTrio, type Roster, type RosterOptions } from './roster'
 import { burst, shakeScreen } from './effects'
 import type { StatDelta } from './stats'
 import type { Enemy, Game } from './types'
+import { maskTypes, ogerponLook, ogerponMask } from './ogerpon'
 
 /**
  * The Legend mode in a run (`data/legends.ts`): a run that starts with a
@@ -29,12 +32,15 @@ export type LegendState = {
   awakened: number
   /** `Player.walked` at the last heavy step. */
   stride: number
-  /** The type Arceus took from the biome last (Multitype), so the stats follow a change. */
+  /** The type Arceus took from the biome last (Multitype), or Ogerpon's mask, so the stats follow a change. */
   multitype: string | null
+  /** The forms its path opened for this run (`ReplayStart.forms`, `data/legendPaths.ts`), in table order. */
+  forms: readonly PathFormId[]
 }
 
-export const createLegendState = (starter: PlayableId): LegendState | null =>
-  isLegend(starter) ? { id: starter, awakened: 0, stride: 0, multitype: null } : null
+/** A legend's state as a run starts, with the path forms `forms` opens that are its own. */
+export const createLegendState = (starter: PlayableId, forms: readonly PathFormId[] = []): LegendState | null =>
+  isLegend(starter) ? { id: starter, awakened: 0, stride: 0, multitype: null, forms: forms.filter((f) => PATH_FORMS[f].legend === starter) } : null
 
 /**
  * The legend the world plays against: the first player's who plays one (the
@@ -55,23 +61,50 @@ export const pendingAwakening = (g: Game) => {
   return g.player.level >= AWAKEN_AT[s.awakened]! ? s.awakened + 1 : 0
 }
 
-/** Stats a legend has after `awakened` awakenings, on top of its own (`LegendDef.stats`). */
-export const awakeningDeltas = (id: LegendId, awakened: number): readonly StatDelta[] => {
+/** The path forms of `forms` a legend wears by `awakened` awakenings, in table order. */
+const reached = (id: LegendId, awakened: number, forms: readonly PathFormId[]): PathFormDef[] =>
+  forms.flatMap((f): PathFormDef[] => {
+    const def: PathFormDef = PATH_FORMS[f]
+    return def.legend === id && def.at <= awakened ? [def] : []
+  })
+
+/** Stats a legend has after `awakened` awakenings, on top of its own (`LegendDef.stats`): its awakenings' and those of the path forms it reached. */
+export const awakeningDeltas = (id: LegendId, awakened: number, forms: readonly PathFormId[] = []): readonly StatDelta[] => {
   const def: LegendDef = LEGENDS[id]
-  return def.awakenings.slice(0, awakened)
+  return [...def.awakenings.slice(0, awakened), ...reached(id, awakened, forms).map((f) => f.stats)]
 }
 
-/** The form a legend wears after `awakened` awakenings: the second one's, where it has one. */
-export const formAfter = (id: LegendId, awakened: number): LegendDef['form'] | null => {
+/**
+ * A legend's look past its own: the species drawn (`dex`), its asset form
+ * (`key`), its name and types. `community`: shown only once the community
+ * goal opens it (`formLocked`).
+ */
+export type LegendLook = { dex: number; key?: LegendForm; name: string; types?: readonly PokeType[]; community?: true }
+
+/**
+ * The look a legend wears after `awakened` awakenings: the latest path form it
+ * reached among `forms` (Zygarde's, Urshifu, Melmetal), else its second
+ * awakening's form where it has one (Primal Kyogre), else its first's
+ * (Terapagos's Terastal Form), else null (its own).
+ */
+export const formAfter = (id: LegendId, awakened: number, forms: readonly PathFormId[] = []): LegendLook | null => {
   const def: LegendDef = LEGENDS[id]
-  return awakened >= 2 ? (def.form ?? null) : null
+  const dex = def.line[0].dex
+  const path = reached(id, awakened, forms).reduce<PathFormDef | null>((top, f) => (top && top.at > f.at ? top : f), null)
+  if (path) return { dex: path.dex ?? dex, ...(path.key && { key: path.key }), name: path.name, ...(path.types && { types: path.types }) }
+  const form = awakened >= 2 ? def.form : awakened >= 1 ? def.early : undefined
+  return form ? { dex, ...form } : null
 }
 
-/** The sprite form the acting player wears now: the awakened form, else Deoxys's forme (its stance). */
+/** The look of a legend's state now (`formAfter` of its awakenings and path forms). */
+export const lookOf = (s: LegendState) => formAfter(s.id, s.awakened, s.forms)
+
+/** The sprite form the acting player wears now: the awakened form, else Ogerpon's mask (Terastallized or not), else Deoxys's forme (its stance). */
 export const legendLook = (g: Game): LegendForm | undefined => {
   const s = g.player.legend
   if (!s) return undefined
-  const form = formAfter(s.id, s.awakened)
+  if (s.id === 'ogerpon') return ogerponLook(g.player)
+  const form = lookOf(s)
   if (form) return form.key
   const stance = g.player.special.stance
   return stance === 'attack' || stance === 'defense' || stance === 'speed' ? stance : undefined
@@ -84,21 +117,24 @@ const stages = new Map<string, EvolutionStage>()
 
 /**
  * The stage a legend is in: its single stage, under its form's name and types
- * once the second awakening lands it, and Arceus's typing follows the biome.
- * A form still behind the community goal (`formLocked`) keeps the legend's
- * name; only the screen reads it, so the run plays the same either way.
- * Cached, since `playerForm` asks every tick.
+ * once the second awakening lands it, the species it evolves into once its
+ * awakening does (Poipole's Naganadel, `LegendDef.evolve`), and Arceus's typing follows the biome.
+ * Ogerpon's types follow its mask (`maskTypes`). A form still behind the
+ * community goal (`formLocked`) keeps the legend's name; only the screen reads
+ * it, so the run plays the same either way. Cached, since `playerForm` asks every tick.
  */
 export const legendStage = (g: Game, s: LegendState): EvolutionStage => {
   const def: LegendDef = LEGENDS[s.id]
-  const form = formAfter(s.id, s.awakened)
+  const form = lookOf(s)
   const locked = formLocked(form)
   const multi = def.innate.ability === 'multitype' ? multitypeOf(g) : null
-  const key = `${s.id}|${form?.key ?? ''}|${multi ?? ''}|${locked ? 'locked' : ''}`
+  const mask = s.id === 'ogerpon' ? ogerponMask(g.player) : null
+  const evolved = def.evolve && s.awakened >= def.evolve.at ? def.evolve : null
+  const key = `${s.id}|${form?.dex ?? ''}|${form?.key ?? ''}|${form?.name ?? ''}|${multi ?? ''}|${mask ?? ''}|${locked ? 'locked' : ''}|${evolved ? 'evolved' : ''}`
   let stage = stages.get(key)
   if (!stage) {
-    const own = def.line[0]
-    stage = { ...own, name: (!locked && form?.name) || own.name, types: multi ? [multi] : (form?.types ?? own.types) }
+    const own = evolved ? { ...def.line[0], dex: evolved.dex, name: evolved.name, types: evolved.types } : def.line[0]
+    stage = { ...own, dex: (!locked && form?.dex) || own.dex, name: (!locked && form?.name) || own.name, types: multi ? [multi] : mask ? maskTypes(mask) : (form?.types ?? own.types) }
     stages.set(key, stage)
   }
   return stage
@@ -238,7 +274,7 @@ export const STEP = { every: 22, heavy: 40 } as const
 /**
  * Per tick, for the acting player: every `STEP.every` px walked a legend's
  * step raises dust (and a small tremor under the big ones), and Arceus's type
- * follows the biome. True when the stats need rebuilding (Multitype changed type).
+ * follows the biome. True when the stats need rebuilding (Multitype changed type, Ogerpon changed mask).
  */
 export const updateLegend = (g: Game) => {
   const p = g.player
@@ -248,6 +284,12 @@ export const updateLegend = (g: Game) => {
     s.stride = p.walked
     burst(g, p.x, p.y, { colors: ['#c8b898', '#a89878', '#e8e0c8'], count: 5, speed: 30, ttl: 0.35, gravity: 30 })
     if (bodyOf(LEGENDS[s.id].line[0].dex).bodyW >= STEP.heavy) shakeScreen(g, 0.6)
+  }
+  if (s.id === 'ogerpon') {
+    const mask = ogerponMask(p)
+    if (mask === s.multitype) return false
+    s.multitype = mask
+    return true
   }
   if (LEGENDS[s.id].innate.ability !== 'multitype') return false
   const type = multitypeOf(g)

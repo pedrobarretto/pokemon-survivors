@@ -208,7 +208,7 @@ export type CoopBoardEntry = {
  * The top of a co-op board (`BOARD_SIZE` teams), plus the asking player's
  * best team on it (null for a guest or off it). `GET /coop/boards/:difficulty?size=&period=&friends=`.
  */
-export type CoopBoard = { size: TeamSize; difficulty: Difficulty; period: BoardPeriod; entries: CoopBoardEntry[]; me: CoopBoardEntry | null }
+export type CoopBoard = { size: TeamSize; difficulty: Difficulty; period: BoardPeriod; entries: CoopBoardEntry[]; me: CoopBoardEntry | null; total?: number }
 
 /**
  * A day's Desafio co-op board for one team size: the day's difficulty, every

@@ -161,7 +161,7 @@ const WISP = { flame: '#78f0a8', core: '#e0fff0', tail: 'rgba(120,240,168,0.5)',
  * The Haunted Egg hatches at night: a dusk backdrop, will-o'-wisps circling
  * and a violet burst. `holdAt` freezes the animation at that second (dev screenshots).
  */
-export const hatchScene = (root: HTMLElement, input: Input, hatch: Hatch, actions: { play: () => void; done: () => void }, holdAt?: number): Screen => {
+export const hatchScene = (root: HTMLElement, input: Input, hatch: Hatch, actions: { play?: () => void; done: () => void }, holdAt?: number): Screen => {
   const m = t().eggs
   const def = HATCHLINGS[hatch.id]
   const dex = def.line[0].dex
@@ -188,14 +188,15 @@ export const hatchScene = (root: HTMLElement, input: Input, hatch: Hatch, action
     const unlocked = hatch.duplicate ? m.duplicate(name, formatPokeDollars(hatch.refund)) : hatch.shiny ? m.shinyUnlocked : m.unlocked
     const note = hatch.guaranteed ? `${m.pity.hatched(EGGS.pity)} ${unlocked}` : unlocked
     text.replaceChildren(rich(hatch.shiny ? m.hatchedShiny(name) : m.hatched(name)), h('small', {}, note))
-    const play = h('button', { class: 'btn' }, m.play(name))
+    // Without `play` (a hatch away from the lobby) OK is the only way on.
+    const play = actions.play ? h('button', { class: 'btn' }, m.play(name)) : null
     const ok = h('button', { class: 'btn' }, m.ok)
-    buttons.replaceChildren(play, ok)
+    buttons.replaceChildren(...(play ? [play, ok] : [ok]))
     buttons.classList.remove('hidden')
     skipHint.remove()
     // OK is the default and the first picks wait (`REVEAL_GUARD_MS`): the key that skipped the hatch, held or
     // repeating, must not land on "Play with" and start a run nobody asked for.
-    nav = menu(input, [play, ok], (i) => later(i === 0 ? actions.play : actions.done), { horizontal: true, initial: 1, guard: REVEAL_GUARD_MS })
+    nav = menu(input, play ? [play, ok] : [ok], (i) => later(play && i === 0 && actions.play ? actions.play : actions.done), { horizontal: true, initial: play ? 1 : 0, guard: REVEAL_GUARD_MS })
   }
 
   // Before the reveal, any key or tap skips the animation.

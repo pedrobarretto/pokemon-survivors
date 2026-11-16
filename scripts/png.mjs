@@ -24,18 +24,22 @@ export const readPng = async (file) => {
   }
   const { width, height, depth, color, interlace } = header
   const channels = { 6: 4, 2: 3, 4: 2, 3: 1, 0: 1 }[color]
-  if (depth !== 8 || interlace !== 0 || !channels) throw new Error(`${file}: unsupported PNG (depth ${depth}, color ${color}, interlace ${interlace})`)
+  // Palette PNGs may pack 1, 2 or 4 bits a pixel (PokeAPI's item sprites); everything else is 8-bit.
+  const packed = color === 3 && [1, 2, 4].includes(depth)
+  if ((depth !== 8 && !packed) || interlace !== 0 || !channels) throw new Error(`${file}: unsupported PNG (depth ${depth}, color ${color}, interlace ${interlace})`)
   const raw = inflateSync(Buffer.concat(idat))
-  const stride = width * channels
+  const stride = packed ? Math.ceil((width * depth) / 8) : width * channels
+  // The filters' byte step: a whole pixel, or one byte when pixels are packed.
+  const bpp = packed ? 1 : channels
   const rows = Buffer.alloc(stride * height)
   // Undo the per-row filters (PNG spec, section 9).
   for (let y = 0; y < height; y++) {
     const filter = raw[y * (stride + 1)]
     for (let x = 0; x < stride; x++) {
       const cur = raw[y * (stride + 1) + 1 + x]
-      const a = x >= channels ? rows[y * stride + x - channels] : 0
+      const a = x >= bpp ? rows[y * stride + x - bpp] : 0
       const b = y > 0 ? rows[(y - 1) * stride + x] : 0
-      const c = x >= channels && y > 0 ? rows[(y - 1) * stride + x - channels] : 0
+      const c = x >= bpp && y > 0 ? rows[(y - 1) * stride + x - bpp] : 0
       const p = a + b - c
       const paeth = Math.abs(p - a) <= Math.abs(p - b) && Math.abs(p - a) <= Math.abs(p - c) ? a : Math.abs(p - b) <= Math.abs(p - c) ? b : c
       rows[y * stride + x] = (cur + [0, a, b, (a + b) >> 1, paeth][filter]) & 0xff
@@ -48,7 +52,9 @@ export const readPng = async (file) => {
     else if (color === 2) rgba.set([rows[i * 3], rows[i * 3 + 1], rows[i * 3 + 2], 255], o)
     else if (color === 4) rgba.set([rows[i * 2], rows[i * 2], rows[i * 2], rows[i * 2 + 1]], o)
     else if (color === 3) {
-      const k = rows[i]
+      const x = i % width
+      const y = Math.floor(i / width)
+      const k = packed ? (rows[y * stride + ((x * depth) >> 3)] >> (8 - depth - ((x * depth) & 7))) & ((1 << depth) - 1) : rows[i]
       rgba.set([palette[k * 3], palette[k * 3 + 1], palette[k * 3 + 2], alphas?.[k] ?? 255], o)
     } else rgba.set([rows[i], rows[i], rows[i], 255], o)
   }

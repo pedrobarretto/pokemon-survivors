@@ -3,6 +3,14 @@ import type { FurnitureCounts, FurnitureId } from '../data/furniture'
 import type { Activity } from '../game/friends'
 import type { CityId, RoomKey } from './realm'
 import type { GameOutcome, MinigameId } from '../data/minigames'
+import type { HatchlingId, PlayableId } from '../data/hatchlings'
+import type { PlushFamily } from '../data/plushes'
+import type { SafariHabitat } from '../data/safari'
+import type { DigPrize, DigTreasureId, FossilFamily, GalarHalf } from '../data/digTreasures'
+import type { Gift, GiftContent, GiftReason } from '../game/gifts'
+import type { SafariCatch, SafariDaypart, SafariMode, SafariMood, SafariTurn } from '../realm/games/safari.rules'
+import type { DigCell, DigHint, DigPattern, DigPowers, DigTreasure } from '../realm/games/dig.rules'
+import type { SweepView } from '../realm/games/corner.rules'
 
 /**
  * The Poké Realm's API (game → `server/`, Clerk-authenticated like the rest).
@@ -27,11 +35,33 @@ import type { GameOutcome, MinigameId } from '../data/minigames'
  *   `furniture:<uuid>`) or ₽ (out of the stored save at revision `base`, like `POST /festival/donate`).
  *   `FurnitureBought`; 402 `{ error: 'gems' | 'funds' }`, 404 not sold, 409 `nosave`/`stale` (sync first).
  * - `POST /realm/report` (auth) `RealmReport`: reports a trainer (to the moderation queue and the staff's Discord channel).
- * - `POST /realm/game/claim` (auth) `GameClaim`: a finished mini game (`data/minigames.ts`). The API
+ * - `POST /realm/game/claim` (auth) `GameClaim`: a finished mini game (`data/minigames.ts`; 400 for one
+ *   the API runs itself, `claimable`). The API
  *   prices it (`coinsFor`), caps it for the Brasília day (`capped`, kept per account and game), updates
  *   the game's stats (`GameStats`) and grants the trophies they reach (`trophiesEarned`, into
  *   `furniture_owned` with source `game`). `GameClaimed`; 400 for an outcome that doesn't fit the game,
  *   429 past the route's rate limit. The client adds `coins` to the wallet like a run's ₽.
+ * - `GET /realm/dig` (auth): `DigState`, the Escavação as the player sees it (the open wall's view, never its layout). 403 `profile` without a @handle.
+ * - `POST /realm/dig/start` (auth) `{ partner?, base? }`: a wall (`wallPrice`: free, or ₽ out of the stored save at revision `base`). `DigStarted`, with `{ save, revision }` when it spent; a wall open already comes back uncharged. 403 `cap`/`profile`/`banned`, 402 `funds`, 409 `nosave`/`stale`.
+ * - `POST /realm/dig/hit` (auth) `{ id, seq, tool, cell }`: one hit, numbered from 1: `DigHitAnswer` (only the cells it opened and the crack). A number already answered gets its stored answer back. 409 `seq`/`empty`/`over`.
+ * - `POST /realm/dig/stop` (auth) `{ id }`: leaves with what's dug out. `{ end: DigEnd }`; a wall already ended answers the same.
+ * - `GET /realm/claw` (auth): `ClawState`, the Máquina de Pelúcias as the player sees it. 403 `profile` without a @handle.
+ * - `POST /realm/claw/insert` (auth) `{ base? }`: a credit (`creditPrice`: free, or ₽ out of the stored save at revision
+ *   `base`, like `POST /realm/furniture/buy`). `ClawInserted`, with `{ save, revision }` when it spent; an open credit
+ *   comes back uncharged. 402 `funds`, 403 `profile`/`banned`/`cap`, 409 `nosave`/`stale`, 429 past the route's limit.
+ * - `POST /realm/claw/drop` (auth) `{ id, x, y }`: the API decides the credit (`realm/games/claw.rules.ts`). `ClawDropped`;
+ *   the same drop again answers the same. 404 for a credit that isn't this player's.
+ * - `GET /realm/corner` (auth): `CornerState`, the Rocket Game Corner as the player sees it: tokens, today's counts, the
+ *   Koffing Sweep round left open and the once-only prizes taken. 403 `profile` without a @handle.
+ * - `POST /realm/corner/buy` (auth) `{ pack, base }`: tokens for ₽ out of the stored save at revision `base`
+ *   (`CORNER.packs`, `CORNER.buyDaily`). `CornerBought` with `{ save, revision }`. 402 `funds`, 403 `cap`, 409 `nosave`/`stale`.
+ * - `POST /realm/corner/spin` (auth) `{ bet, nonce }`: a spin, rolled here (`realm/games/corner.rules.ts`). `CornerSpun`;
+ *   the same `nonce` again answers the same. 403 `tokens`/`cap`.
+ * - `POST /realm/corner/sweep/start` (auth): a Koffing Sweep board (the one left open comes back). `CornerSwept`. 403 `cap`.
+ * - `POST /realm/corner/sweep/flip` (auth) `{ id, at }` and `/sweep/bank` `{ id }`: a tile turned, or the pot banked.
+ *   `CornerSwept`; a tile already up or a round over answers its view again.
+ * - `POST /realm/corner/redeem` (auth) `{ prize }`: a prize for tokens (`data/rocketCorner.ts`), sent as a gift.
+ *   `CornerRedeemed`. 403 `tokens`/`owned`.
  * - `GET /realm/boards/:game?period=day|week` (public; signed in adds the player's line): `GameBoard`
  *   (`realm/boards.ts`), the game's best of the Brasília day or week, from the claims. Cached a few seconds.
  *
@@ -131,6 +161,131 @@ export type ErrandClaimed = { coins: number; book: RealmBook }
 /**
  * What the game paid (₽ after the caps), what the account's mini games paid
  * today in all (`today`, out of `MINIGAME_DAILY`), the trophies it just
- * earned (new furniture ids) and, when it earned any, the new furniture counts.
+ * earned (new furniture ids), when it earned any, the new furniture counts,
+ * and the family it brought for the first time (a `HatchlingId`, on its way as a gift), if any.
  */
-export type GameClaimed = { coins: number; today: number; trophies: readonly FurnitureId[]; furniture: FurnitureCounts | null }
+export type GameClaimed = { coins: number; today: number; trophies: readonly FurnitureId[]; furniture: FurnitureCounts | null; family: string | null }
+
+/** A credit in play: the seed that shakes the plushes and the week it was put in on. */
+export type ClawPlay = { id: string; seed: number; week: string }
+
+/** The machine for this account: the week's plushes, the misses on each (in that order), the credits used today and the credit left open, if any. */
+export type ClawState = { week: string; prizes: PlushFamily[]; misses: number[]; used: number; open: ClawPlay | null }
+
+export type ClawInserted = { play: ClawPlay; used: number }
+
+/** What a drop came to: the plush it went for (its place in `prizes`), the grip, whether it held and every plush's misses after it. */
+export type ClawDropped = { target: number; grip: number; won: boolean; family: PlushFamily; misses: number[] }
+
+/** The Rocket Game Corner for this account: tokens held, what today bought and won, spins and boards played, the board left open and the once-only prizes taken. */
+export type CornerState = { tokens: number; bought: number; won: number; spins: number; rounds: number; level: number; sweep: CornerSweep | null; taken: string[] }
+
+export type CornerBought = { tokens: number; bought: number }
+
+/** A spin: where the three reels stopped, what it paid (after the day's cap) and the tokens after it. */
+export type CornerSpun = { stops: [number, number, number]; paid: number; tokens: number; won: number; spins: number }
+
+/** A Koffing Sweep round as its player sees it (`SweepView`), and what banking it paid. */
+export type CornerSweep = { id: string } & SweepView
+
+export type CornerSwept = { sweep: CornerSweep; paid: number; tokens: number; won: number; rounds: number; level: number }
+
+/** A prize taken: the tokens left and the gift sent (applied on the next sync, like any gift). */
+export type CornerRedeemed = { tokens: number; gift: Gift | null }
+
+/** The Pokémon being faced, known once the grass has given it away: its calm (berries), its mood and turns left, its place in the chain and whether it was sneaked up on. */
+export type SafariEncounterView = { family: HatchlingId; shiny: boolean; calm: number; sure: boolean; level: number; mood: SafariMood | null; moodTurns: number; chain: number; stalked: boolean }
+
+/** A Pokémon out in the open: the queue's slot it holds (what `stalk` sends) and who it is. */
+export type SafariWanderer = { slot: number; family: HatchlingId }
+
+/** A session as its owner sees it. `turn`: how many actions the API has answered (what the next action sends). */
+export type SafariSession = {
+  id: string
+  week: string
+  habitat: SafariHabitat
+  /** A regular session or a Concurso de Insetos entry. */
+  mode: SafariMode
+  /** The time of day the API took from the player's clock: who's about. */
+  daypart: SafariDaypart
+  balls: number
+  berries: number
+  /** Encounters still to come; never who hides in the grass. */
+  left: number
+  /** Whether the next one in the grass is the guarantee's. */
+  sureNext: boolean
+  /** Who wanders in the open, not met yet. */
+  wanderers: SafariWanderer[]
+  /** The species met last and how many in a row. */
+  chain: { family: HatchlingId; n: number } | null
+  encounter: SafariEncounterView | null
+  catches: SafariCatch<HatchlingId>[]
+  over: boolean
+  turn: number
+}
+
+/** The Concurso de Insetos today: whether it runs, the entries left, and this week's best entry (null without one). */
+export type SafariContest = { open: boolean; left: number; best: number | null }
+
+/**
+ * The Zona Safári for this account: the habitat, the sessions used today, the
+ * sessions without a new family, whether the next one is the guarantee's, the
+ * partner the API counts, the session left open, if any, the contest, and
+ * each habitat's Pokédex (the families caught there).
+ */
+export type SafariState = {
+  week: string
+  habitat: SafariHabitat
+  used: number
+  dry: number
+  sure: boolean
+  partner: PlayableId | null
+  open: SafariSession | null
+  contest: SafariContest
+  dex: Record<SafariHabitat, HatchlingId[]>
+  /** The habitats whose Pokédex gift went out: completed for good, however many residents joined since. */
+  done: SafariHabitat[]
+}
+
+export type SafariStarted = { session: SafariSession; used: number }
+
+/** What an action came to, the session after it and, for a catch, the gift that brings the Pokémon. */
+export type SafariActed = { turn: SafariTurn<HatchlingId>; gift: Gift | null; session: SafariSession }
+
+/** The Escavação's wall as its owner sees it: the rock's look, what's dug out so far and how cracked it is. Never where anything still buried lies. */
+export type DigWallView = {
+  id: string
+  week: string
+  golden: boolean
+  pattern: DigPattern
+  cap: number
+  powers: DigPowers
+  hint: DigHint | null
+  depths: number[]
+  left: number[]
+  crack: number
+  seq: number
+  tiles: DigCell[]
+  freed: number[]
+}
+
+/** The mine for this account: the week it's on, walls used today, the dry streak toward a guaranteed fossil, the fossils it lacks, the Galar halves waiting in its lab and the wall left open. */
+export type DigState = { week: string; used: number; dry: number; lacking: string[]; held: GalarHalf[]; open: DigWallView | null }
+
+export type DigStarted = { wall: DigWallView; used: number }
+
+/**
+ * A prize dug out: its treasure, what it pays, whether a fossil was a repeat
+ * and the ₽ it paid in coins. A Galar half either `restored` a family with the
+ * half that waited in the lab, or was `stored` there (or is a repeat).
+ */
+export type DigReward = { id: DigTreasureId; prize: DigPrize; repeat: boolean; coins: number; restored?: FossilFamily; stored?: boolean }
+
+/** A prize's gift as the API sends it (`parseGift` reads it). */
+export type DigGift = { id: string; content: GiftContent; reason: GiftReason | null; at: string }
+
+/** How a wall ended: what was kept, what got buried (every treasure's place, now it's over), the gifts carrying the prizes and the dry streak after. */
+export type DigEnd = { outcome: 'collapse' | 'stopped'; kept: DigReward[]; buried: DigTreasure[]; treasures: DigTreasure[]; gifts: DigGift[]; dry: number }
+
+/** One hit's answer: the cells it changed, the crack now, the treasures it finished and, if it ended the wall, how. */
+export type DigHitAnswer = { seq: number; cells: DigCell[]; crack: number; freed: number[]; end: DigEnd | null }

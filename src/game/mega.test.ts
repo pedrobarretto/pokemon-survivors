@@ -5,7 +5,8 @@ import { MEGA, MEGA_IDS, MEGA_LINES, MEGAS, megasOf, type MegaDef } from '../dat
 import manifest from '../data/sprites.generated.json'
 import { createGame, step } from './game'
 import { recomputeStats } from './leveling'
-import { createMegaState, dropMegaStones, grantStone, isFinalStage, megaPhase, tickMega } from './mega'
+import { atMegaBase, createMegaState, dropMegaStones, grantStone, isFinalStage, megaPhase, runMegas, tickMega } from './mega'
+import { NO_RANKS } from './meta'
 import { updatePickups } from './pickups'
 import { resolveSpecial, SPECIALS } from './special'
 
@@ -128,5 +129,47 @@ describe('mega evolution', () => {
     updatePickups(g, DT)
     expect(g.player.mega.stone).toBe('charizardY')
     expect(stones()).toHaveLength(0)
+  })
+})
+
+describe('the Grande Atualização Megas', () => {
+  const VIEW = { w: 480, h: 270 }
+
+  it('gives Zygarde its Mega only in a run that opened the Complete Forme, and only once it wears it', () => {
+    const closed = createGame('zygarde', VIEW, 1, NO_RANKS, undefined, { forms: ['zygarde10', 'zygarde50'] })
+    expect(runMegas(closed)).toEqual([])
+    const g = createGame('zygarde', VIEW, 1, NO_RANKS, undefined, { forms: ['zygarde10', 'zygarde50', 'zygardeComplete'] })
+    expect(runMegas(g)).toEqual(['zygarde'])
+    grantStone(g, 'zygarde')
+    expect(atMegaBase(g.player)).toBe(false)
+    g.player.legend = { ...g.player.legend!, awakened: 2 }
+    expect(atMegaBase(g.player)).toBe(true)
+  })
+
+  it("leaves the other branch's Mega behind: Froslass's for a Glalie, Glalie's for a Froslass", () => {
+    const g = createGame('snorunt', VIEW, 1)
+    expect(runMegas(g)).toEqual(['glalie', 'froslass'])
+    g.player.branch = 'froslass'
+    expect(runMegas(g)).toEqual(['froslass'])
+  })
+
+  it("plays a Mega's own ability only while the form lasts, then gives the picked one back", () => {
+    const g = createGame('absol', VIEW, 1)
+    grantStone(g, 'absolZ')
+    step(g, { move: { x: 0, y: 0 }, special: false, mega: true }, DT)
+    for (let t = 0; t <= MEGA.intro + DT; t += DT) step(g, { move: { x: 0, y: 0 }, special: false }, DT)
+    expect(g.player.mega.active).toBeGreaterThan(0)
+    expect(g.player.stats.tagDamage.slice).toBeCloseTo(0.5)
+    g.player.mega.active = DT / 2
+    step(g, { move: { x: 0, y: 0 }, special: false }, DT)
+    expect(g.player.stats.tagDamage.slice ?? 0).toBe(0)
+  })
+
+  it('calls Dondozo as Mega Tatsugiri lands, unless it just left', () => {
+    const g = createGame('tatsugiri', VIEW, 1)
+    grantStone(g, 'tatsugiri')
+    step(g, { move: { x: 0, y: 0 }, special: false, mega: true }, DT)
+    for (let t = 0; t <= MEGA.intro + 2 * DT; t += DT) step(g, { move: { x: 0, y: 0 }, special: false }, DT)
+    expect(g.player.kit?.kind === 'commander' && g.player.kit.left > 0).toBe(true)
   })
 })

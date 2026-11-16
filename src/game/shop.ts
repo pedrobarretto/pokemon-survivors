@@ -147,9 +147,17 @@ export const nextAppearance = (key: VitrineKey, from: DayKey, level: ShopLevel =
 /** Whether a shop of `level` sells `key` at all (the Everstone waits for the Shop, `bagItemLevel`). */
 export const sellsAt = (key: VitrineKey, level: ShopLevel) => key === 'egg' || key === 'style' || bagItemLevel(key) <= level
 
-/** How many of a card one save may buy on a day (the Kecleon Egg's fixed card too). */
+/** How many of a card one save may buy on a day (the Kecleon Egg's and Ovo de Viagem's fixed cards too). */
 export const vitrineStock = (key: ShopBoughtKey) =>
-  key === 'egg' ? VITRINE.eggStock : key === 'style' ? VITRINE.styleStock : key === 'kecleonEgg' ? VITRINE.kecleonEgg.prices.length : BAG_ITEMS[key].stock
+  key === 'egg'
+    ? VITRINE.eggStock
+    : key === 'style'
+      ? VITRINE.styleStock
+      : key === 'kecleonEgg'
+        ? VITRINE.kecleonEgg.prices.length
+        : key === 'travelEgg'
+          ? VITRINE.travelEgg.stock
+          : BAG_ITEMS[key].stock
 
 /** A card's price today for a save (its style card offers its own style), rounded to ₽10 after the deal; null for a style card with nothing left to offer. */
 export const vitrinePrice = (v: Vitrine, key: VitrineKey, style: StyleSave): number | null => {
@@ -197,7 +205,7 @@ export const recordVisit = (shop: ShopSave, day: DayKey): ShopSave => {
 }
 
 /** The shop as of `day`: a new day restocks and brings a new gift. */
-const onDay = (shop: ShopSave, day: DayKey): ShopSave => (shop.day === day ? shop : { ...shop, day, bought: {}, gift: false })
+export const onDay = (shop: ShopSave, day: DayKey): ShopSave => (shop.day === day ? shop : { ...shop, day, bought: {}, gift: false })
 
 /** How many of `key` a save bought on the Vitrine's day. */
 export const boughtToday = (shop: ShopSave, v: Vitrine, key: ShopBoughtKey) => onDay(shop, v.day).bought[key] ?? 0

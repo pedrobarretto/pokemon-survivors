@@ -1,5 +1,6 @@
 import { assetImage, assetUrl } from '../assets'
 import { canvasCache, context2d, createCanvas, fromStrings, lazy, type Palette, type PixelSprite } from '../engine/pixelart'
+import { PENCIL, PENCIL_PALETTE } from './pencilArt'
 import type { Medal } from '../data/achievements'
 import { ITEMS, type ItemId } from '../data/items'
 import type { BagItem } from '../game/bag'
@@ -14,6 +15,16 @@ import type { UpgradeId } from '../game/meta'
 import type { MoveId } from '../game/moves'
 import { EGG_MOVE_ICONS } from './eggMoveArt'
 import { EGG_MOVE_3_ICONS } from './eggMove3Art'
+import { SEASON_ONE_KIT_ICONS } from './seasonOneKitArt'
+import { KIT_B_ICONS } from './gaKitBArt'
+import { FOSSIL_KIT_ICONS } from './fossilKitArt'
+import { HOOK_ICONS } from './gaHookArt'
+import { GA_KIT_A_ICONS } from './gaKitAArt'
+import { REGIONAL_ICONS } from './regionalArt'
+import { ROCKET_KIT_ICONS } from './rocketKitArt'
+import { GA_KIT_MA_ICONS } from './gaKitMAArt'
+import { MEGA_KIT_B_ICONS } from './megaKitBArt'
+import { GALLOP_ICONS } from './gallopArt'
 import { EGG_MOVE_2_ICONS } from './eggMove2Art'
 import { SIGNATURE_ICONS } from './signatureArt'
 import { TM_ICONS } from './tmArt'
@@ -25,6 +36,13 @@ import type { CurseId } from '../data/curses'
 import type { SocialId } from '../site/routes'
 import { LEGENDARY_ICONS } from './legendaryArt'
 import { LEGENDARY_ICONS_2 } from './legendaryArt2'
+import { ULTRA_ICONS } from './ultraArt'
+import { PATH_LEGEND_ICONS } from './pathLegendArt'
+import { LEGENDARY_ICONS_3 } from './legendaryFx3'
+import { LEGENDARY_ICONS_4 } from './legendaryFx4'
+import { SC_KIT_ICONS } from './scKitArt'
+import { LEGENDARY_ICONS_5 } from './legendaryFx5'
+import { LEGENDARY_ICONS_6 } from './legendaryFx6'
 import * as TE from './typeEvolvedArt'
 
 /**
@@ -370,6 +388,38 @@ const KECLEON_EGG = [
   '.1222222211.',
   '..11111111..',
 ]
+/**
+ * The Ovos de Viagem: the egg's shell in its region's colors, a luggage strap
+ * buckled round its waist and the region's stamp on top (Alola's hibiscus,
+ * Galar's crown, Hisui's red seal with Mt. Coronet, Paldea's sun). 1 shade, 2 shell, 3 shine,
+ * 4 strap, 9 its shade, 5 buckle, 6 and 7 the stamp. `stamp` is five rows of
+ * five pixels, laid on rows 2 to 6, columns 5 to 9.
+ */
+const travelEgg = (stamp: readonly [string, string, string, string, string]) => {
+  const rows = [
+    '....2222....',
+    '...222222...',
+    '..23222222..',
+    '..32222222..',
+    '.2222222222.',
+    '.2222222221.',
+    '.2222222221.',
+    '222555222221',
+    '445454444449',
+    '445554444449',
+    '222222222221',
+    '122222222211',
+    '.1222222211.',
+    '..11111111..',
+  ]
+  return rows.map((row, y) => (y >= 2 && y <= 6 ? [...row].map((c, x) => (x >= 5 && x <= 9 && stamp[y - 2]![x - 5] !== '.' ? stamp[y - 2]![x - 5] : c)).join('') : row))
+}
+const TRAVEL_EGGS = {
+  alola: travelEgg(['..6..', '.666.', '66766', '.666.', '..6..']),
+  galar: travelEgg(['.....', '6.6.6', '66666', '67676', '66666']),
+  hisui: travelEgg(['.666.', '66666', '66766', '67776', '.666.']),
+  paldea: travelEgg(['6.6.6', '.777.', '67776', '.777.', '6.6.6']),
+} as const
 /** The crack that splits the shell, revealed from the middle out as hatching goes on. */
 const EGG_CRACK = ['', '', '', '', '1...1...1...', '.1.1.1.1.1.1', '..1...1...1.']
 
@@ -384,12 +434,22 @@ const EGG_PALETTES = {
   kecleon: { 1: '#2c6a30', 2: '#68c058', 3: '#c8f0a8', 4: '#d83838' },
   /** The loyalty card's Kecleon Egg, sure to hatch shiny: a golden zigzag on a deeper green shell. */
   kecleonShiny: { 1: '#1c4a20', 2: '#3c8a3c', 3: '#a8e890', 4: '#f8d030' },
+  /** The Fossil Egg: old amber with a dark fossil's spots. */
+  fossil: { 1: '#a86820', 2: '#e8a838', 3: '#f8d888', 4: '#583818' },
+  found: { 1: '#c8b890', 2: '#f8f0d8', 3: '#ffffff', 4: '#c8b890' },
+  /** The Escavação's restored fossils (never laid): a shell of sandstone with dark fossil spots. */
+  dig: { 1: '#806850', 2: '#c8b088', 3: '#e8d8b8', 4: '#4a3420' },
+  /** The Ovos de Viagem (`TRAVEL_EGGS`): Alola's sand with a sea-teal strap and a hibiscus, Galar's rose with a navy strap and a gold crown, Hisui's snow with a leather strap and a red seal, Paldea's violet with a scarlet strap and a sun. */
+  alola: { 1: '#c06830', 2: '#f8d090', 3: '#fff4d8', 4: '#28a0a0', 9: '#186868', 5: '#f8e070', 6: '#e84878', 7: '#f8e050' },
+  galar: { 1: '#802838', 2: '#d86070', 3: '#f8c0c8', 4: '#283868', 9: '#141c38', 5: '#f8d048', 6: '#f8d048', 7: '#48a0f0' },
+  hisui: { 1: '#6880a0', 2: '#bcd0e4', 3: '#f0f8ff', 4: '#8a5a30', 9: '#4a2c14', 5: '#c8c8d0', 6: '#d03028', 7: '#f8f0e8' },
+  paldea: { 1: '#583080', 2: '#9868c8', 3: '#d8c0f0', 4: '#d83830', 9: '#781810', 5: '#f8e070', 6: '#f8a020', 7: '#f8e070' },
 } as const satisfies Record<EggTier, Palette>
 
-const CRACK_COLORS = { common: '#584830', rare: '#584830', ultra: '#f8f0c0', friend: '#803048', haunted: '#78f0a8', kecleon: '#1c4020', kecleonShiny: '#1c4020' } as const satisfies Record<EggTier, string>
+const CRACK_COLORS = { common: '#584830', rare: '#584830', ultra: '#f8f0c0', friend: '#803048', haunted: '#78f0a8', kecleon: '#1c4020', kecleonShiny: '#1c4020', fossil: '#583818', found: '#584830', dig: '#4a3420', alola: '#7a3018', galar: '#481028', hisui: '#405068', paldea: '#2c1048' } as const satisfies Record<EggTier, string>
 
 /** The eggs drawn from their own rows instead of `EGG`'s spots. */
-const EGG_ROWS: Partial<Record<EggTier, readonly string[]>> = { kecleon: KECLEON_EGG, kecleonShiny: KECLEON_EGG }
+const EGG_ROWS: Partial<Record<EggTier, readonly string[]>> = { kecleon: KECLEON_EGG, kecleonShiny: KECLEON_EGG, ...TRAVEL_EGGS }
 
 /** Memoized sprite per key (one per tier and crack stage). */
 const eggCache = canvasCache<string, PixelSprite>()
@@ -661,6 +721,12 @@ const MOVE_ICON_ART: Record<MoveId, () => PixelSprite> = {
   ...VERB_EVOLVED_ICONS,
   ...LEGENDARY_ICONS,
   ...LEGENDARY_ICONS_2,
+  ...ULTRA_ICONS,
+  ...PATH_LEGEND_ICONS,
+  ...LEGENDARY_ICONS_3,
+  ...LEGENDARY_ICONS_4,
+  ...LEGENDARY_ICONS_5,
+  ...LEGENDARY_ICONS_6,
   ember: () => FX.ember()[0]!,
   fireSpin: () => FX.flame()[0]!,
   waterGun: () => FX.water(),
@@ -732,6 +798,17 @@ const MOVE_ICON_ART: Record<MoveId, () => PixelSprite> = {
   outrage: () => outlined(FX.dragonFlame()[0]!, '#180840'),
   ...EGG_MOVE_ICONS,
   ...EGG_MOVE_3_ICONS,
+  ...SEASON_ONE_KIT_ICONS,
+  ...KIT_B_ICONS,
+  ...HOOK_ICONS,
+  ...GA_KIT_A_ICONS,
+  ...REGIONAL_ICONS,
+  ...ROCKET_KIT_ICONS,
+  ...GA_KIT_MA_ICONS,
+  ...MEGA_KIT_B_ICONS,
+  ...GALLOP_ICONS,
+  ...FOSSIL_KIT_ICONS,
+  ...SC_KIT_ICONS,
   jawLock: () => art([...TE.MAW_TOP, ...TE.MAW_BOTTOM], TE.MAW, '#d8c0e8'),
   superpower: () => art(TE.BIG_FIST, TE.FIST_PAL, '#281010'),
   fissure: () => art(...TE.FISSURE_ICON, '#181818'),
@@ -754,6 +831,19 @@ const MOVE_ICON_ART: Record<MoveId, () => PixelSprite> = {
   alluringVoice: () => compose(15, 15, [[art(TE.heartRing(15), TE.HEART_PAL, '#401020'), 0, 0], [FX.heart(), 3, 3]]),
   ...EGG_MOVE_2_ICONS,
   ...DUO_ICONS,
+  powderSnow: () => FX.snowflake(),
+  flareBlitz: () => FX.flame()[0]!,
+  dazzlingGleam: () => art(STAR, { 1: '#b878d8', 2: '#f8b8e0', 3: '#ffffff' }, '#402060'),
+  electroweb: () => art(CHAIN, { 2: '#c8e830', 3: '#ffffff' }, '#383810'),
+  corrosiveGas: () => VERB_FX.glob(),
+  magicCoat: () => FX.heart(),
+  appleAcid: () => FX.leaf(),
+  icicleSpear: () => FX.icicle(),
+  headSmash: () => FX.boulder(),
+  ironDefense: () => VERB_FX.gear()[0]!,
+  dualWingbeat: () => VERB_FX.feather(),
+  bite: () => FX.jaws().top,
+  auroraVeil: () => art(FROST_RING, { 1: '#a8f0ff' }, '#3878a8'),
 }
 
 /* ---------------- Item icons ---------------- */
@@ -1150,6 +1240,10 @@ const OG_PLATE = ['.111111111.', '12332223331', '13223232221', '13223232331', '1
 
 /** The OG Supporters' badge (`badgesOf`), worn beside the tier's heart. 11 px wide: shown at 1.5× or 2× its size, like the hearts beside it. */
 export const ogIcon = () => toIconUrl('og', () => art(OG_PLATE, { 1: '#201030', 2: '#6038a8', 3: '#ffe070', 4: '#e8a020' }))
+/** The Pokédex's "art on its way" mark for the species SpriteCollab hasn't drawn yet (`ui/pokedex.ts`), from `render/pencilArt.ts`. */
+export const pencilSprite = lazy(() => art(PENCIL, PENCIL_PALETTE))
+export const pencilIcon = () => toIconUrl('pencil', pencilSprite)
+
 export const sparkleIcon = () => toIconUrl('sparkle', () => outlined(SPARKLE()[2]!, '#584010'))
 
 /** The joystick's padlock (`ui/stickLock.ts`): the stick's ring and knob with a padlock on its shoulder, gold and shut when the stick is fixed, gray and open when it follows the thumb. */

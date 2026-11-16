@@ -1,4 +1,15 @@
 import { retain } from '../engine/math'
+import { seasonKitDeltas } from './seasonOneKitRules'
+import { kitBDeltas } from './gaKitBRules'
+import { kitFDeltas } from './fossilKitRules'
+import { kitMADeltas } from './gaKitMARules'
+import { kitSCDeltas } from './scKitRules'
+import { kitHDeltas, linkDeltas } from './gaHookRules'
+import { gaKitADeltas } from './gaKitARules'
+import { rocketKitDeltas } from './rocketKitRules'
+import { megaKitBDeltas } from './megaKitBRules'
+import { rocketEvolves } from './rocketKitSystem'
+import { variantDeltas } from './shadow'
 import type { Rng } from '../engine/rng'
 import { evolvedFrom, readyEvolutions } from '../data/evolutions'
 import { ITEM_IDS, ITEMS, type ItemDef, type ItemId } from '../data/items'
@@ -27,6 +38,7 @@ import { bagDeltas } from './bag'
 import { rulesOf, versusStats } from './versusRules'
 import type { VersusState } from './versus'
 import { BAG_ITEMS } from '../data/shop'
+import { needsSwap, restingItems, swapItems } from './itemDrop'
 import { ownAttack, setPhase } from './players'
 import type { Game, Offer, OwnedItem, OwnedMove, PrizeSource, Rarity } from './types'
 
@@ -58,7 +70,7 @@ export const gainXp = (g: Game, amount: number, growth = g.player.stats.growth) 
  * `banished`: moves forgotten this run (Esquecer) or fused into a duo move,
  * and `banishedItems` the items forgotten, never offered again (kept apart:
  * Metronome is a move and an item). `curses`: the cursed items held (Choice Band
- * stops new moves).
+ * stops new moves). `resting`: items dropped lately (`DROP_REST` in `itemDrop.ts`), left out for now.
  */
 export type Loadout = {
   starter: PlayableId
@@ -69,6 +81,7 @@ export type Loadout = {
   fresh?: boolean
   banished?: ReadonlySet<MoveId>
   banishedItems?: ReadonlySet<ItemId>
+  resting?: readonly ItemId[]
   curses?: readonly CurseId[]
   /** The Arena's kit (`versusPacing.ts`): it learns new moves on its own screens, so the level-up offers none, nor duo fusions. */
   kit?: boolean
@@ -83,12 +96,13 @@ export const loadout = (g: Game): Loadout => ({
   fresh: g.player.freshMoves > 0,
   banished: g.player.banished,
   banishedItems: g.player.banishedItems,
+  resting: restingItems(g.player),
   curses: g.player.curses.held,
   kit: g.player.versus !== undefined,
 })
 
 /** Every upgrade the player could pick right now, with selection weights. */
-export const offerPool = ({ starter, moves, items, stage, branch = null, fresh, banished, banishedItems, curses, kit }: Loadout): Array<readonly [Offer, number]> => {
+export const offerPool = ({ starter, moves, items, stage, branch = null, fresh, banished, banishedItems, resting, curses, kit }: Loadout): Array<readonly [Offer, number]> => {
   const ownedMoves = new Map(moves.map((m) => [m.id, m.level]))
   const ownedItems = new Map(items.map((i) => [i.id, i.level]))
   const learnset = runLearnset(starter, branch, stage)
@@ -113,12 +127,14 @@ export const offerPool = ({ starter, moves, items, stage, branch = null, fresh, 
     !learnset.includes(m.id) && !banished?.has(m.id) && m.level < maxMoveLevel(m.id) ? [[{ kind: 'move', id: m.id, level: m.level + 1 }, UPGRADE_WEIGHT]] : [],
   )
 
+  // A full build is still offered a held move's paired item, to swap in (`swapItems`): the shell asks which item goes.
+  const swaps = swapItems(moves, items)
   const itemOffers = ITEM_IDS.flatMap((id: ItemId): Array<readonly [Offer, number]> => {
-    if (banishedItems?.has(id)) return []
+    if (banishedItems?.has(id) || resting?.includes(id)) return []
     const level = ownedItems.get(id)
     const def: ItemDef = ITEMS[id]
     if (level === undefined && def.boosts && !learnsetTypes.has(def.boosts)) return []
-    if (level === undefined) return items.length < MAX_ITEMS ? [[{ kind: 'item', id, level: 1 }, 0.8]] : []
+    if (level === undefined) return items.length < MAX_ITEMS || swaps.includes(id) ? [[{ kind: 'item', id, level: 1 }, 0.8]] : []
     return level < ITEMS[id].levels.length ? [[{ kind: 'item', id, level: level + 1 }, 1]] : []
   })
 
@@ -216,6 +232,8 @@ export const rollOffers = (loadout: Loadout, rng: Rng, count = 3, opts: RollOpti
     picked.push(pool[index]![0])
     pool.splice(index, 1)
   }
+  // Swap cards alone never force a swap: the berry sits beside them.
+  if (picked.length > 0 && picked.length < count && picked.every((o) => needsSwap(loadout, o))) picked.push({ kind: 'berry' })
   const shinyOdds = opts.shiny
   const offers = shinyOdds === undefined ? picked : picked.map((o) => withRarity(o, rng(), shinyOdds, opts.rare))
   return offers.length > 0 ? offers : [{ kind: 'berry' }]
@@ -264,7 +282,7 @@ export const recomputeStats = (g: Game) => {
   const before = p.stats.maxHp
   const deltas = applyDeltas(BASE_STATS, [
     ...starterDeltas(p.starter, p.stage, p.branch),
-    ...(p.legend ? awakeningDeltas(p.legend.id, p.legend.awakened) : []),
+    ...(p.legend ? awakeningDeltas(p.legend.id, p.legend.awakened, p.legend.forms) : []),
     ...rankDeltas(p.ranks),
     ...p.items.flatMap((i) => ITEMS[i.id].levels.slice(0, i.level)),
     ...buffDeltas(p.buffs),
@@ -274,6 +292,17 @@ export const recomputeStats = (g: Game) => {
     ...(p.mega.active > 0 && p.mega.stone ? [MEGAS[p.mega.stone].stats] : []),
     ...p.curses.held.map((id) => CURSES[id].stats),
     ...bagDeltas(p.bag),
+    ...seasonKitDeltas(p.kit),
+    ...kitBDeltas(p.kitB, p.stage),
+    ...kitSCDeltas(p.kitSC, p.stage),
+    ...kitHDeltas(p.kitH, p.stage, p.branch),
+    ...linkDeltas(g.coop !== null && g.coop.plusMinus.on, p.starter),
+    ...gaKitADeltas(p.kitA, p.stage),
+    ...rocketKitDeltas(p.rocket),
+    ...kitFDeltas(p.kitF, p.stage),
+    ...kitMADeltas(p.kitMA),
+    ...megaKitBDeltas(p.megaB),
+    ...variantDeltas(p.variant),
   ])
   // A held evolution (no item for any branch yet) is as strong as with an Everstone.
   const stats = boostStats(stanceStats(deltas, p.special.stance), p.boost + (p.evoHeld ? BAG_ITEMS.everstone.effect.everstone : 0))
@@ -306,7 +335,8 @@ export const applyOffer = (g: Game, offer: Offer) => {
     case 'item': {
       const owned = p.items.find((i) => i.id === offer.id)
       if (owned) owned.level = offer.level
-      else p.items.push({ id: offer.id, level: offer.level })
+      // A swap card drops an item first (`dropItem`); never past the slots.
+      else if (p.items.length < MAX_ITEMS) p.items.push({ id: offer.id, level: offer.level })
       recomputeStats(g)
       break
     }
@@ -392,7 +422,10 @@ export const pendingEvolution = (g: Game) => {
   if (p.everstone || p.stage + 1 >= PLAYABLE[p.starter].line.length) return null
   const stage = formAt(p.starter, p.branch, p.stage)
   const next = formAt(p.starter, p.branch, p.stage + 1)
+  // A branch that ends its line early (Flapple, Appletun) has nowhere further to go.
+  if (next.dex === stage.dex) return null
   // The Arena evolves at its format's own levels (`FormatRules.evolveAt`).
   const at = p.versus && g.versus ? versusEvolveAt(g.versus, p.stage) : stage.evolveAt
-  return at !== undefined && p.level >= at ? { from: stage.dex, to: next.dex } : null
+  // Gimmighoul's line evolves on its coins too (`rocketEvolves`).
+  return (at !== undefined && p.level >= at) || rocketEvolves(p) ? { from: stage.dex, to: next.dex } : null
 }

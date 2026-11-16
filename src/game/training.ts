@@ -23,6 +23,7 @@ import { shelfTms } from './tmShelf'
 import { createTraitState } from './traits'
 import { setArchetype } from './terrain'
 import type { DamageSource, Enemy, Game } from './types'
+import { finiteDummies, trialKnockout, updateTrial, type TrialRun } from './towerTrial'
 
 /**
  * The Dojo: a run with no horde, no clock and no harm, where the player sets
@@ -39,8 +40,8 @@ import type { DamageSource, Enemy, Game } from './types'
 /** The Dojo's state on the run (`Game.training`; null in every other run). */
 export type Training = {
   target: TrainingTarget
-  /** Where the dummies stand, by enemy id (a dummy that fainted anyway is replaced at its post). */
-  posts: { id: number; x: number; y: number }[]
+  /** Where the dummies stand, by enemy id (a dummy that fainted anyway is replaced at its post; in a Torre trial with HP of their own, `down` for good). */
+  posts: { id: number; x: number; y: number; down?: true }[]
   /** Where the player started: the dummies stand around it. */
   home: Vec
   /** Where the dummies stand from it: a unit direction and how far (world px), so the shell keeps them clear of its panel. */
@@ -49,6 +50,8 @@ export type Training = {
   lens: Vec
   /** The lens the camera shows now, easing to `lens` (`trainingCamera`). */
   shown: Vec
+  /** A Torre trial under way (`game/towerTrial.ts`), or null for free training. */
+  trial: TrialRun | null
 }
 
 /** Which way from the player's start the dummies stand, and how far. */
@@ -87,7 +90,7 @@ const spawnDummy = (g: Game, target: TrainingTarget, at: Vec): Enemy => {
 export const startTraining = (g: Game, target: TrainingTarget = TRAINING.target, count: number = TRAINING.counts[0], aim: Aim = AHEAD) => {
   const p = g.player
   setArchetype(g, 'route')
-  g.training = { target, posts: [], home: { x: p.x, y: p.y }, aim, lens: { x: 0, y: 0 }, shown: { x: 0, y: 0 } }
+  g.training = { target, posts: [], home: { x: p.x, y: p.y }, aim, lens: { x: 0, y: 0 }, shown: { x: 0, y: 0 }, trial: null }
   setDummies(g, target, count)
 }
 
@@ -135,18 +138,27 @@ export const updateTraining = (g: Game, dt: number) => {
   for (const p of g.players) p.hp = p.stats.maxHp
   // The screen flash (a Mega Evolution's burst) fades here: a run does it in `updateConsumables`, which the Dojo's tick skips.
   g.flash = Math.max(0, g.flash - dt * 2.5)
+  updateTrial(g, dt)
+  const finite = finiteDummies(g)
   const k = Math.min(1, TRAINING.spring * dt)
   for (const post of t.posts) {
+    if (post.down) continue
     let e = g.enemies.find((x) => x.id === post.id)
     if (!e || e.dying >= 0) {
+      // A trial's armored dummy that falls stays down: one more knocked out.
+      if (finite) {
+        post.down = true
+        trialKnockout(g)
+        continue
+      }
       e = spawnDummy(g, t.target, post)
       post.id = e.id
     }
-    e.hp = e.maxHp
+    if (!finite) e.hp = e.maxHp
     e.x += (post.x - e.x) * k
     e.y += (post.y - e.y) * k
   }
-  retain(g.enemies, (e) => e.dying < 0 || t.posts.some((p) => p.id === e.id))
+  retain(g.enemies, (e) => e.dying < 0 || t.posts.some((p) => p.id === e.id && !p.down))
   g.pickups.length = 0
 }
 

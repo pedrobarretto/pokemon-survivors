@@ -1,5 +1,6 @@
 import { dir8, dirTo, retain } from '../engine/math'
-import { clearGrid, insert, query } from '../engine/spatial'
+import { clearGrid, insert } from '../engine/spatial'
+import { separate } from './separation'
 import { ENEMIES, type EnemyDef, type EnemyId } from '../data/enemies'
 import { scaling } from '../data/waves'
 import { STANCES } from '../data/bosses'
@@ -11,6 +12,7 @@ import { leadTime } from './horde'
 import { inView } from './queries'
 import { isSpitter, spitBand, spitterStride } from './spitters'
 import { CONFUSE_BUMP, CONFUSE_CONTACT, createStatus, isFrozen, statusAttack, statusPace } from './status'
+import { miceLure } from './seasonOneKitSystem'
 import { enemyGroundPace } from './terrain'
 import { createTraitState, isAirborne, traitPace } from './traits'
 import { dungeonNav } from './dungeon'
@@ -20,9 +22,8 @@ import { actAs, inPlay, nearestPlayer, nearestSeen, onAnyScreen, ownerOf, standi
 import { coopScale } from './coop'
 import { COOP } from '../data/coop'
 import type { DamageSource, Enemy, EnemyBehavior, Game } from './types'
+import { roamStep } from './roamers'
 import * as dm from '../engine/dmath'
-
-const neighbors: number[] = []
 
 /** Body radius derived from the sprite so big Pokémon take up more space. */
 export const radiusFor = (dex: number) => Math.max(5, dm.round(bodyOf(dex).bodyW * 0.32))
@@ -92,6 +93,14 @@ export const blastHorde = (g: Game, force: number) => {
   }
 }
 
+/**
+ * Whether a foe may be moved by its own script while the grid is sealed
+ * (`sealBounds`, `updateAttacks`), without widening its cell: a boss (a
+ * teleport, a park, a phase's home), a fight's partner, an Arena avatar (a
+ * respawn). Its cell is always read, and it is read again.
+ */
+export const movesOnItsOwn = (e: Enemy) => e.boss || e.fight !== null || e.behavior.kind === 'avatar'
+
 export const rebuildGrid = (g: Game) => {
   clearGrid(g.grid)
   g.enemies.forEach((e, i) => {
@@ -108,6 +117,10 @@ const LOST_PACE = 0.55
 const SHY_FEAR = 110
 /** A thrown foe stops hurting others once its knockback drops under this speed (px/s). */
 const THROWN_MIN = 90
+/** Whether a foe pushes off its neighbors and is pushed (`separate`): not while fainting, in the air or as an Arena avatar. */
+const separates = (e: Enemy) => e.dying < 0 && !isAirborne(e) && e.behavior.kind !== 'avatar'
+/** Whether a foe can be bumped into: not while fainting or in the air. */
+const bumpable = (o: Enemy) => o.dying < 0 && !isAirborne(o)
 
 /** A thrown foe crashing into `o` (once per throw, passing some of its momentum), or a confused one bumping it. */
 const bodyBlow = (g: Game, e: Enemy, o: Enemy) => {
@@ -153,6 +166,8 @@ const mateOf = (g: Game, e: Enemy) => {
 const caveNavs: ReturnType<typeof dungeonNav>[] = []
 /** Where a walker heads instead of the player (a dungeon's corridor), reused every tick. */
 const waypoint = { x: 0, y: 0 }
+/** Where a roaming lake legend heads this tick (`roamStep`), reused every tick. */
+const roaming = { x: 0, y: 0 }
 /** Where a boss with phases heads (`steerBoss`), reused every tick. */
 const steering: Steering = { x: 0, y: 0, pace: 1 }
 
@@ -228,6 +243,12 @@ export const updateEnemies = (g: Game, dt: number) => {
       } else if (isSpitter(e)) {
         speed = pace * spitterStride(dm.hypot(p.x - e.x, p.y - e.y), inView(g, e.x, e.y, -TRAITS.spitter.inset), band)
       }
+      // Tandemaus' mice draw the regular horde off the player (`miceLure`).
+      const mouse = miceLure(g, e, dt)
+      if (mouse) {
+        tx = mouse.x
+        ty = mouse.y
+      }
       if (nav && cave && nav(e.x - cave.x, e.y - cave.y, waypoint)) {
         tx = cave.x + waypoint.x
         ty = cave.y + waypoint.y
@@ -264,6 +285,11 @@ export const updateEnemies = (g: Game, dt: number) => {
       const speed = b.leash <= 0 && home < 2 ? 0 : near || home > b.leash ? pace : pace * 0.45
       vx = frozen ? 0 : dx * speed
       vy = frozen ? 0 : dy * speed
+    } else if (e.behavior.kind === 'roam') {
+      // A roaming lake legend (`roamers.ts`) runs, circles or stands as its quirk says.
+      roamStep(g, e, p, frozen ? 0 : pace, roaming)
+      vx = roaming.x
+      vy = roaming.y
     } else if (e.behavior.kind === 'camp') {
       // Versus's wild: home until hit, then after whoever hit it within its leash; back home it rests and heals.
       const b = e.behavior
@@ -303,31 +329,19 @@ export const updateEnemies = (g: Game, dt: number) => {
     }
   }
 
-  // Separation: overlapping enemies push each other apart so hordes form rings, not blobs.
-  // A pass over the horde as it stood (as `forEach` walks it): a foe added meanwhile waits for the next tick.
+  // Separation: overlapping enemies push each other apart so hordes form rings, not blobs (`separate`);
+  // a thrown or confused one bumping into another lands a body blow.
+  separate(g.enemies, separates, bumpable, (e, o) => {
+    if (e.thrown || e.status.confuse.time > 0) bodyBlow(g, e, o)
+  })
+
+  // Then bodies keep out of the players and deal contact damage: a pass over the horde as it stood
+  // (as `forEach` walks it), so a foe added meanwhile waits for the next tick.
   const horde = g.enemies
   const count = horde.length
   for (let i = 0; i < count; i++) {
     const e = horde[i]
-    if (e === undefined || e.dying >= 0 || isAirborne(e) || e.behavior.kind === 'avatar') continue
-    for (const j of query(g.grid, e.x, e.y, e.radius * 2, neighbors)) {
-      if (j === i) continue
-      const o = g.enemies[j]!
-      const dx = e.x - o.x
-      const dy = e.y - o.y
-      const min = (e.radius + o.radius) * 0.8
-      const d2 = dx * dx + dy * dy
-      // Most of a crowded cell is out of reach: that's settled before looking any closer.
-      if (d2 >= min * min || o.dying >= 0 || isAirborne(o)) continue
-      if (e.thrown || e.status.confuse.time > 0) bodyBlow(g, e, o)
-      if (d2 === 0) continue
-      const d = Math.sqrt(d2)
-      const push = ((min - d) / d) * (o.mass / (e.mass + o.mass)) * 0.5
-      e.x += dx * push
-      e.y += dy * push
-    }
-
-    // Keep bodies out of the players and deal contact damage.
+    if (e === undefined || !separates(e)) continue
     for (const p of g.players) {
       if (!standing(g, p)) continue
       const dx = e.x - p.x
@@ -338,7 +352,7 @@ export const updateEnemies = (g: Game, dt: number) => {
       const d = Math.sqrt(d2) || 1
       e.x = p.x + (dx / d) * reach
       e.y = p.y + (dy / d) * reach
-      const attack = e.behavior.kind === 'shy' ? 0 : statusAttack(e.status)
+      const attack = e.behavior.kind === 'shy' || e.behavior.kind === 'roam' ? 0 : statusAttack(e.status)
       // A camp's wild Pokémon bites only the one it turned on.
       if (attack <= 0 || (e.behavior.kind === 'camp' && e.behavior.target !== p.slot)) continue
       const before = actAs(g, p)

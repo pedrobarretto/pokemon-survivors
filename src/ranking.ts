@@ -6,6 +6,7 @@ import type { Difficulty } from './game/difficulty'
 import { isRecord } from './game/parse'
 import { isDayKey, type DayKey } from './game/day'
 import { isOutbreakSpecies } from './game/outbreak'
+import { isUltraBeast, type UltraBeast } from './data/ultraBeasts'
 import { isPlayable, parseChallengePlace, parseRunResult, rankable, type Board, type BoardPeriod, type ChallengeBoard, type ChallengePlace, type ProfileRun, type PublicProfile, type RunMode, type RunRanks, type RunResult } from './game/ranking'
 import { firstTouch, landingRef, parseInvites, REF_PARAM } from './game/referral'
 import { RULES_VERSION, type Recorder, type Replay } from './game/replay'
@@ -15,6 +16,7 @@ import { locale } from './i18n'
 import { timeoutSignal } from './net/timeout'
 import { TEAM_SIZE_KEYS, type CoopBoard, type CoopBoardEntry, type CoopChallengeBoard, type TeamSize } from './game/coopBoard'
 import { fakeCoopBoard, fakeCoopChallengeBoard } from './coopBoardFakes'
+import { fakeEra1Board, fakeEra1CoopBoard } from './era1Fakes'
 
 /**
  * Ranked runs and the public side of accounts (boards, profiles, follows),
@@ -281,11 +283,11 @@ const DAY_HOLD_MS = 20 * 3600 * 1000
 /** How long a ticket has been held, by both clocks (sleep can stall the monotonic one, a clock fix jumps the wall one). */
 const heldFor = (t: Ticket) => Math.max(Date.now() - t.dealt.wall, performance.now() - t.dealt.mono)
 
-/** What a ticket tells its run: its seed, plus its day (outbreak and haunting) while it holds. */
+/** What a ticket tells its run: its seed, plus its day (outbreak, haunting and the Ultra Beast of the week) while it holds. */
 const planOf = (t: Ticket): TicketPlan =>
   heldFor(t) < DAY_HOLD_MS
-    ? { seed: t.seed, outbreak: t.outbreak, halloween: t.halloween }
-    : { seed: t.seed, outbreak: null, halloween: null }
+    ? { seed: t.seed, outbreak: t.outbreak, halloween: t.halloween, ultra: t.ultra }
+    : { seed: t.seed, outbreak: null, halloween: null, ultra: null }
 
 /**
  * A ticket held longer than this is asked for again when the menus prefetch:
@@ -295,8 +297,8 @@ const planOf = (t: Ticket): TicketPlan =>
  */
 const FRESH_MS = 2 * 60 * 1000
 
-/** What a ticket in hand tells the next run: its seed, outbreak and haunting (null: the game's own). */
-export type TicketPlan = { seed: number | null; outbreak: EnemyId | null; halloween: boolean | null }
+/** What a ticket in hand tells the next run: its seed, outbreak, haunting and Ultra Beast of the week (null: the game's own). */
+export type TicketPlan = { seed: number | null; outbreak: EnemyId | null; halloween: boolean | null; ultra: UltraBeast | null }
 
 type TicketKind = 'regular' | 'challenge'
 
@@ -330,9 +332,10 @@ const requestTicket = async (userId: string, day: DayKey | null): Promise<Ticket
   const seed = typeof body.seed === 'number' && Number.isSafeInteger(body.seed) ? body.seed : null
   const outbreak = isOutbreakSpecies(body.outbreak) ? body.outbreak : null
   const halloween = typeof body.halloween === 'boolean' ? body.halloween : null
+  const ultra = isUltraBeast(body.ultra) ? body.ultra : null
   // An API older than this answers no `rules`.
   if (typeof body.rules === 'number' && body.rules > RULES_VERSION) rulesBehind()
-  return { userId, day, token: body.token, seed, outbreak, halloween, dealt: { wall: Date.now(), mono: performance.now() } }
+  return { userId, day, token: body.token, seed, outbreak, halloween, ultra, dealt: { wall: Date.now(), mono: performance.now() } }
 }
 
 /** The first wait before asking again for a ticket that didn't come, doubled on each miss up to `ASK_RETRY_MAX_MS`. */
@@ -513,7 +516,7 @@ export const startRanked = async (challenge: DayKey | null = null, slow: (skip: 
   }
   stopAsking()
   const ticket = held[kind]
-  if (!fits(ticket, challenge)) return { seed: null, outbreak: null, halloween: null, ranked: unranked }
+  if (!fits(ticket, challenge)) return { seed: null, outbreak: null, halloween: null, ultra: null, ranked: unranked }
   held[kind] = null
   const { token } = ticket
   // 409: another tab or device got a newer token since, so this one can't report.
@@ -587,6 +590,7 @@ const knownProfile = (p: PublicProfile): PublicProfile => ({
 
 /** A board, or null when the API can't be reached. Friends boards need an account. */
 export const fetchBoard = async (f: BoardFilter): Promise<Board | null> => {
+  if (era1Faked !== null && f.period === 'era1') return fakeEra1Board(f.mode, era1Faked)
   const params = new URLSearchParams({ period: f.period, ...(f.mode === 'legend' ? { mode: f.mode } : {}), ...(f.starter ? { starter: f.starter } : {}), ...(f.friends ? { friends: '1' } : {}) })
   const { body } = await read(`/boards/${f.difficulty}?${params}`, await sessionToken())
   // Our own API: a quick look at the shape is enough, past the Pokémon the screens draw.
@@ -597,6 +601,13 @@ export const fetchBoard = async (f: BoardFilter): Promise<Board | null> => {
 export const fetchChallengeBoard = async (day: DayKey, friends = false): Promise<ChallengeBoard | null> => {
   const { body } = await read(`/challenge/${day}${friends ? '?friends=1' : ''}`, await sessionToken())
   return isRecord(body) && Array.isArray(body.entries) && typeof body.total === 'number' ? knownBoard(body as ChallengeBoard) : null
+}
+
+/** Dev: the Era 1 boards answer made-up ones of this many players (`era1Fakes.ts`, `ps.era1('fake')`); null asks the API. */
+let era1Faked: number | null = null
+
+export const fakeEra1Boards = (field: number | null) => {
+  era1Faked = field
 }
 
 /* ---------------- Co-op boards ---------------- */
@@ -626,6 +637,7 @@ const knownCoopBoard = <B extends CoopBoard | CoopChallengeBoard>(body: unknown)
 
 /** A co-op board (`GET /coop/boards/:difficulty`), or null when the API can't be reached. Guests read the public ones; friends needs an account. */
 export const fetchCoopBoard = async (f: CoopBoardFilter): Promise<CoopBoard | null> => {
+  if (era1Faked !== null && f.period === 'era1') return fakeEra1CoopBoard(f.size, f.difficulty, era1Faked)
   if (coopFaked) return fakeCoopBoard(f.size, f.difficulty, f.period)
   const params = new URLSearchParams({ size: TEAM_SIZE_KEYS[f.size], period: f.period, ...(f.friends ? { friends: '1' } : {}) })
   const { body } = await read(`/coop/boards/${f.difficulty}?${params}`, await sessionToken())

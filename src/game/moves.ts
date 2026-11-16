@@ -4,7 +4,7 @@ import type { PokeType } from '../data/types'
 import { spawnAttack } from './spawn'
 import { damageEnemy } from './combat'
 import { enemiesInView, nearestEnemy } from './queries'
-import { NO_BONUS, type DamageBonus, type StackRule } from './kitRules'
+import { NO_BONUS, softCooldown, type DamageBonus, type StackRule } from './kitRules'
 import {
   CHAIN_JUMP, CHAIN_RANGE, chainDamage, chainTargets, HEX_BONUS, LUNGE_IFRAMES, LUNGE_MIN_COOLDOWN, LUNGE_OVERSHOOT,
   LUNGE_SEEK, LUNGE_TIME, lungeLength, lungeTarget, mineCap,
@@ -17,13 +17,32 @@ import { scaleStatus, type StatusSpec } from './status'
 import { SIGNATURE_MOVES } from './signatureMoves'
 import { EGG_MOVES_3 } from './eggMoves3'
 import { SKETCH_MOVES } from './sketch'
+import { SEASON_ONE_EGG_MOVES } from './seasonOneEggMoves'
+import { SEASON_ONE_KIT_MOVES } from './seasonOneKitMoves'
+import { GA_KIT_B_MOVES } from './gaKitBMoves'
+import { FOSSIL_KIT_MOVES } from './fossilKitMoves'
+import { SC_KIT_MOVES } from './scKitMoves'
+import { GA_KIT_A_MOVES } from './gaKitAMoves'
+import { GA_HOOK_MOVES } from './gaHookMoves'
+import { REGIONAL_MOVES } from './regionalMoves'
+import { ROCKET_KIT_MOVES } from './rocketKitMoves'
+import { GA_KIT_MA_MOVES } from './gaKitMAMoves'
+import { GALLOP_MOVES } from './gallopMoves'
+import { MEGA_KIT_B_MOVES } from './megaKitBMoves'
 import { TM_MOVES } from './tmMoves'
 import { SHOP_TM_MOVES } from './shopTmMoves'
+import { SHOP_TM_MOVES_2 } from './shopTmMoves2'
 import { VERB_EVOLVED_MOVES } from './verbEvolutions'
 import { EGG_MOVES_2 } from './eggMoves2'
 import { DUO_MOVES } from './duoMoves'
 import { LEGENDARY_MOVES } from './legendaryMoves'
 import { LEGENDARY_MOVES_2 } from './legendaryMoves2'
+import { ULTRA_MOVES } from './ultraMoves'
+import { PATH_LEGEND_MOVES } from './pathLegendMoves'
+import { LEGENDARY_MOVES_3 } from './legendaryMoves3'
+import { LEGENDARY_MOVES_4 } from './legendaryMoves4'
+import { LEGENDARY_MOVES_5 } from './legendaryMoves5'
+import { LEGENDARY_MOVES_6 } from './legendaryMoves6'
 import { beatOf } from './signatureRules'
 import { stacksOf } from './kitRules'
 import * as dm from '../engine/dmath'
@@ -110,8 +129,8 @@ export type MoveDef = {
   onGuard?: (g: Game, s: CastStats, owned: OwnedMove, from?: Enemy) => void
   /** A burrow it started (`burrow` in `moveKit.ts`) ended: come back out, usually with a hit. */
   emerge?: (g: Game, s: CastStats, owned: OwnedMove) => void
-  /** One of its hitboxes `a` landed a hit on `e` (after the damage): ramp it up, grow it, shake the screen. */
-  onHit?: (g: Game, a: Attack, e: Enemy) => void
+  /** One of its hitboxes `a` landed a hit on `e` (after the damage): ramp it up, grow it, shake the screen. `unhurt`: `e` had all its HP before this hit (a first strike). */
+  onHit?: (g: Game, a: Attack, e: Enemy, unhurt?: boolean) => void
 }
 
 /**
@@ -2300,11 +2319,76 @@ export const MOVES = {
   ...LEGENDARY_MOVES,
   /* ---------- Legendary moves, second batch: the trios, Mewtwo and Arceus (`legendaryMoves2.ts`) ---------- */
   ...LEGENDARY_MOVES_2,
+  ...ULTRA_MOVES,
+  /* ---------- Legendary moves, third batch: the path legends (`pathLegendMoves.ts`) ---------- */
+  ...PATH_LEGEND_MOVES,
+  /* ---------- Legendary moves, third batch: Palkia, the lake trio, the Swords of Justice, Keldeo and Hoopa (`legendaryMoves3.ts`) ---------- */
+  ...LEGENDARY_MOVES_3,
+  /* ---------- Legendary moves, fourth batch: Manaphy (`legendaryMoves4.ts`) ---------- */
+  ...LEGENDARY_MOVES_4,
+  ...LEGENDARY_MOVES_5,
+  /* ---------- Legendary moves, sixth batch: the Ruínas da Decisão's Regis and the Forces of Nature (`legendaryMoves6.ts`) ---------- */
+  ...LEGENDARY_MOVES_6,
   /* ---------- Smeargle's Sketch, the Kecleon Egg's signature (`sketch.ts`) ---------- */
   ...SKETCH_MOVES,
+  ...SEASON_ONE_EGG_MOVES,
+  ...SEASON_ONE_KIT_MOVES,
+  ...GA_KIT_B_MOVES,
+  ...SC_KIT_MOVES,
+  ...GA_KIT_A_MOVES,
+  ...REGIONAL_MOVES,
+  ...ROCKET_KIT_MOVES,
+  /* ---------- Ponyta's gallop batch and its evolutions (`gallopMoves.ts`) ---------- */
+  ...GALLOP_MOVES,
+  /* ---------- The fossil families' signatures (`fossilKitMoves.ts`) ---------- */
+  ...FOSSIL_KIT_MOVES,
+  /* ---------- The Mega families' signatures (`gaKitMAMoves.ts`) ---------- */
+  ...GA_KIT_MA_MOVES,
+  /* ---------- The big update's Mega families (`megaKitBMoves.ts`) ---------- */
+  ...MEGA_KIT_B_MOVES,
+  /* ---------- The wave's hook families (`gaHookMoves.ts`) ---------- */
+  ...GA_HOOK_MOVES,
 } as const satisfies Record<string, MoveDef>
 
 export type MoveId = keyof typeof MOVES
+
+/**
+ * Every table `MOVES` is assembled from (and `SHOP_TM_MOVES_2`, which
+ * `SHOP_TM_MOVES` spreads), by name. A spread lets a later table, or a move
+ * written in `MOVES` itself, silently take over an id: `moveTables.test.ts`
+ * holds that each id here is the move `MOVES` keeps. A new table goes here too.
+ */
+export const MOVE_TABLES: Readonly<Record<string, Readonly<Record<string, MoveDef>>>> = {
+  SIGNATURE_MOVES,
+  EGG_MOVES_3,
+  TM_MOVES,
+  SHOP_TM_MOVES,
+  SHOP_TM_MOVES_2,
+  VERB_EVOLVED_MOVES,
+  EGG_MOVES_2,
+  DUO_MOVES,
+  LEGENDARY_MOVES,
+  LEGENDARY_MOVES_2,
+  ULTRA_MOVES,
+  PATH_LEGEND_MOVES,
+  LEGENDARY_MOVES_3,
+  LEGENDARY_MOVES_4,
+  LEGENDARY_MOVES_5,
+  LEGENDARY_MOVES_6,
+  SKETCH_MOVES,
+  SEASON_ONE_EGG_MOVES,
+  SEASON_ONE_KIT_MOVES,
+  GA_KIT_B_MOVES,
+  SC_KIT_MOVES,
+  GA_KIT_A_MOVES,
+  REGIONAL_MOVES,
+  ROCKET_KIT_MOVES,
+  GALLOP_MOVES,
+  FOSSIL_KIT_MOVES,
+  GA_KIT_MA_MOVES,
+  MEGA_KIT_B_MOVES,
+  GA_HOOK_MOVES,
+}
 
 export const MOVE_IDS = Object.keys(MOVES) as MoveId[]
 
@@ -2354,7 +2438,7 @@ export const moveStats = (id: MoveId, level: number, player: PlayerStats, path =
     ...s,
     mods,
     damage: Math.max(0, s.damage) * player.might * (1 + (player.typeDamage[def.type] ?? 0) + tagBonus(def, player)),
-    cooldown: Math.max(def.minCooldown ?? 0.1, s.cooldown * player.cooldown),
+    cooldown: Math.max(def.minCooldown ?? 0.1, s.cooldown * softCooldown(player.cooldown)),
     area: Math.max(0.35, s.area) * player.area,
     amount: Math.max(1, s.amount) + player.amount,
     speed: s.speed * player.projectileSpeed,

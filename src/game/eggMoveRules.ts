@@ -1,4 +1,5 @@
 import * as dm from '../engine/dmath'
+import { densestOf } from './crowd'
 import { scaleBy } from './kitRules'
 
 /**
@@ -115,21 +116,16 @@ export const SLAM_R = 50
  * nearest to `from`, then the lower id. Null when nobody is in reach.
  */
 export const densestFoe = <T extends Point & { id: number; dying: number }>(foes: readonly T[], from: Point, reach: number, radius: number): T | null => {
-  let best: T | null = null
-  let bestCount = -1
-  let bestD = Infinity
+  const near: T[] = []
+  const pool: T[] = []
+  // A foe within `radius` of one within `reach` stands inside this box (a px of slack for rounding).
+  const box = reach + radius + 1
   for (const e of foes) {
-    if (e.dying >= 0) continue
-    const d = dm.sq(e.x - from.x) + dm.sq(e.y - from.y)
-    if (d > reach * reach) continue
-    let count = 0
-    for (const o of foes) if (o !== e && o.dying < 0 && dm.sq(o.x - e.x) + dm.sq(o.y - e.y) <= radius * radius) count++
-    if (count < bestCount || (count === bestCount && (d > bestD || (d === bestD && best && e.id > best.id)))) continue
-    best = e
-    bestCount = count
-    bestD = d
+    if (e.dying >= 0 || Math.abs(e.x - from.x) > box || Math.abs(e.y - from.y) > box) continue
+    pool.push(e)
+    if (dm.sq(e.x - from.x) + dm.sq(e.y - from.y) <= reach * reach) near.push(e)
   }
-  return best
+  return densestOf(near, pool, from.x, from.y, radius)
 }
 
 /* ---------------- Dynamic Punch, Giga Impact ---------------- */

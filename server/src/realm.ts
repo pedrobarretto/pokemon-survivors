@@ -3,6 +3,9 @@ import { FURNITURE, isFurnitureId, type FurnitureCounts, type FurnitureId } from
 import { checkLayout, EMPTY_BASE, isBaseVisibility, parseLayout, type BaseVisibility, type LayoutError } from '../../src/data/secretBases'
 import { brasiliaDay, type DayKey } from '../../src/game/day'
 import { donateFrom } from '../../src/game/festival'
+import type { HatchlingId } from '../../src/data/hatchlings'
+import { newFeatFamily } from '../../src/game/seasonOneUnlocks'
+import { sendGift } from './gifts'
 import { parseSaveData, type Save } from '../../src/game/meta'
 import { isRecord } from '../../src/game/parse'
 import { parseHandle } from '../../src/game/ranking'
@@ -24,7 +27,7 @@ import {
   type ReportReason,
 } from '../../src/net/realmApi'
 import { cityCounts, friendsFrom, parseReportRoom, walking, type HeldPresence } from '../../src/realm/friends'
-import { capped, isMinigameId, MINIGAME_DAILY, MINIGAMES, trophiesEarned, type GameOutcome, type GameStats, type MinigameId } from '../../src/data/minigames'
+import { capped, claimable, isMinigameId, MINIGAME_DAILY, MINIGAMES, trophiesEarned, type GameOutcome, type GameStats, type MinigameId } from '../../src/data/minigames'
 import type { DeedsAnswer, IdentityResponse, PresenceReport, VisitResponse } from '../../src/net/realmRelay'
 import { FURNISHED, isDeed, type Deed } from '../../src/data/realmStamps'
 import type { RealmBan, RealmDesk, RealmModeration, RealmReportGroup } from '../../src/realm/moderation'
@@ -154,13 +157,14 @@ const parseOutcome = (v: unknown): GameOutcome | null => {
 }
 
 /**
- * `POST /realm/game/claim`'s body, or null: a known game, an outcome of
- * either shape, how long it took (ms) and the feats it hit (strings; the ones
- * the game doesn't declare are dropped later, `statsAfter`). Whether the
- * outcome fits the game is `coinsFor`'s call.
+ * `POST /realm/game/claim`'s body, or null: a known game that pays through
+ * claims (never one the API runs itself, `claimable`, or a claim could make up
+ * its deeds), an outcome of either shape, how long it took (ms) and the feats
+ * it hit (strings; the ones the game doesn't declare are dropped later,
+ * `statsAfter`). Whether the outcome fits the game is `coinsFor`'s call.
  */
 export const parseGameClaim = (v: unknown): GameClaim | null => {
-  if (!isRecord(v) || !isMinigameId(v.game) || typeof v.ms !== 'number' || !Number.isFinite(v.ms) || v.ms < 0 || v.ms > GAME_MAX_MS) return null
+  if (!isRecord(v) || !isMinigameId(v.game) || !claimable(v.game) || typeof v.ms !== 'number' || !Number.isFinite(v.ms) || v.ms < 0 || v.ms > GAME_MAX_MS) return null
   const outcome = parseOutcome(v.outcome)
   const feats = v.feats === undefined ? [] : v.feats
   if (!outcome || !Array.isArray(feats) || feats.length > CLAIM_FEATS.n) return null
@@ -308,7 +312,7 @@ export type ErrandClaimOutcome = ErrandOutcome | { ok: false; error: 'profile' |
 export type BuyError = 'profile' | 'gems' | 'funds' | 'nosave' | 'stale'
 
 /** What a mini game claim came to (`GameClaimed`), or why it was refused: no @handle, or kept out of the realm. */
-export type ClaimOutcome = { ok: true; coins: number; today: number; trophies: FurnitureId[]; furniture: FurnitureCounts | null } | { ok: false; error: 'profile' | 'banned' }
+export type ClaimOutcome = { ok: true; coins: number; today: number; trophies: FurnitureId[]; furniture: FurnitureCounts | null; family: HatchlingId | null } | { ok: false; error: 'profile' | 'banned' }
 
 export type FurnitureOutcome =
   | { ok: true; furniture: FurnitureCounts; pay: 'gems'; balance: number }
@@ -653,7 +657,8 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
      * account's row lock: the Brasília `day`'s caps (`capped`: the game's and
      * all games'), the game's stats (`statsAfter`) and the trophies they
      * reach for the first time (`trophiesEarned`, into `furniture_owned` as
-     * source `game`). The price grows before the caps with company in the
+     * source `game`) and the family a feat brings (`newFeatFamily`, as a
+     * gift). The price grows before the caps with company in the
      * room (the relays' presence, never the client's word) and during the
      * game's Hora do Realm (`claimPay`). The ₽ goes to the wallet on the
      * device, like a run's. Then the game's deeds (`game:*`, `feat:*`).
@@ -685,6 +690,9 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
           await tx`insert into furniture_owned (user_id, furniture, source, count) values (${userId}, ${id}, 'game', 1) on conflict (user_id, furniture, source) do nothing`
         }
         if (trophies.length > 0) console.log(`realm: ${userId} earned ${trophies.join(', ')} at ${claim.game}`)
+        // A feat's family, once per account: the first claim that hits it sends the gift (the key keeps a retry from sending two).
+        const family = newFeatFamily(claim.game, was.feats, stats.feats)
+        if (family) await sendGift(tx, userId, { kind: 'family', family }, { kind: 'season', way: 'fishing' }, `feat:${claim.game}:${family}`)
         const points = boardPoints(claim.game, claim.outcome)
         if (points !== null) {
           for (const period of GAME_BOARD_PERIODS) {
@@ -705,11 +713,12 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
           today: Math.min(MINIGAME_DAILY, paidAll + paid),
           trophies,
           furniture: trophies.length > 0 ? await ownedBy(tx, userId, await slimOf(tx, userId)) : null,
+          family,
         }
       })
       if (claimed.ok) {
-        const feats = claim.feats.flatMap((f) => [`feat:${claim.game}:${f}`].filter(isDeed))
-        await earn(userId, new Map<Deed, number>([[`game:${claim.game}`, 1], ...feats.map((f) => [f, 1] as const)]), day)
+        const deeds = [`game:${claim.game}`, ...claim.feats.map((f) => `feat:${claim.game}:${f}`)].filter(isDeed)
+        await earn(userId, new Map(deeds.map((d) => [d, 1])), day)
       }
       return claimed
     },
@@ -816,6 +825,10 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
 
     /** Whether `userId` is kept out of the realm now (the realm's writes ask). */
     closed: (userId: string) => closed(sql, userId),
+    /** The same inside a transaction (the claw machine's, the Safári's and the Escavação's). */
+    closedIn: closed,
+    /** The deeds those games settle, as the claim's go (`EarnDeeds`). */
+    earn,
 
     /** Counts a base save against the account's limit; false past it. */
     takeSave: (userId: string) => limits.save.take([userId], now().getTime()),

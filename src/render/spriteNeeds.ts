@@ -3,17 +3,19 @@ import { ENEMIES, type EnemyId } from '../data/enemies'
 import { GRAVEYARD, hiddenCast } from '../data/places'
 import { isSummoner, SUMMONS } from '../data/traits'
 import { EVENTS, STAGES, stageIndexAt, stageStart } from '../data/waves'
-import { phasesOf } from '../game/bossFight'
+import { phaseForm, phasesOf } from '../game/bossFight'
+import { maskOf, OGERPON_MASK_IDS, OGERPON_MASKS } from '../data/mythicals'
 import { ENDLESS, REAPER } from '../game/endless'
 import { playerDex } from '../game/game'
 import { formAfter } from '../game/legend'
-import { heldMega, isFinalStage } from '../game/mega'
+import { atMegaBase, heldMega } from '../game/mega'
 import { placePool } from '../game/place'
 import { actAs } from '../game/players'
 import { bossSummons, type Roster } from '../game/roster'
 import { STANCES } from '../game/stance'
 import type { Game } from '../game/types'
-import type { Dex, KeepSprites, Variant } from './sprites'
+import { sheetForm, type Dex, type KeepSprites, type Variant } from './sprites'
+import { hookVariants } from './gaHookLook'
 
 /**
  * Which species' sheets a run holds: the shell streams the ones it needs now
@@ -88,20 +90,36 @@ const riftCameo = (g: Game): Dex[] => {
   return cameo ? [cameo.dex] : []
 }
 
-/** A place's dwellers (the ones its pool has now) once its entrance opens, Spiritomb with the graveyard's, a hidden zone's own, and the reaper as its hunt nears in the endless mode. */
+/** A place's dwellers (the ones its pool has now) once its entrance opens, Spiritomb with the graveyard's, a hidden zone's own, the run's roaming lake legend and Sword while they may still come (`game/quests.ts`), and the reaper as its hunt nears in the endless mode. */
 const visitors = (g: Game): Dex[] => {
   const place = g.place.inside?.id ?? g.place.entrance?.id
+  const raidBoss = g.raid.den?.raid.boss ?? g.raid.arena?.raid.boss
+  const { roam, duel } = g.quests
   return [
+    ...(roam && !roam.caught ? [ENEMIES[roam.legend].dex] : []),
+    ...(duel && duel.stage !== 'done' ? [ENEMIES[duel.sword].dex] : []),
     ...(place ? placePool(place, g.time).map(([id]) => ENEMIES[id].dex) : []),
     ...(place === 'graveyard' ? [ENEMIES[GRAVEYARD.boss].dex] : []),
+    // The Rocket Hideout's lair bosses: Giovanni's Persian and Mewtwo.
+    ...(place === 'hideout' ? [ENEMIES.giovanniPersian.dex, ENEMIES.shadowMewtwo.dex] : []),
     // A hidden zone's lucky ones and rare dweller, from its entrance on (found or not: loading shows nothing).
     ...(place ? hiddenCast(place).map((id) => ENEMIES[id].dex) : []),
     ...(g.endless && g.time >= ENDLESS.reaperAt - REAPER_LEAD ? [ENEMIES[REAPER].dex] : []),
+    // A Tera Raid's giant, from its den's opening on.
+    ...(raidBoss ? [ENEMIES[raidBoss].dex] : []),
   ]
 }
 
+/** The forms each kit family may turn into mid-run (`seasonKitForm`), and Tatsugiri's Dondozo. */
+const KIT_FORMS: Record<string, readonly string[]> = { school: ['school'], hero: ['hero'], hunger: ['hangry'], forecast: ['sunny', 'rainy', 'snowy'], zen: ['zen'], disguise: ['busted'], none: [] }
+const DONDOZO = 977
+/** The shell Nincada leaves behind: Shedinja floats beside Ninjask (`render/gaKitAFx.ts`). */
+const SHEDINJA = 292
+
 /** Every stance's name: the ones that are a form of the species (Aegislash's Blade, Deoxys's formes) load, the rest (Shield, Normal) are no form. */
 const STANCE_NAMES = Object.keys(STANCES)
+
+const OGERPON_DEX = ENEMIES.ogerpon.dex
 
 /**
  * The forms each player may wear soon: their Mega once the stone is in hand at
@@ -112,18 +130,25 @@ export const playerForms = (g: Game): Variant[] =>
   g.players.flatMap((p) => {
     const before = actAs(g, p)
     const dex = playerDex(g)
-    const mega = isFinalStage(p.starter, p.stage) ? heldMega(g) : null
+    const mega = atMegaBase(p) ? heldMega(g) : null
     actAs(g, before)
-    const legend = p.legend && p.legend.awakened >= 1 ? formAfter(p.legend.id, 2)?.key : undefined
-    const forms = [...(mega ? [mega.form] : []), ...(legend ? [legend] : []), ...(p.special.stance !== null ? STANCE_NAMES : [])]
-    return forms.map((form) => ({ dex, shiny: p.shiny, form }))
+    // A legend's looks from its first awakening on (from the start with a path's forms: Zygarde 50%, Urshifu): the one it wears and the next.
+    // Terapagos's Stellar Form wears its Terastal Form's sheets (`sheetForm`).
+    const s = p.legend
+    const looks = s && (s.awakened >= 1 || s.forms.length > 0) ? [formAfter(s.id, s.awakened, s.forms), formAfter(s.id, s.awakened + 1, s.forms) ?? formAfter(s.id, 2, s.forms)] : []
+    // Ogerpon swaps masks (and Terastallizes) at any time: every mask's sheets, all along.
+    const masks = s?.id === 'ogerpon' ? OGERPON_MASK_IDS.flatMap((m) => [OGERPON_MASKS[m].form, OGERPON_MASKS[m].tera]).flatMap((form) => (form ? [{ dex: OGERPON_DEX, shiny: p.shiny, form }] : [])) : []
+    const legend = [...looks.flatMap((l) => (l ? [{ dex: l.dex, shiny: p.shiny, ...(l.key && { form: sheetForm(l.key) }) }] : [])), ...masks]
+    const forms = [...(mega ? [mega.form] : []), ...(p.special.stance !== null ? STANCE_NAMES : []), ...(KIT_FORMS[p.kit?.kind ?? 'none'] ?? [])]
+    return [...forms.map((form) => ({ dex, shiny: p.shiny, form })), ...legend, ...(p.kit?.kind === 'commander' ? [{ dex: DONDOZO, shiny: false }] : []), ...(p.kitA?.kind === 'shell' && p.stage >= 1 ? [{ dex: SHEDINJA, shiny: p.shiny }] : []), ...hookVariants(g, p)]
   })
 
 /**
  * The rift's sheets beyond its legendary's normal colors: from the omen, the form
  * it starts its battle in; inside, its shiny colors when it is shiny; and in the
- * battle, the form of every phased boss's phase and of the next one, so a phase's
- * form is ready when the phase comes instead of all of them at the crossing.
+ * battle, the form of every phased boss's phase, of the one before (its form
+ * change shows the old form a moment) and of the next one, so a phase's form is
+ * ready when the phase comes instead of all of them at the crossing.
  */
 export const bossForms = (g: Game): Variant[] => {
   const shiny = g.rift.arena?.shiny ?? false
@@ -135,10 +160,16 @@ export const bossForms = (g: Game): Variant[] => {
   const fights = g.enemies.flatMap((e) => {
     const phases = e.fight ? phasesOf(e.kind) : null
     if (!phases || !e.fight) return []
-    const forms = [phases[e.fight.phase]?.form, phases[e.fight.phase + 1]?.form]
+    const d = e.fight.difficulty
+    const forms = [phaseForm(phases[e.fight.phase - 1], d), phaseForm(phases[e.fight.phase], d), phaseForm(phases[e.fight.phase + 1], d)]
     return forms.flatMap((form) => (form ? [{ dex: ENEMIES[e.kind].dex, shiny: e.shiny, form }] : []))
   })
-  return [...rift, ...fights]
+  // Ogerpon's raid giant wears its mask Terastallized (`bossForm`), from its den's opening on.
+  const raid = g.raid.den?.raid ?? g.raid.arena?.raid
+  const ogerpon = raid?.boss === 'ogerpon' ? [{ dex: ENEMIES.ogerpon.dex, shiny: false, form: OGERPON_MASKS[maskOf(raid.tera)].tera }] : []
+  // Shadow Mewtwo wears SpriteCollab's Shadow sheets from the Hideout's door on (`data/rocketHideout.ts`).
+  const hideout = g.place.inside?.id === 'hideout' || g.place.entrance?.id === 'hideout' ? [{ dex: ENEMIES.shadowMewtwo.dex, shiny: false, form: 'shadow' as const }] : []
+  return [...rift, ...fights, ...hideout, ...ogerpon]
 }
 
 /**

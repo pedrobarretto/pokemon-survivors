@@ -16,11 +16,15 @@ import { DISCORD_GIFT } from '../game/gifts'
 import { missionStatus } from '../game/missions'
 import { pendingPicks, playsShiny } from '../game/shinyPicks'
 import { pollToVote, supporterCount, tierRank, type WallEntry } from '../game/supporters'
-import { formatNumber, LOCALES, locale, t } from '../i18n'
+import { formatNumber, LOCALES, locale, t, formatDay } from '../i18n'
 import { arenaIcon, bulbIcon, chevronIcon, coopIcon, discordIcon, eggsIcon, friendEggIcon, gearIcon, giftIcon, gridIcon, heartIcon, helpIcon, itemIcon, medalIcon, moveIcon, newsIcon, pokeballIcon, rankingIcon, ribbonIcon, shopIcon, socialIcon, sparkleIcon, supporterIcon, surveyIcon } from '../render/art'
 import { CAFE_PATRONS, cafeBubbles, cafePose, newCafePose } from '../render/cafeLife'
 import { logoScale, titleLogo } from '../render/logo'
-import { drawPokemon, loadedSprites, loadSpecies, type Dex } from '../render/sprites'
+import { drawPokemon, fitSprites, loadedSprites, loadSpecies, portraitUrl, type Dex } from '../render/sprites'
+import { drawCrystalPokemon } from '../render/teraFx'
+import { crownIcon } from '../render/teraArt'
+import { raidOfDay } from '../game/teraRaid'
+import { teraName } from './teraText'
 import type { Cover, Place } from '../render/titleScene'
 import type { VisitorShelf } from './shop'
 import { dialogue, type Dialogue } from './dialogue'
@@ -33,7 +37,13 @@ import { ROUTES, SOCIAL_IDS, SOCIALS, type SocialId } from '../site/routes'
 import { fetchWall, knownStatus } from '../supporters'
 import { h, later, rich } from './dom'
 import { printedKeys } from './inputLabels'
-import { challengeToday, halloweenToday, loadAttempt, loadSave, outbreakToday, today } from './save'
+import { challengeToday, halloweenToday, loadAttempt, loadSave, outbreakToday, today, ultraToday } from './save'
+import { beastBallIcon } from '../render/ultraArt'
+import { ultraWeekEnd } from '../game/ultraWeek'
+import { brasiliaDay } from '../game/day'
+import { cosmogStage } from '../game/legendPaths'
+import { COSMOG, COSMOG_DEX } from '../data/legendPaths'
+import { pathSheet } from './legendPaths'
 import { festivalBanner, festivalCard, festivalCardShows, type FestivalTab } from './festival'
 import { fillHalloweenCard, halloweenCard, halloweenCardShows } from './halloween'
 import { contentLine } from './gifts'
@@ -57,6 +67,7 @@ import { uiDpr, uiViewport, uiZoom } from './uiScale'
 /** What the lobby can highlight. A screen opened over it gets the one it came from, to come back to it. */
 export type LobbyFocus =
   | 'trainer'
+  | 'cosmog'
   | 'news'
   | 'survey'
   | 'discord'
@@ -65,6 +76,8 @@ export type LobbyFocus =
   | 'halloween'
   | 'festival'
   | 'outbreak'
+  | 'raid'
+  | 'ultra'
   | 'challenge'
   | 'missions'
   | 'hall'
@@ -324,6 +337,58 @@ const outbreakCard = () => {
   return { el, tick }
 }
 
+/**
+ * Raide do dia: the day's Tera Raid (`raidOfDay`), its giant walking in its Tera
+ * type's crystal under its crown, its stars on the line. `tick` animates it.
+ */
+const raidCard = () => {
+  const m = t().raid
+  const raid = raidOfDay(brasiliaDay(today()))
+  const def = ENEMIES[raid.boss]
+  const walker = h('canvas', { class: 'lobby-walker raid', width: 36, height: 44, 'aria-hidden': 'true' })
+  void loadSpecies(def.dex).catch(() => {})
+  const tick = (time: number) => {
+    pixelSize(walker, Math.max(1, Math.round(uiDpr())))
+    const ctx = context2d(walker)
+    ctx.clearRect(0, 0, walker.width, walker.height)
+    const s = loadedSprites(def.dex)
+    if (s) drawCrystalPokemon(ctx, fitSprites(s, 30, 0), raid.tera, 'Walk', 0, time, walker.width / 2, walker.height - 2, {}, time)
+  }
+  const line = `${m.dayLine(def.name, teraName(raid.tera))} ${'★'.repeat(raid.stars)}`
+  const el = todayCard('raid', walker, m.dayTitle, line, iconImg(crownIcon(raid.tera), 'lobby-day-spark'))
+  el.setAttribute('aria-label', `${m.dayTitle}: ${line}`)
+  return { el, tick, raid }
+}
+/** The Ultra Beast of the week (`game/ultraWeek.ts`): its portrait, its name and a Beast Ball. */
+const ultraCard = () => {
+  const def = ENEMIES[ultraToday()]
+  const w = t().ultra.week
+  const el = todayCard('ultra', h('img', { class: 'lobby-ultra-portrait', src: portraitUrl(def.dex), alt: '' }), w.card(def.name), w.cardLine, iconImg(beastBallIcon(), 'lobby-day-ball'))
+  el.setAttribute('aria-label', `${w.title}: ${def.name}`)
+  return el
+}
+/** Cosmog (the legend paths, `game/legendPaths.ts`): floating on its canvas while it grows, its runs and how its sky leans; null while there's none. */
+const cosmogCard = () => {
+  const c = loadSave().paths.cosmog
+  const stage = cosmogStage(c)
+  if (!stage) return null
+  const dex = COSMOG_DEX[stage]
+  const m = t().paths.cosmog
+  const floater = h('canvas', { class: 'lobby-walker', width: 30, height: 32, 'aria-hidden': 'true' })
+  void loadSpecies(dex).catch(() => {})
+  const tick = (time: number) => {
+    pixelSize(floater, Math.max(1, Math.round(uiDpr())))
+    const ctx = context2d(floater)
+    ctx.clearRect(0, 0, floater.width, floater.height)
+    const s = loadedSprites(dex)
+    if (s) drawPokemon(ctx, s, 'Idle', 0, time, floater.width / 2, floater.height - 3 - Math.round((Math.sin(time * 2.4) + 1) * 1.5))
+  }
+  const line = `${m.runs(String(c.runs), String(COSMOG.evolve))} · ☀${c.sun} ☾${c.moon}`
+  const el = todayCard('cosmog', floater, stage === 'cosmog' ? 'Cosmog' : 'Cosmoem', line)
+  el.setAttribute('aria-label', `${stage === 'cosmog' ? 'Cosmog' : 'Cosmoem'}: ${line}`)
+  return { el, tick }
+}
+
 /* ---------------- Top bar ---------------- */
 
 /** Novidades in the top bar: a page of patch notes that wiggles under a red "!" while the newest update is unread. */
@@ -504,7 +569,12 @@ const figure = (dex: Dex, x: number, dir: Dir8, team?: Figure['team']): Figure =
 const castOf = (mode: GameModeId): Cast => {
   const save = loadSave()
   const partner = PLAYABLE[save.partner].line[0]
-  if (mode === 'survivors') return { figures: [{ dex: partner.dex, shiny: playsShiny(save, save.partner), x: 0, dir: 0 }] }
+  if (mode === 'survivors') {
+    // Cosmog, while one grows (`cosmogStage`), floats beside the partner.
+    const cosmog = cosmogStage(save.paths.cosmog)
+    const own = { dex: partner.dex, shiny: playsShiny(save, save.partner), x: cosmog ? -10 : 0, dir: 0 } as const satisfies Figure
+    return { figures: cosmog ? [own, figure(COSMOG_DEX[cosmog], 26, 7)] : [own] }
+  }
   if (mode === 'legends') {
     const legend = isLegend(save.partner) ? partner.dex : 382
     return { figures: [figure(legend, 0, 0)] }
@@ -815,6 +885,19 @@ export const titleScreen = (
     festival: () => visitShop('festival'),
     discord: () => openOver(actions.discord),
     outbreak: () => toast(root, rich(`*${ENEMIES[outbreakToday()].name}*: ${t().outbreak.blurb}`), 3600, 'outbreak'),
+    raid: () => toast(root, raidOfDay(brasiliaDay(today())).stars === 7 ? t().raid.dayStellar : t().raid.dayWhen, 4200, 'raid'),
+    ultra: () => toast(root, rich(t().ultra.week.line(ENEMIES[ultraToday()].name, formatDay(ultraWeekEnd(brasiliaDay(today()))))), 4200, 'ultra'),
+    cosmog: () => {
+      if (sheet || visit) return
+      offKeys?.()
+      offKeys = null
+      sheet = pathSheet(root, input, 'cosmog', {
+        close: () => {
+          sheet = null
+          offKeys = restKeys()
+        },
+      })
+    },
     challenge: actions.challenge,
     missions: actions.missions,
     gifts: actions.gifts,
@@ -1014,14 +1097,23 @@ export const titleScreen = (
     }
 
     const outbreak = outbreakCard()
+    const raid = raidCard()
+    const cosmog = cosmogCard()
     const ready = save.eggs.filter(isReady).length
+    const ultra = () => pressable(ultraCard(), 'ultra')
+    // An upright phone shows two cards before the row scrolls: there the Ultra Beast of the week is a square badge up front, so it's seen without scrolling.
+    const ultraBadge = kind === 'narrow'
     const dayCards = [
+      ...(ultraBadge ? [ultra()] : []),
       ...(halloweenCardShows() ? [pressable((candyCard = halloweenCard()), 'halloween')] : []),
       pressable(giftsCard(), 'gifts'),
+      ...(cosmog ? [pressable(cosmog.el, 'cosmog')] : []),
       pressable(challengeCard(), 'challenge'),
       pressable(eggsCard(ready, save.eggs.length), 'eggs'),
       pressable(missionsCard(), 'missions'),
       pressable(outbreak.el, 'outbreak'),
+      pressable(raid.el, 'raid'),
+      ...(ultraBadge ? [] : [ultra()]),
     ]
     const date = today().toLocaleDateString(LOCALES[lang].tag, { weekday: 'short', day: 'numeric', month: 'short' })
     const festival = festivalCardShows() ? pressable(kind === 'wide' ? festivalCard() : festivalBanner(), 'festival') : null
@@ -1184,7 +1276,7 @@ export const titleScreen = (
     }
     paintMode()
 
-    tickers = [outbreak.tick, painter.tick]
+    tickers = [outbreak.tick, raid.tick, painter.tick, ...(cosmog ? [cosmog.tick] : [])]
     castBox = painter.box
 
     ;(lobby ?? intro).replaceWith(lobbyEl)

@@ -15,6 +15,7 @@ import { firstStance, nextStance, STANCES, STANCE_CYCLES, type Stance, type Stan
 import type { StatusSpec } from './status'
 import type { PlayerStats } from './stats'
 import type { Enemy, Game } from './types'
+import { teraSpecialType } from './tera'
 import * as dm from '../engine/dmath'
 
 /**
@@ -123,10 +124,17 @@ export const SPECIALS = {
     final: { name: 'Draco Meteor', damage: 52, area: 1.3, count: 16 },
     status: { kind: 'burn', chance: 0.3, duration: 2, power: 0.3 },
   },
+  /* Mega Camerupt's (`data/megas.ts`): the volcano on its back lets go. */
+  eruption: {
+    type: 'fire', kind: 'rain', cooldown: 11, charge: 0.5,
+    base: { name: 'Lava Plume', damage: 40, area: 1.1, count: 10 },
+    final: { name: 'Eruption', damage: 66, area: 1.4, count: 16 },
+    status: { kind: 'burn', chance: 0.5, duration: 2.5, power: 0.4 },
+  },
   diamondStorm: {
     type: 'rock', kind: 'rain', cooldown: 10, charge: 0.4,
     base: { name: 'Rock Slide', damage: 32, area: 1, count: 10 },
-    final: { name: 'Diamond Storm', damage: 52, area: 1.25, count: 16 },
+    final: { name: 'Stone Edge', damage: 52, area: 1.25, count: 16 },
   },
   blizzard: {
     type: 'ice', kind: 'rain', cooldown: 10, charge: 0.4,
@@ -203,6 +211,12 @@ export const SPECIALS = {
   /** Deoxys only (Legend mode): cycles Normal, Attack, Defense and Speed Forme, like Stance Change. */
   formeChange: {
     type: 'psychic', kind: 'stance', cooldown: 2, charge: 0,
+    base: { name: 'Forme Change', damage: 0, area: 1, count: 1 },
+    final: { name: 'Forme Change', damage: 0, area: 1, count: 1 },
+  },
+  /** Rotom only: cycles its appliances, each reshaping Discharge (`seasonOneKitMoves.ts`). */
+  applianceChange: {
+    type: 'electric', kind: 'stance', cooldown: 3, charge: 0,
     base: { name: 'Forme Change', damage: 0, area: 1, count: 1 },
     final: { name: 'Forme Change', damage: 0, area: 1, count: 1 },
   },
@@ -409,6 +423,91 @@ export const SPECIALS = {
     base: { name: 'Double-Edge', damage: 72, area: 1.4, count: 12 },
     final: { name: 'Double-Edge', damage: 72, area: 1.4, count: 12 },
   },
+  /** Mega Mewtwo X: a brawler's chain of psychic blades. */
+  psychoCut: {
+    type: 'psychic', kind: 'chain', cooldown: 7, charge: 0, orbs: 8,
+    base: { name: 'Psycho Cut', damage: 60, area: 1.3, count: 6 },
+    final: { name: 'Psycho Cut', damage: 60, area: 1.3, count: 6 },
+  },
+  /** Mega Heracross: Skill Link lands every horn, so it's the most strikes of any bolt. */
+  megahorn: {
+    type: 'bug', kind: 'bolt', cooldown: 7, charge: 0.3,
+    base: { name: 'Megahorn', damage: 66, area: 1.35, count: 16 },
+    final: { name: 'Megahorn', damage: 66, area: 1.35, count: 16 },
+  },
+  /** Mega Abomasnow. */
+  avalanche: {
+    type: 'ice', kind: 'wave', cooldown: 7, charge: 0.3,
+    base: { name: 'Avalanche', damage: 72, area: 1.5, count: 9 },
+    final: { name: 'Avalanche', damage: 72, area: 1.5, count: 9 },
+    status: { kind: 'slow', chance: 1, duration: 1.2, power: 0.6 },
+  },
+  /** Mega Froslass: it glides on, leaving a freezing wake. */
+  icyWind: {
+    type: 'ice', kind: 'trail', cooldown: 8, charge: 0.1,
+    base: { name: 'Icy Wind', damage: 58, area: 1.3, count: 32 },
+    final: { name: 'Icy Wind', damage: 58, area: 1.3, count: 32 },
+    status: { kind: 'freeze', chance: 0.3, duration: 1.2, power: 0 },
+  },
+  /** Mega Scrafty: the kick lands as shock waves around it. */
+  highJumpKick: {
+    type: 'fighting', kind: 'nova', cooldown: 7, charge: 0.3,
+    base: { name: 'High Jump Kick', damage: 74, area: 1.55, count: 2 },
+    final: { name: 'High Jump Kick', damage: 74, area: 1.55, count: 2 },
+    status: { kind: 'weaken', chance: 0.8, duration: 2, power: 0.3 },
+  },
+  /** Mega Chandelure: Inferno always burns. */
+  inferno: {
+    type: 'fire', kind: 'rain', cooldown: 7, charge: 0.3,
+    base: { name: 'Inferno', damage: 62, area: 1.4, count: 18 },
+    final: { name: 'Inferno', damage: 62, area: 1.4, count: 18 },
+    status: { kind: 'burn', chance: 1, duration: 2.5, power: 0.35 },
+  },
+  /** Mega Golurk: few, very heavy fists from above. */
+  shadowPunch: {
+    type: 'ghost', kind: 'bolt', cooldown: 7, charge: 0.35,
+    base: { name: 'Shadow Punch', damage: 80, area: 1.55, count: 8 },
+    final: { name: 'Shadow Punch', damage: 80, area: 1.55, count: 8 },
+  },
+  /** Mega Malamar: a sweep of tentacles that turns foes around. */
+  foulPlay: {
+    type: 'dark', kind: 'wave', cooldown: 7, charge: 0.25,
+    base: { name: 'Foul Play', damage: 68, area: 1.5, count: 9 },
+    final: { name: 'Foul Play', damage: 68, area: 1.5, count: 9 },
+    status: { kind: 'confuse', chance: 0.5, duration: 1.5, power: 0 },
+  },
+  /** Mega Golisopod. */
+  firstImpression: {
+    type: 'bug', kind: 'chain', cooldown: 7, charge: 0, orbs: 6,
+    base: { name: 'First Impression', damage: 62, area: 1.3, count: 6 },
+    final: { name: 'First Impression', damage: 62, area: 1.3, count: 6 },
+  },
+  /** Mega Baxcalibur: its blades sweep forward like the spine it throws. */
+  glaiveRush: {
+    type: 'dragon', kind: 'wave', cooldown: 7, charge: 0.25,
+    base: { name: 'Glaive Rush', damage: 76, area: 1.5, count: 9 },
+    final: { name: 'Glaive Rush', damage: 76, area: 1.5, count: 9 },
+  },
+  /** Mega Absol Z: a ring of cleaving blades. */
+  kowtowCleave: {
+    type: 'dark', kind: 'ring', cooldown: 7, charge: 0.2,
+    base: { name: 'Kowtow Cleave', damage: 66, area: 1.4, count: 20 },
+    final: { name: 'Kowtow Cleave', damage: 66, area: 1.4, count: 20 },
+  },
+  /** Mega Tatsugiri: cold water that saps foes' strength. */
+  chillingWater: {
+    type: 'water', kind: 'ring', cooldown: 7, charge: 0.2,
+    base: { name: 'Chilling Water', damage: 62, area: 1.35, count: 22 },
+    final: { name: 'Chilling Water', damage: 62, area: 1.35, count: 22 },
+    status: { kind: 'weaken', chance: 0.6, duration: 2, power: 0.25 },
+  },
+  /** Mega Zygarde: arrows of earth that pin foes down. */
+  thousandArrows: {
+    type: 'ground', kind: 'rain', cooldown: 7, charge: 0.3,
+    base: { name: 'Thousand Arrows', damage: 72, area: 1.45, count: 24 },
+    final: { name: 'Thousand Arrows', damage: 72, area: 1.45, count: 24 },
+    status: { kind: 'slow', chance: 1, duration: 1, power: 0.5 },
+  },
 } as const satisfies Record<string, SpecialDef>
 
 export type SpecialId = keyof typeof SPECIALS
@@ -442,6 +541,7 @@ const BY_SPECIES: Partial<Record<PlayableId, SpecialId | readonly SpecialId[]>> 
   swablu: ['boomburst', 'dracoMeteor'],
   pidgey: 'aeroblast',
   deoxys: 'formeChange',
+  rotom: 'applianceChange',
 }
 
 export const specialOfType = (type: PokeType): SpecialId => BY_TYPE[type]
@@ -457,11 +557,13 @@ export const specialIdFor = (species: PlayableId, types: readonly PokeType[], st
 /**
  * The special at an evolution stage; in Mega form (`mega`), the Mega's own.
  * From a branch's stage on (`branch`), the branch's: its own, or its first type's (Vaporeon's Hydro Cannon).
+ * Terastallized (`tera`), the Tera type's.
  */
-export const resolveSpecial = (starter: PlayableId, stage: number, mega: MegaId | null = null, branch: BranchId | null = null, finalTier?: boolean) => {
+export const resolveSpecial = (starter: PlayableId, stage: number, mega: MegaId | null = null, branch: BranchId | null = null, finalTier?: boolean, tera: PokeType | null = null) => {
   const species = PLAYABLE[starter]
   const b: BranchDef | null = branch && BRANCHES[branch].line === starter && stage >= BRANCHES[branch].stage ? BRANCHES[branch] : null
-  const own = mega ? MEGAS[mega].special : b ? (b.special ?? specialOfType(b.types[0] ?? 'normal')) : undefined
+  // Terastallized, the special is the Tera type's (Tera Blast's spirit: a Water Tera Charizard casts Hydro Cannon).
+  const own = tera ? specialOfType(tera) : mega ? MEGAS[mega].special : b ? (b.special ?? specialOfType(b.types[0] ?? 'normal')) : undefined
   const id: SpecialId = own ?? specialIdFor(starter, species.line[0].types, stage)
   const def: SpecialDef = SPECIALS[id]
   const final = finalTier ?? stage >= species.line.length - 1
@@ -473,7 +575,7 @@ export type ResolvedSpecial = ReturnType<typeof resolveSpecial>
 /** The special the acting player has right now: its stage's, or its Mega form's while that lasts. A legend's turns final at its second awakening. */
 export const gameSpecial = (g: Game) => {
   const p = g.player
-  return resolveSpecial(p.starter, p.stage, p.mega.active > 0 ? p.mega.stone : null, p.branch, p.legend ? p.legend.awakened >= 2 : undefined)
+  return resolveSpecial(p.starter, p.stage, p.mega.active > 0 ? p.mega.stone : null, p.branch, p.legend ? p.legend.awakened >= 2 : undefined, teraSpecialType(p))
 }
 
 /* ---------------- Timers (pure) ---------------- */

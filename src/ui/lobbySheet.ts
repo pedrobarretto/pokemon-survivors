@@ -6,8 +6,8 @@ import { h, later } from './dom'
 import type { Screen } from './screens'
 import { nearestInDirection, type Direction } from './spatial'
 
-/** A row in a lobby sheet: `icon`, a label, an optional line and whatever goes at the end (`extra`: a count, a prize). */
-export type SheetEntry = { icon: Node; label: string; sub?: string; extra?: Node | null; run: () => void }
+/** A row in a lobby sheet: `icon`, a label, an optional line and whatever goes at the end (`extra`: a count, a prize); a `locked` one shows but only says no. */
+export type SheetEntry = { icon: Node; label: string; sub?: string; extra?: Node | null; locked?: boolean; run: () => void }
 
 const STEPS: Partial<Record<string, Direction>> = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', KeyW: 'up', KeyS: 'down', KeyA: 'left', KeyD: 'right' }
 
@@ -33,6 +33,7 @@ export const lobbySheet = (root: HTMLElement, input: Input, opts: { title: strin
   }
   const pick = (entry: SheetEntry) => {
     if (closed) return
+    if (entry.locked) return playSfx('denied')
     dispose()
     later(() => (opts.close(), entry.run()))
   }
@@ -40,7 +41,7 @@ export const lobbySheet = (root: HTMLElement, input: Input, opts: { title: strin
   const rows = opts.entries.map((entry) =>
     h(
       'button',
-      { class: 'arc-card lobby-sheet-row', type: 'button', onclick: () => pick(entry) },
+      { class: entry.locked ? 'arc-card lobby-sheet-row locked' : 'arc-card lobby-sheet-row', type: 'button', 'aria-disabled': entry.locked && 'true', onclick: () => pick(entry) },
       entry.icon,
       h('span', { class: 'lobby-sheet-text' }, h('b', {}, entry.label), entry.sub ? h('small', {}, entry.sub) : null),
       entry.extra ?? null,

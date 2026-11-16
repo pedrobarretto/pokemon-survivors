@@ -1,3 +1,5 @@
+import { ultraAt } from '../game/ultraWeek'
+import type { UltraBeast } from '../data/ultraBeasts'
 import { AIM_ASSISTS, type AimAssist } from './arenaAim'
 import { PRIORITIES, type Priority } from '../game/versusKit'
 import type { TitleId } from '../data/achievements'
@@ -9,6 +11,7 @@ import { vitrineOf } from '../game/shop'
 import { outbreakAt } from '../game/outbreak'
 import { isHalloweenDay } from '../game/halloween'
 import { depositEggs, type Egg } from '../game/eggs'
+import { walkShadows } from '../game/shadow'
 import { parseSave, recordHatch, recordRun, type Save } from '../game/meta'
 import type { RunSummary } from '../game/tally'
 import { BUTTON_SIDES, STICK_EDGES, STICK_HEIGHTS, STICK_MODES, type ButtonSide, type StickEdge, type StickHeight, type StickMode } from '../engine/input'
@@ -52,11 +55,12 @@ export const depositPokeDollars = (amount: number) => {
 
 /**
  * Banks a run into the incubator: incubating eggs walk `steps`, new eggs take
- * the free slots and the rest are paid in ₽ (see `depositEggs`).
+ * the free slots and the rest are paid in ₽ (see `depositEggs`). The Shadow
+ * Pokémon's heart gauges walk the same steps (`walkShadows`).
  */
 export const bankEggs = (steps: number, found: readonly Egg[]) => {
   const { save, converted, refund } = depositEggs(loadSave(), steps, found)
-  writeSave(save)
+  writeSave({ ...save, shadows: walkShadows(save.shadows, steps) })
   return { converted, refund }
 }
 
@@ -88,6 +92,15 @@ export const outbreakToday = (dealt: EnemyId | null = null): EnemyId => outbreak
 
 export const setOutbreak = (id: EnemyId | null) => {
   outbreakOverride = id
+}
+
+let ultraOverride: UltraBeast | null = null
+
+/** The Ultra Beast of the week (`game/ultraWeek.ts`) on the missions' clock: the one dealt with a ranked run's ticket, else the device's week (the dev console's `ps.ultra` holds one instead). */
+export const ultraToday = (dealt: UltraBeast | null = null): UltraBeast => ultraOverride ?? dealt ?? ultraAt(today())
+
+export const setUltra = (id: UltraBeast | null) => {
+  ultraOverride = id
 }
 
 /**

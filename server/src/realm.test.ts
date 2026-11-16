@@ -119,6 +119,8 @@ describe('mini game claims', () => {
     expect(parseGameClaim({ game: 'fishing', outcome: { score: 120 }, ms: 90_000.4, feats: ['feebas'] })).toEqual({ game: 'fishing', outcome: { score: 120 }, ms: 90_000, feats: ['feebas'] })
     expect(parseGameClaim({ game: 'fourInRow', outcome: { result: 'win', vs: 'bot' }, ms: 40_000 })).toEqual({ game: 'fourInRow', outcome: { result: 'win', vs: 'bot' }, ms: 40_000, feats: [] })
     expect(parseGameClaim({ game: 'chess', outcome: { score: 1 }, ms: 1, feats: [] })).toBeNull()
+    // The API runs these itself: a claim for one would make up its deeds.
+    for (const game of ['claw', 'safari', 'dig']) expect(parseGameClaim({ game, outcome: { score: 0 }, ms: 0, feats: ['plush'] })).toBeNull()
     expect(parseGameClaim({ game: 'fishing', outcome: { score: 1.5 }, ms: 90_000, feats: [] })).toBeNull()
     expect(parseGameClaim({ game: 'fishing', outcome: { score: -1 }, ms: 90_000, feats: [] })).toBeNull()
     expect(parseGameClaim({ game: 'fourInRow', outcome: { result: 'win', vs: 'cat' }, ms: 40_000, feats: [] })).toBeNull()

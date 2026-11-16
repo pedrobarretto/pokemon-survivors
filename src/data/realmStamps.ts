@@ -8,7 +8,8 @@
  * - the relay reports what happens in the town (`POST /realm/deeds`,
  *   `net/realmRelay.ts`): rooms, seats, talk, company, parties, tables;
  * - the API adds what it sees itself: a claimed mini game and its feats, a
- *   like, a saved base.
+ *   like, a saved base, and what the games it runs on its own routes settle
+ *   (a plush won, a catch, a treasure dug out).
  *
  * The API keeps each account's count per deed, and a stamp is a condition over
  * those counts (`realm/stamps.ts`). The day's Recados (`realm/errands.ts`) read
@@ -20,23 +21,27 @@
  * `realm.stamps`, keyed by these ids. A hidden stamp shows neither until earned.
  */
 
-const ROOMS = ['plaza', 'pier', 'cafe', 'trail', 'arcade'] as const
+const ROOMS = ['plaza', 'pier', 'cafe', 'trail', 'arcade', 'gameCorner'] as const
 /** Every town bench, as `<room>:<index of its spot in REALM_ROOMS>` (`realmStamps.test.ts` holds them to the map). */
 const BENCHES = ['plaza:3', 'plaza:4', 'pier:1', 'cafe:1', 'cafe:2', 'trail:4', 'trail:5', 'arcade:5'] as const
 /** `REALM_EMOTES` less `look`, which only some trainers have. */
 const EMOTES = ['wave', 'heart', 'laugh', 'music', 'sleep', 'angry', 'question', 'exclaim'] as const
-const GAMES = ['fishing', 'berryCatch', 'whackDiglett', 'fourInRow', 'typeDuel'] as const
-/** `<game>:<feat>` of `MINIGAMES` (held to it by `realmStamps.test.ts`). */
+/** The games claimed through `POST /realm/game/claim` (`claimable` in `data/minigames.ts`). */
+const GAMES = ['fishing', 'berryCatch', 'whackDiglett', 'fourInRow', 'typeDuel', 'ludo', 'unown'] as const
+/** `<game>:<feat>` of those games' `MINIGAMES` feats (held to it by `realmStamps.test.ts`). */
 const FEATS = [
   'fishing:feebas',
   'fishing:shinyGyarados',
   'fishing:bigHaul',
+  'fishing:wishiwashi',
   'berryCatch:flawless',
   'berryCatch:goldRush',
   'berryCatch:combo50',
   'whackDiglett:combo30',
   'whackDiglett:dugtrio',
   'typeDuel:perfectDuel',
+  'ludo:untouchable',
+  'unown:mewFinish',
 ] as const
 /** The kinds of Hora do Realm (`data/realmEvents.ts`). */
 const EVENT_KINDS = ['tide', 'storm', 'tables'] as const
@@ -78,6 +83,21 @@ const DEED_LIST = [
   /* The API. */
   ...GAMES.map((g) => `game:${g}` as const),
   ...FEATS.map((f) => `feat:${f}` as const),
+  /*
+   * The API, from the mini games it runs itself (`server/src/claw.ts`,
+   * `safari.ts`, `dig.ts`), at the moment it settles an outcome; never from a
+   * claim. Counted by `realm/gameDeeds.ts`.
+   */
+  /** A plush won at the claw machine, and one won with the first credit spent on it. */
+  'claw:plush',
+  'claw:firstTry',
+  /** A Pokémon caught in the Zona Safári, and a shiny one. */
+  'safari:catch',
+  'safari:shiny',
+  /** A treasure dug out of an Escavação wall, a fossil among them, and a golden wall that gave one up. */
+  'dig:find',
+  'dig:fossil',
+  'dig:golden',
   /** Liked someone's base. */
   'like',
   /** Saved a base holding `FURNISHED` pieces or more. */
@@ -156,6 +176,16 @@ export const STAMPS = {
   ugliestFish: { group: 'games', tier: 'hard', when: { deed: 'feat:fishing:feebas' }, hidden: true },
   redTide: { group: 'games', tier: 'extreme', when: { deed: 'feat:fishing:shinyGyarados' }, hidden: true },
   perfectDuel: { group: 'games', tier: 'hard', when: { deed: 'feat:typeDuel:perfectDuel' }, hidden: true },
+  /* The season's games, from the API's own word. */
+  safariCatch: { group: 'games', tier: 'easy', when: { deed: 'safari:catch' } },
+  safariRanger: { group: 'games', tier: 'hard', when: { deed: 'safari:catch', at: 30 } },
+  safariShiny: { group: 'games', tier: 'extreme', when: { deed: 'safari:shiny' }, hidden: true },
+  firstFind: { group: 'games', tier: 'easy', when: { deed: 'dig:find' } },
+  fossilHunter: { group: 'games', tier: 'medium', when: { deed: 'dig:fossil' } },
+  goldenVein: { group: 'games', tier: 'hard', when: { deed: 'dig:golden' }, hidden: true },
+  firstPlush: { group: 'games', tier: 'easy', when: { deed: 'claw:plush' } },
+  plushShelf: { group: 'games', tier: 'hard', when: { deed: 'claw:plush', at: 10 } },
+  steadyHand: { group: 'games', tier: 'hard', when: { deed: 'claw:firstTry' }, hidden: true },
 
   /* The Hora do Realm. */
   highTide: { group: 'events', tier: 'easy', when: { deed: 'event:tide' } },

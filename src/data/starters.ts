@@ -180,7 +180,7 @@ export const STARTERS = {
   chimchar: {
     name: 'Chimchar',
     color: '#e86830',
-    stats: { speed: 8, cooldown: -0.08, maxHp: -10 },
+    stats: { speed: 8, cooldown: -0.08, maxHp: 5 },
     signature: 'machPunch',
     learnset: [['machPunch', 'ember', 'flameWheel', 'torchSong', 'fireSpin', 'focusPunch'], ['uTurn', 'pyroBall'], ['stealthRock', 'shockWave']],
     line: line(['Chimchar', 'Monferno', 'Infernape'], 390, [['fire'], ['fire', 'fighting'], ['fire', 'fighting']], [
@@ -239,7 +239,7 @@ export const STARTERS = {
   chespin: {
     name: 'Chespin',
     color: '#80b050',
-    stats: { maxHp: 25, armor: 2, speed: -6 },
+    stats: { maxHp: 15, armor: 1, speed: -6 },
     signature: 'needleArm',
     learnset: [['needleArm', 'vineWhip', 'pinMissile', 'toxicSpikes', 'machPunch', 'drumBeating'], ['gyroBall', 'razorLeaf'], ['leafBlade', 'stealthRock']],
     line: line(['Chespin', 'Quilladin', 'Chesnaught'], 650, [['grass'], ['grass'], ['grass', 'fighting']], [
@@ -250,7 +250,7 @@ export const STARTERS = {
   fennekin: {
     name: 'Fennekin',
     color: '#f09048',
-    stats: { area: 0.1, duration: 0.2, might: 0.05, maxHp: -10 },
+    stats: { area: 0.1, duration: 0.2, might: 0.05, maxHp: 5 },
     signature: 'psybeam',
     learnset: [['psybeam', 'ember', 'fireSpin', 'psyshock', 'willOWisp', 'futureSight'], ['flameWheel', 'torchSong'], ['disarmingVoice', 'spiritShackle']],
     line: line(['Fennekin', 'Braixen', 'Delphox'], 653, [['fire'], ['fire'], ['fire', 'psychic']], [
@@ -261,7 +261,7 @@ export const STARTERS = {
   froakie: {
     name: 'Froakie',
     color: '#58a0d8',
-    stats: { speed: 12, projectileSpeed: 0.15, maxHp: -20 },
+    stats: { speed: 12, projectileSpeed: 0.15, maxHp: -5 },
     signature: 'waterShuriken',
     learnset: [['waterShuriken', 'waterGun', 'quickAttack', 'razorShell', 'brine', 'futureSight'], ['uTurn', 'sludgeBomb'], ['toxicSpikes', 'spiritShackle']],
     line: line(['Froakie', 'Frogadier', 'Greninja'], 656, [['water'], ['water'], ['water', 'dark']], [

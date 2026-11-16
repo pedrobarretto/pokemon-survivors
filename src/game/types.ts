@@ -4,8 +4,10 @@ import type { Grid } from '../engine/spatial'
 import type { HazardVisual } from '../data/bosses'
 import type { WorldHazardState } from './hazards'
 import type { EnemyId } from '../data/enemies'
+import type { IslandId } from '../data/rushIslands'
 import type { BiomeId, WeatherId } from '../data/biomes'
 import type { RiftLegend } from '../data/rifts'
+import type { UltraBeast } from '../data/ultraBeasts'
 import type { BuffId } from '../data/consumables'
 import type { BagItem, EvoItemId } from '../data/shop'
 import type { ItemId } from '../data/items'
@@ -24,6 +26,8 @@ import type { ConsumableId } from './consumables'
 import type { DexLog } from './dex'
 import type { Difficulty } from './difficulty'
 import type { EggTier, RunEggs } from './eggs'
+import type { FindId } from '../data/seasonOneUnlocks'
+import type { FindMoment, SeasonFinds } from './seasonOneFinds'
 import type { EndlessState } from './endless'
 import type { MoveId } from './moves'
 import type { MapEventNotice, MapEventsState } from './mapEvents'
@@ -31,6 +35,9 @@ import type { Team } from '../data/versus'
 import type { VersusSeat, VersusState } from './versus'
 import type { PingKind, QuickChat } from './versusSocial'
 import type { MegaState } from './mega'
+import type { TeraState } from './tera'
+import type { RaidState } from './teraRaid'
+import type { RaidPick, TeraType } from '../data/tera'
 import type { Prop } from './props'
 import type { TerrainState } from './terrain'
 import type { Roster } from './roster'
@@ -48,6 +55,10 @@ import type { TraitState } from './traits'
 import type { BossFight } from './bossFight'
 import type { ModState } from './mods'
 import type { DamageBonus, Ward } from './kitRules'
+import type { GaKitB } from './gaKitBRules'
+import type { FossilKit, FossilVisual } from './fossilKitRules'
+import type { ScKit } from './scKitRules'
+import type { GaKitHook } from './gaHookRules'
 import type { MoveSound } from './moveVerbs'
 import type { TmSource } from './tmRules'
 import type { TmState } from './tms'
@@ -55,6 +66,19 @@ import type { CurseId } from '../data/curses'
 import type { CurseState } from './curses'
 import type { LegendaryVisual } from './legendaryMoves'
 import type { LegendaryVisual2 } from './legendaryMoves2'
+import type { UltraVisual } from './ultraMoves'
+import type { PathLegendVisual } from './pathLegendMoves'
+import type { PathNotice, PathRun } from './pathRun'
+import type { LegendaryVisual3 } from './legendaryMoves3'
+import type { LegendaryVisual4 } from './legendaryMoves4'
+import type { LegendaryVisual5 } from './legendaryMoves5'
+import type { OgerponMask } from '../data/mythicals'
+import type { LegendaryVisual6 } from './legendaryMoves6'
+import type { QuestState } from './quests'
+import type { RushState } from './rush'
+import type { RoamMoment } from './roamers'
+import type { DuelMoment } from './duels'
+import type { RoamerId, SwordId } from '../data/legends'
 import type { TensionState } from './tension'
 import type { AlphaClock, AlphaState } from './alphas'
 import type { LegendForm, LegendId } from '../data/legends'
@@ -62,6 +86,12 @@ import type { LegendState } from './legend'
 import type { CoopState } from './coop'
 import type { Training } from './training'
 import type { Harm, HarmBy } from './harm'
+import type { SeasonKit } from './seasonOneKitRules'
+import type { GaKitA, GaKitAVisual } from './gaKitARules'
+import type { GaKitMA, GaKitMAVisual } from './gaKitMARules'
+import type { MegaKitB } from './megaKitBRules'
+import type { RocketKit } from './rocketKitRules'
+import type { ShadowVariant } from './shadow'
 import type { MythicalHunt } from './mythicalHunt'
 
 export type OwnedMove = {
@@ -155,6 +185,8 @@ export type Player = {
   special: SpecialState
   /** Mega Stone, Mega form and its recharge (`mega.ts`). */
   mega: MegaState
+  /** Tera type, Tera Orb and Terastal form (`tera.ts`). */
+  tera: TeraState
   /** Level-up rerolls/skips left this run. */
   rerolls: number
   skips: number
@@ -164,6 +196,8 @@ export type Player = {
   banished: Set<MoveId>
   /** Items forgotten this run, apart from the moves: Metronome is both, and forgetting one must leave the other. */
   banishedItems: Set<ItemId>
+  /** Items let go this run (`dropItem` in `itemDrop.ts`), each kept out of the offers until the player reaches `until`. */
+  dropped: Array<{ id: ItemId; until: number }>
   /** Mods of the move being cast right now (`updateMoves`), stamped on every hitbox it spawns; 0 otherwise. */
   castMods: number
   damageByMove: Partial<Record<DamageSource, number>>
@@ -229,6 +263,26 @@ export type Player = {
   hits: Harm[]
   /** Versus (`versus.ts`): their team, Energy, respawn and match stats. Absent outside Versus. */
   versus?: VersusSeat
+  /** Temporada 1's mechanic families (`seasonOneKitRules.ts`): their running state. Absent for everyone else. */
+  kit?: SeasonKit
+  /** The Grande Atualização's second batch of families (`gaKitBRules.ts`): their running state. Absent for everyone else. */
+  kitB?: GaKitB
+  /** The Safári and Game Corner wave's families (`scKitRules.ts`): their running state. Absent for everyone else. */
+  kitSC?: ScKit
+  /** The big update's first 15 families (`gaKitARules.ts`): their running state. Absent for everyone else. */
+  kitA?: GaKitA
+  /** The fossil families the Grande Atualização restores (`fossilKitRules.ts`): their running state. Absent for everyone else. */
+  kitF?: FossilKit
+  /** The Rocket Game Corner's prize families (`rocketKitRules.ts`): their running state. Absent for everyone else. */
+  rocket?: RocketKit
+  /** The Grande Atualização's Mega families (`gaKitMARules.ts`): their running state. Absent for everyone else. */
+  kitMA?: GaKitMA
+  /** The big update's Mega families (`megaKitBRules.ts`): their running state. Absent for everyone else. */
+  megaB?: MegaKitB
+  /** The wave's hook families (`gaHookRules.ts`): their running state. Absent for everyone else. */
+  kitH?: GaKitHook
+  /** A Shadow or Purified Pokémon (`shadow.ts`), decided as the run starts. Absent for the plain one, so its state hashes as before. */
+  variant?: ShadowVariant
 }
 
 /** One player's run stats (damage dealt is `damageByMove`). `tally` counts their own faints only in co-op. */
@@ -236,6 +290,8 @@ export type PlayerRecord = {
   kills: number
   /** HP lost to the horde, bosses and hazards. */
   taken: number
+  /** Hits that hurt (`hurtPlayer`). */
+  hits: number
   /** Fainted teammates this player got back up. */
   revives: number
   /** Times this player fainted (co-op). */
@@ -257,6 +313,8 @@ export type EnemyBehavior =
    * sits in its hole) until place age `until`, when it ducks away unhurt.
    */
   | { kind: 'shy'; x: number; y: number; leash: number; until: number }
+  /** A roaming lake legend (`roamers.ts`): it walks as `roamStep` says (away from players, or its quirk's way) and never bites. */
+  | { kind: 'roam' }
   /**
    * Versus: the body of the player at `slot` that the rival team's moves hit
    * (`versusCombat.ts`). It never moves or bites on its own: it stands where
@@ -363,6 +421,8 @@ export type Visual =
   | 'streak' | 'slash' | 'afterimage'
   /** The rainbow burst that ends a Mega Evolution (`mega.ts`), drawn by `render/megaFx.ts`. */
   | 'megaWave'
+  /** The shockwave as a Terastallization's crystal shatters (`tera.ts`), drawn by `render/teraFx.ts`. */
+  | 'teraWave'
   /** Lingering ground of a Trail mod, the blast of a Burst mod and the sparks of an Arc mod (`mods.ts`), drawn by `render/modFx.ts`. */
   | 'modTrail' | 'modBurst' | 'modArc'
   /** A delayed strike's warning on the ground (`moveKit.ts`), drawn by `render/kitFx.ts`. */
@@ -382,6 +442,42 @@ export type Visual =
   | LegendaryVisual
   /** Legendary moves, second batch (`legendaryMoves2.ts`), drawn by `render/legendaryFx2.ts`. */
   | LegendaryVisual2
+  /** The Ultra Beasts' moves (`ultraMoves.ts`), drawn by `render/ultraFx.ts`. */
+  | UltraVisual
+  /** Legendary moves, third batch (`pathLegendMoves.ts`), drawn by `render/pathLegendFx.ts`. */
+  | PathLegendVisual
+  /** Legendary moves, third batch (`legendaryMoves3.ts`), drawn by `render/legendaryFx3.ts`. */
+  | LegendaryVisual3
+  /** Legendary moves, fourth batch (`legendaryMoves4.ts`), drawn by `render/legendaryFx4.ts`. */
+  | LegendaryVisual4
+  /** Legendary moves, fifth batch (`legendaryMoves5.ts`, the mythicals'), drawn by `render/legendaryFx5.ts`. */
+  | LegendaryVisual5
+  /** Legendary moves, sixth batch (`legendaryMoves6.ts`), drawn by `render/legendaryFx6.ts`. */
+  | LegendaryVisual6
+  /** Temporada 1's mechanic families, drawn by `render/seasonOneKitFx.ts`. */
+  | 'kitCross' | 'kitClaw' | 'dragonPulse' | 'slime' | 'waterPulse' | 'miceBite' | 'auraWheel' | 'zenOrb' | 'commandSlam' | 'orderUp'
+  /** The second batch's families (`gaKitBMoves.ts`, `gaKitBSystem.ts`), drawn by `render/gaKitBFx.ts`; `kitBHit` is a kit's unseen hitbox. */
+  | 'kitBHit' | 'kitBTail' | 'kitBEgg' | 'kitBSphere' | 'kitBWing' | 'kitBFist' | 'kitBSalt' | 'kitBCut' | 'kitBSpark' | 'kitBLatch'
+  | 'kitBCharge' | 'kitBShot' | 'kitBKick' | 'kitBRing' | 'kitBSlam' | 'kitBSplash'
+  | 'kitBJaws' | 'kitBHammer' | 'kitBErupt' | 'kitBHug'
+  /** The Safári and Game Corner wave's families (`scKitMoves.ts`, `scKitSystem.ts`), drawn by `render/scKitFx.ts`; `scHit` is a kit's unseen hitbox. */
+  | 'scSludge' | 'scQuill' | 'scHorn' | 'scCharge' | 'scQuake' | 'scMoonbeam' | 'scGeyser' | 'scSplash' | 'scHit'
+  /** The big update's first 15 families, drawn by `render/gaKitAFx.ts`. */
+  | GaKitAVisual
+  /** The fossil families (`fossilKitMoves.ts`, `fossilKitSystem.ts`), drawn by `render/fossilKitFx.ts`. */
+  | FossilVisual
+  | GaKitMAVisual
+  /** The big update's Mega families (`megaKitBMoves.ts`, `megaKitBSystem.ts`), drawn by `render/megaKitBFx.ts`; `mbLeap`, `mbHop` and `mbCrash` never hit. */
+  | 'mbKick' | 'mbLeap' | 'mbCrash' | 'mbQuake' | 'mbBomb' | 'mbMagma' | 'mbPunch' | 'mbHop' | 'mbStomp' | 'mbWind' | 'mbBlossom' | 'mbPetal'
+  | 'mbGlob' | 'mbSplash' | 'mbDrop'
+  /** The regional forms' moves (`regionalMoves.ts`), drawn by `render/regionalFx.ts`. */
+  | 'metalClaw' | 'shellSlam' | 'shellShot' | 'obstructGuard' | 'obstructX' | 'leekJoust' | 'chloroblast' | 'barb' | 'toxicGlob' | 'toxicPool' | 'bullCharge' | 'bitterMalice'
+  /** The Rocket Game Corner's prize families, drawn by `render/rocketKitFx.ts`. */
+  | 'transformSplash' | 'razorWind' | 'omenFall' | 'coinRain' | 'viseGrip' | 'deceiverBite'
+  /** Ponyta's gallop batch (`gallopMoves.ts`), drawn by `render/gallopFx.ts`. */
+  /** The hook families (`gaHookMoves.ts`, `gaHookSystem.ts`), drawn by `render/gaHookFx.ts`; `hookHit` is a kit's unseen hitbox. */
+  | 'hookHit' | 'hookPowder' | 'hookBuzz' | 'hookGem' | 'hookShell' | 'hookJab' | 'hookLeap' | 'hookKnee' | 'hookSpin' | 'hookCounter' | 'hookBolt' | 'hookImpulse' | 'hookBurst' | 'hookPulse' | 'hookZap'
+  | 'gallopQuake' | 'gallopPillar' | 'lowKick' | 'axeKick' | 'axeRing' | 'hornDrill' | 'hornBlow' | 'hyperLance' | 'morningSun' | 'revivalFlare' | 'bounceLand' | 'skyDive'
 
 /** What dealt the damage, for the results screen: a move, the special or the ability (Rough Skin, Magic Bounce). */
 export type DamageSource = MoveId | 'special' | 'ability'
@@ -417,7 +513,7 @@ export type EggMoveVisual =
 export type EggMove3Visual =
   | 'fieryDance' | 'overdrive' | 'gigatonHammer' | 'hammerTap' | 'hammerQuake' | 'bitterBlade' | 'leechLife' | 'fireFang'
   | 'furySwipes' | 'heavySlam' | 'heavyQuake' | 'bulldoze' | 'perishWave' | 'perishMark' | 'chargeBeam' | 'moonblast'
-  | 'moonBurst' | 'frostBreath' | 'avalanche'
+  | 'moonBurst' | 'dazzlingGleam' | 'frostBreath' | 'avalanche'
 /** The second batch of egg-family signature moves (`eggMoves2.ts`), drawn by `render/eggMove2Fx.ts`. */
 export type EggMove2Visual =
   | 'braveBird' | 'weatherBall' | 'accelerock' | 'zapCannon' | 'aerialAce' | 'crossPoison' | 'bubbleBeam' | 'rockBlast'
@@ -521,6 +617,8 @@ export type Attack = {
   memo: number
   /** Arena only: a lasting effect (an aura, a trail: a hitbox with no end) that its casts hold `VERSUS_KIT.persist` s at a time (`holdLasting`). */
   lasting?: true
+  /** A patch of ground a trail left (`dropPatch`): a move keeps only so many alive at once. */
+  ground?: true
 }
 
 /** Enemy-owned hitbox that hurts the player (boss attacks). */
@@ -579,7 +677,7 @@ export type Pickup = {
   to?: number
   /** Co-op: dropped for this slot alone (their Mega Stone, legendary TM, a boss's TM or Poké Ball); unset means anyone's. */
   owner?: number
-} & ({ kind: 'xp'; value: number } | { kind: 'coin'; value: number } | { kind: 'berry' } | { kind: 'pokeball' } | { kind: 'megaStone'; mega: MegaId } | { kind: 'consumable'; item: ConsumableId } | { kind: 'tm'; move: MoveId; source: TmSource } | { kind: 'alphaPrize' } | { kind: 'treat' } | { kind: 'evoItem'; item: EvoItemId })
+} & ({ kind: 'xp'; value: number } | { kind: 'coin'; value: number } | { kind: 'berry' } | { kind: 'pokeball' } | { kind: 'megaStone'; mega: MegaId } | { kind: 'consumable'; item: ConsumableId } | { kind: 'tm'; move: MoveId; source: TmSource } | { kind: 'alphaPrize' } | { kind: 'treat' } | { kind: 'evoItem'; item: EvoItemId } | { kind: 'teraShard'; tera: TeraType; pair: number } | { kind: 'hexNut' })
 
 export type Particle = {
   x: number
@@ -672,6 +770,8 @@ export type GameEvent =
   | { kind: 'shinyPlayer' }
   /** First shiny of a species defeated this run; the shell toasts it only when the Pokédex didn't have it yet. */
   | { kind: 'caught'; enemy: EnemyId }
+  /** Shadow Mewtwo fell in the Rocket Hideout's lair (`game/hideout.ts`): the shell gives it to the Legend mode. */
+  | { kind: 'rocketCleared' }
   | { kind: 'thunder' }
   | { kind: 'quake' }
   /**
@@ -690,9 +790,36 @@ export type GameEvent =
   | { kind: 'mega'; name: string }
   | { kind: 'megaEnd' }
   | { kind: 'megaReady' }
+  /**
+   * Terastal (`tera.ts`): a boss left its choice of shards, a shard set the Tera type, the orb filled, the
+   * transformation started, the form landed or ran out, a Stellar type's once-only strike landed, Terapagos's Stellar Form shone anew.
+   */
+  | { kind: 'teraShards' }
+  | { kind: 'teraShard'; tera: TeraType; from: TeraType | null }
+  /** Ogerpon Terastallized in a mask: its Embody Aspect (`game/ogerpon.ts`). */
+  | { kind: 'embodyAspect'; mask: OgerponMask }
+  /** Zeraora's storm on the open map (`game/zeraora.ts`): it gathers, or it ends with Zeraora gone (`fled`: chased off or out of time). */
+  | { kind: 'storm'; moment: 'gathering' | 'fled' }
+  | { kind: 'teraReady' }
+  | { kind: 'teraStart'; tera: TeraType }
+  | { kind: 'tera'; tera: TeraType }
+  | { kind: 'teraEnd' }
+  | { kind: 'stellarStrike'; type: PokeType }
+  | { kind: 'stellarPulse' }
+  /** Tera Raids (`teraRaid.ts`): a den opened or closed unused, the team went in, the shield rose or broke, a storm came, the boss fell, a player fainted, the team came back out. */
+  | { kind: 'raidOpen'; raid: RaidPick; day: boolean }
+  | { kind: 'raidClosed' }
+  | { kind: 'raidEnter'; raid: RaidPick; day: boolean }
+  | { kind: 'raidShield'; moment: 'up' | 'broken' }
+  | { kind: 'raidStorm' }
+  | { kind: 'raidCleared'; raid: RaidPick; day: boolean }
+  | { kind: 'raidFall' }
+  | { kind: 'raidExit'; outcome: 'won' | 'timeout' | 'fallen' }
   | { kind: 'evolve'; from: number; to: number }
   /** A branching evolution waits on the player's pick. */
   | { kind: 'branchChoice' }
+  /** Co-op: Plusle and Minun on one team linked up (`updatePlusMinus` in `coop.ts`). */
+  | { kind: 'plusMinus' }
   /** An evolution item found in the run (`game/evoGate.ts`). */
   | { kind: 'evoItem'; item: EvoItemId }
   /** The evolution waits for one of these items: the run stays in its form, stronger (`Game.evoHeld`). */
@@ -706,6 +833,8 @@ export type GameEvent =
   | { kind: 'shinyOffer' }
   /** A level-up card was forgotten (Esquecer) and its slot drawn again. */
   | { kind: 'banish' }
+  /** A held item was let go (`dropItem`). */
+  | { kind: 'itemDropped'; id: ItemId }
   | { kind: 'moveEvolved'; from: MoveId; to: MoveId }
   /** Two moves fused into a duo move. */
   | { kind: 'duoFused'; from: readonly [MoveId, MoveId]; to: MoveId }
@@ -750,6 +879,12 @@ export type GameEvent =
   | { kind: 'egg'; tier: EggTier }
   /** A landmark was named, its treasure opened, or the player went into or out of a tunnel (`landmarks.ts`). */
   | { kind: 'landmark'; landmark: LandmarkId; moment: LandmarkMoment }
+  /** A Temporada 1 map encounter (`seasonOneFinds.ts`): the shell banks a `found` one. */
+  | { kind: 'seasonFind'; find: FindId; moment: FindMoment }
+  /** A legend path's moment in a run (`pathRun.ts`): a Zygarde piece, Regigigas's temple. */
+  | { kind: 'path'; notice: PathNotice }
+  /** A Hex Nut picked up in Meltan's run (`pathRun.ts`). */
+  | { kind: 'hexNut' }
   /** Something happened at a place: its entrance, the way in and out, what goes on inside (`place.ts`). */
   | { kind: 'place'; place: PlaceId; notice: PlaceNotice }
   /** A foe shattered: an execute, or a frozen foe's ice broken by a hit. */
@@ -776,9 +911,16 @@ export type GameEvent =
   | { kind: 'hazardIntro' }
   /** Legend mode (`legend.ts`): an awakening (`n`, 1 or 2) started, or landed, maybe in its `form` (Primal Kyogre). */
   | { kind: 'awaken'; legend: LegendId; n: number }
-  | { kind: 'awakened'; legend: LegendId; n: number; form: LegendForm | null }
+  /** A legend's awakening landed: `form` its asset form now, `changed` when it took a new look (a form, another species: Urshifu, Melmetal, Poipole's Naganadel). */
+  | { kind: 'awakened'; legend: LegendId; n: number; form: LegendForm | null; changed: boolean }
   /** A legendary boss fell (rift, trio, mythical, Mewtwo, Arceus), once per defeat: the save counts it toward capturing it. */
   | { kind: 'legendBeaten'; legend: EnemyId; shiny: boolean }
+  /** A roaming legend, of the lake trio or a Force of Nature (`roamers.ts`): sighted, gone (its HP share `left` is the save's to keep), its memory wipe, a Force's new `phase`, or caught. */
+  | { kind: 'roam'; legend: RoamerId; moment: RoamMoment; left: number; phase: number }
+  /** A Sword of Justice's duel (`duels.ts`). */
+  | { kind: 'duel'; sword: SwordId; moment: DuelMoment }
+  /** Hoopa's Rings (`rush.ts`): ring `ring` (from 0) of `rings` opened on `legend`, or its legend went down. */
+  | { kind: 'rush'; moment: 'ring' | 'down'; ring: number; rings: number; legend: EnemyId; island: IslandId }
   /** A solo finale rolled its mythical slot: who came, or null. The save counts it (`game/mythicalHunt.ts`). */
   | { kind: 'mythicalRoll'; enemy: EnemyId | null }
   /** A boss with phases moved on to phase `phase` (from 0), or began its ultimate (`move`, the official English name). */
@@ -828,6 +970,7 @@ export type GameEvent =
 export type Buff = { id: BuffId; left: number; total: number }
 
 /** An evolution's scene: dex `from` → `to`. A legend's awakening (`awakening`: 1 or 2) plays it too, landing in its `form` where it takes one. */
+/** An evolution under way, `from` and `to` dex; an awakening's (`awakening`: which) lands in `to`'s `form` (none: the species' own sheets). */
 export type Evolution = { from: number; to: number; t: number; awakening?: number; form?: LegendForm }
 
 export type Game = {
@@ -869,6 +1012,8 @@ export type Game = {
   outbreak: EnemyId | null
   /** Noite das Bruxas (`game/halloween.ts`): the run is haunted, a run input like the outbreak. */
   halloween: boolean
+  /** The Ultra Beast of the week (`game/ultraWeek.ts`), a run input like the outbreak: its Ultra Wormhole comes more often (`drawUltraBeast`). Null without one (co-op, the Dojo). */
+  ultraWeek: UltraBeast | null
   /** The mythicals' bad-luck protection this run plays (`game/mythicalHunt.ts`), null for the plain odds. */
   mythicalHunt: MythicalHunt | null
   /** Candies collected this run (a haunted one), banked into the save's jar at the end. */
@@ -886,6 +1031,14 @@ export type Game = {
   terrain: TerrainState
   /** The landmarks' treasures taken, names shown and the tunnel being walked (`game/landmarks.ts`). */
   landmarks: LandmarkState
+  /** Temporada 1's map encounters this run (`seasonOneFinds.ts`). */
+  finds: SeasonFinds
+  /** The legend paths' side of the run (`pathRun.ts`): Zygarde's pieces to come, Meltan's Hex Nuts, Regigigas's temple. */
+  paths: PathRun
+  /** The legends met on the open map this run: a roaming lake legend and a Sword's duel (`quests.ts`). */
+  quests: QuestState
+  /** Hoopa's Rings, the Legend mode's boss rush (`rush.ts`); null in every other run. */
+  rush: RushState | null
   /** Points of interest placed by the event director (`mapEvents.ts`). */
   mapEvents: MapEventsState
   /** Full-screen white flash strength (Explosion), decays to 0. */
@@ -896,6 +1049,8 @@ export type Game = {
   traits: { seen: Set<TraitId>; nextIntro: number }
   /** Legendary rifts: the portal on the map, the arena and what was met this run. */
   rift: RiftState
+  /** Tera Raids (`teraRaid.ts`): the den on the map, the hollow the team is in and the raids beaten. */
+  raid: RaidState
   /** Places (`place.ts`): the entrance on the map, the inside the player is in and the wings picked up. */
   place: PlaceState
   /** Move Tutors met this run (their tent's odds, `mapEvents.ts`). */

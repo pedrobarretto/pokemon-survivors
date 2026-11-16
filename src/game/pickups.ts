@@ -1,4 +1,5 @@
 import { dirTo, retain } from '../engine/math'
+import { restTurnedDown } from './itemDrop'
 import { range } from '../engine/rng'
 import { healPlayer } from './combat'
 import { burst, floatText, shakeScreen } from './effects'
@@ -9,11 +10,16 @@ import { openAlphaPrize } from './alphas'
 import { grantStone } from './mega'
 import { collectTm } from './tms'
 import { collectCandy } from './halloween'
+import { collectNut } from './hexNuts'
 import { collectEvoItem } from './evoGate'
+import { collectShard } from './tera'
+import { TERA } from '../data/tera'
 import { inPlay, onAnyScreen, setPhase } from './players'
 import { coopScale } from './coop'
 import { COOP } from '../data/coop'
+import { rocketCoin } from './rocketKitSystem'
 import type { Game, Offer, Pickup, Player } from './types'
+import { gaKitAPickup } from './gaKitASystem'
 import * as dm from '../engine/dmath'
 
 export const MAX_XP_PICKUPS = 260
@@ -28,7 +34,7 @@ export const MAX_XP_PICKUPS = 260
 export const LOOT = { maxAge: 120, margin: 32 } as const
 
 /** Pickups that never go: Exp. Candies (capped by folding) and the finds a run gets one of. */
-const LASTING: ReadonlySet<Pickup['kind']> = new Set(['xp', 'tm', 'megaStone', 'evoItem', 'alphaPrize'])
+const LASTING: ReadonlySet<Pickup['kind']> = new Set(['xp', 'tm', 'megaStone', 'evoItem', 'alphaPrize', 'teraShard'])
 
 /** Whether `k` was left behind for good (`LOOT`): old, not on its way to anyone, out of everyone's sight. */
 export const leftBehind = (g: Game, k: Pickup) => k.age > LOOT.maxAge && !k.attracted && !LASTING.has(k.kind) && !onAnyScreen(g, k.x, k.y, LOOT.margin)
@@ -38,7 +44,7 @@ const PULL_SPEED = 420
 /** How fast (1/s) a pulled pickup's velocity turns toward the player. */
 const PULL_STEER = 7
 
-type PickupKind = Exclude<Pickup['kind'], 'xp' | 'coin' | 'consumable' | 'megaStone' | 'tm' | 'treat' | 'evoItem'>
+type PickupKind = Exclude<Pickup['kind'], 'xp' | 'coin' | 'consumable' | 'megaStone' | 'tm' | 'treat' | 'evoItem' | 'teraShard' | 'hexNut'>
 
 export const dropPickup = (g: Game, x: number, y: number, kind: PickupKind) => {
   g.pickups.push({ id: g.nextId++, x, y, vx: 0, vy: 0, attracted: false, age: 0, kind })
@@ -128,6 +134,7 @@ export const decidePokeball = (g: Game, picked: Offer) => {
   const [found] = g.player.offers
   if (!found || found.kind === 'pass') return
   const take = picked.kind !== 'pass'
+  if (!take) restTurnedDown(g.player, [found], picked)
   if (take) applyOffer(g, found)
   g.events.push({ kind: 'pokeball', offer: found, moment: take ? 'taken' : 'left' })
 }
@@ -144,6 +151,7 @@ const collect = (g: Game, pickup: Pickup) => {
       // Co-op ₽ are worth a bit more: the team's total is split at the end (`coopPayout`).
       const amount = dm.round(pickup.value * p.stats.greed * coopScale(g, COOP.scale.coins))
       g.coins += amount
+      rocketCoin(g, amount)
       floatText(g, p.x, p.y - 30, `₽${amount}`, '#f8d030')
       g.events.push({ kind: 'coin' })
       break
@@ -176,7 +184,14 @@ const collect = (g: Game, pickup: Pickup) => {
     case 'evoItem':
       collectEvoItem(g, pickup.item)
       break
+    case 'teraShard':
+      collectShard(g, pickup.tera, pickup.pair)
+      break
+    case 'hexNut':
+      collectNut(g)
+      break
   }
+  gaKitAPickup(g, pickup)
 }
 
 /**
@@ -234,8 +249,9 @@ export const updatePickups = (g: Game, dt: number) => {
       continue
     }
     const d2 = dm.sq(k.x - p.x) + dm.sq(k.y - (p.y - 6))
-    if (choosing && k.kind === 'megaStone') {
-      if (d2 < dm.sq(p.radius + 8)) {
+    // A choice of Mega Stones, and every Tera Shard (taking one is a call: it sets the Tera type), wait to be touched.
+    if ((choosing && k.kind === 'megaStone') || k.kind === 'teraShard') {
+      if (d2 < dm.sq(p.radius + (k.kind === 'teraShard' ? TERA.touch : 8))) {
         collect(g, k)
         k.age = -1
       }
@@ -296,6 +312,7 @@ const takerWithin = (g: Game, k: Pickup, reach: (q: Player) => number = magnetRe
 
 const magnetReach = (q: Player) => dm.sq(q.stats.magnet)
 const touchReach = (q: Player) => dm.sq(q.radius + 8)
+const shardReach = (q: Player) => dm.sq(q.radius + TERA.touch)
 
 /** The nearest player who can take `k` (an already pulled pickup whose player fainted or went away, or one Exp. Share pulled). */
 const nearestTaker = (g: Game, k: Pickup) => {
@@ -328,9 +345,9 @@ const updateTeamPickups = (g: Game, dt: number) => {
       k.age = -1
       continue
     }
-    if (k.kind === 'megaStone' && stonesFor(g, k.owner) > 1) {
-      // A choice of stones isn't pulled: it waits to be touched.
-      const q = takerWithin(g, k, touchReach)
+    if ((k.kind === 'megaStone' && stonesFor(g, k.owner) > 1) || k.kind === 'teraShard') {
+      // A choice of stones isn't pulled, nor a Tera Shard: it waits to be touched.
+      const q = takerWithin(g, k, k.kind === 'teraShard' ? shardReach : touchReach)
       if (q) {
         g.player = q
         collect(g, k)

@@ -25,9 +25,20 @@ export const fromAngle = (angle: number, length = 1): Vec => ({ x: dm.cos(angle)
  */
 export type Dir8 = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7
 
+/** tan(22.5°): the slope where a direction turns from straight to diagonal. */
+const TAN_EIGHTH = Math.SQRT2 - 1
+
+/**
+ * The sprite row facing (x, y): the nearest of the 8 directions, by comparing
+ * the slope with 22.5° rather than taking the angle (every moving foe asks
+ * every tick, and `dm.atan2` is a software arctangent). Still (0, 0) faces Right.
+ */
 export const dir8 = (x: number, y: number): Dir8 => {
-  const octant = (dm.round(dm.atan2(y, x) / (Math.PI / 4)) + 8) % 8
-  return ((2 - octant + 8) % 8) as Dir8
+  const ax = Math.abs(x)
+  const ay = Math.abs(y)
+  if (ay <= ax * TAN_EIGHTH) return x < 0 ? 6 : 2
+  if (ax <= ay * TAN_EIGHTH) return y < 0 ? 4 : 0
+  return y < 0 ? (x < 0 ? 5 : 3) : x < 0 ? 7 : 1
 }
 
 /** In-place removal of items that fail `keep`, preserving order. Avoids per-frame allocations. */

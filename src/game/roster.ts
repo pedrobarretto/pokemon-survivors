@@ -71,6 +71,9 @@ export const hasTrait = (id: EnemyId) => TRAITED.has(id)
 /** Draw odds of a spitter whose type has its own spit flavor (`hasFlavor`). */
 const FLAVOR_ODDS = 3
 
+/** Draw odds of a species against the rest of its tier (`EnemyDef.rarity`). */
+const rarity = (def: EnemyDef) => def.rarity ?? 1
+
 const isFlyer = (def: EnemyDef) => def.types.includes('flying')
 
 /**
@@ -140,7 +143,7 @@ export const drawRoster = (rng: Rng, { weight = () => 1, stages = STAGES, events
     )
   }
   const draw = (entries: readonly Entry[], stage: number) => {
-    const id = drawOne(rng, entries, (def) => weight(def, stage) * (def.trait ? TRAIT_ODDS : 1))
+    const id = drawOne(rng, entries, (def) => weight(def, stage) * (def.trait ? TRAIT_ODDS : 1) * rarity(def))
     used.add(id)
     return id
   }
@@ -203,7 +206,7 @@ export const drawRoster = (rng: Rng, { weight = () => 1, stages = STAGES, events
     const cast = new Set([...carried, ...fresh])
     const open = ofTier(Math.min(...stage.cast) as Tier, false).filter(([id]) => !cast.has(id))
     if (open.length === 0) return null
-    const id = drawOne(rng, open, (def) => weight(def, i) * (hasFlavor(def.types) ? FLAVOR_ODDS : 1))
+    const id = drawOne(rng, open, (def) => weight(def, i) * rarity(def) * (hasFlavor(def.types) ? FLAVOR_ODDS : 1))
     used.add(id)
     return id
   })

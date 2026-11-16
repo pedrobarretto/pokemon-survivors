@@ -1,5 +1,6 @@
 import { beginRects, blitCentered, blitPacked, context2d, createCanvas, ellipse, fromStrings, lazy, ring, type Palette, type PixelSprite } from '../engine/pixelart'
 import { TAU } from '../engine/math'
+import type { PokeType } from '../data/types'
 import { hash2 } from '../engine/rng'
 import { HYPER_BEAM, type ShopTmMoveId } from '../game/shopTmMoves'
 import type { ShopTmMove2Id } from '../game/shopTmMoves2'
@@ -131,6 +132,13 @@ const drawClaw = (ctx: Ctx, a: Attack) => {
 }
 
 /** Protect's bubble around the player: a green-white shell with a turning glint, flashing when it blocks. */
+/** A bubble's colors by move type: Protect's green, Magic Coat's pink, Iron Defense's steel. */
+const BUBBLE_LOOKS: Partial<Record<PokeType, { fill: string; ring: string; rim: string }>> = {
+  normal: { fill: 'rgba(120,232,152,0.22)', ring: '#a8f0b8', rim: 'rgba(32,104,56,0.8)' },
+  psychic: { fill: 'rgba(248,160,200,0.2)', ring: '#f8c0e0', rim: 'rgba(160,48,104,0.8)' },
+  steel: { fill: 'rgba(184,200,216,0.24)', ring: '#d8e8f0', rim: 'rgba(72,88,112,0.85)' },
+}
+
 const drawBubble = (ctx: Ctx, g: Game, a: Attack, t: number) => {
   const r = Math.round(radiusOf(a))
   const left = a.ttl - a.age
@@ -138,10 +146,11 @@ const drawBubble = (ctx: Ctx, g: Game, a: Attack, t: number) => {
   if (left < 0.25 && Math.floor(t * 20) % 2 === 0) return
   const pop = Math.min(1, a.age / 0.08)
   const rr = Math.max(2, Math.round(r * (0.6 + 0.4 * pop)))
-  blitPacked(ctx, ellipse(rr, rr, 'rgba(120,232,152,0.22)'), a.x, a.y)
-  blitPacked(ctx, ring(rr, 1, '#a8f0b8'), a.x, a.y)
-  blitPacked(ctx, ring(rr + 1, 1, 'rgba(32,104,56,0.8)'), a.x, a.y)
-  const guarding = ownerOf(g, a.owner).guard?.move === 'protect'
+  const look = BUBBLE_LOOKS[a.type] ?? BUBBLE_LOOKS.normal!
+  blitPacked(ctx, ellipse(rr, rr, look.fill), a.x, a.y)
+  blitPacked(ctx, ring(rr, 1, look.ring), a.x, a.y)
+  blitPacked(ctx, ring(rr + 1, 1, look.rim), a.x, a.y)
+  const guarding = ownerOf(g, a.owner).guard?.move === a.move
   // Hexagon facets turning around the shell.
   for (let i = 0; i < 6; i++) {
     const ang = (i / 6) * TAU + t * 1.2

@@ -19,14 +19,24 @@ import { fitView, pickViewport } from './engine/viewport'
 import { createRng } from './engine/rng'
 import { BIOMES, type BiomeId, type WeatherId } from './data/biomes'
 import { bodyOf } from './data/bodies'
-import { MEGA_LINES, MEGAS, megasOf, type MegaId } from './data/megas'
+import { MEGA_LINES, MEGAS, megasOf, type MegaDef, type MegaId } from './data/megas'
 import { isRiftLegend } from './data/rifts'
+import { isUltraBeast } from './data/ultraBeasts'
 import { domainTheme } from './game/domain'
 import { partnerOf } from './data/domains'
 import { captureOutcome, setCaptureOutcome } from './render/capture'
-import { captureOutcome as savedCapture } from './game/capture'
+import { captureByGift, captureOutcome as savedCapture, isCaptured } from './game/capture'
+import { hideoutCleared, holdsPass, usePass } from './game/hideoutPass'
+import { bankRoamer, wildOf } from './game/questSave'
+import { questNews } from './ui/quests'
+import { rushEnd, rushRingLine } from './ui/rush'
+import { rushLineup, startRush } from './game/rush'
+import { recordRush } from './game/questSave'
 import { domainLines } from './ui/riftTitle'
 import { isWaveLegend, LEGEND_THEME } from './data/legendBosses'
+import { maskOf, OGERPON_MASKS } from './data/mythicals'
+import { phaseForm, phasesOf } from './game/bossFight'
+import { playsOgerpon } from './game/ogerpon'
 import { ENEMIES, type EnemyDef, type EnemyId } from './data/enemies'
 import { ITEMS } from './data/items'
 import type { AchievementId } from './data/achievements'
@@ -35,7 +45,7 @@ import { REGIONS, STARTERS } from './data/starters'
 import { nextIsOfficial } from './game/attempt'
 import { challengeStart, type Challenge } from './game/challenge'
 import { HATCHLING_IDS, HATCHLINGS, PLAYABLE, PLAYABLE_IDS, type HatchlingId, type PlayableId } from './data/hatchlings'
-import { isLegend } from './data/legends'
+import { BEAST_BOOST, isLegend, LEGEND_IDS, type LegendId } from './data/legends'
 import { accountHandle, accountState, accountsEnabled, accountUserId, backFromSignIn, giftInbox, onAccountChange, signIn, stageGifts, stageSyncedSave, startAccount, syncSave } from './account'
 import { devCandyGoal, onCandyGoal, startCandyGoal } from './candyGoal'
 import { devFestival, festivalView, startFestival } from './festival'
@@ -67,6 +77,16 @@ import { EVENTS, stageIndexAt } from './data/waves'
 import { makeShiny } from './game/shiny'
 import { MAP_EVENT_KINDS, MAP_EVENTS, spawnMapEvent, type MapEventKind } from './game/mapEvents'
 import { MEOWTH_DEX } from './game/mapEventRules'
+import { CASTFORM_FIND } from './data/seasonOneUnlocks'
+import { seasonFindDevTools, seasonFindFeedback } from './ui/seasonFinds'
+import { travelDevTools } from './ui/travelDev'
+import { bankNuts, nutFeedback, pathFeedback } from './ui/pathRun'
+import { pathDevTools } from './ui/pathDev'
+import { pathSheet } from './ui/legendPaths'
+import { trialHud } from './ui/towerTrial'
+import { startTrial } from './game/towerTrial'
+import { COSMOG_DEX, PATH_FORMS, PATH_IDS, TRIALS, type TrialId } from './data/legendPaths'
+import { clearTrial, cosmogStage, giantAwake, kubfuJoined, openForms, ruinsRun, templeRun, towerOf } from './game/legendPaths'
 import { FIELD, FIELD_MISSION_KINDS, TOGEPI_DEX, type FieldMissionKind } from './game/fieldMissionRules'
 import { advancePhase, banishOffer, chooseOffer, createGame, offerAbilities, playerDex, rerollOffers, skipLevelUp, step, takeBerryLevelUps } from './game/game'
 import { applyBuild, setDummies, setLens, startTraining } from './game/training'
@@ -78,26 +98,35 @@ import { trainingPanel } from './ui/training'
 import { formAt, playerForm } from './game/branch'
 import { unlockedAt } from './game/learnsets'
 import { ABILITIES, type AbilityEffect, type AbilityId } from './data/abilities'
-import { branchesAt, familyDex, MEGA_BRANCH, type BranchId } from './data/branches'
+import { BRANCHES, branchesAt, familyDex, MEGA_BRANCH, type BranchId } from './data/branches'
 import { abilityStacks, grantAbility } from './game/abilities'
 import { abilityIcon } from './render/abilityArt'
 import { recomputeStats, xpFor } from './game/leveling'
-import { dropMegaStones, grantStone, heldMega, megaBaseName } from './game/mega'
+import { atMegaBase, dropMegaStones, grantStone, heldMega, megaBaseName } from './game/mega'
 import { REAPER } from './game/endless'
 import { continueEndless } from './game/endlessSystem'
 import { levelUpDevTools } from './game/levelUpDev'
 import { legendDevTools } from './game/legendDev'
 import { bankCapture, captureDevTools, showCapture } from './ui/capture'
 import { riftDevTools } from './game/riftDev'
+import { ultraDevTools } from './ui/ultraDev'
+import { questDevTools } from './game/questDev'
+import { rushDevTools } from './game/rushDev'
 import { placeDevTools } from './game/placeDev'
 import { placeFeedback } from './ui/places'
 import { landmarkFeedback } from './ui/landmarks'
-import { announceMap } from './ui/mapSign'
+import { afterMapSign, announceMap } from './ui/mapSign'
 import { MAP_ARCHETYPE_IDS, type MapArchetypeId } from './data/mapArchetypes'
 import { PLACES } from './data/places'
 import { kitDevTools } from './game/kitDev'
+import { gaKitADevTools } from './game/gaKitADev'
+import { gaHookDevTools } from './gaHookDev'
+import { fighterNow } from './game/gaHookSystem'
+import { devicePattern } from './vivillonRegion'
+import { parsePattern, setSeatPatterns } from './render/gaHookLook'
 import { eggMoveDevTools } from './game/eggMovesDev'
 import { learnDevTools } from './game/learnDev'
+import { itemDropDevTools } from './game/itemDropDev'
 import { tmDevTools } from './game/tmDev'
 import { evoGateDevTools } from './game/evoGateDev'
 import { duoDevTools } from './game/duoDev'
@@ -113,15 +142,19 @@ import { clearSpot, featureAt, featuresNear, footOf, inSolid, runArchetype, setA
 import { TERRAIN, type SolidKind } from './data/terrain'
 import type { LandmarkId } from './data/landmarks'
 import { dexCounts, dexNews, dexStatus, mergeDex, recordRun, type Pokedex } from './game/dex'
-import { runEarnings, wonRun, type ConvertedEggs } from './game/meta'
+import { dexSee } from './ui/pokedexDev'
+import type { DexRegion } from './data/nationalDex'
+import { runEarnings, wonRun, type ConvertedEggs, type Save } from './game/meta'
+import { equipStyle } from './game/style'
 import { missionStatus, type MissionStatus } from './game/missions'
 import { summarizeRun, type RunSummary } from './game/tally'
-import { parseHandle, rankable, runMode, runResult } from './game/ranking'
+import { isRunMode, parseHandle, rankable, runMode, runResult } from './game/ranking'
 import { rosterSchedule, type Roster } from './game/roster'
 import { parseReplay, recordEvent, recordStep, resimulate, RULES_VERSION, rulesStanding, runRoster, startGame, startRecording, TICK, type Recorder, type ReplayStart } from './game/replay'
 import { gameSpecial } from './game/special'
 import { unlockShinyStarter } from './game/shinyStarters'
 import { playsShiny } from './game/shinyPicks'
+import { grantShadow, pickShadow, purifySteps, runVariant, type ShadowSave } from './game/shadow'
 import { canWalkWith, companionForm, OG_GIFT, SUPPORTER_TIERS, TIER_GIFTS, type CompanionId, type SupporterTier } from './game/supporters'
 import { createCompanion, stepCompanion, type CompanionView } from './render/companion'
 import { MOVES } from './game/moves'
@@ -134,10 +167,13 @@ import { drawJoystick } from './render/joystick'
 import { cryUrl, loadAll, loadSpecies, overlayStats, portraitUrl, preloadShinies, releaseSprites, spriteMemory, streamSprites, sweepSprites, type Dex, type Variant } from './render/sprites'
 import { castNeeds, runSprites, type SpriteNeed } from './render/spriteNeeds'
 import { setMarkerInsets } from './render/mapEvents'
+import { frameRaid, setRaidRoom } from './render/teraFx'
+import { frameRush, setRushRoom } from './render/rush'
 import { consumableIcon } from './render/props'
-import { berryIcon, curseIcon, eggIcon, moveIcon, ribbonIcon, warmIcon } from './render/art'
+import { berryIcon, curseIcon, eggIcon, itemIcon, moveIcon, ribbonIcon, warmIcon } from './render/art'
 import { TYPE_COLORS } from './data/types'
 import { megaStoneIcon } from './render/megaFx'
+import { denToast, dressBanner, raidBanner, shardToast, teraStrip } from './ui/teraNews'
 import { celebrateShop, createTitleScene, drawTitleScene, meetPartner, revealShopkeeper, sceneAt, stepTitleScene, visitPlaza } from './render/titleScene'
 import { festivalSprites, KECLEON_DEX, type PlazaFestival, type ShopLevel } from './render/plaza'
 import { weatherIcon } from './render/weather'
@@ -146,8 +182,9 @@ import { h, later, rich } from './ui/dom'
 import { setActivePad } from './ui/inputLabels'
 import { watchCursorMode } from './ui/cursorMode'
 import { detectKeyLayout } from './ui/keyLayout'
-import { captureRef, coopBoardsFaked, fakeCoopBoards, flushRuns, onRulesBehind, prefetchRanked, PROFILE_PARAM, rankingEnabled, stageInvite, startRanked, type RankedRun, type RankOutcome } from './ranking'
-import { DISCORD_GIFT, parseGiftContent, type GiftKind, type GiftReason } from './game/gifts'
+import { captureRef, coopBoardsFaked, fakeCoopBoards, fakeEra1Boards, flushRuns, onRulesBehind, prefetchRanked, PROFILE_PARAM, rankingEnabled, stageInvite, startRanked, type RankedRun, type RankOutcome } from './ranking'
+import { applyGift, DISCORD_GIFT, parseGiftContent, type GiftKind, type GiftReason } from './game/gifts'
+import { ERA1_GIFTS, era1Gifts, type Era1Tier } from './game/era1'
 import { giftScreen } from './ui/gifts'
 import { arenaGate, coopGate, playGate, realmGate } from './ui/account'
 import { TOWN_ROOMS, isTownRoomId } from './data/realmMap'
@@ -163,9 +200,11 @@ import { discordScreen } from './ui/discord'
 import { createHud, type Hud } from './ui/hud'
 import { openGameModes } from './ui/gameModes'
 import { loadLobbyMode, saveLobbyMode } from './ui/lobbyMode'
-import { bankEggs, challengeToday, depositPokeDollars, halloweenToday, loadAttempt, loadSave, outbreakToday, recordRunProgress, saveAttempt, saveHatch, setToday, today, updateSave, writeSave, type Settings } from './ui/save'
+import { bankEggs, challengeToday, depositPokeDollars, halloweenToday, loadAttempt, loadSave, outbreakToday, recordRunProgress, saveAttempt, saveHatch, setToday, today, ultraToday, updateSave, writeSave, type Settings } from './ui/save'
 import { challengeScreen, challengeShiny, type ChallengeSide } from './ui/challenge'
+import { manaphyEggScene } from './ui/manaphyEgg'
 import { hatchScene, incubator } from './ui/incubator'
+import { cosmogEvolveScene } from './ui/cosmogEvolve'
 import { medalChips, missionReport, missionsScreen, progressToast, titleBadge } from './ui/missions'
 import { martDevTools } from './ui/martDev'
 import { CARAVAN, STALL_IDS, STALLS, TAILOR, type StallId } from './data/visitors'
@@ -180,6 +219,8 @@ import { pokedexScreen } from './ui/pokedex'
 import { profileEditor, profileScreen } from './ui/profile'
 import { rankingScreen, rankPanel } from './ui/ranking'
 import { confirmDialog, flashScreen, levelUp, pauseMenu, results, textBox, type Screen } from './ui/screens'
+import { itemSwap } from './ui/itemSwap'
+import { dropItem, needsSwap } from './game/itemDrop'
 import { abilityPick, branchPick } from './ui/abilityPick'
 import { tmPick } from './ui/tmPick'
 import { isSettingsOpen, openSettings, settings, toggleMute } from './ui/settings'
@@ -196,7 +237,7 @@ import { creditsLine, supportersScreen } from './ui/supporters'
 import type { PollKind } from './data/supporters'
 import { fakeWall, knownTier, linkedPoll, patreonReturn, stageSupporterStatus, watchSupporterStatus } from './supporters'
 import { suggestionsScreen } from './ui/suggestions'
-import { banner, clearToasts, readRunToasts, runToast, tickToasts, toast, type ToastTone } from './ui/toasts'
+import { banner, clearToasts, focusToasts, readRunToasts, runToast, tickToasts, toast, type ToastTone } from './ui/toasts'
 import { bugReportForm, crashPrompt } from './ui/bugReport'
 import { localPlayer, phaseOf } from './game/players'
 import { activeCoopClient, addBots, arenaClient, botsTalk, tabBotLook, arenaQueueDeps, bankCoopRun, botStates, buildRefusal, closeArenaClient, coopClient, coopEventFor, openArenaClient, coopNetPayload, coopUrl, lastCoopNet, linkedRoom, linkRoom, markBuildReload, removeBots, reportCoopNet, reportHeal, setCoopUrl, setCoopVpsUrl, setBotRelays, surrenderBots, type CoopNetOutcome } from './coopShell'
@@ -230,7 +271,7 @@ import { parseHeldVersus, versusReport, type HeldVersus, type VersusLeave } from
 import { ARENA_RANKED, type MatchKind, type QueueKind } from './data/arenaRanked'
 import { arenaResult } from './game/arenaRank'
 import { dailyCoopChallenge, parseTeamSize } from './game/coopBoard'
-import type { Difficulty } from './game/difficulty'
+import { isDifficulty, type Difficulty } from './game/difficulty'
 import type { VersusHud } from './ui/versusHud'
 import { arenaFxEvent, arenaFxStats, playBurst, resetArenaFx } from './render/arenaFx'
 import { lookOf, setLooks, setLooksGame, setLocalLook } from './render/looks'
@@ -426,6 +467,8 @@ type Run = {
   paid: number
   /** Noite das Bruxas candies of this run already in the save's jar, banked the same way. */
   candies: number
+  /** Meltan's Hex Nuts of this run already in the save (`bankNuts`). */
+  nuts: number
   /** True once the run's end was reported to analytics. */
   reported: boolean
   /** Missions as the run started, and what the run has recorded so far (see `recordProgress`). */
@@ -465,10 +508,41 @@ type Run = {
   coop: CoopRun | null
   /** A Dojo session (`game/training.ts`): never banked, ranked nor reported as a run (null otherwise). */
   training: DojoRun | null
+  /** Hoopa's Rings (`game/rush.ts`): never banked, ranked nor reported as a run either (null otherwise). */
+  rush: RushRun | null
 }
 
+/** The shell's side of a rush: its level and Pokémon (for Try again), and whether its end was banked (a record, Hoopa caught). */
+type RushRun = { difficulty: Difficulty; starter: PlayableId; banked: { record: boolean; caught: boolean } | null }
+
 /** The shell's side of a Dojo session: its panel, when it began and whether a build was saved, for its `dojo_end`. */
-type DojoRun = { panel: ReturnType<typeof trainingPanel>; startedAt: number; saved: boolean }
+/** The Dojo's panel, or a Torre trial's screen in its place. */
+type DojoPanel = Screen & { refresh?: (clear: (() => void) | null) => void }
+type DojoRun = { panel: DojoPanel; startedAt: number; saved: boolean }
+
+/** Who trains at the Dojo when no trial plays: the Torre's Voltar comes back to them. */
+let dojoPartner: PlayableId = 'charmander'
+
+/** The Torre's sheet over the Dojo, its trials startable. */
+const openTower = () => {
+  const r = run
+  if (!r?.training) return
+  r.overlay?.dispose()
+  r.overlay = pathSheet(ui, input, 'kubfu', { close: () => r.overlay === sheet && (r.overlay = null), start: (id) => void startDojo(TRIALS[id].starter, id) })
+  const sheet = r.overlay
+}
+
+/** A Torre trial won: into the save; returns a word on what it brought (Kubfu joining, Urshifu's style), or null. */
+const bankTrial = (id: TrialId): string | null => {
+  const before = loadSave().paths.trials
+  updateSave((s) => ({ ...s, paths: { ...s.paths, trials: clearTrial(s.paths.trials, id) } }))
+  void syncSave()
+  const after = loadSave().paths.trials
+  const m = t().paths.tower
+  const tower = towerOf(after)
+  if (!kubfuJoined(before) && kubfuJoined(after)) return m.kubfu
+  return tower && !towerOf(before) ? m.urshifu(m.styles[tower]) : null
+}
 
 /**
  * The shell's side of a co-op run. `r.game` is the runner's (confirmed) game;
@@ -515,6 +589,8 @@ const shownGame = (r: Run) => (r.coop ? r.coop.view.game : r.game)
 let specialQueued = false
 /** Mega Evolution press (E, the Mega button, gamepad Y), consumed like the special. */
 let megaQueued = false
+/** A TERA press waiting for the next step (`game/tera.ts`). */
+let teraQueued = false
 /** Manual lunge press (Shift, the lunge button, gamepad X) for Quick Attack, consumed like the special. */
 let lungeQueued = false
 /** The meadow with wandering Pokémon behind every menu. Lives across screens, so it never pops. */
@@ -527,7 +603,7 @@ let meetings = 0
 const meadow: Meadow = {
   meet: (partner) => {
     const id = ++meetings
-    meetPartner(scene, partner, runCompanion({ x: 0, y: 0 }))
+    meetPartner(scene, partner, runCompanion({ x: 0, y: 0 }), lobbyCosmog())
     return () => void (id === meetings && meetPartner(scene, null))
   },
   visit: (to, instant) => {
@@ -657,6 +733,11 @@ const showBoutique = (tab: BoutiqueTab, back?: () => void, checkout: string | nu
 const queueMega = () => {
   unlockAudio()
   if (run?.game.phase === 'playing') megaQueued = true
+}
+
+const queueTera = () => {
+  unlockAudio()
+  if (run?.game.phase === 'playing') teraQueued = true
 }
 
 /** The player's name right now: its stage's, or its Mega form's while that lasts. */
@@ -858,6 +939,7 @@ const showMenu = (initial: PlayableId = loadSave().partner, tab?: 'legends') => 
     incubator: () => showIncubator(() => showMenu(select.selected())),
     // A skin not owned yet: the Boutique's Skins on it, then back here on the same Pokémon.
     boutique: (skin) => showBoutique('skins', () => showMenu(select.selected()), null, skin),
+    rush: (id, difficulty) => setTimeout(() => void startRushRun(id, difficulty), 250),
   }, initial, tab ? { tab } : undefined)
   setScreen(select)
 }
@@ -869,6 +951,7 @@ const showMenu = (initial: PlayableId = loadSave().partner, tab?: 'legends') => 
  */
 const wearOwnLook = () => {
   setLooksGame(null)
+  setSeatPatterns([])
   setLooks([parseLook(equippedLook())])
 }
 
@@ -880,7 +963,17 @@ onGems(() => {
 const takeOffLooks = () => {
   resetArenaFx()
   setLooks([])
+  setSeatPatterns([])
   setLooksGame(null)
+}
+
+/** Cosmog or Cosmoem while one grows (the legend paths), to float beside the partner on the lobby's trips (its sprites start loading); null when none does. */
+const lobbyCosmog = (): CompanionView | null => {
+  const stage = cosmogStage(loadSave().paths.cosmog)
+  if (!stage) return null
+  const dex = COSMOG_DEX[stage]
+  void loadSpecies(dex).catch(() => {})
+  return createCompanion(dex, false, { x: 0, y: 0 })
 }
 
 /** The save's companion for a run starting now, if the account's tier still allows it (`knownTier`; its sprites start loading). */
@@ -977,7 +1070,8 @@ const afterRun = (then: () => void) => {
 
 /**
  * The lobby's gift box: opens the waiting Mystery Gifts one by one. A shiny
- * hatch plays its scene (recorded in the missions and medals) and a shiny
+ * hatch plays its scene (recorded in the missions and medals), Cosmog's
+ * legend its evolution (`cosmogEvolveScene`) and a shiny
  * ticket goes to the Hall's picker, each coming back to the next gift, or
  * to the lobby once none waits.
  */
@@ -991,9 +1085,25 @@ const showGifts = () => {
         showHatch(hatch, back, undefined, () => later(() => progressToast(ui, record)))
       },
       pick: () => setScreen(supportersScreen(ui, input, { play: (id) => void startRun(id), onClose: back }, 'pick')),
+      evolve: (legend) => setScreen(cosmogEvolveScene(ui, input, legend, back)),
+      legendEgg: (legend) => setScreen(manaphyEggScene(ui, input, legend, { play: () => void startRun(legend), done: back })),
       close: () => showTitle({ focus: 'gifts' }),
     }),
   )
+}
+
+/**
+ * What the legend paths bring to a run's start (`ReplayStart`): the forms the
+ * save opened for this legend (`openForms`), and Regigigas's temple or the Ruínas da Decisão, drawn
+ * from the seed for the Regi trio's captor (never in its own run).
+ */
+const pathStart = (save: Save, starter: PlayableId, seed: number): Pick<ReplayStart, 'forms' | 'temple' | 'ruins'> => {
+  const forms = openForms(save.paths, starter)
+  const caught = (id: LegendId) => isCaptured(save.legends, id)
+  // Once Regigigas is captured, the Ruínas da Decisão may come in its temple's place.
+  const ruins = ruinsRun(seed, caught)
+  const temple = ruins.length === 0 && starter !== 'regigigas' && templeRun(seed, giantAwake(caught), caught('regigigas'))
+  return { ...(forms.length > 0 ? { forms } : {}), ...(temple ? { temple } : {}), ...(ruins.length > 0 ? { ruins } : {}) }
 }
 
 /** Moves the run's steps and new eggs into the incubator, once each (a victory banks, then endless banks again). */
@@ -1012,6 +1122,12 @@ const bankHatchery = (r: Run) => {
  * Quitting keeps coins but forfeits the survival bonus, unless Mewtwo already
  * fell (victory or endless). Every species seen or defeated counts either way.
  */
+/** A roaming lake legend's HP taken this run stays taken (`bankRoamer`), whether it fled, fell or is still about as the run ends. */
+const bankRoamerHp = (g: Game) => {
+  const roam = g.quests.roam
+  if (roam && g.coop === null) updateSave((s) => ({ ...s, roamers: bankRoamer(s.roamers, roam.legend, roam.left) }))
+}
+
 const bankRun = (r: Run, withBonus: boolean) => {
   const g = r.game
   const total = withBonus ? runEarnings(g).total : g.coins
@@ -1019,7 +1135,9 @@ const bankRun = (r: Run, withBonus: boolean) => {
   r.paid = Math.max(r.paid, total)
   if (g.candies > r.candies) updateSave((save) => addCandies(save, g.candies - r.candies))
   r.candies = Math.max(r.candies, g.candies)
+  r.nuts = bankNuts(ui, g, r.nuts)
   bankHatchery(r)
+  bankRoamerHp(g)
   // Merged into the stored Pokédex, which an account sync may have grown during the run.
   updateSave((save) => ({ ...save, dex: mergeDex(save.dex, recordRun(r.dexBase, g.dexLog)) }))
 }
@@ -1144,6 +1262,7 @@ const endRun = () => {
   if (!run) return
   if (run.coop) return endCoopRun(run, run.coop)
   if (run.training) return endDojo(run, run.training)
+  if (run.rush) return endRushRun(run)
   bankRun(run, wonRun(run.game))
   reportRun(run)
   rankRun(run)
@@ -1196,11 +1315,12 @@ const prefetchRun = (day: DayKey | null = null) =>
 
 /**
  * Species a run may need outside its drawn cast, with when they can first show
- * up: the fleeing Meowth and the escort mission's Togepi. A rift's legendary,
+ * up: the fleeing Meowth, the escort mission's Togepi and the wandering Castform. A rift's legendary,
  * a place's dwellers and the reaper load when the run gets near them (`runSprites`).
  */
 const EXTRAS = [
   { dex: MEOWTH_DEX, at: MAP_EVENTS.meowth.spawn.from },
+  { dex: CASTFORM_FIND.dex, at: CASTFORM_FIND.from },
   { dex: TOGEPI_DEX, at: FIELD.first },
 ]
 
@@ -1309,6 +1429,12 @@ const firstFrameDrawn = () => {
   firstStep('firstFrame')
 }
 
+/** The `ReplayStart` field a run with `starter` takes from the save's Shadows: nothing for the plain one, so its replay stays as it was. */
+const shadowStart = (shadows: ShadowSave, starter: PlayableId) => {
+  const variant = runVariant(shadows, starter)
+  return variant ? { variant } : {}
+}
+
 /** A player's whole family (branches included: the evolution scene can land on any of them) in the colors they play, not the normal ones as well. */
 const familySheets = (starter: PlayableId, shiny: boolean): Variant[] => familyDex(starter).map((dex) => ({ dex, shiny }))
 
@@ -1383,6 +1509,7 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
   // And the outbreak and haunting it dealt with the ticket (the API checks them by its own clock); without one, the device's day.
   const outbreak = outbreakToday(ranked?.outbreak ?? null)
   const halloween = halloweenToday(ranked?.halloween ?? null)
+  const ultra = ultraToday(ranked?.ultra ?? null)
   const legend = !c && isLegend(starter)
   // A plan from another day (the menus stayed open past midnight) would play yesterday's outbreak (or haunting).
   const plan = c
@@ -1417,9 +1544,20 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
     evo: [...save.evo],
     caps: capLevel(save.caps, starter),
     mythical: mythicalHunt(save),
+    // The raid of the day's den (`raidOfDay`), from the Brasília day like the outbreak.
+    raid: brasiliaDay(today()),
+    // A Shadow (or Purified) Pokémon plays as one unless switched to Normal (`game/shadow.ts`).
+    ...shadowStart(save.shadows, starter),
+    // The Game Corner poster's pass brings the Rocket Hideout's hatch onto this run's map (`game/hideoutPass.ts`).
+    ...(holdsPass(save.hideout) && !isLegend(starter) ? { hideout: true } : {}),
+    ultra,
+    // The legend paths: the forms the save opened for this legend, and Regigigas's temple for the Regi trio's captor.
+    ...pathStart(save, starter, plan.seed),
+    wild: wildOf(save),
     view: { w: view.w, h: view.h },
   }
   // Created like a replay is re-simulated (the roster drawn ahead is the same one).
+  if (start.hideout) updateSave((s) => ({ ...s, hideout: usePass(s.hideout) }))
   const game = startGame(start, view)
   if (devMap) setDevMap(game, devMap)
   const me = localPlayer(game)
@@ -1438,6 +1576,7 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
     closeText: null,
     paid: 0,
     candies: 0,
+    nuts: 0,
     mythical: null,
     reported: false,
     missionsBefore: missionStatus(save.missions, today()),
@@ -1459,6 +1598,7 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
     sprites: { needs: castNeeds(game.roster, EXTRAS), always: [...familyDex(starter), playerDex(game), ENEMIES[plan.outbreak].dex] },
     coop: null,
     training: null,
+    rush: null,
   }
   if (run.companion) run.sprites.always.push(run.companion.dex)
   wearOwnLook()
@@ -1474,6 +1614,17 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
 /** A run's news that warns or asks for something (a boss, a rift's omen, a hazard): it shows unless the "Avisos na partida" setting says Nenhum. */
 const news = (content: HTMLElement | string, ms?: number, key: string | null = null) => runToast(ui, 'important', content, ms, key)
 /** A run's minor news (a drop, a berry, a shiny spotted, a milestone the screen already shows): only at Todos. */
+/** A roaming legend's or a duel's moment: its sound and cry, and its line on the news (`questNews`). */
+const showQuest = (e: Extract<GameEvent, { kind: 'roam' | 'duel' }>) => {
+  const q = questNews(e)
+  if (q.sfx) playSfx(q.sfx)
+  if (q.cry !== null) playCry(cryUrl(q.cry), 0.8)
+  if (!q.line) return undefined
+  // A roaming legend's lines wear its portrait, as the other legends' moments do.
+  const dex = e.kind === 'roam' ? ENEMIES[e.legend].dex : null
+  return news(dex === null ? rich(q.line) : h('span', { class: 'item-toast' }, h('img', { src: portraitUrl(dex), alt: '' }), h('span', {}, rich(q.line))), q.ms)
+}
+
 const aside = (content: HTMLElement | string, ms?: number, key: string | null = null, tone: ToastTone | null = null) => runToast(ui, 'minor', content, ms, key, tone)
 
 /** The run's first toasts: safe mode coming on after a crash, the challenge it plays, the day's outbreak, then each bag item it used and each TM it armed. */
@@ -1523,9 +1674,12 @@ const showDojo = (initial: PlayableId = loadSave().partner) => {
  * A Dojo session (`game/training.ts`): a run with the save's upgrades, Bottle
  * Caps and colors but no Bag, TMs or luck of its own, turned into the Dojo, in
  * the family's saved build when it has one, with its panel over it
- * (`ui/training.ts`). Nothing of it is banked, ranked or recorded.
+ * (`ui/training.ts`). Nothing of it is banked, ranked or recorded. With
+ * `trial`, it plays that Torre trial instead (`game/towerTrial.ts`): the
+ * trial's Pokémon and loadout, its screen in the panel's place, and a win
+ * banked into the save (`clearTrial`).
  */
-const startDojo = async (starter: PlayableId) => {
+const startDojo = async (starter: PlayableId, trial: TrialId | null = null) => {
   if (launching) return
   launching = true
   try {
@@ -1535,15 +1689,16 @@ const startDojo = async (starter: PlayableId) => {
     ui.append(loading)
     const save = loadSave()
     const shiny = playsShiny(save, starter)
-    const game = createGame(starter, view, Date.now(), save.ranks, undefined, { shiny, evo: [...save.evo], caps: capLevel(save.caps, starter) })
+    const game = createGame(starter, view, Date.now(), save.ranks, undefined, { shiny, evo: [...save.evo], caps: capLevel(save.caps, starter), forms: openForms(save.paths, starter) })
     // The 1/64 roll is a run's luck: nothing unlocks at the Dojo, and it plays in the colors picked.
     const me = localPlayer(game)
     me.shiny = shiny
     me.luckyShiny = false
     // The dummies stand left of the player, near enough to share the field the panel leaves open (the camera centers the player there: the panel's `lens`).
     startTraining(game, TRAINING.target, TRAINING.counts[0], { x: -1, y: 0, reach: Math.min(TRAINING.reach, Math.round(view.w * 0.28)) })
-    const build = save.builds[starter]
+    const build = trial ? undefined : save.builds[starter]
     if (build) applyBuild(game, build)
+    if (trial) startTrial(game, trial)
     // Opens quietly: no news of the build's ability being picked.
     game.events.length = 0
     await loadRunSheets(familySheets(starter, shiny), [ENEMIES[TRAINING.target].dex])
@@ -1557,6 +1712,7 @@ const startDojo = async (starter: PlayableId) => {
       closeText: null,
       paid: 0,
       candies: 0,
+      nuts: 0,
       mythical: null,
       reported: true,
       missionsBefore: [],
@@ -1577,6 +1733,7 @@ const startDojo = async (starter: PlayableId) => {
       sprites: { needs: [], always: [...familyDex(starter), ENEMIES[TRAINING.target].dex] },
       coop: null,
       training: null,
+      rush: null,
     }
     if (r.companion) r.sprites.always.push(r.companion.dex)
     wearOwnLook()
@@ -1587,10 +1744,16 @@ const startDojo = async (starter: PlayableId) => {
             updateSave((s) => ({ ...s, builds: Object.fromEntries(Object.entries(s.builds).filter(([id]) => id !== starter)) }))
             void syncSave()
             aside(rich(t().training.cleared(name)), 2600, 'dojo')
-            panel.refresh(null)
+            panel.refresh?.(null)
           }
         : null
-    const panel = trainingPanel(ui, game, {
+    if (!trial) dojoPartner = starter
+    const panel: DojoPanel = trial ? trialHud(ui, game, {
+      ended: (won) => (won ? bankTrial(trial) : null),
+      retry: () => void startDojo(starter, trial),
+      back: () => void startDojo(dojoPartner, null).then(() => openTower()),
+    }) : trainingPanel(ui, game, {
+      tower: () => openTower(),
       // A species' sheets load before its dummies stand (and it stays loaded while the session lasts).
       dummies: (target, count) => {
         const dex = ENEMIES[target].dex
@@ -1600,7 +1763,7 @@ const startDojo = async (starter: PlayableId) => {
             if (run !== r) return
             if (!r.sprites.always.includes(dex)) r.sprites.always.push(dex)
             setDummies(game, target, count)
-            panel.refresh(forget())
+            panel.refresh?.(forget())
           })
       },
       save: () => {
@@ -1609,7 +1772,7 @@ const startDojo = async (starter: PlayableId) => {
         dojo.saved = true
         playSfx('buy')
         news(rich(t().training.saved(name)), 3600, 'dojo')
-        panel.refresh(forget())
+        panel.refresh?.(forget())
       },
       clear: forget(),
       leave: () => leaveDojo(),
@@ -1626,6 +1789,106 @@ const startDojo = async (starter: PlayableId) => {
   } finally {
     launching = false
   }
+}
+
+/**
+ * Hoopa's Rings (`game/rush.ts`) with `starter` at `difficulty`: a run with no
+ * horde whose rings bring back the save's captured legends. Like the Dojo it's
+ * never banked, ranked nor reported: only its end touches the save (the best
+ * time, `bankRush`, and Hoopa's capture through `legendBeaten`).
+ */
+const startRushRun = async (starter: PlayableId, difficulty: Difficulty) => {
+  if (launching) return
+  const save = loadSave()
+  const lineup = rushLineup(LEGEND_IDS.filter((id) => isCaptured(save.legends, id)), difficulty, Date.now())
+  if (!lineup) return
+  launching = true
+  try {
+    setScreen(null)
+    endRun()
+    const loading = loadingScreen()
+    ui.append(loading)
+    const shiny = playsShiny(save, starter)
+    const game = createGame(starter, view, Date.now(), save.ranks, undefined, { shiny, difficulty, caps: capLevel(save.caps, starter), forms: openForms(save.paths, starter) })
+    const me = localPlayer(game)
+    me.shiny = shiny
+    me.luckyShiny = false
+    startRush(game, difficulty, lineup, save.builds[starter] ?? null)
+    const dexes = lineup.map((id) => ENEMIES[id].dex)
+    await loadRunSheets(familySheets(starter, shiny), dexes)
+    loading.remove()
+    const start: ReplayStart = { seed: 0, starter, difficulty, ranks: save.ranks, shiny, luckyEgg: false, outbreak: null, halloween: false, bag: [], view: { ...view } }
+    const r: Run = {
+      game,
+      hud: runHud(game),
+      overlay: null,
+      shown: null,
+      closeText: null,
+      paid: 0,
+      candies: 0,
+      nuts: 0,
+      mythical: null,
+      reported: true,
+      missionsBefore: [],
+      recorded: null,
+      unlocked: [],
+      reward: 0,
+      rewardEggs: 0,
+      rewardItems: [],
+      hatchery: { steps: 0, eggs: 0 },
+      convertedEggs: { full: [], cap: [] },
+      dexBase: save.dex,
+      recorder: startRecording(start),
+      ranked: null,
+      rank: null,
+      bestBefore: 0,
+      challenge: null,
+      companion: runCompanion(me),
+      sprites: { needs: [], always: [...familyDex(starter), ...dexes] },
+      coop: null,
+      training: null,
+      rush: { difficulty, starter, banked: null },
+    }
+    if (r.companion) r.sprites.always.push(r.companion.dex)
+    wearOwnLook()
+    run = r
+    syncSprites()
+    resetMemoryPeaks()
+    resetRunFrames(frames)
+    awaitFirstFrame()
+    aside(rich(save.builds[starter] ? t().quests.rush.build(PLAYABLE[starter].name) : t().quests.rush.noBuild), 3200, 'rush')
+  } finally {
+    launching = false
+  }
+}
+
+/** A rush's end into the save, once: a cleared one's time (`recordRush`); Hoopa's capture came through `legendBeaten` already. */
+const bankRush = (g: Game, rush: RushRun) => {
+  if (g.phase !== 'victory') return { record: false, caught: false }
+  const before = loadSave()
+  const { best, record } = recordRush(before.rush, rush.difficulty, Math.round(g.time))
+  updateSave((s) => ({ ...s, rush: best }))
+  void syncSave()
+  // The first clear, at any level, is the one that caught Hoopa.
+  return { record, caught: Object.keys(before.rush).length === 0 }
+}
+
+/** Leaves Hoopa's Rings for the Lendários tab. */
+const leaveRush = () => {
+  const starter = run?.rush?.starter
+  endRun()
+  showMenu(starter ?? loadSave().partner, 'legends')
+}
+
+/** Ends a rush: no banking, ranking or missions; its looks and HUD go. */
+const endRushRun = (r: Run) => {
+  r.overlay?.dispose()
+  r.closeText?.()
+  r.hud.dispose()
+  clearToasts(ui)
+  takeOffLooks()
+  run = null
+  syncRunWatch()
 }
 
 /** Leaves the Dojo for the lobby (the panel's Sair, the pause menu's quit). */
@@ -1656,7 +1919,7 @@ const endDojo = (r: Run, dojo: DojoRun) => {
 
 /** The run's HUD; `menu`: its pause button opens a menu over a run that goes on (co-op). */
 const runHud = (game: Game, onPause: () => void = () => game.phase === 'playing' && (game.phase = 'paused'), menu = false) => {
-  const hud = createHud(ui, queueSpecial, queueMega, queueLunge, onPause, () => requestAnimationFrame(syncMarkerInsets), input.isHeld, menu)
+  const hud = createHud(ui, queueSpecial, queueMega, queueTera, queueLunge, onPause, () => requestAnimationFrame(syncMarkerInsets), input.isHeld, menu)
   requestAnimationFrame(syncMarkerInsets)
   return hud
 }
@@ -1677,6 +1940,15 @@ const syncMarkerInsets = () => {
   const top = Math.max(bottomOf('.hud-row'), team && row && team.width > box.width / 2 ? team.bottom : 0) - box.top
   const bottom = box.bottom - Math.min(topOf('.hud .status'), topOf('.special-button'))
   setMarkerInsets({ top: Math.max(0, top) / cssScale + 10, bottom: Math.max(0, bottom) / cssScale + 10, side: 14 })
+  // A raid frames its giant under the boss bar (`frameRaid` in `render/teraFx.ts`); the touch buttons keep to the corners, so the player's feet may come near the bottom.
+  const boss = rect('.hud .boss:not(.hidden)')
+  setRaidRoom({ top: boss ? Math.max(0, boss.bottom - box.top) / cssScale : 0, bottom: 14 })
+  // Hoopa's rings frame their legend under the boss bar or the pill, whichever ends lower (`frameRush` in `render/rush.ts`),
+  // and keep the player's feet over what covers the bottom's middle (the status box on a phone held upright; nothing sideways).
+  const pill = rect('.hud .rift-pill:not(.hidden)')
+  const middle = box.left + box.width / 2
+  const cover = [rect('.hud .status'), rect('.special-button')].reduce((top, r) => (r && r.left < middle && r.right > middle ? Math.min(top, r.top) : top), box.bottom)
+  setRushRoom({ top: Math.max(0, Math.max(boss?.bottom ?? box.top, pill?.bottom ?? box.top) - box.top) / cssScale, bottom: (box.bottom - cover) / cssScale + 8 })
 }
 
 /** Settings from the pause menu. The HUD reads its labels once, so a language switch rebuilds it. */
@@ -1713,10 +1985,27 @@ const syncOverlay = (r: Run) => {
   r.overlay = null
   r.shown = { phase, offers: me.offers }
   r.hud.setMenuOpen(phase !== 'playing' && phase !== 'evolving')
+  // Largar item: solo it lands on the spot (into the replay; the Dojo's never is); co-op sends it as a tick entry.
+  const drop = (index: number) =>
+    c ? c.team.drop(index) : r.training ? dropItem(g, index) : (recordEvent(r.recorder, ['drop', index]), dropItem(g, index))
   // A pick: solo it plays on the spot (and goes into the replay); co-op sends it with the screen's round (`ui/teamLayer.ts`).
-  const pick = (offer: Offer) => {
+  const take = (offer: Offer) => {
     runMoment('pick')
     return c ? c.team.pick(me, offer) : (recordEvent(r.recorder, ['offer', me.offers.indexOf(offer)]), chooseOffer(g, offer))
+  }
+  // A new item's card on a full build is a swap: which item goes first, then the pick (back reopens the cards).
+  const pick = (offer: Offer) => {
+    if (!needsSwap(me, offer) || offer.kind !== 'item') return take(offer)
+    r.overlay?.dispose()
+    r.overlay = itemSwap(ui, input, g, offer.id, (index) => {
+      if (index === null) {
+        r.shown = null
+        return syncOverlay(r)
+      }
+      drop(index)
+      take(offer)
+    })
+    if (c) c.team.decorate(r.overlay, g, me, phase)
   }
   switch (phase) {
     case 'levelup':
@@ -1760,6 +2049,7 @@ const syncOverlay = (r: Run) => {
           report: bugReportsEnabled ? (back) => bugReportForm(ui, input, back) : null,
           coop: { sound: () => (toggleMute(), !settings().muted), soundOn: !settings().muted },
           surrender: g.versus ? () => c.driver.send({ kind: 'surrender', vote: true }) : undefined,
+          drop: g.versus ? undefined : drop,
         })
         break
       }
@@ -1767,13 +2057,20 @@ const syncOverlay = (r: Run) => {
         // Only from the pause: a late press must never flip a level-up to playing (unrecorded) or end the run under it.
         // A fresh canvas too: the player's way out of a world that stopped drawing behind the pause (`freshCanvas`).
         resume: () => g.phase === 'paused' && ((g.phase = 'playing'), freshCanvas()),
-        quit: () => g.phase === 'paused' && (r.training ? leaveDojo() : afterRun(() => showMenu())),
+        quit: () => g.phase === 'paused' && (r.training ? leaveDojo() : r.rush ? leaveRush() : afterRun(() => showMenu())),
         settings: (back) => runSettings(r, back),
         report: bugReportsEnabled ? (back) => bugReportForm(ui, input, back) : null,
+        drop,
       })
       break
     case 'gameover':
     case 'victory':
+      if (r.rush) {
+        const rush = r.rush
+        rush.banked ??= bankRush(g, rush)
+        r.overlay = rushEnd(ui, input, g, { ...rush.banked, again: () => void startRushRun(rush.starter, rush.difficulty), leave: () => leaveRush() })
+        break
+      }
       if (c?.versus) {
         // The match's last toasts would sit over the results.
         clearToasts(ui)
@@ -1869,6 +2166,12 @@ const abilityFeedback = (g: Game, id: AbilityId, moment: 'picked' | 'proc') => {
     playSfx('unlock')
     return aside(icon(m.picked(playerForm(g).name, name)), 3200, 'ability')
   }
+  // Beast Boost climbs every 12 KOs: its burst plays on the beast (`render/beastBoost.ts`), so only a blip, and a word at the cap.
+  if (id === 'beastBoost') {
+    const stacks = abilityStacks(g)
+    playSfx('stance', 0)
+    return stacks >= BEAST_BOOST.max ? aside(icon(m.stack(name, stacks)), 1800, 'ability') : undefined
+  }
   const effects: readonly AbilityEffect[] = ABILITIES[id].effects
   const kind = effects.find((e) => e.kind !== 'immune' && e.kind !== 'stats')?.kind
   if (kind === 'sturdy') {
@@ -1947,6 +2250,14 @@ const CRUMB_EVENTS: Partial<Record<GameEvent['kind'], CrumbMoment>> = {
   place: 'place',
   evolved: 'evolve',
   megaStart: 'mega',
+  teraStart: 'mega',
+  raidEnter: 'rift',
+}
+
+/** A Terastal banner or a raid's title card, its box cut in the type's crystal. */
+const showTeraBanner = (content: HTMLElement, ms: number) => {
+  banner(ui, content, ms)
+  dressBanner(content)
 }
 
 /** The sounds and toasts of a simulation event, read off the game as shown (`shownGame`: this player's cries, form, special and Mega in co-op). */
@@ -1991,9 +2302,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
     case 'megaStone': {
       const def = heldMega(g)
       if (!def) return
-      const me = localPlayer(g)
-      const line = PLAYABLE[me.starter].line
-      const final = me.stage >= line.length - 1
+      const final = atMegaBase(localPlayer(g))
       playSfx('unlock')
       return news(
         h('span', { class: 'item-toast mega-toast' }, h('img', { src: megaStoneIcon(def), alt: '' }), h('span', {}, rich(t().mega.stone(def.stone)), h('small', {}, rich(final ? t().mega.stoneReady : t().mega.stoneLocked(megaBaseName(g)))))),
@@ -2083,6 +2392,9 @@ const handleEvent = (r: Run, e: GameEvent) => {
     case 'branchChoice':
       playCry(playerCry(g), 0.6)
       return
+    case 'plusMinus':
+      playSfx('unlock')
+      return news(rich(t().gaHook.plusMinus.linked), 2800)
     case 'evoItem':
       playSfx('unlock')
       return evoItemToast([e.item], t().branch.found(EVO_ITEMS[e.item].name), t().branch.foundHint, 'evoItem', aside)
@@ -2105,11 +2417,31 @@ const handleEvent = (r: Run, e: GameEvent) => {
       const name = PLAYABLE[localPlayer(g).starter].name
       // A form still behind the community goal keeps the legend's name (`legendStage`): then it just awakened.
       const form = playerForm(g).name
-      return aside(rich(e.form && form !== name ? t().legend.awakenedForm(name, form) : t().legend.awakened(name)), 3500)
+      return aside(rich(e.changed && form !== name ? t().legend.awakenedForm(name, form) : t().legend.awakened(name)), 3500)
     }
     // Banked toward capturing it right away (`ui/capture.ts`), so the capture scene reads it.
     case 'legendBeaten':
       return bankCapture(e.legend, e.shiny, g.endless !== null)
+    case 'roam':
+      if (e.moment === 'fled' || e.moment === 'caught') bankRoamerHp(g)
+      return showQuest(e)
+    case 'duel':
+      return showQuest(e)
+    /* The mythicals (`data/mythicals.ts`): Zeraora's storm gathering or gone, Ogerpon's Embody Aspect. */
+    case 'storm':
+      if (e.moment === 'gathering') {
+        playSfx('legendary')
+        flashScreen(ui)
+        return news(rich(t().mythicals.storm.gathering), 3600)
+      }
+      return aside(rich(t().mythicals.storm.fled), 2800)
+    case 'embodyAspect':
+      return aside(rich(t().mythicals.embody(OGERPON_MASKS[e.mask].name)), 2200, 'tera')
+    case 'rush':
+      if (e.moment === 'down') return
+      playSfx(e.legend === 'hoopa' ? 'legendary' : 'boss')
+      playCry(cryUrl(ENEMIES[e.legend].dex), 0.8)
+      return news(rich(rushRingLine(e.ring, e.rings, e.legend, e.island)), 2600)
     // The Desafio do dia plays the same for everyone: its finales don't count toward the protection.
     case 'mythicalRoll':
       r.mythical = e.enemy ?? 'none'
@@ -2118,7 +2450,10 @@ const handleEvent = (r: Run, e: GameEvent) => {
     case 'evolve': {
       playCry(cryUrl(e.from))
       r.closeText?.()
-      r.closeText = textBox(ui, t().toast.evolving(playerForm(g).name))
+      // Tyrogue reads out the build that decided its branch (`ruledBranch`).
+      const me = localPlayer(g)
+      const build = me.branch ? fighterNow(me) : null
+      r.closeText = textBox(ui, build && me.branch ? t().gaHook.tyrogue.evolving(playerForm(g).name, build.attack, build.defense, BRANCHES[me.branch].name) : t().toast.evolving(playerForm(g).name))
       return
     }
     case 'evolved': {
@@ -2179,6 +2514,8 @@ const handleEvent = (r: Run, e: GameEvent) => {
     case 'banish':
       // The level-up screen plays the toss itself.
       return
+    case 'itemDropped':
+      return aside(h('span', { class: 'item-toast' }, h('img', { src: itemIcon(e.id), alt: '' }), rich(t().itemDrop.dropped(ITEMS[e.id].name))), 2200, 'itemDropped')
     case 'consumable': {
       const def = CONSUMABLES[e.item]
       playSfx(def.sfx)
@@ -2202,8 +2539,26 @@ const handleEvent = (r: Run, e: GameEvent) => {
       return mapEventFeedback(ui, e.notice)
     case 'place':
       return placeFeedback(ui, e.place, e.notice)
+    case 'rocketCleared': {
+      // Giovanni beaten: Shadow Mewtwo joins the Legend mode (captured if it wasn't), the clear counts, the first one gives the title.
+      updateSave((s) => ({
+        ...s,
+        hideout: hideoutCleared(s.hideout),
+        legends: captureByGift(s.legends, 'mewtwo'),
+        shadows: grantShadow(s.shadows, 'mewtwo'),
+        titles: s.titles.includes('rocketBuster') ? s.titles : [...s.titles, 'rocketBuster'],
+      }))
+      playSfx('legendary')
+      return aside(h('span', { class: 'item-toast' }, h('img', { src: portraitUrl(150), alt: '' }), rich(`${t().rocket.hideout.reward} ${t().rocket.hideout.capture}`)), 5200, null, 'shiny')
+    }
     case 'landmark':
       return landmarkFeedback(ui, e.landmark, e.moment)
+    case 'seasonFind':
+      return seasonFindFeedback(ui, e.find, e.moment)
+    case 'path':
+      return pathFeedback(ui, e.notice)
+    case 'hexNut':
+      return nutFeedback(ui, g)
     case 'revive':
       playSfx('evolve')
       return news(h('span', { class: 'item-toast' }, h('img', { src: consumableIcon('revive'), alt: '' }), rich(t().toast.revive)), 3000)
@@ -2249,7 +2604,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
       return news(rich(t().hazards.intro), 3400)
     case 'riftOpen':
       playSfx('shiny')
-      return news(rich(t().rifts.open), 3200)
+      return news(rich(g.rift.portal && isUltraBeast(g.rift.portal.legend) ? t().ultra.open : t().rifts.open), 3200)
     case 'riftClosed':
       return aside(t().rifts.closed, 2000)
     case 'riftOmen': {
@@ -2258,7 +2613,13 @@ const handleEvent = (r: Run, e: GameEvent) => {
       // Rayquaza's Air Lock ends what Kyogre or Groudon stirred up earlier in the run.
       const calmed = e.enemy === 'rayquaza' ? g.rift.met.find((l) => l === 'kyogre' || l === 'groudon') : undefined
       const nod = calmed ? ` ${t().rifts.calms(ENEMIES[calmed].name)}` : ''
-      return news(rich(lines ? `${lines.omen}${nod} ${t().rifts.omen(ENEMIES[e.enemy].name)}` : t().rifts.omenFaint), 4200)
+      // An Ultra Wormhole's omen says what's coming through, in co-op (no domain lines' sky) too. Either waits for the map's sign to go.
+      if (isUltraBeast(e.enemy)) {
+        const line = `${lines ? `${lines.omen} ` : ''}${t().ultra.omen(ENEMIES[e.enemy].name)}`
+        return afterMapSign(ui, () => news(rich(line), 4600))
+      }
+      const line = lines ? `${lines.omen}${nod} ${t().rifts.omen(ENEMIES[e.enemy].name)}` : t().rifts.omenFaint
+      return afterMapSign(ui, () => news(rich(line), 4200))
     }
     case 'riftEnter': {
       const def = ENEMIES[e.enemy]
@@ -2276,12 +2637,19 @@ const handleEvent = (r: Run, e: GameEvent) => {
     case 'riftTitle':
       playSfx('legendary')
       playCry(cryUrl(ENEMIES[e.enemy].dex), 0.9)
+      // Palkia knows its twin: a player who captured Dialga hears it once the title card is down.
+      if (e.enemy === 'palkia' && isCaptured(loadSave().legends, 'dialga')) {
+        const line = domainLines('palkia')?.cues?.dialga
+        if (line) window.setTimeout(() => news(rich(line), 3600), 2600)
+      }
       return flashScreen(ui)
     case 'bossPhase': {
       const def = ENEMIES[e.enemy]
       playSfx('quake')
       playCry(cryUrl(def.dex), 0.7)
-      const line = isRiftLegend(e.enemy) ? domainLines(e.enemy)?.phases[e.phase - 1] : isWaveLegend(e.enemy) ? t().legends.phases[e.enemy][e.phase - 1] : undefined
+      // Dialga's last phase turns Primal on Nightmare (`nightmareForm`): its own line.
+      const primal = e.enemy === 'dialga' && g.difficulty === 'nightmare' && phaseForm(phasesOf('dialga')?.[e.phase], 'nightmare') === 'primal'
+      const line = primal ? t().mythicals.primal : isRiftLegend(e.enemy) ? domainLines(e.enemy)?.phases[e.phase - 1] : isWaveLegend(e.enemy) ? t().legends.phases[e.enemy][e.phase - 1] : undefined
       return line ? news(rich(line), 3600) : undefined
     }
     case 'bossUltimate':
@@ -2302,6 +2670,8 @@ const handleEvent = (r: Run, e: GameEvent) => {
       return aside(rich(t().rifts.escaped(name)), 3200)
     }
     case 'domainCue': {
+      // Palkia's portals: a whoosh as a player goes through one.
+      if (e.cue === 'warp' || e.cue === 'thrownBack' || e.cue === 'swap') playSfx('whoosh')
       const line = domainLines(e.enemy)?.cues?.[e.cue]
       return line ? news(rich(line), 1600) : undefined
     }
@@ -2339,6 +2709,78 @@ const handleEvent = (r: Run, e: GameEvent) => {
       const text = partner ? t().rifts.pairCleared(ENEMIES[e.enemy].name, ENEMIES[partner].name) : t().rifts.cleared(ENEMIES[e.enemy].name)
       return aside(rich(text, { class: 'toast-evo' }), 3500)
     }
+    /* Terastal (`game/tera.ts`) and the Tera Raids (`game/teraRaid.ts`). */
+    case 'teraShards':
+      playSfx('unlock')
+      return news(rich(t().tera.shardsChoice), 4200, 'tera')
+    case 'teraShard':
+      playSfx('unlock')
+      // Ogerpon's shard is a mask (`game/ogerpon.ts`).
+      if (playsOgerpon(localPlayer(g))) return news(rich(t().mythicals.mask(OGERPON_MASKS[maskOf(e.tera)].name)), 3200, 'tera')
+      return news(shardToast(e.tera, e.from), 3600, 'tera')
+    case 'teraReady':
+      playSfx('shiny')
+      return news(rich(t().tera.readyNews), 2400, 'tera')
+    case 'teraStart':
+      playSfx('megaCharge', 0)
+      playCry(cryUrl(playerDex(g)), 0.6)
+      return aside(t().tera.start(playerName(g)), 1400, 'tera')
+    case 'tera':
+      playSfx('megaBurst', 0)
+      playSfx('break', 0)
+      playCry(playerCry(g), 0.9)
+      return teraStrip(ui, playerName(g), e.tera)
+    case 'teraEnd':
+      playSfx('stance', 0)
+      return aside(t().tera.ended(playerName(g)), 1800, 'tera')
+    case 'stellarStrike':
+      return playSfx('superHit', 80)
+    case 'stellarPulse':
+      playSfx('shiny')
+      return aside(t().tera.stellarPulse, 1600, 'tera')
+    case 'raidOpen':
+      playSfx('shiny')
+      // Ogerpon's own den (`ogerponRaid`) says whose it is and in which mask.
+      if (e.raid.boss === 'ogerpon') {
+        playCry(cryUrl(ENEMIES.ogerpon.dex), 0.6)
+        return news(rich(t().mythicals.raid(OGERPON_MASKS[maskOf(e.raid.tera)].name)), 4600, 'raid')
+      }
+      return news(denToast(e.raid, e.day), 4200, 'raid')
+    case 'raidClosed':
+      return aside(t().raid.closed, 2000, 'raid')
+    case 'raidEnter': {
+      playSfx('legendary')
+      playCry(cryUrl(ENEMIES[e.raid.boss].dex), 0.7)
+      flashScreen(ui)
+      // The boss bar shows from this frame on: measure it for the raid's framing once it's laid out.
+      setTimeout(syncMarkerInsets, 60)
+      return showTeraBanner(raidBanner(e.raid), 2800)
+    }
+    case 'raidShield':
+      if (e.moment === 'up') {
+        playSfx('megaCharge', 0)
+        return news(rich(t().raid.shieldUp), 3200, 'raidShield')
+      }
+      playSfx('break', 0)
+      playSfx('megaBurst', 0)
+      return news(rich(t().raid.shieldBroken), 2400, 'raidShield')
+    case 'raidStorm':
+      return playSfx('quake', 300)
+    case 'raidCleared':
+      playSfx('evolve')
+      if (e.day) news(rich(t().raid.clearedDay), 3600, 'raidDay')
+      return aside(rich(t().raid.cleared(ENEMIES[e.raid.boss].name), { class: 'toast-evo' }), 3500, 'raid')
+    case 'raidFall':
+      playSfx('riftFall')
+      playCry(playerCry(g))
+      return news(t().raid.fall, 2800, 'raid')
+    case 'raidExit':
+      if (e.outcome === 'timeout') {
+        playSfx('quake')
+        return news(t().raid.timeout, 3000, 'raid')
+      }
+      if (e.outcome === 'fallen') flashScreen(ui)
+      return
     case 'riftFall':
       playSfx('riftFall')
       playCry(playerCry(g))
@@ -2428,6 +2870,7 @@ input.onKey((key) => {
   if (g.versus) return
   if (key === 'Space') queueSpecial()
   if (key === 'KeyE') queueMega()
+  if (key === 'KeyR') queueTera()
   if (key === 'ShiftLeft' || key === 'ShiftRight') queueLunge()
 })
 // Touch only counts as a user activation on pointerup/touchend (not pointerdown).
@@ -2689,6 +3132,7 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
   const seatLook = (p: (typeof live.start.players)[number], i: number) =>
     i === me.slot ? equippedLook() : (p.loadout.look ?? (import.meta.env.DEV ? tabBotLook(p.seat) : null))
   setLooks(live.start.players.map((p, i) => parseLook(seatLook(p, i))))
+  setSeatPatterns(live.start.players.map((p, i) => (i === me.slot ? devicePattern() : parsePattern(p.loadout.pattern))))
   setLooksGame(`${live.room}:${live.start.id}`)
   run = {
     game: live.game,
@@ -2706,6 +3150,7 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
     rewardEggs: 0,
     rewardItems: [],
     candies: 0,
+    nuts: 0,
     hatchery: { steps: 0, eggs: 0 },
     convertedEggs: { full: [], cap: [] },
     dexBase: save.dex,
@@ -2723,6 +3168,7 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
     },
     coop: c,
     training: null,
+    rush: null,
   }
   syncSprites()
   resetMemoryPeaks()
@@ -2885,8 +3331,8 @@ const coopFrame = (r: Run, c: CoopRun, dt: number, t: number, realDt: number) =>
   // The stick reads still while a menu or a screen is up (a match's pick cards wait in a tray: the Pokémon keeps moving).
   const still = c.menu || (g.versus ? g.phase !== 'playing' : phaseOf(g, me) !== 'playing')
   // A match casts its kit instead (`ui/arenaControls.ts`): its casts carry their aim.
-  c.driver.advance(g, realDt, { move: still ? { x: 0, y: 0 } : input.readMove(), special: specialQueued, mega: megaQueued, lunge: lungeQueued, casts: c.versus?.controls.take() })
-  specialQueued = megaQueued = lungeQueued = false
+  c.driver.advance(g, realDt, { move: still ? { x: 0, y: 0 } : input.readMove(), special: specialQueued, mega: megaQueued, tera: teraQueued, lunge: lungeQueued, casts: c.versus?.controls.take() })
+  specialQueued = megaQueued = teraQueued = lungeQueued = false
   const runner = c.runner
   const st = client.state()
   const drawn = predict(c.prediction, runner, st, c.driver.frac(), dt)
@@ -2925,6 +3371,7 @@ const coopFrame = (r: Run, c: CoopRun, dt: number, t: number, realDt: number) =>
   settleShake(c.shake, dt, runner.next, Math.random)
   shown.shake = c.shake.amount
   c.versus?.controls.frame(shown, localPlayer(shown))
+  if (shown.raid.arena) frameRaid(shown, t, shown.camera.y)
   const drawAt = performance.now()
   render(ctx, shown, t, { ...settings(), companion: null, mates: c.view.mates, shakeOffset: c.shake, arena: c.versus?.controls.overlay() })
   firstFrameDrawn()
@@ -3172,6 +3619,8 @@ const showRealm = (city: CityId | null) => {
           openRoom: (mode) => realmRoom(mode),
           showRoom: () => showRoom(),
           joinRoom: (_mode, code) => void joinCoop(code, 'link').then((res) => (res.ok ? showRoom() : (toast(ui, closedText(res.why), 4000, 'realmParty'), showRealm(null)))),
+          // Down the Game Corner's stairs: the partner select, and the run picked there opens the Hideout's hatch (the pass, `game/hideoutPass.ts`).
+          hideout: () => showMenu(),
         },
         city,
       )),
@@ -3192,6 +3641,17 @@ const realmRoom = async (mode: PartyMode): Promise<string | null> => {
   track('coop', { step: 'create', relay: made.home, ...(made.overflow ? { overflow: made.overflow } : {}) })
   client.setSettings(mode === 'arena' ? { difficulty: loadSave().difficulty, mode: 'versus', format: 'standard' } : { difficulty: loadSave().difficulty })
   return made.code
+}
+
+const devMinigame = async (game: unknown, how?: 'auto') => {
+  const { isMinigameId, MINIGAME_IDS } = await import('./data/minigames')
+  if (!isMinigameId(game)) return `ps.minigame: ${MINIGAME_IDS.join(', ')}`
+  const { openGame } = await import('./realm/games/registry')
+  ;(await import('./realm/games/localTable')).localTableDev.autopilot = how === 'auto'
+  const save = loadSave()
+  let screen: { dispose: () => void } | null = null
+  screen = await openGame(document.body, game, { input, partner: save.partner, shiny: false, realm: null, table: null, you: 0, close: () => screen?.dispose() })
+  return screen
 }
 
 /**
@@ -3859,10 +4319,12 @@ const frame = (now: number) => {
         // The simulation gets the stick as the replay stores it (`moveCode`), so a re-simulation sees the same run.
         if (specialQueued) recordEvent(r.recorder, ['special'])
         if (megaQueued) recordEvent(r.recorder, ['mega'])
+        if (teraQueued) recordEvent(r.recorder, ['tera'])
         if (lungeQueued) recordEvent(r.recorder, ['lunge'])
-        step(g, { move: recordStep(r.recorder, view, input.readMove()), special: specialQueued, mega: megaQueued, lunge: lungeQueued }, STEP)
+        step(g, { move: recordStep(r.recorder, view, input.readMove()), special: specialQueued, mega: megaQueued, tera: teraQueued, lunge: lungeQueued }, STEP)
         specialQueued = false
         megaQueued = false
+        teraQueued = false
         lungeQueued = false
         pace.acc -= STEP
         steps++
@@ -3876,6 +4338,7 @@ const frame = (now: number) => {
       resetPacer(pace)
       specialQueued = false
       megaQueued = false
+      teraQueued = false
       lungeQueued = false
     }
     // A level-up with only the Oran Berry to pick takes it without a screen, recorded like a tap.
@@ -3887,7 +4350,8 @@ const frame = (now: number) => {
     if (run === r) {
       syncOverlay(r)
       r.training?.panel.tick?.(t)
-      // Toasts and banners wait out menus, level-ups and evolutions with their clocks stopped.
+      // Toasts and banners wait out menus, level-ups and evolutions with their clocks stopped; a fight that needs its boss in view (a rift's legend, Hoopa's rings, a Sword's duel) takes them one at a time, off the top.
+      focusToasts(ui, g.rush !== null || g.quests.duel?.stage === 'dueling' || g.rift.arena?.domain?.act === 'battle')
       tickToasts(ui, dt, g.phase !== 'playing')
       // Redraw only when the simulation advanced: halves the work on 120 Hz phones and
       // idles the GPU while a menu is open over a frozen frame (but for `HELD_BACK` and `HELD_KEEP`).
@@ -3895,6 +4359,8 @@ const frame = (now: number) => {
       if (steps > 0 || dirty || now - backAt < HELD_BACK || now - runDrawnAt >= HELD_KEEP) {
         dirty = false
         runDrawnAt = now
+        if (g.raid.arena) frameRaid(g, t, localPlayer(g).screen.y)
+        if (g.rush) frameRush(g, t, localPlayer(g).screen.y)
         render(ctx, g, t, { ...settings(), companion: r.companion })
         firstFrameDrawn()
         firstRunClock(g.time)
@@ -4270,6 +4736,9 @@ const devMega = (mode: 'now' | 'ready' | 'stone' = 'now', mega?: MegaId) => {
   const pick = mega ?? ids[0]
   // A branch's Mega (Gallade's) needs its branch.
   localPlayer(g).branch = MEGA_BRANCH[pick] ?? localPlayer(g).branch
+  // A path form's Mega (Zygarde's) needs that form, opened and worn.
+  const def: MegaDef = MEGAS[pick]
+  if (def.from && p.legend) p.legend = { ...p.legend, forms: [...new Set([...p.legend.forms, def.from])], awakened: Math.max(p.legend.awakened, PATH_FORMS[def.from].at) }
   p.stage = PLAYABLE[localPlayer(g).starter].line.length - 1
   p.radius = Math.max(6, Math.round(bodyOf(playerDex(g)).bodyW * 0.3))
   recomputeStats(g)
@@ -4277,6 +4746,19 @@ const devMega = (mode: 'now' | 'ready' | 'stone' = 'now', mega?: MegaId) => {
   grantStone(g, pick)
   localPlayer(g).mega.charge = 0
   if (mode === 'now') queueMega()
+}
+
+/**
+ * Dev: Terastal and the Tera Raids (`game/tera.ts`, `game/teraRaid.ts`). `ps.tera('lab')` opens the art gallery
+ * (every crown, a few Pokémon in crystal); `ps.tera('water')` sets the run's Tera type and fills the orb,
+ * `ps.tera('now', 'fire')` Terastallizes at once, `ps.tera('shards')` drops a boss's choice of shards 40 px to the right,
+ * `ps.tera('orb', 0.9)` sets the orb. `ps.tera('raid')` opens a den next to you with the day's raid
+ * (`ps.tera('raid', 'raidGarchomp', 'ice', 6)` any), `ps.tera('enter')` steps straight in, `ps.tera('shield')` breaks
+ * the shield, `ps.tera('day', '2026-11-15')` prints a day's raid.
+ */
+const devTera = async (cmd?: string, a?: unknown, b?: unknown, c?: unknown) => {
+  const { devTera: run_ } = await import('./teraDev')
+  return run_(run?.game, () => (teraQueued = true), cmd, a, b, c)
 }
 
 /**
@@ -4363,13 +4845,14 @@ const devGifts = {
    * `ps.gift('title')`, `ps.gift('style', 'ambassador')` (a frame), `ps.gift('shinyHatch', 'munchlax')`,
    * `ps.gift('ribbon', 'gold')` (yesterday's challenge, #12 of 340), `ps.gift('shinyPick')` (a shiny of one's choice),
    * `ps.gift('companion', 'pumpkaboo')` (a gift-only companion), `ps.gift('bag', 'lure')` (3 of a Bag item), `ps.gift('legend', 'cresselia')` (a festival legend).
-   * `why`: an inviter's handle (welcome) or a count of friends brought.
+   * `why`: an inviter's handle (welcome), a count of friends brought, or a legend path (`ps.gift('legend', 'solgaleo', 'cosmog')`: Cosmog's evolution scene as it opens).
    */
   gift: (kind: GiftKind = 'egg', arg?: string, why?: string | number) => {
-    const raw = { egg: { tier: arg ?? 'friend' }, coins: { amount: Number(arg ?? 500) }, title: { title: arg ?? 'ambassador' }, style: { style: { slot: 'frame', id: arg ?? 'ambassador' } }, shinyHatch: { family: arg ?? 'munchlax' }, ribbon: { ribbon: { day: previousDay(brasiliaDay(today())), tier: arg ?? 'gold', rank: 12, total: 340 } }, shinyPick: {}, companion: { id: arg ?? 'pumpkaboo' }, bag: { item: arg ?? 'lure', count: 3 }, legend: { legend: arg ?? 'cresselia' } }[kind]
+    const raw = { egg: { tier: arg ?? 'friend' }, coins: { amount: Number(arg ?? 500) }, title: { title: arg ?? 'ambassador' }, style: { style: { slot: 'frame', id: arg ?? 'ambassador' } }, shinyHatch: { family: arg ?? 'munchlax' }, family: { family: arg ?? 'mimikyu' }, shadow: { family: arg ?? 'ditto' }, ribbon: { ribbon: { day: previousDay(brasiliaDay(today())), tier: arg ?? 'gold', rank: 12, total: 340 } }, shinyPick: {}, companion: { id: arg ?? 'pumpkaboo' }, bag: { item: arg ?? 'lure', count: 3 }, legend: { legend: arg ?? 'cresselia' }, evoItem: { item: arg ?? 'fireStone' } }[kind]
     const content = parseGiftContent({ kind, ...raw })
     if (!content) return 'Kinds: egg (tier), coins (amount), title, style (frame id), shinyHatch (family), ribbon (tier), shinyPick, companion (id), bag (item, 3 of it), legend (id)'
-    const reason: GiftReason | null = typeof why === 'number' ? { kind: 'friends', count: why } : why ? { kind: 'welcome', from: why } : null
+    const path = PATH_IDS.find((id) => id === why)
+    const reason: GiftReason | null = typeof why === 'number' ? { kind: 'friends', count: why } : path ? { kind: 'path', path } : why ? { kind: 'welcome', from: why } : null
     return stageGifts([{ id: `dev-${Date.now()}`, content, reason }])
   },
   /** Puts one invite milestone's gifts in the gift box as the API sends them (`FRIEND_MILESTONES`): `ps.friendGifts(10)` the shiny Dratini, the Friendship Legend title and background. */
@@ -4457,6 +4940,53 @@ const devCoopBoard = (cmd?: 'fake' | 'off' | 'open' | 'daily' | 'challenge', siz
     return dailyCoopChallenge(brasiliaDay(new Date()))
   }
   return "ps.coopBoard('fake' | 'off') · ('open', size?, difficulty?) · ('daily', size?) · ('challenge')"
+}
+
+/**
+ * Dev: the Era 1 Hall da Fama (`game/era1.ts`, `ui/era1Hall.ts`). `ps.era1('hall')` makes the Era 1 boards answer made-up ones
+ * (`era1Fakes.ts`) and opens the Ranking on its tab: `ps.era1('hall', 'nightmare', 'legend', 12)` a difficulty, a side (`standard`,
+ * `legend`, or `duo`, `trio`, `squad` for co-op) and how many are on the board (12 shows a thin board's shorter cut); `('off')` asks the
+ * API again. `('gift', 'champion' | 'hall')` puts a tier's gifts in the gift box as the API sends them (`era1Gifts`), and
+ * `('wear', 'champion' | 'hall')` owns and wears its title, frame (and the Champion's sky) and opens the Trainer Card (`ps.card()` then
+ * shows the share card); `('wear', 'off')` takes them off. Whether Era 1 reads as closed follows the missions' clock (`ps.date`).
+ */
+const devEra1 = (cmd?: 'hall' | 'off' | 'gift' | 'wear', a?: string, b?: string, field = 240) => {
+  const tier: Era1Tier = a === 'hall' ? 'hall' : 'champion'
+  if (cmd === 'off') {
+    fakeEra1Boards(null)
+    return 'Era 1 boards: the API again'
+  }
+  if (cmd === 'hall') {
+    endRun()
+    fakeEra1Boards(field)
+    const difficulty = isDifficulty(a) ? a : 'normal'
+    const size = parseTeamSize(b)
+    const mode = isRunMode(b) ? b : 'standard'
+    setScreen(rankingScreen(ui, input, () => showTitle({ focus: 'ranking' }), { difficulty, mode, period: 'era1', ...(size ? { coop: { size } } : {}) }))
+    return `Era 1 Hall: ${difficulty}, ${size ? `${size} players` : mode}, ${field} on the board (fake)`
+  }
+  if (cmd === 'gift') {
+    const award = { tier, rank: tier === 'champion' ? 1 : 7, board: { side: 'standard', difficulty: 'nightmare' } } as const
+    return stageGifts(era1Gifts(award).map((g, i) => ({ id: `dev-era1-${tier}-${i}-${Date.now()}`, content: g.content, reason: g.reason })))
+  }
+  if (cmd === 'wear') {
+    updateSave((save) => {
+      if (a === 'off') return { ...save, title: null, style: { ...save.style, equipped: { ...save.style.equipped, frame: 'classic', background: 'night' } } }
+      const owned = ERA1_GIFTS[tier].reduce<Save>((s, content, i) => {
+        const out = applyGift(s, { id: `dev-era1-wear-${tier}-${i}`, content, reason: null })
+        return out.status === 'applied' ? out.save : s
+      }, save)
+      const frame = tier === 'champion' ? 'era1Champion' : 'era1'
+      const style = equipStyle(equipStyle(owned.style, 'frame', frame), 'background', tier === 'champion' ? 'era1Champion' : owned.style.equipped.background)
+      return { ...owned, title: tier === 'champion' ? 'era1Champion' : 'era1Legend', style }
+    })
+    endRun()
+    setScreen(
+      trainerCardScreen(ui, input, { supporters: (back) => supportersScreen(ui, input, { play: (id) => void startRun(id), onClose: back }, null), locker: () => showTitle(), book: null }, () => showTitle()),
+    )
+    return a === 'off' ? 'Era 1: off' : `Era 1: wearing the ${tier}'s title and frame`
+  }
+  return "ps.era1('hall', difficulty?, side?, field?) · ('off') · ('gift', 'champion' | 'hall') · ('wear', 'champion' | 'hall' | 'off')"
 }
 
 /**
@@ -4567,7 +5097,8 @@ const devCoop = async (cmd?: string, arg?: string | number | boolean | null, ext
     case 'join':
       return joinCoop(String(arg ?? ''), 'code')
     case 'bots':
-      return st.code ? addBots(st.code, Number(arg ?? 1)) : 'ps.coop: join a room first'
+      // ps.coop('bots', 1, 'minun'): the bots play that Pokémon (Plusle and Minun's link).
+      return st.code ? addBots(st.code, Number(arg ?? 1), PLAYABLE_IDS.find((p) => p === extra)) : 'ps.coop: join a room first'
     case 'pick': {
       // Another Pokémon for this room (the lobby picks it in PR 7).
       const id = PLAYABLE_IDS.find((p) => p === arg)
@@ -4913,16 +5444,127 @@ if (import.meta.env.DEV) {
         import('./ui/realmArtDev').then((m) => m.openRealmArt(view, opts)),
       /**
        * A Poké Realm mini game on its own, over whatever is on screen (`realm/games/registry.ts`): `ps.minigame('fishing')`,
-       * a table game against the bot (`'fourInRow'`, `'typeDuel'`). Its claim goes to the API (or `ps.realm('fake')`'s fakes).
+       * a table game against the bot (`'fourInRow'`, `'typeDuel'`, the café's 4-seat `'ludo'` and `'unown'`; `ps.minigame('ludo', 'auto')`
+       * lets the bot play your seat too). Its claim goes to the API (or `ps.realm('fake')`'s fakes).
        */
-      minigame: async (game: unknown) => {
-        const { isMinigameId, MINIGAME_IDS } = await import('./data/minigames')
-        if (!isMinigameId(game)) return `ps.minigame: ${MINIGAME_IDS.join(', ')}`
+      minigame: devMinigame,
+      /**
+       * Shadow Pokémon (`game/shadow.ts`): `ps.shadow('charmander')` owns it as a Shadow and plays it so from the next run,
+       * `ps.shadow('charmander', 'ready')` fills its heart gauge, `('purified')` purifies it, `('off')` plays it Normal, `('drop')` forgets it.
+       */
+      /** The partner select on `id` (the save's partner by default; its Shadow row, `ui/shadowPick.ts`) and the Pokédex (its Shadow marks, the regional forms), for staging. */
+      select: (id: string = loadSave().partner) => (Object.hasOwn(PLAYABLE, id) ? showMenu(id as PlayableId) : 'ps.select: a Pokémon id'),
+      pokedex: () => (endRun(), setScreen(pokedexScreen(ui, input, () => showTitle(), showPcBox))),
+      shadow: (id: string = loadSave().partner, how: 'own' | 'ready' | 'purified' | 'off' | 'drop' = 'own') => {
+        if (!Object.hasOwn(PLAYABLE, id)) return 'ps.shadow: a Pokémon id'
+        const pid = id as PlayableId
+        updateSave((s) => {
+          const owned = grantShadow(s.shadows, pid)
+          const e = owned[pid]!
+          const next = how === 'drop' ? Object.fromEntries(Object.entries(s.shadows).filter(([k]) => k !== pid))
+            : how === 'ready' ? { ...owned, [pid]: { ...e, steps: purifySteps(pid) } }
+            : how === 'purified' ? { ...owned, [pid]: { ...e, steps: purifySteps(pid), purified: true } }
+            : how === 'off' ? pickShadow(owned, pid, false)
+            : pickShadow(owned, pid, true)
+          return { ...s, shadows: next }
+        })
+        return loadSave().shadows[pid] ?? 'dropped'
+      },
+      /**
+       * The Rocket Game Corner (faked API): `ps.corner('prizes')` or `ps.corner('tokens')` opens the counter on that page,
+       * `ps.corner('stage', 5000)` sets the faked tokens (a second number the Koffing Sweep level), `ps.minigame('slots')` and
+       * `ps.minigame('sweep')` its games; `ps.realm('room', 'gameCorner')` walks into the room.
+       */
+      corner: async (cmd: string = 'prizes', tokens?: number | string, level?: number) => {
+        const [{ fakeRealm }, { stageCorner, rigSpin }, { openCornerCounter }] = await Promise.all([realmMode(), import('./realm/cornerApi'), import('./ui/cornerCounter')])
+        fakeRealm(true, accountHandle() ?? 'you')
+        if (cmd === 'win') return rigSpin(String(tokens ?? 'seven'))
+        if (cmd === 'stage') return stageCorner(typeof tokens === 'number' ? tokens : undefined, level)
+        if (cmd !== 'prizes' && cmd !== 'tokens') return "ps.corner: 'prizes', 'tokens' or 'stage'"
+        return setScreen(openCornerCounter(ui, input, { tab: cmd, close: () => showTitle() }))
+      },
+      /**
+       * The claw machine's faked state (after `ps.realm('fake')`, open it with `ps.minigame('claw')`): `ps.claw()` puts the week's
+       * first plush one miss short of sure, `ps.claw(2, 4)` 4 misses on the week's third plush, `ps.claw(2, 4, 9)` also 9 credits used today.
+       */
+      claw: async (index?: number, misses?: number, used?: number) => (await import('./realm/clawApi')).stageClaw(index, misses, used),
+      /**
+       * The Zona Safári with the faked API (`ps.realm('fake')` on, then its screen): `ps.safari()`. `ps.safari('sure')` puts the guarantee in the next
+       * session, `ps.safari('catch')` makes every ball hold and `ps.safari('flee')` every ball break and its Pokémon run (`'real'` back to the dice), `ps.safari('dry', 3)` sets the sessions
+       * without a new family and `ps.safari('used', 2)` the sessions used today. `ps.safari('habitat', 'marsh')` holds a preserve, `ps.safari('meet', 'mimikyu')` makes that the next encounter
+       * (`('meet', 'mimikyu', true)` shiny), `ps.safari('grass')` sets the grass off now and `ps.safari('phase')` prints where the game is.
+       * `ps.safari('hour', 'night')` holds a time of day (`dawn`, `day`, `dusk`, `night`; null back to the clock), `ps.safari('contest', true)` holds the
+       * Concurso de Insetos open (false closed, null back to the calendar), `ps.safari('dex', 'marsh')` fills a habitat's Pokédex but for one (`('dex', 'marsh', 'all')`,
+       * `'half'`, `'empty'`), `ps.safari('sneakup')` sets the partner just behind the first wanderer, sneaking (`('sneakup', 'front')` where it looks), and `ps.safari('stalk')` meets it now,
+       * `ps.safari('prize', 1)` puts that contest place's prizes in the gift box (on a field of 40),
+       * `ps.safari('done', 'meadow')` marks a habitat completed before its residents grew, `ps.safari('rewards', 'cove')` puts a completed habitat's gifts
+       * in the gift box (the cove's with the Ovo de Manaphy, whose hatching plays as it opens),
+       * and `ps.safari('say', text)` puts a line in the message box (to check that it fits).
+       */
+      safari: async (
+        what?: 'sure' | 'catch' | 'flee' | 'real' | 'dry' | 'used' | 'habitat' | 'meet' | 'grass' | 'phase' | 'hour' | 'contest' | 'dex' | 'sneakup' | 'stalk' | 'prize' | 'say' | 'done' | 'rewards',
+        arg?: number | string | boolean | null,
+        shiny?: boolean | string,
+      ) => {
+        await devRealm('fake')
+        if (what === undefined) return devMinigame('safari')
+        const { stageSafari } = await import('./realm/safariApi')
+        const { safariDev } = await import('./realm/games/safari')
+        const { isSafariHabitat } = await import('./data/safari')
+        if (what === 'sure') return stageSafari({ sure: true })
+        if (what === 'dry') return stageSafari({ dry: typeof arg === 'number' ? arg : 0 })
+        if (what === 'used') return stageSafari({ used: typeof arg === 'number' ? arg : 0 })
+        if (what === 'habitat') return stageSafari({ habitat: isSafariHabitat(arg) ? arg : null })
+        if (what === 'meet') return stageSafari({ next: typeof arg === 'string' && (HATCHLING_IDS as readonly string[]).includes(arg) ? (arg as HatchlingId) : null, shiny: shiny === true })
+        if (what === 'hour') return stageSafari({ daypart: arg === 'dawn' || arg === 'day' || arg === 'dusk' || arg === 'night' ? arg : null })
+        if (what === 'contest') return stageSafari({ contest: typeof arg === 'boolean' ? arg : null })
+        if (what === 'dex') return isSafariHabitat(arg) ? stageSafari({ dex: { habitat: arg, fill: shiny === 'all' || shiny === 'empty' || shiny === 'half' ? shiny : 'almost' } }) : null
+        if (what === 'sneakup') return safariDev.run?.sneakUp(arg === 'front')
+        if (what === 'done') return isSafariHabitat(arg) ? stageSafari({ done: [arg] }) : null
+        if (what === 'rewards') {
+          const { fakeRewards } = await import('./realm/safariApi')
+          return isSafariHabitat(arg) ? stageGifts(fakeRewards(arg).map((g) => ({ ...g, id: `${g.id}-${Date.now()}` }))) : null
+        }
+        if (what === 'prize') {
+          const { CONTEST_GIFTS } = await import('./data/safari')
+          const { contestPrize } = await import('./realm/games/safari.rules')
+          const rank = typeof arg === 'number' ? arg : 1
+          const prize = contestPrize(rank, 40)
+          return prize ? stageGifts(CONTEST_GIFTS[prize].map((content, i) => ({ id: `dev-contest-${rank}-${i}-${Date.now()}`, content, reason: { kind: 'bugContest', rank } as const }))) : null
+        }
+        if (what === 'stalk') return safariDev.run?.stalk()
+        if (what === 'say') return safariDev.run?.say(String(arg ?? ''))
+        if (what === 'grass') return safariDev.run?.rustle()
+        if (what === 'phase') return { game: safariDev.run?.phase() ?? null, battle: safariDev.run?.battle() ?? null, wanderers: safariDev.run?.wanderers() ?? null }
+        return stageSafari({ catches: what === 'catch', flees: what === 'flee' })
+      },
+      /**
+       * The Escavação on fakes (`realm/digApi.ts`): `ps.dig()` opens it with the faked API. `ps.dig('golden')` forces the next wall golden,
+       * `ps.dig('fossil', 'cranidos')` a fossil of that family (a Galar one's half the lab lacks: `ps.dig('fossil', 'dracozolt')`), `ps.dig('box')` Meltan's Mystery Box in it, `ps.dig('diamond')` Diancie's pink diamond, `ps.dig('dry', 10)` sets the guarantee's streak, `ps.dig('used', 3)` the walls used
+       * today, `ps.dig('lacking', [])` the fossils lacked (all of them by default), `ps.dig('held', ['bird'])` the Galar halves waiting in the lab (none by default), `ps.dig('crack')` the open wall one hit short of collapse, `ps.dig('peek')` where the open wall hides things and the layers left, `ps.dig('partner', 'ralts')` a partner's powers for the next wall, `ps.dig('soft')` a next wall one layer deep with far more crack, to stage a whole dig.
+       */
+      dig: async (what?: 'golden' | 'fossil' | 'box' | 'diamond' | 'dry' | 'used' | 'lacking' | 'held' | 'crack' | 'peek' | 'partner' | 'soft', arg?: unknown) => {
+        const { stageDig, crackFakeWall, peekFakeWall } = await import('./realm/digApi')
+        const { DIG_FOSSIL_FAMILIES, GALAR_HALVES } = await import('./data/digTreasures')
+        if (what === 'golden') return stageDig({ golden: true })
+        if (what === 'box') return stageDig({ box: true })
+        if (what === 'diamond') return stageDig({ diamond: true })
+        if (what === 'fossil') return stageDig({ fossil: arg === null ? null : DIG_FOSSIL_FAMILIES.find((f) => f === arg) ?? DIG_FOSSIL_FAMILIES[0] })
+        if (what === 'dry') return stageDig({ dry: Number(arg ?? 10) })
+        if (what === 'used') return stageDig({ used: Number(arg ?? 0) })
+        if (what === 'lacking') return stageDig({ lacking: Array.isArray(arg) ? DIG_FOSSIL_FAMILIES.filter((f) => (arg as unknown[]).includes(f)) : DIG_FOSSIL_FAMILIES })
+        if (what === 'held') return stageDig({ held: Array.isArray(arg) ? GALAR_HALVES.filter((h) => (arg as unknown[]).includes(h)) : [] })
+        if (what === 'soft') return stageDig({ soft: true })
+        if (what === 'partner') return stageDig({ partner: typeof arg === 'string' ? arg : null })
+        if (what === 'crack') return crackFakeWall()
+        if (what === 'peek') return peekFakeWall()
+        const { fakeRealm } = await import('./realm/api')
+        fakeRealm(true, 'you')
         const { openGame } = await import('./realm/games/registry')
         const save = loadSave()
         let screen: { dispose: () => void } | null = null
-        screen = await openGame(document.body, game, { partner: save.partner, shiny: false, realm: null, table: null, you: 0, close: () => screen?.dispose() })
-        return screen
+        screen = await openGame(document.body, 'dig', { input, partner: save.partner, shiny: false, realm: null, table: null, you: 0, close: () => screen?.dispose() })
+        return 'Escavação: real API off, fakes on'
       },
       /**
        * A mini game's Placar (`realm/games/board.ts`) over whatever is on screen: `ps.realmBoard('fishing')`, `('arcade')`
@@ -4993,15 +5635,22 @@ if (import.meta.env.DEV) {
       spawn: devSpawn,
       alpha: devAlpha,
       mega: devMega,
+      tera: devTera,
       evolve: devEvolve,
       ability: devAbility,
       event: devEvent,
       field: devField,
       challenge: devChallenge,
       coopBoard: devCoopBoard,
+      era1: devEra1,
       hall: devHall,
       otherDevice: devOtherDevice,
       dex: () => loadSave().dex,
+      dexSee: (region?: DexRegion | 'all', missing?: number) => {
+        const out = dexSee(region, missing)
+        if (screen?.el.classList.contains('title-home')) showTitle()
+        return out
+      },
       /** Plays an error report's `replay` (the JSON string from PostHog) again: a simulation error throws here at the same tick. */
       replay: (json: string) => {
         const replay = parseReplay(JSON.parse(json))
@@ -5157,11 +5806,20 @@ if (import.meta.env.DEV) {
       /** `ps.ball(3)` drops Poké Balls 20 px to the right of the player (inside the magnet), side by side. */
       ball: (n = 1) => withRun((g) => Array.from({ length: n }, (_, i) => dropPickup(g, localPlayer(g).x + 20 + i * 6, localPlayer(g).y, 'pokeball'))),
       ...riftDevTools(() => run?.game),
+      ...ultraDevTools(() => run?.game, () => showMenu(loadSave().partner, 'legends')),
+      ...questDevTools(() => run?.game),
+      ...rushDevTools(() => run?.game, (difficulty) => void startRushRun(loadSave().partner, difficulty), () => showMenu(loadSave().partner, 'legends')),
       ...placeDevTools(() => run?.game),
+      ...seasonFindDevTools(() => run?.game, devLandmark),
+      ...travelDevTools(),
+      ...pathDevTools(() => run?.game, { menu: (id) => showMenu(id, 'legends'), sheet: (path) => void pathSheet(ui, input, path, { close: () => {} }) }),
       ...levelUpDevTools(() => run?.game),
       ...kitDevTools(() => run?.game),
+      ...gaKitADevTools(() => run?.game),
+      ...gaHookDevTools(() => run?.game),
       ...eggMoveDevTools(() => run?.game),
       ...learnDevTools(() => run?.game),
+      ...itemDropDevTools(() => run?.game),
       ...tmDevTools(() => run?.game),
       ...evoGateDevTools(() => run?.game),
       ...duoDevTools(() => run?.game),

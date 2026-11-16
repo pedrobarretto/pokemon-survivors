@@ -309,7 +309,7 @@ describe('styles', () => {
   })
 
   it("parse and merge: unknown ids dropped, a style not owned isn't worn", () => {
-    expect(parseStyle({ owned: { frame: ['poke', 'rocket', 'poke'] }, equipped: { frame: 'great', background: 'cave' } })).toEqual({
+    expect(parseStyle({ owned: { frame: ['poke', 'teamMagma', 'poke'] }, equipped: { frame: 'great', background: 'cave' } })).toEqual({
       owned: { frame: ['poke'], background: [], wallpaper: [] },
       equipped: { frame: 'classic', background: 'night', wallpaper: 'classic' },
     })

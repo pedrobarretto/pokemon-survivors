@@ -101,6 +101,8 @@ const GLYPHS: Record<FormSpecial, { rows: readonly string[]; turn?: boolean }> =
   expandingForce: { rows: ['...111...', '.1122211.', '122333221', '123414321', '122333221', '.1122211.', '...111...'] },
   nightDaze: { rows: ['1...1...1', '.1..2..1.', '..12321..', '..23332..', '123343321', '..23332..', '..12321..', '.1..2..1.', '1...1...1'] },
   dracoMeteor: { rows: ['...3...', '..3.3..', '..232..', '.12321.', '.23432.', '1234321', '1234321', '.12321.', '..111..'] },
+  /* Mega Camerupt's: a lava bomb, its crust split over the glow. */
+  eruption: { rows: ['..1111..', '.121341.', '12134431', '13444321', '12343411', '11233421', '.112221.', '..1111..'] },
   diamondStorm: { rows: ['..1111..', '.122341.', '12223431', '12222341', '11222221', '.112221.', '..1111..'] },
   blizzard: { rows: ['12341', '12341', '.234.', '.234.', '.23..', '..3..', '..3..'] },
   astralBarrage: { rows: ['..1111..', '.122221.', '12233221', '12334321', '12334321', '12233221', '.122221.', '..1111..'] },
@@ -137,6 +139,18 @@ const GLYPHS: Record<FormSpecial, { rows: readonly string[]; turn?: boolean }> =
   hyperVoice: { rows: ['....1...1', '.1...1...', '121...1.1', '1331..1.1', '13441.1.1', '1331..1.1', '121...1.1', '.1...1...', '....1...1'] },
   sheerCold: { rows: ['....1....', '.1..2..1.', '..2.3.2..', '...343...', '123444321', '...343...', '..2.3.2..', '.1..2..1.', '....1....'] },
   doubleEdge: { rows: ['1.......1', '12.....21', '.123.321.', '..13431..', '...141...', '...131...', '..1.1.1..', '.1..1..1.', '111111111'] },
+  /* The Grande Atualização's Megas (`data/megas.ts`). */
+  megahorn: { rows: ['....1....', '...121...', '...131...', '..12321..', '..13431..', '.1234321.', '.1233321.', '1.12221.1', '111111111'] },
+  avalanche: { rows: ['...1111..', '..122331.', '.12234431', '.12233331', '..122221.', '1..1111..', '31....1..', '21...131.', '11...111.'] },
+  icyWind: { rows: ['...1.....', '.1.3.1...', '..343....', '1334331..', '..343....', '.1.3.1...', '...1.....', '11222233.', '...111234'] },
+  highJumpKick: { rows: ['..111....', '..1231...', '..1231...', '..12331..', '..123341.', '.1223341.', '12222331.', '11111111.', '1.1.1.1.1'] },
+  inferno: { rows: ['...1.....', '..121..1.', '..123.121', '.1233.131', '.12343321', '123444321', '123444321', '.1234321.', '..11111..'] },
+  shadowPunch: { rows: ['..1.1.1..', '.1212121.', '.1232321.', '123333321', '123444321', '123444321', '.1233321.', '..12221..', '...111...'] },
+  foulPlay: { rows: ['1.....', '21....', '321...', '4321..', '.4321.', '..4321', '.4321.', '4321..', '321...', '21....', '1.....'], turn: true },
+  glaiveRush: { rows: ['....1', '...12', '..123', '.1234', '12344', '.1234', '..123', '...12', '....1'], turn: true },
+  kowtowCleave: { rows: ['.....11..', '....1231.', '...12341.', '..12341..', '.12341...', '1231.....', '121......', '1.1......', '..1......'] },
+  chillingWater: { rows: ['....1....', '...121...', '..12321..', '.1232321.', '.1343431.', '123444321', '123343321', '.1232321.', '..11111..'] },
+  thousandArrows: { rows: ['.2..2..2.', '.3..3..3.', '.3..3..3.', '.4..4..4.', '141141141', '.1..1..1.', '.........', '1.1.1.1.1', '111111111'] },
 }
 
 const glyphCache = canvasCache<FormSpecial, PixelSprite>()
@@ -317,6 +331,11 @@ const STANCE_ART = {
   attack: deoxysArt(SWORD, 'attack'),
   defense: deoxysArt(SHIELD, 'defense'),
   speed: deoxysArt(CHEVRON, 'speed'),
+  heat: deoxysArt(CORE, 'heat'),
+  wash: deoxysArt(CHEVRON, 'wash'),
+  frost: deoxysArt(CORE, 'frost'),
+  fan: deoxysArt(CHEVRON, 'fan'),
+  mow: deoxysArt(SWORD, 'mow'),
 } as const satisfies Record<Stance, () => PixelSprite>
 
 export const stanceIcon = (stance: Stance) => toIconUrl(`stance:${stance}`, STANCE_ART[stance])
@@ -345,6 +364,11 @@ export const STANCE_FORMS = {
   attack: 'attack',
   defense: 'defense',
   speed: 'speed',
+  heat: 'heat',
+  wash: 'wash',
+  frost: 'frost',
+  fan: 'fan',
+  mow: 'mow',
 } as const satisfies Record<Stance, FormKey | undefined>
 
 /**
@@ -541,6 +565,7 @@ const BESPOKE_ICONS: Record<Exclude<SpecialId, FormSpecial>, () => PixelSprite> 
   ironHead: () => outlined(slashSprite('steel')),
   stanceChange: STANCE_ART.shield,
   formeChange: STANCE_ART.normal,
+  applianceChange: STANCE_ART.heat,
   dragonFlare: () =>
     outlined(fromStrings(
       ['.....1.....', '.1...21..1.', '.21.1321.2.', '..1123321..', '.112344321.', '12344443211', '.123444321.', '..1234321..', '.1.12321.1.', '.2..121..2.', '.....1.....'],
@@ -554,6 +579,8 @@ const BESPOKE_ICONS: Record<Exclude<SpecialId, FormSpecial>, () => PixelSprite> 
   nightSlash: () => outlined(slashSprite('dark')),
   bulletPunch: () => outlined(slashSprite('steel')),
   phantomForce: () => outlined(slashSprite('ghost')),
+  psychoCut: () => outlined(slashSprite('psychic')),
+  firstImpression: () => outlined(slashSprite('bug')),
   auraStorm: () =>
     outlined(fromStrings(
       ['1..2222..1', '.1233332.1', '.23344332.', '2344444432', '2344444432', '.23344332.', '1.233332.1', '1..2222..1'],

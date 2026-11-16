@@ -10,11 +10,12 @@ import { NO_RANKS } from './meta'
 import { withBranch } from './moves'
 import { OUTBREAK_SPECIES } from './outbreak'
 import { moveOf, recordEvent, recordStep, resimulate, RULES_VERSION, startGame, startRecording, TICK, type Replay, type ReplayStart } from './replay'
+import { descendHideout } from './hideout'
 import { enterPlace } from './placeInterior'
 import { startEndless } from './endless'
 import { enterArena } from './riftArena'
 import { spawnWaveBoss } from './spawner'
-import { EVENTS } from '../data/waves'
+import { EVENTS, stageIndexAt } from '../data/waves'
 import type { Game } from './types'
 
 /**
@@ -233,6 +234,20 @@ const SCENARIOS = {
       enterPlace(g, 'cave', g.player.x, g.player.y)
     },
   },
+  /** A Shadow Mewtwo-hunting Shadow Absol in the Rocket Hideout's lair at 4:00 (`hideout.ts`, `shadow.ts`, `rocketKitSystem.ts`): its Omen, Persian, then Shadow Mewtwo's phases. */
+  hideout: {
+    start: { ...START, starter: 'absol', variant: 'shadow' },
+    seconds: 40,
+    stage: (g) => {
+      g.time = 240
+      g.nextEvent = 99
+      g.player.revives = 2
+      gainXp(g, 900)
+      enterPlace(g, 'hideout', g.player.x, g.player.y)
+      const inside = g.place.inside
+      if (inside?.id === 'hideout') while (inside.state.floor < 2) descendHideout(g, inside)
+    },
+  },
   /** The Hidden Grotto at 5:00 (`hidden.ts`, `grotto.ts`): a patch sparkling early, Audino popping out of the shaking grass, the item in the grass. */
   grotto: {
     start: { ...START, starter: 'charmander' },
@@ -293,6 +308,21 @@ const SCENARIOS = {
       gainXp(g, 3000)
     },
   },
+  /** Endless mode at 120:00, its event a swarm: only a species fit for a flyby leads it (`fitsFlyby`), never the stage's slow walker. */
+  endlessSwarm: {
+    start: { ...START, starter: 'charmander' },
+    seconds: 12,
+    stage: (g) => {
+      g.time = 120 * 60
+      g.nextEvent = 99
+      g.endless = { ...startEndless(g.time), nextEvent: g.time + 2, events: 1 }
+      // A slow walker beside a flyer: only the flyer may lead the swarm.
+      const stage = stageIndexAt(g.time)
+      g.roster = { ...g.roster, stages: g.roster.stages.map((pool, i) => (i === stage ? [['slowpoke', 4], ['pidgeotto', 1]] : pool)) }
+      g.player.revives = 3
+      gainXp(g, 3000)
+    },
+  },
 } as const satisfies Record<string, Scenario>
 
 type ScenarioId = keyof typeof SCENARIOS
@@ -302,26 +332,28 @@ type ScenarioId = keyof typeof SCENARIOS
  * under. When the version moves, replace the entry with the new digests the
  * failing test prints.
  */
-const PINNED: Partial<Record<number, Record<ScenarioId, string>>> = {
-  48: {
-    levelUps: '2998·45·12·78f86519',
-    mega: '1892·27·1·2d1d227c',
-    riftFall: '665·0·1·8722c904',
-    alphaHazards: '1002·2·19·4c8862d5',
-    nightBoss: '2093·36·17·04c2b2b6',
-    bag: '989·11·4·ebcf7333',
-    shop: '1521·114·21·1cecb29a',
-    shopTms2: '1787·49·18·57c9b8dd',
-    evoGate: '1487·55·24·5f3f7264',
-    porygonGate: '2074·69·37·77df1acd',
-    sketch: '1210·22·1·d5a7050c',
-    legend: '1487·99·14·4ccd28a1',
-    waveLegend: '1998·22·17·db5ba4c3',
-    cave: '2188·16·12·d2d47594',
-    grotto: '2782·23·18·bb75df4d',
-    underground: '3084·27·30·ddb45396',
-    magicGuard: '1188·51·20·285cf0b7',
-    endlessCeiling: '845·0·26·f8ec4480',
+const PINNED: Partial<Record<number, Partial<Record<ScenarioId, string>>>> = {
+  49: {
+    levelUps: '2998·48·12·ad64acab',
+    mega: '1892·32·2·4007bb5c',
+    riftFall: '765·0·1·9fa6c9be',
+    alphaHazards: '1002·6·20·ea33b4b0',
+    nightBoss: '2093·24·17·148a20f9',
+    bag: '1017·7·3·cc8da20c',
+    shop: '1521·88·19·880c065c',
+    shopTms2: '1787·48·17·b2353376',
+    evoGate: '1487·53·24·4a84d98b',
+    porygonGate: '2074·72·37·25bd273a',
+    sketch: '1210·20·4·d4ffa023',
+    legend: '1487·97·14·f773046a',
+    waveLegend: '1998·16·17·c7c9f3dd',
+    cave: '2188·17·12·c8bd7e7e',
+    hideout: '2633·73·16·cbca0c6f',
+    grotto: '2782·23·19·519287c8',
+    underground: '3084·28·30·12e02551',
+    magicGuard: '1188·41·19·541abae2',
+    endlessCeiling: '826·0·26·0a313e76',
+    endlessSwarm: '819·6·26·845a4e37',
   },
 }
 

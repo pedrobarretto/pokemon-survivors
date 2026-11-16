@@ -12,6 +12,7 @@ import { isOpen } from './terrain'
 import { anchorPlayer } from './players'
 import { biomeOf } from './biomeMap'
 import { coopLocked } from '../data/coop'
+import { HIDEOUT } from '../data/rocketHideout'
 import type { Game } from './types'
 import * as dm from '../engine/dmath'
 
@@ -72,13 +73,16 @@ export const updatePlaceEntrance = (g: Game, dt: number) => {
   const s = g.place
   const ent = s.entrance
   if (!ent) {
-    const busy = s.inside !== null || g.rift.omen !== null || g.rift.portal !== null || g.rift.arena !== null
-    if (placeDue({ time: g.time, nextAt: s.nextAt, busy, bossAlive: g.bossId !== null, endless: g.endless !== null })) openEntrance(g)
+    const busy = s.inside !== null || g.rift.omen !== null || g.rift.portal !== null || g.rift.arena !== null || g.raid.den !== null || g.raid.arena !== null
+    // The poster's pass opens the Rocket Hideout's hatch once, on its own clock (`data/rocketHideout.ts`).
+    if (s.hideout && g.time >= HIDEOUT.at && !busy && g.bossId === null) {
+      if (openEntrance(g, 'hideout')) delete s.hideout
+    } else if (placeDue({ time: g.time, nextAt: s.nextAt, busy, bossAlive: g.bossId !== null, endless: g.endless !== null })) openEntrance(g)
     else updateHiddenSchedule(g)
     return
   }
   // It waits on the map while the team is inside (or in a rift).
-  if (s.inside || g.rift.arena) return
+  if (s.inside || g.rift.arena || g.raid.arena) return
   if (ent.open) {
     revealHidden(g, ent)
     ent.left -= dt

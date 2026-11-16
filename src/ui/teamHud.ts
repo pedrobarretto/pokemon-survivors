@@ -11,7 +11,7 @@ import type { Game, Player } from '../game/types'
 import { t } from '../i18n'
 import { curseIcon, itemIcon, moveIcon, teamAwayIcon, teamBallIcon, sparkleIcon } from '../render/art'
 import { shownLook } from '../render/looks'
-import { portraitUrl } from '../render/sprites'
+import { hookPortrait } from '../render/gaHookLook'
 import { busyWith, slotColor } from '../render/team'
 import { TEAM_COLORS } from '../render/vale'
 import { titleChip } from './arenaTitle'
@@ -79,7 +79,7 @@ export const teamBuilds = (g: Game, me: Player) => {
         h(
           'div',
           { class: 'team-build-head' },
-          h('img', { class: 'team-portrait', src: portraitUrl(formAt(p.starter, p.branch, p.stage).dex, p.shiny), alt: '' }),
+          h('img', { class: 'team-portrait', src: hookPortrait(g, p, formAt(p.starter, p.branch, p.stage).dex), alt: '' }),
           h('b', { class: 'team-name' }, seatName(g, p.slot), titleChip(shownLook(g, p.slot).title)),
           h('span', { class: 'team-level' }, t().levelShort(p.level)),
         ),
@@ -167,10 +167,10 @@ export const createTeamHud = (root: HTMLElement) => {
       if (p === me || (p.versus && p.versus.team !== me.versus?.team)) continue
       const card = cardFor(g, p)
       const dex = formAt(p.starter, p.branch, p.stage).dex
-      const key = `${dex}${p.shiny}`
+      const key = hookPortrait(g, p, dex)
       if (key !== card.key) {
         card.key = key
-        card.portrait.src = portraitUrl(dex, p.shiny)
+        card.portrait.src = key
       }
       const state = stateOf(p)
       const mode = state ?? ''

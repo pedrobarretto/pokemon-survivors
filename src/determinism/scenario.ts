@@ -2,6 +2,17 @@ import { createRng, rngFrom, type SeededRng } from '../engine/rng'
 import * as dm from '../engine/dmath'
 import { PLAYABLE_IDS, type PlayableId } from '../data/hatchlings'
 import { REGULAR_LEGENDS } from '../data/legends'
+import { SEASON_ONE_EGGS } from '../data/seasonOneEggs'
+import { SEASON_ONE_KITS } from '../data/seasonOneKits'
+import { GA_FAMILIES_B } from '../data/gaFamiliesB'
+import { GA_FOSSILS } from '../data/gaFossils'
+import { MEGA_FAMILIES_B } from '../data/megaFamiliesB'
+import { GA_FAMILIES_A } from '../data/gaFamiliesA'
+import { GA_MEGA_FAMILIES_A } from '../data/gaMegaFamiliesA'
+import { REGIONAL_FAMILIES } from '../data/regionalFamilies'
+import { ROCKET_FAMILIES } from '../data/rocketFamilies'
+import { SC_FAMILIES } from '../data/scFamilies'
+import { GA_FAMILIES_HOOK } from '../data/gaFamiliesHook'
 import { continueEndless } from '../game/endlessSystem'
 import { banishOffer, chooseOffer, rerollOffers, skipLevelUp, step } from '../game/game'
 import { UPGRADE_IDS, UPGRADES, type Ranks } from '../game/meta'
@@ -31,7 +42,7 @@ export type Scenario = {
   starter: PlayableId
   difficulty: Difficulty
   maxRanks: boolean
-} & Partial<Pick<ReplayStart, 'halloween' | 'bag' | 'tms' | 'evo' | 'caps'>>
+} & Partial<Pick<ReplayStart, 'halloween' | 'bag' | 'tms' | 'evo' | 'caps' | 'wild' | 'ruins'>>
 
 const FULL_RANKS = Object.fromEntries(UPGRADE_IDS.map((id) => [id, UPGRADES[id].maxRank])) as Ranks
 const NO_RANKS_SET = Object.fromEntries(UPGRADE_IDS.map((id) => [id, 0])) as Ranks
@@ -49,6 +60,8 @@ export const scenarioStart = (s: Scenario): ReplayStart => ({
   ...(s.tms ? { tms: s.tms } : {}),
   ...(s.evo ? { evo: s.evo } : {}),
   ...(s.caps ? { caps: s.caps } : {}),
+  ...(s.wild ? { wild: s.wild } : {}),
+  ...(s.ruins ? { ruins: s.ruins } : {}),
   view: { w: 480, h: 270 },
 })
 
@@ -157,10 +170,12 @@ export const tickScenario = (d: Driver) => {
 
 /**
  * The Pokémon the scenarios draw from: the starters, the hatched families and
- * the regular legends (Legend mode). The event legends stay out so the draw
- * keeps its picks; each plays in the harness's own runs (`harness.ts`).
+ * the regular legends (Legend mode). The event legends, Temporada 1's and
+ * the big update's families (the regional forms and the Game Corner's too)
+ * stay out so the draw keeps its picks; each
+ * event legend plays in the harness's own runs (`harness.ts`).
  */
-const PLAYS: readonly PlayableId[] = [...PLAYABLE_IDS, ...REGULAR_LEGENDS]
+const PLAYS: readonly PlayableId[] = [...PLAYABLE_IDS.filter((id) => !(id in SEASON_ONE_EGGS) && !(id in SEASON_ONE_KITS) && !(id in GA_FAMILIES_B) && !(id in GA_FAMILIES_A) && !(id in REGIONAL_FAMILIES) && !(id in ROCKET_FAMILIES) && !(id in GA_FOSSILS) && !(id in GA_MEGA_FAMILIES_A) && !(id in MEGA_FAMILIES_B) && !(id in SC_FAMILIES) && !(id in GA_FAMILIES_HOOK)), ...REGULAR_LEGENDS]
 
 /** What a save brings along, by turns: nothing but the usual Lure and Incense, a full Bag, armed shop TMs and Bottle Caps, evolution items, an Everstone. */
 const SAVES: ReadonlyArray<Partial<Scenario>> = [

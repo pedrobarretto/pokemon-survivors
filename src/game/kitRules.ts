@@ -22,12 +22,19 @@ export type BonusWhen =
   | 'lowHp'
   /** Flying type, or a leaper mid-jump. */
   | 'flying'
+  /** At least `HEAVY_MASS` (Snorlax, Golem, the Alphas, every boss): Low Kick's weight. */
+  | 'heavy'
   | 'elite' | 'boss'
+  /** All its HP still: a first strike (Bolt Beak, Fishious Rend). */
+  | 'unhurt'
 
 /** ×`mult` damage on hits against foes matching `when`. Several bonuses multiply. `stamp`: a branch's mod put it there (Hunter, Cruel; `stampMods`), so it's added once. */
 export type DamageBonus = { when: BonusWhen; mult: number; stamp?: 'hunter' | 'cruel' }
 
 export const NO_BONUS: readonly DamageBonus[] = []
+
+/** Mass from which a foe counts as `heavy` (regular foes weigh about 1). */
+export const HEAVY_MASS = 1.5
 
 /** HP fraction under which a foe counts as `lowHp`. */
 export const LOW_HP = 0.5
@@ -45,8 +52,10 @@ export const bonusApplies = (when: BonusWhen, e: Enemy): boolean => {
     case 'chilled': return st.slow.time > 0 || st.freeze.time > 0
     case 'lowHp': return e.hp < e.maxHp * LOW_HP
     case 'flying': return e.types.includes('flying') || isAirborne(e)
+    case 'heavy': return e.mass >= HEAVY_MASS
     case 'elite': return e.elite
     case 'boss': return e.boss
+    case 'unhurt': return e.hp >= e.maxHp
   }
 }
 
@@ -162,6 +171,13 @@ export const learnable = (owned: readonly MoveId[], id: MoveId, manual: (id: Mov
 
 /* ---------------- Immunity windows ---------------- */
 
+/** The cooldown multiplier past which reductions count for half (`softCooldown`). */
+export const COOLDOWN_SOFT = 0.7
+
+/** The cooldown multiplier a move sees: full down to `COOLDOWN_SOFT`, half as much past it, so stacking cooldown cuts stops paying as much. */
+export const softCooldown = (multiplier: number) =>
+  multiplier >= COOLDOWN_SOFT ? multiplier : COOLDOWN_SOFT - (COOLDOWN_SOFT - multiplier) * 0.5
+
 /** Seconds after one move's immunity window (a guard, a burrow) closes before a different move can open one. */
 export const WARD_GAP = 0.75
 
@@ -184,7 +200,7 @@ export const burrowTime = (duration: number, cooldown: number, after: number) =>
  * duration (Light Clay) and cooldown (Quick Claw) stacked past the point where
  * the window outlasts the cooldown, and the player was never hit again.
  */
-export const GUARD_UPTIME = 0.5
+export const GUARD_UPTIME = 0.4
 
 /** Seconds a renewing guard stands: its `duration`, held to `GUARD_UPTIME` of its `cooldown`. */
 export const guardSpan = (duration: number, cooldown: number) => Math.min(duration, cooldown * GUARD_UPTIME)

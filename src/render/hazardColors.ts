@@ -24,4 +24,5 @@ export const HAZARD_COLORS: Record<HazardVisual, readonly [string, string]> = {
   orb: ['#e8e8f0', 'rgba(200,200,216,0.3)'],
   mist: ['#f86078', 'rgba(248,176,200,0.42)'],
   luster: ['#58a0f8', 'rgba(72,136,248,0.32)'],
+  space: ['#f8b8e8', 'rgba(232,112,200,0.32)'],
 }
