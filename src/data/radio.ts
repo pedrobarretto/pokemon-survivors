@@ -23,7 +23,7 @@ export type RadioUnlock =
   | { readonly kind: 'legend'; readonly ids: readonly EnemyId[] }
   | { readonly kind: 'heard' }
 
-export const RADIO_GROUPS = ['menus', 'biomes', 'bosses', 'legends'] as const
+export const RADIO_GROUPS = ['menus', 'realm', 'biomes', 'bosses', 'legends'] as const
 
 export type RadioGroup = (typeof RADIO_GROUPS)[number]
 
@@ -35,6 +35,15 @@ const legend = (...ids: readonly EnemyId[]) => ({ kind: 'legend', ids }) as cons
 
 export const RADIO_TRACKS = [
   { theme: 'menu', group: 'menus', unlock: open },
+  { theme: 'realmTown', group: 'realm', unlock: open },
+  { theme: 'cafe', group: 'realm', unlock: { kind: 'heard' } },
+  { theme: 'fishing', group: 'realm', unlock: { kind: 'heard' } },
+  { theme: 'arcade', group: 'realm', unlock: { kind: 'heard' } },
+  { theme: 'gameCorner', group: 'realm', unlock: { kind: 'heard' } },
+  { theme: 'dig', group: 'realm', unlock: { kind: 'heard' } },
+  { theme: 'safariField', group: 'realm', unlock: { kind: 'heard' } },
+  { theme: 'safariBattle', group: 'realm', unlock: { kind: 'heard' } },
+  { theme: 'contest', group: 'realm', unlock: { kind: 'heard' } },
   { theme: 'run', group: 'biomes', unlock: open },
   { theme: 'forest', group: 'biomes', unlock: biome('forest') },
   { theme: 'beach', group: 'biomes', unlock: biome('beach') },
