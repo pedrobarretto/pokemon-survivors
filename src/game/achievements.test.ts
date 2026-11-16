@@ -93,7 +93,7 @@ describe('Pokédex and egg achievements', () => {
     expect(shiny.save.eggs).toEqual([{ tier: 'rare', steps: 0 }])
   })
 
-  it('pay reward eggs in ₽ once the run used up its egg cap, or the incubator is full', () => {
+  it('pay reward eggs in ₽ once the run used up its egg cap, or the incubator and its line are full', () => {
     const capped = recordRun(EMPTY_SAVE, summary({ kills: 100_000 }), null, date, 0)
     expect(capped.unlocked).toContain('kills100k')
     expect(capped.eggs).toEqual([])
@@ -101,7 +101,7 @@ describe('Pokédex and egg achievements', () => {
     expect(capped.converted).toEqual({ full: [], cap: ['rare'] })
     expect(capped.save.wallet).toBe(capped.reward + EGG_TIERS.rare.refund)
     expect(recordRun(EMPTY_SAVE, summary({ kills: 100_000 }), null, date).save.eggs).toHaveLength(1)
-    const full = { ...EMPTY_SAVE, eggs: Array.from({ length: EGGS.slots }, () => ({ tier: 'common' as const, steps: 0 })) }
+    const full = { ...EMPTY_SAVE, eggs: Array.from({ length: EGGS.slots }, () => ({ tier: 'common' as const, steps: 0 })), eggQueue: Array.from({ length: EGGS.queue }, () => ({ tier: 'common' as const, steps: 0 })) }
     const paid = recordHatch({ ...full, achievements: { ...NO_ACHIEVEMENTS, unlocked: ['firstHatch'] } }, true, date)
     expect(paid.eggs).toEqual([])
     expect(paid.converted).toEqual({ full: ['rare'], cap: [] })

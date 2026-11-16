@@ -272,6 +272,9 @@ export const INCUBATOR = {
   slots: [
     { price: 150_000, minLevel: 2 },
     { price: 500_000, minLevel: 4 },
+    { price: 1_000_000, minLevel: 5 },
+    { price: 2_000_000, minLevel: 5 },
+    { price: 4_000_000, minLevel: 5 },
   ],
   quick: { price: 8000, speed: 2 },
 } as const satisfies { slots: readonly { price: number; minLevel: ShopLevel }[]; quick: { price: number; speed: number } }

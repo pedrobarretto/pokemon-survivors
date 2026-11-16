@@ -1692,7 +1692,7 @@ export const es: Messages = {
     incubator: {
       intro: (slots, max) => `Tu incubadora: ${slots} de ${max} espacios · los espacios extra son para siempre`,
       slot: (n) => `Espacio ${n}`,
-      slotText: 'Un huevo más eclosionando a la vez, para siempre. Con la incubadora llena, un huevo nuevo se vuelve ₽.',
+      slotText: 'Un huevo más eclosionando a la vez, para siempre. Con la incubadora llena, un huevo nuevo espera en la fila.',
       before: 'Compra primero el espacio anterior.',
       needs: (level) => `A la venta con la tienda en ${level}.`,
       buy: (price) => `Comprar ${price}`,
@@ -2629,10 +2629,13 @@ export const es: Messages = {
   eggs: {
     tiers: { common: 'Huevo Común', rare: 'Huevo Raro', ultra: 'Huevo Ultrarraro', friend: 'Huevo de la Amistad', haunted: 'Huevo Embrujado', kecleon: 'Huevo Kecleon', kecleonShiny: 'Huevo Kecleon brillante', fossil: 'Huevo Fósil', found: 'Encuentro', dig: 'Fósil de la Excavación', ...REGIONAL_WORDS.es.tiers },
     found: (egg) => `¡Encontraste un *${egg}*! Va a la incubadora.`,
-    foundFull: (egg, coins) => `¡Encontraste un *${egg}*! La incubadora está llena, así que se convertirá en *${coins}*.`,
+    foundFull: (egg, coins) => `¡Encontraste un *${egg}*! La incubadora y la fila están llenas, así que se convertirá en *${coins}*.`,
+    foundQueued: (egg) => `¡Encontraste un *${egg}*! La incubadora está llena, así que espera en la fila.`,
     title: 'INCUBADORA',
     intro: 'Los huevos eclosionan con los pasos que das en las partidas. Todos los huevos de la incubadora avanzan juntos.',
     sources: 'Los jefes, los cofres cerrados y las grietas a veces dejan un huevo.',
+    queue: (n, max) => `Fila de espera ${n}/${max}`,
+    queueRule: (max) => `Con la incubadora llena, hasta ${max} huevos esperan en la fila y entran solos cuando se libera un lugar. Después de eso, se vuelven ₽.`,
     empty: 'Vacío',
     stepsLeft: (n) => `Faltan ${n} pasos`,
     ready: '¡Listo!',

@@ -64,7 +64,7 @@ import { runEvoItems } from './game/evoGate'
 import { EVO_ITEM_IDS, EVO_ITEMS, SHOP_LEVEL_IDS, SHOP_LEVELS, type EvoItemId } from './data/shop'
 import { shopIcon, tmPicture } from './ui/shopIcons'
 import { CONSUMABLES } from './game/consumables'
-import { depositEggs, EGG_TIERS, EGGS, freeSlots, grantEgg, hatchEgg, incubatorSlots, isReady, toSteps, type EggTier, type Hatch } from './game/eggs'
+import { depositEggs, EGG_TIERS, eggRoom, EGGS, freeSlots, grantEgg, hatchEgg, incubatorSlots, isReady, toSteps, type EggTier, type Hatch } from './game/eggs'
 import { useQuick } from './game/incubator'
 import { biomeDevTools } from './ui/biomeDev'
 import { addCandies, HAUNT_DEX, recordHunt } from './game/halloween'
@@ -2810,10 +2810,15 @@ const handleEvent = (r: Run, e: GameEvent) => {
       return aside(rich(t().alphas.prize), 2600)
     case 'egg': {
       const m = t().eggs
-      // The run's eggs bank when it ends: this one fits if the incubator has a slot for it after the ones found before it.
+      // The run's eggs bank when it ends: this one takes a slot, a place in line or ₽, after the ones found before it.
       const save = loadSave()
-      const fits = g.eggs.found.length - r.hatchery.eggs <= freeSlots(save.eggs, incubatorSlots(save))
-      const text = fits ? m.found(m.tiers[e.tier]) : m.foundFull(m.tiers[e.tier], formatPokeDollars(EGG_TIERS[e.tier].refund))
+      const nth = g.eggs.found.length - r.hatchery.eggs
+      const text =
+        save.eggQueue.length === 0 && nth <= freeSlots(save.eggs, incubatorSlots(save))
+          ? m.found(m.tiers[e.tier])
+          : nth <= eggRoom(save)
+            ? m.foundQueued(m.tiers[e.tier])
+            : m.foundFull(m.tiers[e.tier], formatPokeDollars(EGG_TIERS[e.tier].refund))
       playSfx('unlock')
       return aside(h('span', { class: 'item-toast' }, h('img', { src: eggIcon(e.tier), alt: '' }), rich(text)), 3600)
     }
