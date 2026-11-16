@@ -1,4 +1,5 @@
 import type { Score } from '../engine/score'
+import { REALM_THEMES } from './realmMusic'
 
 /**
  * Original chiptune themes, written in the tracker notation of `engine/score.ts`
@@ -1596,6 +1597,6 @@ const volcano: Score = {
   },
 }
 
-export const THEMES = { menu, run, boss, forest, cave, snow, tower, beach, plant, desert, volcano, kyogre, groudon, rayquaza, lugia, hoOh, dialga, palkia, latis, deoxys, ultraSpace, birds, beasts, regis, mewtwo, arceus } as const satisfies Record<string, Score>
+export const THEMES = { menu, run, boss, forest, cave, snow, tower, beach, plant, desert, volcano, kyogre, groudon, rayquaza, lugia, hoOh, dialga, palkia, latis, deoxys, ultraSpace, birds, beasts, regis, mewtwo, arceus, ...REALM_THEMES } as const satisfies Record<string, Score>
 
 export type ThemeId = keyof typeof THEMES

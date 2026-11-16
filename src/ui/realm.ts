@@ -49,7 +49,7 @@ import { drawFurnitureUse } from '../render/furnitureUse'
 import { furnitureImage } from '../render/furnitureArt'
 import { actionOf, freeSeat, onASeat, pieceAt, pieceNear, reaches, roomTheme, usePieces, type UsePiece } from '../realm/pieces'
 import { JUKEBOX } from '../data/furnitureUse'
-import { setRealmJukebox } from '../realmJukebox'
+import { setRealmJukebox, setRealmRoom } from '../realmMusic'
 import { drawJoystick } from '../render/joystick'
 import { drawTownGround, drawTownOverhead, labelTop, townPieces } from '../render/realmArt'
 import { GROVE_HOST } from '../render/realmLayout'
@@ -97,7 +97,8 @@ import { brasiliaDay } from '../game/day'
  * Habbo style (`realm/pieces.ts`): walk up and press E, or tap the piece,
  * to sit on a bench, a sofa or a bed (a step stands up), or, in a base,
  * switch a light or play music on a jukebox for everyone there
- * (`realmJukebox.ts` hands the shell the theme to play).
+ * (`realmMusic.ts` hands the shell the theme to play, as it does each
+ * room's own).
  * The Estampas and Recados show here too: the book's button (`ui/realmBook.ts`),
  * the plaza's board (`ui/realmErrands.ts`), a carimbo over whoever earns one
  * (`render/stampFx.ts`) with a notice for the room, which keeps a hidden
@@ -357,6 +358,7 @@ type AutoEntry = { counts: Partial<Record<CityId, number>> | null; tried: Set<Ci
  */
 export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city: CityId | null): RealmScreen => {
   markRealmSeen()
+  setRealmRoom(LANDING)
   const m = () => t().realm
   const { client } = deps
   const el = h('div', { class: 'screen realm' })
@@ -1441,6 +1443,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       ctx.fillRect(0, 0, w, hgt)
       if (!room) return
       const town = isTownRoomId(room) ? room : null
+      setRealmRoom(town ?? 'base')
       if (town) drawTownGround(ctx, town, cam.x, cam.y, w, hgt, clock, exterior)
       if (town === 'gameCorner' && stairs !== null) drawCornerStairs(ctx, cam.x, cam.y, clock - stairs, clock)
       else if (base) drawBaseRoom(ctx, base, cam.x, cam.y, clock)
@@ -1630,6 +1633,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
     scene: (ctx, dt, w, hgt) => {
       if (town) return town.scene(ctx, dt, w, hgt)
       // The list (or the way in, looking for a city) sits over the plaza, quiet, the client not yet in one.
+      setRealmRoom(LANDING)
       ctx.fillStyle = '#101820'
       ctx.fillRect(0, 0, w, hgt)
       drawTownGround(ctx, LANDING, Math.round((REALM_ROOMS[LANDING].w - w) / 2), Math.round((REALM_ROOMS[LANDING].h - hgt) / 2), w, hgt, performance.now() / 1000)
@@ -1640,6 +1644,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       disposed = true
       closeSub()
       town?.dispose()
+      setRealmRoom(null)
       endSession()
       client.leave()
       el.remove()

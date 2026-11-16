@@ -515,6 +515,21 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
           },
         ],
       },
+      {
+        title: { pt: 'Músicas do Poké Realm', en: 'Poké Realm music', es: 'Música del Poké Realm', fr: 'Musique du Poké Realm', zh: '寶可夢國度的音樂' },
+        notes: [
+          {
+            pt: 'O Poké Realm ganhou trilha própria: a cidade, o píer, o café, o fliperama e o Game Corner tocam cada um a sua música, e os mini games também (a pesca, a Escavação, as mesas do café, as máquinas).',
+            en: 'The Poké Realm has its own soundtrack: the town, the pier, the café, the arcade and the Game Corner each play their own tune, and so do the mini games (fishing, the Mine Dig, the café tables, the machines).',
+            es: 'El Poké Realm tiene banda sonora propia: la ciudad, el muelle, el café, el Arcade y el Game Corner tocan cada uno su música, y los minijuegos también (la pesca, la Excavación, las mesas del café, las máquinas).',
+          },
+          {
+            pt: 'Na Zona Safári, andar no mato tem música de aventura, e um Pokémon selvagem traz a sua música de batalha. O Concurso de Insetos tem a sua.',
+            en: 'In the Safari Zone, walking the tall grass has adventure music, and a wild Pokémon brings its own battle theme. The Bug-Catching Contest has one of its own.',
+            es: 'En la Zona Safari, caminar por la hierba alta tiene música de aventura, y un Pokémon salvaje trae su música de batalla. El Concurso de Bichos tiene la suya.',
+          },
+        ],
+      },
     ],
   },
   {

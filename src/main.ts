@@ -189,7 +189,7 @@ import { giftScreen } from './ui/gifts'
 import { arenaGate, coopGate, playGate, realmGate } from './ui/account'
 import { TOWN_ROOMS, isTownRoomId } from './data/realmMap'
 import { isLocalRealm, realmUrl } from './realmUrl'
-import { realmJukebox } from './realmJukebox'
+import { realmGame, realmJukebox, realmTheme } from './realmMusic'
 import { openTracks, radio, radioOver, radioSounding, unlockAllTracks } from './radio'
 import { nowPlaying, type MusicPlace } from './radioRules'
 import { openRadio } from './ui/radio'
@@ -2840,9 +2840,14 @@ const weatherToast = (next: WeatherId, prev: WeatherId) => {
 
 /* ---------------- Music ---------------- */
 
-/** Where the music plays: a menu (the results too), a run, or a fight in it (a boss, a rift, a legend's domain), for the Rádio (`radioTheme`). */
+/**
+ * Where the music plays, for the Rádio (`radioTheme`): a menu (the results and the
+ * Poké Realm's rooms too), a run, or a fight (a boss, a rift, a legend's domain,
+ * and a Realm mini game, whose theme is part of the game, like the Safári's battles).
+ */
 const musicPlace = (r: Run | null): MusicPlace => {
-  if (!r || r.game.phase === 'gameover' || r.game.phase === 'victory') return 'menu'
+  if (!r) return realmGame() ? 'fight' : 'menu'
+  if (r.game.phase === 'gameover' || r.game.phase === 'victory') return 'menu'
   return r.game.rift.arena !== null || r.game.bossId !== null ? 'fight' : 'run'
 }
 
@@ -2859,8 +2864,11 @@ const themeFor = (r: Run | null): ThemeId | null => {
   return radioOver(auto, musicPlace(r)) ?? auto
 }
 
-/** The game's own music: menus play the village theme, a run its biome's theme, and a living boss takes over until it falls. */
+/** The game's own music: menus play the village theme (the Poké Realm its own), a run its biome's theme, and a living boss takes over until it falls. */
 const gameTheme = (r: Run | null): ThemeId => {
+  // The Poké Realm plays its own: the mini game open, else the room (`realmMusic.ts`).
+  const realm = r ? null : realmTheme()
+  if (realm) return realm
   // The Noite das Bruxas swaps the village for Lavender Tower's tune.
   if (!r || r.game.phase === 'gameover' || r.game.phase === 'victory') return halloweenToday() ? BIOMES.tower.theme : 'menu'
   // A legendary's domain plays its crossing's theme, then its own from the moment it shows itself.
