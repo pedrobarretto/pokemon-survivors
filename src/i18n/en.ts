@@ -1693,7 +1693,7 @@ export const en: Messages = {
     incubator: {
       intro: (slots, max) => `Your incubator: ${slots} of ${max} slots · extra slots are yours for good`,
       slot: (n) => `Slot ${n}`,
-      slotText: 'One more egg hatching at once, for good. With the incubator full, a new egg turns into ₽.',
+      slotText: 'One more egg hatching at once, for good. With the incubator full, a new egg waits in line.',
       before: 'Buy the slot before it first.',
       needs: (level) => `On sale with the shop at ${level}.`,
       buy: (price) => `Buy ${price}`,
@@ -2629,10 +2629,13 @@ export const en: Messages = {
   eggs: {
     tiers: { common: 'Common Egg', rare: 'Rare Egg', ultra: 'Ultra Rare Egg', friend: 'Friendship Egg', haunted: 'Haunted Egg', kecleon: 'Kecleon Egg', kecleonShiny: 'Shiny Kecleon Egg', fossil: 'Fossil Egg', found: 'Encounter', dig: 'Mine Dig Fossil', ...REGIONAL_WORDS.en.tiers },
     found: (egg) => `You found a *${egg}*! It goes to the incubator.`,
-    foundFull: (egg, coins) => `You found a *${egg}*! The incubator is full, so it will become *${coins}*.`,
+    foundFull: (egg, coins) => `You found a *${egg}*! The incubator and the line are full, so it will become *${coins}*.`,
+    foundQueued: (egg) => `You found a *${egg}*! The incubator is full, so it waits in line.`,
     title: 'INCUBATOR',
     intro: 'Eggs hatch with the steps you take in runs. Every egg in the incubator walks along.',
     sources: 'Bosses, locked chests and rifts sometimes leave an egg.',
+    queue: (n, max) => `Waiting line ${n}/${max}`,
+    queueRule: (max) => `With the incubator full, up to ${max} eggs wait in line and move in on their own when a slot opens. Past that, they turn into ₽.`,
     empty: 'Empty',
     stepsLeft: (n) => `${n} steps to go`,
     ready: 'Ready!',

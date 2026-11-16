@@ -22,7 +22,7 @@ describe('applyGift', () => {
 
   it('puts an egg in the incubator, and waits while it is full', () => {
     expect(applied(EMPTY_SAVE, gift({ kind: 'egg', tier: 'friend' })).save.eggs).toEqual([{ tier: 'friend', steps: 0 }])
-    const full: Save = { ...EMPTY_SAVE, eggs: Array.from({ length: EGGS.slots }, () => ({ tier: 'common' as const, steps: 0 })) }
+    const full: Save = { ...EMPTY_SAVE, eggs: Array.from({ length: EGGS.slots }, () => ({ tier: 'common' as const, steps: 0 })), eggQueue: Array.from({ length: EGGS.queue }, () => ({ tier: 'common' as const, steps: 0 })) }
     expect(applyGift(full, gift({ kind: 'egg', tier: 'friend' })).status).toBe('wait')
   })
 
@@ -75,7 +75,7 @@ describe('Friendship Egg', () => {
 
 describe('giftToOpen', () => {
   it('skips an egg waiting for room and opens the next gift', () => {
-    const full: Save = { ...EMPTY_SAVE, eggs: Array.from({ length: EGGS.slots }, () => ({ tier: 'common' as const, steps: 0 })) }
+    const full: Save = { ...EMPTY_SAVE, eggs: Array.from({ length: EGGS.slots }, () => ({ tier: 'common' as const, steps: 0 })), eggQueue: Array.from({ length: EGGS.queue }, () => ({ tier: 'common' as const, steps: 0 })) }
     const egg = gift({ kind: 'egg', tier: 'rare' }, 'g1')
     const coins = gift({ kind: 'coins', amount: 100 }, 'g2')
     expect(giftToOpen(full, [egg, coins])).toEqual({ gift: coins, blocked: false })

@@ -1692,7 +1692,7 @@ export const fr: Messages = {
     incubator: {
       intro: (slots, max) => `Ton incubateur : ${slots} emplacements sur ${max} · les emplacements en plus sont à toi pour toujours`,
       slot: (n) => `Emplacement ${n}`,
-      slotText: 'Un œuf de plus en incubation à la fois, pour toujours. Avec l’incubateur plein, un nouvel œuf se transforme en ₽.',
+      slotText: 'Un œuf de plus en incubation à la fois, pour toujours. Avec l’incubateur plein, un nouvel œuf attend dans la file.',
       before: 'Achète d’abord l’emplacement précédent.',
       needs: (level) => `En vente quand la boutique atteint ${level}.`,
       buy: (price) => `Acheter ${price}`,
@@ -2627,10 +2627,13 @@ export const fr: Messages = {
   eggs: {
     tiers: { common: 'Œuf commun', rare: 'Œuf rare', ultra: 'Œuf ultra rare', friend: 'Œuf de l’Amitié', haunted: 'Œuf Hanté', kecleon: 'Œuf de Kecleon', kecleonShiny: 'Œuf de Kecleon chromatique', fossil: 'Œuf Fossile', found: 'Rencontre', dig: 'Fossile de l’Excavation', ...REGIONAL_WORDS.fr.tiers },
     found: (egg) => `Tu as trouvé un *${egg}* ! Il part à l’incubateur.`,
-    foundFull: (egg, coins) => `Tu as trouvé un *${egg}* ! L’incubateur est plein, il deviendra donc *${coins}*.`,
+    foundFull: (egg, coins) => `Tu as trouvé un *${egg}* ! L’incubateur et la file sont pleins, il deviendra donc *${coins}*.`,
+    foundQueued: (egg) => `Tu as trouvé un *${egg}* ! L’incubateur est plein, il attend donc dans la file.`,
     title: 'INCUBATEUR',
     intro: 'Les œufs éclosent avec les pas que tu fais en partie. Chaque œuf de l’incubateur marche avec toi.',
     sources: 'Les boss, les coffres verrouillés et les failles laissent parfois un œuf.',
+    queue: (n, max) => `File d’attente ${n}/${max}`,
+    queueRule: (max) => `Avec l’incubateur plein, jusqu’à ${max} œufs attendent dans la file et entrent seuls dès qu’une place se libère. Au-delà, ils deviennent des ₽.`,
     empty: 'Vide',
     stepsLeft: (n) => `Encore ${n} pas`,
     ready: 'Prêt !',

@@ -26,14 +26,15 @@ export type CosmogSave = { research: readonly CosmogStep[]; runs: number; sun: n
 
 /**
  * Every path's progress: the Zygarde Cube's Cells and Cores, Cosmog's,
- * the Torre's trials cleared (a tower among them once climbed) and Meltan's
- * Hex Nuts. Counters only grow.
+ * the Torre's trials cleared (the towers among them once climbed), the tower
+ * whose style Urshifu wears (`style`, null: the only one climbed, or none
+ * yet) and Meltan's Hex Nuts. Counters only grow.
  */
-export type PathsSave = { cells: number; cores: number; cosmog: CosmogSave; trials: readonly TrialId[]; nuts: number }
+export type PathsSave = { cells: number; cores: number; cosmog: CosmogSave; trials: readonly TrialId[]; style: Tower | null; nuts: number }
 
 export const NO_COSMOG: CosmogSave = { research: [], runs: 0, sun: 0, moon: 0, raised: [] }
 
-export const NO_PATHS: PathsSave = { cells: 0, cores: 0, cosmog: NO_COSMOG, trials: [], nuts: 0 }
+export const NO_PATHS: PathsSave = { cells: 0, cores: 0, cosmog: NO_COSMOG, trials: [], style: null, nuts: 0 }
 
 const COSMOG_LEGENDS = ['solgaleo', 'lunala'] as const satisfies readonly CosmogLegend[]
 const TRIAL_IDS = Object.keys(TRIALS) as TrialId[]
@@ -42,11 +43,7 @@ const TRIAL_IDS = Object.keys(TRIALS) as TrialId[]
 
 const oneOf = <T extends string>(list: readonly T[], raw: unknown): T[] => (Array.isArray(raw) ? list.filter((id) => raw.includes(id)) : [])
 
-/** The trials cleared, with one tower at most (the Tower of Darkness when a save somehow holds both). */
-const oneTower = (trials: readonly TrialId[]): TrialId[] => {
-  const tower = TOWERS.find((t) => trials.includes(t))
-  return trials.filter((id) => !TOWERS.some((t) => t === id) || id === tower)
-}
+const parseStyle = (raw: unknown): Tower | null => TOWERS.find((t) => t === raw) ?? null
 
 const parseCosmog = (raw: unknown): CosmogSave => {
   if (!isRecord(raw)) return NO_COSMOG
@@ -55,14 +52,15 @@ const parseCosmog = (raw: unknown): CosmogSave => {
 
 export const parsePaths = (raw: unknown): PathsSave => {
   if (!isRecord(raw)) return NO_PATHS
-  return { cells: wholeNumber(raw.cells), cores: wholeNumber(raw.cores), cosmog: parseCosmog(raw.cosmog), trials: oneTower(oneOf(TRIAL_IDS, raw.trials)), nuts: wholeNumber(raw.nuts) }
+  return { cells: wholeNumber(raw.cells), cores: wholeNumber(raw.cores), cosmog: parseCosmog(raw.cosmog), trials: oneOf(TRIAL_IDS, raw.trials), style: parseStyle(raw.style), nuts: wholeNumber(raw.nuts) }
 }
 
 /**
  * Both saves' paths in one, every counter at the larger side; Cosmog's
  * research and the legends raised are unions, and its run counts come with the
  * side further along (more raised, then more runs), so the two devices' Cosmogs
- * don't add up into one that was never raised. The trials are a union (one tower).
+ * don't add up into one that was never raised. The trials are a union; the style
+ * is `b`'s when it chose one (the incoming side, the latest pick).
  */
 export const mergePaths = (a: PathsSave, b: PathsSave): PathsSave => {
   const ahead = a.cosmog.raised.length !== b.cosmog.raised.length ? (a.cosmog.raised.length > b.cosmog.raised.length ? a.cosmog : b.cosmog) : a.cosmog.runs >= b.cosmog.runs ? a.cosmog : b.cosmog
@@ -76,7 +74,8 @@ export const mergePaths = (a: PathsSave, b: PathsSave): PathsSave => {
       moon: ahead.moon,
       raised: COSMOG_LEGENDS.filter((l) => a.cosmog.raised.includes(l) || b.cosmog.raised.includes(l)),
     },
-    trials: oneTower(TRIAL_IDS.filter((id) => a.trials.includes(id) || b.trials.includes(id))),
+    trials: TRIAL_IDS.filter((id) => a.trials.includes(id) || b.trials.includes(id)),
+    style: b.style ?? a.style,
     nuts: Math.max(a.nuts, b.nuts),
   }
 }
@@ -145,15 +144,19 @@ export const recordCosmog = (c: CosmogSave, run: CosmogRun, hour: number, first:
 
 /* ---------------- Kubfu ---------------- */
 
-/** The tower climbed, if any. */
-export const towerOf = (trials: readonly TrialId[]): Tower | null => TOWERS.find((t) => trials.includes(t)) ?? null
+/** The towers climbed. */
+export const towersOf = (trials: readonly TrialId[]): Tower[] => TOWERS.filter((t) => trials.includes(t))
 
-/** Whether the trial can be taken now: each floor after the one before it, a tower after every floor (and only one tower, ever). */
+/** The style Urshifu wears: the chosen tower when it's climbed, else the first one climbed, else null (none yet). */
+export const styleOf = (paths: Pick<PathsSave, 'trials' | 'style'>): Tower | null => {
+  const climbed = towersOf(paths.trials)
+  return paths.style !== null && climbed.includes(paths.style) ? paths.style : (climbed[0] ?? null)
+}
+
+/** Whether the trial can be taken now: each floor after the one before it, either tower after every floor. */
 export const trialOpen = (trials: readonly TrialId[], id: TrialId) => {
   const floor = FLOORS.findIndex((f) => f === id)
-  if (floor >= 0) return FLOORS.slice(0, floor).every((f) => trials.includes(f))
-  const tower = towerOf(trials)
-  return FLOORS.every((f) => trials.includes(f)) && (tower === null || tower === id)
+  return floor >= 0 ? FLOORS.slice(0, floor).every((f) => trials.includes(f)) : kubfuJoined(trials)
 }
 
 /** Kubfu joined: every floor cleared. */
@@ -185,12 +188,12 @@ export const templeRun = (seed: number, awake: boolean, caught: boolean) => awak
 
 /**
  * The path forms a run with `legend` starts with open, from the save: Zygarde's
- * by the Cube's pieces, Urshifu's by the tower climbed, Melmetal by the Hex Nuts.
+ * by the Cube's pieces, Urshifu's by the style worn (`styleOf`), Melmetal by the Hex Nuts.
  */
 export const openForms = (paths: PathsSave, legend: string): PathFormId[] => {
   if (!isLegend(legend)) return []
   const pieces = cubePieces(paths)
-  const tower = towerOf(paths.trials)
+  const tower = styleOf(paths)
   const open: Record<PathFormId, boolean> = {
     zygarde10: pieces >= ZYGARDE.formes.ten,
     zygarde50: pieces >= ZYGARDE.formes.fifty,

@@ -65,7 +65,7 @@ import { runEvoItems } from './game/evoGate'
 import { EVO_ITEM_IDS, EVO_ITEMS, SHOP_LEVEL_IDS, SHOP_LEVELS, type EvoItemId } from './data/shop'
 import { shopIcon, tmPicture } from './ui/shopIcons'
 import { CONSUMABLES } from './game/consumables'
-import { depositEggs, EGG_TIERS, EGGS, freeSlots, grantEgg, hatchEgg, incubatorSlots, isReady, toSteps, type EggTier, type Hatch } from './game/eggs'
+import { depositEggs, EGG_TIERS, eggRoom, EGGS, freeSlots, grantEgg, hatchEgg, incubatorSlots, isReady, toSteps, type EggTier, type Hatch } from './game/eggs'
 import { useQuick } from './game/incubator'
 import { biomeDevTools } from './ui/biomeDev'
 import { addCandies, HAUNT_DEX, recordHunt } from './game/halloween'
@@ -86,8 +86,8 @@ import { pathDevTools } from './ui/pathDev'
 import { pathSheet } from './ui/legendPaths'
 import { trialHud } from './ui/towerTrial'
 import { startTrial } from './game/towerTrial'
-import { COSMOG_DEX, PATH_FORMS, PATH_IDS, TRIALS, type TrialId } from './data/legendPaths'
-import { clearTrial, cosmogStage, giantAwake, kubfuJoined, openForms, ruinsRun, templeRun, towerOf } from './game/legendPaths'
+import { COSMOG_DEX, PATH_FORMS, PATH_IDS, TOWERS, TRIALS, type TrialId } from './data/legendPaths'
+import { clearTrial, cosmogStage, giantAwake, kubfuJoined, openForms, ruinsRun, templeRun } from './game/legendPaths'
 import { FIELD, FIELD_MISSION_KINDS, TOGEPI_DEX, type FieldMissionKind } from './game/fieldMissionRules'
 import { advancePhase, banishOffer, chooseOffer, createGame, offerAbilities, playerDex, rerollOffers, skipLevelUp, step, takeBerryLevelUps } from './game/game'
 import { applyBuild, setDummies, setLens, startTraining } from './game/training'
@@ -539,13 +539,14 @@ const openTower = () => {
 /** A Torre trial won: into the save; returns a word on what it brought (Kubfu joining, Urshifu's style), or null. */
 const bankTrial = (id: TrialId): string | null => {
   const before = loadSave().paths.trials
-  updateSave((s) => ({ ...s, paths: { ...s.paths, trials: clearTrial(s.paths.trials, id) } }))
+  // A tower climbed for the first time becomes the style Urshifu wears.
+  const tower = TOWERS.find((tw) => tw === id && !before.includes(tw)) ?? null
+  updateSave((s) => ({ ...s, paths: { ...s.paths, trials: clearTrial(s.paths.trials, id), ...(tower && { style: tower }) } }))
   void syncSave()
   const after = loadSave().paths.trials
   const m = t().paths.tower
-  const tower = towerOf(after)
   if (!kubfuJoined(before) && kubfuJoined(after)) return m.kubfu
-  return tower && !towerOf(before) ? m.urshifu(m.styles[tower]) : null
+  return tower && after.includes(tower) ? m.urshifu(m.styles[tower]) : null
 }
 
 /**
@@ -2814,10 +2815,15 @@ const handleEvent = (r: Run, e: GameEvent) => {
       return aside(rich(t().alphas.prize), 2600)
     case 'egg': {
       const m = t().eggs
-      // The run's eggs bank when it ends: this one fits if the incubator has a slot for it after the ones found before it.
+      // The run's eggs bank when it ends: this one takes a slot, a place in line or ₽, after the ones found before it.
       const save = loadSave()
-      const fits = g.eggs.found.length - r.hatchery.eggs <= freeSlots(save.eggs, incubatorSlots(save))
-      const text = fits ? m.found(m.tiers[e.tier]) : m.foundFull(m.tiers[e.tier], formatPokeDollars(EGG_TIERS[e.tier].refund))
+      const nth = g.eggs.found.length - r.hatchery.eggs
+      const text =
+        save.eggQueue.length === 0 && nth <= freeSlots(save.eggs, incubatorSlots(save))
+          ? m.found(m.tiers[e.tier])
+          : nth <= eggRoom(save)
+            ? m.foundQueued(m.tiers[e.tier])
+            : m.foundFull(m.tiers[e.tier], formatPokeDollars(EGG_TIERS[e.tier].refund))
       playSfx('unlock')
       return aside(h('span', { class: 'item-toast' }, h('img', { src: eggIcon(e.tier), alt: '' }), rich(text)), 3600)
     }

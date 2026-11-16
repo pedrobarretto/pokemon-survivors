@@ -1,11 +1,12 @@
+import { syncSave } from '../account'
 import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
 import { context2d, createCanvas } from '../engine/pixelart'
-import { COSMOG, COSMOG_DEX, FLOORS, MELTAN, REGIGIGAS, TOWERS, TRIALS, ZYGARDE, type PathId, type TrialDef, type TrialId } from '../data/legendPaths'
+import { COSMOG, COSMOG_DEX, FLOORS, MELTAN, REGIGIGAS, TOWERS, TRIALS, ZYGARDE, type PathId, type Tower, type TrialDef, type TrialId } from '../data/legendPaths'
 import { LEGENDS } from '../data/legends'
 import { MOVES } from '../game/moves'
 import { isCaptured } from '../game/capture'
-import { cosmogHere, cosmogLean, cosmogStage, cubePieces, kubfuJoined, sunHour, towerOf, trialOpen } from '../game/legendPaths'
+import { cosmogHere, cosmogLean, cosmogStage, cubePieces, kubfuJoined, styleOf, sunHour, trialOpen } from '../game/legendPaths'
 import type { Save } from '../game/meta'
 import { formatNumber, t } from '../i18n'
 import { closeIcon } from '../render/art'
@@ -13,7 +14,7 @@ import { portraitUrl } from '../render/sprites'
 import { emotionUrl } from './dialogue'
 import { h, later, rich } from './dom'
 import { cellIcon, coreIcon, nutIcon } from './pathRun'
-import { loadSave } from './save'
+import { loadSave, updateSave } from './save'
 import type { Screen } from './screens'
 import './legendPaths.css'
 
@@ -152,18 +153,19 @@ export const trialLoadout = (def: TrialDef) => t().paths.tower.loadout(def.start
 /**
  * The Torre's body: Machoke's words and the notes beside (`info`), the trial
  * cards in a list of their own (`list`), so a phone held sideways shows them
- * as two columns, the cards scrolling on their own.
+ * as two columns, the cards scrolling on their own. A climbed tower whose
+ * style isn't the one worn offers it (`pick`).
  */
-const kubfuBody = (save: Save, intro: HTMLElement, start: ((id: TrialId) => void) | null, close: () => void) => {
+const kubfuBody = (save: Save, intro: HTMLElement, start: ((id: TrialId) => void) | null, close: () => void, pick: (style: Tower) => void) => {
   const m = t().paths.tower
   const trials = save.paths.trials
-  const tower = towerOf(trials)
+  const tower = styleOf(save.paths)
   const card = (id: TrialId) => {
     const def: TrialDef = TRIALS[id]
     const cleared = trials.includes(id)
     const open = trialOpen(trials, id)
-    const closedTower = TOWERS.some((tw) => tw === id) && tower !== null && tower !== id
-    const status = cleared ? (TOWERS.some((tw) => tw === id) ? m.chosen : m.cleared) : closedTower ? m.closed : open ? '' : m.locked
+    const style = TOWERS.find((tw) => tw === id)
+    const status = cleared ? (style === undefined ? m.cleared : style === tower ? m.chosen : '') : open ? '' : m.locked
     const text = m.floors[id]
     return h(
       'div',
@@ -173,6 +175,7 @@ const kubfuBody = (save: Save, intro: HTMLElement, start: ((id: TrialId) => void
       h('p', { class: 'path-trial-goal' }, trialGoal(def)),
       h('p', { class: 'path-trial-load' }, trialLoadout(def)),
       open && !cleared && start && h('button', { class: 'arc-btn arc-btn-small path-trial-go', type: 'button', onclick: () => (playSfx('select'), close(), later(() => start(id))) }, h('span', { class: 'arc-outline' }, m.start)),
+      cleared && style !== undefined && style !== tower && h('button', { class: 'arc-btn arc-btn-small path-trial-go', type: 'button', onclick: () => (playSfx('select'), pick(style)) }, h('span', { class: 'arc-outline' }, m.use)),
     )
   }
   const styleLine = tower ? [h('p', { class: 'path-lean' }, rich(m.urshifu(m.styles[tower])))] : []
@@ -242,13 +245,20 @@ export const pathSheet = (root: HTMLElement, input: Input, path: PathId, opts: {
     h('img', { class: 'path-npc-face', src: emotionUrl(npc, 'Normal'), alt: '' }),
     h('div', { class: 'path-npc-text' }, h('b', { class: 'path-npc-name' }, m.npc[path]), ...introLines(path, save).map((line) => h('p', {}, rich(line)))),
   )
-  const body = path === 'zygarde' ? [intro, ...zygardeBody(save)] : path === 'cosmog' ? [intro, ...cosmogBody(save)] : path === 'kubfu' ? kubfuBody(save, intro, opts.start ?? null, dispose) : path === 'meltan' ? [intro, ...meltanBody(save)] : [intro, ...regiBody(save)]
+  // Wearing the other tower's style: into the save, and the Torre's cards again.
+  const pick = (style: Tower) => {
+    updateSave((s) => ({ ...s, paths: { ...s.paths, style } }))
+    void syncSave()
+    bodyEl.replaceChildren(...kubfuBody(loadSave(), intro, opts.start ?? null, dispose, pick))
+  }
+  const body = path === 'zygarde' ? [intro, ...zygardeBody(save)] : path === 'cosmog' ? [intro, ...cosmogBody(save)] : path === 'kubfu' ? kubfuBody(save, intro, opts.start ?? null, dispose, pick) : path === 'meltan' ? [intro, ...meltanBody(save)] : [intro, ...regiBody(save)]
+  const bodyEl = h('div', { class: 'path-body' }, ...body)
   const closeButton = h('button', { class: 'arc-icon-btn', type: 'button', 'aria-label': m.close, title: m.close, onclick: () => (playSfx('select'), close()) }, h('img', { class: 'ink-icon', src: closeIcon(), alt: '' }))
   const panel = h(
     'div',
     { class: `lobby-sheet-panel path-sheet path-sheet-${path}`, role: 'dialog', 'aria-label': m.names[path] },
     h('header', { class: 'lobby-sheet-head' }, h('h2', { class: 'arc-outline' }, m.names[path]), closeButton),
-    h('div', { class: 'path-body' }, ...body),
+    bodyEl,
   )
   const el = h('div', { class: 'screen lobby-sheet' }, panel)
   el.addEventListener('click', (e) => e.target === el && (playSfx('select'), close()))

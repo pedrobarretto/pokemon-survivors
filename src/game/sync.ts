@@ -13,7 +13,7 @@ import { mergeCaps, mergeEvoItems } from './evoItems'
 import { mergeCaravan } from './caravan'
 import { mergeStyle } from './style'
 import { mergeDex } from './dex'
-import { incubatorSlots, mergeEggPity, mergeEggs, mergeHatched } from './eggs'
+import { incubatorSlots, mergeEggPity, mergeHatched, mergeIncubated } from './eggs'
 import { mergeIncubator, slotsInvested } from './incubator'
 import { SAVE_VERSION, totalSpent, UPGRADE_IDS, type Ranks, type Save, type UpgradeId } from './meta'
 import { mergeMissions } from './missions'
@@ -47,7 +47,7 @@ const worth = (s: Save) => s.wallet + totalSpent(s.ranks) + shopInvested(s.shop.
  * nothing:
  *
  * - Collection: the Pokédex, hatched families and unlocked achievements are
- *   unions; the incubator keeps the most eggs of each tier (`mergeEggs`), up
+ *   unions; the incubator and its waiting line keep the most eggs of each tier as one pool (`mergeIncubated`), up
  *   to the merged slots. Its upgrades: the most slots bought, and the Quick
  *   Incubators' got and used counters at the larger side (`mergeIncubator`).
  *   The egg pity: each kind's count at the larger side (`mergeEggPity`).
@@ -100,7 +100,7 @@ export const mergeSaves = (base: Save, incoming: Save): Save => {
     wallet: Math.max(0, Math.max(worth(base), worth(incoming)) - totalSpent(ranks) - shopInvested(shop.level) - slotsInvested(incubator.slots) - spent),
     ranks,
     dex: mergeDex(base.dex, incoming.dex),
-    eggs: mergeEggs(base.eggs, incoming.eggs, incubatorSlots({ incubator })),
+    ...mergeIncubated(base, incoming, incubatorSlots({ incubator })),
     incubator,
     hatched: mergeHatched(base.hatched, incoming.hatched),
     eggPity: mergeEggPity(base.eggPity, incoming.eggPity),

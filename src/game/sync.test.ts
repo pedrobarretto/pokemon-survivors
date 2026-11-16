@@ -130,6 +130,16 @@ describe('mergeSaves', () => {
     expect(parseSaveData(JSON.parse(JSON.stringify(m)))).toEqual(m)
   })
 
+  it('keeps the waiting line, moving its rarest eggs into the slots the merged incubator has free, never counting one twice', () => {
+    const line = [{ tier: 'ultra' as const, steps: 0 }, { tier: 'rare' as const, steps: 0 }]
+    const full = save({ eggs: Array.from({ length: 3 }, () => ({ tier: 'common' as const, steps: 0 })), eggQueue: line })
+    const slotted = save({ incubator: { ...EMPTY_SAVE.incubator, slots: 1 }, shop: { ...EMPTY_SAVE.shop, level: 2 } })
+    const m = mergeSaves(full, slotted)
+    expect(m.eggs.slice(0, 2)).toEqual(line)
+    expect(m.eggQueue).toEqual([{ tier: 'common', steps: 0 }])
+    expect(mergeSaves(m, full)).toEqual(m)
+  })
+
   it('changes nothing when merged again, in either order', () => {
     const m = mergeSaves(account, guest)
     expect(mergeSaves(m, guest)).toEqual(m)

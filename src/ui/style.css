@@ -10357,13 +10357,54 @@ button {
   color: color-mix(in srgb, #c89000 var(--dk-lift, 100%), #fff);
 }
 
-/* The shop's extra slots (`INCUBATOR.slots`): five side by side, three a row on a phone. */
+/* The shop's extra slots (`INCUBATOR.slots`): eight in two rows of four. */
 .dialog.incubator {
   width: min(680px, 94 * var(--vw));
 }
 
-.egg-slots.slots-5 {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+.egg-slots.slots-8 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* The waiting line (`Save.eggQueue`): a strip under the slots, a small egg per place taken. */
+.egg-queue {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 10px;
+  margin-top: 10px;
+  padding: 6px 10px;
+  background: var(--dk-surface-1, #f0f0f4);
+  border-radius: 8px;
+}
+
+.egg-queue b {
+  font-family: var(--title);
+  font-size: 16px;
+}
+
+.egg-queue small {
+  flex-basis: 100%;
+  text-align: center;
+  font-size: 14px;
+  color: var(--dk-ink-3, #6a6a80);
+}
+
+.egg-queue-places {
+  display: flex;
+  gap: 4px;
+}
+
+.egg-queued {
+  width: 24px;
+  height: 24px;
+  image-rendering: pixelated;
+}
+
+.egg-queued.empty {
+  border: 2px dashed var(--dk-line, #c8c8d4);
+  border-radius: 50%;
 }
 
 .egg-slot {
@@ -10423,8 +10464,8 @@ button {
 }
 
 @media (max-width: 520px) {
-  .egg-slots.slots-5 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .egg-slots.slots-8 {
+    gap: 6px;
   }
 }
 

@@ -101,6 +101,13 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             fr: 'Les légendes verrouillées expliquent mieux comment les obtenir : chaque Épée de la Justice indique ses biomes et son épreuve, Cosmog indique où est la Recherche stellaire et combien de parties il faut, et Meltan que la Mystery Box sort en 12 murs au plus.',
             zh: '未解鎖的傳說寶可夢會更清楚地說明取得方式：每把正義之劍會寫出牠等待的地區和考驗內容，Cosmog 會說明星空研究在哪裡、需要幾場遊戲，Meltan 則說明最多 12 面岩壁內一定能挖到 Mystery Box。',
           },
+          {
+            pt: 'Os dois estilos do Urshifu: na Torre do Dojo, quem já subiu uma torre agora pode subir a outra, e o cartão da torre troca entre o Estilo Golpe Único e o Estilo Golpe Fluido quando você quiser.',
+            en: 'Both of Urshifu’s styles: at the Dojo Tower, whoever climbed one tower can now climb the other, and the tower’s card switches between the Single Strike and Rapid Strike Styles whenever you like.',
+            es: 'Los dos estilos de Urshifu: en la Torre del Dojo, quien ya subió una torre ahora puede subir la otra, y la tarjeta de la torre cambia entre el Estilo Brusco y el Estilo Fluido cuando quieras.',
+            fr: 'Les deux styles d’Urshifu : à la Tour du Dojo, qui a gravi une tour peut maintenant gravir l’autre, et la carte de la tour passe du Style Poing Final au Style Mille Poings quand vous voulez.',
+            zh: 'Urshifu 的兩種流派：在道館之塔，爬過一座塔的人現在可以爬另一座，並隨時在塔的卡片上切換一擊流和連擊流。',
+          },
         ],
       },
       {
@@ -533,6 +540,25 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             es: 'Las Teraincursiones tienen su propia música, épica y cristalina, desde que entras en la guarida hasta que sales. El Dojo de Machoke entrena al son de un koto tranquilo y tambores, y la Torre de Kubfu tiene una versión tensa y más rápida.',
             fr: 'Les Raids Téracristal ont leur propre musique, épique et cristalline, de l’entrée dans la tanière jusqu’à la sortie. Le Dojo de Machoke s’entraîne sur un koto calme et des tambours, et la Tour de Kubfu en a une version tendue et plus rapide.',
             zh: '太晶團體戰有了專屬音樂，史詩又晶瑩，從走進洞窟一直播到離開。Machoke 的道場伴著平靜的古箏和太鼓訓練，Kubfu 之塔則是緊張、更快的版本。',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Fila de ovos e incubadora maior', en: 'Egg waiting line and a bigger incubator', es: 'Fila de huevos e incubadora más grande', fr: 'File d’œufs et incubateur plus grand', zh: '蛋的等候隊列與更大的孵化器' },
+        notes: [
+          {
+            pt: 'Com a incubadora cheia, o ovo novo não vira mais ₽ na hora: até 6 ovos esperam numa fila e entram sozinhos assim que um ovo choca. Só depois que a fila enche é que o ovo vira ₽.',
+            en: 'With the incubator full, a new egg no longer turns into ₽ right away: up to 6 eggs wait in line and move in on their own as soon as an egg hatches. Only once the line is full does an egg turn into ₽.',
+            es: 'Con la incubadora llena, el huevo nuevo ya no se vuelve ₽ al instante: hasta 6 huevos esperan en una fila y entran solos en cuanto eclosiona un huevo. Solo cuando la fila se llena el huevo se vuelve ₽.',
+            fr: 'Avec l’incubateur plein, un nouvel œuf ne devient plus des ₽ tout de suite : jusqu’à 6 œufs attendent dans une file et entrent seuls dès qu’un œuf éclot. Ce n’est qu’une fois la file pleine qu’un œuf devient des ₽.',
+            zh: '孵化器滿了時，新的蛋不會再立刻變成₽：最多 6 顆蛋會排隊等候，一有蛋孵化就自動放入。只有隊列也滿了，蛋才會變成₽。',
+          },
+          {
+            pt: 'A loja do Kecleon no nível 5 vende mais 3 vagas para sempre, por ₽1M, ₽2M e ₽4M: até 8 ovos chocando ao mesmo tempo.',
+            en: 'Kecleon’s shop at level 5 sells 3 more slots for good, for ₽1M, ₽2M and ₽4M: up to 8 eggs hatching at once.',
+            es: 'La tienda de Kecleon en el nivel 5 vende 3 lugares más para siempre, por ₽1M, ₽2M y ₽4M: hasta 8 huevos eclosionando a la vez.',
+            fr: 'La boutique de Kecleon au niveau 5 vend 3 places de plus pour toujours, pour 1 M ₽, 2 M ₽ et 4 M ₽ : jusqu’à 8 œufs en incubation à la fois.',
+            zh: 'Kecleon 商店 5 級時會再賣 3 個永久格位，價格為₽1M、₽2M 和₽4M：最多 8 顆蛋同時孵化。',
           },
         ],
       },

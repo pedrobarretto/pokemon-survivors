@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { COSMOG, MELTAN, ZYGARDE } from '../data/legendPaths'
 import { formAfter } from './legend'
 import {
-  clearTrial, cosmogLean, cosmogStage, cubePieces, kubfuJoined, mergePaths, NO_COSMOG, NO_PATHS, openForms, parsePaths, pathGifts, recordCosmog, runPieces, templeRun, trialOpen,
+  clearTrial, cosmogLean, cosmogStage, cubePieces, kubfuJoined, mergePaths, NO_COSMOG, NO_PATHS, openForms, parsePaths, pathGifts, recordCosmog, runPieces, styleOf, templeRun, trialOpen,
   type CosmogSave,
 } from './legendPaths'
 import { createPathRun } from './pathRun'
@@ -87,22 +87,28 @@ describe('Cosmog', () => {
 })
 
 describe('the Torre', () => {
-  it('opens each floor after the one before it and one tower, ever, after all three', () => {
+  it('opens each floor after the one before it and both towers after all three', () => {
     expect([trialOpen([], 'fist'), trialOpen([], 'crowd'), trialOpen(['fist'], 'crowd'), trialOpen(['fist', 'crowd'], 'dark')]).toEqual([true, false, true, false])
     const floors = clearTrial(clearTrial(clearTrial([], 'fist'), 'crowd'), 'chase')
     expect([kubfuJoined(floors), trialOpen(floors, 'dark'), trialOpen(floors, 'water')]).toEqual([true, true, true])
     const water = clearTrial(floors, 'water')
-    expect([trialOpen(water, 'dark'), clearTrial(water, 'dark')]).toEqual([false, water])
+    expect([trialOpen(water, 'dark'), clearTrial(water, 'dark')]).toEqual([true, [...floors, 'dark', 'water']])
     expect(openForms({ ...NO_PATHS, trials: water }, 'kubfu')).toEqual(['urshifuRapid'])
+  })
+
+  it('wears the chosen style once both towers are climbed, else the one climbed', () => {
+    const both = ['fist', 'crowd', 'chase', 'dark', 'water'] as const
+    expect([styleOf({ trials: both, style: null }), styleOf({ trials: both, style: 'water' }), styleOf({ trials: ['dark'], style: 'water' }), styleOf({ trials: [], style: 'water' })]).toEqual(['dark', 'water', 'dark', null])
+    expect([openForms({ ...NO_PATHS, trials: both, style: 'water' }, 'kubfu'), openForms({ ...NO_PATHS, trials: both, style: 'dark' }, 'kubfu')]).toEqual([['urshifuRapid'], ['urshifuSingle']])
   })
 })
 
 describe('the save', () => {
-  it('merges every counter at the larger side, Cosmog with the side further along, one tower', () => {
+  it('merges every counter at the larger side, Cosmog with the side further along, both towers and the incoming style', () => {
     const a = { ...NO_PATHS, cells: 30, cores: 1, nuts: 50, trials: ['fist', 'crowd', 'chase', 'dark'] as const, cosmog: { ...researched, runs: 4, sun: 4 } }
-    const b = { ...NO_PATHS, cells: 12, cores: 3, nuts: 400, trials: ['fist', 'water'] as const, cosmog: { ...NO_COSMOG, research: ['day'] as const, raised: ['lunala'] as const } }
+    const b = { ...NO_PATHS, cells: 12, cores: 3, nuts: 400, trials: ['fist', 'water'] as const, style: 'water' as const, cosmog: { ...NO_COSMOG, research: ['day'] as const, raised: ['lunala'] as const } }
     const m = mergePaths(a, b)
-    expect(m).toEqual({ cells: 30, cores: 3, nuts: 400, trials: ['fist', 'crowd', 'chase', 'dark'], cosmog: { research: [...COSMOG.research], runs: 0, sun: 0, moon: 0, raised: ['lunala'] } })
+    expect(m).toEqual({ cells: 30, cores: 3, nuts: 400, trials: ['fist', 'crowd', 'chase', 'dark', 'water'], style: 'water', cosmog: { research: [...COSMOG.research], runs: 0, sun: 0, moon: 0, raised: ['lunala'] } })
     expect(mergePaths(m, a)).toEqual(m)
     expect(parsePaths(JSON.parse(JSON.stringify(m)))).toEqual(m)
   })

@@ -1692,7 +1692,7 @@ export const zh: Messages = {
     incubator: {
       intro: (slots, max) => `你的孵化器：${slots}/${max}格 · 額外的格子永久屬於你`,
       slot: (n) => `第${n}格`,
-      slotText: '永久多一顆蛋能同時孵化。孵化器滿了時，新的蛋會變成₽。',
+      slotText: '永久多一顆蛋能同時孵化。孵化器滿了時，新的蛋會排隊等候。',
       before: '請先購買前一格。',
       needs: (level) => `商店達到${level}時開賣。`,
       buy: (price) => `購買 ${price}`,
@@ -2627,10 +2627,13 @@ export const zh: Messages = {
   eggs: {
     tiers: { common: '普通蛋', rare: '稀有蛋', ultra: '超稀有蛋', friend: '友情蛋', haunted: '鬧鬼蛋', kecleon: 'Kecleon蛋', kecleonShiny: '異色Kecleon蛋', fossil: '化石蛋', found: '邂逅', dig: '礦坑挖掘化石', ...REGIONAL_WORDS.zh.tiers },
     found: (egg) => `你找到了一顆*${egg}*！已放進孵化器。`,
-    foundFull: (egg, coins) => `你找到了一顆*${egg}*！孵化器已滿，所以會變成*${coins}*。`,
+    foundFull: (egg, coins) => `你找到了一顆*${egg}*！孵化器和等候隊列都滿了，所以會變成*${coins}*。`,
+    foundQueued: (egg) => `你找到了一顆*${egg}*！孵化器已滿，所以它會排隊等候。`,
     title: '孵化器',
     intro: '蛋會隨著你在對局中走的步數孵化。孵化器裡的每顆蛋都會一起走。',
     sources: '首領、上鎖的寶箱與裂縫有時會留下蛋。',
+    queue: (n, max) => `等候隊列 ${n}/${max}`,
+    queueRule: (max) => `孵化器滿了時，最多${max}顆蛋會排隊等候，有空位時自動放入。超過的蛋會變成₽。`,
     empty: '空',
     stepsLeft: (n) => `還差 ${n} 步`,
     ready: '準備好了！',
