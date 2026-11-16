@@ -16,7 +16,8 @@ import { resolveSpecial } from '../game/special'
 import { megaIcon } from '../render/megaFx'
 import { moveIcon, sparkleIcon } from '../render/art'
 import { specialIcon } from '../render/specialFx'
-import { portraitUrl } from '../render/sprites'
+import { formPortraitUrl, portraitUrl } from '../render/sprites'
+import { PATH_FORMS } from '../data/legendPaths'
 import { t } from '../i18n'
 import { boundLabel, glyphText, printedKeys } from './inputLabels'
 import { h } from './dom'
@@ -193,7 +194,35 @@ const legend = () => {
   return h('span', { class: 'legend' }, h('i', { class: 'legend-base' }), `${m.legendBase} `, h('i', { class: 'legend-final' }), m.legendFinal)
 }
 
-/** The evolution line: a portrait per stage and the level between them; tapping a stage previews it (`onStage`). */
+/**
+ * A path legend's forms of another species (Melmetal, Urshifu's two styles),
+ * past the legend's own stage: the awakening and what opens it on the arrow,
+ * then the form. Not a stage to preview: the run reaches it only once its path opens it.
+ */
+const pathStep = (id: PlayableId) => {
+  const words = t().paths.forms
+  const steps: Partial<Record<PlayableId, string>> = words.step
+  const forms = Object.values(PATH_FORMS).flatMap((f) =>
+    f.legend === id && 'dex' in f ? [{ at: f.at, name: f.name, types: 'types' in f ? f.types : PLAYABLE[id].line[0].types, src: 'key' in f ? formPortraitUrl(f.dex, f.key) : portraitUrl(f.dex) }] : [],
+  )
+  const first = forms[0]
+  if (!first) return []
+  const portraits = [...new Set(forms.map((f) => f.src))]
+  return [
+    h('span', { class: 'evo-arrow evo-path' }, words.at(first.at), h('br'), steps[id] ?? '', h('br'), '▶'),
+    h(
+      'div',
+      { class: 'evo-stage', title: first.name },
+      // Forms that share a portrait (Urshifu's styles, until one has its own) show it once.
+      portraits.length > 1 ? h('span', { class: 'evo-branch-grid', style: `--n:${portraits.length}` }, ...portraits.map((src) => h('img', { src, alt: first.name }))) : h('img', { src: first.src, alt: first.name }),
+      h('span', { class: 'evo-name' }, first.name),
+      // One form shows its types like any stage; Urshifu's two styles differ, as a branch's do.
+      forms.length === 1 && h('span', { class: 'evo-types' }, ...first.types.map((type) => h('i', { style: `--type:${TYPE_COLORS[type]}`, title: type }))),
+    ),
+  ]
+}
+
+/** The evolution line: a portrait per stage and the level between them; tapping a stage previews it (`onStage`). A path legend's forms of another species close it (`pathStep`). */
 export const evoLine = (id: PlayableId, stage: number, onStage: (stage: number) => void) => {
   const s: PlayableDef = PLAYABLE[id]
   return h(
@@ -221,6 +250,7 @@ export const evoLine = (id: PlayableId, stage: number, onStage: (stage: number) 
             ),
       ]
     }),
+    ...pathStep(id),
   )
 }
 

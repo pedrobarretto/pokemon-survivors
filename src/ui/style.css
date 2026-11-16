@@ -2008,6 +2008,13 @@ button {
   text-align: center;
 }
 
+/* A path legend's step to its form of another species: the awakening and what opens it (`pathStep`). */
+.evo-arrow.evo-path {
+  max-width: 80px;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
 .move-list {
   display: grid;
   grid-template-columns: 1fr 1fr;

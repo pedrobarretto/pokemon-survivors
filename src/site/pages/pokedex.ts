@@ -357,11 +357,16 @@ const tierOf = (entry: DexEntry) => {
 }
 
 /** One species' card. `page` links its name to the Pokémon's own page: the Pokédex's cards do, that page's own cards don't. */
-/** A path legend's card line: where its path starts (the game's own words, `paths.where`), Cosmog's line how it grows. */
+/**
+ * A path legend's card line: where its path starts (the game's own words,
+ * `paths.where`), then how it turns into another species (Melmetal, Urshifu,
+ * `paths.forms.how`); Cosmog's line how it grows.
+ */
 export const pathNote = (legend: LegendId | null, locale: Locale) => {
   const words = MESSAGES[locale].paths
   const where: Partial<Record<LegendId, string>> = words.where
-  return plainText(legend ? (where[legend] ?? '') : words.cosmog.how)
+  const how: Partial<Record<LegendId, string>> = words.forms.how
+  return plainText(legend ? [where[legend], how[legend]].filter(Boolean).join(' ') : words.cosmog.how)
 }
 
 /** The game's light markup (`*bold*`, `_em_`) as plain text. */

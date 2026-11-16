@@ -428,6 +428,11 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         title: { pt: 'Pedidos da comunidade', en: 'Community requests', es: 'Pedidos de la comunidad', fr: 'Demandes de la communauté', zh: '社群許願' },
         notes: [
           {
+            pt: 'A linha de evolução do Meltan e do Kubfu agora mostra o Melmetal e o Urshifu, com o despertar e o que os libera (400 Porcas Sextavadas, a Torre). A Pokédex explica também.',
+            en: 'Meltan’s and Kubfu’s evolution lines now show Melmetal and Urshifu, with the awakening and what opens them (400 Hex Nuts, the Tower). The Pokédex explains it too.',
+            es: 'La línea evolutiva de Meltan y Kubfu ahora muestra a Melmetal y Urshifu, con el despertar y lo que los abre (400 Tuercas Hexagonales, la Torre). La Pokédex también lo explica.',
+          },
+          {
             pt: 'Largar item: no pause, toque num item para largá-lo e liberar o espaço. Com a build cheia, o item que um golpe no nível máximo precisa para evoluir aparece como carta de troca no level-up e nas Poké Balls. Um item largado só volta às ofertas 5 níveis depois.',
             en: 'Drop items: in the pause menu, tap an item to drop it and free its slot. With a full build, the item a maxed move needs to evolve shows up as a swap card on level-ups and in Poké Balls. A dropped item only comes back to the offers 5 levels later.',
             es: 'Soltar objetos: en la pausa, toca un objeto para soltarlo y liberar su espacio. Con la build llena, el objeto que un movimiento al máximo necesita para evolucionar aparece como carta de cambio al subir de nivel y en las Poké Balls. Un objeto soltado solo vuelve a las ofertas 5 niveles después.',
