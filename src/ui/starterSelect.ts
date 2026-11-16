@@ -584,7 +584,8 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
         h(
           'div',
           { class: 'partner-id' },
-          h('small', { class: 'partner-dex' }, `#${String(nationalDex(form.dex)).padStart(3, '0')}`),
+          // The compact panel (phones) shows the clear as the trophy beside the number, not as its own line.
+          h('small', { class: 'partner-dex' }, `#${String(nationalDex(form.dex)).padStart(3, '0')}`, level && h('img', { class: 'partner-dex-clear', src: trophyIcon(level), alt: clearText(id) ?? '', title: clearText(id) ?? '' })),
           h('h3', { class: 'partner-name' }, form.name),
           h('div', { class: 'types' }, ...form.types.map(typeBadge)),
           level && h('p', { class: 'partner-clear' }, h('img', { src: trophyIcon(level), alt: '' }), m.dex.clearedOn(m.difficulty.names[level])),
