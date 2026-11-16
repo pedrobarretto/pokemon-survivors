@@ -65,6 +65,31 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
     ],
     changes: [
       {
+        title: {
+          pt: 'Escolha do parceiro feita para o celular',
+          en: 'A partner select made for phones',
+          es: 'Elección de compañero hecha para el celular',
+          fr: 'Le choix du partenaire pensé pour le téléphone',
+          zh: '為手機重新設計的夥伴選擇',
+        },
+        notes: [
+          {
+            pt: 'No celular em pé, o painel do Pokémon ficou compacto e a lista ganhou o resto da tela; deitado, a lista ocupa toda a altura e a dificuldade e o Começar ficam ao lado, à mão. As abas mostram a contagem embaixo do nome, e nada mais sai da tela.',
+            en: 'With the phone upright, the Pokémon panel is compact and the list gets the rest of the screen; on its side, the list takes the whole height with the difficulty and Start beside it, in thumb reach. The tabs show their count under the name, and nothing runs off the screen anymore.',
+            es: 'Con el celular en vertical, el panel del Pokémon es compacto y la lista se lleva el resto de la pantalla; en horizontal, la lista ocupa toda la altura y la dificultad y Empezar quedan al lado, a mano. Las pestañas muestran la cuenta bajo el nombre, y ya nada se sale de la pantalla.',
+            fr: 'Téléphone en portrait, le panneau du Pokémon est compact et la liste prend le reste de l’écran ; en paysage, la liste occupe toute la hauteur, la difficulté et Commencer à côté, sous le pouce. Les onglets affichent leur compte sous le nom, et plus rien ne sort de l’écran.',
+            zh: '手機直拿時，寶可夢面板變得精簡，清單佔滿其餘畫面；橫拿時，清單佔滿整個高度，難度和開始按鈕就在旁邊，伸手可及。分頁的數量改顯示在名稱下方，不再有內容超出畫面。',
+          },
+          {
+            pt: 'Na aba Lendários, o banner dos Anéis de Hoopa agora rola junto com a lista: dá para deslizar até qualquer lendário no celular.',
+            en: 'In the Legendaries tab, the Hoopa’s Rings banner now scrolls with the list: you can swipe down to any legend on a phone.',
+            es: 'En la pestaña Legendarios, el cartel de los Aros de Hoopa ahora se desplaza con la lista: puedes deslizar hasta cualquier legendario en el celular.',
+            fr: 'Dans l’onglet Légendaires, la bannière des Anneaux de Hoopa défile maintenant avec la liste : on peut glisser jusqu’à n’importe quelle légende sur téléphone.',
+            zh: '在傳說分頁中，Hoopa 的圓環橫幅現在會隨清單一起捲動：在手機上可以滑到任何一隻傳說寶可夢。',
+          },
+        ],
+      },
+      {
         title: { pt: 'Temporada 1 e o Hall da Fama da Era 1', en: 'Season 1 and the Era 1 Hall of Fame', es: 'Temporada 1 y el Salón de la Fama de la Era 1', fr: 'Saison 1 et le Panthéon de l’Ère 1', zh: '第 1 賽季與第 1 紀元名人堂' },
         notes: [
           {
