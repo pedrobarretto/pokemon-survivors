@@ -42,6 +42,7 @@ import { standingOf, type StandingRow } from './supporters'
 import { creditRun } from './gems'
 import { runEarnsGems } from '../../src/game/gems'
 import type { TokenRules } from './rulesGrace'
+import { boardFrom, frozenBoards } from './era1Board'
 
 /** Which board: a mode (regular or Legend), a difficulty and a period, optionally one Pokémon or only the friends of `viewer`. */
 export type BoardQuery = { mode: RunMode; difficulty: Difficulty; period: BoardPeriod; starter: PlayableId | null; friends: boolean; viewer: string | null }
@@ -215,6 +216,21 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
   /** The handles taken that start with `base`, for `freeHandle`. */
   const takenLike = async (base: string) =>
     new Set((await sql<{ handle: string }[]>`select handle from users where left(handle, ${base.length}) = ${base}`).map((r) => r.handle))
+
+  /**
+   * Era 1's whole boards (`era1Board.ts`), by mode, difficulty and Pokémon: they rank every run from
+   * before Temporada 1 (~90k on Normal), too slow to read on each visit, and they no longer change
+   * but for moderation. The friends boards are cut from them.
+   */
+  const era1Board = frozenBoards(
+    ({ mode, difficulty, starter }: Pick<BoardQuery, 'mode' | 'difficulty' | 'starter'>) => `${mode}:${difficulty}:${starter ?? ''}`,
+    async ({ mode, difficulty, starter }) => {
+      const rows = await sql<EntryRow[]>`
+        select * from (${ranked({ mode, difficulty, period: 'era1', starter, friends: false, viewer: null })}) board
+        order by rank`
+      return { entries: rows.map(toEntry), users: rows.map((r) => r.user_id) }
+    },
+  )
 
   return {
     /** The player's handle and name, or null before they pick one. */
@@ -546,6 +562,15 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
 
     /** The top of a board, the viewer's own line wherever they are, and how many players it holds. */
     board: async (query: BoardQuery): Promise<Board> => {
+      if (query.period === 'era1') {
+        const [whole, follows] = await Promise.all([
+          era1Board(query),
+          query.friends && query.viewer
+            ? sql<{ followee_id: string }[]>`select followee_id from follows where follower_id = ${query.viewer}`.then((rows) => new Set(rows.map((r) => r.followee_id)))
+            : null,
+        ])
+        return boardFrom(whole, query.viewer, follows)
+      }
       const rows = await sql<(EntryRow & { total: number })[]>`
         select * from (${ranked(query)}) board
         where rank <= ${BOARD_SIZE} or user_id = ${query.viewer ?? ''}
