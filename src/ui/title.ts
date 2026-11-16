@@ -1,3 +1,4 @@
+import { assetImage, assetUrl } from '../assets'
 import { realmHourTag } from './realmHour'
 import { accountState, accountsEnabled, giftInbox, onInbox, onSaveSynced } from '../account'
 import { lobbyPress } from '../analytics'
@@ -562,8 +563,6 @@ type Figure = { dex: Dex; shiny: boolean; x: number; dir: Dir8; team?: 'blue' | 
 /** Who stands in the meadow for a mode: figures, a picture beside them (`img`: feet at `x`), the ribbon over the day's Pokémon, how much smaller than the partner its art is drawn (`shrink`), and the patrons around the Realm's café (`cafe`, `render/cafeLife.ts`). */
 type Cast = { figures: readonly Figure[]; img?: { src: string; x: number }; ribbon?: boolean; shrink?: number; cafe?: boolean }
 
-const ASSETS = `${import.meta.env.BASE_URL}assets`
-
 const figure = (dex: Dex, x: number, dir: Dir8, team?: Figure['team']): Figure => ({ dex, shiny: false, x, dir, team })
 
 /** What each mode stands in the meadow. */
@@ -583,8 +582,8 @@ const castOf = (mode: GameModeId): Cast => {
   if (mode === 'challenge') return { figures: [figure(PLAYABLE[challengeToday().starter].line[0].dex, 0, 0)], ribbon: true }
   if (mode === 'coop') return { figures: [figure(1, -38, 0), figure(25, 0, 0), figure(7, 38, 0)] }
   if (mode === 'arena') return { figures: [figure(448, -58, 2, 'blue'), figure(6, -24, 2, 'blue'), figure(445, 24, 6, 'red'), figure(94, 58, 6, 'red')] }
-  if (mode === 'dojo') return { figures: [figure(67, -20, 2)], img: { src: `${ASSETS}/dojo/dummy.png`, x: 20 } }
-  return { figures: [], img: { src: `${ASSETS}/realm/cafe.png`, x: 0 }, shrink: 2, cafe: true }
+  if (mode === 'dojo') return { figures: [figure(67, -20, 2)], img: { src: assetUrl('dojo/dummy.png'), x: 20 } }
+  return { figures: [], img: { src: assetUrl('realm/cafe.png'), x: 0 }, shrink: 2, cafe: true }
 }
 
 /** How big the cast stands in each layout, in CSS px per art px; the mockups' sizes. */
@@ -608,8 +607,7 @@ const castPainter = (canvas: HTMLCanvasElement, slot: HTMLElement) => {
     cast = castOf(mode)
     picture = null
     if (cast.img) {
-      picture = new Image()
-      picture.src = cast.img.src
+      picture = assetImage(cast.img.src)
     }
     for (const f of cast.figures) void loadSpecies(f.dex, f.shiny).catch(() => {})
     if (cast.cafe) for (const p of CAFE_PATRONS) void loadSpecies(p.dex).catch(() => {})
@@ -1042,8 +1040,8 @@ export const titleScreen = (
         entries: [
           ...(festivalCardShows() ? [entry('festival', sparkleIcon(), t().festival.card)] : []),
           entry('mart', shopIcon(), m.shopName, m.shopLine),
-          entry('boutique', `${ASSETS}/shop/boutique.png`, m.boutiqueName, m.boutiqueLine),
-          entry('carpentry', `${ASSETS}/shop/carpentry.png`, m.carpentryName, m.carpentryLine),
+          entry('boutique', assetUrl('shop/boutique.png'), m.boutiqueName, m.boutiqueLine),
+          entry('carpentry', assetUrl('shop/carpentry.png'), m.carpentryName, m.carpentryLine),
           hallEntry(),
         ],
       },
@@ -1131,9 +1129,9 @@ export const titleScreen = (
     const shops = h(
       'div',
       { class: 'arc-card lobby-shops' },
-      shopRow('mart', `${ASSETS}/shop/shop-lv${save.shop.level}.png`, m.shopName, m.shopLine),
-      shopRow('boutique', `${ASSETS}/shop/boutique.png`, m.boutiqueName, m.boutiqueLine),
-      shopRow('carpentry', `${ASSETS}/shop/carpentry.png`, m.carpentryName, m.carpentryLine),
+      shopRow('mart', assetUrl(`shop/shop-lv${save.shop.level}.png`), m.shopName, m.shopLine),
+      shopRow('boutique', assetUrl('shop/boutique.png'), m.boutiqueName, m.boutiqueLine),
+      shopRow('carpentry', assetUrl('shop/carpentry.png'), m.carpentryName, m.carpentryLine),
     )
     const hall = navigable(hallStrip(openHall), 'hall')
     const plazaEl =

@@ -1,3 +1,4 @@
+import { assetUrl } from '../assets'
 import { artImages, canvasCache, context2d, createCanvas, fromStrings } from '../engine/pixelart'
 import { STAMP_MILESTONES, STAMPS, type StampGroup, type StampId, type StampTier } from '../data/realmStamps'
 
@@ -29,7 +30,7 @@ const COLUMNS = 9
 
 type SheetCell = (typeof SHEET_ORDER)[number]
 
-const sheet = artImages<'sheet'>(() => `${import.meta.env.BASE_URL}assets/realm/stamps.png`)
+const sheet = artImages<'sheet'>(() => assetUrl('realm/stamps.png'))
 
 const SHEET = canvasCache<'sheet', HTMLCanvasElement>('shared')
 

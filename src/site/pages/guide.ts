@@ -1,3 +1,4 @@
+import { assetUrl } from '../../assets'
 import { ACHIEVEMENT_IDS, ACHIEVEMENTS, MEDAL_EGG, MEDAL_REWARD, MEDALS, TITLE_IDS, type AchievementDef, type AchievementId } from '../../data/achievements'
 import { DAILY_POOL, MISSION_SLOTS, WEEKLY_POOL, type MissionTemplate } from '../../data/missions'
 import { BIOME_IDS, BIOME_TIERS, BIOMES, WEATHER_IDS, type WeatherId } from '../../data/biomes'
@@ -70,7 +71,7 @@ const table = (head: readonly Child[], rows: readonly (readonly Child[])[]) =>
 
 const paragraphs = (texts: readonly string[]) => texts.map((t) => html`<p>${t}</p>`)
 
-const portrait = (dex: number) => html`<img class="mini" src="/assets/pokemon/${dex}/portrait.png" width="40" height="40" loading="lazy" alt="" />`
+const portrait = (dex: number) => html`<img class="mini" src="${assetUrl(`pokemon/${dex}/portrait.png`)}" width="40" height="40" loading="lazy" alt="" />`
 
 /** The Pokédex's cards by anchor, for `dexLink`. */
 const CARDS = new Map(pokedex().map((e) => [e.slug, e]))

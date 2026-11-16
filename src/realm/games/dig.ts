@@ -1,3 +1,4 @@
+import { assetUrl } from '../../assets'
 import { DIG_FOSSIL_FAMILIES, DIG_HALVES, DIG_TREASURES, GALAR_PAIRS, type DigGroup, type DigLegend, type DigTreasureId, type FossilFamily, type GalarHalf } from '../../data/digTreasures'
 import { HATCHLINGS, PLAYABLE, type PlayableId } from '../../data/hatchlings'
 import { BAG_ITEMS, EVO_ITEMS } from '../../data/shop'
@@ -172,7 +173,7 @@ const start = (ctx: SoloCtx): GameRun => {
     say('card', [h('p', { class: 'mg-lead' }, text)], [{ label: m().retry, run: load, primary: true }])
   }
 
-  const art = (id: DigTreasureId) => `${import.meta.env.BASE_URL}assets/${DIG_TREASURES[id].art}.png`
+  const art = (id: DigTreasureId) => assetUrl(`${DIG_TREASURES[id].art}.png`)
 
   /** Why a price can't be paid now, or null: the day's cap or too few ₽. */
   const blocked = (price: number | null, wallOpen: boolean) => {

@@ -1,3 +1,4 @@
+import { assetUrl } from '../assets'
 import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
 import { t } from '../i18n'
@@ -23,7 +24,7 @@ export type DialogueLine = { text: string; emotion?: Emotion }
 export type Speaker = { name: string; color: string; portrait: (emotion: Emotion) => HTMLElement }
 
 /** A talking species' emotion portrait (`public/assets/pokemon/<dex>/portraits/<Emotion>.png`). */
-export const emotionUrl = (dex: Dex, emotion: Emotion) => `${import.meta.env.BASE_URL}assets/pokemon/${dex}/portraits/${emotion}.png`
+export const emotionUrl = (dex: Dex, emotion: Emotion) => assetUrl(`pokemon/${dex}/portraits/${emotion}.png`)
 
 /** Letters per second of the typewriter. */
 const CPS = 45

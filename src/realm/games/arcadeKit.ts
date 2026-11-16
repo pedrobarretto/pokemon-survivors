@@ -1,3 +1,4 @@
+import { assetImage, assetUrl } from '../../assets'
 import { PLAYABLE } from '../../data/hatchlings'
 import { drawPacked, drawable, fromStrings, lazy, textSprite, type Packed, type Palette } from '../../engine/pixelart'
 
@@ -29,8 +30,7 @@ const images = new Map<string, HTMLImageElement>()
 export const image = (path: string): HTMLImageElement | null => {
   let img = images.get(path)
   if (!img) {
-    img = new Image()
-    img.src = `${import.meta.env.BASE_URL}assets/${path}.png`
+    img = assetImage(assetUrl(`${path}.png`))
     images.set(path, img)
   }
   return drawable(img) ? img : null

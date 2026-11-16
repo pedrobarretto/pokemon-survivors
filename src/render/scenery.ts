@@ -1,3 +1,4 @@
+import { assetUrl } from '../assets'
 import { BIOMES, type BiomeId } from '../data/biomes'
 import type { LandmarkPiece } from '../data/landmarks'
 import type { PlacePiece } from '../data/places'
@@ -85,7 +86,7 @@ const fileOf = (biome: BiomeId, kind: string, variant: number, open: boolean): s
 /** Whether a piece has painted art in `biome` (then it isn't sculpted ahead of time). */
 export const hasScenery = (kind: string, biome: BiomeId, variant = 0) => fileOf(biome, kind, variant, false) !== null
 
-const pictures = artImages((file: string) => `${import.meta.env.BASE_URL}assets/scenery/${file}.png`)
+const pictures = artImages((file: string) => assetUrl(`scenery/${file}.png`))
 const pieces = canvasCache<string, ArtPiece>()
 
 /** Rows at the bottom of the art that make its foot, the part that meets the ground. */

@@ -1,3 +1,4 @@
+import { assetImage } from '../../assets'
 import type { SafariHabitat } from '../../data/safari'
 import type { SafariDaypart } from './safari.rules'
 import { MAP_H, MAP_W, TERRAIN, TILE } from '../../data/safariMaps'
@@ -527,7 +528,8 @@ export const silhouetteUrl = (sheet: { url: string; fw: number; fh: number } | u
   const had = silhouettes.get(dex)
   if (had) return done(had)
   if (!sheet) return
-  const img = new Image()
+  // CORS (`assetImage`): the sheet may come from the asset CDN, and its pixels are read.
+  const img = assetImage(sheet.url)
   img.onload = () => {
     // The frame, cut to its body and blown up by the largest whole factor that fits.
     const frame = createCanvas(sheet.fw, sheet.fh)
@@ -563,5 +565,4 @@ export const silhouetteUrl = (sheet: { url: string; fw: number; fh: number } | u
     silhouettes.set(dex, url)
     done(url)
   }
-  img.src = sheet.url
 }
