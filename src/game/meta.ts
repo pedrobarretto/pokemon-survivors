@@ -125,6 +125,8 @@ export type Save = {
   dex: Pokedex
   /** The incubator (`game/eggs.ts`), up to `incubatorSlots` eggs. */
   eggs: readonly Egg[]
+  /** Eggs waiting for a free slot (`game/eggs.ts`, up to `EGGS.queue`), first in first: they walk no steps until they get one. */
+  eggQueue: readonly Egg[]
   /** The incubator's upgrades (`game/incubator.ts`): extra slots bought for good and the Quick Incubators got and used. */
   incubator: IncubatorSave
   /** Families unlocked from eggs (`game/eggs.ts`). */
@@ -221,6 +223,7 @@ export const EMPTY_SAVE: Save = {
   ranks: NO_RANKS,
   dex: EMPTY_DEX,
   eggs: [],
+  eggQueue: [],
   incubator: NO_INCUBATOR,
   hatched: {},
   eggPity: {},
@@ -302,6 +305,7 @@ export const parseSaveData = (json: unknown): Save => {
     ranks: Object.fromEntries(UPGRADE_IDS.map((id) => [id, wholeNumber(ranks[id], UPGRADES[id].maxRank)])) as Record<UpgradeId, number>,
     dex: parseDex(data.dex),
     eggs: parseEggs(data.eggs, incubatorSlots({ incubator })),
+    eggQueue: parseEggs(data.eggQueue, EGGS.queue),
     incubator,
     hatched: parseHatched(data.hatched),
     eggPity: parseEggPity(data.eggPity),

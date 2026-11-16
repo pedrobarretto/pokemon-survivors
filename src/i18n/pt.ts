@@ -1967,7 +1967,7 @@ export const pt = {
     incubator: {
       intro: (slots: number, max: number) => `Sua incubadora: ${slots} de ${max} vagas · vagas extras são para sempre`,
       slot: (n: number) => `${n}ª vaga`,
-      slotText: 'Mais um ovo chocando ao mesmo tempo, para sempre. Com a incubadora cheia, ovo novo vira ₽.',
+      slotText: 'Mais um ovo chocando ao mesmo tempo, para sempre. Com a incubadora cheia, ovo novo espera na fila.',
       before: 'Compre a vaga anterior primeiro.',
       needs: (level: string) => `À venda com a loja em ${level}.`,
       buy: (price: string) => `Comprar ${price}`,
@@ -2965,11 +2965,16 @@ export const pt = {
   eggs: {
     tiers: { common: 'Ovo comum', rare: 'Ovo raro', ultra: 'Ovo ultra raro', friend: 'Ovo da Amizade', haunted: 'Ovo Assombrado', kecleon: 'Ovo do Kecleon', kecleonShiny: 'Ovo do Kecleon brilhante', fossil: 'Ovo Fóssil', found: 'Encontro', dig: 'Fóssil da Escavação', ...REGIONAL_WORDS.pt.tiers } satisfies Record<EggTier, string>,
     found: (egg: string) => `Você achou um *${egg}*! Ele vai para a incubadora.`,
-    /** Found mid-run with no room left in the incubator: it will be paid in ₽ when the run ends. */
-    foundFull: (egg: string, coins: string) => `Você achou um *${egg}*! A incubadora está cheia, então ele vai virar *${coins}*.`,
+    /** Found mid-run with no slot and no place in line left: it will be paid in ₽ when the run ends. */
+    foundFull: (egg: string, coins: string) => `Você achou um *${egg}*! A incubadora e a fila estão cheias, então ele vai virar *${coins}*.`,
+    /** Found mid-run with every slot taken but room in the waiting line (`EGGS.queue`). */
+    foundQueued: (egg: string) => `Você achou um *${egg}*! A incubadora está cheia, então ele espera na fila.`,
     title: 'INCUBADORA',
     intro: 'Os ovos chocam com os passos dados nas partidas. Todos os ovos da incubadora andam juntos.',
     sources: 'Chefes, baús trancados e fendas às vezes deixam um ovo.',
+    /** The waiting line (`Save.eggQueue`): its label, an empty place and its rule. */
+    queue: (n: number, max: number) => `Fila de espera ${n}/${max}`,
+    queueRule: (max: number) => `Com a incubadora cheia, até ${max} ovos esperam na fila e entram sozinhos quando uma vaga abre. Depois disso, viram ₽.`,
     empty: 'Vazio',
     stepsLeft: (n: string) => `Faltam ${n} passos`,
     ready: 'Pronto!',

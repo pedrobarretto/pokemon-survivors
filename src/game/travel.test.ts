@@ -5,7 +5,7 @@ import { REGION_IDS } from '../data/regionalForms'
 import { VITRINE } from '../data/shop'
 import { evolutionOffers } from './branch'
 import { addDays } from './day'
-import { hatchPool } from './eggs'
+import { EGGS, hatchPool } from './eggs'
 import { EMPTY_SAVE } from './meta'
 import { vitrineOf } from './shop'
 import { buyTravelEgg, nextTrip, regionFamilies, regionOfWeek, travelEggBlock, TRAVEL } from './travel'
@@ -49,7 +49,7 @@ describe("the Vitrine's Ovo de Viagem", () => {
 
   it('waits for room in the incubator and for the ₽', () => {
     expect(travelEggBlock({ ...rich, wallet: VITRINE.travelEgg.price - 1 }, v)).toBe('poor')
-    const full = { ...rich, eggs: [0, 1, 2].map(() => ({ tier: 'common' as const, steps: 0 })) }
+    const full = { ...rich, eggs: [0, 1, 2].map(() => ({ tier: 'common' as const, steps: 0 })), eggQueue: Array.from({ length: EGGS.queue }, () => ({ tier: 'common' as const, steps: 0 })) }
     expect(travelEggBlock(full, v)).toBe('full')
   })
 })

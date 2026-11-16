@@ -48,6 +48,22 @@ const lockedView = (i: number) => {
   )
 }
 
+/** The waiting line (`Save.eggQueue`): its count, a small egg per place taken (first in line first) and its rule. */
+const queueView = (save: Save) => {
+  const m = t().eggs
+  const places = Array.from({ length: EGGS.queue }, (_, i) => {
+    const egg = save.eggQueue[i]
+    return egg ? h('img', { class: 'egg-queued', src: eggIcon(egg.tier), alt: m.tiers[egg.tier], title: m.tiers[egg.tier] }) : h('span', { class: 'egg-queued empty' })
+  })
+  return h(
+    'div',
+    { class: 'egg-queue' },
+    h('b', {}, m.queue(save.eggQueue.length, EGGS.queue)),
+    h('span', { class: 'egg-queue-places' }, ...places),
+    h('small', {}, m.queueRule(EGGS.queue)),
+  )
+}
+
 /** What tapping the slot at `i` says when it does nothing else: where to buy the slot, or why the egg can't take a Quick Incubator. */
 const slotNote = (save: Save, i: number): string | null => {
   const m = t().eggs
@@ -61,7 +77,7 @@ const slotNote = (save: Save, i: number): string | null => {
 
 /**
  * The incubator: its slots with the steps each egg still needs (the shop's
- * extra slots locked until bought), the Quick Incubators owned, the
+ * extra slots locked until bought), the waiting line, the Quick Incubators owned, the
  * collection count and the egg pity's rule and counts. Picking a ready egg calls `onHatch` with its index; a
  * walking one asks to put a Quick Incubator on it, then calls `onQuick`.
  */
@@ -117,6 +133,7 @@ export const incubator = (root: HTMLElement, input: Input, actions: { onHatch: (
       h('div', { class: 'dialog-title' }, m.title),
       h('p', { class: 'incubator-intro' }, m.intro),
       h('div', { class: `egg-slots slots-${MAX_SLOTS}` }, ...slots),
+      queueView(save),
       note,
       h('p', { class: 'incubator-note incubator-pity' }, rich(pity)),
       h('div', { class: 'buttons' }, back),

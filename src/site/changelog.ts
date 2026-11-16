@@ -503,6 +503,25 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
           },
         ],
       },
+      {
+        title: { pt: 'Fila de ovos e incubadora maior', en: 'Egg waiting line and a bigger incubator', es: 'Fila de huevos e incubadora más grande', fr: 'File d’œufs et incubateur plus grand', zh: '蛋的等候隊列與更大的孵化器' },
+        notes: [
+          {
+            pt: 'Com a incubadora cheia, o ovo novo não vira mais ₽ na hora: até 6 ovos esperam numa fila e entram sozinhos assim que um ovo choca. Só depois que a fila enche é que o ovo vira ₽.',
+            en: 'With the incubator full, a new egg no longer turns into ₽ right away: up to 6 eggs wait in line and move in on their own as soon as an egg hatches. Only once the line is full does an egg turn into ₽.',
+            es: 'Con la incubadora llena, el huevo nuevo ya no se vuelve ₽ al instante: hasta 6 huevos esperan en una fila y entran solos en cuanto eclosiona un huevo. Solo cuando la fila se llena el huevo se vuelve ₽.',
+            fr: 'Avec l’incubateur plein, un nouvel œuf ne devient plus des ₽ tout de suite : jusqu’à 6 œufs attendent dans une file et entrent seuls dès qu’un œuf éclot. Ce n’est qu’une fois la file pleine qu’un œuf devient des ₽.',
+            zh: '孵化器滿了時，新的蛋不會再立刻變成₽：最多 6 顆蛋會排隊等候，一有蛋孵化就自動放入。只有隊列也滿了，蛋才會變成₽。',
+          },
+          {
+            pt: 'A loja do Kecleon no nível 5 vende mais 3 vagas para sempre, por ₽1M, ₽2M e ₽4M: até 8 ovos chocando ao mesmo tempo.',
+            en: 'Kecleon’s shop at level 5 sells 3 more slots for good, for ₽1M, ₽2M and ₽4M: up to 8 eggs hatching at once.',
+            es: 'La tienda de Kecleon en el nivel 5 vende 3 lugares más para siempre, por ₽1M, ₽2M y ₽4M: hasta 8 huevos eclosionando a la vez.',
+            fr: 'La boutique de Kecleon au niveau 5 vend 3 places de plus pour toujours, pour 1 M ₽, 2 M ₽ et 4 M ₽ : jusqu’à 8 œufs en incubation à la fois.',
+            zh: 'Kecleon 商店 5 級時會再賣 3 個永久格位，價格為₽1M、₽2M 和₽4M：最多 8 顆蛋同時孵化。',
+          },
+        ],
+      },
     ],
   },
   {
