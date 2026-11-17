@@ -433,6 +433,8 @@ export const EMOTIONS = {
   400: ['Normal'],
   // The Game Corner's Meowth talks with the 52 row above; Giovanni speaks through his Persian (the Rocket Hideout).
   53: ['Normal', 'Happy', 'Joyous', 'Surprised', 'Sigh', 'Inspired', 'Angry', 'Determined', 'Shouting'],
+  // Rotom, the first visit's guide (`data/guide.ts`): the welcome, the training run and the lobby tour.
+  479: ['Normal', 'Happy', 'Joyous', 'Surprised', 'Sigh', 'Inspired', 'Angry'],
   // Sudowoodo, who tells of the Zygarde Cells (the legend paths, src/data/legendPaths.ts).
   185: ['Normal', 'Happy', 'Joyous', 'Surprised', 'Sigh', 'Inspired', 'Angry'],
 }
