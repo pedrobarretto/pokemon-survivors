@@ -84,7 +84,10 @@ export const rememberGuest = (now = Date.now()) => {
  * The onboarding's moments, for whoever listens (analytics, `onOnboarding`):
  * the fast lane starting a first run, the gate skipped or answered as a guest,
  * the results' save card shown or pressed, the in-app hint shown or its
- * browser link pressed, and a sign in an in-app browser held back.
+ * browser link pressed, a sign in an in-app browser held back, and the first
+ * visit's arm `tour` (`firstTime.ts`): Rotom's welcome shown or answered
+ * "Já sei jogar", the training run started, finished or skipped, the first
+ * partner picked, and the lobby tour done or skipped.
  */
 export type OnboardingStep =
   | 'fastLane'
@@ -95,6 +98,14 @@ export type OnboardingStep =
   | 'inAppHintShown'
   | 'inAppOpenBrowser'
   | 'inAppSignInHeld'
+  | 'welcomeShown'
+  | 'welcomeKnows'
+  | 'tutorialStarted'
+  | 'tutorialFinished'
+  | 'tutorialSkipped'
+  | 'partnerPicked'
+  | 'tourDone'
+  | 'tourSkipped'
 
 type Listener = (step: OnboardingStep) => void
 const listeners = new Set<Listener>()

@@ -1,0 +1,237 @@
+/* ---------- The first visit: Rotom's welcome (ui/welcome.ts) and the first partner pick (ui/firstPartner.ts) ---------- */
+
+/* Rotom floats over the meadow, the two answers under it, the dialogue box at the foot (its own layer). */
+.welcome-screen {
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+.welcome-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  /* Clear of the dialogue box below. */
+  padding-bottom: 120px;
+}
+
+.welcome-rotom {
+  display: block;
+  image-rendering: pixelated;
+  /* A screen's glow behind it, so it stands out from the meadow's wanderers. */
+  background: radial-gradient(closest-side, rgba(255, 236, 190, 0.85), rgba(255, 200, 120, 0.35) 70%, transparent);
+  border-radius: 50%;
+}
+
+/* Rotom hops in from another screen: a flicker, then it pops out. */
+.welcome-rotom.pop {
+  animation: welcome-hop 0.5s steps(5) both;
+}
+
+@keyframes welcome-hop {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+  60% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.welcome-choices .btn {
+  min-height: 52px;
+  min-width: 150px;
+  font-size: 24px;
+}
+
+/* Until the lines are read the answers keep their room, unseen and untouchable. */
+.welcome-choices.waiting {
+  visibility: hidden;
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .welcome-stage {
+    flex-direction: row;
+    gap: 20px;
+    padding-bottom: 96px;
+  }
+  .welcome-choices {
+    flex-direction: column;
+  }
+}
+
+/* The pick: Rotom's line, the regions' cards, the start bar. */
+.first-partner-screen .shell-body {
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.first-partner-say {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 620px);
+  padding: 8px 12px;
+}
+
+.first-partner-say p {
+  margin: 0;
+  font-family: var(--body);
+  font-size: 22px;
+  line-height: 1.05;
+  text-align: left;
+}
+
+.first-partner-say b {
+  font-family: var(--title);
+  font-weight: 400;
+}
+
+.first-partner-portrait {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  padding: 2px;
+  image-rendering: pixelated;
+  background: #cfe6c4;
+  border: 3px solid #283040;
+  border-radius: 6px;
+}
+
+/* Regions side by side as they fit: three on a computer, one on a phone held upright. */
+.first-partner-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 10px 14px;
+  width: min(100%, 980px);
+}
+
+.first-partner-region-name {
+  margin: 0 0 4px 4px;
+  font-family: var(--title);
+  font-size: 20px;
+  font-weight: 400;
+  text-align: left;
+  color: var(--dk-ink, #fff);
+  text-shadow: 1px 1px 0 rgba(16, 24, 48, 0.6);
+}
+
+.first-partner-region-name small {
+  margin-right: 6px;
+  padding: 0 4px;
+  font-size: 15px;
+  color: #fff;
+  background: rgba(16, 24, 48, 0.55);
+  border-radius: 3px;
+}
+
+.first-partner-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.first-partner-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 6px 4px 8px;
+  color: var(--kit-ink);
+  background: color-mix(in srgb, var(--t) 18%, var(--kit-paper));
+  border-color: color-mix(in srgb, var(--t) 55%, var(--kit-tinta));
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.first-partner-card.selected {
+  border-color: #e83030;
+  box-shadow:
+    0 0 0 2px var(--dk-surface-0, #fff),
+    0 0 0 5px #e83030;
+}
+
+.first-partner-sprite {
+  display: block;
+  image-rendering: pixelated;
+}
+
+.first-partner-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--title);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.first-partner-card .type-badge {
+  font-size: 13px;
+  padding: 2px 4px 1px;
+}
+
+.first-partner-go {
+  min-width: 220px;
+  min-height: 52px;
+  font-size: 24px;
+}
+
+@media (max-width: 420px) {
+  .first-partner-say p {
+    font-size: 19px;
+  }
+  .first-partner-name {
+    font-size: 16px;
+  }
+  .first-partner-card .type-badge {
+    font-size: 11px;
+  }
+}
+
+/* A phone on its side: the line and the hint shrink, the cards sit in a row of regions that scrolls. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .first-partner-screen .shell-body {
+    gap: 6px;
+  }
+  .first-partner-say {
+    padding: 4px 10px;
+  }
+  .first-partner-say p {
+    font-size: 18px;
+  }
+  .first-partner-screen .hint {
+    display: none;
+  }
+  .first-partner-card {
+    gap: 2px;
+    padding: 4px 4px 6px;
+  }
+  .first-partner-name {
+    font-size: 15px;
+  }
+  .first-partner-card .type-badge {
+    font-size: 11px;
+  }
+  .first-partner-screen .shell-actions {
+    padding: 4px 10px 6px;
+  }
+  .first-partner-go {
+    min-height: 44px;
+    font-size: 20px;
+  }
+}

@@ -6,12 +6,16 @@
 
 /**
  * The steps a first visit can reach, in the order a first run passes them: the
- * intro's "press start", the lobby, JOGAR, the sign-in gate, the partner
- * select, the run loading, its first frame, and a minute into it. Any of them
- * may be skipped (a link straight to the Boutique, back from signing in, a flow
- * without the gate), so a visit is judged by the furthest it reached.
+ * intro's "press start", then (the onboarding's arm `tour`, `firstTime.ts`)
+ * Rotom's welcome, the training run started and ended (finished or skipped),
+ * the first partner pick shown, then the lobby, JOGAR (or the pick made), the
+ * sign-in gate, the partner select, the run loading, its first frame, and a
+ * minute into it. Any of them may be skipped (arm `control`'s fast lane, a link
+ * straight to the Boutique, back from signing in, a flow without the gate), so
+ * a visit is judged by the furthest it reached. Only a real run marks the last
+ * three: the training run's are held (`holdRunSteps` in `firstSession.ts`).
  */
-export const FIRST_STEPS = ['intro', 'lobby', 'play', 'gate', 'select', 'loading', 'firstFrame', 'minute'] as const
+export const FIRST_STEPS = ['intro', 'welcome', 'tutorial', 'tutorialEnd', 'partner', 'lobby', 'play', 'gate', 'select', 'loading', 'firstFrame', 'minute'] as const
 
 export type FirstStep = (typeof FIRST_STEPS)[number]
 

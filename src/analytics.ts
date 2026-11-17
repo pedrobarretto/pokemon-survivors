@@ -22,6 +22,7 @@ import type { SkinBundleId } from './data/skinCatalog'
 import type { GemCurrency, GemMethod, GemPackId } from './data/gems'
 import type { FirstStep, GateAnswer, StepTimes } from './firstSteps'
 import type { InAppApp, OnboardingStep } from './onboarding'
+import type { Arm, TourOutcome, TutorialOutcome } from './firstTime'
 
 /**
  * Analytics and error reports. Events go to PostHog (product analytics and
@@ -127,9 +128,25 @@ type AnalyticsEvents = {
     inApp: InAppApp | null
     /** The onboarding moments the load went through (`OnboardingStep`), each once. */
     moments: OnboardingStep[]
+    /** The device's onboarding arm (`firstTime.ts`; null: out of the test), and how its training run ended so far and the furthest step it reached (null: never ended). */
+    arm: Arm | null
+    tutorial: TutorialOutcome['how'] | null
+    tutorialStep: string | null
     account: 0 | 1
     replay: 0 | 1
   } & DeviceInfo
+  /**
+   * The first visit's onboarding ended (`firstTime.ts`): the lobby tour done or skipped, once per device in arm
+   * `tour` (and again each time Settings' "Rever tutorial" replays it), with the tour's furthest stop
+   * (null when the tour doesn't tell) and how the device's training run ended (`none`: "Já sei jogar", or cut short).
+   */
+  onboarding: {
+    arm: Arm | null
+    how: TourOutcome
+    stop: string | null
+    tutorial: TutorialOutcome['how'] | 'none'
+    replay: 0 | 1
+  }
   /**
    * A Dojo session ended (`game/training.ts`), one per visit: who trained, for how long, and the
    * loadout it left with (`id:level`, as `run_end`), saved as a build or not. Says which builds
