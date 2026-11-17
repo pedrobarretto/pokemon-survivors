@@ -30,7 +30,7 @@ import { parseShinyPicks, type ShinyPick } from './shinyPicks'
 import { isPlayable } from './ranking'
 import type { SpecialCompanionId } from '../data/companions'
 import { parseCompanion, parseCompanions, type Companion } from './supporters'
-import { NO_CAPTURES, parseCaptures, type Captures } from './capture'
+import { NO_CAPTURES, parseCaptures, withBeatenLegendShinies, type Captures } from './capture'
 import { BRANCHES, isBranch, type BranchId } from '../data/branches'
 import type { PlayableId } from '../data/hatchlings'
 import type { StatDelta } from './stats'
@@ -298,12 +298,14 @@ export const parseSaveData = (json: unknown): Save => {
   const ranks = isRecord(data.ranks) ? data.ranks : {}
   const achievements = parseAchievements(data.achievements)
   const titles = parseGiftTitles(data.titles)
+  const dex = parseDex(data.dex)
+  const legends = parseCaptures(data.legends)
   const incubator = parseIncubator(data.incubator)
   return {
     version: SAVE_VERSION,
     wallet: wholeNumber(data.wallet),
     ranks: Object.fromEntries(UPGRADE_IDS.map((id) => [id, wholeNumber(ranks[id], UPGRADES[id].maxRank)])) as Record<UpgradeId, number>,
-    dex: parseDex(data.dex),
+    dex,
     eggs: parseEggs(data.eggs, incubatorSlots({ incubator })),
     eggQueue: parseEggs(data.eggQueue, EGGS.queue),
     incubator,
@@ -314,7 +316,7 @@ export const parseSaveData = (json: unknown): Save => {
     title: parseTitle(data.title, achievements.unlocked, titles),
     difficulty: parseDifficulty(data.difficulty),
     partner: isPlayable(data.partner) ? data.partner : DEFAULT_PARTNER,
-    shinyStarters: parseShinyStarters(data.shinyStarters),
+    shinyStarters: withBeatenLegendShinies(parseShinyStarters(data.shinyStarters), legends, dex),
     bag: parseBag(data.bag),
     // A save from before the Kecleon Shop brings its Balcão do dia counts.
     shop: parseShop(data.shop, data.counter),
@@ -330,7 +332,7 @@ export const parseSaveData = (json: unknown): Save => {
     // Plus the clears the lifetime records prove, for wins from before clears were tracked.
     clears: mergeClears(pastClears(achievements.lifetime), parseClears(data.clears)),
     halloween: parseHalloween(data.halloween),
-    legends: parseCaptures(data.legends),
+    legends,
     roamers: parseRoamers(data.roamers),
     rush: parseRushBest(data.rush),
     mythicalPity: parseMythicalPity(data.mythicalPity),

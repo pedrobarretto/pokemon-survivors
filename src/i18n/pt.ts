@@ -1311,8 +1311,8 @@ export const pt = {
     shinyNote: 'Escolha grátis: depois tem outra!',
     banish: (n: number) => `Esquecer (${n})`,
     banishCancel: 'Cancelar',
-    banishHintKeys: 'Escolha o card a esquecer · ESC cancela',
-    banishHintTouch: 'Toque no card a esquecer',
+    banishHintKeys: 'Escolha o card a esquecer: ele não volta mais nesta partida (um golpe que você já tem para no nível atual) · ESC cancela',
+    banishHintTouch: 'Toque no card a esquecer: ele não volta mais nesta partida (um golpe que você já tem para no nível atual)',
     /** Title of a prize level-up (every card rare), by where it came from (`Game.prize`). */
     prize: { alpha: 'Prêmio do Alfa!', mission: 'Missão cumprida!' } satisfies Record<PrizeSource, string>,
   },
@@ -2648,7 +2648,7 @@ export const pt = {
     boss: (name: string) => `Um *${name}* selvagem apareceu!`,
     bossFled: (name: string) => `O *${name}* selvagem fugiu!`,    shiny: (name: string) => `Um *${name}* shiny apareceu!`,
     shinyPlayer: (name: string) => `Que sorte! Seu *${name}* é shiny! Agora ele fica _liberado_ na seleção.`,
-    caught: (name: string) => `*${name}* shiny é seu! Registrado na _Pokédex_.`,
+    caught: (name: string) => `*${name}* shiny derrotado! Registrado na _Pokédex_ e na _Caixa do PC_.`,
     evolving: (name: string) => `Hã? ${name} está evoluindo!`,
     evolved: (from: string, to: string) => `Parabéns! ${from} evoluiu para ${to}!`,
     moveEvolved: (from: string, to: string) => `*${from}* evoluiu para *${to}*!`,
@@ -6842,7 +6842,7 @@ export const pt = {
     where: {
       rift: 'Espera numa _fenda lendária_: entre no portal e vença-o lá dentro.',
       trio: 'Vem como chefe com o _trio lendário_ sorteado na partida.',
-      mythical: 'Às vezes (1 partida em 10, mais a cada final sem mítico) aparece junto do *Mewtwo* no final.',
+      mythical: 'Às vezes aparece junto do *Mewtwo* aos 15:00: 1 final em 10 traz um dos míticos que faltam (com os três faltando, cada um sai em 1 final de 30). Depois de 5 finais sem mítico a chance sobe, até ser certa no 21º.',
       finale: 'É o chefe final: vença uma partida.',
       endless: 'O último troféu: depois de capturar os outros 22, vença-o no _modo sem fim_.',
       event: 'Só na _Noite das Bruxas_: vença-o na _fenda do Pesadelo_.',
@@ -6857,7 +6857,7 @@ export const pt = {
       ...REGIS_FORCES_WORDS.pt.where,
     },
     rule: (need: number) => (need === 1 ? 'Para capturar, vença este lendário 1 vez como chefe, numa partida solo, em qualquer modo. Vitórias no co-op não contam.' : `Para capturar, vença este lendário ${need} vezes como chefe, numa partida solo, em qualquer modo. Vitórias no co-op não contam.`),
-    shinyRule: 'Vencer um shiny na vitória da captura, ou depois, libera a forma shiny.',
+    shinyRule: 'Vencer um shiny em qualquer vitória, antes ou depois da captura, libera a forma shiny assim que ele é capturado.',
     selectNote: 'Lendários jogam o *Modo Lendário*: ranking próprio, horda mais forte, despertares no Nv 12 e 28.',
     /** An event legend (`LegendUnlock.event`): its badge on the partner select, and its card before, during and after the event (dates as `formatDay`). */
     event: {

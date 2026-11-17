@@ -47,12 +47,12 @@ export const dropTm = (g: Game, x: number, y: number, move: MoveId, source: TmSo
 const takeArmed = (g: Game): MoveId | null => g.player.tm.armed.shift() ?? null
 
 /** A defeated wave boss leaves its TM (`BOSS_TMS`), or the next armed one (marked `armed`); a mythical of the finale its legendary TM. */
-export const dropBossTm = (g: Game, e: Enemy) => {
+export const dropBossTm = (g: Game, e: Enemy, x = e.x, y = e.y) => {
   const table: Partial<Record<Enemy['kind'], MoveId>> = BOSS_TMS
   const move = table[e.kind]
   const armed = move ? takeArmed(g) : null
-  if (move) dropTm(g, e.x - 10, e.y + 2, armed ?? move, armed ? 'armed' : 'boss')
-  else if (MYTHICALS.some((id) => id === e.kind)) dropLegendaryTm(g, e.kind, e.x - 10, e.y + 2)
+  if (move) dropTm(g, x - 10, y + 2, armed ?? move, armed ? 'armed' : 'boss')
+  else if (MYTHICALS.some((id) => id === e.kind)) dropLegendaryTm(g, e.kind, x - 10, y + 2)
 }
 
 /**
