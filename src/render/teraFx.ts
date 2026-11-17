@@ -245,8 +245,9 @@ export const drawTeraAir = (ctx: Ctx, g: Game, s: SpeciesSprites, anim: AnimName
       }
     }
     const at = crystalAt(s, anim, p.dir, p.animTime, p.x, feet, 1, true, type)
+    // A frame with no opaque pixels read back (a blank or blocked canvas) cuts into no facets: no crystal to grow.
     const cut = at && facetsOf(at.crystal)
-    if (!at || !cut) {
+    if (!at || !cut || cut.facets.length === 0) {
       if (k >= BEAT.flash) drawBurst(ctx, type, r, p.x, feet - bh / 2, (k - BEAT.flash) * 0.4)
       return
     }

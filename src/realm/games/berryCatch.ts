@@ -294,7 +294,7 @@ const start = (ctx: SoloCtx): GameRun => {
     const onPad = (p: { x: number; y: number }) => pads !== null && (inRect(pads.left, p.x, p.y) || inRect(pads.right, p.x, p.y))
     const left = input.held('ArrowLeft') || input.held('KeyA') || steer < 0
     const right = input.held('ArrowRight') || input.held('KeyD') || steer > 0
-    const held = input.pointers.findLast((p) => !onPad(p))
+    const held = [...input.pointers].reverse().find((p) => !onPad(p))
     if (held) me.target = held.x - fx
     else if (input.pointer.released && !onPad(input.pointer)) me.target = input.pointer.x - fx
     let want = 0

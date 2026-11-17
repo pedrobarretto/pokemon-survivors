@@ -31,7 +31,7 @@ export const createRuinsCard = () => {
     const el = h('div', { class: 'ruins-tile', 'data-regi': regi }, h('img', { src: portraitUrl(ENEMIES[regi].dex), alt: '' }), h('span', { class: 'ruins-words' }, h('span', { class: 'ruins-name' }, name, typeBadge(RUINS_SIDES[regi].type)), label, state))
     return { regi, el, state, label }
   })
-  const row = h('div', { class: 'ruins-row' }, ...tiles.toSorted((a, b) => RUINS_SIDES[a.regi].side - RUINS_SIDES[b.regi].side).map((tile) => tile.el))
+  const row = h('div', { class: 'ruins-row' }, ...[...tiles].sort((a, b) => RUINS_SIDES[a.regi].side - RUINS_SIDES[b.regi].side).map((tile) => tile.el))
   const el = h('div', { class: 'ruins-card box hidden' }, title, hint, row)
   let key = ''
   const update = (g: Game) => {
