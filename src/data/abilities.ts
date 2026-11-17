@@ -86,7 +86,7 @@ export type AbilityEffect =
   | { kind: 'bossHunter'; bonus: number }
   /**
    * Every `per` kills one more stack of `stats`, up to `max`. With `decay`,
-   * a stack wears off every `decay` s (Moxie); without it they stay (Battle Bond).
+   * a stack wears off every `decay` s without a kill (Moxie); without it they stay (Battle Bond).
    */
   | { kind: 'onKill'; per: number; max: number; stats: StatDelta; decay?: number }
   /** A kill may drop something more (Pickup, Magician, Frisk). */

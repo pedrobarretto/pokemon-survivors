@@ -33,7 +33,7 @@ export type AbilityState = {
   id: AbilityId | null
   /** `abilityKey` when the stats were last built; a change rebuilds them. */
   key: number
-  /** Stacks of an onKill, timer or onHurt ability (whole stacks count; Moxie's wear off bit by bit). */
+  /** Stacks of an onKill, timer or onHurt ability (whole stacks count). */
   stacks: number
   /** Seconds toward the next timer, heal or Moody tick, or left on onHurt stacks. */
   clock: number
@@ -43,6 +43,8 @@ export type AbilityState = {
   guard: number
   /** Kills toward the next onKill stack. */
   kills: number
+  /** Seconds until a decaying onKill stack wears off (Moxie, Beast Boost); each kill winds it back up. */
+  fade: number
   /** Sturdy already held this run. */
   spent: boolean
   /** Moody's current boost, an index into its options (-1: none yet). */
@@ -52,7 +54,7 @@ export type AbilityState = {
 }
 
 export const createAbilityState = (): AbilityState => ({
-  id: null, key: -1, stacks: 0, clock: 0, pulse: 0, guard: 0, kills: 0, spent: false, mood: -1, biome: null,
+  id: null, key: -1, stacks: 0, clock: 0, pulse: 0, guard: 0, kills: 0, fade: 0, spent: false, mood: -1, biome: null,
 })
 
 /** The abilities a run picks from: the branch's own when the first evolution branched (Eevee), else the family's. */
@@ -337,6 +339,7 @@ export const abilityKill = (g: Game, e: Enemy) => {
   for (const effect of effectsOf(g)) {
     if (effect.kind === 'onKill') {
       const s = g.player.ability
+      if (effect.decay) s.fade = effect.decay
       if (++s.kills < effect.per) continue
       s.kills = 0
       if (s.stacks >= effect.max) continue
@@ -451,7 +454,11 @@ export const updateAbility = (g: Game, dt: number) => {
         }
         break
       case 'onKill':
-        if (e.decay && s.stacks > 0) s.stacks = Math.max(0, s.stacks - dt / e.decay)
+        // A whole stack wears off every `decay` s without a kill, never a share of one (which floored the newest away at once).
+        if (e.decay && s.stacks > 0 && (s.fade -= dt) <= 0) {
+          s.stacks -= 1
+          s.fade += e.decay
+        }
         break
       case 'moody':
         s.clock -= dt

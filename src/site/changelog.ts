@@ -152,6 +152,11 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             en: 'The palm tree’s shadow on the Poké Realm pier now sits under it.',
             es: 'La sombra de la palmera del muelle del Poké Realm ahora queda debajo de ella.',
           },
+          {
+            pt: 'Beast Boost (Ultra Beasts) e Moxie: o nível que você acabou de ganhar não some mais na hora; um nível só cai depois de 4 s sem nocautes (1 s no Moxie).',
+            en: 'Beast Boost (Ultra Beasts) and Moxie: the stack you just earned no longer vanishes at once; a stack only drops after 4 s without KOs (1 s for Moxie).',
+            es: 'Beast Boost (Ultraentes) y Moxie: el nivel que acabas de ganar ya no desaparece al instante; un nivel solo se pierde tras 4 s sin derrotas (1 s en Moxie).',
+          },
         ],
       },
       {
