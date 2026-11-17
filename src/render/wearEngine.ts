@@ -10,6 +10,7 @@ import { artDir, decodeRig, DRAW_ORDER, fitOf, fixOf, layerOf, rigChunk, rigKey,
 import { sceneOf, WEAR_MODELS } from './wearModels'
 import { NONE as RIG_NONE } from './wearRig'
 import type { DressDone, DressJob } from './wearWorker'
+import wearWorkerUrl from './wearWorker?worker&url'
 
 /**
  * The wearables' engine, loaded with the first look drawn
@@ -238,10 +239,22 @@ const land = async (done: DressDone) => {
   }
 }
 
+/**
+ * A module worker from `url`. The chunks may come from the asset CDN (`cdn/loader.ts`), and a browser only
+ * starts a worker from the page's own origin: another origin's script starts through a same-origin blob
+ * that imports it (with CORS, which the CDN sends).
+ */
+const moduleWorker = (url: string) => {
+  const script = new URL(url, location.href)
+  if (script.origin === location.origin) return new Worker(script, { type: 'module' })
+  const shim = new Blob([`import ${JSON.stringify(script.href)}`], { type: 'text/javascript' })
+  return new Worker(URL.createObjectURL(shim), { type: 'module' })
+}
+
 const workerOf = () => {
   if (worker !== undefined) return worker
   try {
-    worker = new Worker(new URL('./wearWorker.ts', import.meta.url), { type: 'module' })
+    worker = moduleWorker(wearWorkerUrl)
     worker.onmessage = (e: MessageEvent<DressDone>) => void land(e.data)
     // A worker that can't run: everything draws bare.
     worker.onerror = () => {

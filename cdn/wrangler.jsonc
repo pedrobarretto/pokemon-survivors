@@ -1,14 +1,19 @@
 {
   "$schema": "https://unpkg.com/wrangler@4.154.0/config-schema.json",
-  // The asset CDN: a Worker with static assets only (no script), so its requests and bandwidth are free.
-  // It serves `cdn/dist` (`npm run cdn:build`: public/assets/ under /assets/, plus versions.json and _headers)
-  // at https://ps-assets.<account>.workers.dev; the game's build points at it with VITE_ASSET_ORIGIN (src/assets.ts).
-  // Deployed by `npm run cdn:deploy`, and on every push to main that touches public/assets (.github/workflows/cdn.yml).
+  // The asset CDN: a Worker whose static assets (free requests and bandwidth) are `cdn/dist` (`cdn/build.mjs`):
+  // public/assets/ under /assets/ (src/assets.ts), the site builds' chunks next to them (cdn/loader.ts, cdn/builds.ts),
+  // public/fonts/, versions.json, builds.json and _headers, at https://ps-assets.<account>.workers.dev; the game's build
+  // points at it with VITE_ASSET_ORIGIN. Its script (`worker.ts`) only runs where no file matches: PostHog's proxy under
+  // /ingest/ (billed as Worker requests: 100k a day on the Free plan).
+  // Deployed by the site's production build (`cdn/deploy.mjs`, part of `npm run build` where CLOUDFLARE_API_TOKEN is set),
+  // or by hand (`npm run cdn:deploy`, the Asset CDN workflow).
   // `npm run cdn:dev` serves it locally on :8796 with its watcher polling (CHOKIDAR_USEPOLLING): on macOS, watching the
   // ~11k files one by one breaks wrangler dev's spawns (EBADF) past about 10k.
-  // A deploy replaces the whole set: never roll it back to an older one (a group's version would then name other bytes).
+  // A deploy replaces the whole set: never roll it back to an older one (a group's version would then name other bytes,
+  // and the pages deployed since would miss their chunks).
   "name": "ps-assets",
   "account_id": "a55a1ff9d78296b70afe6d06782d6d79",
+  "main": "worker.ts",
   "compatibility_date": "2026-10-01",
   "workers_dev": true,
   "preview_urls": false,
