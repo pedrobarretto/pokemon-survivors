@@ -90,6 +90,16 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         ],
       },
       {
+        title: { pt: 'Doações com Apple Pay e Google Pay no Brasil', en: 'Apple Pay and Google Pay for donations in Brazil', es: 'Donaciones con Apple Pay y Google Pay en Brasil' },
+        notes: [
+          {
+            pt: 'Na página Apoie, a doação em reais (AbacatePay) agora aceita Apple Pay e Google Pay, além de Pix e cartão.',
+            en: 'On the Support page, donations in reais (AbacatePay) now take Apple Pay and Google Pay, besides Pix and card.',
+            es: 'En la página Apoya, las donaciones en reales (AbacatePay) ahora aceptan Apple Pay y Google Pay, además de Pix y tarjeta.',
+          },
+        ],
+      },
+      {
         title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Correctifs', zh: '修正' },
         notes: [
           {
