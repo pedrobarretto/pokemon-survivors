@@ -468,6 +468,16 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             en: 'The Rock special’s last tier is now called Stone Edge: Diamond Storm became Diancie’s move.',
             es: 'El último nivel del especial de Roca ahora se llama Stone Edge: Diamond Storm pasó a ser el movimiento de Diancie.',
           },
+          {
+            pt: 'O Discharge do Rotom Heat voltou a aparecer na tela: as chamas sempre acertaram, só não eram desenhadas.',
+            en: 'Heat Rotom’s Discharge shows on screen again: the flames always hit, they just weren’t drawn.',
+            es: 'El Discharge de Rotom Calor vuelve a verse en pantalla: las llamas siempre golpearon, solo no se dibujaban.',
+          },
+          {
+            pt: 'No celular, a descrição inteira do Pokémon agora aparece em Detalhes, na escolha do parceiro.',
+            en: 'On phones, the Pokémon’s full description now shows in Details, on the partner select.',
+            es: 'En el celular, la descripción completa del Pokémon ahora aparece en Detalles, en la elección del compañero.',
+          },
         ],
       },
       {

@@ -217,7 +217,8 @@ const drawAttack = (ctx: Ctx, a: Attack, t: number, g: Game) => {
     case 'ember':
       return drawEmber(ctx, a, t)
     case 'flame':
-      return drawFireSpin(ctx, a, t)
+      // Fire Spin's ring; a flame thrown straight (Heat Rotom's Discharge) flies as an ember.
+      return m.kind === 'orbit' ? drawFireSpin(ctx, a, t) : drawEmber(ctx, a, t)
     case 'water':
       return drawWaterGun(ctx, a, t)
     case 'leaf':
