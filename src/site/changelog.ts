@@ -172,6 +172,11 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             en: 'Clearer texts: the mythicals’ chance at the 15:00 finale, what happens to a wild shiny you beat, and what Forget does.',
             es: 'Textos más claros: la probabilidad de los míticos en el final de las 15:00, qué pasa con un shiny salvaje derrotado y qué hace Olvidar.',
           },
+          {
+            pt: 'O Ponyta de Galar agora fica junto das outras formas de Galar: aparece na seção de Galar da escolha de parceiro e choca do Ovo de Viagem na semana de Galar (não mais do Ovo Raro). Quem já tem continua com ele.',
+            en: 'Galarian Ponyta now sits with the other Galarian forms: it shows in the partner select’s Galar section and hatches from the Travel Egg in Galar’s week (no longer from the Rare Egg). If you have it, you keep it.',
+            es: 'El Ponyta de Galar ahora está junto a las otras formas de Galar: aparece en la sección de Galar de la elección de compañero y sale del Huevo de Viaje en la semana de Galar (ya no del Huevo Raro). Si ya lo tienes, lo conservas.',
+          },
         ],
       },
     ],
