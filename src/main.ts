@@ -4562,13 +4562,21 @@ const inCoopRoom = () => {
   return status === 'room' || status === 'playing' || status === 'connecting'
 }
 
-/** Reloads into a newer build when one is live: right away in the menus (the save is local), or once the run is over (a co-op room: once the player leaves it). */
-const loadNewerBuild = () =>
+/** How often a page may ask the site for its HTML (`newerBuild`): a chunk that fails on every frame (an ad blocker's, say) once asked 60 times a second, each a billed request. */
+const BUILD_CHECK_MS = 60_000
+let lastBuildCheck = -Infinity
+
+/** Reloads into a newer build when one is live: right away in the menus (the save is local), or once the run is over (a co-op room: once the player leaves it). At most once per `BUILD_CHECK_MS`. */
+const loadNewerBuild = () => {
+  const now = performance.now()
+  if (now - lastBuildCheck < BUILD_CHECK_MS) return
+  lastBuildCheck = now
   void newerBuild().then((newer) => {
     if (!newer) return
     if (run || inCoopRoom()) reloadForDeploy = true
     else location.reload()
   })
+}
 
 /**
  * Each deploy renames the chunks loaded on demand (Novidades, Clerk) and drops
