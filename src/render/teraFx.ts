@@ -4,7 +4,7 @@ import { hash2 } from '../engine/rng'
 import { TAU, type Dir8 } from '../engine/math'
 import { outlined, toIconUrl } from './art'
 import { detail } from './quality'
-import { crownSprite, crystalAt, drawCrown, drawFacet, drawGlint, drawTwinkles, facetsOf, STELLAR, TERA_RAMPS, type Facets, type Ramp } from './teraArt'
+import { crownSprite, crystalAt, drawCrown, drawFacet, drawGlint, drawTwinkles, facetsLive, facetsOf, STELLAR, TERA_RAMPS, type Facets, type Ramp } from './teraArt'
 import { headSeat, skullWidth } from './wearables'
 import type { CrownSize } from './teraCrowns'
 import { drawPokemon, type AnimName, type DrawOpts, type SpeciesSprites } from './sprites'
@@ -263,7 +263,7 @@ export const drawTeraAir = (ctx: Ctx, g: Game, s: SpeciesSprites, anim: AnimName
     const shown = Math.floor(grown * n)
     const fresh = Math.max(1, Math.round(n * 0.12))
     const white = k >= BEAT.flash
-    shell = { cut, dx: at.dx, dy: at.dy, x: p.x, feet, slot: p.slot }
+    shells.set(p.slot, { cut, dx: at.dx, dy: at.dy, x: p.x, feet })
     for (let i = 0; i < Math.min(n, shown); i++) drawFacet(ctx, cut, cut.facets[i]!, at.dx, at.dy, 1, 0, 0, white || i >= shown - fresh)
     // 4. Whole, cracks of light run over it: a few facets at a time catch white.
     if (k >= BEAT.whole && !white) {
@@ -291,8 +291,11 @@ export const drawTeraAir = (ctx: Ctx, g: Game, s: SpeciesSprites, anim: AnimName
   }
 }
 
-/** The shell as last drawn (its facets, where): the shatter flies those, not whatever frame the Pokémon walks on after. */
-let shell: { cut: Facets; dx: number; dy: number; x: number; feet: number; slot: number } | null = null
+/**
+ * Each seat's shell as last drawn (its facets, where): the shatter flies those, not whatever frame the Pokémon walks
+ * on after. Per seat, since co-op draws every teammate through `drawPlayer`, so their crystals form and shatter side by side.
+ */
+const shells = new Map<number, { cut: Facets; dx: number; dy: number; x: number; feet: number }>()
 
 /** Seconds the shatter's shards fly. */
 const SHATTER_TIME = 1.3
@@ -315,8 +318,10 @@ const ring = (ctx: Ctx, x: number, y: number, r: number, color: string) => {
  */
 const drawShatter = (ctx: Ctx, s: SpeciesSprites, anim: AnimName, type: TeraType, r: Ramp, p: Player, feet: number, since: number) => {
   const c = shardClock(since)
-  // The shell as it gave (`shell`), or this frame's crystal when it wasn't seen forming (a teammate's, a late join).
-  const own = shell?.slot === p.slot ? shell : null
+  // The shell as it gave (`shells`), or this frame's crystal when it wasn't seen forming (a late join) or
+  // the facet cache has let it go since (other seats' crystals cut meanwhile).
+  const held = shells.get(p.slot)
+  const own = held && facetsLive(held.cut) ? held : null
   const now = own ? null : crystalAt(s, anim, p.dir, p.animTime, p.x, feet, 1, true, type)
   const cut = own?.cut ?? (now && facetsOf(now.crystal))
   if (!cut) return drawBurst(ctx, type, r, p.x, feet - s.bodyH / 2, c)
