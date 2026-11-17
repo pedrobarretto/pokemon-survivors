@@ -1388,6 +1388,7 @@ export const pt = {
     music: 'Música',
     sfx: 'Efeitos',
     sound: 'Som',
+    mixOthers: 'Tocar com outros apps',
     damageNumbers: 'Números de dano',
     damageModes: { all: 'Todos', reduced: 'Reduzidos', off: 'OFF' },
     screenShake: 'Tremor de tela',

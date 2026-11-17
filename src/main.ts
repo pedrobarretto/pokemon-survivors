@@ -103,7 +103,7 @@ import { ABILITIES, type AbilityEffect, type AbilityId } from './data/abilities'
 import { BRANCHES, branchesAt, familyDex, MEGA_BRANCH, type BranchId } from './data/branches'
 import { abilityStacks, grantAbility } from './game/abilities'
 import { abilityIcon } from './render/abilityArt'
-import { recomputeStats, xpFor } from './game/leveling'
+import { nothingToChoose, recomputeStats, xpFor } from './game/leveling'
 import { atMegaBase, dropMegaStones, grantStone, heldMega, megaBaseName } from './game/mega'
 import { REAPER } from './game/endless'
 import { continueEndless } from './game/endlessSystem'
@@ -1988,6 +1988,8 @@ const syncOverlay = (r: Run) => {
     c?.menu && !coopOver(g) && g.phase !== 'victory' ? 'paused'
     : g.versus ? (g.phase === 'gameover' ? 'gameover' : 'playing')
     : c?.team.holding(me) ? 'playing'
+    // Co-op: a level-up with only the Oran Berry is taken by the simulation on the next tick (`updatePicks`); opening its screen meanwhile flashed it for a frame on every level-up of a maxed build.
+    : c && phaseOf(g, me) === 'levelup' && nothingToChoose(me.offers) ? 'playing'
     : phaseOf(g, me)
   if (r.shown?.phase === phase && (r.shown.offers === me.offers || g.versus)) return
   r.overlay?.dispose()

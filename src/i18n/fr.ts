@@ -1170,6 +1170,7 @@ export const fr: Messages = {
     music: 'Musique',
     sfx: 'Effets',
     sound: 'Son',
+    mixOthers: 'Jouer avec d’autres apps',
     damageNumbers: 'Chiffres de dégâts',
     damageModes: { all: 'Tous', reduced: 'Réduits', off: 'NON' },
     screenShake: 'Tremblement d’écran',
