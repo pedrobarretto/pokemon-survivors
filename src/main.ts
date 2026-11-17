@@ -54,7 +54,6 @@ import type { PlazaStage } from './data/festivals'
 import { festivalAnnounced } from './game/festival'
 import { openFestival } from './ui/festival'
 import type { BoutiqueTab } from './ui/boutiqueSeen'
-import { watchAssetImages } from './assets'
 import { identify, lobbyPress, startAnalytics, takeOpened, track, type ErrorContext, type QueueEnd, type RunPerf } from './analytics'
 import { firstGate, firstRunClock, firstStep, holdRunSteps, startFirstSession } from './firstSession'
 import { enrolDevice, firstTime, forgetFirstTime, nextFirst, tourDue, updateFirstTime, type Arm, type TutorialOutcome } from './firstTime'
@@ -302,9 +301,6 @@ import { formatPlays, rulesOf } from './game/versusRules'
 import { parseLoadout, parseSettings, type CoopPick } from './coop/start'
 import { countFinale, mythicalHunt } from './game/mythicalHunt'
 import { MYTHICAL_PITY } from './data/waves'
-
-// The menus' own <img>s from the asset CDN fall back to the site's copies where the CDN can't be reached.
-watchAssetImages()
 
 /** Fixed simulation step: the replays the ranking re-simulates count on it. */
 const STEP = TICK

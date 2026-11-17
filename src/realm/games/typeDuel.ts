@@ -1,4 +1,3 @@
-import { assetImage } from '../../assets'
 import type { Sfx } from '../../engine/audio'
 import { playCry, playSfx } from '../../engine/audio'
 import { canvasCache, context2d, createCanvas, fromStrings, lazy } from '../../engine/pixelart'
@@ -147,7 +146,8 @@ const portraits = new Map<number, HTMLImageElement>()
 const portrait = (dex: number) => {
   let img = portraits.get(dex)
   if (!img) {
-    img = assetImage(portraitUrl(dex))
+    img = new Image()
+    img.src = portraitUrl(dex)
     portraits.set(dex, img)
   }
   return img.complete && img.naturalWidth > 0 ? img : null

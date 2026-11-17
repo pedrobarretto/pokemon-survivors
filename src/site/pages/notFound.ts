@@ -105,7 +105,7 @@ const pickLocale = () => {
 }
 
 /**
- * The 404 page (`404.html` at the root, which Vercel serves for any path that
+ * The 404 page (`404.html` at the root, which the site's Worker serves for any path that
  * doesn't exist): every language in one file, never indexed, and the Rota 404
  * mini game (`notFoundClient.ts`) whose signs are the page's links.
  */

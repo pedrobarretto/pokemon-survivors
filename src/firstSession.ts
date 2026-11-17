@@ -4,7 +4,6 @@ import { firstTime } from './firstTime'
 import { answerGate, furthest, isFirstLoad, NO_STEPS, reach, REPLAY_RATE, type FirstStep, type FirstSteps, type GateAnswer } from './firstSteps'
 import { hostApp, onOnboarding, type OnboardingStep } from './onboarding'
 import { deviceNow } from './telemetry'
-import { cdnState } from './assets'
 
 /**
  * A new device's first visit, as one `first_session` event: where it got to
@@ -73,7 +72,6 @@ const send = (sent: 'minute' | 'hidden') => {
       arm: onboarding.arm,
       tutorial: onboarding.tutorial?.how ?? null,
       tutorialStep: onboarding.tutorial?.step ?? null,
-      cdn: cdnState(),
       account: accountUserId() ? 1 : 0,
       replay: replay ? 1 : 0,
       ...deviceNow(),
