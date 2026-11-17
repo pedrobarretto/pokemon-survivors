@@ -1,3 +1,5 @@
+import type { InputKind } from './game/bugReport'
+
 /**
  * A new visitor's way into the first run, and the sign-in asks around it:
  * a device that never played skips the lobby, the sign-in gate and the
@@ -45,6 +47,14 @@ export const hostApp = (): InAppBrowser | null => (typeof navigator === 'undefin
  * The URL's query and hash go along (a `?ref=`, a room).
  */
 export const chromeIntent = (url: URL) => `intent://${url.host}${url.pathname}${url.search}${url.hash}#Intent;scheme=https;package=com.android.chrome;end`
+
+/**
+ * Which way to tell a new player to move (the first run's tip, Rotom's first
+ * lesson): the input they last used, except that a mouse (or nothing yet) on a
+ * touch screen is a finger: WASD is only ever named after a key was pressed.
+ */
+export const moveHint = (kind: InputKind | null, coarse: boolean): 'keys' | 'touch' | 'pad' =>
+  kind === 'gamepad' ? 'pad' : kind === 'touch' || (kind !== 'keyboard' && coarse) ? 'touch' : 'keys'
 
 /** A device whose save never finished a run, and that isn't signed in to an account (whose save may still be on its way). */
 export const firstRunDue = (runs: number, signedIn: boolean) => runs === 0 && !signedIn

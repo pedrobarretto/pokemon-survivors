@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { chromeIntent, firstRunDue, GUEST_GATE_PAUSE, guestGateDue, inAppBrowser, savePromptDue } from './onboarding'
+import { chromeIntent, firstRunDue, GUEST_GATE_PAUSE, guestGateDue, inAppBrowser, moveHint, savePromptDue } from './onboarding'
 
 const UA = {
   chromeAndroid: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Mobile Safari/537.36',
@@ -64,5 +64,19 @@ describe('onboarding thresholds', () => {
 
   it('shows the save card in the first runs only', () => {
     expect([0, 1, 2, 3, 4].map(savePromptDue)).toEqual([false, true, true, true, false])
+  })
+})
+
+describe('moveHint', () => {
+  it('names the keys on a touch screen only after a key was pressed', () => {
+    expect(moveHint('mouse', true)).toBe('touch')
+    expect(moveHint(null, true)).toBe('touch')
+    expect(moveHint('keyboard', true)).toBe('keys')
+  })
+  it('follows the input at hand otherwise', () => {
+    expect(moveHint('touch', false)).toBe('touch')
+    expect(moveHint('gamepad', true)).toBe('pad')
+    expect(moveHint('mouse', false)).toBe('keys')
+    expect(moveHint(null, false)).toBe('keys')
   })
 })

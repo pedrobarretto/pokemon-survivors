@@ -2,6 +2,7 @@ import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
 import { GUIDE } from '../data/guide'
 import type { InputKind } from '../game/bugReport'
+import { moveHint } from '../onboarding'
 import type { TutorialRun } from '../game/tutorial'
 import type { Game, Phase } from '../game/types'
 import { t } from '../i18n'
@@ -29,9 +30,8 @@ type Line = DialogueLine & { key: string }
 /** How to move with the input at hand: keys (the bound ones), a finger or a stick. */
 const moveLine = (kind: InputKind | null) => {
   const m = t().tutorial
-  if (kind === 'gamepad') return m.movePad
-  if (kind === 'touch' || (kind === null && matchMedia('(pointer: coarse)').matches)) return m.moveTouch
-  return m.moveKeys(boundMoveKeys())
+  const hint = moveHint(kind, matchMedia('(pointer: coarse)').matches)
+  return hint === 'pad' ? m.movePad : hint === 'touch' ? m.moveTouch : m.moveKeys(boundMoveKeys())
 }
 
 /** Rotom's line for the lesson as the game stands: a pick's note, the hurt warning while it holds, else the step's. */
