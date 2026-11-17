@@ -215,6 +215,12 @@ export default defineConfig(async ({ mode }) => ({
   },
   // PostHog's proxy, as vercel.json has it, to try analytics locally (`ps:analytics` set to `on` in localStorage).
   server: { proxy: { '/ingest': { target: 'https://us.i.posthog.com', changeOrigin: true, rewrite: (path) => path.replace(/^\/ingest/, '') } } },
+  experimental: {
+    // Chunks find each other relative to the one importing them (preloads, lazy chunks, the wear worker),
+    // so a page whose entry came from the asset CDN keeps loading from it, and one that fell back to the
+    // site (`cdn/loader.ts`) keeps loading from the site.
+    renderBuiltUrl: (_file: string, { hostType }: { hostType: 'js' | 'css' | 'html' }) => (hostType === 'js' ? { relative: true } : undefined),
+  },
   build: {
     // Hidden source maps, for `scripts/sourcemaps.mjs` to upload to PostHog, only where it will.
     sourcemap: process.env.POSTHOG_CLI_API_KEY ? 'hidden' : false,
