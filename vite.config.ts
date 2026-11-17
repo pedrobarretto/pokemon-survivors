@@ -94,9 +94,9 @@ const statSafe = (file: string) => {
   }
 }
 
-/** The commit being built (Vercel says which; locally, git), for `__GAME_VERSION__`. */
+/** The commit being built (Vercel or GitHub Actions say which; locally, git), for `__GAME_VERSION__`. */
 const gameVersion = () => {
-  const sha = process.env.VERCEL_GIT_COMMIT_SHA
+  const sha = process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GITHUB_SHA
   if (sha) return sha.slice(0, 7)
   try {
     return execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim() || 'dev'
