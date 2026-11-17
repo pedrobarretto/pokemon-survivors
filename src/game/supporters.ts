@@ -52,7 +52,7 @@ export const donationPoints = (cents: number, currency: string) => {
 export const ogTier = (points: number): SupporterTier | null => (points >= SUPPORTER.gold ? 'gold' : points > 0 ? 'supporter' : null)
 
 /** The tier of a Patreon pledge of `cents` a month (`PATREON_TIERS`), or null under the lowest. */
-export const pledgeTier = (cents: number): SupporterTier | null => SUPPORTER_TIERS.findLast((tier) => cents >= PATREON_TIERS[tier]) ?? null
+export const pledgeTier = (cents: number): SupporterTier | null => [...SUPPORTER_TIERS].reverse().find((tier) => cents >= PATREON_TIERS[tier]) ?? null
 
 /**
  * An account's support, as the API keeps it: one-time `points`, the `og`

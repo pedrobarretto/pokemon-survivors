@@ -36,7 +36,7 @@ describe('effectiveness', () => {
 describe('starter roster', () => {
   it('lists every starter in exactly one region', () => {
     const listed = REGIONS.flatMap((r) => r.starters)
-    expect(listed.toSorted()).toEqual(STARTER_IDS.toSorted())
+    expect(listed.slice().sort()).toEqual(STARTER_IDS.slice().sort())
   })
 
   it('has walk/idle/hurt sheets for every evolution stage', () => {

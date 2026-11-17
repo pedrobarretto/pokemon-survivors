@@ -456,7 +456,7 @@ describe(`the simulation under RULES_VERSION ${RULES_VERSION}`, () => {
     expect(shopTms2.live.weather.held).not.toBeNull()
     expect(shopTms2.live.player.moves.find((m) => m.id === 'swordsDance')?.stacks).toBeGreaterThan(1)
     expect([evoGate.live.player.stage, evoGate.live.player.evoFound.length, evoGate.live.player.evoHeld]).toEqual([1, 1, false])
-    expect([porygonGate.live.player.stage, porygonGate.live.player.evoFound.toSorted(), porygonGate.live.player.evoHeld]).toEqual([2, ['dubiousDisc', 'upgrade'], false])
+    expect([porygonGate.live.player.stage, porygonGate.live.player.evoFound.slice().sort(), porygonGate.live.player.evoHeld]).toEqual([2, ['dubiousDisc', 'upgrade'], false])
     expect(sketch.live.player.moves.find((m) => m.id === 'sketch')?.sketch).toBeDefined()
     expect(sketch.live.kills).toBeGreaterThan(0)
     for (const e of Object.values(endings)) expect(e.sameEnd).toBe(true)

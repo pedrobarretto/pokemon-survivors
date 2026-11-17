@@ -236,7 +236,7 @@ describe('save fields', () => {
 describe('egg families', () => {
   it('cover every type and every generation', () => {
     const types = new Set(HATCHLING_IDS.flatMap((id) => PLAYABLE[id].line.flatMap((s) => s.types)))
-    expect([...types].toSorted()).toEqual([...POKE_TYPES].toSorted())
+    expect([...types].slice().sort()).toEqual([...POKE_TYPES].slice().sort())
     const gens = new Set(HATCHLING_IDS.flatMap((id) => PLAYABLE[id].line.map((s) => regionOf(s.dex).gen)))
     expect(gens.size).toBe(9)
   })
