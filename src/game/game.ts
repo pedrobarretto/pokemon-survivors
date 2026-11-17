@@ -107,6 +107,7 @@ import { updateStatuses } from './statusSystem'
 import { createTally } from './tally'
 import { updateShopTms } from './shopTmSystem'
 import { trainingCamera, updateTraining } from './training'
+import { updateTutorial } from './tutorial'
 import { createWeather, updateWeather } from './weather'
 import { updateTraits } from './traitSystem'
 import { BASE_STATS } from './stats'
@@ -1034,7 +1035,7 @@ export const stepTeam = (g: Game, inputs: readonly StepInput[], dt: number) => {
   if (updateLegendScene(g, dt)) return
   if (updatePlaceFall(g, dt)) return
   if (hitstopHolds(g, dt)) return
-  if (g.training !== null) return stepTraining(g, inputs, dt)
+  if (g.training !== null) return g.training.tutorial ? stepTutorial(g, inputs, dt) : stepTraining(g, inputs, dt)
   if (g.rush !== null) return stepRush(g, inputs, dt)
 
   // The run clock stops inside a rift (`clockRuns`); `now` never does.
@@ -1137,6 +1138,46 @@ const stepTraining = (g: Game, inputs: readonly StepInput[], dt: number) => {
   updateEffects(g, dt)
   updateTraining(g, dt)
   followPlayers(g, dt, trainingCamera)
+}
+
+/**
+ * The training run's tick (`tutorial.ts`): the Dojo's, plus what its lessons
+ * need: an Alpha's charges, the pickups and the level-ups. The run clock, the
+ * spawner, the map and the weather wait, as at the Dojo.
+ */
+const stepTutorial = (g: Game, inputs: readonly StepInput[], dt: number) => {
+  g.now += dt
+  const actor = g.player
+  for (const p of g.players) {
+    g.player = p
+    stepPlayer(g, inputs[p.slot] ?? STILL, dt)
+  }
+  g.player = actor
+  rebuildGrid(g)
+  updateAlphas(g, dt)
+  updateEnemies(g, dt)
+  updateHazards(g, dt)
+  updateStatuses(g, dt)
+  rebuildGrid(g)
+  for (const p of g.players) {
+    g.player = p
+    stepMoves(g, inputs[p.slot] ?? STILL, dt)
+  }
+  g.player = actor
+  updateAttacks(g, dt)
+  updateVerbEvolved(g, dt)
+  updateTerrain(g, dt)
+  updatePickups(g, dt)
+  updateConsumables(g, dt)
+  updateEffects(g, dt)
+  updateTutorial(g, dt)
+  followPlayers(g, dt)
+  if (g.phase !== 'playing') return
+  for (const p of g.players) {
+    g.player = p
+    if (p.pendingLevelUps > 0) advancePhase(g)
+  }
+  g.player = actor
 }
 
 /**

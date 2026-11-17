@@ -86,6 +86,9 @@ import { pathDevTools } from './ui/pathDev'
 import { pathSheet } from './ui/legendPaths'
 import { trialHud } from './ui/towerTrial'
 import { startTrial } from './game/towerTrial'
+import { jumpTutorial, startTutorial as beginTutorial, TUTORIAL_DEXES, type TutorialStepId } from './game/tutorial'
+import { tutorialCoach, type TutorialCoach } from './ui/tutorialCoach'
+import { NO_RANKS } from './game/meta'
 import { COSMOG_DEX, PATH_FORMS, PATH_IDS, TOWERS, TRIALS, type TrialId } from './data/legendPaths'
 import { clearTrial, cosmogStage, giantAwake, kubfuJoined, openForms, ruinsRun, templeRun } from './game/legendPaths'
 import { FIELD, FIELD_MISSION_KINDS, TOGEPI_DEX, type FieldMissionKind } from './game/fieldMissionRules'
@@ -514,7 +517,15 @@ type Run = {
   training: DojoRun | null
   /** Hoopa's Rings (`game/rush.ts`): never banked, ranked nor reported as a run either (null otherwise). */
   rush: RushRun | null
+  /** The first visit's training run (`startTutorial`): its coach and how it ends; never banked, ranked nor reported (absent otherwise). */
+  tutorial?: TutorialShell
 }
+
+/** The shell's side of a training run: Rotom's coach, and the skip the pause menu's quit takes too. */
+type TutorialShell = { coach: TutorialCoach; skip: () => void }
+
+/** How a training run ended: played to its last line, or skipped at the furthest step it reached. */
+type TutorialEnd = { how: 'finished' | 'skipped'; step: TutorialStepId }
 
 /** The shell's side of a rush: its level and Pokémon (for Try again), and whether its end was banked (a record, Hoopa caught). */
 type RushRun = { difficulty: Difficulty; starter: PlayableId; banked: { record: boolean; caught: boolean } | null }
@@ -1266,6 +1277,7 @@ const errorContext = (): ErrorContext => {
 const endRun = () => {
   if (!run) return
   if (run.coop) return endCoopRun(run, run.coop)
+  if (run.tutorial) return endTutorial(run, run.tutorial)
   if (run.training) return endDojo(run, run.training)
   if (run.rush) return endRushRun(run)
   bankRun(run, wonRun(run.game))
@@ -1431,7 +1443,8 @@ const firstFrameDrawn = () => {
   if (!firstFrameDue) return
   firstFrameDue = false
   launchStep('running')
-  firstStep('firstFrame')
+  // The training run isn't the first run: the flow marks its own steps.
+  if (!run?.tutorial) firstStep('firstFrame')
 }
 
 /** The `ReplayStart` field a run with `starter` takes from the save's Shadows: nothing for the plain one, so its replay stays as it was. */
@@ -1796,6 +1809,99 @@ const startDojo = async (starter: PlayableId, trial: TrialId | null = null) => {
   }
 }
 
+/* ---------------- The training run ---------------- */
+
+/**
+ * The first visit's training run ("Primeiros passos", `game/tutorial.ts`):
+ * the save's partner, with no upgrades, on a run Rotom walks through one
+ * lesson at a time (`ui/tutorialCoach.ts`). Like the Dojo nothing of it is
+ * banked, ranked, recorded or reported, and it can't be lost. Played to its
+ * last line or skipped (the coach's Pular, the pause menu's quit), it ends
+ * (`endRun`) and `done` decides what comes next.
+ */
+const startTutorial = async (done: (end: TutorialEnd) => void) => {
+  if (launching) return
+  launching = true
+  try {
+    setScreen(null)
+    endRun()
+    const loading = loadingScreen()
+    ui.append(loading)
+    const save = loadSave()
+    const starter = save.partner
+    const shiny = playsShiny(save, starter)
+    const game = createGame(starter, view, Date.now(), NO_RANKS, undefined, { shiny, forms: openForms(save.paths, starter) })
+    const me = localPlayer(game)
+    me.shiny = shiny
+    me.luckyShiny = false
+    beginTutorial(game)
+    game.events.length = 0
+    await loadRunSheets(familySheets(starter, shiny), TUTORIAL_DEXES)
+    loading.remove()
+    const start: ReplayStart = { seed: 0, starter, difficulty: 'normal', ranks: NO_RANKS, shiny, luckyEgg: false, outbreak: null, halloween: false, bag: [], view: { ...view } }
+    const r: Run = {
+      game,
+      hud: runHud(game),
+      overlay: null,
+      shown: null,
+      closeText: null,
+      paid: 0,
+      candies: 0,
+      nuts: 0,
+      mythical: null,
+      reported: true,
+      missionsBefore: [],
+      recorded: null,
+      unlocked: [],
+      reward: 0,
+      rewardEggs: 0,
+      rewardItems: [],
+      hatchery: { steps: 0, eggs: 0 },
+      convertedEggs: { full: [], cap: [] },
+      dexBase: save.dex,
+      recorder: startRecording(start),
+      ranked: null,
+      rank: null,
+      bestBefore: 0,
+      challenge: null,
+      companion: runCompanion(me),
+      sprites: { needs: [], always: [...familyDex(starter), ...TUTORIAL_DEXES] },
+      coop: null,
+      training: null,
+      rush: null,
+    }
+    if (r.companion) r.sprites.always.push(r.companion.dex)
+    wearOwnLook()
+    /** Ends the run once, then hands over: the furthest step is where it stands, since lessons only move on. */
+    const end = (how: TutorialEnd['how']) => {
+      if (run !== r) return
+      const step = game.training?.tutorial?.step ?? 'move'
+      endRun()
+      done({ how, step })
+    }
+    r.tutorial = { coach: tutorialCoach(ui, input, game, { skip: () => end('skipped'), finish: () => end('finished') }), skip: () => end('skipped') }
+    run = r
+    syncSprites()
+    resetMemoryPeaks()
+    resetRunFrames(frames)
+    awaitFirstFrame()
+  } finally {
+    launching = false
+  }
+}
+
+/** Ends a training run: the coach goes, then the run, without banking, ranking, missions or a report. */
+const endTutorial = (r: Run, tutorial: TutorialShell) => {
+  tutorial.coach.dispose()
+  r.overlay?.dispose()
+  r.closeText?.()
+  r.hud.dispose()
+  clearToasts(ui)
+  takeOffLooks()
+  run = null
+  syncRunWatch()
+}
+
 /**
  * Hoopa's Rings (`game/rush.ts`) with `starter` at `difficulty`: a run with no
  * horde whose rings bring back the save's captured legends. Like the Dojo it's
@@ -2062,7 +2168,7 @@ const syncOverlay = (r: Run) => {
         // Only from the pause: a late press must never flip a level-up to playing (unrecorded) or end the run under it.
         // A fresh canvas too: the player's way out of a world that stopped drawing behind the pause (`freshCanvas`).
         resume: () => g.phase === 'paused' && ((g.phase = 'playing'), freshCanvas()),
-        quit: () => g.phase === 'paused' && (r.training ? leaveDojo() : r.rush ? leaveRush() : afterRun(() => showMenu())),
+        quit: () => g.phase === 'paused' && (r.tutorial ? r.tutorial.skip() : r.training ? leaveDojo() : r.rush ? leaveRush() : afterRun(() => showMenu())),
         settings: (back) => runSettings(r, back),
         report: bugReportsEnabled ? (back) => bugReportForm(ui, input, back) : null,
         drop,
@@ -2884,8 +2990,8 @@ const gameTheme = (r: Run | null): ThemeId => {
   if (domain) return domainTheme(domain)
   // A Tera Raid's den plays its own from the way in to the way out, its giant (the run's `bossId`) included.
   if (r.game.raid.arena) return 'teraRaid'
-  // The Dojo trains to its own, a Torre trial to the Torre's.
-  if (r.game.training) return r.game.training.trial ? 'kubfuTower' : 'dojo'
+  // The Dojo trains to its own, a Torre trial to the Torre's; the training run plays the route's, and the boss theme for its Alpha.
+  if (r.game.training && !r.game.training.tutorial) return r.game.training.trial ? 'kubfuTower' : 'dojo'
   // A rift arena keeps the boss theme until the player is back, loot window included; a place plays its own.
   const inside = r.game.place.inside
   // A wave legendary plays its own theme from its entrance on.
@@ -4401,7 +4507,7 @@ const frame = (now: number) => {
         if (g.rush) frameRush(g, t, localPlayer(g).screen.y)
         render(ctx, g, t, { ...settings(), companion: r.companion })
         firstFrameDrawn()
-        firstRunClock(g.time)
+        if (!r.tutorial) firstRunClock(g.time)
         const stick = input.readStick()
         if (stick && g.phase === 'playing') drawJoystick(ctx, stick, cssScale)
         r.hud.update(g)
@@ -5721,6 +5827,18 @@ if (import.meta.env.DEV) {
         if (id) return void startDojo(id)
         showTitle({ shop: 'dojo' })
       },
+      /**
+       * The first visit's training run (`startTutorial`) with the save's partner: `ps.tutorial()` plays it from the
+       * start, `ps.tutorial('boss')` jumps to a lesson once it's up (`move`, `fight`, `xp`, `wave`, `ball`, `boss`, `end`).
+       * It logs how it ended (`{ how, step }`) and goes back to the lobby.
+       */
+      tutorial: (step?: TutorialStepId) =>
+        void startTutorial((end) => {
+          console.info('ps: tutorial', end)
+          showTitle()
+        }).then(() => {
+          if (step && run?.tutorial) jumpTutorial(run.game, step)
+        }),
       /**
        * The Estádio: `ps.stadium()` goes there, south of home, Ninjask's hello included (the first visit's long one
        * after `localStorage.removeItem('ps:stadiumSeen')`), then the Arena's screen.
