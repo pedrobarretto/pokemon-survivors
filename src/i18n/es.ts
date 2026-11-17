@@ -1171,6 +1171,7 @@ export const es: Messages = {
     music: 'Música',
     sfx: 'Efectos',
     sound: 'Sonido',
+    mixOthers: 'Sonar con otras apps',
     damageNumbers: 'Indicador de daño',
     damageModes: { all: 'Todos', reduced: 'Reducidos', off: 'OFF' },
     screenShake: 'Temblor de pantalla',

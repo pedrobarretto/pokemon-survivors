@@ -188,6 +188,8 @@ export type Settings = {
   musicVolume: number
   sfxVolume: number
   muted: boolean
+  /** iOS: another app's audio (a podcast, music) plays on under the game's (`sessionType` in `engine/audio.ts`). Per device. */
+  mixOthers: boolean
   /** `reduced` keeps the biggest few on a crowded screen (`render/damageNumbers.ts`). */
   damageNumbers: DamageNumbers
   screenShake: boolean
@@ -227,6 +229,7 @@ export const DEFAULT_SETTINGS: Settings = {
   musicVolume: 0.6,
   sfxVolume: 1,
   muted: false,
+  mixOthers: false,
   damageNumbers: 'reduced',
   screenShake: true,
   flashes: 'normal',
@@ -269,6 +272,7 @@ export const parseSettings = (raw: string | null, defaults = DEFAULT_SETTINGS): 
     musicVolume: volume(data.musicVolume, defaults.musicVolume),
     sfxVolume: volume(data.sfxVolume, defaults.sfxVolume),
     muted: flag(data.muted, defaults.muted),
+    mixOthers: flag(data.mixOthers, defaults.mixOthers),
     damageNumbers: damageMode(data.damageNumbers, defaults.damageNumbers),
     screenShake: flag(data.screenShake, defaults.screenShake),
     flashes: FLASH_MODES.find((m) => m === data.flashes) ?? defaults.flashes,

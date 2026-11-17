@@ -1170,6 +1170,7 @@ export const zh: Messages = {
     music: '音樂',
     sfx: '音效',
     sound: '聲音',
+    mixOthers: '與其他 App 同時播放',
     damageNumbers: '傷害數字',
     damageModes: { all: '全部', reduced: '減少', off: '關' },
     screenShake: '畫面震動',

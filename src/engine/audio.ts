@@ -12,9 +12,10 @@ const MASTER_VOLUME = 0.35
 const MUSIC_HEADROOM = 0.4
 
 /** User-facing mix, 0..1 per slider. Applied to the buses whenever they exist. */
-export type Mix = { musicVolume: number; sfxVolume: number; muted: boolean }
+/** `mixOthers`: let another app's audio (a podcast, the player's music) play on under the game's (iOS). */
+export type Mix = { musicVolume: number; sfxVolume: number; muted: boolean; mixOthers: boolean }
 
-let mix: Mix = { musicVolume: 0.6, sfxVolume: 1, muted: false }
+let mix: Mix = { musicVolume: 0.6, sfxVolume: 1, muted: false, mixOthers: false }
 let graph: { ctx: AudioContext; master: GainNode; sfx: GainNode; music: GainNode } | null = null
 const runningListeners = new Set<() => void>()
 const lastPlayed = new Map<string, number>()
@@ -55,9 +56,14 @@ declare global {
  * ringer switch silences: on a phone left on silent the game made no sound at all, music
  * included. With the game's music on it plays as `playback`, like a music app (the switch no
  * longer mutes it, and another app's music stops); with the music off or the game muted it stays
- * `ambient`, so the player's own music plays on under the effects.
+ * `ambient`, so the player's own music plays on under the effects. The player may ask for
+ * `ambient` with the music on too (`mixOthers`, Settings → Sound): a podcast then plays on under
+ * the game's music, and the ringer switch silences the game again.
  */
-export const sessionType = (m: Mix): AudioSessionType => (!m.muted && m.musicVolume > 0 ? 'playback' : 'ambient')
+export const sessionType = (m: Mix): AudioSessionType => (!m.mixOthers && !m.muted && m.musicVolume > 0 ? 'playback' : 'ambient')
+
+/** Whether this browser lets the page choose how its audio mixes with other apps' (iOS Safari 16.4+). */
+export const hasAudioSession = () => navigator.audioSession !== undefined
 
 /** Sets the audio session where the browser has one (iOS Safari); elsewhere nothing to do. */
 const applySession = () => {
