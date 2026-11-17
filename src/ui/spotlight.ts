@@ -119,8 +119,9 @@ export const coachMarks = (
   /** Styles last written, to touch the page only when something moved. */
   let holeKey = ''
   let cardKey = ''
-  /** Moves glide, but not the first placement nor a jump the card makes as it changes stop. */
-  let glide = false
+  /** The hole glides from stop to stop and as its element moves, from its first placement on; the card jumps to a new stop and glides after. */
+  let placed = false
+  let cardGlides = false
 
   const hole = h('div', { class: 'coach-hole hidden', 'aria-hidden': 'true' })
   const safe = h('div', { class: 'coach-safe', 'aria-hidden': 'true' })
@@ -167,7 +168,7 @@ export const coachMarks = (
     paintText()
     const target = s.target()
     if (target) reveal(target)
-    glide = false
+    cardGlides = false
     layout()
   }
 
@@ -247,12 +248,13 @@ export const coachMarks = (
     const nextCard = `${Math.round(x)},${Math.round(y)}`
     if (nextCard !== cardKey) {
       cardKey = nextCard
-      card.classList.toggle('coach-glide', glide)
+      card.classList.toggle('coach-glide', cardGlides)
       card.style.left = `${Math.round(x)}px`
       card.style.top = `${Math.round(y)}px`
     }
-    layer.classList.toggle('coach-glide', glide)
-    glide = true
+    if (!placed) requestAnimationFrame(() => layer.classList.add('coach-glide'))
+    placed = true
+    cardGlides = true
   }
 
   const tick = (time: number) => {
