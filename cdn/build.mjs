@@ -23,8 +23,9 @@ export const OG_PATH = '/og.png'
 const OUT = join(import.meta.dirname, 'dist')
 const SITE_ASSETS = join(ROOT, 'dist', 'assets')
 const CACHE = join(ROOT, 'node_modules', '.cache', 'cdn-builds')
-/** The most files a Worker version holds on the Free plan (each up to 25 MiB). */
-const MAX_FILES = 20_000
+/** The most files a Worker version holds on the Free plan, and the most bytes in each. */
+export const MAX_FILES = 20_000
+export const MAX_FILE_BYTES = 25 * 1024 * 1024
 
 // Asset URLs carry their group's version (`?v=`) and chunks a hash in their names, so both are cached for
 // good; the CORS header keeps a canvas that draws an image readable, and lets the module scripts, the
@@ -53,10 +54,11 @@ ${OG_PATH}
 /** The CDN's origin, as the game's build reads it (`VITE_ASSET_ORIGIN`, set in the environment where it deploys), or empty. */
 export const cdnOrigin = () => (process.env.VITE_ASSET_ORIGIN ?? '').replace(/\/+$/, '')
 
-/** The commit being built, as `__GAME_VERSION__` names it (vite.config.ts). */
-const commit = () => process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? execSync('git rev-parse --short HEAD').toString().trim()
+/** The commit being built, as `__GAME_VERSION__` names it (vite.config.ts): Vercel's or GitHub's, else git's. */
+export const commit = () =>
+  (process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GITHUB_SHA)?.slice(0, 7) ?? execSync('git rev-parse --short HEAD').toString().trim()
 
-/** The builds the CDN at `origin` lists (`builds.json`): none when it has no list yet; throws when it can't be read. */
+/** The builds the Worker at `origin` lists (`builds.json`): none when it has no list yet; throws when it can't be read. */
 const liveBuilds = async (origin) => {
   const res = await fetch(`${origin}/builds.json`, { cache: 'no-store', signal: AbortSignal.timeout(15_000) })
   if (res.status === 404) return []
@@ -66,11 +68,11 @@ const liveBuilds = async (origin) => {
   return builds
 }
 
-/** Puts a kept build's file in `OUT`: from this build, the cache or the live CDN (then cached). */
-const fetchFile = async (origin, file) => {
-  const out = join(OUT, file)
+/** Puts a kept build's file in `outDir`: from this build, the cache or the live origin (then cached in `cacheDir`). */
+const fetchFile = async (origin, file, outDir, cacheDir) => {
+  const out = join(outDir, file)
   if (existsSync(out)) return
-  const cached = join(CACHE, file)
+  const cached = join(cacheDir, file)
   if (!existsSync(cached)) {
     const res = await fetch(`${origin}/${file}`, { signal: AbortSignal.timeout(60_000) })
     if (!res.ok) throw new Error(`${origin}/${file}: HTTP ${res.status}`)
@@ -87,6 +89,27 @@ const pool = async (items, n, fn) => {
   await Promise.all(Array.from({ length: n }, async () => {
     while (queue.length) await fn(queue.shift())
   }))
+}
+
+/**
+ * The builds a deploy of `outDir` serves (`keptBuilds`): `next` (this build, already in `outDir`, or null) and
+ * the ones the live Worker at `origin` lists in its `builds.json`, their files fetched into `outDir` while they
+ * fit the files a version takes. Shared by the asset CDN and the site's Worker (`cdn/site.mjs`).
+ */
+export const carryBuilds = async ({ origin, next, outDir, cacheDir }) => {
+  const budget = MAX_FILES - filesUnder(outDir).length - 100
+  const kept = keptBuilds(await liveBuilds(origin), next, Date.now(), budget)
+  // A build whose files the live Worker can't give back is dropped whole: half a build is no use to a page.
+  const failed = new Set()
+  await pool(kept.filter((b) => b !== next), 16, async (build) => {
+    try {
+      for (const file of build.files) await fetchFile(origin, file, outDir, cacheDir)
+    } catch (error) {
+      console.warn(`[builds] Dropped build ${build.id}: ${error}`)
+      failed.add(build)
+    }
+  })
+  return kept.filter((b) => !failed.has(b))
 }
 
 /**
@@ -115,19 +138,7 @@ export const assemble = async ({ site = false, keep = true, origin = cdnOrigin()
   let builds = next ? [next] : []
   if (keep) {
     if (!origin) throw new Error('VITE_ASSET_ORIGIN is unset: no CDN to keep builds from')
-    const budget = MAX_FILES - filesUnder(OUT).length - 100
-    const kept = keptBuilds(await liveBuilds(origin), next, Date.now(), budget)
-    // A build whose files the CDN can't give back is dropped whole: half a build is no use to a page.
-    const failed = new Set()
-    await pool(kept.filter((b) => b !== next), 16, async (build) => {
-      try {
-        for (const file of build.files) await fetchFile(origin, file)
-      } catch (error) {
-        console.warn(`[cdn] Dropped build ${build.id}: ${error}`)
-        failed.add(build)
-      }
-    })
-    builds = kept.filter((b) => !failed.has(b))
+    builds = await carryBuilds({ origin, next, outDir: OUT, cacheDir: CACHE })
   }
   writeFileSync(join(OUT, 'builds.json'), JSON.stringify(builds))
 

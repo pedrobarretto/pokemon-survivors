@@ -1,0 +1,45 @@
+name: Site
+
+# Builds the whole site and deploys it to its Cloudflare Worker (`ps-site`, cdn/site.wrangler.jsonc), Vercel's
+# replacement. By hand any time (before the cutover it only reaches ps-site.pedrobarretto.workers.dev), and on
+# every push to main once the repo variable SITE_DEPLOY is `on`. `npm run site:build` never deploys the asset CDN
+# (`ps-assets`, cdn/deploy.mjs): Vercel's builds keep deploying that one, and two deploys at once would clobber
+# its builds.json.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One deploy at a time, in order: each reads the live Worker's builds.json to carry the previous builds along.
+concurrency:
+  group: site
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || vars.SITE_DEPLOY == 'on'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # What the game's build reads (`import.meta.env`, .env.example): public values, so variables.
+      VITE_CLERK_PUBLISHABLE_KEY: ${{ vars.VITE_CLERK_PUBLISHABLE_KEY }}
+      VITE_API_URL: ${{ vars.VITE_API_URL }}
+      VITE_POSTHOG_KEY: ${{ vars.VITE_POSTHOG_KEY }}
+      VITE_COOP_URL: ${{ vars.VITE_COOP_URL }}
+      VITE_COOP_URL_SA: ${{ vars.VITE_COOP_URL_SA }}
+      # The source maps' upload (scripts/sourcemaps.mjs); without the key it only deletes them.
+      POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
+      POSTHOG_CLI_PROJECT_ID: ${{ vars.POSTHOG_CLI_PROJECT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run site:build
+      - run: npx --yes wrangler@4.154.0 deploy --config cdn/site.wrangler.jsonc
