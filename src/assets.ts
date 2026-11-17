@@ -30,6 +30,8 @@ type AssetCdn = { origin: string; versions: Readonly<Record<string, string | und
 /** The CDN's origin and the groups it serves as built, each with its version; set by `vite.config.ts`, absent where it doesn't build (Node scripts, the server). */
 declare const __ASSET_CDN__: AssetCdn
 const CDN: AssetCdn = typeof __ASSET_CDN__ === 'undefined' ? { origin: '', versions: {} } : __ASSET_CDN__
+/** The asset CDN's origin (`https://…`), or empty without one. It serves the game's chunks too (`cdn/loader.ts`) and proxies PostHog (`cdn/worker.ts`). */
+export const CDN_ORIGIN = CDN.origin
 
 /** How long an image may take on the CDN before the site's copy is asked for instead. */
 const CDN_STALL_MS = 10_000
