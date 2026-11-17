@@ -1,4 +1,4 @@
-import { playSfx, setMix } from '../engine/audio'
+import { playSfx, quietly, setMix } from '../engine/audio'
 import { BUTTON_SIDES, STICK_EDGES, STICK_HEIGHTS, STICK_MODES, type Input } from '../engine/input'
 import { clamp } from '../engine/math'
 import { locale, LOCALE_IDS, LOCALES, setLocale, t, type Locale } from '../i18n'
@@ -135,7 +135,7 @@ const switchRow = (label: string, read: () => boolean, set: (on: boolean) => voi
 const canFullscreen = () => document.fullscreenEnabled && typeof document.documentElement.requestFullscreen === 'function'
 const isFullscreen = () => document.fullscreenElement !== null
 /** Fullscreen on or off; the browser may refuse (no gesture, a policy), and the switch then stays as it was (`fullscreenchange` syncs it). */
-const setFullscreen = (on: boolean) => void (on ? document.documentElement.requestFullscreen({ navigationUI: 'hide' }) : document.exitFullscreen()).catch(() => {})
+const setFullscreen = (on: boolean) => quietly(() => (on ? document.documentElement.requestFullscreen({ navigationUI: 'hide' }) : document.exitFullscreen()))
 
 /** A switch over one of the settings. */
 const toggle = (label: string, read: (s: Settings) => boolean, write: (on: boolean) => Partial<Settings>): Row =>
