@@ -1,4 +1,4 @@
-import { playSfx, setMix } from '../engine/audio'
+import { hasAudioSession, playSfx, quietly, setMix } from '../engine/audio'
 import { BUTTON_SIDES, STICK_EDGES, STICK_HEIGHTS, STICK_MODES, type Input } from '../engine/input'
 import { clamp } from '../engine/math'
 import { locale, LOCALE_IDS, LOCALES, setLocale, t, type Locale } from '../i18n'
@@ -135,7 +135,7 @@ const switchRow = (label: string, read: () => boolean, set: (on: boolean) => voi
 const canFullscreen = () => document.fullscreenEnabled && typeof document.documentElement.requestFullscreen === 'function'
 const isFullscreen = () => document.fullscreenElement !== null
 /** Fullscreen on or off; the browser may refuse (no gesture, a policy), and the switch then stays as it was (`fullscreenchange` syncs it). */
-const setFullscreen = (on: boolean) => void (on ? document.documentElement.requestFullscreen({ navigationUI: 'hide' }) : document.exitFullscreen()).catch(() => {})
+const setFullscreen = (on: boolean) => quietly(() => (on ? document.documentElement.requestFullscreen({ navigationUI: 'hide' }) : document.exitFullscreen()))
 
 /** A switch over one of the settings. */
 const toggle = (label: string, read: (s: Settings) => boolean, write: (on: boolean) => Partial<Settings>): Row =>
@@ -283,6 +283,8 @@ export const openSettings = (root: HTMLElement, input: Input, onClose: () => voi
           slider(m.music, 'musicVolume'),
           slider(m.sfx, 'sfxVolume', () => playSfx('pickup', 90)),
           toggle(m.sound, (s) => !s.muted, (on) => ({ muted: !on })),
+          // Only iOS Safari lets a page mix with other apps' audio (`navigator.audioSession`).
+          ...(hasAudioSession() ? [toggle(m.mixOthers, (s) => s.mixOthers, (on) => ({ mixOthers: on }))] : []),
           openRow(t().radio.open, () => showSub(openRadio)),
         ]
       case 'game':

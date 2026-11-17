@@ -83,17 +83,22 @@ export const loadTownArt = () => {
   for (const id of Object.keys(TOWN_ART) as TownArt[]) loadArt(id)
 }
 
-/** Draws `art` with the bottom middle of its painted box at (x, y), mirrored when `flip`. */
-const put = (ctx: CanvasRenderingContext2D, art: Art, x: number, y: number, flip = false) => {
-  const dy = Math.round(y - art.maxY - 1)
-  if (!flip) return ctx.drawImage(art.img, Math.round(x - (art.minX + art.w / 2)), dy)
+/**
+ * Draws `img` (`art`'s own image or one as wide, its shadow) with its left edge where `art`'s
+ * painted box has its middle at `x`, mirrored when `flip`, its top at `top`.
+ */
+const blit = (ctx: CanvasRenderingContext2D, art: Art, img: CanvasImageSource & { width: number }, x: number, top: number, flip: boolean) => {
+  if (!flip) return ctx.drawImage(img, Math.round(x - (art.minX + art.w / 2)), top)
   // Mirrored, the painted box's middle lands `width - middle` from the image's left.
-  const left = Math.round(x - (art.img.width - (art.minX + art.w / 2)))
+  const left = Math.round(x - (img.width - (art.minX + art.w / 2)))
   ctx.save()
   ctx.scale(-1, 1)
-  ctx.drawImage(art.img, -(left + art.img.width), dy)
+  ctx.drawImage(img, -(left + img.width), top)
   ctx.restore()
 }
+
+/** Draws `art` with the bottom middle of its painted box at (x, y), mirrored when `flip`. */
+const put = (ctx: CanvasRenderingContext2D, art: Art, x: number, y: number, flip = false) => blit(ctx, art, art.img, x, Math.round(y - art.maxY - 1), flip)
 
 /* ---------------- Ground ---------------- */
 
@@ -783,8 +788,9 @@ export const drawTownGround = (ctx: CanvasRenderingContext2D, room: TownRoomId, 
     const { art: id, x } = resolve(p, exterior)
     const art = arts.get(id)
     if (!art || FLAT.has(id)) continue
+    // Mirrored with its piece: a flipped palm's crown leans the other way, and so does its shadow.
     const mask = silhouette(art)
-    ctx.drawImage(mask, Math.round(x - camX - (art.minX + art.w / 2)) + 2, Math.round(p.y - camY - mask.height) + 2)
+    blit(ctx, art, mask, x - camX + 2, Math.round(p.y - camY - mask.height) + 2, p.flip ?? false)
   }
   for (const host of townFigures(room)) {
     ctx.fillStyle = 'rgba(30,40,30,0.3)'
