@@ -143,8 +143,8 @@ export type TitleActions = {
   incubator: () => void
   /** Opens the waiting Mystery Gifts (the Presentes card). */
   gifts: () => void
-  /** The lobby is up: after the "press start" gesture, so the browser lets audio play. */
-  ready: () => void
+  /** The lobby is up: after the "press start" gesture, so the browser lets audio play. True when something takes the lobby at once (the first visit's lobby tour): no survey or install offer opens over it. */
+  ready: () => boolean
   /** Set, "press start" calls it instead of opening the lobby (a device's first run, `startFirstRun` in main.ts). */
   start?: () => void
   /**
@@ -1576,12 +1576,12 @@ export const titleScreen = (
   const enterLobby = () => {
     noteDesignSeen()
     buildLobby()
-    actions.ready()
+    const spoken = actions.ready()
     // `?loja` (and the dev's `ps.plaza()`) head for the shop once the lobby is laid out.
     const trip = opts.shop
     if (trip) requestAnimationFrame(() => visitShop(trip, opts.instant, opts.shelf))
-    // The lobby tour holds the lobby: its pop-ups wait for another visit.
-    else if (!tourRunning()) {
+    // The lobby tour holds the lobby (a tour due, or running): its pop-ups wait for another visit.
+    else if (!spoken && !tourRunning()) {
       // Otherwise a survey asks by itself, at most one per page load; closed unanswered, its clipboard in the top bar keeps asking.
       const survey = takeSurveyOffer()
       if (survey) openOver(survey === 'design' ? actions.designSurvey : actions.survey)

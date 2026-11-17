@@ -42,7 +42,7 @@ import { ENEMIES, type EnemyDef, type EnemyId } from './data/enemies'
 import { ITEMS } from './data/items'
 import type { AchievementId } from './data/achievements'
 import type { TraitId } from './data/traits'
-import { REGIONS, STARTERS } from './data/starters'
+import { REGIONS, STARTER_IDS, STARTERS, type StarterId } from './data/starters'
 import { nextIsOfficial } from './game/attempt'
 import { challengeStart, type Challenge } from './game/challenge'
 import { HATCHLING_IDS, HATCHLINGS, PLAYABLE, PLAYABLE_IDS, type HatchlingId, type PlayableId } from './data/hatchlings'
@@ -55,7 +55,10 @@ import { festivalAnnounced } from './game/festival'
 import { openFestival } from './ui/festival'
 import type { BoutiqueTab } from './ui/boutiqueSeen'
 import { identify, lobbyPress, startAnalytics, takeOpened, track, type ErrorContext, type QueueEnd, type RunPerf } from './analytics'
-import { firstGate, firstRunClock, firstStep, startFirstSession } from './firstSession'
+import { firstGate, firstRunClock, firstStep, holdRunSteps, startFirstSession } from './firstSession'
+import { enrolDevice, firstTime, forgetFirstTime, nextFirst, tourDue, updateFirstTime, type Arm, type TutorialOutcome } from './firstTime'
+import { welcomeScreen } from './ui/welcome'
+import { firstPartnerScreen } from './ui/firstPartner'
 import { deviceInfo, deviceNow, resetMemoryPeaks, sampleMemory } from './telemetry'
 import type { Crumb, CrumbMoment } from './crumb'
 import { BAG_ITEMS, useArmed, type BagItem } from './game/bag'
@@ -839,19 +842,20 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
   if (opts.intro) firstStep('intro')
   setScreen(
     titleScreen(ui, input, {
-      play: () => (firstStep('play'), playFromLobby()),
+      play: () => playFromLobby(),
       partner: () => showMenu(),
       legends: () => showMenu(loadSave().partner, 'legends'),
       modes: (focus, shown) => openGameModes(ui, input, { current: loadLobbyMode(), shown, onPick: (id) => (saveLobbyMode(id), showTitle({ focus: 'play' })), close: () => showTitle({ focus }) }),
-      // A device that never played: "press start" goes straight into its first run.
-      start: opts.intro && firstRun() ? () => ((pressedStart = true), firstStep('play'), startFirstRun()) : undefined,
+      // A device that never played: "press start" goes straight into its first run (or, in the onboarding's arm `tour`, Rotom's welcome first).
+      start: opts.intro && firstRun() ? () => ((pressedStart = true), startFirstRun()) : undefined,
       challenge: () => showChallenge(),
       incubator: () => showIncubator(() => showTitle({ focus: 'eggs' })),
       gifts: showGifts,
       missions: () => showMissions(),
-      ready: () => ((pressedStart = true), firstStep('lobby'), hideInAppHint()),
+      // Back home after the first partner pick's run (arm `tour`): the lobby tour, once the lobby is laid out (not on a trip to a shop).
+      ready: () => ((pressedStart = true), firstStep('lobby'), hideInAppHint(), !opts.shop && queueTour()),
       // The language may change inside Settings, so closing them rebuilds the title on the same entry.
-      settings: (focus) => openSettings(ui, input, () => showTitle({ focus })),
+      settings: (focus) => openSettings(ui, input, () => showTitle({ focus }), { tutorial: replayTutorial }),
       news: (focus) => newsScreen(ui, input, () => showTitle({ focus })),
       // Closed unanswered, the lobby highlights the survey's clipboard; answered, it's gone and JOGAR is.
       survey: () => surveyScreen(ui, input, () => showTitle({ focus: 'survey' })),
@@ -906,22 +910,145 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
   if (app && opts.intro && screen) showInAppHint(screen.el, app)
 }
 
-/** No run finished on this device and no account linked to it: the next Play is the first run (`startFirstRun`). */
-const firstRun = () => firstRunDue(loadSave().achievements.lifetime.runs, accountUserId() !== null)
+/**
+ * Dev: `ps.onboarding('reset')` plays the first visit again on a save that has runs: the runs banked so far count as none
+ * (and an account as none) until the page reloads. Null otherwise.
+ */
+let devFirstRuns: number | null = null
 
-/** The first run: the saved partner (Charmander on a new save) on the saved difficulty (Normal), past the gate and the partner select. */
+/** The save's banked runs, as the first visit's rules count them (`devFirstRuns`). */
+const firstRuns = () => loadSave().achievements.lifetime.runs - (devFirstRuns ?? 0)
+
+/** No run finished on this device and no account linked to it: the next Play is the first run (`startFirstRun`). */
+const firstRun = () => firstRunDue(firstRuns(), devFirstRuns === null && accountUserId() !== null)
+
+/**
+ * The first run's Play ("press start", or JOGAR on a device that never played). In the onboarding's arm
+ * `tour` (`firstTime.ts`), Rotom's welcome first, then the first partner pick (where a reload after the
+ * welcome lands too); otherwise the fast lane: the saved partner (Charmander on a new save) on the saved
+ * difficulty (Normal), past the gate and the partner select.
+ */
 const startFirstRun = () => {
+  const s = firstTime()
+  const next = nextFirst(s)
+  if (next === 'welcome') return showWelcome()
+  if (next === 'partner') return showFirstPartner(s.tutorial?.how === 'finished')
+  firstStep('play')
   onboardingStep('fastLane')
   void startRun(loadSave().partner)
 }
 
+/** Rotom's welcome (arm `tour`): "Me mostra!" plays the training run, "Já sei jogar" goes to the partner pick. Answered, a reload goes to the pick. */
+const showWelcome = () => {
+  firstStep('welcome')
+  onboardingStep('welcomeShown')
+  const answered = () => updateFirstTime((s) => ({ ...s, welcome: true }))
+  setScreen(
+    welcomeScreen(ui, input, {
+      show: () =>
+        later(() => {
+          answered()
+          playTutorial((end) => {
+            updateFirstTime((s) => ({ ...s, tutorial: end }))
+            showFirstPartner(end.how === 'finished')
+          })
+        }),
+      knows: () =>
+        later(() => {
+          answered()
+          onboardingStep('welcomeKnows')
+          showFirstPartner(false)
+        }),
+    }),
+  )
+}
+
 /**
- * JOGAR: the first run starts at once; after it, a guest sees the sign-in gate
+ * The training run (`startTutorial`), measured: its loading, frame and clock aren't the first run's
+ * (`holdRunSteps`), and its start and end are first-visit steps and moments. `then` gets how it ended.
+ */
+const playTutorial = (then: (end: TutorialOutcome) => void) => {
+  setScreen(null)
+  holdRunSteps(true)
+  firstStep('tutorial')
+  onboardingStep('tutorialStarted')
+  startTutorial((end) => {
+    holdRunSteps(false)
+    firstStep('tutorialEnd')
+    onboardingStep(end.how === 'finished' ? 'tutorialFinished' : 'tutorialSkipped')
+    then(end)
+  })
+}
+
+/** The first partner pick (arm `tour`): every starter; the pick becomes the partner and plays the first run, as the fast lane would. */
+const showFirstPartner = (afterTutorial: boolean) => {
+  endRun()
+  firstStep('partner')
+  const partner = loadSave().partner
+  const initial: StarterId = STARTER_IDS.find((id) => id === partner) ?? 'charmander'
+  setScreen(
+    firstPartnerScreen(ui, input, {
+      initial,
+      afterTutorial,
+      pick: (id) => {
+        updateFirstTime((s) => ({ ...s, partner: true }))
+        firstStep('play')
+        onboardingStep('partnerPicked')
+        setTimeout(() => void startRun(id), 250)
+      },
+    }),
+  )
+}
+
+/** Set while the lobby tour runs, so a lobby rebuilt under it doesn't start a second one. */
+let touring = false
+
+/**
+ * The lobby tour, once this lobby is laid out, when it's due (`tourDue`: the first lobby after the first partner pick's run).
+ * True when it's coming (or running): the lobby then opens no survey or install offer over it.
+ */
+const queueTour = (): boolean => {
+  if (touring) return true
+  if (!tourDue(firstTime(), firstRuns())) return false
+  requestAnimationFrame(() => {
+    if (touring || run || !screen?.el.classList.contains('title-home')) return
+    playTour(false)
+  })
+  return true
+}
+
+/**
+ * The lobby tour over the lobby on screen, and the `onboarding` event as it ends. `replay`: Settings' "Rever tutorial"
+ * offered it again, which leaves the device's onboarding as it was.
+ */
+const playTour = (replay: boolean) => {
+  touring = true
+  showLobbyTour((end) => {
+    touring = false
+    const how = end?.how ?? 'done'
+    const s = replay ? firstTime() : updateFirstTime((s) => ({ ...s, tour: how }))
+    onboardingStep(how === 'done' ? 'tourDone' : 'tourSkipped')
+    track('onboarding', { arm: s.arm, how, stop: end?.stop ?? null, tutorial: s.tutorial?.how ?? 'none', replay: replay ? 1 : 0 })
+  })
+}
+
+/** Settings' "Rever tutorial" (any device, any arm): the training run again, then the lobby with its tour. */
+const replayTutorial = () =>
+  later(() =>
+    playTutorial(() => {
+      showTitle({ focus: 'play' })
+      playTour(true)
+    }),
+  )
+
+/**
+ * JOGAR: the first run starts at once (`startFirstRun`); after it, a guest sees the sign-in gate
  * now and then (`guestGateDue`: not again for a while after "Jogar como
  * convidado"), never inside an app's browser, where Google won't sign in; then the partner select.
  */
 const playFromLobby = () => {
   if (firstRun()) return startFirstRun()
+  firstStep('play')
   if (!accountsEnabled || accountState().kind !== 'guest') return showMenu()
   if (hostApp()) {
     onboardingStep('gateSkipped')
@@ -952,7 +1079,7 @@ const showMenu = (initial: PlayableId = loadSave().partner, tab?: 'legends') => 
     pick: (id) => setTimeout(() => void startRun(id), 250),
     back: () => showTitle({ focus: 'play' }),
     mart: () => showShop(),
-    settings: () => setScreen(openSettings(ui, input, () => showMenu(select.selected()))),
+    settings: () => setScreen(openSettings(ui, input, () => showMenu(select.selected()), { tutorial: replayTutorial })),
     incubator: () => showIncubator(() => showMenu(select.selected())),
     // A skin not owned yet: the Boutique's Skins on it, then back here on the same Pokémon.
     boutique: (skin) => showBoutique('skins', () => showMenu(select.selected()), null, skin),
@@ -4767,7 +4894,9 @@ const boot = () => {
   loadSafeMode()
   startAnalytics(errorContext)
   // A new device's first visit: where it gets to, sent as one event (`firstSession.ts`).
-  startFirstSession(loadSave().achievements.lifetime.runs)
+  const firstVisit = startFirstSession(loadSave().achievements.lifetime.runs)
+  // The onboarding's A/B arm (`firstTime.ts`), drawn once on a guest's first visit by the same rules.
+  enrolDevice(firstVisit && firstRun(), accountUserId() !== null)
   sendHeldVersus()
   watchDeploys()
   // Events and errors tie to the account on this device, known from its link before Clerk loads.
@@ -5953,6 +6082,24 @@ if (import.meta.env.DEV) {
         if (mode === 'design' && design === 'due') return (stageDesignSurveyDue(), showTitle())
         if (mode === 'design') return setScreen(designSurveyScreen(ui, input, () => showTitle({ focus: 'survey' })))
         setScreen(surveyScreen(ui, input, () => showTitle({ focus: 'survey' })))
+      },
+      /**
+       * The first visit's onboarding (`firstTime.ts`): prints this device's state, whether its next Play is a first run and
+       * where it leads, and whether the lobby gives the tour. `ps.onboarding('tour')` or `('control')` forces the A/B arm;
+       * `('reset')` forgets the onboarding (keeping the arm, `tour` if none) and plays the first visit again from the intro,
+       * the save's runs and the account counting as none until a reload.
+       */
+      onboarding: (cmd?: Arm | 'reset') => {
+        if (cmd === 'reset') {
+          const arm = firstTime().arm ?? 'tour'
+          forgetFirstTime()
+          updateFirstTime((s) => ({ ...s, arm }))
+          devFirstRuns = loadSave().achievements.lifetime.runs
+          endRun()
+          showTitle({ intro: true })
+        } else if (cmd) updateFirstTime((s) => ({ ...s, arm: cmd }))
+        const s = firstTime()
+        return { ...s, firstRun: firstRun(), next: firstRun() ? nextFirst(s) : null, tourDue: tourDue(s, firstRuns()) }
       },
       /**
        * The lobby's install offer now, as Chromium's prompt or the iOS how-to (`'ios'`), whatever the browser

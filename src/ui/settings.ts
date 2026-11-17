@@ -231,7 +231,7 @@ let lastTab: Tab = 'sound'
 
 /**
  * Settings in four tabs: Som (music and effects volume, mute, the Rádio's sheet), Jogo
- * (language, theme, damage numbers, screen shake, flashes, fog, run alerts, the mini map, move opacity, UI size, safe mode), Controles
+ * (language, Rever tutorial where `opts.tutorial` is given, theme, damage numbers, screen shake, flashes, fog, run alerts, the mini map, move opacity, UI size, safe mode), Controles
  * (touch joystick, the buttons' side and the fixed stick's place on touchscreens, and the remap screen) and Sobre
  * (installing the app, what the game is, legal and
  * credits, GitHub, the official profiles, and the bug report form when there's an API to send it to).
@@ -245,7 +245,7 @@ let lastTab: Tab = 'sound'
  * owns. `dispose` closes it without calling `onClose` (e.g. when the caller's
  * own screen goes away).
  */
-export const openSettings = (root: HTMLElement, input: Input, onClose: () => void): Screen => {
+export const openSettings = (root: HTMLElement, input: Input, onClose: () => void, opts: { tutorial?: () => void } = {}): Screen => {
   const el = h('div', { class: 'screen shell dim settings-screen' })
   let rows: Row[] = []
   let nav: ReturnType<typeof menu> | null = null
@@ -288,6 +288,8 @@ export const openSettings = (root: HTMLElement, input: Input, onClose: () => voi
       case 'game':
         return [
           languageRow(pickLanguage),
+          // Away from a run (the lobby, the partner select): the training run again, then the lobby tour.
+          ...(opts.tutorial ? [openRow(t().welcome.replay, opts.tutorial)] : []),
           choiceRow(m.theme, 'theme', THEMES, (mode) => m.themes[mode]),
           choiceRow(m.damageNumbers, 'damageNumbers', DAMAGE_NUMBERS, (mode) => m.damageModes[mode]),
           toggle(m.screenShake, (s) => s.screenShake, (on) => ({ screenShake: on })),
