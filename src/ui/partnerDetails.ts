@@ -321,6 +321,8 @@ export const detailsSheet = (opts: SheetOpts) => {
     body.replaceChildren(
       ...(k === 'status'
         ? [
+            // The whole blurb: the compact panel (phones) cuts it to a line or two.
+            h('p', { class: 'partner-sheet-blurb' }, m.blurbs[id]),
             section(m.title.statsSection, legend()),
             statBars(id),
             section(m.title.evolution),

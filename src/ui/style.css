@@ -15361,6 +15361,13 @@ button.hall-tile:hover {
   font-weight: normal;
 }
 
+.partner-sheet-blurb {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.1;
+  color: var(--dk-ink-2, #505870);
+}
+
 .ability-note {
   margin: 0;
   font-size: 16px;

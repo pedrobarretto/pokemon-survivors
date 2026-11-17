@@ -24,6 +24,7 @@ import { createTraitState } from './traits'
 import { setArchetype } from './terrain'
 import type { DamageSource, Enemy, Game } from './types'
 import { finiteDummies, trialKnockout, updateTrial, type TrialRun } from './towerTrial'
+import type { TutorialRun } from './tutorial'
 
 /**
  * The Dojo: a run with no horde, no clock and no harm, where the player sets
@@ -52,6 +53,8 @@ export type Training = {
   shown: Vec
   /** A Torre trial under way (`game/towerTrial.ts`), or null for free training. */
   trial: TrialRun | null
+  /** The first visit's training run (`game/tutorial.ts`): the lessons under way, or null at the Dojo. */
+  tutorial: TutorialRun | null
 }
 
 /** Which way from the player's start the dummies stand, and how far. */
@@ -90,7 +93,7 @@ const spawnDummy = (g: Game, target: TrainingTarget, at: Vec): Enemy => {
 export const startTraining = (g: Game, target: TrainingTarget = TRAINING.target, count: number = TRAINING.counts[0], aim: Aim = AHEAD) => {
   const p = g.player
   setArchetype(g, 'route')
-  g.training = { target, posts: [], home: { x: p.x, y: p.y }, aim, lens: { x: 0, y: 0 }, shown: { x: 0, y: 0 }, trial: null }
+  g.training = { target, posts: [], home: { x: p.x, y: p.y }, aim, lens: { x: 0, y: 0 }, shown: { x: 0, y: 0 }, trial: null, tutorial: null }
   setDummies(g, target, count)
 }
 
