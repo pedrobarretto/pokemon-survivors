@@ -67,6 +67,19 @@ const applySession = () => {
   if (session.type !== type) session.type = type
 }
 
+/**
+ * Runs a media call that should hand back a promise (`play()`, `resume()`) and drops its failure.
+ * Old Android WebViews (Quark, UU and other in-app browsers) return undefined instead of a promise,
+ * or throw at once: a bare `.catch` on that crashed the page.
+ */
+export const quietly = (call: () => Promise<unknown> | undefined) => {
+  try {
+    void call()?.catch(() => {})
+  } catch {
+    // Nothing to do: the sound just doesn't play.
+  }
+}
+
 /** Set when this browser has no WebAudio (iOS Lockdown Mode turns it off) or refused a context: the game plays silent. */
 let silent = false
 
@@ -102,7 +115,7 @@ const audio = () => {
   }
   const { ctx, sfx } = graph
   // iOS reports 'interrupted' after calls or app switches; anything but running needs a resume.
-  if (ctx.state !== 'running') void ctx.resume().catch(() => {})
+  if (ctx.state !== 'running') quietly(() => ctx.resume?.())
   return healthy(ctx) ? { ctx, sfx } : null
 }
 
@@ -926,7 +939,7 @@ export const playCry = (url: string, volume = 0.35) => {
     if (!buffer) {
       const el = new Audio(url)
       el.volume = volume * loudness(mix.sfxVolume)
-      return void el.play().catch(() => {})
+      return quietly(() => el.play())
     }
     const out = audio()
     if (!out) return
