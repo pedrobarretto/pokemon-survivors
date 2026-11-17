@@ -10,17 +10,16 @@
 //                                rewrites the pages to load them from it (cdn/loader.ts). On a failure the pages
 //                                keep loading from the site. Vercel publishes the pages only after the build, so a
 //                                page never names chunks the CDN doesn't have yet.
-//                                The pages' share image moves to the CDN's copy with them (cdn/og.ts). On Vercel,
-//                                it then fails the build unless the CDN serves the image `vercel.json` redirects
-//                                /og.png to, so the redirect never goes live naming a missing file.
+//                                On Vercel, it then fails the build unless the CDN serves the image `vercel.json`
+//                                redirects /og.png to (`OG_PATH` in cdn/build.mjs), so the redirect never goes live
+//                                naming a missing file.
 //
 // `--force` deploys the assets whatever the CDN has, and fails loudly (`npm run cdn:deploy`, the manual workflow).
 import { spawnSync } from 'node:child_process'
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { assemble, cdnOrigin } from './build.mjs'
+import { assemble, cdnOrigin, OG_PATH } from './build.mjs'
 import { withCdnLoader } from './loader.ts'
-import { OG_PATH, withCdnOgImage } from './og.ts'
 import { assetVersions, servedVersions } from './versions.mjs'
 
 const ROOT = join(import.meta.dirname, '..')
@@ -59,13 +58,12 @@ const deploySite = async () => {
   if (!deploy()) throw new Error('the chunks deploy failed: the pages load them from the site')
   let rewritten = 0
   for (const page of pages()) {
-    const html = readFileSync(page, 'utf8')
-    const loaded = withCdnLoader(html, origin)
-    const next = withCdnOgImage(loaded ?? html, origin)
-    if (next !== html) writeFileSync(page, next)
-    if (loaded !== null) rewritten++
+    const html = withCdnLoader(readFileSync(page, 'utf8'), origin)
+    if (html === null) continue
+    writeFileSync(page, html)
+    rewritten++
   }
-  console.log(`[cdn] ${rewritten} pages load their chunks from ${origin}; every page's share image is its copy there`)
+  console.log(`[cdn] ${rewritten} pages load their chunks from ${origin}`)
 }
 
 /** Whether `url` serves a PNG, tried three times. */

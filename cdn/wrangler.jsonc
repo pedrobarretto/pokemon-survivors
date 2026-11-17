@@ -2,7 +2,7 @@
   "$schema": "https://unpkg.com/wrangler@4.154.0/config-schema.json",
   // The asset CDN: a Worker whose static assets (free requests and bandwidth) are `cdn/dist` (`cdn/build.mjs`):
   // public/assets/ under /assets/ (src/assets.ts), the site builds' chunks next to them (cdn/loader.ts, cdn/builds.ts),
-  // public/fonts/, the share image (og.png, cdn/og.ts), versions.json, builds.json and _headers, at https://ps-assets.<account>.workers.dev; the game's build
+  // public/fonts/, the share image (og.png, which vercel.json redirects /og.png to), versions.json, builds.json and _headers, at https://ps-assets.<account>.workers.dev; the game's build
   // points at it with VITE_ASSET_ORIGIN. Its script (`worker.ts`) only runs where no file matches: PostHog's proxy under
   // /ingest/ (billed as Worker requests: 100k a day on the Free plan).
   // Deployed by the site's production build (`cdn/deploy.mjs`, part of `npm run build` where CLOUDFLARE_API_TOKEN is set),
