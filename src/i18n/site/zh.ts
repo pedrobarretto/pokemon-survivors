@@ -922,7 +922,7 @@ export const siteZh: SiteMessages = {
     suggested: '為你推薦',
     br: {
       title: '在巴西',
-      methods: 'Pix 或信用卡，以巴西雷亞爾付款。',
+      methods: 'Pix、信用卡、Apple Pay 或 Google Pay，以巴西雷亞爾付款。',
       amount: '捐款金額',
       other: '其他金額',
       range: (min: number, max: number) => `R$ ${min} 到 R$ ${max}，以整數雷亞爾計。`,
