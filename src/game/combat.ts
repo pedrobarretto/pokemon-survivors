@@ -39,6 +39,7 @@ import type { Attack, DamageSource, Enemy, Game, Player } from './types'
 import { playerWeatherBoost, weatherHere, weatherPower } from './weather'
 import { dropForEach, faint, winRun } from './coop'
 import { inPlay } from './players'
+import { lootSpot } from './terrain'
 import { knockOut, strikeAvatar, tickAvatar, wildDown } from './versusCombat'
 import { seasonKitBlocks, seasonKitHolds, seasonKitHurt, seasonKitKill } from './seasonOneKitSystem'
 import { kitBBlocks, kitBHurt, kitBKill } from './gaKitBSystem'
@@ -248,13 +249,15 @@ export const killEnemy = (g: Game, e: Enemy, source?: DamageSource | null) => {
       g.events.push({ kind: 'legendBeaten', legend: e.kind, shiny: e.shiny })
     }
     nightBossDown(g, e)
+    // The loot lands where a player can walk to it, not over the water or the hole the boss flew over (`lootSpot`).
+    const at = lootSpot(g, e.x, e.y)
     // A choice of two Tera Shards for each player (`tera.ts`); a raid pays its own type's (`teraRaid.ts`).
-    if (!isRaidBoss(g, e)) dropBossShards(g, e.x, e.y, e.types[0] ?? 'normal')
+    if (!isRaidBoss(g, e)) dropBossShards(g, at.x, at.y, e.types[0] ?? 'normal')
     // Co-op: a Poké Ball, the TM and an evolution item for each player (`dropForEach`); the egg is everyone's.
-    dropForEach(g, () => dropPickup(g, e.x, e.y, 'pokeball'))
-    awardEgg(g, bossEggSource(e.kind), e.x, e.y)
-    dropForEach(g, () => dropBossTm(g, e))
-    dropForEach(g, () => dropEvoItem(g, e.x + 10, e.y + 2))
+    dropForEach(g, () => dropPickup(g, at.x, at.y, 'pokeball'))
+    awardEgg(g, bossEggSource(e.kind), at.x, at.y)
+    dropForEach(g, () => dropBossTm(g, e, at.x, at.y))
+    dropForEach(g, () => dropEvoItem(g, at.x + 10, at.y + 2))
     if (g.bossId === e.id) g.bossId = null
     setScreenShake(g, 6, e)
     // A wave legendary's capture plays where it fell; Mewtwo's victory waits for it.

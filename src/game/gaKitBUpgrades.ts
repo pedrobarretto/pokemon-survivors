@@ -84,11 +84,11 @@ export const GA_KIT_B_UPGRADES = {
     { damage: 3 },
   ],
   electroShot: [
-    { damage: 3 }, { area: 0.15 },
-    { fork: [{ stats: { damage: 3 }, mods: ['burstOnKill'] }, { stats: { cooldown: -0.2 }, mods: ['arc'] }] },
-    { damage: 3 }, { cooldown: -0.2 },
-    { fork: [{ stats: { damage: 4 }, mods: ['hunter'] }, { stats: { area: 0.2 }, mods: ['echo'] }] },
-    { damage: 4 },
+    { damage: 5 }, { area: 0.15 },
+    { fork: [{ stats: { damage: 5 }, mods: ['burstOnKill'] }, { stats: { cooldown: -0.2 }, mods: ['arc'] }] },
+    { damage: 5 }, { cooldown: -0.2 },
+    { fork: [{ stats: { damage: 7 }, mods: ['hunter'] }, { stats: { area: 0.2 }, mods: ['echo'] }] },
+    { damage: 7 },
   ],
   tropKick: [
     { damage: 2 }, { area: 0.2 },

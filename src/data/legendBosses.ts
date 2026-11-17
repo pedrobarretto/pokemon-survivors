@@ -87,7 +87,7 @@ export const LEGEND_THEME = {
  */
 export const WAVE_LEGEND_HP = 0.85
 
-/** Chance a wave legendary arrives shiny (`legendEntrance`), as a rift's does (`RIFT.shinyOdds`): beating one unlocks its shiny in Legend mode. */
+/** Chance a wave legendary arrives shiny (`legendEntrance`), as a rift's does (`RIFT.shinyOdds`): beating one unlocks its shiny in Legend mode once the legend is captured (`recordLegendWin`). */
 export const WAVE_LEGEND_SHINY = 1 / 8
 
 /** Seconds a wave legendary holds still and untouchable as a phase begins (shorter than a rift's: the horde keeps coming, and the fight shouldn't last longer than it did in one phase). */

@@ -2,11 +2,15 @@ import { BUFFS, type BuffId } from '../data/consumables'
 import type { StatDelta } from './stats'
 import type { Buff } from './types'
 
-/** Starts a buff, or extends a running one (capped at twice its base duration). */
+/**
+ * Starts a buff, or extends a running one: the pickup's duration on top of
+ * what's left, capped at twice it, and never shorter than it was (a bottle
+ * over an altar's longer stack keeps the stack).
+ */
 export const addBuff = (buffs: Buff[], id: BuffId, duration: number) => {
   const running = buffs.find((b) => b.id === id)
   if (!running) return void buffs.push({ id, left: duration, total: duration })
-  running.left = Math.min(running.left + duration, duration * 2)
+  running.left = Math.max(running.left, Math.min(running.left + duration, duration * 2))
   running.total = Math.max(running.total, running.left)
 }
 

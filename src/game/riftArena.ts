@@ -13,7 +13,7 @@ import { dropLegendaryTm } from './tms'
 import { riftLoot, riftScale, type RiftArena } from './rift'
 import { bringBack, keepOnFloor, setAside } from './room'
 import { rollShiny } from './shiny'
-import { footOf, groundAt, playerTypes } from './terrain'
+import { footOf, groundAt, lootSpot, playerTypes } from './terrain'
 import { updateDomain } from './domain'
 import { centerScreen, eachPlayer, placeTeam } from './players'
 import { dropForEach } from './coop'
@@ -117,8 +117,10 @@ export const updateArenaFall = (g: Game, dt: number) => {
   return true
 }
 
-/** The legendary fell: drop the rift's loot at (x, y), heal the team and start the short loot window. */
-export const riftWin = (g: Game, arena: RiftArena, x: number, y: number) => {
+/** The legendary fell: drop the rift's loot near (x, y), on floor the team can walk to (`lootSpot`), heal the team and start the short loot window. */
+export const riftWin = (g: Game, arena: RiftArena, fellX: number, fellY: number) => {
+  // A legendary swims or flies over its domain's holes (Lugia's whirlpool, Groudon's lava lake): its Mega Stones must not.
+  const { x, y } = lootSpot(g, fellX, fellY)
   const loot = riftLoot(g.time, arena.shiny)
   dropCoins(g, x, y, loot.coins)
   dropForEach(g, () => {

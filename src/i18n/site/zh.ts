@@ -157,7 +157,7 @@ export const siteZh: SiteMessages = {
         : `在任何模式中以首領身分擊敗牠 ${need} 次，就能在傳說模式中使用牠（獨立排行榜、更強的獸群、Lv ${awaken[0]} 與 ${awaken[1]} 覺醒）。`,
     captureLast: (others: number) => `最後的戰利品：只能在無盡模式中收服，而且要先收服其他 ${others} 隻傳說寶可夢。`,
     captureEvent: (need: number) => `活動傳說：在2026女巫之夜期間（10/24至11/2）於夢魘裂縫擊敗它${need}次，它就會永久在傳說模式中可用。它不計入 Arceus 的條件。`,
-    captureShiny: '在收服的那場勝利或之後擊敗異色個體，就能解鎖牠的異色。',
+    captureShiny: '在任何一場勝利中擊敗異色個體（收服前或收服後皆可），收服後就能解鎖牠的異色。',
     innate: (name: string) => `固有（永遠生效）：${name}`,
     opens: (move: string) => `以 ${move} 開局`,
   },
@@ -563,7 +563,7 @@ export const siteZh: SiteMessages = {
     },
     legends: {
       paragraphs: (m: { count: number; awaken: readonly number[] }) => [
-        `遊戲中全部 ${m.count} 隻傳說（傳說寶可夢、幻之寶可夢與究極異獸）都能收服，並在傳說模式中使用。下表列出每一隻的收服方式；大多數要在任何模式中以首領身分擊敗：在收服之前的每場勝利，牠都會掙脫 Poké Ball，遊戲會記錄次數（Kyogre 掙脫了…2/3）；湊滿次數的那場勝利就會收服牠，牠會出現在夥伴選擇畫面的傳說寶可夢分頁中。在收服的那場勝利或之後的任何一場勝利中擊敗異色個體，就能解鎖牠的異色。`,
+        `遊戲中全部 ${m.count} 隻傳說（傳說寶可夢、幻之寶可夢與究極異獸）都能收服，並在傳說模式中使用。下表列出每一隻的收服方式；大多數要在任何模式中以首領身分擊敗：在收服之前的每場勝利，牠都會掙脫 Poké Ball，遊戲會記錄次數（Kyogre 掙脫了…2/3）；湊滿次數的那場勝利就會收服牠，牠會出現在夥伴選擇畫面的傳說寶可夢分頁中。在任何一場勝利中擊敗異色個體（收服前或收服後皆可），收服後就能解鎖牠的異色。`,
         `在傳說模式中，傳說寶可夢不會進化：牠會在 Lv ${m.awaken[0]} 與 Lv ${m.awaken[1]} 覺醒（獲得一個特性、力量提升與一次遺忘次數；Kyogre 與 Groudon 會原始回歸，Rayquaza 會超級進化），開局就擁有自己的傳說招式與永遠生效的固有特性，而獸群會更強（壓迫感），全是已進化的寶可夢，沒有未進化型態，也沒有今日大量出現。Latias、Latios 與 Mewtwo 和其他寶可夢一樣，靠超級石與 MEGA 按鈕超級進化；Deoxys 的必殺技則會切換形態（普通、攻擊、防禦、速度）。對局時間一樣長，三種難度都適用，這個模式還有依難度區分的獨立排行榜：在排行榜上，用「標準 | 傳說」那一列切換榜單。`,
         '地圖上的傳說寶可夢（本場的三神、Mewtwo 身旁的稀有幻之寶可夢、最後的 Mewtwo 與無盡模式中的 Arceus）會帶著標題卡登場，分三個階段戰鬥，最後放出有安全區標示的終極招式。牠們倒下時，收服畫面會在原地以簡短的場景播放；裂縫傳說寶可夢則在其領域的盡頭收服。傳說寶可夢不會和自己對戰：裂縫、三神與幻之寶可夢會跳過你正在使用的那隻，而 Mewtwo 最後會對上 Mewtwo 複製體。',
       ],
@@ -577,7 +577,7 @@ export const siteZh: SiteMessages = {
       opensHead: '傳說招式',
       pressureTitle: '傳說模式的難度',
       pressure: '壓迫感會疊加在每種難度上：以下是傳說模式的倍率。',
-      where: { rift: '傳說裂縫', trio: '傳說三神', mythical: 'Mewtwo 身旁（1/10，每場沒有幻之寶可夢的決戰後提高）', finale: '最終首領', endless: '無盡模式，最後一隻', event: '女巫之夜 2026（活動）', festival: '2026 燈籠祭（獎勵）', roam: '在地圖上遊蕩（HP保留到下一局）', duel: '在相稱的生態區決鬥', swords: '三把正義之劍的禮物', rush: '通關 Hoopa 的圓環', ultra: '究極之洞（單人遊戲每局一個）', ultraGift: '收服10隻究極異獸的禮物', path: '專屬路線（Zygarde Cell、Cosmog、道館之塔、Mystery Box）', temple: '捕捉 Regi 三柱後，對戰中出現的神殿', egg: '瑪納霏之蛋（狩獵地帶冰封海灣圖鑑）', dig: 'Poké Realm 挖掘場最稀有的寶物（Pink Diamond）', storm: '發電廠下雨時的雷暴', mask: 'Ogerpon 的太晶團體戰', ruins: '抉擇遺跡，捕獲 Regigigas 後（每局一座）', force: '帶著天氣在地圖上遊蕩（HP 跨局保留）' },
+      where: { rift: '傳說裂縫', trio: '傳說三神', mythical: '15:00 時 Mewtwo 身旁（每 10 場決戰 1 場會出現三隻之一，每隻約 1/30；每場沒有幻之寶可夢的決戰後提高）', finale: '最終首領', endless: '無盡模式，最後一隻', event: '女巫之夜 2026（活動）', festival: '2026 燈籠祭（獎勵）', roam: '在地圖上遊蕩（HP保留到下一局）', duel: '在相稱的生態區決鬥', swords: '三把正義之劍的禮物', rush: '通關 Hoopa 的圓環', ultra: '究極之洞（單人遊戲每局一個）', ultraGift: '收服10隻究極異獸的禮物', path: '專屬路線（Zygarde Cell、Cosmog、道館之塔、Mystery Box）', temple: '捕捉 Regi 三柱後，對戰中出現的神殿', egg: '瑪納霏之蛋（狩獵地帶冰封海灣圖鑑）', dig: 'Poké Realm 挖掘場最稀有的寶物（Pink Diamond）', storm: '發電廠下雨時的雷暴', mask: 'Ogerpon 的太晶團體戰', ruins: '抉擇遺跡，捕獲 Regigigas 後（每局一座）', force: '帶著天氣在地圖上遊蕩（HP 跨局保留）' },
       /** The event legends (`EVENT_LEGENDS`), after the table. */
       eventNote: '在2026年的女巫之夜（10月24日至11月2日），Darkrai 以活動傳說的身分登場：它只出現在夢魘裂縫中，而夢魘裂縫可能在鬧鬼對局中取代一道裂縫，贏得2次即可收服。它使用能讓敵群沉睡的 Dark Void，以及能傷害在它附近睡著的敵人的固有特性 Bad Dreams。活動結束後它會回到黑暗之中，但已收服的玩家仍可繼續使用它。它不計入 Arceus 的條件。',
     },

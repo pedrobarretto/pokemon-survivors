@@ -1,11 +1,12 @@
 import { isLegend, LEGEND_IDS, LEGENDS, REGULAR_LEGENDS, type LegendId, type LegendUnlock } from '../data/legends'
 import { MYTHICALS, TRIO_IDS, TRIOS } from '../data/waves'
 import type { PlayableId } from '../data/hatchlings'
+import { dexStatus, type Pokedex } from './dex'
 import { isUnlocked } from './eggs'
 import type { Save } from './meta'
 import { mythicalBeaten } from './mythicalHunt'
 import { isRecord, wholeNumber } from './parse'
-import { unlockShinyStarter } from './shinyStarters'
+import { unlockShinyStarter, type ShinyStarters } from './shinyStarters'
 
 /**
  * Capturing legends for the Legend mode: beating a legendary as a boss (any
@@ -17,9 +18,9 @@ import { unlockShinyStarter } from './shinyStarters'
  * back). A festival legend (Cresselia) is never fought: its festival's
  * milestone gift captures it (`captureByGift`), and so does a path legend's
  * path (`game/legendPaths.ts`), but for Regigigas, beaten once the Regi trio
- * is captured. A shiny one beaten on its
- * capturing win, or on any win after, also unlocks its shiny (kept in
- * `shinyStarters`, like any owned shiny). Pure: the shell banks each
+ * is captured. A shiny one beaten on any win, before the capture or after,
+ * unlocks its shiny once it's captured (kept in `shinyStarters`, like any
+ * owned shiny; a shiny beaten in an earlier run is the Pokédex's shiny mark). Pure: the shell banks each
  * `legendBeaten` event through `recordLegendWin`.
  */
 
@@ -109,7 +110,17 @@ export type LegendWin = { legend: LegendId; shiny: boolean; endless: boolean }
  */
 export type CaptureResult = { legend: LegendId; outcome: 'caught' | 'escaped' | 'owned'; wins: number; need: number; counted: boolean; shiny: boolean }
 
-/** Banks a win into the save: the capture count, and the shiny when a shiny one falls on or after the capturing win. */
+/** Whether the Pokédex marks this legend shiny: a shiny one was beaten in an earlier run (`logDefeat`), or it was played shiny. */
+const shinyInDex = (dex: Pokedex, id: LegendId) => dexStatus(dex, LEGENDS[id].line[0].dex).shiny
+
+/**
+ * The shinies owed to captured legends whose shiny was beaten before the
+ * capturing win (saves from before that counted): `parseSaveData` fills them in.
+ */
+export const withBeatenLegendShinies = (owned: ShinyStarters, captures: Captures, dex: Pokedex): ShinyStarters =>
+  LEGEND_IDS.reduce((acc, id) => (isCaptured(captures, id) && shinyInDex(dex, id) ? unlockShinyStarter(acc, id) : acc), owned)
+
+/** Banks a win into the save: the capture count, and the shiny once it's captured if this win's or an earlier one's was shiny. */
 export const recordLegendWin = (save: Save, win: LegendWin): { save: Save; result: CaptureResult } => {
   const { legend } = win
   const need = winsNeeded(legend)
@@ -118,7 +129,7 @@ export const recordLegendWin = (save: Save, win: LegendWin): { save: Save; resul
   const counted = owned || winCounts(save.legends, legend, win.endless)
   const wins = counted ? before + 1 : before
   const caught = wins >= need
-  const shiny = win.shiny && caught && !(legend in save.shinyStarters)
+  const shiny = (win.shiny || shinyInDex(save.dex, legend)) && caught && !(legend in save.shinyStarters)
   const next: Save = {
     ...save,
     legends: counted ? { ...save.legends, [legend]: wins } : save.legends,
