@@ -1,0 +1,28 @@
+/* The lobby tour's modes reel (ui/lobbyTour.ts): Modos de jogo's scenes in turn, under Rotom's line. */
+.tour-reel {
+  position: relative;
+  overflow: hidden;
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 10px;
+  background: var(--kit-stage);
+}
+
+.tour-reel > canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  image-rendering: pixelated;
+}
+
+/* The mode's name on the scene's nameplate. */
+.tour-reel-name {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  font-family: var(--kit-title);
+  font-size: 19px;
+  line-height: 1;
+  text-align: center;
+  color: #fff;
+}

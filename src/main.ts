@@ -234,6 +234,7 @@ import type { ShopPlaza, VisitorShelf } from './ui/shop'
 import { starterSelect } from './ui/starterSelect'
 import { firstRunDue, guestChosenAt, guestGateDue, hostApp, onboardingStep, onOnboarding, rememberGuest, savePromptDue } from './onboarding'
 import { firstRunTip, hideInAppHint, saveCard, showInAppHint } from './ui/onboarding'
+import { startLobbyTour, type LobbyTourEnd } from './ui/lobbyTour'
 import { invitesScreen, resultsInvite } from './ui/invites'
 import { forgetInstallNudge, installNudgeScreen } from './ui/install'
 import { titleScreen, type LobbyFocus, type Meadow, type ShopTrip } from './ui/title'
@@ -999,6 +1000,15 @@ const showPcBox = (back: () => void) =>
   pcBoxScreen(ui, input, { onClose: back, trainerCard: (close) => sharePreview(ui, input, trainerShare(loadSave().partner), close) }, loadSave().style.equipped.wallpaper)
 
 const showMissions = () => setScreen(missionsScreen(ui, input, () => showTitle({ focus: 'missions' })))
+
+/**
+ * The lobby tour (`ui/lobbyTour.ts`): the lobby comes up (JOGAR highlighted, its pop-ups held back) and Rotom
+ * points at its stops; `done` runs once it ends or is skipped, with how and the stop it ended on.
+ */
+const showLobbyTour = (done: (end: LobbyTourEnd) => void) => {
+  startLobbyTour(ui, input, done)
+  showTitle({ focus: 'play' })
+}
 
 /**
  * The Desafio do dia's screen (from the title), on its solo or co-op side; its boards open over it and come back to it.
@@ -5731,6 +5741,8 @@ if (import.meta.env.DEV) {
        * visit's long one after `localStorage.removeItem('ps:boutiqueSeen')`, which brings back the NOVO tags too), then its sheet;
        * `ps.boutique('open')` lands there with the sheet open at once (`'skins'` on Skins, `'locker'` on Visual).
        */
+      /** The lobby tour (`ui/lobbyTour.ts`): `ps.tour()` brings the lobby up with Rotom's spotlight on it and prints how it ended. */
+      tour: () => showLobbyTour((end) => console.info('ps.tour', end)),
       /** Modos de jogo (`ui/gameModes.ts`): a pick lands back on the lobby with that mode. */
       modes: () => setScreen(openGameModes(ui, input, { current: loadLobbyMode(), onPick: (id) => (saveLobbyMode(id), showTitle()), close: () => showTitle() })),
       /** The secret bases' screens with fakes: `ps.base()` the editor, `ps.base('board')`, `ps.base('carpentry')` (`devBase`). */

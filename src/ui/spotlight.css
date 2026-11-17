@@ -1,0 +1,205 @@
+/* Coach marks (ui/spotlight.ts): the dim with a hole around one element, and the guide's card beside it. */
+
+/* Over everything in #ui, taking every tap: the screen under it hears none while the tour runs. */
+.coach-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  pointer-events: auto;
+  cursor: pointer;
+  touch-action: none;
+}
+
+/* Nothing to point at: the whole screen dims. */
+.coach-layer.coach-dim {
+  background: rgba(8, 10, 28, 0.62);
+}
+
+/* The hole: its huge shadow is the dim, its gold edge says "here". */
+.coach-hole {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: 18px;
+  box-shadow:
+    0 0 0 3px var(--kit-ouro),
+    0 0 0 6px var(--kit-tinta),
+    0 0 0 200vmax rgba(8, 10, 28, 0.62);
+  pointer-events: none;
+}
+
+/* Its pulse: a ring that grows out of the edge and fades, in a few hard steps. */
+.coach-hole::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border: 3px solid var(--kit-ouro);
+  border-radius: inherit;
+  animation: coach-pulse 1.3s steps(6) infinite;
+}
+
+@keyframes coach-pulse {
+  to {
+    inset: -15px;
+    border-radius: 26px;
+    opacity: 0;
+  }
+}
+
+.coach-glide .coach-hole,
+.coach-card.coach-glide {
+  transition:
+    left 0.22s ease-out,
+    top 0.22s ease-out,
+    width 0.22s ease-out,
+    height 0.22s ease-out;
+}
+
+/* The safe area, measured: the card stays inside it. */
+.coach-safe {
+  position: absolute;
+  inset: max(12px, var(--safe-t)) max(12px, var(--safe-r)) max(12px, var(--safe-b)) max(12px, var(--safe-l));
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.coach-card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(440px, calc(100% - 24px));
+  padding: 12px 12px 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.coach-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.coach-portrait {
+  flex: none;
+}
+
+.coach-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.coach-who {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.coach-name {
+  font-family: var(--title);
+  font-size: 20px;
+  font-weight: 400;
+}
+
+.coach-count {
+  font-family: var(--title);
+  font-size: 18px;
+  color: var(--kit-ink-2);
+}
+
+.coach-text {
+  margin: 0;
+  font-family: var(--body);
+  font-size: 22px;
+  line-height: 1.08;
+  color: var(--kit-ink);
+}
+
+.coach-extra[hidden] {
+  display: none;
+}
+
+.coach-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* "Pular tour": a quiet text button, so the way on stays the obvious one. */
+.coach-skip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 4px 6px;
+  color: var(--kit-ink-2);
+  font-family: var(--body);
+  font-size: 20px;
+  background: none;
+  border: none;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.coach-next {
+  --mode: var(--kit-survivors);
+  min-width: 132px;
+  min-height: 48px;
+  padding: 4px 16px 10px;
+  font-size: 28px;
+}
+
+.coach-next,
+.coach-skip {
+  position: relative;
+}
+
+.coach-next .key-hint {
+  position: absolute;
+  top: -10px;
+  right: -8px;
+  font-size: 14px;
+}
+
+.coach-skip .key-hint {
+  font-size: 14px;
+  text-decoration: none;
+}
+
+@media (max-width: 759px), (max-height: 500px) and (orientation: landscape) {
+  .coach-card {
+    gap: 8px;
+    padding: 10px 10px 12px;
+  }
+  .coach-head {
+    gap: 10px;
+  }
+  .coach-text {
+    font-size: 20px;
+  }
+  .coach-name {
+    font-size: 17px;
+  }
+  .coach-next {
+    min-width: 112px;
+    min-height: 44px;
+    font-size: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coach-hole::after {
+    animation: none;
+  }
+  .coach-glide .coach-hole,
+  .coach-card.coach-glide {
+    transition: none;
+  }
+}
