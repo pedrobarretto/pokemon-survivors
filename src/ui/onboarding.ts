@@ -1,7 +1,7 @@
 import { playSfx } from '../engine/audio'
 import type { InputKind } from '../game/bugReport'
 import { t } from '../i18n'
-import { chromeIntent, onboardingStep, type InAppBrowser } from '../onboarding'
+import { chromeIntent, moveHint, onboardingStep, type InAppBrowser } from '../onboarding'
 import { h, rich } from './dom'
 import { boundMoveKeys } from './inputLabels'
 
@@ -63,7 +63,8 @@ export const hideInAppHint = () => {
 /** The first run's opening toast: how to move with the input at hand, and that the moves fire on their own. */
 export const firstRunTip = (kind: InputKind | null, touch: boolean) => {
   const m = t().onboarding
-  const move = kind === 'gamepad' ? m.movePad : kind === 'touch' || (kind === null && touch) ? m.moveTouch : m.moveKeys(boundMoveKeys())
+  const hint = moveHint(kind, touch)
+  const move = hint === 'pad' ? m.movePad : hint === 'touch' ? m.moveTouch : m.moveKeys(boundMoveKeys())
   return h('span', { class: 'item-toast first-run-tip' }, h('span', {}, rich(move), h('small', {}, m.auto)))
 }
 

@@ -10,9 +10,15 @@ describe('first visit steps', () => {
   it('judges a visit by its furthest step, skipped ones and all', () => {
     expect(furthest({})).toEqual({ step: null, stepIndex: -1 })
     // Back from signing in: no intro, no gate, straight to the select.
-    expect(furthest({ lobby: 1, select: 4 })).toEqual({ step: 'select', stepIndex: 4 })
+    expect(furthest({ lobby: 1, select: 4 })).toEqual({ step: 'select', stepIndex: 8 })
     // Reached out of order (a co-op link draws a frame before any lobby): the order of the steps decides.
-    expect(furthest({ firstFrame: 2, lobby: 9 })).toEqual({ step: 'firstFrame', stepIndex: 6 })
+    expect(furthest({ firstFrame: 2, lobby: 9 })).toEqual({ step: 'firstFrame', stepIndex: 10 })
+  })
+
+  it('puts the onboarding before the lobby and the run', () => {
+    // Arm `tour`: the training run skipped, the pick made, its run loading.
+    expect(furthest({ intro: 1, welcome: 2, tutorial: 4, tutorialEnd: 30, partner: 31, play: 40, loading: 40 })).toEqual({ step: 'loading', stepIndex: 9 })
+    expect(furthest({ intro: 1, welcome: 2, tutorial: 4 })).toEqual({ step: 'tutorial', stepIndex: 2 })
   })
 
   it('takes the last answer at the gate', () => {

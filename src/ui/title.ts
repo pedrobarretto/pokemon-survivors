@@ -59,6 +59,7 @@ import { realmIconUrl } from '../render/realmScene'
 import { modeFacts, type ModeFacts } from './gameModes'
 import { lobbyModeIn, loadLobbyMode, modeBeside, saveLobbyMode, shownModes } from './lobbyMode'
 import { lobbySheet, type SheetEntry } from './lobbySheet'
+import { tourRunning } from './lobbyTour'
 import { openRadio, radioButton, radioPill } from './radio'
 import { nearestInDirection, type Direction } from './spatial'
 import { toast } from './toasts'
@@ -142,8 +143,8 @@ export type TitleActions = {
   incubator: () => void
   /** Opens the waiting Mystery Gifts (the Presentes card). */
   gifts: () => void
-  /** The lobby is up: after the "press start" gesture, so the browser lets audio play. */
-  ready: () => void
+  /** The lobby is up: after the "press start" gesture, so the browser lets audio play. True when something takes the lobby at once (the first visit's lobby tour): no survey or install offer opens over it. */
+  ready: () => boolean
   /** Set, "press start" calls it instead of opening the lobby (a device's first run, `startFirstRun` in main.ts). */
   start?: () => void
   /**
@@ -297,6 +298,7 @@ const eggsCard = (ready: number, walking: number) => {
   const line = ready > 0 ? m.eggsReady(ready) : walking > 0 ? m.eggsWalking(walking) : m.eggsNone
   const el = todayCard('eggs', iconImg(eggsIcon()), m.eggs, line, countBadge(ready), 'O')
   el.setAttribute('aria-label', `${m.eggs}: ${line}`)
+  el.dataset.tour = 'eggs'
   return el
 }
 
@@ -739,7 +741,8 @@ const playLine = (id: GameModeId, facts: ModeFacts) => [t().gameModes.names[id],
  * a wipe each way; `shop` starts on one once the lobby is up
  * (`instant`: already there; `back`: leaving the shop calls it instead of
  * going home). `intro: false` opens straight on the lobby (coming back from
- * another screen, or after a language switch), highlighting `focus`.
+ * another screen, or after a language switch), highlighting `focus`. Its
+ * `data-tour` anchors are what the lobby tour points at (`ui/lobbyTour.ts`).
  */
 export const titleScreen = (
   root: HTMLElement,
@@ -1136,14 +1139,14 @@ export const titleScreen = (
       'section',
       { class: 'lobby-today', 'aria-label': m.today },
       h('header', { class: 'lobby-col-head' }, h('h2', { class: 'arc-outline' }, m.today), h('span', { class: 'lobby-col-note' }, date)),
-      h('div', { class: 'lobby-today-cards' }, ...(kind === 'landscape' && festival ? [festival] : []), ...dayCards),
+      h('div', { class: 'lobby-today-cards', 'data-tour': 'today' }, ...(kind === 'landscape' && festival ? [festival] : []), ...dayCards),
     )
 
     const shopRow = (key: 'mart' | 'boutique' | 'carpentry', art: string, name: string, line: string) =>
       pressable(h('button', { class: 'lobby-shop-row', type: 'button', 'aria-label': `${name}: ${line}` }, h('span', { class: 'lobby-shop-art' }, iconImg(art, 'lobby-shop-img')), h('span', { class: 'lobby-day-text' }, h('b', {}, name), h('small', {}, line))), key)
     const shops = h(
       'div',
-      { class: 'arc-card lobby-shops' },
+      { class: 'arc-card lobby-shops', 'data-tour': 'plaza' },
       shopRow('mart', assetUrl(`shop/shop-lv${save.shop.level}.png`), m.shopName, m.shopLine),
       shopRow('boutique', assetUrl('shop/boutique.png'), m.boutiqueName, m.boutiqueLine),
       shopRow('carpentry', assetUrl('shop/carpentry.png'), m.carpentryName, m.carpentryLine),
@@ -1198,7 +1201,7 @@ export const titleScreen = (
     /* The modes bar and JOGAR. */
     const chips = modes.map((id) => {
       const chip = navigable(
-        h('button', { class: 'lobby-mode-chip', type: 'button', style: `--mode:${GAME_MODES[id].color}` }, h('span', { class: 'lobby-mode-chip-icon' }, iconImg(modeIcon(id), 'lobby-mode-chip-img')), h('span', { class: 'lobby-mode-chip-name' }, names[id])),
+        h('button', { class: 'lobby-mode-chip', type: 'button', style: `--mode:${GAME_MODES[id].color}`, 'data-mode': id }, h('span', { class: 'lobby-mode-chip-icon' }, iconImg(modeIcon(id), 'lobby-mode-chip-img')), h('span', { class: 'lobby-mode-chip-name' }, names[id])),
         `mode-${id}`,
       )
       if (GAME_MODES[id].fresh) chip.append(h('em', { class: 'arc-tag new' }, t().gameModes.tags.fresh))
@@ -1216,9 +1219,9 @@ export const titleScreen = (
       })
     }
     const allModes = pressable(h('button', { class: 'lobby-mode-all', type: 'button', 'aria-label': t().gameModes.title, title: t().gameModes.title }, iconImg(gridIcon(), 'ink-icon')), 'modes')
-    const bar_ = h('nav', { class: 'lobby-modes', 'aria-label': t().gameModes.title }, h('div', { class: 'lobby-modes-scroll' }, ...chips.map((c) => c.chip)), allModes)
+    const bar_ = h('nav', { class: 'lobby-modes', 'aria-label': t().gameModes.title, 'data-tour': 'modes' }, h('div', { class: 'lobby-modes-scroll' }, ...chips.map((c) => c.chip)), allModes)
     const playSub = h('small')
-    const play = pressable(h('button', { class: 'arc-btn lobby-play', type: 'button' }, h('span', { class: 'arc-outline' }, m.play), playSub, h('span', { class: 'key-hint' }, 'ENTER')), 'play')
+    const play = pressable(h('button', { class: 'arc-btn lobby-play', type: 'button', 'data-tour': 'play' }, h('span', { class: 'arc-outline' }, m.play), playSub, h('span', { class: 'key-hint' }, 'ENTER')), 'play')
 
     const tile = (key: keyof typeof runs, icon: Node, label: string, hotkey: string | null, count = 0, aria = label) =>
       pressable(h('button', { class: 'arc-card lobby-tile', type: 'button', 'aria-label': aria }, h('span', { class: 'lobby-tile-icon' }, icon), h('span', { class: 'lobby-tile-name' }, label), count > 0 && h('em', { class: 'arc-badge' }, formatNumber(count)), hotkey && h('span', { class: 'key-hint' }, printedKeys(hotkey))), key)
@@ -1245,7 +1248,7 @@ export const titleScreen = (
             { class: 'lobby-tabs', 'aria-label': m.tabs.home },
             ...TAB_IDS.map((id) => {
               const tab = navigable(
-                h('button', { class: `lobby-tab ${id}`, type: 'button' }, iconImg(tabIcons[id], 'lobby-tab-icon'), h('span', {}, m.tabs[id]), id === 'collection' ? countBadge(ready) : null),
+                h('button', { class: `lobby-tab ${id}`, type: 'button', 'data-tour': `tab-${id}` }, iconImg(tabIcons[id], 'lobby-tab-icon'), h('span', {}, m.tabs[id]), id === 'collection' ? countBadge(ready) : null),
                 `tab-${id}`,
               )
               tab.addEventListener('click', () => openTab(id))
@@ -1573,11 +1576,12 @@ export const titleScreen = (
   const enterLobby = () => {
     noteDesignSeen()
     buildLobby()
-    actions.ready()
+    const spoken = actions.ready()
     // `?loja` (and the dev's `ps.plaza()`) head for the shop once the lobby is laid out.
     const trip = opts.shop
     if (trip) requestAnimationFrame(() => visitShop(trip, opts.instant, opts.shelf))
-    else {
+    // The lobby tour holds the lobby (a tour due, or running): its pop-ups wait for another visit.
+    else if (!spoken && !tourRunning()) {
       // Otherwise a survey asks by itself, at most one per page load; closed unanswered, its clipboard in the top bar keeps asking.
       const survey = takeSurveyOffer()
       if (survey) openOver(survey === 'design' ? actions.designSurvey : actions.survey)

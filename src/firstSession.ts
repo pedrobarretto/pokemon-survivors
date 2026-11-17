@@ -1,5 +1,6 @@
 import { accountUserId } from './account'
 import { recordReplay, track } from './analytics'
+import { firstTime } from './firstTime'
 import { answerGate, furthest, isFirstLoad, NO_STEPS, reach, REPLAY_RATE, type FirstStep, type FirstSteps, type GateAnswer } from './firstSteps'
 import { hostApp, onOnboarding, type OnboardingStep } from './onboarding'
 import { deviceNow } from './telemetry'
@@ -9,7 +10,10 @@ import { cdnState } from './assets'
  * A new device's first visit, as one `first_session` event: where it got to
  * (`firstSteps.ts`) and how long each step took. The shell marks the steps
  * with one-line calls (`firstStep`, `firstGate`, `firstRunClock`), which do
- * nothing on any other page load. A sample of these loads is also recorded
+ * nothing on any other page load. The onboarding's training run is no first
+ * run: while it plays (`holdRunSteps`) its loading, frame and clock mark
+ * nothing. The event carries the device's onboarding arm and how its training
+ * run ended (`firstTime.ts`). A sample of these loads is also recorded
  * (session replay) until a minute into the first run.
  */
 
@@ -21,6 +25,10 @@ let load = 0
 let replay = false
 /** The onboarding moments (`onboarding.ts`: the fast lane, the gate skipped, the save card, the in-app hint) this load went through, each once. */
 let moments: OnboardingStep[] = []
+/** Set while the training run plays: its loading, first frame and minute aren't the first run's. */
+let held = false
+/** The steps only a real run marks. */
+const RUN_STEPS: readonly FirstStep[] = ['loading', 'firstFrame', 'minute']
 
 const loadsBefore = () => {
   try {
@@ -51,6 +59,7 @@ const send = (sent: 'minute' | 'hidden') => {
   if (!s) return
   steps = null
   if (replay) recordReplay(false)
+  const onboarding = firstTime()
   track(
     'first_session',
     {
@@ -61,6 +70,9 @@ const send = (sent: 'minute' | 'hidden') => {
       sent,
       inApp: hostApp()?.app ?? null,
       moments,
+      arm: onboarding.arm,
+      tutorial: onboarding.tutorial?.how ?? null,
+      tutorialStep: onboarding.tutorial?.step ?? null,
       cdn: cdnState(),
       account: accountUserId() ? 1 : 0,
       replay: replay ? 1 : 0,
@@ -70,10 +82,13 @@ const send = (sent: 'minute' | 'hidden') => {
   )
 }
 
-/** Starts watching this page load if it's a first visit (`isFirstLoad`, from the save's banked `runs`). Call once at boot, after `startAnalytics`. */
-export const startFirstSession = (runs: number) => {
+/**
+ * Starts watching this page load if it's a first visit (`isFirstLoad`, from the save's banked `runs`), and says whether it is.
+ * Call once at boot, after `startAnalytics`.
+ */
+export const startFirstSession = (runs: number): boolean => {
   const before = loadsBefore()
-  if (!isFirstLoad(runs, before)) return
+  if (!isFirstLoad(runs, before)) return false
   load = before + 1
   countLoad(load)
   steps = NO_STEPS
@@ -85,11 +100,17 @@ export const startFirstSession = (runs: number) => {
   // Only a device's very first load, so a recording is one per device (PostHog's free tier holds 5k a month).
   replay = load === 1 && (Math.random() < REPLAY_RATE || devReplay())
   if (replay) recordReplay(true)
+  return true
+}
+
+/** Holds the run steps (`loading`, `firstFrame`, `minute`) while the training run plays (`on`), and lets them through again after it. */
+export const holdRunSteps = (on: boolean) => {
+  held = on
 }
 
 /** The visit reached `step` (only the first time counts); `minute` sends it. */
 export const firstStep = (step: FirstStep) => {
-  if (!steps) return
+  if (!steps || (held && RUN_STEPS.includes(step))) return
   steps = reach(steps, step, performance.now() / 1000)
   if (step === 'minute') send('minute')
 }
@@ -101,5 +122,5 @@ export const firstGate = (answer: GateAnswer) => {
 
 /** A run's clock (`g.time`), each frame it's drawn: a minute in is the visit's last step. */
 export const firstRunClock = (seconds: number) => {
-  if (steps && seconds >= 60) firstStep('minute')
+  if (steps && !held && seconds >= 60) firstStep('minute')
 }

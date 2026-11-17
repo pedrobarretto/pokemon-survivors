@@ -52,6 +52,7 @@ import { fallInRaid, isRaidBoss, raidHarm, shieldTakes } from './teraRaid'
 import { TERA } from '../data/tera'
 import { rocketKitKill } from './rocketKitSystem'
 import * as dm from '../engine/dmath'
+import { tutorialHp } from './tutorial'
 
 const TEXT_COLORS = { super: '#ffd830', normal: '#ffffff', weak: '#a8a8b8', warded: '#88b8f8' } as const
 
@@ -295,8 +296,8 @@ export const hurtPlayer = (
   by: HarmBy | null = null,
 ) => {
   const p = g.player
-  // The Dojo never hurts (`training.ts`).
-  if (p.iframes > 0 || p.hidden || isRepelled(g) || g.phase !== 'playing' || g.training !== null) return
+  // The Dojo never hurts (`training.ts`); the training run does, down to its floor (`tutorialHp`).
+  if (p.iframes > 0 || p.hidden || isRepelled(g) || g.phase !== 'playing' || (g.training !== null && g.training.tutorial === null)) return
   // Co-op: fainted, away, gone or mid-evolution players can't be hurt.
   if (g.coop !== null && !inPlay(p)) return
   if (p.guard) return guardHit(g, p.guard, from)
@@ -310,6 +311,7 @@ export const hurtPlayer = (
   // Terastallized, the player defends as its Tera type (`teraGuard`).
   const dmg = armored(gaKitATaken(g, taken, types) * mods.enemyDamage * weather * teraGuard(g, types) * domainHarm(g, from !== undefined) * raidHarm(g, from !== undefined) * p.stats.damageTaken, p.stats.armor)
   p.hp -= dmg
+  if (g.training !== null) p.hp = tutorialHp(p.hp, p.stats.maxHp)
   p.record.taken += dmg
   p.record.hits++
   noteHit(p, by ?? (from ? harmBy(from) : NO_ONE), hit, dmg)

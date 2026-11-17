@@ -2,6 +2,9 @@ import { CAFE_TABLES_WORDS } from './cafeTables'
 import type { DexRegion } from '../data/nationalDex'
 import { GALLOP_WORDS } from './gallop'
 import { ITEM_DROP_WORDS } from './itemDrop'
+import { LOBBY_TOUR_WORDS } from './lobbyTour'
+import { TUTORIAL_WORDS } from './tutorial'
+import { WELCOME_WORDS } from './welcome'
 import { RADIO_WORDS } from './radio'
 import type { GameModeId } from '../data/gameModes'
 import { realmBookPt as realmBook } from './realmStamps/pt'
@@ -1281,6 +1284,9 @@ export const pt = {
   },
 
   itemDrop: ITEM_DROP_WORDS.pt,
+  welcome: WELCOME_WORDS.pt,
+  tutorial: TUTORIAL_WORDS.pt,
+  lobbyTour: LOBBY_TOUR_WORDS.pt,
   radio: RADIO_WORDS.pt,
   levelUp: {
     title: (name: string, level: number) => `${name} subiu para o Nv ${level}!`,

@@ -65,6 +65,31 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
     ],
     changes: [
       {
+        title: {
+          pt: 'Primeira vez? O Rotom te mostra o jogo',
+          en: 'First time? Rotom shows you the game',
+          es: '¿Primera vez? Rotom te muestra el juego',
+          fr: 'Première fois ? Rotom te montre le jeu',
+          zh: '第一次玩？Rotom 帶你認識遊戲',
+        },
+        notes: [
+          {
+            pt: 'Quem chega pela primeira vez pode ser recebido pelo Rotom, que ensina o básico jogando, em uns 2 minutos: andar, os golpes que saem sozinhos, a experiência, as melhorias, a Poké Ball e um chefe. Dá pra pular a qualquer hora, ou tocar em "Já sei jogar".',
+            en: 'New players may be greeted by Rotom, who teaches the basics by playing, in about 2 minutes: moving, the moves that fire on their own, experience, upgrades, the Poké Ball and a boss. Skip it any time, or tap "I know how to play".',
+            es: 'Quien llega por primera vez puede ser recibido por Rotom, que enseña lo básico jugando, en unos 2 minutos: moverse, los ataques que salen solos, la experiencia, las mejoras, la Poké Ball y un jefe. Se puede saltar en cualquier momento, o tocar "Ya sé jugar".',
+            fr: 'Les nouveaux joueurs peuvent être accueillis par Rotom, qui apprend les bases en jouant, en 2 minutes environ : se déplacer, les attaques qui partent seules, l’expérience, les améliorations, la Poké Ball et un boss. On peut passer à tout moment, ou toucher « Je sais jouer ».',
+            zh: '新玩家可能會遇到 Rotom 迎接，花大約 2 分鐘邊玩邊教基本操作：移動、自動施放的招式、經驗值、強化、精靈球和頭目。隨時都能跳過，或點「我會玩了」。',
+          },
+          {
+            pt: 'Depois, você escolhe o primeiro parceiro entre os 27 iniciais de todas as regiões. E em Ajustes > Jogo, "Rever tutorial" mostra tudo de novo, com um passeio pelo lobby.',
+            en: 'Then you pick your first partner from the 27 starters of every region. And in Settings > Game, "See the tutorial again" shows it all again, with a tour of the lobby.',
+            es: 'Después eliges tu primer compañero entre los 27 iniciales de todas las regiones. Y en Ajustes > Juego, "Ver el tutorial otra vez" lo muestra todo de nuevo, con un paseo por el lobby.',
+            fr: 'Ensuite, tu choisis ton premier partenaire parmi les 27 starters de toutes les régions. Et dans Réglages > Jeu, « Revoir le tutoriel » montre tout à nouveau, avec une visite du lobby.',
+            zh: '接著從各地區的 27 隻御三家中選出第一位夥伴。在設定 > 遊戲裡的「重看教學」可以再看一次，還會帶你逛一圈大廳。',
+          },
+        ],
+      },
+      {
         title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Correctifs', zh: '修正' },
         notes: [
           {

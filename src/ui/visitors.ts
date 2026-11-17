@@ -1,3 +1,4 @@
+import { GUIDE } from '../data/guide'
 import { CARAVAN, CARPENTER, STALLS, TAILOR, type StallId } from '../data/visitors'
 import { caravanHere, isCaravanDay } from '../game/caravan'
 import { addDays, brasiliaDay, type DayKey } from '../game/day'
@@ -85,6 +86,9 @@ export const senseiSpeaker = () => visitorSpeaker(SENSEI.dex, SENSEI.name, '#c04
 
 /** Leavanny, the Boutique's tailor (`ui/boutique.ts`). */
 export const tailorSpeaker = () => visitorSpeaker(TAILOR.dex, TAILOR.name, '#3f8f3a')
+
+/** Rotom, the first visit's guide (`data/guide.ts`): the welcome, the training run and the lobby tour. */
+export const guideSpeaker = () => visitorSpeaker(GUIDE.dex, GUIDE.name, GUIDE.color)
 
 /** Bibarel, the carpentry's carpenter (`ui/carpentry.ts`). */
 export const carpenterSpeaker = () => visitorSpeaker(CARPENTER.dex, CARPENTER.name, '#8a5a2b')
