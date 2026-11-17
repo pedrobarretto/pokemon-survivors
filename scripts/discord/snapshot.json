@@ -8,15 +8,22 @@
     "splash": null,
     "discovery_splash": null,
     "features": [
-      "AUTO_MODERATION",
-      "GUILD_ONBOARDING",
+      "VIDEO_BITRATE_ENHANCED",
+      "VIDEO_QUALITY_720_60FPS",
       "NEWS",
-      "COMMUNITY",
-      "GUILD_ONBOARDING_EVER_ENABLED",
       "AGE_VERIFICATION_LARGE_GUILD",
-      "GUILD_ONBOARDING_HAS_PROMPTS",
+      "GUILD_ONBOARDING_EVER_ENABLED",
+      "ANIMATED_ICON",
+      "COMMUNITY",
+      "INVITE_SPLASH",
+      "GUILD_ONBOARDING",
       "GUILD_SERVER_GUIDE",
-      "WELCOME_SCREEN_ENABLED"
+      "AUDIO_BITRATE_128_KBPS",
+      "STAGE_CHANNEL_VIEWERS_50",
+      "AUTO_MODERATION",
+      "GUILD_ONBOARDING_HAS_PROMPTS",
+      "WELCOME_SCREEN_ENABLED",
+      "TIERLESS_BOOSTING"
     ],
     "banner": null,
     "owner_id": "639620117239562251",
@@ -43,7 +50,7 @@
     "safety_alerts_channel_id": null,
     "public_updates_channel_id": "1561829077839515779",
     "hub_type": null,
-    "premium_progress_bar_enabled": false,
+    "premium_progress_bar_enabled": true,
     "premium_progress_bar_enabled_user_updated_at": null,
     "latest_onboarding_question_id": "1562204550784360531",
     "nsfw": false,
@@ -82,7 +89,7 @@
     },
     {
       "id": "1561829006846730414",
-      "name": "Owner",
+      "name": "『👑』Owner",
       "description": null,
       "permissions": "5892853606918",
       "position": 14,
@@ -120,13 +127,13 @@
     },
     {
       "id": "1561829008507928587",
-      "name": "Moderator",
+      "name": "『🛡️』Moderator",
       "description": null,
-      "permissions": "5903322589878",
+      "permissions": "14699415612086",
       "position": 12,
-      "color": 6852848,
+      "color": 11607906,
       "colors": {
-        "primary_color": 6852848,
+        "primary_color": 11607906,
         "secondary_color": null,
         "tertiary_color": null
       },
@@ -157,30 +164,11 @@
       "flags": 0
     },
     {
-      "id": "1564342412833329316",
-      "name": "『🏆』OG Supporter",
-      "description": null,
-      "permissions": "0",
-      "position": 10,
-      "color": 10514672,
-      "colors": {
-        "primary_color": 10514672,
-        "secondary_color": null,
-        "tertiary_color": null
-      },
-      "hoist": true,
-      "managed": false,
-      "mentionable": false,
-      "icon": null,
-      "unicode_emoji": null,
-      "flags": 0
-    },
-    {
       "id": "1561829009556381729",
       "name": "『💛』Gold Supporter",
       "description": null,
       "permissions": "0",
-      "position": 9,
+      "position": 10,
       "color": 15762176,
       "colors": {
         "primary_color": 15762176,
@@ -199,10 +187,29 @@
       "name": "『🩷』Supporter",
       "description": null,
       "permissions": "0",
-      "position": 8,
+      "position": 9,
       "color": 16275592,
       "colors": {
         "primary_color": 16275592,
+        "secondary_color": null,
+        "tertiary_color": null
+      },
+      "hoist": true,
+      "managed": false,
+      "mentionable": false,
+      "icon": null,
+      "unicode_emoji": null,
+      "flags": 0
+    },
+    {
+      "id": "1564342412833329316",
+      "name": "『🏆』OG Supporter",
+      "description": null,
+      "permissions": "0",
+      "position": 8,
+      "color": 10514672,
+      "colors": {
+        "primary_color": 10514672,
         "secondary_color": null,
         "tertiary_color": null
       },
@@ -347,6 +354,28 @@
       "flags": 1
     },
     {
+      "id": "1566150178308620388",
+      "name": "Server Booster",
+      "description": null,
+      "permissions": "2217309179855937",
+      "position": 1,
+      "color": 16023551,
+      "colors": {
+        "primary_color": 16023551,
+        "secondary_color": 11816191,
+        "tertiary_color": null
+      },
+      "hoist": false,
+      "managed": true,
+      "mentionable": false,
+      "icon": null,
+      "unicode_emoji": null,
+      "tags": {
+        "premium_subscriber": null
+      },
+      "flags": 0
+    },
+    {
       "id": "1561824253559709777",
       "name": "@everyone",
       "description": null,
@@ -389,7 +418,7 @@
       "position": 0,
       "permission_overwrites": [
         {
-          "id": "1561829008507928587",
+          "id": "1562199946545991730",
           "type": 0,
           "allow": "377957124096",
           "deny": "0"
@@ -407,7 +436,7 @@
           "deny": "0"
         },
         {
-          "id": "1562199946545991730",
+          "id": "1561829008507928587",
           "type": 0,
           "allow": "377957124096",
           "deny": "0"
@@ -427,7 +456,7 @@
       "position": 1,
       "permission_overwrites": [
         {
-          "id": "1561829008507928587",
+          "id": "1562199946545991730",
           "type": 0,
           "allow": "377957124096",
           "deny": "0"
@@ -445,7 +474,7 @@
           "deny": "0"
         },
         {
-          "id": "1562199946545991730",
+          "id": "1561829008507928587",
           "type": 0,
           "allow": "377957124096",
           "deny": "0"
@@ -485,7 +514,7 @@
       "position": 3,
       "permission_overwrites": [
         {
-          "id": "1562199946545991730",
+          "id": "1561829008507928587",
           "type": 0,
           "allow": "377957124096",
           "deny": "0"
@@ -503,7 +532,7 @@
           "deny": "0"
         },
         {
-          "id": "1561829008507928587",
+          "id": "1562199946545991730",
           "type": 0,
           "allow": "377957124096",
           "deny": "0"
@@ -523,7 +552,7 @@
       "position": 4,
       "permission_overwrites": [
         {
-          "id": "1561829008507928587",
+          "id": "1562199946545991730",
           "type": 0,
           "allow": "377957124096",
           "deny": "0"
@@ -541,7 +570,7 @@
           "deny": "0"
         },
         {
-          "id": "1562199946545991730",
+          "id": "1561829008507928587",
           "type": 0,
           "allow": "377957124096",
           "deny": "0"
@@ -559,7 +588,7 @@
       "position": 1,
       "permission_overwrites": [
         {
-          "id": "1561829008507928587",
+          "id": "1561829006846730414",
           "type": 0,
           "allow": "1024",
           "deny": "0"
@@ -571,7 +600,7 @@
           "deny": "1024"
         },
         {
-          "id": "1562199946545991730",
+          "id": "1561829008507928587",
           "type": 0,
           "allow": "1024",
           "deny": "0"
@@ -583,7 +612,7 @@
           "deny": "0"
         },
         {
-          "id": "1561829006846730414",
+          "id": "1562199946545991730",
           "type": 0,
           "allow": "1024",
           "deny": "0"
@@ -646,7 +675,7 @@
       "position": 6,
       "permission_overwrites": [
         {
-          "id": "1561829006846730414",
+          "id": "1562199946545991730",
           "type": 0,
           "allow": "1024",
           "deny": "0"
@@ -658,7 +687,7 @@
           "deny": "1024"
         },
         {
-          "id": "1562199946545991730",
+          "id": "1561829008507928587",
           "type": 0,
           "allow": "1024",
           "deny": "0"
@@ -670,7 +699,7 @@
           "deny": "0"
         },
         {
-          "id": "1561829008507928587",
+          "id": "1561829006846730414",
           "type": 0,
           "allow": "1024",
           "deny": "0"
@@ -690,7 +719,7 @@
       "position": 7,
       "permission_overwrites": [
         {
-          "id": "1561829008507928587",
+          "id": "1561829006846730414",
           "type": 0,
           "allow": "1024",
           "deny": "0"
@@ -702,7 +731,7 @@
           "deny": "1024"
         },
         {
-          "id": "1561829006846730414",
+          "id": "1562199946545991730",
           "type": 0,
           "allow": "1024",
           "deny": "0"
@@ -714,7 +743,7 @@
           "deny": "0"
         },
         {
-          "id": "1562199946545991730",
+          "id": "1561829008507928587",
           "type": 0,
           "allow": "1024",
           "deny": "0"
@@ -734,7 +763,7 @@
       "position": 8,
       "permission_overwrites": [
         {
-          "id": "1562199946545991730",
+          "id": "1561829008507928587",
           "type": 0,
           "allow": "1024",
           "deny": "0"
@@ -746,7 +775,7 @@
           "deny": "1024"
         },
         {
-          "id": "1561829008507928587",
+          "id": "1562199946545991730",
           "type": 0,
           "allow": "1024",
           "deny": "0"
@@ -778,7 +807,7 @@
       "position": 9,
       "permission_overwrites": [
         {
-          "id": "1561829008507928587",
+          "id": "1562199946545991730",
           "type": 0,
           "allow": "1024",
           "deny": "0"
@@ -790,7 +819,7 @@
           "deny": "1024"
         },
         {
-          "id": "1562199946545991730",
+          "id": "1561829006846730414",
           "type": 0,
           "allow": "1024",
           "deny": "0"
@@ -802,7 +831,7 @@
           "deny": "0"
         },
         {
-          "id": "1561829006846730414",
+          "id": "1561829008507928587",
           "type": 0,
           "allow": "1024",
           "deny": "0"
@@ -895,13 +924,13 @@
           "deny": "0"
         },
         {
-          "id": "1564342411793277029",
+          "id": "1561829008507928587",
           "type": 0,
           "allow": "4776006782464",
           "deny": "0"
         },
         {
-          "id": "1564342412833329316",
+          "id": "1564342411793277029",
           "type": 0,
           "allow": "4776006782464",
           "deny": "0"
@@ -919,7 +948,7 @@
           "deny": "0"
         },
         {
-          "id": "1561829008507928587",
+          "id": "1564342412833329316",
           "type": 0,
           "allow": "4776006782464",
           "deny": "0"
@@ -946,7 +975,7 @@
       "position": 10,
       "permission_overwrites": [
         {
-          "id": "1561829010953207861",
+          "id": "1564342412833329316",
           "type": 0,
           "allow": "4776006782464",
           "deny": "0"
@@ -958,13 +987,13 @@
           "deny": "0"
         },
         {
-          "id": "1564342411793277029",
+          "id": "1561829008507928587",
           "type": 0,
           "allow": "4776006782464",
           "deny": "0"
         },
         {
-          "id": "1564342412833329316",
+          "id": "1561829010953207861",
           "type": 0,
           "allow": "4776006782464",
           "deny": "0"
@@ -982,7 +1011,7 @@
           "deny": "0"
         },
         {
-          "id": "1561829008507928587",
+          "id": "1564342411793277029",
           "type": 0,
           "allow": "4776006782464",
           "deny": "0"
@@ -1085,7 +1114,7 @@
       "position": 15,
       "permission_overwrites": [
         {
-          "id": "1562199946545991730",
+          "id": "1561829008507928587",
           "type": 0,
           "allow": "377957173248",
           "deny": "0"
@@ -1097,7 +1126,7 @@
           "deny": "377957173248"
         },
         {
-          "id": "1561829008507928587",
+          "id": "1561829006846730414",
           "type": 0,
           "allow": "377957173248",
           "deny": "0"
@@ -1109,7 +1138,7 @@
           "deny": "0"
         },
         {
-          "id": "1561829006846730414",
+          "id": "1562199946545991730",
           "type": 0,
           "allow": "377957173248",
           "deny": "0"
@@ -1129,7 +1158,7 @@
       "position": 16,
       "permission_overwrites": [
         {
-          "id": "1561829008507928587",
+          "id": "1562199946545991730",
           "type": 0,
           "allow": "377957173248",
           "deny": "0"
@@ -1141,7 +1170,7 @@
           "deny": "377957173248"
         },
         {
-          "id": "1562199946545991730",
+          "id": "1561829006846730414",
           "type": 0,
           "allow": "377957173248",
           "deny": "0"
@@ -1153,7 +1182,7 @@
           "deny": "0"
         },
         {
-          "id": "1561829006846730414",
+          "id": "1561829008507928587",
           "type": 0,
           "allow": "377957173248",
           "deny": "0"
@@ -2068,6 +2097,15 @@
     {
       "id": "1561834786039926904",
       "name": "oshawott",
+      "roles": [],
+      "require_colons": true,
+      "managed": false,
+      "animated": false,
+      "available": true
+    },
+    {
+      "id": "1565069219190546582",
+      "name": "palkia",
       "roles": [],
       "require_colons": true,
       "managed": false,
