@@ -3,6 +3,7 @@
 // - with `--site`, the site build's chunks (`dist/assets/`'s own files, after `vite build`) as a new build;
 // - the builds the live CDN keeps (`keptBuilds` in cdn/builds.ts), their chunks fetched from it (and cached in
 //   node_modules/.cache, which Vercel keeps between builds), unless `--fresh`;
+// - the share image (`public/og.png`, cdn/og.ts), in every deploy: `vercel.json` redirects the site's copy to it;
 // - its `versions.json`, `builds.json` and the `_headers` the Worker serves them with.
 // `npm run cdn:build`; `cdn/deploy.mjs` builds it before each deploy.
 import { execSync } from 'node:child_process'
@@ -10,6 +11,7 @@ import { copyFileSync, cpSync, existsSync, mkdirSync, readdirSync, rmSync, write
 import { dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { keptBuilds } from './builds.ts'
+import { OG_PATH } from './og.ts'
 import { ASSETS_DIR, assetVersions, filesUnder } from './versions.mjs'
 
 const ROOT = join(import.meta.dirname, '..')
@@ -34,6 +36,10 @@ const HEADERS = `/assets/*
 /versions.json
   Access-Control-Allow-Origin: *
   Cache-Control: no-cache
+
+${OG_PATH}
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
 
 /builds.json
   Cache-Control: no-cache
@@ -88,6 +94,7 @@ export const assemble = async ({ site = false, keep = true, origin = cdnOrigin()
   const hidden = (src) => !src.split(/[\\/]/).pop()?.startsWith('.')
   cpSync(ASSETS_DIR, join(OUT, 'assets'), { recursive: true, filter: hidden })
   cpSync(join(ROOT, 'public', 'fonts'), join(OUT, 'fonts'), { recursive: true, filter: hidden })
+  copyFileSync(join(ROOT, 'public', OG_PATH), join(OUT, OG_PATH))
   const versions = assetVersions()
   writeFileSync(join(OUT, 'versions.json'), JSON.stringify(versions))
   writeFileSync(join(OUT, '_headers'), HEADERS)

@@ -10,6 +10,9 @@
 //                                rewrites the pages to load them from it (cdn/loader.ts). On a failure the pages
 //                                keep loading from the site. Vercel publishes the pages only after the build, so a
 //                                page never names chunks the CDN doesn't have yet.
+//                                The pages' share image moves to the CDN's copy with them (cdn/og.ts). On Vercel,
+//                                it then fails the build unless the CDN serves the image `vercel.json` redirects
+//                                /og.png to, so the redirect never goes live naming a missing file.
 //
 // `--force` deploys the assets whatever the CDN has, and fails loudly (`npm run cdn:deploy`, the manual workflow).
 import { spawnSync } from 'node:child_process'
@@ -17,6 +20,7 @@ import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { assemble, cdnOrigin } from './build.mjs'
 import { withCdnLoader } from './loader.ts'
+import { OG_PATH, withCdnOgImage } from './og.ts'
 import { assetVersions, servedVersions } from './versions.mjs'
 
 const ROOT = join(import.meta.dirname, '..')
@@ -55,12 +59,33 @@ const deploySite = async () => {
   if (!deploy()) throw new Error('the chunks deploy failed: the pages load them from the site')
   let rewritten = 0
   for (const page of pages()) {
-    const html = withCdnLoader(readFileSync(page, 'utf8'), origin)
-    if (html === null) continue
-    writeFileSync(page, html)
-    rewritten++
+    const html = readFileSync(page, 'utf8')
+    const loaded = withCdnLoader(html, origin)
+    const next = withCdnOgImage(loaded ?? html, origin)
+    if (next !== html) writeFileSync(page, next)
+    if (loaded !== null) rewritten++
   }
-  console.log(`[cdn] ${rewritten} pages load their chunks from ${origin}`)
+  console.log(`[cdn] ${rewritten} pages load their chunks from ${origin}; every page's share image is its copy there`)
+}
+
+/** Whether `url` serves a PNG, tried three times. */
+const servesPng = async (url) => {
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const res = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(15_000) })
+      if (res.ok && res.headers.get('content-type')?.startsWith('image/png')) return true
+      console.warn(`[cdn] ${url}: HTTP ${res.status} ${res.headers.get('content-type')} (attempt ${attempt})`)
+    } catch (error) {
+      console.warn(`[cdn] ${url}: ${error} (attempt ${attempt})`)
+    }
+  }
+  return false
+}
+
+/** The address `vercel.json` redirects the site's share image to, if it does. */
+const ogRedirect = () => {
+  const { redirects = [] } = JSON.parse(readFileSync(join(ROOT, 'vercel.json'), 'utf8'))
+  return redirects.find((r) => r.source === OG_PATH)?.destination
 }
 
 if (mode !== 'assets' && mode !== 'site') throw new Error('Usage: node cdn/deploy.mjs assets|site [--force]')
@@ -72,7 +97,15 @@ if (!process.env.CLOUDFLARE_API_TOKEN || !origin) {
     await (mode === 'assets' ? deployAssets() : deploySite())
   } catch (error) {
     console.warn(`[cdn] ${error instanceof Error ? error.message : error}`)
-    // A site build never fails over the CDN: it ships loading from the site, as before.
+    // A failed deploy never fails a site build: it ships loading from the site, as before (only the check below can).
     if (force) process.exit(1)
   }
+}
+
+// The one way the CDN fails a build: a deployment whose /og.png redirects to a file the CDN lacks would break
+// every link preview of the game, so it stays unpublished and the live one keeps serving.
+const ogTarget = ogRedirect()
+if (mode === 'site' && process.env.VERCEL && ogTarget && !(await servesPng(ogTarget))) {
+  console.error(`[cdn] vercel.json redirects ${OG_PATH} to ${ogTarget}, which doesn't serve it: not publishing that redirect.`)
+  process.exit(1)
 }
