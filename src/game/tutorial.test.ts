@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { edgeReach, furthestStep, nextStep, overdue, TUTORIAL, tutorialHp, type TutorialFacts } from './tutorial'
+import { edgeReach, nextStep, overdue, TUTORIAL, tutorialHp, type TutorialFacts } from './tutorial'
 
 const idle: TutorialFacts = { walked: 0, foes: 1, packs: 0, leveled: false, ball: false, bossDown: false }
 
@@ -27,11 +27,6 @@ describe('the training run steps', () => {
     expect(overdue('move', TUTORIAL.timeout.move)).toBe(true)
     expect(overdue('boss', TUTORIAL.timeout.boss)).toBe(true)
     expect(overdue('end', 1e6)).toBe(false)
-  })
-
-  it('reports the furthest step reached', () => {
-    expect(furthestStep('xp', 'move')).toBe('xp')
-    expect(furthestStep('move', 'boss')).toBe('boss')
   })
 })
 

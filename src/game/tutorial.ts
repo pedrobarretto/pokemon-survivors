@@ -120,9 +120,6 @@ export const nextStep = (step: TutorialStepId, f: TutorialFacts): TutorialStepId
 /** Whether `step` has waited `t` s, long enough for the tutorial to do it for the player. */
 export const overdue = (step: TutorialStepId, t: number) => step !== 'end' && t >= TUTORIAL.timeout[step]
 
-/** The furthest of two steps (the skip reports how far the player got). */
-export const furthestStep = (a: TutorialStepId, b: TutorialStepId) => (TUTORIAL_STEPS.indexOf(a) >= TUTORIAL_STEPS.indexOf(b) ? a : b)
-
 /** The player's HP after a hit in the tutorial: never under `TUTORIAL.floor` of max (`hurtPlayer`). */
 export const tutorialHp = (hp: number, maxHp: number) => Math.max(hp, maxHp * TUTORIAL.floor)
 
