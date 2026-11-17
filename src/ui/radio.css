@@ -192,7 +192,9 @@
   background: #58b858;
 }
 
-.shop-sheet > .radio-body {
+/* Out-specifies the shop's `.shop-sheet > :not(.shop-items) { flex-shrink: 0 }`: this file ships in a
+   chunk that loads before style.css, so equal specificity would let the list grow past the screen. */
+.shop-sheet.radio-sheet > .radio-body {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
@@ -368,6 +370,15 @@
   }
   .btn.radio-icon-btn {
     min-height: 34px;
+  }
+  .radio-now-line {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .radio-where .shell-seg-option,
+  .btn.radio-toggle {
+    min-height: 30px;
   }
   .radio-row {
     min-height: 40px;

@@ -1,4 +1,4 @@
-import { assetImage } from '../assets'
+import { loadAssetImage } from '../assets'
 import { formatTime } from '../engine/math'
 import { blitPacked, canvasCache, context2d, createCanvas, ellipse, fromStrings, onCanvasReset, type PixelSprite } from '../engine/pixelart'
 import { MEDALS, type Medal } from '../data/achievements'
@@ -348,12 +348,7 @@ export const styleThumb = (frame: FrameId | null, background: BackgroundId, w = 
 const spritesOf = (mon: CardMon): Promise<SpeciesSprites | null> =>
   loadSpecies(mon.dex, mon.shiny && hasShiny(mon.dex)).catch(() => loadSpecies(mon.dex).catch(() => null))
 
-const loadImage = (src: string) =>
-  new Promise<HTMLImageElement | null>((resolve) => {
-    const img = assetImage(src)
-    img.onload = () => resolve(img)
-    img.onerror = () => resolve(null)
-  })
+const loadImage = (src: string) => loadAssetImage(src).catch(() => null)
 
 /** Largest whole scale that keeps the body inside `maxW`×`maxH`, from 1 to 4. */
 const heroScale = (s: SpeciesSprites, maxW: number, maxH: number) => Math.max(1, Math.min(4, Math.floor(Math.min(maxW / s.bodyW, maxH / s.bodyH))))

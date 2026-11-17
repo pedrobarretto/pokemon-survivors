@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { BOSS_PATTERNS, BOSS_PHASES } from '../data/bosses'
 import { RUSH, RUSH_ORDER } from '../data/rush'
 import { DIFFICULTY_IDS } from './difficulty'
-import { rushHp, rushLineup } from './rush'
+import { killEnemy } from './combat'
+import { spawnEnemy } from './enemies'
+import { createGame } from './game'
+import { rushHp, rushLineup, startRush, updateRush } from './rush'
 
 describe('Hoopa’s Rings', () => {
   it('open a level only with as many captured legends as its rings, and always bring that many, in the rings’ order, then Hoopa', () => {
@@ -25,7 +28,7 @@ describe('Hoopa’s Rings', () => {
 
   it('bring every captured legend that fights somewhere, and none a fight never brings', () => {
     const fought = ['kartana', 'guzzlord', 'regigigas', 'terapagos', 'keldeo', 'mew', 'celebi', 'zeraora', 'jirachi', 'azelf'] as const
-    expect(rushLineup([...fought, 'zygarde', 'solgaleo', 'lunala', 'kubfu', 'meltan', 'poipole', 'cresselia'], 'nightmare', 3)).toEqual([...fought.toSorted((a, b) => RUSH_ORDER.indexOf(a) - RUSH_ORDER.indexOf(b)), 'hoopa'])
+    expect(rushLineup([...fought, 'zygarde', 'solgaleo', 'lunala', 'kubfu', 'meltan', 'poipole', 'cresselia'], 'nightmare', 3)).toEqual([...[...fought].sort((a, b) => RUSH_ORDER.indexOf(a) - RUSH_ORDER.indexOf(b)), 'hoopa'])
     // Each fights in the rings with its own phases or patterns.
     for (const id of RUSH_ORDER) expect(BOSS_PHASES[id] ?? BOSS_PATTERNS[id], id).toBeTruthy()
   })
@@ -34,5 +37,20 @@ describe('Hoopa’s Rings', () => {
     expect(rushHp('normal', 1, false)).toBeGreaterThan(rushHp('normal', 0, false))
     expect(rushHp('hard', 0, false)).toBeGreaterThan(rushHp('normal', 0, false))
     expect(rushHp('normal', 4, true)).toBeGreaterThan(rushHp('normal', 4, false))
+  })
+
+  it('open the next ring only when the ring’s legend falls, never for an add its pattern summoned', () => {
+    const g = createGame('charmander', { w: 480, h: 270 }, 1)
+    startRush(g, 'normal', ['articuno', 'hoopa'], null)
+    const r = g.rush!
+    updateRush(g, RUSH.gate + 0.1)
+    expect(r.stage).toBe('fight')
+    const legend = g.enemies.find((e) => e.id === r.bossId)!
+    const add = spawnEnemy(g, 'rattata', legend.x + 20, legend.y)
+    killEnemy(g, add)
+    expect(r.stage).toBe('fight')
+    expect(r.ring).toBe(0)
+    killEnemy(g, legend)
+    expect(r.stage).toBe('rest')
   })
 })

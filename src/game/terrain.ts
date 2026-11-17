@@ -536,6 +536,17 @@ export const clearSpot = (g: Game, o: Pos, r: number) => {
   return o
 }
 
+/** How far around its spot a fallen boss's loot spreads, px (a pair of Mega Stones, `STONE_GAP` apart in `mega.ts`, the TM and the evolution item). */
+export const LOOT_REACH = 24
+
+/**
+ * Where a fallen boss's or legendary's loot lands, so a player can walk to all
+ * of it: a boss flies over the terrain and a room's holes (Lugia's whirlpool,
+ * Groudon's lava lake), its loot doesn't. In a room, on its floor and out of
+ * its holes and solids (`standingSpot`); on the map, out of solids and lakes (`clearSpot`).
+ */
+export const lootSpot = (g: Game, x: number, y: number, r: number = LOOT_REACH): Pos => (roomOf(g) ? standingSpot(g, { x, y }, r) : clearSpot(g, { x, y }, r))
+
 /** Whether a circle at (x, y) is clear of solids and lakes (where breakables may stand). */
 export const isOpen = (g: Game, x: number, y: number, r: number) =>
   !featuresNear(g, x, y, r).some((f) => f.solids.some((s) => inside(s.foot, x, y, r)) || (f.lake !== null && inside(f.lake.foot, x, y, r)))

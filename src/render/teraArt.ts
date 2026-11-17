@@ -342,8 +342,12 @@ export type Facet = { x: number; y: number; w: number; h: number; ay: number }
  */
 export type Facets = { atlas: HTMLCanvasElement; white: HTMLCanvasElement; facets: readonly Facet[]; fw: number; fh: number }
 
-/** The last few frames cut (the transformation shows one or two). */
+/** The last few frames cut (a transformation shows one or two at a time; co-op draws up to four seats'). */
 const cut: { key: CrystalFrame; facets: Facets }[] = []
+const MAX_CUT = 8
+
+/** False once the cache has let `f` go (its canvases emptied): a holder must cut its frame again. */
+export const facetsLive = (f: Facets) => f.atlas.width > 0 && f.white.width > 0
 
 /** `crystal` cut along its facets, made on first use. */
 export const facetsOf = (crystal: CrystalFrame): Facets | null => {
@@ -351,6 +355,8 @@ export const facetsOf = (crystal: CrystalFrame): Facets | null => {
   if (held) return held.facets
   const fw = crystal.canvas.width
   const fh = crystal.canvas.height
+  // A crystal frame the cache already let go has no pixels left to cut.
+  if (fw === 0 || fh === 0) return null
   const ctx = readerFor(fw, fh)
   if (!ctx) return null
   ctx.drawImage(crystal.canvas, 0, 0)
@@ -402,16 +408,20 @@ export const facetsOf = (crystal: CrystalFrame): Facets | null => {
   wctx.fillRect(0, 0, fw, height)
   const out: Facets = { atlas, white, facets, fw, fh }
   cut.push({ key: crystal, facets: out })
-  while (cut.length > 4) {
+  while (cut.length > MAX_CUT) {
     const old = cut.shift()!
     old.facets.atlas.width = old.facets.atlas.height = old.facets.white.width = old.facets.white.height = 0
   }
   return out
 }
 
-/** Draws facet `f` of `cut` with its frame's top-left at (dx, dy), `scale` times, moved (ox, oy) px; white for a flash. */
-export const drawFacet = (ctx: CanvasRenderingContext2D, cut: Facets, f: Facet, dx: number, dy: number, scale: number, ox = 0, oy = 0, white = false) =>
-  ctx.drawImage(white ? cut.white : cut.atlas, f.x, f.ay, f.w, f.h, Math.round(dx + f.x * scale + ox), Math.round(dy + f.y * scale + oy), f.w * scale, f.h * scale)
+/** Draws facet `f` of `cut` with its frame's top-left at (dx, dy), `scale` times, moved (ox, oy) px; white for a flash. Nothing once the cache let `cut` go. */
+export const drawFacet = (ctx: CanvasRenderingContext2D, cut: Facets, f: Facet, dx: number, dy: number, scale: number, ox = 0, oy = 0, white = false) => {
+  const from = white ? cut.white : cut.atlas
+  // An emptied canvas throws in drawImage (InvalidStateError).
+  if (from.width === 0 || from.height === 0) return
+  ctx.drawImage(from, f.x, f.ay, f.w, f.h, Math.round(dx + f.x * scale + ox), Math.round(dy + f.y * scale + oy), f.w * scale, f.h * scale)
+}
 
 /* ---------------- The glint ---------------- */
 

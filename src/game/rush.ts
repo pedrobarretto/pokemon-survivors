@@ -186,9 +186,10 @@ const openRing = (g: Game, r: RushState) => {
 }
 
 /**
- * A ring's legend fell (`killEnemy` hands it here): the next ring comes after
- * a rest (and a heal), or, Hoopa's, it's captured where it fell and the rush
- * is won once the capture has played.
+ * An enemy fell in the rush (`killEnemy` hands every one here). The ring's
+ * legend opens the next ring after a rest (and a heal), or, Hoopa's, it's
+ * captured where it fell and the rush is won once the capture has played; an
+ * add a legend's pattern summoned only faints.
  */
 export const rushDown = (g: Game, e: Enemy) => {
   const r = g.rush
@@ -196,6 +197,8 @@ export const rushDown = (g: Game, e: Enemy) => {
   e.dying = 0
   e.hp = 0
   g.kills++
+  // Only the ring's legend opens the next ring: an add its pattern summoned just faints.
+  if (e.id !== r.bossId) return
   if (g.bossId === e.id) g.bossId = null
   g.hazards.length = 0
   shakeScreen(g, 6, e)

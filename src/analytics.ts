@@ -132,6 +132,8 @@ type AnalyticsEvents = {
     arm: Arm | null
     tutorial: TutorialOutcome['how'] | null
     tutorialStep: string | null
+    /** The asset CDN as the load ended (`cdnState`): `down` where it couldn't be reached and the site served the assets. */
+    cdn: 'off' | 'unknown' | 'ok' | 'down'
     account: 0 | 1
     replay: 0 | 1
   } & DeviceInfo

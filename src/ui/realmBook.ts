@@ -88,10 +88,11 @@ export const openRealmBook = (root: HTMLElement, input: Input, opts: RealmBookOp
   let picked: Pick | null = opts.focus ? { stamp: opts.focus } : null
   let closed = false
 
+  /** Takes the book down, then tells its opener: the Trainer Card only shows itself again and leaves its screens to remove themselves. */
   const close = () => {
     if (closed) return
-    closed = true
     playSfx('select')
+    dispose()
     later(opts.close)
   }
 
@@ -292,12 +293,12 @@ export const openRealmBook = (root: HTMLElement, input: Input, opts: RealmBookOp
   renderTabs()
   void load()
 
-  return {
-    el,
-    dispose: () => {
-      closed = true
-      off()
-      el.remove()
-    },
+  function dispose() {
+    if (closed) return
+    closed = true
+    off()
+    el.remove()
   }
+
+  return { el, dispose }
 }

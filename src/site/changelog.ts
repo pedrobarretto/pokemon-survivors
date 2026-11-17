@@ -24,6 +24,159 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-17',
+    title: { pt: 'Correções da Temporada 1', en: 'Season 1 fixes', es: 'Correcciones de la Temporada 1', fr: 'Correctifs de la Saison 1', zh: '第 1 賽季修正' },
+    highlights: [
+      {
+        pt: 'As partidas voltam a abrir em navegadores mais antigos (Chrome 109 e anteriores).',
+        en: 'Runs open again on older browsers (Chrome 109 and earlier).',
+        es: 'Las partidas vuelven a abrir en navegadores más antiguos (Chrome 109 y anteriores).',
+        fr: 'Les parties se lancent de nouveau sur les navigateurs plus anciens (Chrome 109 et avant).',
+        zh: '舊版瀏覽器（Chrome 109 及更早）又能開始對局了。',
+      },
+      {
+        pt: 'Lendário shiny derrotado agora libera o shiny para jogar quando o lendário é capturado.',
+        en: 'A shiny legend you beat now unlocks the playable shiny once the legend is captured.',
+        es: 'Un legendario shiny derrotado ahora desbloquea el shiny jugable al capturar al legendario.',
+        fr: 'Un légendaire chromatique vaincu débloque désormais le chromatique jouable une fois le légendaire capturé.',
+        zh: '擊敗過的異色傳說寶可夢，在捕獲該傳說後就能以異色遊玩。',
+      },
+      {
+        pt: 'Mega Stones e itens de chefe caem sempre onde dá para pegar.',
+        en: 'Mega Stones and boss loot always land where you can reach them.',
+        es: 'Las Megapiedras y el botín de los jefes siempre caen donde puedes alcanzarlos.',
+        fr: 'Les Méga-Gemmes et le butin des boss tombent toujours là où tu peux les ramasser.',
+        zh: '超級石和頭目掉落物一定會落在走得到的地方。',
+      },
+      {
+        pt: 'Electro Shot do Duraludon mais forte, ainda mais na chuva.',
+        en: 'Duraludon’s Electro Shot hits harder, even more in the rain.',
+        es: 'El Electro Shot de Duraludon pega más fuerte, y aún más con lluvia.',
+        fr: 'L’Electro Shot de Duraludon frappe plus fort, encore plus sous la pluie.',
+        zh: '鋁鋼龍的 Electro Shot 威力提升，下雨時更強。',
+      },
+      {
+        pt: 'No iPhone, uma opção nova em Ajustes → Som deixa seu podcast ou música tocando junto com o jogo.',
+        en: 'On iPhone, a new option in Settings → Sound keeps your podcast or music playing alongside the game.',
+        es: 'En iPhone, una opción nueva en Ajustes → Sonido deja tu pódcast o música sonando junto con el juego.',
+        fr: 'Sur iPhone, une nouvelle option dans Réglages → Son laisse ton podcast ou ta musique jouer en même temps que le jeu.',
+        zh: 'iPhone 在「設定 → 音效」新增選項，可以一邊玩一邊聽 Podcast 或音樂。',
+      },
+    ],
+    changes: [
+      {
+        title: {
+          pt: 'Primeira vez? O Rotom te mostra o jogo',
+          en: 'First time? Rotom shows you the game',
+          es: '¿Primera vez? Rotom te muestra el juego',
+          fr: 'Première fois ? Rotom te montre le jeu',
+          zh: '第一次玩？Rotom 帶你認識遊戲',
+        },
+        notes: [
+          {
+            pt: 'Quem chega pela primeira vez pode ser recebido pelo Rotom, que ensina o básico jogando, em uns 2 minutos: andar, os golpes que saem sozinhos, a experiência, as melhorias, a Poké Ball e um chefe. Dá pra pular a qualquer hora, ou tocar em "Já sei jogar".',
+            en: 'New players may be greeted by Rotom, who teaches the basics by playing, in about 2 minutes: moving, the moves that fire on their own, experience, upgrades, the Poké Ball and a boss. Skip it any time, or tap "I know how to play".',
+            es: 'Quien llega por primera vez puede ser recibido por Rotom, que enseña lo básico jugando, en unos 2 minutos: moverse, los ataques que salen solos, la experiencia, las mejoras, la Poké Ball y un jefe. Se puede saltar en cualquier momento, o tocar "Ya sé jugar".',
+            fr: 'Les nouveaux joueurs peuvent être accueillis par Rotom, qui apprend les bases en jouant, en 2 minutes environ : se déplacer, les attaques qui partent seules, l’expérience, les améliorations, la Poké Ball et un boss. On peut passer à tout moment, ou toucher « Je sais jouer ».',
+            zh: '新玩家可能會遇到 Rotom 迎接，花大約 2 分鐘邊玩邊教基本操作：移動、自動施放的招式、經驗值、強化、精靈球和頭目。隨時都能跳過，或點「我會玩了」。',
+          },
+          {
+            pt: 'Depois, você escolhe o primeiro parceiro entre os 27 iniciais de todas as regiões. E em Ajustes > Jogo, "Rever tutorial" mostra tudo de novo, com um passeio pelo lobby.',
+            en: 'Then you pick your first partner from the 27 starters of every region. And in Settings > Game, "See the tutorial again" shows it all again, with a tour of the lobby.',
+            es: 'Después eliges tu primer compañero entre los 27 iniciales de todas las regiones. Y en Ajustes > Juego, "Ver el tutorial otra vez" lo muestra todo de nuevo, con un paseo por el lobby.',
+            fr: 'Ensuite, tu choisis ton premier partenaire parmi les 27 starters de toutes les régions. Et dans Réglages > Jeu, « Revoir le tutoriel » montre tout à nouveau, avec une visite du lobby.',
+            zh: '接著從各地區的 27 隻御三家中選出第一位夥伴。在設定 > 遊戲裡的「重看教學」可以再看一次，還會帶你逛一圈大廳。',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Correctifs', zh: '修正' },
+        notes: [
+          {
+            pt: 'Partidas não começavam no Chrome 109 e anteriores (Windows 7 e 8, Chromebooks antigos) desde a Temporada 1. Corrigido.',
+            en: 'Runs wouldn’t start on Chrome 109 and earlier (Windows 7 and 8, older Chromebooks) since Season 1. Fixed.',
+            es: 'Las partidas no empezaban en Chrome 109 y anteriores (Windows 7 y 8, Chromebooks antiguos) desde la Temporada 1. Corregido.',
+          },
+          {
+            pt: 'Quem estava preso no "Carregando…" na primeira visita (sobretudo na China e em Hong Kong) agora entra no jogo.',
+            en: 'Players stuck on “Loading…” on their first visit (mostly in mainland China and Hong Kong) now get into the game.',
+            es: 'Quien se quedaba en "Cargando…" en su primera visita (sobre todo en China y Hong Kong) ahora entra al juego.',
+          },
+          {
+            pt: 'Anéis do Hoopa: derrotar um ajudante do chefe não pula mais para o próximo anel.',
+            en: 'Hoopa’s Rings: beating a boss’s helper no longer skips to the next ring.',
+            es: 'Anillos de Hoopa: derrotar a un ayudante del jefe ya no salta al siguiente anillo.',
+          },
+          {
+            pt: 'O estilhaço do cristal Tera não dá mais erro no co-op, e um cristal sem facetas não quebra mais a transformação.',
+            en: 'The Tera crystal’s shatter no longer errors in co-op, and a crystal with no facets no longer breaks the transformation.',
+            es: 'El estallido del cristal Tera ya no da error en el cooperativo, y un cristal sin facetas ya no rompe la transformación.',
+          },
+          {
+            pt: 'Em navegadores de apps no Android, o grito de um Pokémon não fecha mais o jogo.',
+            en: 'In Android in-app browsers, a Pokémon’s cry no longer crashes the game.',
+            es: 'En los navegadores de apps de Android, el grito de un Pokémon ya no cierra el juego.',
+          },
+          {
+            pt: 'Mega Stones e itens de chefe que caíam no buraco da arena de Lugia ou no lago de lava do Groudon agora caem no chão mais próximo.',
+            en: 'Mega Stones and boss loot that fell into Lugia’s whirlpool or Groudon’s lava lake now land on the nearest ground.',
+            es: 'Las Megapiedras y el botín de jefe que caían en el remolino de Lugia o en el lago de lava de Groudon ahora caen en el suelo más cercano.',
+          },
+          {
+            pt: 'Um lendário shiny derrotado antes da captura agora libera o shiny jogável. Saves nessa situação recebem o shiny ao abrir o jogo.',
+            en: 'A shiny legend beaten before the capture now unlocks the playable shiny. Saves in that state get it when the game opens.',
+            es: 'Un legendario shiny derrotado antes de la captura ahora desbloquea el shiny jugable. Las partidas guardadas en esa situación lo reciben al abrir el juego.',
+          },
+          {
+            pt: 'Pegar um X Attack ou X Speed durante um bônus longo de altar não encurta mais o bônus.',
+            en: 'Picking up an X Attack or X Speed during a long altar buff no longer shortens the buff.',
+            es: 'Recoger un X Attack o X Speed durante un bonus largo de altar ya no acorta el bonus.',
+          },
+          {
+            pt: 'No iPhone em pé, o botão Começar não cobre mais a Mochila antes da partida.',
+            en: 'On iPhone in portrait, the Start button no longer covers the Bag before a run.',
+            es: 'En iPhone en vertical, el botón Empezar ya no tapa la Mochila antes de la partida.',
+          },
+          {
+            pt: 'O Livro de Estampas aberto pelo Cartão de Treinador volta a fechar no Voltar.',
+            en: 'The Stamp Book opened from the Trainer Card closes with Back again.',
+            es: 'El Libro de Estampas abierto desde la Tarjeta de Entrenador vuelve a cerrarse con Volver.',
+          },
+          {
+            pt: 'No co-op, subir de nível com tudo no máximo não pisca mais a tela.',
+            en: 'In co-op, leveling up with everything maxed no longer flashes the screen.',
+            es: 'En el cooperativo, subir de nivel con todo al máximo ya no hace parpadear la pantalla.',
+          },
+          {
+            pt: 'A sombra do coqueiro no píer do Poké Realm agora fica embaixo dele.',
+            en: 'The palm tree’s shadow on the Poké Realm pier now sits under it.',
+            es: 'La sombra de la palmera del muelle del Poké Realm ahora queda debajo de ella.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Ajustes', en: 'Tweaks', es: 'Ajustes', fr: 'Ajustements', zh: '調整' },
+        notes: [
+          {
+            pt: 'Electro Shot (Duraludon): dano 16 → 28, recarga 2,6 → 2,2 s, raio maior e bônus de chuva ×1,2 → ×1,5.',
+            en: 'Electro Shot (Duraludon): damage 16 → 28, cooldown 2.6 → 2.2 s, a bigger beam and the rain bonus ×1.2 → ×1.5.',
+            es: 'Electro Shot (Duraludon): daño 16 → 28, recarga 2,6 → 2,2 s, rayo más grande y bonus de lluvia ×1,2 → ×1,5.',
+          },
+          {
+            pt: 'iPhone: "Tocar com outros apps" em Ajustes → Som deixa podcasts e música de outros apps tocando com o jogo (com o celular no silencioso, o jogo fica mudo).',
+            en: 'iPhone: “Play with other apps” in Settings → Sound keeps other apps’ podcasts and music playing with the game (on silent, the game goes quiet).',
+            es: 'iPhone: "Sonar con otras apps" en Ajustes → Sonido deja pódcasts y música de otras apps sonando con el juego (en silencio, el juego queda mudo).',
+          },
+          {
+            pt: 'Textos mais claros: a chance dos míticos no final das 15:00, o que acontece com um shiny selvagem derrotado e o que o Esquecer faz.',
+            en: 'Clearer texts: the mythicals’ chance at the 15:00 finale, what happens to a wild shiny you beat, and what Forget does.',
+            es: 'Textos más claros: la probabilidad de los míticos en el final de las 15:00, qué pasa con un shiny salvaje derrotado y qué hace Olvidar.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-11-16',
     title: { pt: 'Temporada 1: Terastal, Pokédex Nacional e lendas novas', en: 'Season 1: Terastal, the National Pokédex and new legends', es: 'Temporada 1: Teracristal, la Pokédex Nacional y leyendas nuevas', fr: 'Saison 1 : Téracristal, le Pokédex National et de nouvelles légendes', zh: '第 1 賽季：太晶化、全國圖鑑和新的傳說' },
     highlights: [
@@ -71,31 +224,6 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
       },
     ],
     changes: [
-      {
-        title: {
-          pt: 'Primeira vez? O Rotom te mostra o jogo',
-          en: 'First time? Rotom shows you the game',
-          es: '¿Primera vez? Rotom te muestra el juego',
-          fr: 'Première fois ? Rotom te montre le jeu',
-          zh: '第一次玩？Rotom 帶你認識遊戲',
-        },
-        notes: [
-          {
-            pt: 'Quem chega pela primeira vez pode ser recebido pelo Rotom, que ensina o básico jogando, em uns 2 minutos: andar, os golpes que saem sozinhos, a experiência, as melhorias, a Poké Ball e um chefe. Dá pra pular a qualquer hora, ou tocar em "Já sei jogar".',
-            en: 'New players may be greeted by Rotom, who teaches the basics by playing, in about 2 minutes: moving, the moves that fire on their own, experience, upgrades, the Poké Ball and a boss. Skip it any time, or tap "I know how to play".',
-            es: 'Quien llega por primera vez puede ser recibido por Rotom, que enseña lo básico jugando, en unos 2 minutos: moverse, los ataques que salen solos, la experiencia, las mejoras, la Poké Ball y un jefe. Se puede saltar en cualquier momento, o tocar "Ya sé jugar".',
-            fr: 'Les nouveaux joueurs peuvent être accueillis par Rotom, qui apprend les bases en jouant, en 2 minutes environ : se déplacer, les attaques qui partent seules, l’expérience, les améliorations, la Poké Ball et un boss. On peut passer à tout moment, ou toucher « Je sais jouer ».',
-            zh: '新玩家可能會遇到 Rotom 迎接，花大約 2 分鐘邊玩邊教基本操作：移動、自動施放的招式、經驗值、強化、精靈球和頭目。隨時都能跳過，或點「我會玩了」。',
-          },
-          {
-            pt: 'Depois, você escolhe o primeiro parceiro entre os 27 iniciais de todas as regiões. E em Ajustes > Jogo, "Rever tutorial" mostra tudo de novo, com um passeio pelo lobby.',
-            en: 'Then you pick your first partner from the 27 starters of every region. And in Settings > Game, "See the tutorial again" shows it all again, with a tour of the lobby.',
-            es: 'Después eliges tu primer compañero entre los 27 iniciales de todas las regiones. Y en Ajustes > Juego, "Ver el tutorial otra vez" lo muestra todo de nuevo, con un paseo por el lobby.',
-            fr: 'Ensuite, tu choisis ton premier partenaire parmi les 27 starters de toutes les régions. Et dans Réglages > Jeu, « Revoir le tutoriel » montre tout à nouveau, avec une visite du lobby.',
-            zh: '接著從各地區的 27 隻御三家中選出第一位夥伴。在設定 > 遊戲裡的「重看教學」可以再看一次，還會帶你逛一圈大廳。',
-          },
-        ],
-      },
       {
         title: {
           pt: 'Escolha do parceiro feita para o celular',

@@ -333,7 +333,7 @@ type ScenarioId = keyof typeof SCENARIOS
  * failing test prints.
  */
 const PINNED: Partial<Record<number, Partial<Record<ScenarioId, string>>>> = {
-  49: {
+  50: {
     levelUps: '2998·48·12·ad64acab',
     mega: '1892·32·2·4007bb5c',
     riftFall: '765·0·1·9fa6c9be',
@@ -456,7 +456,7 @@ describe(`the simulation under RULES_VERSION ${RULES_VERSION}`, () => {
     expect(shopTms2.live.weather.held).not.toBeNull()
     expect(shopTms2.live.player.moves.find((m) => m.id === 'swordsDance')?.stacks).toBeGreaterThan(1)
     expect([evoGate.live.player.stage, evoGate.live.player.evoFound.length, evoGate.live.player.evoHeld]).toEqual([1, 1, false])
-    expect([porygonGate.live.player.stage, porygonGate.live.player.evoFound.toSorted(), porygonGate.live.player.evoHeld]).toEqual([2, ['dubiousDisc', 'upgrade'], false])
+    expect([porygonGate.live.player.stage, porygonGate.live.player.evoFound.slice().sort(), porygonGate.live.player.evoHeld]).toEqual([2, ['dubiousDisc', 'upgrade'], false])
     expect(sketch.live.player.moves.find((m) => m.id === 'sketch')?.sketch).toBeDefined()
     expect(sketch.live.kills).toBeGreaterThan(0)
     for (const e of Object.values(endings)) expect(e.sameEnd).toBe(true)

@@ -90,7 +90,7 @@ const fanShots = (g: Game, s: CastStats, l: Look, center: number, step: number, 
 }
 
 /** Electro Shot's charge and beam (× area), and its rain boost. */
-export const ELECTRO_SHOT = { charge: 0.8, length: 150, segments: 7, r: 7, time: 0.22, rain: 1.2 } as const
+export const ELECTRO_SHOT = { charge: 0.8, length: 190, segments: 9, r: 10, time: 0.3, rain: 1.5 } as const
 
 /** Salt Cure's crust: the mark it leaves (each stack takes more from every hit). */
 const SALT_MARK: StatusSpec = { kind: 'mark', chance: 0.5, duration: 3.5, power: 0.12 }
@@ -309,7 +309,7 @@ export const GA_KIT_B_MOVES = {
   electroShot: {
     name: 'Electro Shot',
     type: 'electric',
-    base: stats({ damage: 16, cooldown: 2.6, knockback: 40 }),
+    base: stats({ damage: 28, cooldown: 2.2, knockback: 40 }),
     upgrades: GA_KIT_B_UPGRADES.electroShot,
     fire: (g, s) => {
       const p = g.player

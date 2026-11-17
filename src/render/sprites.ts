@@ -1,4 +1,4 @@
-import { assetImage, assetUrl } from '../assets'
+import { assetUrl, loadAssetImage } from '../assets'
 import { bodyOf, type Body } from '../data/bodies'
 import type { MegaForm } from '../data/megas'
 import type { LegendForm } from '../data/legends'
@@ -130,15 +130,16 @@ const pump = () => {
 const loadImage = (src: string, key: Key, rank: number) =>
   new Promise<HTMLImageElement>((resolve, reject) => {
     const start = () => {
-      const img = assetImage(src)
-      // A browser that can't decode ahead (a rejected `decode` on an image that did load) still gets the image,
+      // Loaded first (`loadAssetImage`: the site's copy when the CDN fails or stalls, a rejection rather than a wait forever),
+      // then decoded. A browser that can't decode ahead (a rejected `decode` on an image that did load) still gets the image,
       // but never a broken or empty one, which would throw on every frame that draws it (`drawable`).
       const fail = () => Promise.reject(new Error(`Failed to load ${src}`))
-      img
-        .decode()
-        .then(
-          () => (img.naturalWidth > 0 && img.naturalHeight > 0 ? img : fail()),
-          () => (drawable(img) ? img : fail()),
+      loadAssetImage(src)
+        .then((img) =>
+          img.decode().then(
+            () => (img.naturalWidth > 0 && img.naturalHeight > 0 ? img : fail()),
+            () => (drawable(img) ? img : fail()),
+          ),
         )
         .then(resolve, reject)
         .finally(() => {

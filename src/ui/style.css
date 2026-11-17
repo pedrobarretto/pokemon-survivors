@@ -1646,8 +1646,8 @@ button {
   }
   .shell-actions.partner-bar {
     display: grid;
-    /* The Start button keeps its room; a Bag with many items scrolls sideways. */
-    grid-template-columns: minmax(0, max-content) minmax(max-content, 1fr);
+    /* The Bag takes the room the Start button leaves (never the other way round: a 1fr Start pushed the Bag under it); a Bag with many items scrolls sideways. */
+    grid-template-columns: minmax(0, 1fr) max-content;
     grid-template-areas: 'diff diff' 'bag go';
     gap: 6px 10px;
     padding: 6px 8px 8px;

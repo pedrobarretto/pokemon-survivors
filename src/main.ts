@@ -54,6 +54,7 @@ import type { PlazaStage } from './data/festivals'
 import { festivalAnnounced } from './game/festival'
 import { openFestival } from './ui/festival'
 import type { BoutiqueTab } from './ui/boutiqueSeen'
+import { watchAssetImages } from './assets'
 import { identify, lobbyPress, startAnalytics, takeOpened, track, type ErrorContext, type QueueEnd, type RunPerf } from './analytics'
 import { firstGate, firstRunClock, firstStep, holdRunSteps, startFirstSession } from './firstSession'
 import { enrolDevice, firstTime, forgetFirstTime, nextFirst, tourDue, updateFirstTime, type Arm, type TutorialOutcome } from './firstTime'
@@ -108,7 +109,7 @@ import { ABILITIES, type AbilityEffect, type AbilityId } from './data/abilities'
 import { BRANCHES, branchesAt, familyDex, MEGA_BRANCH, type BranchId } from './data/branches'
 import { abilityStacks, grantAbility } from './game/abilities'
 import { abilityIcon } from './render/abilityArt'
-import { recomputeStats, xpFor } from './game/leveling'
+import { nothingToChoose, recomputeStats, xpFor } from './game/leveling'
 import { atMegaBase, dropMegaStones, grantStone, heldMega, megaBaseName } from './game/mega'
 import { REAPER } from './game/endless'
 import { continueEndless } from './game/endlessSystem'
@@ -301,6 +302,9 @@ import { formatPlays, rulesOf } from './game/versusRules'
 import { parseLoadout, parseSettings, type CoopPick } from './coop/start'
 import { countFinale, mythicalHunt } from './game/mythicalHunt'
 import { MYTHICAL_PITY } from './data/waves'
+
+// The menus' own <img>s from the asset CDN fall back to the site's copies where the CDN can't be reached.
+watchAssetImages()
 
 /** Fixed simulation step: the replays the ranking re-simulates count on it. */
 const STEP = TICK
@@ -2227,6 +2231,8 @@ const syncOverlay = (r: Run) => {
     c?.menu && !coopOver(g) && g.phase !== 'victory' ? 'paused'
     : g.versus ? (g.phase === 'gameover' ? 'gameover' : 'playing')
     : c?.team.holding(me) ? 'playing'
+    // Co-op: a level-up with only the Oran Berry is taken by the simulation on the next tick (`updatePicks`); opening its screen meanwhile flashed it for a frame on every level-up of a maxed build.
+    : c && phaseOf(g, me) === 'levelup' && nothingToChoose(me.offers) ? 'playing'
     : phaseOf(g, me)
   if (r.shown?.phase === phase && (r.shown.offers === me.offers || g.versus)) return
   r.overlay?.dispose()
