@@ -1,6 +1,6 @@
 import { accountState } from '../account'
 import { HATCHLINGS, PLAYABLE, type PlayableId } from '../data/hatchlings'
-import { CORNER_PRIZE_IDS, CORNER_PRIZES, isShinyPrize, prizeOnce, ROCKET_FRAME, ROCKET_TITLE, type CornerPrize, type CornerPrizeId } from '../data/rocketCorner'
+import { CORNER_PRIZE_IDS, CORNER_PRIZES, isShinyPrize, prizeOnce, prizePrice, ROCKET_FRAME, ROCKET_TITLE, type CornerPrize, type CornerPrizeId } from '../data/rocketCorner'
 import { purifiedIds } from '../game/shadow'
 import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
@@ -151,10 +151,20 @@ export const openCornerCounter = (root: HTMLElement, input: Input, opts: CornerC
 
   const tokenTag = (n: number) => h('span', { class: 'carpentry-price corner-price' }, h('img', { src: tokenIcon(), alt: '' }), formatNumber(n))
 
+  /** What a prize costs this account (a shiny after its family costs the rest, `prizePrice`). */
+  const priceOf = (id: CornerPrizeId) => prizePrice(id, state?.taken ?? [])
+
+  /** A prize's price tag, the full price struck beside it when the account pays less. */
+  const priceTag = (id: CornerPrizeId) => {
+    const full = CORNER_PRIZES[id].price
+    const price = priceOf(id)
+    return price < full ? h('span', { class: 'corner-deal' }, h('s', { class: 'corner-was' }, formatNumber(full)), tokenTag(price)) : tokenTag(price)
+  }
+
   const prizeCard = (id: CornerPrizeId) => {
     const def = CORNER_PRIZES[id]
     const have = taken(id)
-    const short = (state?.tokens ?? 0) < def.price
+    const short = (state?.tokens ?? 0) < priceOf(id)
     // A family the save doesn't have yet wears the NOVO tag, as the Safári's board does.
     const fresh = def.kind === 'family' && !have
     return h(
@@ -164,7 +174,7 @@ export const openCornerCounter = (root: HTMLElement, input: Input, opts: CornerC
       h('span', { class: `corner-kind ${def.kind}` }, c().kinds[def.kind]),
       h('b', { class: 'carpentry-name' }, prizeName(id)),
       h('span', { class: 'carpentry-owned' }, have ? c().owned : ''),
-      h('span', { class: 'carpentry-tag' }, tokenTag(def.price)),
+      h('span', { class: 'carpentry-tag' }, priceTag(id)),
       fresh && h('em', { class: 'arc-tag new corner-new' }, t().minigames.safari.fresh),
     )
   }
@@ -181,7 +191,7 @@ export const openCornerCounter = (root: HTMLElement, input: Input, opts: CornerC
     const id = open
     const def = CORNER_PRIZES[id]
     const have = taken(id)
-    const short = Math.max(0, def.price - (state?.tokens ?? 0))
+    const short = Math.max(0, priceOf(id) - (state?.tokens ?? 0))
     const serum = def.kind === 'reshadow'
     const choices = serum ? purifiedNow() : []
     if (target !== null && !choices.includes(target)) target = null
@@ -218,7 +228,7 @@ export const openCornerCounter = (root: HTMLElement, input: Input, opts: CornerC
           targets,
           have
             ? h('span', { class: 'carpentry-owned' }, c().owned)
-            : h('button', { class: 'btn carpentry-buy', type: 'button', disabled: busy || short > 0 || (serum && target === null), onclick: () => redeem(id) }, short > 0 ? c().short(formatNumber(short)) : c().redeem, ' ', tokenTag(def.price)),
+            : h('button', { class: 'btn carpentry-buy', type: 'button', disabled: busy || short > 0 || (serum && target === null), onclick: () => redeem(id) }, short > 0 ? c().short(formatNumber(short)) : c().redeem, ' ', priceTag(id)),
         ),
       ),
     )

@@ -98,9 +98,9 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             es: 'El Suero Oscuro cuesta 11.000 fichas en el mostrador de premios y se puede canjear las veces que quieras. Llega a la caja de regalos y, al abrirlo, el Pokémon elegido vuelve a ser Oscuro con el corazón cerrado.',
           },
           {
-            pt: 'Cada família do balcão tem seu prêmio shiny, de 7.500 fichas (Ditto) a 15.000 (Cleffa). Ele chega na caixa de presentes e choca a família já shiny; se você já tinha a família, ela passa a ser shiny.',
-            en: 'Every counter family has a shiny prize, from 7,500 tokens (Ditto) to 15,000 (Cleffa). It arrives in the gift box and hatches the family shiny; if you already had the family, it turns shiny.',
-            es: 'Cada familia del mostrador tiene su premio shiny, de 7.500 fichas (Ditto) a 15.000 (Cleffa). Llega a la caja de regalos y eclosiona la familia ya shiny; si ya tenías la familia, pasa a ser shiny.',
+            pt: 'Cada família do balcão tem seu prêmio shiny, de 7.500 fichas (Ditto) a 15.000 (Cleffa). Ele chega na caixa de presentes e choca a família já shiny; se você já tinha a família, ela passa a ser shiny. Quem já trocou a família normal paga só a diferença.',
+            en: 'Every counter family has a shiny prize, from 7,500 tokens (Ditto) to 15,000 (Cleffa). It arrives in the gift box and hatches the family shiny; if you already had the family, it turns shiny. If you already traded for the regular family, you only pay the difference.',
+            es: 'Cada familia del mostrador tiene su premio shiny, de 7.500 fichas (Ditto) a 15.000 (Cleffa). Llega a la caja de regalos y eclosiona la familia ya shiny; si ya tenías la familia, pasa a ser shiny. Si ya canjeaste la familia normal, pagas solo la diferencia.',
           },
         ],
       },

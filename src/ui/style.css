@@ -32202,6 +32202,17 @@ span.arena-hub-face {
   background: #5a1c90;
 }
 
+/* A shiny bought after its family: the full price struck beside what's left to pay. */
+.corner-deal {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.corner-was {
+  opacity: 0.6;
+}
+
 /* A shiny prize: a gold chip and a warm glow behind the family's shiny colors. */
 .corner-kind.shiny {
   color: #3a2400;

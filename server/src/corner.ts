@@ -1,7 +1,7 @@
 import { randomInt } from 'node:crypto'
 import type { TransactionSql } from 'postgres'
 import type { PlayableId } from '../../src/data/hatchlings'
-import { CORNER_PRIZES, isCornerPrize, prizeContent, prizeOnce, prizeTargets, type CornerPrizeId } from '../../src/data/rocketCorner'
+import { isCornerPrize, prizeContent, prizeOnce, prizePrice, prizeTargets, type CornerPrizeId } from '../../src/data/rocketCorner'
 import { brasiliaDay, type DayKey } from '../../src/game/day'
 import { donateFrom } from '../../src/game/festival'
 import type { Gift } from '../../src/game/gifts'
@@ -216,7 +216,8 @@ export const cornerStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
       }),
 
     /**
-     * `POST /realm/corner/redeem`: takes the tokens and sends the prize as a gift (a once-only prize, only once).
+     * `POST /realm/corner/redeem`: takes the tokens (`prizePrice`: a shiny after its family costs the rest) and sends
+     * the prize as a gift (a once-only prize, only once).
      * The Shadow Serum needs `target` Purified in the stored save, or it's refused (`unpurified`) before any token moves.
      */
     redeem: (userId: string, prize: CornerPrizeId, target: PlayableId | null = null): Promise<Out<CornerRedeemed>> =>
@@ -224,9 +225,10 @@ export const cornerStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
         const refused = await gate(tx, userId)
         if (refused) return { ok: false, error: refused }
         const w = await walletOf(tx, userId)
-        const def = CORNER_PRIZES[prize]
-        if (prizeOnce(prize) && (await takenOf(tx, userId)).includes(prize)) return { ok: false, error: 'owned' }
-        if (w.tokens < def.price) return { ok: false, error: 'tokens' }
+        const had = await takenOf(tx, userId)
+        if (prizeOnce(prize) && had.includes(prize)) return { ok: false, error: 'owned' }
+        const price = prizePrice(prize, had)
+        if (w.tokens < price) return { ok: false, error: 'tokens' }
         const content = prizeContent(prize, target)
         if (!content) return { ok: false, error: 'unpurified' }
         if (content.kind === 'reshadow') {
@@ -234,11 +236,11 @@ export const cornerStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
           if (!row) return { ok: false, error: 'nosave' }
           if (parseSaveData(row.data).shadows[content.id]?.purified !== true) return { ok: false, error: 'unpurified' }
         }
-        const [taken] = await tx<{ id: string }[]>`insert into corner_redemptions (user_id, prize, price) values (${userId}, ${prize}, ${def.price}) returning id`
+        const [taken] = await tx<{ id: string }[]>`insert into corner_redemptions (user_id, prize, price) values (${userId}, ${prize}, ${price}) returning id`
         const key = `corner:${taken!.id}`
         await sendGift(tx, userId, content, { kind: 'rocket' }, key)
         const [g] = await tx<{ id: string }[]>`select id from gifts where user_id = ${userId} and key = ${key}`
-        const after = { ...w, tokens: w.tokens - def.price }
+        const after = { ...w, tokens: w.tokens - price }
         await saveWallet(tx, userId, after)
         console.log(`corner: ${userId} redeemed ${prize}`)
         const gift: Gift | null = g ? { id: g.id, content, reason: { kind: 'rocket' } } : null

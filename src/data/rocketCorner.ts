@@ -19,7 +19,8 @@ import type { CornerFamilyId } from './scFamilies'
  * - `shiny`: that family hatched shiny, once (the family too if it isn't
  *   owned yet): the counter's chase, priced at two and a half times its family
  *   (a week or so of play for the dearest), since no egg, ticket or run brings
- *   a prize family's shiny.
+ *   a prize family's shiny. Bought after the family, it costs only the rest
+ *   (`prizePrice`), so either order adds up to the same.
  * - `shadow`: that family as a Shadow (`game/shadow.ts`), the family too if it
  *   isn't owned yet, once.
  * - `reshadow`: the Shadow Serum, which turns one Purified Pokémon (the player
@@ -94,6 +95,25 @@ export type ShinyPrizeId = { [K in CornerPrizeId]: (typeof CORNER_PRIZES)[K]['ki
 export const isShinyPrize = (id: CornerPrizeId): id is ShinyPrizeId => CORNER_PRIZES[id].kind === 'shiny'
 
 export const isCornerPrize = (v: unknown): v is CornerPrizeId => typeof v === 'string' && Object.hasOwn(CORNER_PRIZES, v)
+
+/** The prize that sells `family` in its normal colors. */
+const familyPrizeOf = (family: PrizeFamilyId) =>
+  CORNER_PRIZE_IDS.find((id) => {
+    const def: CornerPrize = CORNER_PRIZES[id]
+    return def.kind === 'family' && def.family === family
+  })
+
+/**
+ * What a prize costs an account that has redeemed `taken` (prize ids, the API's
+ * `corner_redemptions`): a shiny prize whose family was bought already costs its
+ * price less the family's, so the family then its shiny costs what the shiny alone does.
+ */
+export const prizePrice = (id: CornerPrizeId, taken: readonly string[]) => {
+  const def: CornerPrize = CORNER_PRIZES[id]
+  if (def.kind !== 'shiny') return def.price
+  const family = familyPrizeOf(def.family)
+  return family !== undefined && taken.includes(family) ? def.price - CORNER_PRIZES[family].price : def.price
+}
 
 /** Whether a prize is bought once (everything but Bag items and the Shadow Serum). */
 export const prizeOnce = (id: CornerPrizeId) => CORNER_PRIZES[id].kind !== 'bag' && CORNER_PRIZES[id].kind !== 'reshadow'
