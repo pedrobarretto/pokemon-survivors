@@ -55,6 +55,8 @@ export type CoopState = {
   own: Map<number, boolean>[]
   /** The Desafio co-op do dia this run plays (`game/coopBoard.ts`), null for any other run. */
   challenge: DayKey | null
+  /** Whether the run plays the Legend mode (the room's legend setting): every seat a captured legend, on the boards' Lendário side. */
+  legend: boolean
   /** Plusle and Minun's link (`updatePlusMinus`): on while both stand on the team, and seconds to the current's next hit. */
   plusMinus: { on: boolean; next: number }
 }
@@ -68,6 +70,7 @@ export const createCoopState = (players: number): CoopState => ({
   awayTicks: Array.from({ length: players }, () => 0),
   own: Array.from({ length: players }, () => new Map<number, boolean>()),
   challenge: null,
+  legend: false,
   plusMinus: { on: false, next: 0 },
 })
 

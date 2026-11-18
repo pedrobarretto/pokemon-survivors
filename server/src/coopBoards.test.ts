@@ -86,4 +86,18 @@ describe('coopListing', () => {
     // Ended two days later: it can't have started on its day.
     expect(challenge({ difficulty }, NOON + 2 * 86_400_000)).toBeNull()
   })
+
+  it('lists a co-op Legend run on its own side: every seat a legend at its one stage, never a challenge', () => {
+    const legends = (over: Record<string, unknown> = {}, starters = ['kyogre', 'mew']) =>
+      coopListing(report(2, { result: result(2, { legend: true, players: starters.map((starter, slot) => ({ ...player(slot), starter, stage: 0 })), ...over }) }))
+    expect(legends()?.result).toMatchObject({ legend: true, players: [{ starter: 'kyogre', stage: 0, branch: null }, { starter: 'mew' }] })
+    // A regular seat in a Legend run, a legend in a regular run, a stage past the legend's one, a Legend challenge: none lists.
+    expect(legends({}, ['kyogre', 'charmander'])).toBeNull()
+    expect(coopListing(report(2, { result: result(2, { players: [player(0), { ...player(1), starter: 'mew', stage: 0 }] }) }))).toBeNull()
+    expect(legends({ players: [{ ...player(0), starter: 'kyogre', stage: 1 }, { ...player(1), starter: 'mew', stage: 0 }] })).toBeNull()
+    expect(legends({ challenge: DAY })).toBeNull()
+    expect(legends({ legend: 'yes' })).toBeNull()
+    // An older client leaves `legend` out: a regular run.
+    expect(coopListing(report(2))?.result.legend).toBe(false)
+  })
 })

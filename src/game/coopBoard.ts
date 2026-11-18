@@ -1,13 +1,14 @@
 import { createRng, seedFrom, weightedPick } from '../engine/rng'
 import type { BranchId } from '../data/branches'
-import { PLAYABLE_IDS, PLAYABLE, type PlayableId } from '../data/hatchlings'
+import { PLAYABLE, type PlayableId } from '../data/hatchlings'
+import { isLegend } from '../data/legends'
 import { RUN_LENGTH } from '../data/waves'
 import { CHALLENGE } from './challenge'
 import { brasiliaDay, isDayKey, msSinceDayStart, previousDay, type DayKey } from './day'
 import { isDifficulty, type Difficulty } from './difficulty'
 import { wonRun } from './meta'
 import { isRecord } from './parse'
-import { maxKills, RANKED, runBranch, type BoardPeriod } from './ranking'
+import { isPlayable, maxKills, RANKED, runBranch, type BoardPeriod, type RunMode } from './ranking'
 import type { SupporterTier } from './supporters'
 import type { Game } from './types'
 
@@ -17,8 +18,9 @@ import type { Game } from './types'
  * clients send a `CoopResult` (as JSON) on `over`; the relay posts the one the
  * end's majority agreed on (`CoopReport`, `net/coopReport.ts`) to the API,
  * which parses it here and files the run under its team size, difficulty and,
- * for a challenge run, its day. Boards rank teams (the same set of accounts)
- * by their best run. Pure.
+ * for a challenge run, its day; a co-op Legend run (every seat a captured
+ * legend) on the boards' Lendário side. Boards rank teams (the same set of
+ * accounts) by their best run, on each side apart. Pure.
  */
 
 /* ---------------- Team sizes ---------------- */
@@ -65,13 +67,15 @@ export type CoopResultPlayer = {
  * What a run-mode room's clients send on `over` (`TickEntry`-free: read off
  * the ended game, `coopResult`), so every client in step sends the same JSON
  * and the relay can count them. `challenge`: the Desafio co-op do dia's day,
- * null for any other run. `players` by slot, every seat that started (a
- * leaver's Pokémon as it left).
+ * null for any other run. `legend`: a co-op Legend run (`CoopState.legend`),
+ * never a challenge one; a client before it leaves it out (false). `players`
+ * by slot, every seat that started (a leaver's Pokémon as it left).
  */
 export type CoopResult = {
   v: 1
   difficulty: Difficulty
   challenge: DayKey | null
+  legend: boolean
   /** Seconds the team survived, endless overtime included. */
   time: number
   outcome: CoopOutcome
@@ -87,6 +91,7 @@ export const coopResult = (g: Game): CoopResult | null => {
     v: 1,
     difficulty: g.difficulty,
     challenge: g.coop.challenge,
+    legend: g.coop.legend,
     time: g.time,
     outcome: wonRun(g) ? 'victory' : 'wipe',
     kills: g.players.reduce((sum, p) => sum + p.record.kills, 0),
@@ -104,10 +109,9 @@ export const coopResult = (g: Game): CoopResult | null => {
 
 const isWhole = (v: unknown, min: number, max: number): v is number => typeof v === 'number' && Number.isInteger(v) && v >= min && v <= max
 
-const isPlayable = (v: unknown): v is PlayableId => PLAYABLE_IDS.some((id) => id === v)
-
-const parsePlayer = (raw: unknown, slot: number, time: number): CoopResultPlayer | null => {
-  if (!isRecord(raw) || raw.slot !== slot || !isPlayable(raw.starter)) return null
+/** A seat of a result, or null: a Legend run's seat plays a legend (its one stage, never a branch), any other run's a regular Pokémon. */
+const parsePlayer = (raw: unknown, slot: number, time: number, legend: boolean): CoopResultPlayer | null => {
+  if (!isRecord(raw) || raw.slot !== slot || !isPlayable(raw.starter) || isLegend(raw.starter) !== legend) return null
   const { starter, stage, level, kills } = raw
   if (!isWhole(stage, 0, PLAYABLE[starter].line.length - 1) || !isWhole(level, 1, RANKED.maxLevel) || !isWhole(kills, 0, maxKills(time))) return null
   return { slot, starter, stage, branch: runBranch(starter, stage, raw.branch), shiny: raw.shiny === true, level, kills }
@@ -116,19 +120,25 @@ const parsePlayer = (raw: unknown, slot: number, time: number): CoopResultPlayer
 /**
  * A co-op result from an untrusted body for a run `size` players started, or
  * null when its shape is wrong or it can't have been played: another number
- * of seats, a victory before Mewtwo shows up, more faints than the clock allows.
+ * of seats, a victory before Mewtwo shows up, more faints than the clock
+ * allows, a Legend run with a seat that isn't a legend (or a regular run with
+ * one that is), or a Legend run of the Desafio co-op do dia. A missing
+ * `legend` (an older client) is a regular run.
  */
 export const parseCoopResult = (raw: unknown, size: number): CoopResult | null => {
   if (!isRecord(raw) || raw.v !== 1 || !isDifficulty(raw.difficulty) || !COOP_OUTCOMES.some((o) => o === raw.outcome)) return null
   const { time, kills, players, challenge } = raw
+  if (raw.legend !== undefined && typeof raw.legend !== 'boolean') return null
+  const legend = raw.legend === true
   if (typeof time !== 'number' || !Number.isFinite(time) || time < 0 || time > RANKED.maxTime) return null
   if (raw.outcome === 'victory' && time < RUN_LENGTH) return null
   if (challenge !== null && !isDayKey(challenge)) return null
+  if (legend && challenge !== null) return null
   if (!Array.isArray(players) || players.length !== size) return null
-  const parsed = players.map((p, slot) => parsePlayer(p, slot, time))
+  const parsed = players.map((p, slot) => parsePlayer(p, slot, time, legend))
   if (!parsed.every((p): p is CoopResultPlayer => p !== null)) return null
   if (!isWhole(kills, 0, maxKills(time) * size) || kills !== parsed.reduce((sum, p) => sum + p.kills, 0)) return null
-  return { v: 1, difficulty: raw.difficulty, challenge, time, outcome: raw.outcome as CoopOutcome, kills, players: parsed }
+  return { v: 1, difficulty: raw.difficulty, challenge, legend, time, outcome: raw.outcome as CoopOutcome, kills, players: parsed }
 }
 
 /* ---------------- Desafio co-op do dia ---------------- */
@@ -206,9 +216,11 @@ export type CoopBoardEntry = {
 
 /**
  * The top of a co-op board (`BOARD_SIZE` teams), plus the asking player's
- * best team on it (null for a guest or off it). `GET /coop/boards/:difficulty?size=&period=&friends=`.
+ * best team on it (null for a guest or off it). `mode`: the regular runs'
+ * side (`standard`) or the co-op Legend runs' (`legend`, the Lendário side).
+ * `GET /coop/boards/:difficulty?size=&period=&friends=&mode=`.
  */
-export type CoopBoard = { size: TeamSize; difficulty: Difficulty; period: BoardPeriod; entries: CoopBoardEntry[]; me: CoopBoardEntry | null; total?: number }
+export type CoopBoard = { size: TeamSize; difficulty: Difficulty; period: BoardPeriod; mode: RunMode; entries: CoopBoardEntry[]; me: CoopBoardEntry | null; total?: number }
 
 /**
  * A day's Desafio co-op board for one team size: the day's difficulty, every
