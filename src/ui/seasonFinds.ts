@@ -3,7 +3,7 @@ import { HATCHLINGS, PLAYABLE_IDS } from '../data/hatchlings'
 import type { LandmarkId } from '../data/landmarks'
 import { CASTFORM_FIND, RESEARCH, type FindId, type ResearchId } from '../data/seasonOneUnlocks'
 import { spawnMapEvent } from '../game/mapEvents'
-import { countsAsPartner, mergeFinds } from '../game/seasonOneUnlocks'
+import { countsAsPartner, mergeFinds, repeatShinyHit, repeatShinyOpen, tvShinyRoll } from '../game/seasonOneUnlocks'
 import type { FindMoment } from '../game/seasonOneFinds'
 import { setWeather } from '../game/weather'
 import type { Landmark } from '../game/terrain'
@@ -14,12 +14,28 @@ import { h, rich } from './dom'
 import { loadSave, updateSave, writeSave } from './save'
 import { runToast } from './toasts'
 
+/** `ps.seasonFind('rotom', 'shiny')` makes the next repeat TV find land Rotom's shiny, whatever the run's roll. */
+const dev = { shiny: false }
+
+/**
+ * Whether this repeat TV find brings Rotom's shiny: the family owned and its
+ * shiny not, nor already waiting, and the run's own roll (`tvShinyRoll`).
+ * The roll is the seed's, so a run brings it or not however often it's reported.
+ */
+const tvShiny = (seed: number) => {
+  const save = loadSave()
+  if (save.shinyFinds.includes('rotom') || !repeatShinyOpen(save.hatched, 'rotom')) return false
+  return dev.shiny || repeatShinyHit('rotom', tvShinyRoll(seed))
+}
+
 /**
  * The shell's side of Temporada 1's map encounters (`game/seasonOneFinds.ts`):
  * a found one is banked on the spot (its family then waits as a game-made
- * gift, `seasonGifts`), and each moment gets its toast.
+ * gift, `seasonGifts`), and each moment gets its toast. Found again by an
+ * owner, Rotom may bring its shiny (`REPEAT_SHINY`), banked in `shinyFinds`;
+ * `seed` is the run's terrain seed.
  */
-export const seasonFindFeedback = (root: HTMLElement, find: FindId, moment: FindMoment) => {
+export const seasonFindFeedback = (root: HTMLElement, find: FindId, moment: FindMoment, seed: number) => {
   const m = t().seasonUnlocks.find
   const dex = HATCHLINGS[find].line[0].dex
   const say = (text: string, ms: number) => runToast(root, 'important', h('span', { class: 'item-toast' }, h('img', { src: portraitUrl(dex), alt: '' }), rich(text)), ms)
@@ -30,6 +46,14 @@ export const seasonFindFeedback = (root: HTMLElement, find: FindId, moment: Find
   if (moment === 'gone') return say(m.castformGone, 2200)
   // Every graveyard win reports Spiritomb: only the first brings the family (the place's own toast tells the rest).
   if (find === 'spiritomb' && loadSave().finds.includes('spiritomb')) return
+  if (find === 'rotom' && loadSave().finds.includes('rotom')) {
+    if (!tvShiny(seed)) return say(m.rotomAgain, 3000)
+    dev.shiny = false
+    updateSave((save) => ({ ...save, shinyFinds: mergeFinds(save.shinyFinds, ['rotom']) }))
+    playSfx('unlock')
+    playCry(cryUrl(dex))
+    return say(m.rotomShiny, 4800)
+  }
   updateSave((save) => ({ ...save, finds: mergeFinds(save.finds, [find]) }))
   playSfx('unlock')
   playCry(cryUrl(dex))
@@ -41,13 +65,17 @@ const STEPS = 3
 
 /** Dev console helpers (`ps.*` in dev builds). `landmark` walks to the nearest one of a kind (`devLandmark` in `main.ts`). */
 export const seasonFindDevTools = (game: () => Game | undefined, landmark: (g: Game, id: LandmarkId, dy: number) => Landmark | null) => ({
-  /** `ps.seasonFind('rotom')` makes this run's TV flicker and walks you next to the nearest cottage's; `ps.seasonFind('castform')` brings the rain and a Castform 70 px to the right. */
-  seasonFind: (find: FindId) => {
+  /**
+   * `ps.seasonFind('rotom')` makes this run's TV flicker and walks you next to the nearest cottage's (`'shiny'` second: a repeat
+   * find there lands Rotom's shiny, for a save that owns Rotom and not its shiny); `ps.seasonFind('castform')` brings the rain and a Castform 70 px to the right.
+   */
+  seasonFind: (find: FindId, shiny?: 'shiny') => {
     const g = game()
     if (!g) return console.warn('ps: start a run first')
     if (find === 'spiritomb') return console.warn('ps: Spiritomb comes from the graveyard: ps.enter("graveyard"), then ps.spirits(GRAVEYARD.spirits)')
     if (find === 'rotom') {
       g.finds.tv = true
+      dev.shiny = shiny === 'shiny'
       return landmark(g, 'cottage', -14)
     }
     g.finds.castform = false

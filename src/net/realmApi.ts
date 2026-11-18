@@ -165,7 +165,8 @@ export type ErrandClaimed = { coins: number; book: RealmBook }
  * earned (new furniture ids), when it earned any, the new furniture counts,
  * and the family it brought for the first time (a `HatchlingId`, on its way as a gift), if any.
  */
-export type GameClaimed = { coins: number; today: number; trophies: readonly FurnitureId[]; furniture: FurnitureCounts | null; family: string | null }
+/** `family`: a family the claim's feat brought, as a gift; `shiny`: a family's shiny a repeat of its feat brought (`REPEAT_SHINY`), as a gift. */
+export type GameClaimed = { coins: number; today: number; trophies: readonly FurnitureId[]; furniture: FurnitureCounts | null; family: string | null; shiny: string | null }
 
 /** A credit in play: the seed that shakes the plushes and the week it was put in on. */
 export type ClawPlay = { id: string; seed: number; week: string }
