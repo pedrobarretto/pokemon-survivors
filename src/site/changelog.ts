@@ -187,6 +187,11 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             en: 'Galarian Ponyta now sits with the other Galarian forms: it shows in the partner select’s Galar section and hatches from the Travel Egg in Galar’s week (no longer from the Rare Egg). If you have it, you keep it.',
             es: 'El Ponyta de Galar ahora está junto a las otras formas de Galar: aparece en la sección de Galar de la elección de compañero y sale del Huevo de Viaje en la semana de Galar (ya no del Huevo Raro). Si ya lo tienes, lo conservas.',
           },
+          {
+            pt: 'O ranking do Desafio do dia de 17/11 misturou Stufful e Starly: o Pokémon do dia mudou no meio do dia. Os próximos dias não mudam mais. Desculpa!',
+            en: 'The Daily Challenge board of 11/17 mixed Stufful and Starly: the day’s Pokémon changed mid-day. The next days won’t change anymore. Sorry!',
+            es: 'El ranking del Desafío del día del 17/11 mezcló Stufful y Starly: el Pokémon del día cambió a mitad del día. Los próximos días ya no cambian. ¡Perdón!',
+          },
         ],
       },
     ],
