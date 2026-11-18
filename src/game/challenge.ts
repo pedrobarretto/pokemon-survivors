@@ -46,11 +46,12 @@ export type Challenge = { day: DayKey; seed: number; starter: PlayableId; diffic
 /**
  * Families that became exclusive after their pool's draw began: they stay
  * in, so every day keeps its Pokémon (the pool's size picks each day's).
- * Kabuto left the Rare Egg for the Escavação's Dome Fossil; Galarian Ponyta
- * the Rare Egg for the Ovo de Viagem on 2026-11-17, mid-day, which moved
- * that day's Pokémon from Stufful to Starly until it came back in.
+ * Kabuto left the Rare Egg for the Escavação's Dome Fossil. Galarian Ponyta
+ * left the Rare Egg for the Ovo de Viagem mid-day on 2026-11-17 and wasn't
+ * kept: that day's Pokémon went from Stufful to Starly, and from then on
+ * the pool without it is the one played (2026-11-18 is Finizen).
  */
-const KEPT_IN: readonly PlayableId[] = ['kabuto', 'ponytaGalar']
+const KEPT_IN: readonly PlayableId[] = ['kabuto']
 
 const drawable = (id: PlayableId) => !isExclusiveFamily(id) || KEPT_IN.includes(id)
 

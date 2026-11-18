@@ -55,8 +55,8 @@ describe('dailyChallenge', () => {
   it('keeps the Pokémon each Temporada 1 day had', () => {
     // Pinned: any change to the pool's size reshuffles every day from the season on, the day being played too.
     // A family leaving the draw goes in `KEPT_IN`; one joining it needs a pool of its own from a later day.
-    const days = ['2026-11-17', '2026-11-18', '2026-11-19', '2026-11-20', '2026-11-21']
-    expect(days.map((d) => dailyChallenge(d).starter)).toEqual(['stufful', 'magikarp', 'impidimp', 'dewpider', 'clauncher'])
+    const days = ['2026-11-18', '2026-11-19', '2026-11-20', '2026-11-21', '2026-11-22']
+    expect(days.map((d) => dailyChallenge(d).starter)).toEqual(['finizen', 'chespin', 'wimpod', 'fennekin', 'happiny'])
   })
 
   it('keeps the past Nightmares and draws none after `nightmareUntil`, every other day as it was', () => {

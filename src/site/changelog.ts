@@ -188,9 +188,9 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             es: 'El Ponyta de Galar ahora está junto a las otras formas de Galar: aparece en la sección de Galar de la elección de compañero y sale del Huevo de Viaje en la semana de Galar (ya no del Huevo Raro). Si ya lo tienes, lo conservas.',
           },
           {
-            pt: 'O Desafio do dia de 17/11 volta a ser o Stufful: por algumas horas ele virou Starly e o ranking misturou os dois.',
-            en: 'The Daily Challenge of 11/17 is Stufful again: for a few hours it turned into Starly and the board mixed both.',
-            es: 'El Desafío del día del 17/11 vuelve a ser Stufful: durante unas horas pasó a ser Starly y el ranking mezcló los dos.',
+            pt: 'O ranking do Desafio do dia de 17/11 misturou Stufful e Starly: o Pokémon do dia mudou no meio do dia. Os próximos dias não mudam mais. Desculpa!',
+            en: 'The Daily Challenge board of 11/17 mixed Stufful and Starly: the day’s Pokémon changed mid-day. The next days won’t change anymore. Sorry!',
+            es: 'El ranking del Desafío del día del 17/11 mezcló Stufful y Starly: el Pokémon del día cambió a mitad del día. Los próximos días ya no cambian. ¡Perdón!',
           },
         ],
       },
