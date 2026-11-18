@@ -24,6 +24,50 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-18',
+    title: { pt: 'Soro Sombrio', en: 'Shadow Serum', es: 'Suero Oscuro', fr: 'Sérum Obscur', zh: '暗影血清' },
+    highlights: [
+      {
+        pt: 'Purificar um Pokémon Sombrio agora pede confirmação, com o nome dele e o aviso de que a forma Sombria vai embora.',
+        en: 'Purifying a Shadow Pokémon now asks first, naming it and warning that its Shadow form goes away.',
+        es: 'Purificar un Pokémon Oscuro ahora pide confirmación, con su nombre y el aviso de que la forma Oscura se va.',
+        fr: 'Purifier un Pokémon Obscur demande désormais confirmation, avec son nom et l’avertissement que sa forme Obscure disparaît.',
+        zh: '淨化暗影寶可夢前會先確認，並寫出牠的名字，提醒暗影型態會消失。',
+      },
+      {
+        pt: 'Novo no balcão do Meowth, no Game Corner: o Soro Sombrio, que faz um Pokémon Purificado (você escolhe qual) voltar a ser Sombrio.',
+        en: 'New at Meowth’s counter in the Game Corner: the Shadow Serum turns a Purified Pokémon of your choice back into a Shadow.',
+        es: 'Nuevo en el mostrador de Meowth, en el Casino: el Suero Oscuro hace que un Pokémon Purificado (tú eliges cuál) vuelva a ser Oscuro.',
+        fr: 'Nouveau au comptoir de Meowth, dans la Salle de jeux : le Sérum Obscur rend sa forme Obscure au Pokémon Purifié de ton choix.',
+        zh: '遊戲城喵喵櫃台新上架：暗影血清，可讓你選的一隻淨化寶可夢變回暗影。',
+      },
+      {
+        pt: 'Purificou o Mewtwo Sombrio sem querer? O Soro traz a forma Sombria de volta; para purificar de novo, é só andar o coração inteiro outra vez.',
+        en: 'Purified Shadow Mewtwo by mistake? The Serum brings its Shadow form back; to purify it again, walk its whole heart gauge again.',
+        es: '¿Purificaste a Mewtwo Oscuro sin querer? El Suero devuelve su forma Oscura; para purificarlo otra vez, camina todo su corazón de nuevo.',
+        fr: 'Mewtwo Obscur purifié par erreur ? Le Sérum lui rend sa forme Obscure ; pour le purifier à nouveau, il faut remarcher toute sa jauge.',
+        zh: '不小心淨化了暗影超夢？血清能讓暗影型態回來；想再淨化，就要重新走滿心門量表。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Pokémon Sombrios', en: 'Shadow Pokémon', es: 'Pokémon Oscuros' },
+        notes: [
+          {
+            pt: 'O botão Purificar abre uma janela de confirmação (Cancelar já vem selecionado) que diz qual Pokémon vai ser purificado e que a forma Sombria se perde, a não ser com o Soro Sombrio.',
+            en: 'The Purify button opens a confirmation (Cancel comes selected) that names the Pokémon and says its Shadow form is lost, unless you use the Shadow Serum.',
+            es: 'El botón Purificar abre una ventana de confirmación (Cancelar viene seleccionado) que dice qué Pokémon se purifica y que la forma Oscura se pierde, salvo con el Suero Oscuro.',
+          },
+          {
+            pt: 'O Soro Sombrio custa 11.000 fichas no balcão de prêmios e pode ser trocado quantas vezes quiser. Ele chega na caixa de presentes e, ao abrir, o Pokémon escolhido volta a ser Sombrio com o coração fechado.',
+            en: 'The Shadow Serum costs 11,000 tokens at the prize counter and can be traded for as often as you like. It arrives in the gift box, and opening it turns the chosen Pokémon Shadow again, its heart closed.',
+            es: 'El Suero Oscuro cuesta 11.000 fichas en el mostrador de premios y se puede canjear las veces que quieras. Llega a la caja de regalos y, al abrirlo, el Pokémon elegido vuelve a ser Oscuro con el corazón cerrado.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-11-17',
     title: { pt: 'Correções da Temporada 1', en: 'Season 1 fixes', es: 'Correcciones de la Temporada 1', fr: 'Correctifs de la Saison 1', zh: '第 1 賽季修正' },
     highlights: [

@@ -60,8 +60,9 @@ import type { SweepView } from '../realm/games/corner.rules'
  * - `POST /realm/corner/sweep/start` (auth): a Koffing Sweep board (the one left open comes back). `CornerSwept`. 403 `cap`.
  * - `POST /realm/corner/sweep/flip` (auth) `{ id, at }` and `/sweep/bank` `{ id }`: a tile turned, or the pot banked.
  *   `CornerSwept`; a tile already up or a round over answers its view again.
- * - `POST /realm/corner/redeem` (auth) `{ prize }`: a prize for tokens (`data/rocketCorner.ts`), sent as a gift.
- *   `CornerRedeemed`. 403 `tokens`/`owned`.
+ * - `POST /realm/corner/redeem` (auth) `{ prize, target? }`: a prize for tokens (`data/rocketCorner.ts`), sent as a gift;
+ *   the Shadow Serum's `target` is the Purified Pokémon it turns back. `CornerRedeemed`. 403 `tokens`/`owned`,
+ *   409 `unpurified` (the stored save's `target` isn't Purified) or `nosave`.
  * - `GET /realm/boards/:game?period=day|week` (public; signed in adds the player's line): `GameBoard`
  *   (`realm/boards.ts`), the game's best of the Brasília day or week, from the claims. Cached a few seconds.
  *

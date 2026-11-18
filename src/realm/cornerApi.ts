@@ -1,7 +1,9 @@
 import { spendFromSave, stageGifts } from '../account'
+import { loadSave } from '../ui/save'
 import { apiCall } from '../api'
-import { CORNER_PRIZES, prizeOnce, ROCKET_FRAME, ROCKET_TITLE, type CornerPrizeId } from '../data/rocketCorner'
-import { parseGift, type Gift, type GiftContent } from '../game/gifts'
+import type { PlayableId } from '../data/hatchlings'
+import { CORNER_PRIZES, prizeContent, prizeOnce, type CornerPrizeId } from '../data/rocketCorner'
+import { parseGift, type Gift } from '../game/gifts'
 import { isRecord } from '../game/parse'
 import type { CornerBought, CornerRedeemed, CornerSpun, CornerState, CornerSweep, CornerSwept } from '../net/realmApi'
 import { realmFaked, type Failure } from './api'
@@ -215,31 +217,25 @@ export const bankSweep = async (id: string): Promise<CornerSwept | Failure> => {
   return (status === 200 ? parseSwept(body) : null) ?? failed(status, body)
 }
 
-const fakeContent = (prize: CornerPrizeId): GiftContent => {
-  const def = CORNER_PRIZES[prize]
-  switch (def.kind) {
-    case 'family': return { kind: 'family', family: def.family }
-    case 'shadow': return { kind: 'shadow', family: def.family }
-    case 'bag': return { kind: 'bag', item: def.item, count: def.count }
-    case 'title': return { kind: 'title', title: ROCKET_TITLE }
-    case 'frame': return { kind: 'style', style: { slot: 'frame', id: ROCKET_FRAME } }
-  }
-}
-
-/** Trades tokens for a prize; its gift goes into the inbox at once (opened from the lobby's gift box, like any). */
-export const redeemPrize = async (prize: CornerPrizeId): Promise<CornerRedeemed | Failure> => {
+/**
+ * Trades tokens for a prize; its gift goes into the inbox at once (opened from the lobby's gift box, like any).
+ * The Shadow Serum's `target` is the Purified Pokémon it's for (faked, checked against the device's save, as the API checks the stored one).
+ */
+export const redeemPrize = async (prize: CornerPrizeId, target: PlayableId | null = null): Promise<CornerRedeemed | Failure> => {
   if (realmFaked()) {
     const def = CORNER_PRIZES[prize]
+    const content = prizeContent(prize, target)
     if (prizeOnce(prize) && fake.taken.includes(prize)) return { status: 403, error: 'owned' }
     if (fake.tokens < def.price) return { status: 403, error: 'tokens' }
+    if (!content || (content.kind === 'reshadow' && loadSave().shadows[content.id]?.purified !== true)) return { status: 409, error: 'unpurified' }
     fake.tokens -= def.price
     fake.taken.push(prize)
     fake.n += 1
-    const gift: Gift = { id: `dev-corner-${fake.n}-${prize}`, content: fakeContent(prize), reason: { kind: 'rocket' } }
+    const gift: Gift = { id: `dev-corner-${fake.n}-${prize}`, content, reason: { kind: 'rocket' } }
     stageGifts([gift])
     return { tokens: fake.tokens, gift }
   }
-  const { status, body } = await apiCall('/realm/corner/redeem', { method: 'POST', body: { prize }, auth: true })
+  const { status, body } = await apiCall('/realm/corner/redeem', { method: 'POST', body: target ? { prize, target } : { prize }, auth: true })
   if (status !== 200 || !isRecord(body)) return failed(status, body)
   const tokens = count(body.tokens)
   const gift = body.gift === null ? null : parseGift(body.gift)

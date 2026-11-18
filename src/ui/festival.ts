@@ -2,7 +2,7 @@ import { accountHandle, accountsEnabled, accountState, onAccountChange, signIn }
 import { FESTIVAL, type Festival, type FestivalId } from '../data/festivals'
 import { BAG_ITEMS, EVO_ITEMS } from '../data/shop'
 import type { FrameId } from '../data/style'
-import { HATCHLINGS } from '../data/hatchlings'
+import { HATCHLINGS, PLAYABLE } from '../data/hatchlings'
 import { LEGENDS } from '../data/legends'
 import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
@@ -66,6 +66,8 @@ const rewardName = (c: GiftContent): string => {
       return HATCHLINGS[c.family].name
     case 'shadow':
       return t().rocket.shadow.name(HATCHLINGS[c.family].name)
+    case 'reshadow':
+      return t().rocket.gifts.reshadow(PLAYABLE[c.id].name)
     case 'evoItem':
       return EVO_ITEMS[c.item].name
     case 'legend':
