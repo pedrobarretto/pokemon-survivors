@@ -1,4 +1,4 @@
-import { spendFromSave, stageGifts } from '../account'
+import { landGifts, spendFromSave } from '../account'
 import { loadSave } from '../ui/save'
 import { apiCall } from '../api'
 import type { PlayableId } from '../data/hatchlings'
@@ -216,7 +216,9 @@ export const bankSweep = async (id: string): Promise<CornerSwept | Failure> => {
 }
 
 /**
- * Trades tokens for a prize; its gift goes into the inbox at once (opened from the lobby's gift box, like any).
+ * Trades tokens for a prize; its gift lands on the save at once (`landGifts`, as the Safári's and the
+ * Escavação's do: a family hatches, a Shadow brings its family along if new), so it never sits unopened
+ * in the gift box while the player stays in the Realm. A gift that can't land yet waits there, as any.
  * The Shadow Serum's `target` is the Purified Pokémon it's for (faked, checked against the device's save, as the API checks the stored one).
  */
 export const redeemPrize = async (prize: CornerPrizeId, target: PlayableId | null = null): Promise<CornerRedeemed | Failure> => {
@@ -230,7 +232,7 @@ export const redeemPrize = async (prize: CornerPrizeId, target: PlayableId | nul
     fake.taken.push(prize)
     fake.n += 1
     const gift: Gift = { id: `dev-corner-${fake.n}-${prize}`, content, reason: { kind: 'rocket' } }
-    stageGifts([gift])
+    landGifts([gift], 'local')
     return { tokens: fake.tokens, gift }
   }
   const { status, body } = await apiCall('/realm/corner/redeem', { method: 'POST', body: target ? { prize, target } : { prize }, auth: true })
@@ -238,6 +240,6 @@ export const redeemPrize = async (prize: CornerPrizeId, target: PlayableId | nul
   const tokens = count(body.tokens)
   const gift = body.gift === null ? null : parseGift(body.gift)
   if (tokens === null) return failed(status, body)
-  if (gift) stageGifts([gift])
+  if (gift) landGifts([gift], 'claim')
   return { tokens, gift }
 }

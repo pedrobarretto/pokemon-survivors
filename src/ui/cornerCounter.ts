@@ -24,7 +24,7 @@ import type { Screen } from './screens'
  * out as the carpentry's (`.shop-sheet`), with two pages: the prizes (the
  * player picks one; `data/rocketCorner.ts`) and the token packs (₽ only, a
  * day's cap). The API takes the tokens and sends the prize as a gift
- * (`cornerApi.ts`), which waits in the gift box. The Shadow Serum's card picks
+ * (`cornerApi.ts`), which lands on the save at once. The Shadow Serum's card picks
  * which Purified Pokémon it's for, from the save. Esc goes back.
  */
 
@@ -107,10 +107,9 @@ export const openCornerCounter = (root: HTMLElement, input: Input, opts: CornerC
   let busy = false
   let open: CornerPrizeId | null = null
   let closed = false
-  /** The Shadow Serum's pick, and the Pokémon a Serum was already bought for this visit (their gifts wait in the box). */
+  /** The Shadow Serum's pick (a Serum bought lands at once, so its Pokémon leaves the Purified list). */
   let target: PlayableId | null = null
-  const served = new Set<PlayableId>()
-  const purifiedNow = () => purifiedIds(loadSave().shadows).filter((id) => !served.has(id))
+  const purifiedNow = () => purifiedIds(loadSave().shadows)
 
   const tabs = (['prizes', 'tokens'] as const).map((k) => h('button', { class: 'carpentry-set corner-tab', type: 'button', role: 'tab', onclick: () => switchTab(k) }, h('span', { class: 'carpentry-set-name' }, k === 'prizes' ? c().spots.prizes : c().spots.tokens)))
   const rail = h('nav', { class: 'carpentry-rail corner-rail', role: 'tablist' }, ...tabs)
@@ -288,7 +287,6 @@ export const openCornerCounter = (root: HTMLElement, input: Input, opts: CornerC
     else {
       playSfx('buy')
       if (state) state = { ...state, tokens: got.tokens, taken: [...state.taken, id] }
-      if (forWhom) served.add(forWhom)
       talk.say(say(c().redeemed(prizeName(id))), clerk())
       open = null
       target = null

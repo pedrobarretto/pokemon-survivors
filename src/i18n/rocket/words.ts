@@ -65,7 +65,7 @@ const pt = {
     no: 'Agora não',
     pickPurified: 'Qual Pokémon Purificado volta a ser Sombrio?',
     noPurified: 'Você ainda não tem nenhum Pokémon Purificado.',
-    redeemed: (name: string) => `${name} está na sua caixa de presentes!`,
+    redeemed: (name: string) => `${name} agora é seu!`,
     shinyName: (name: string) => `${name} Shiny`,
     short: (n: string) => `Faltam ${n} fichas`,
     errors: {
@@ -241,7 +241,7 @@ const en: RocketWords = {
     no: 'Not now',
     pickPurified: 'Which Purified Pokémon turns Shadow again?',
     noPurified: 'You don’t have any Purified Pokémon yet.',
-    redeemed: (name) => `${name} is in your gift box!`,
+    redeemed: (name) => `${name} is yours now!`,
     shinyName: (name) => `Shiny ${name}`,
     short: (n) => `${n} tokens short`,
     errors: {
@@ -412,7 +412,7 @@ const es: RocketWords = {
     no: 'Ahora no',
     pickPurified: '¿Qué Pokémon Purificado vuelve a ser Oscuro?',
     noPurified: 'Todavía no tienes ningún Pokémon Purificado.',
-    redeemed: (name) => `¡${name} está en tu caja de regalos!`,
+    redeemed: (name) => `¡${name} ya es tuyo!`,
     shinyName: (name) => `${name} Shiny`,
     short: (n) => `Faltan ${n} fichas`,
     errors: {
@@ -583,7 +583,7 @@ const fr: RocketWords = {
     no: 'Pas maintenant',
     pickPurified: 'Quel Pokémon Purifié redevient Obscur ?',
     noPurified: 'Vous n’avez encore aucun Pokémon Purifié.',
-    redeemed: (name) => `${name} est dans votre boîte à cadeaux !`,
+    redeemed: (name) => `${name} est à vous maintenant !`,
     shinyName: (name) => `${name} chromatique`,
     short: (n) => `Il manque ${n} jetons`,
     errors: {
@@ -754,7 +754,7 @@ const zh: RocketWords = {
     no: '先不要',
     pickPurified: '要讓哪隻淨化寶可夢變回暗影？',
     noPurified: '你還沒有任何淨化寶可夢。',
-    redeemed: (name) => `${name} 已送到你的禮物盒！`,
+    redeemed: (name) => `${name} 現在是你的了！`,
     shinyName: (name) => `異色 ${name}`,
     short: (n) => `還差 ${n} 枚代幣`,
     errors: {
