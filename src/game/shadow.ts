@@ -1,6 +1,6 @@
 import { PLAYABLE_IDS, type PlayableId } from '../data/hatchlings'
 import { LEGEND_IDS } from '../data/legends'
-import { isRecord } from './parse'
+import { isRecord, wholeNumber } from './parse'
 import type { StatDelta } from './stats'
 
 /**
@@ -9,7 +9,11 @@ import type { StatDelta } from './stats'
  * (`ReplayStart.variant`, so the server re-simulates it). Walking purifies it,
  * the way eggs hatch in the incubator: every run's steps fill each Shadow's
  * heart gauge, and once full the player may purify it into a Purified Pokémon,
- * which keeps a small mark and a little more HP. The Game Corner's prize
+ * which keeps a small mark and a little more HP. Purifying is for good, as in
+ * GO, but for Meowth's Shadow Serum (`reshadow`, a Game Corner prize the API
+ * charges tokens for): it turns a Purified Pokémon back into a Shadow with an
+ * empty gauge. Each purify or revert bumps the entry's `rev`, so a sync from a
+ * device that missed it never undoes it (`mergeShadows`). The Game Corner's prize
  * counter and the Rocket Hideout give them (`data/rocketCorner.ts`,
  * `data/rocketHideout.ts`); the look is code-drawn (`render/shadowAura.ts`),
  * save for the species with real Shadow sheets (`SHADOW_SHEETS`).
@@ -43,8 +47,11 @@ export const isShadowVariant = (v: unknown): v is ShadowVariant => v === 'shadow
 
 /* ---------------- The save's side ---------------- */
 
-/** One Shadow the player owns: purified or not, the steps its gauge has walked and whether runs play it (the Normal/Shadow pick). */
-export type ShadowEntry = { purified: boolean; steps: number; pick: boolean }
+/**
+ * One Shadow the player owns: purified or not, the steps its gauge has walked, whether runs play it (the
+ * Normal/Shadow pick) and `rev`, how many times it was purified or turned back (old saves: 0).
+ */
+export type ShadowEntry = { purified: boolean; steps: number; pick: boolean; rev: number }
 
 export type ShadowSave = Readonly<Partial<Record<PlayableId, ShadowEntry>>>
 
@@ -60,7 +67,7 @@ export const purifySteps = (id: PlayableId) => (isLegendId(id) ? SHADOW.legendSt
 
 /** Gives `id` as a Shadow, picked (the player just met it). One already owned stays as it is. */
 export const grantShadow = (shadows: ShadowSave, id: PlayableId): ShadowSave =>
-  shadows[id] ? shadows : { ...shadows, [id]: { purified: false, steps: 0, pick: true } }
+  shadows[id] ? shadows : { ...shadows, [id]: { purified: false, steps: 0, pick: true, rev: 0 } }
 
 /** Every Shadow not yet purified walks `steps` more, up to its gauge. */
 export const walkShadows = (shadows: ShadowSave, steps: number): ShadowSave => {
@@ -83,8 +90,17 @@ export const canPurify = (shadows: ShadowSave, id: PlayableId) => {
 /** Purifies `id` when its gauge is full (its pick stays); otherwise nothing changes. */
 export const purify = (shadows: ShadowSave, id: PlayableId): ShadowSave => {
   const e = shadows[id]
-  return e && canPurify(shadows, id) ? { ...shadows, [id]: { ...e, purified: true } } : shadows
+  return e && canPurify(shadows, id) ? { ...shadows, [id]: { ...e, purified: true, rev: e.rev + 1 } } : shadows
 }
+
+/** The Shadow Serum: turns a Purified `id` back into a Shadow, played as one, its gauge to walk again. Anything else stays as it is. */
+export const reshadow = (shadows: ShadowSave, id: PlayableId): ShadowSave => {
+  const e = shadows[id]
+  return e?.purified ? { ...shadows, [id]: { purified: false, steps: 0, pick: true, rev: e.rev + 1 } } : shadows
+}
+
+/** The Pokémon a Shadow Serum can turn back: the save's Purified ones. */
+export const purifiedIds = (shadows: ShadowSave): PlayableId[] => OWNERS.filter((id) => shadows[id]?.purified === true)
 
 /** Sets whether runs play `id`'s Shadow (or Purified) form. */
 export const pickShadow = (shadows: ShadowSave, id: PlayableId, pick: boolean): ShadowSave => {
@@ -99,9 +115,10 @@ export const runVariant = (shadows: ShadowSave, id: PlayableId): ShadowVariant |
 }
 
 /**
- * Both in one: every key on either side; purified wins (it never goes back),
- * the further gauge wins, and `incoming`'s pick when it has the key (a
- * setting, like the shiny pick).
+ * Both in one: every key on either side. The side with the higher `rev` (the
+ * later purify or Shadow Serum) decides `purified` and the gauge; at the same
+ * `rev`, purified wins and the further gauge wins. `incoming`'s pick when it
+ * has the key (a setting, like the shiny pick).
  */
 export const mergeShadows = (base: ShadowSave, incoming: ShadowSave): ShadowSave => {
   const out: Partial<Record<PlayableId, ShadowEntry>> = {}
@@ -109,7 +126,11 @@ export const mergeShadows = (base: ShadowSave, incoming: ShadowSave): ShadowSave
     const a = base[id]
     const b = incoming[id]
     if (!a && !b) continue
-    out[id] = { purified: (a?.purified ?? false) || (b?.purified ?? false), steps: Math.max(a?.steps ?? 0, b?.steps ?? 0), pick: b ? b.pick : (a?.pick ?? false) }
+    const pick = b ? b.pick : (a?.pick ?? false)
+    const ahead = !a || !b || a.rev === b.rev ? null : a.rev > b.rev ? a : b
+    out[id] = ahead
+      ? { purified: ahead.purified, steps: ahead.steps, pick, rev: ahead.rev }
+      : { purified: (a?.purified ?? false) || (b?.purified ?? false), steps: Math.max(a?.steps ?? 0, b?.steps ?? 0), pick, rev: a?.rev ?? b?.rev ?? 0 }
   }
   return out
 }
@@ -122,7 +143,7 @@ export const parseShadows = (raw: unknown): ShadowSave => {
     const e = raw[id]
     if (!isRecord(e)) continue
     const steps = typeof e.steps === 'number' && Number.isFinite(e.steps) ? Math.max(0, Math.min(purifySteps(id), Math.floor(e.steps))) : 0
-    out[id] = { purified: e.purified === true, steps, pick: e.pick === true }
+    out[id] = { purified: e.purified === true, steps, pick: e.pick === true, rev: wholeNumber(e.rev) }
   }
   return out
 }

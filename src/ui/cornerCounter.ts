@@ -1,6 +1,7 @@
 import { accountState } from '../account'
-import { HATCHLINGS } from '../data/hatchlings'
+import { HATCHLINGS, PLAYABLE, type PlayableId } from '../data/hatchlings'
 import { CORNER_PRIZE_IDS, CORNER_PRIZES, prizeOnce, ROCKET_FRAME, ROCKET_TITLE, type CornerPrize, type CornerPrizeId } from '../data/rocketCorner'
+import { purifiedIds } from '../game/shadow'
 import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
 import { formatNumber, t } from '../i18n'
@@ -12,7 +13,7 @@ import { bagIcon, coinIcon, medalIcon } from '../render/art'
 import { tokenIcon } from '../render/cornerArt'
 import { frameIcon } from '../render/cosmetics'
 import { portraitUrl } from '../render/sprites'
-import { standingCanvas } from '../render/shadowAura'
+import { shadowIcon, standingCanvas } from '../render/shadowAura'
 import { dialogue, type DialogueLine, type Speaker } from './dialogue'
 import { h, later, setText } from './dom'
 import { loadSave } from './save'
@@ -23,7 +24,8 @@ import type { Screen } from './screens'
  * out as the carpentry's (`.shop-sheet`), with two pages: the prizes (the
  * player picks one; `data/rocketCorner.ts`) and the token packs (₽ only, a
  * day's cap). The API takes the tokens and sends the prize as a gift
- * (`cornerApi.ts`), which waits in the gift box. Esc goes back.
+ * (`cornerApi.ts`), which waits in the gift box. The Shadow Serum's card picks
+ * which Purified Pokémon it's for, from the save. Esc goes back.
  */
 
 /** Meowth (#52), Team Rocket's talking cat, keeps the counter. */
@@ -37,8 +39,8 @@ const clerk = (): Speaker => ({
 
 export type CornerTab = 'prizes' | 'tokens'
 
-/** The prize page's sections, by kind: the families, their Shadows, the Bag's items, and the card's title and frame. */
-const SECTIONS: readonly (readonly CornerPrize['kind'][])[] = [['family'], ['shadow'], ['bag'], ['title', 'frame']]
+/** The prize page's sections, by kind: the families, their Shadows (and the Shadow Serum), the Bag's items, and the card's title and frame. */
+const SECTIONS: readonly (readonly CornerPrize['kind'][])[] = [['family'], ['shadow', 'reshadow'], ['bag'], ['title', 'frame']]
 
 export type CornerCounterOpts = { tab: CornerTab; close: () => void }
 
@@ -58,6 +60,8 @@ const prizeIcon = (id: CornerPrizeId) => {
     case 'family':
     case 'shadow':
       return portraitUrl(HATCHLINGS[def.family].line[0].dex)
+    case 'reshadow':
+      return shadowIcon()
     case 'bag':
       return bagIcon(def.item)
     case 'title':
@@ -81,6 +85,7 @@ const ownedHere = (id: CornerPrizeId) => {
     case 'frame':
       return save.style.owned.frame.includes(ROCKET_FRAME)
     case 'bag':
+    case 'reshadow':
       return false
   }
 }
@@ -99,6 +104,10 @@ export const openCornerCounter = (root: HTMLElement, input: Input, opts: CornerC
   let busy = false
   let open: CornerPrizeId | null = null
   let closed = false
+  /** The Shadow Serum's pick, and the Pokémon a Serum was already bought for this visit (their gifts wait in the box). */
+  let target: PlayableId | null = null
+  const served = new Set<PlayableId>()
+  const purifiedNow = () => purifiedIds(loadSave().shadows).filter((id) => !served.has(id))
 
   const tabs = (['prizes', 'tokens'] as const).map((k) => h('button', { class: 'carpentry-set corner-tab', type: 'button', role: 'tab', onclick: () => switchTab(k) }, h('span', { class: 'carpentry-set-name' }, k === 'prizes' ? c().spots.prizes : c().spots.tokens)))
   const rail = h('nav', { class: 'carpentry-rail corner-rail', role: 'tablist' }, ...tabs)
@@ -130,7 +139,7 @@ export const openCornerCounter = (root: HTMLElement, input: Input, opts: CornerC
 
   const failure = (error: string) => {
     const e = c().errors
-    return error === 'funds' ? e.funds : error === 'cap' ? e.cap : error === 'tokens' ? e.tokens : error === 'owned' ? e.owned : error === 'profile' ? e.profile : error === 'guest' ? e.guest : e.failed
+    return error === 'funds' ? e.funds : error === 'cap' ? e.cap : error === 'tokens' ? e.tokens : error === 'owned' ? e.owned : error === 'unpurified' ? e.unpurified : error === 'profile' ? e.profile : error === 'guest' ? e.guest : e.failed
   }
 
   const taken = (id: CornerPrizeId) => prizeOnce(id) && ((state?.taken.includes(id) ?? false) || ownedHere(id))
@@ -168,6 +177,26 @@ export const openCornerCounter = (root: HTMLElement, input: Input, opts: CornerC
     const def = CORNER_PRIZES[id]
     const have = taken(id)
     const short = Math.max(0, def.price - (state?.tokens ?? 0))
+    const serum = def.kind === 'reshadow'
+    const choices = serum ? purifiedNow() : []
+    if (target !== null && !choices.includes(target)) target = null
+    if (target === null && choices.length === 1) target = choices[0]!
+    const pickTarget = (pid: PlayableId) => (playSfx('select'), (target = pid), paintDetail())
+    const targets =
+      serum &&
+      h(
+        'div',
+        { class: 'corner-targets', role: 'radiogroup', 'aria-label': c().pickPurified },
+        h('span', { class: 'carpentry-detail-meta' }, choices.length ? c().pickPurified : c().noPurified),
+        ...choices.map((pid) =>
+          h(
+            'button',
+            { class: `corner-target${pid === target ? ' on' : ''}`, type: 'button', role: 'radio', 'aria-checked': String(pid === target), onclick: () => pickTarget(pid) },
+            h('img', { src: portraitUrl(PLAYABLE[pid].line[0].dex), alt: '' }),
+            h('span', {}, PLAYABLE[pid].name),
+          ),
+        ),
+      )
     const close = h('button', { class: 'btn carpentry-detail-close', type: 'button', 'aria-label': t().mart.back, onclick: () => hide() }, '✕')
     detail.replaceChildren(
       h(
@@ -181,9 +210,10 @@ export const openCornerCounter = (root: HTMLElement, input: Input, opts: CornerC
           h('b', { class: 'carpentry-detail-name' }, c().prizes[id]),
           h('span', { class: 'carpentry-detail-meta' }, c().kinds[def.kind]),
           h('p', { class: 'carpentry-note' }, blurbOf(id)),
+          targets,
           have
             ? h('span', { class: 'carpentry-owned' }, c().owned)
-            : h('button', { class: 'btn carpentry-buy', type: 'button', disabled: busy || short > 0, onclick: () => redeem(id) }, short > 0 ? c().short(formatNumber(short)) : c().redeem, ' ', tokenTag(def.price)),
+            : h('button', { class: 'btn carpentry-buy', type: 'button', disabled: busy || short > 0 || (serum && target === null), onclick: () => redeem(id) }, short > 0 ? c().short(formatNumber(short)) : c().redeem, ' ', tokenTag(def.price)),
         ),
       ),
     )
@@ -235,15 +265,18 @@ export const openCornerCounter = (root: HTMLElement, input: Input, opts: CornerC
     if (!signedIn()) return fail('guest')
     busy = true
     paint()
-    const got = await redeemPrize(id)
+    const forWhom = CORNER_PRIZES[id].kind === 'reshadow' ? target : null
+    const got = await redeemPrize(id, forWhom)
     busy = false
     if (closed) return
     if (isFailure(got)) fail(got.error)
     else {
       playSfx('buy')
       if (state) state = { ...state, tokens: got.tokens, taken: [...state.taken, id] }
+      if (forWhom) served.add(forWhom)
       talk.say(say(c().redeemed(c().prizes[id])), clerk())
       open = null
+      target = null
     }
     paint()
   }
@@ -279,6 +312,7 @@ export const openCornerCounter = (root: HTMLElement, input: Input, opts: CornerC
   function show(id: CornerPrizeId) {
     playSfx('select')
     open = id
+    target = null
     paintDetail()
   }
 

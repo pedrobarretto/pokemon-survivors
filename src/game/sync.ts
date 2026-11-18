@@ -86,7 +86,7 @@ const worth = (s: Save) => s.wallet + totalSpent(s.ranks) + shopInvested(s.shop.
  * - The Desafio do dia attempt: the later day (`base`'s on the same day).
  * - Temporada 1's encounters: a union; its research: each chain at the side further along, the partners a union (`mergeResearch`).
  * - The Rocket Hideout's pass: the later day it was given and the later it was used, Giovanni's clears the higher (`mergeHideout`).
- * - Shadow Pokémon: a union, purified for good once either side purified, the further heart gauge, `incoming`'s pick (`mergeShadows`).
+ * - Shadow Pokémon: a union; the side with the later purify or Shadow Serum (`rev`) decides purified and the gauge, else purified wins and the further gauge; `incoming`'s pick (`mergeShadows`).
  * - The legend paths: the Cube's Cells and Cores and Meltan's Hex Nuts at the larger side; Cosmog's research and the
  *   legends it grew into, unions, its run counts the side further along's; the Torre's trials a union (`mergePaths`).
  */

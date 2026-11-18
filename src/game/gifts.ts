@@ -9,9 +9,9 @@ import { PATH_IDS, type PathId } from '../data/legendPaths'
 import { isDifficulty, type Difficulty } from './difficulty'
 import { ERA1_TIERS, isEra1Side, type Era1Side, type Era1Tier } from './era1'
 import { parseTitle } from './achievements'
-import { HATCHLING_IDS, HATCHLINGS, type HatchlingId } from '../data/hatchlings'
+import { HATCHLING_IDS, HATCHLINGS, type HatchlingId, type PlayableId } from '../data/hatchlings'
 import { STYLE_SLOTS, styleIds, stylePrice, type StyleId, type StyleSlot } from '../data/style'
-import { parseHandle } from './ranking'
+import { isPlayable, parseHandle } from './ranking'
 import { addToBag, BAG_ITEM_IDS, type BagItem } from './bag'
 import { EVO_ITEM_IDS, type EvoItemId } from '../data/shop'
 import { captureByGift, type Captures } from './capture'
@@ -23,7 +23,7 @@ import { mergeRibbons, parseRibbon, type Ribbon } from './ribbons'
 import { isSupporterTier, type SupporterTier } from './supporters'
 import { grantShinyPick } from './shinyPicks'
 import { equipStyle, grantStyle, parseStyle, type StyleSave } from './style'
-import { grantShadow } from './shadow'
+import { grantShadow, reshadow } from './shadow'
 
 /**
  * Presente Misterioso (Mystery Gift): the API keeps an inbox per player
@@ -60,6 +60,8 @@ export type GiftContent =
   | { kind: 'evoItem'; item: EvoItemId }
   /** A Shadow Pokémon (`game/shadow.ts`), from the Rocket Game Corner's counter: a family not owned yet hatches too, with its scene. A Shadow owned already changes nothing. */
   | { kind: 'shadow'; family: HatchlingId }
+  /** The Shadow Serum, from the same counter: the Purified `id` turns back into a Shadow (`reshadow`); one not Purified by then changes nothing. */
+  | { kind: 'reshadow'; id: PlayableId }
 
 export type GiftKind = GiftContent['kind']
 
@@ -193,6 +195,8 @@ export const parseGiftContent = (v: unknown): GiftContent | null => {
       return isOneOf(v.item, EVO_ITEM_IDS) ? { kind: 'evoItem', item: v.item } : null
     case 'shadow':
       return isOneOf(v.family, HATCHLING_IDS) ? { kind: 'shadow', family: v.family } : null
+    case 'reshadow':
+      return isPlayable(v.id) ? { kind: 'reshadow', id: v.id } : null
     default:
       return null
   }
@@ -320,6 +324,8 @@ const give = (save: Save, content: GiftContent, id: string): { save: Save; hatch
       const hatched = save.hatched[content.family] === undefined ? familyHatch(save, content.family) : { save, hatch: null }
       return { save: { ...hatched.save, shadows: grantShadow(hatched.save.shadows, content.family) }, hatch: hatched.hatch }
     }
+    case 'reshadow':
+      return { save: { ...save, shadows: reshadow(save.shadows, content.id) }, hatch: null }
   }
 }
 

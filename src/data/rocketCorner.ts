@@ -1,3 +1,5 @@
+import type { GiftContent } from '../game/gifts'
+import type { PlayableId } from './hatchlings'
 import type { BagItem } from './shop'
 import type { RocketFamilyId } from './rocketFamilies'
 import type { CornerFamilyId } from './scFamilies'
@@ -14,6 +16,10 @@ import type { CornerFamilyId } from './scFamilies'
  *   lines, Cleffa's, Plusle and Minun (`CORNER_FAMILY_IDS`, `data/scFamilies.ts`).
  * - `shadow`: that family as a Shadow (`game/shadow.ts`), the family too if it
  *   isn't owned yet, once.
+ * - `reshadow`: the Shadow Serum, which turns one Purified Pokémon (the player
+ *   picks it at the counter; the API checks the stored save) back into a
+ *   Shadow, as often as the tokens last. Priced like the dearest prizes
+ *   (`SHADOW_SERUM_PRICE`), so purifying stays a choice.
  * - `bag`: Bag items, as often as the tokens last.
  * - `title` and `frame`: Team Rocket's title and card frame, once.
  *
@@ -25,9 +31,13 @@ export type PrizeFamilyId = RocketFamilyId | CornerFamilyId
 export type CornerPrize =
   | { kind: 'family'; family: PrizeFamilyId; price: number }
   | { kind: 'shadow'; family: PrizeFamilyId; price: number }
+  | { kind: 'reshadow'; price: number }
   | { kind: 'bag'; item: BagItem; count: number; price: number }
   | { kind: 'title'; price: number }
   | { kind: 'frame'; price: number }
+
+/** What the Shadow Serum costs in tokens: about a Shadow Cleffa's, the dearest prize. */
+export const SHADOW_SERUM_PRICE = 11000
 
 export const CORNER_PRIZES = {
   ditto: { kind: 'family', family: 'ditto', price: 3000 },
@@ -48,6 +58,7 @@ export const CORNER_PRIZES = {
   shadowCleffa: { kind: 'shadow', family: 'cleffa', price: 10500 },
   shadowPlusle: { kind: 'shadow', family: 'plusle', price: 8000 },
   shadowMinun: { kind: 'shadow', family: 'minun', price: 8000 },
+  shadowSerum: { kind: 'reshadow', price: SHADOW_SERUM_PRICE },
   rareCandy: { kind: 'bag', item: 'rareCandy', count: 3, price: 450 },
   xAttack: { kind: 'bag', item: 'xAttack', count: 3, price: 500 },
   luckyEgg: { kind: 'bag', item: 'luckyEgg', count: 2, price: 450 },
@@ -62,9 +73,25 @@ export const CORNER_PRIZE_IDS = Object.keys(CORNER_PRIZES) as CornerPrizeId[]
 
 export const isCornerPrize = (v: unknown): v is CornerPrizeId => typeof v === 'string' && Object.hasOwn(CORNER_PRIZES, v)
 
-/** Whether a prize is bought once (everything but Bag items). */
-export const prizeOnce = (id: CornerPrizeId) => CORNER_PRIZES[id].kind !== 'bag'
+/** Whether a prize is bought once (everything but Bag items and the Shadow Serum). */
+export const prizeOnce = (id: CornerPrizeId) => CORNER_PRIZES[id].kind !== 'bag' && CORNER_PRIZES[id].kind !== 'reshadow'
+
+/** Whether a prize needs a Pokémon picked with it (the Shadow Serum's Purified one). */
+export const prizeTargets = (id: CornerPrizeId) => CORNER_PRIZES[id].kind === 'reshadow'
 
 /** The title and the card frame the counter sells (`GIFT_TITLES`, `STYLE_SHELF.frame`). */
 export const ROCKET_TITLE = 'rocketRecruit' as const
 export const ROCKET_FRAME = 'rocket' as const
+
+/** The gift a prize sends; the Shadow Serum's names its Pokémon (`target`), and is null without one. */
+export const prizeContent = (id: CornerPrizeId, target: PlayableId | null): GiftContent | null => {
+  const def: CornerPrize = CORNER_PRIZES[id]
+  switch (def.kind) {
+    case 'family': return { kind: 'family', family: def.family }
+    case 'shadow': return { kind: 'shadow', family: def.family }
+    case 'reshadow': return target && { kind: 'reshadow', id: target }
+    case 'bag': return { kind: 'bag', item: def.item, count: def.count }
+    case 'title': return { kind: 'title', title: ROCKET_TITLE }
+    case 'frame': return { kind: 'style', style: { slot: 'frame', id: ROCKET_FRAME } }
+  }
+}

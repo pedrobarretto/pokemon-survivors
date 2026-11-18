@@ -1,11 +1,13 @@
 import { randomInt } from 'node:crypto'
 import type { TransactionSql } from 'postgres'
-import { CORNER_PRIZES, isCornerPrize, prizeOnce, ROCKET_FRAME, ROCKET_TITLE, type CornerPrizeId } from '../../src/data/rocketCorner'
+import type { PlayableId } from '../../src/data/hatchlings'
+import { CORNER_PRIZES, isCornerPrize, prizeContent, prizeOnce, prizeTargets, type CornerPrizeId } from '../../src/data/rocketCorner'
 import { brasiliaDay, type DayKey } from '../../src/game/day'
 import { donateFrom } from '../../src/game/festival'
-import type { Gift, GiftContent } from '../../src/game/gifts'
+import type { Gift } from '../../src/game/gifts'
 import { parseSaveData, type Save } from '../../src/game/meta'
 import { isRecord } from '../../src/game/parse'
+import { isPlayable } from '../../src/game/ranking'
 import type { CornerBought, CornerRedeemed, CornerSpun, CornerState, CornerSweep, CornerSwept } from '../../src/net/realmApi'
 import {
   CORNER, canBuy, cappedWin, clampLevel, cleared, dealBoard, isBet, nextLevel, potOf, spinCost, spinStops, spinWins, sweepPay, sweepView,
@@ -48,8 +50,12 @@ export const parseCornerFlip = (v: unknown): { id: string; at: number } | null =
 /** `POST /realm/corner/sweep/bank`'s body. */
 export const parseCornerBank = (v: unknown): { id: string } | null => (isRecord(v) && typeof v.id === 'string' && UUID.test(v.id) ? { id: v.id } : null)
 
-/** `POST /realm/corner/redeem`'s body. */
-export const parseCornerRedeem = (v: unknown): { prize: CornerPrizeId } | null => (isRecord(v) && isCornerPrize(v.prize) ? { prize: v.prize } : null)
+/** `POST /realm/corner/redeem`'s body: the prize, and the Pokémon it's for when it needs one (the Shadow Serum's Purified one). */
+export const parseCornerRedeem = (v: unknown): { prize: CornerPrizeId; target: PlayableId | null } | null => {
+  if (!isRecord(v) || !isCornerPrize(v.prize)) return null
+  if (!prizeTargets(v.prize)) return { prize: v.prize, target: null }
+  return isPlayable(v.target) ? { prize: v.prize, target: v.target } : null
+}
 
 type WalletRow = { tokens: number; day: Date | string; bought: number; won: number; spins: number; rounds: number; level: number; last_nonce: string | null; last_spin: unknown }
 
@@ -63,7 +69,7 @@ const fresh = (w: WalletRow, day: DayKey): WalletRow => (dayOf(w.day) === day ? 
 
 const viewOf = (row: SweepRow): CornerSweep => ({ id: row.id, ...sweepView(clampLevel(row.level), row.board, row.flipped, row.outcome) })
 
-export type CornerRefusal = 'profile' | 'banned' | 'cap' | 'funds' | 'nosave' | 'stale' | 'tokens' | 'owned' | 'missing'
+export type CornerRefusal = 'profile' | 'banned' | 'cap' | 'funds' | 'nosave' | 'stale' | 'tokens' | 'owned' | 'missing' | 'unpurified'
 
 type Out<T> = ({ ok: true } & T) | { ok: false; error: CornerRefusal }
 
@@ -209,8 +215,11 @@ export const cornerStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
         return { ok: true, swept: swept(await finish(tx, userId, w, row, 'bank')) }
       }),
 
-    /** `POST /realm/corner/redeem`: takes the tokens and sends the prize as a gift (a once-only prize, only once). */
-    redeem: (userId: string, prize: CornerPrizeId): Promise<Out<CornerRedeemed>> =>
+    /**
+     * `POST /realm/corner/redeem`: takes the tokens and sends the prize as a gift (a once-only prize, only once).
+     * The Shadow Serum needs `target` Purified in the stored save, or it's refused (`unpurified`) before any token moves.
+     */
+    redeem: (userId: string, prize: CornerPrizeId, target: PlayableId | null = null): Promise<Out<CornerRedeemed>> =>
       sql.begin(async (tx) => {
         const refused = await gate(tx, userId)
         if (refused) return { ok: false, error: refused }
@@ -218,12 +227,13 @@ export const cornerStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
         const def = CORNER_PRIZES[prize]
         if (prizeOnce(prize) && (await takenOf(tx, userId)).includes(prize)) return { ok: false, error: 'owned' }
         if (w.tokens < def.price) return { ok: false, error: 'tokens' }
-        const content: GiftContent =
-          def.kind === 'family' ? { kind: 'family', family: def.family }
-          : def.kind === 'shadow' ? { kind: 'shadow', family: def.family }
-          : def.kind === 'bag' ? { kind: 'bag', item: def.item, count: def.count }
-          : def.kind === 'title' ? { kind: 'title', title: ROCKET_TITLE }
-          : { kind: 'style', style: { slot: 'frame', id: ROCKET_FRAME } }
+        const content = prizeContent(prize, target)
+        if (!content) return { ok: false, error: 'unpurified' }
+        if (content.kind === 'reshadow') {
+          const [row] = await tx<{ data: unknown }[]>`select data from saves where user_id = ${userId}`
+          if (!row) return { ok: false, error: 'nosave' }
+          if (parseSaveData(row.data).shadows[content.id]?.purified !== true) return { ok: false, error: 'unpurified' }
+        }
         const [taken] = await tx<{ id: string }[]>`insert into corner_redemptions (user_id, prize, price) values (${userId}, ${prize}, ${def.price}) returning id`
         const key = `corner:${taken!.id}`
         await sendGift(tx, userId, content, { kind: 'rocket' }, key)
