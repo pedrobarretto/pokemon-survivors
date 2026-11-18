@@ -8,7 +8,7 @@ import { isRecord } from '../game/parse'
 import type { CornerBought, CornerRedeemed, CornerSpun, CornerState, CornerSweep, CornerSwept } from '../net/realmApi'
 import { realmFaked, type Failure } from './api'
 import {
-  CORNER, STRIP, SYMBOLS, canBuy, cappedWin, clampLevel, cleared, dealBoard, nextLevel, potOf, spinCost, spinStops, spinWins, sweepPay, sweepView, type Bet, type Hint, type SlotSymbol, type SweepLevel, type Tile,
+  CORNER, STRIP, SYMBOLS, canBuy, clampLevel, cleared, dealBoard, nextLevel, potOf, spinCost, spinStops, spinWins, sweepCredit, sweepPay, sweepView, type Bet, type Hint, type SlotSymbol, type SweepLevel, type Tile,
 } from './games/corner.rules'
 
 /**
@@ -31,10 +31,11 @@ type FakeCorner = {
 
 const fake: FakeCorner = { tokens: 1200, bought: 0, won: 0, spins: 0, rounds: 0, level: 1, board: null, taken: [], n: 0 }
 
-/** Dev (`ps.corner('tokens', n)`): sets the faked tokens; returns the faked corner. */
-export const stageCorner = (tokens?: number, level?: number) => {
+/** Dev (`ps.corner('stage', tokens, level, won)`): sets the faked tokens, Koffing Sweep level and what it paid today; returns the faked corner. */
+export const stageCorner = (tokens?: number, level?: number, won?: number) => {
   if (tokens !== undefined) fake.tokens = Math.max(0, Math.floor(tokens))
   if (level !== undefined) fake.level = clampLevel(level)
+  if (won !== undefined) fake.won = Math.max(0, Math.floor(won))
   return { ...fake }
 }
 
@@ -128,7 +129,7 @@ const fakeSwept = (sweep: CornerSweep, paid: number): CornerSwept => ({ sweep, p
 /** Ends the fake board as the API would. */
 const fakeFinish = (outcome: 'clear' | 'koffing' | 'bank'): CornerSwept => {
   const b = fake.board!
-  const pay = outcome === 'koffing' ? 0 : cappedWin(sweepPay(potOf(b.tiles, b.flipped), b.level, outcome === 'clear'), fake.won)
+  const pay = outcome === 'koffing' ? 0 : sweepCredit(sweepPay(potOf(b.tiles, b.flipped), b.level, outcome === 'clear'), fake.won)
   fake.tokens += pay
   fake.won += pay
   fake.level = nextLevel(b.level, outcome, b.flipped.length)
@@ -165,14 +166,12 @@ export const buyTokens = async (pack: number): Promise<CornerBought | Failure> =
 /** A spin: the API rolls the reels (faked, the same rules here with the page's dice). */
 export const spinSlots = async (bet: Bet): Promise<CornerSpun | Failure> => {
   if (realmFaked()) {
-    if (fake.spins >= CORNER.spinsDaily) return { status: 403, error: 'cap' }
     if (fake.tokens < spinCost(bet)) return { status: 403, error: 'tokens' }
     const lined = rigged
     const stops: [number, number, number] = lined ? [0, 1, 2].map(() => STRIP.indexOf(lined)) as [number, number, number] : spinStops(Math.random)
     rigged = null
-    const paid = cappedWin(spinWins(stops, bet).reduce((a, w) => a + w.tokens, 0), fake.won)
+    const paid = spinWins(stops, bet).reduce((a, w) => a + w.tokens, 0)
     fake.tokens += paid - spinCost(bet)
-    fake.won += paid
     fake.spins += 1
     return { stops, paid, tokens: fake.tokens, won: fake.won, spins: fake.spins }
   }
@@ -184,7 +183,6 @@ export const spinSlots = async (bet: Bet): Promise<CornerSpun | Failure> => {
 export const dealSweep = async (): Promise<CornerSwept | Failure> => {
   if (realmFaked()) {
     if (!fake.board) {
-      if (fake.rounds >= CORNER.roundsDaily) return { status: 403, error: 'cap' }
       fake.rounds += 1
       fake.n += 1
       fake.board = { id: `fake-sweep-${fake.n}`, level: fake.level, tiles: dealBoard(fake.level, Math.random), flipped: [] }

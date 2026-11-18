@@ -248,7 +248,7 @@ export const openCornerCounter = (root: HTMLElement, input: Input, opts: CornerC
       pageHead.replaceChildren(
         h('b', { class: 'carpentry-page-name' }, c().buyTitle),
         h('span', { class: 'carpentry-page-blurb' }, c().boughtToday(formatNumber(state?.bought ?? 0), formatNumber(CORNER.buyDaily))),
-        h('span', { class: 'carpentry-page-blurb' }, c().wonToday(formatNumber(state?.won ?? 0), formatNumber(CORNER.wonDaily))),
+        h('span', { class: 'carpentry-page-blurb' }, c().sweepToday(formatNumber(state?.won ?? 0), formatNumber(CORNER.sweepDay.full), formatNumber(CORNER.sweepDay.half))),
       )
       grid.replaceChildren(...CORNER.packs.map((_, i) => packCard(i)))
     }

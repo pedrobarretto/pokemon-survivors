@@ -25,7 +25,7 @@ export type ChangelogUpdate = {
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
     date: '2026-11-18',
-    title: { pt: 'Soro Sombrio', en: 'Shadow Serum', es: 'Suero Oscuro', fr: 'Sérum Obscur', zh: '暗影血清' },
+    title: { pt: 'Soro Sombrio e Game Corner sem limite', en: 'Shadow Serum and an unlimited Game Corner', es: 'Suero Oscuro y un Casino sin límite', fr: 'Sérum Obscur et Salle de jeux sans limite', zh: '暗影血清與不設限的遊戲城' },
     highlights: [
       {
         pt: 'Purificar um Pokémon Sombrio agora pede confirmação, com o nome dele e o aviso de que a forma Sombria vai embora.',
@@ -48,8 +48,35 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         fr: 'Mewtwo Obscur purifié par erreur ? Le Sérum lui rend sa forme Obscure ; pour le purifier à nouveau, il faut remarcher toute sa jauge.',
         zh: '不小心淨化了暗影超夢？血清能讓暗影型態回來；想再淨化，就要重新走滿心門量表。',
       },
+      {
+        pt: 'O Game Corner não fecha mais: jogue o caça-níqueis e o Caça ao Koffing o quanto quiser, e compre até 5.000 fichas por dia (eram 500).',
+        en: 'The Game Corner no longer closes: play the slots and Koffing Sweep as long as you like, and buy up to 5,000 tokens a day (it was 500).',
+        es: 'El Casino ya no cierra: juega en las tragaperras y en la Caza de Koffing cuanto quieras, y compra hasta 5.000 fichas al día (eran 500).',
+        fr: 'La Salle de jeux ne ferme plus : joue aux machines à sous et à la Chasse au Koffing autant que tu veux, et achète jusqu’à 5 000 jetons par jour (contre 500).',
+        zh: '遊戲城不再打烊：拉霸機和瓦斯彈掃雷想玩多久就玩多久，每天最多可買 5,000 枚代幣（原本是 500）。',
+      },
     ],
     changes: [
+      {
+        title: { pt: 'Game Corner', en: 'Game Corner', es: 'Casino' },
+        notes: [
+          {
+            pt: 'O caça-níqueis não tem mais limite de giros nem cofre que fecha: cada giro paga o que tirar. Três Poké Balls agora pagam 10 (eram 12) e três Magikarp 7 (eram 9); os prêmios grandes não mudaram.',
+            en: 'The slots no longer have a spin limit or a vault that closes: every spin pays what it lands. Three Poké Balls now pay 10 (was 12) and three Magikarp 7 (was 9); the big prizes are the same.',
+            es: 'Las tragaperras ya no tienen límite de giros ni una caja que cierra: cada giro paga lo que saque. Tres Poké Balls ahora pagan 10 (eran 12) y tres Magikarp 7 (eran 9); los premios grandes no cambian.',
+          },
+          {
+            pt: 'O Caça ao Koffing não tem mais limite de mesas. Ele paga cheio até 1.500 fichas por dia, metade até 2.250, e depois entra no modo livre: as mesas continuam valendo o nível, só não dão fichas até o dia seguinte.',
+            en: 'Koffing Sweep no longer has a board limit. It pays in full up to 1,500 tokens a day and half up to 2,250, then goes into free play: boards still count for your level, they just give no tokens until the next day.',
+            es: 'La Caza de Koffing ya no tiene límite de mesas. Paga completo hasta 1.500 fichas al día, la mitad hasta 2.250, y luego pasa al modo libre: las mesas siguen valiendo el nivel, solo que no dan fichas hasta el día siguiente.',
+          },
+          {
+            pt: 'No balcão do Meowth dá para comprar até 5.000 fichas por dia, e tem um pacote novo de 1.000 fichas por ₽20.000.',
+            en: 'Meowth’s counter sells up to 5,000 tokens a day, with a new pack of 1,000 tokens for ₽20,000.',
+            es: 'En el mostrador de Meowth puedes comprar hasta 5.000 fichas al día, y hay un paquete nuevo de 1.000 fichas por ₽20.000.',
+          },
+        ],
+      },
       {
         title: { pt: 'Pokémon Sombrios', en: 'Shadow Pokémon', es: 'Pokémon Oscuros' },
         notes: [
