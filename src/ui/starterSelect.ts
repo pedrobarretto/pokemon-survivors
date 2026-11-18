@@ -124,10 +124,11 @@ type SelectActions = {
  * `selected` reads the selected Pokémon, so a rebuilt screen (language switch, back from a sub-screen) keeps it.
  * `tab`: opens on that tab (the lobby's Lendas). `coop`: picking the Pokémon for a co-op room, which plays the normal mode (`COOP_LOCKS`): no
  * Lendários tab, no Bag, TMs or Bottle Caps, no Poké Mart, and the host sets the difficulty, so the
- * bar is just "Escolher". `dojo`: picking who trains at the Dojo, the same plain bar ("Treinar"),
+ * bar is just "Escolher"; with `coopLegends` (a room with the Modo Lendário on) it's the other way round:
+ * only the Lendários tab, only the legends this save captured. `dojo`: picking who trains at the Dojo, the same plain bar ("Treinar"),
  * the captured legends included (they train with their awakenings).
  */
-export const starterSelect = (root: HTMLElement, input: Input, actions: SelectActions, initial: PlayableId = 'charmander', opts: { coop?: boolean; dojo?: boolean; tab?: 'legends' } = {}): Screen & { selected: () => PlayableId } => {
+export const starterSelect = (root: HTMLElement, input: Input, actions: SelectActions, initial: PlayableId = 'charmander', opts: { coop?: boolean; coopLegends?: boolean; dojo?: boolean; tab?: 'legends' } = {}): Screen & { selected: () => PlayableId } => {
   const m = t()
   /** Co-op and the Dojo only pick a Pokémon: no Legend mode, Bag, difficulty or Poké Mart, and the partner stays. */
   const plain = opts.coop === true || opts.dojo === true
@@ -139,13 +140,15 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
   const canPick = (id: PlayableId) => ownsShiny(save, id)
   const shinyOf = (id: PlayableId) => playsShiny(forms, id)
 
-  /** Co-op leaves the Legend mode home: no Lendários tab, and a legend partner opens on the starters. */
-  const tabs: readonly Tab[] = opts.coop ? TABS.filter((k) => k !== 'legends') : TABS
-  let tab: Tab = opts.tab ?? (tabs.includes(tabOf(initial)) ? tabOf(initial) : 'starters')
+  /** A co-op Legend room picks among the captured legends only. */
+  const legendRoom = opts.coop === true && opts.coopLegends === true
+  /** Co-op leaves the Legend mode home (no Lendários tab, a legend partner opens on the starters), but for a Legend room, which has only that tab. */
+  const tabs: readonly Tab[] = legendRoom ? ['legends'] : opts.coop ? TABS.filter((k) => k !== 'legends') : TABS
+  let tab: Tab = legendRoom ? 'legends' : (opts.tab ?? (tabs.includes(tabOf(initial)) ? tabOf(initial) : 'starters'))
   /** Each tab remembers its own cursor, so switching back lands where it was. */
   const firstHatched = HATCHLING_IDS.find((id) => save.hatched[id]) ?? HATCHLING_IDS[0]!
   // A festival legend stays out of the tab until its festival is announced (`legendShown`).
-  const legendIds = shownLegends(brasiliaDay(today()))
+  const legendIds = shownLegends(brasiliaDay(today())).filter((id) => !legendRoom || unlocked(id))
   /** The legends' grid and, under their own heading, the Ultra Beasts' (`ULTRA_LEGENDS`). */
   const regularLegendIds = legendIds.filter((id) => !isUltraLegend(id))
   const ultraLegendIds = legendIds.filter(isUltraLegend)
@@ -438,7 +441,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
       legendGrid,
       ultraLegendIds.length > 0 && ultraHead,
       ultraLegendIds.length > 0 && ultraGrid,
-      h('p', { class: 'partner-legend-note' }, rich(opts.dojo ? m.training.legendNote : m.legend.selectNote)),
+      h('p', { class: 'partner-legend-note' }, rich(opts.dojo ? m.training.legendNote : legendRoom ? (legendIds.length > 0 ? m.coop.lobby.legendNote : m.coop.lobby.noLegend) : m.legend.selectNote)),
     ),
   )
 
@@ -456,7 +459,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
     h('div', { class: 'partner-tabs', role: 'tablist' }, ...tabs.map((k) => tabButtons[k]), h('span', { class: 'key-hint' }, 'TAB'), randomButton),
     h('div', { class: 'partner-pane starters' }, starterGrid, teaser),
     eggsPane,
-    !opts.coop && legendsPane,
+    (!opts.coop || legendRoom) && legendsPane,
   )
 
   /* ---------- Skins ---------- */
@@ -847,7 +850,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
       const cols = getComputedStyle(ultra ? ultraGrid : legendGrid).gridTemplateColumns.split(' ').length || 1
       const at = list.indexOf(cursor.legends)
       const next = stepGrid(at, dir, cols, list.length)
-      if (next === 'above') return ultra ? select(regularLegendIds[Math.min(regularLegendIds.length - 1, (Math.ceil(regularLegendIds.length / cols) - 1) * cols + (at % cols))]!) : setTab('eggs')
+      if (next === 'above') return ultra ? select(regularLegendIds[Math.min(regularLegendIds.length - 1, (Math.ceil(regularLegendIds.length / cols) - 1) * cols + (at % cols))]!) : tabs.includes('eggs') ? setTab('eggs') : undefined
       if (next === 'below') return !ultra && ultraLegendIds.length > 0 ? select(ultraLegendIds[Math.min(ultraLegendIds.length - 1, at % cols)]!) : undefined
       select(list[next]!)
       return

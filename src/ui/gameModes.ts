@@ -47,7 +47,7 @@ export const modeFacts = (): Record<GameModeId, ModeFacts> => {
     },
     legends: {
       blurb: m.blurbs.legends,
-      tags: [{ text: m.tags.legends(shownLegends(challenge.day).length) }, { text: m.tags.solo }],
+      tags: [{ text: m.tags.legends(shownLegends(challenge.day).length) }, { text: m.tags.soloCoop }],
     },
     challenge: {
       blurb: m.blurbs.challenge,

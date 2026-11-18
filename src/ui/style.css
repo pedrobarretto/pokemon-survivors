@@ -19765,7 +19765,8 @@ button.hall-tile:hover {
   color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
-.coop-challenge {
+.coop-challenge,
+.coop-legend {
   flex: 1;
   min-width: 180px;
 }
@@ -19807,6 +19808,30 @@ button.hall-tile:hover {
   color: var(--dk-ink-2, #505870);
 }
 
+/* A co-op Legend room (Modo Lendário): the badge in violet, each seat's legend in a gold frame. */
+.coop-legend-badge {
+  background: var(--dk-wash-purple, #f2ecff);
+  border-color: #8a68d8;
+}
+
+.coop-legend-badge b {
+  color: color-mix(in srgb, #6040b0 var(--dk-lift, 100%), #fff);
+}
+
+.coop-seat.legend .coop-seat-portrait {
+  border-color: #e0a828;
+  box-shadow: 0 0 0 1px #fff6d8 inset;
+}
+
+.coop-seat-nolegend {
+  font-family: var(--title);
+  font-size: 13px;
+  padding: 1px 4px;
+  color: #fff;
+  background: #c83838;
+  border-radius: 3px;
+}
+
 .invite-tip.coop-rules {
   margin: 0;
   font-size: 17px;
@@ -19814,7 +19839,8 @@ button.hall-tile:hover {
 }
 
 .coop-mode .shell-seg-option,
-.coop-challenge .shell-seg-option {
+.coop-challenge .shell-seg-option,
+.coop-legend .shell-seg-option {
   min-height: 38px;
   padding: 0 10px;
   font-size: 18px;
