@@ -2808,7 +2808,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
     case 'landmark':
       return landmarkFeedback(ui, e.landmark, e.moment)
     case 'seasonFind':
-      return seasonFindFeedback(ui, e.find, e.moment)
+      return seasonFindFeedback(ui, e.find, e.moment, r.game.terrain.seed)
     case 'path':
       return pathFeedback(ui, e.notice)
     case 'hexNut':
@@ -5880,9 +5880,11 @@ if (import.meta.env.DEV) {
       /**
        * Fishing's staging (`realm/games/fishing.ts`, open it with `ps.minigame('fishing')`): `ps.fishing('feebas')` makes
        * that the next bite, at once (`shinyGyarados`, `wailmer`, `boot`…); a second `true` turns on the autopilot (casts,
-       * hooks and reels by itself; `ps.fishing(null, false)` off); `ps.fishing()` prints it (its `phase` too).
+       * hooks and reels by itself; `ps.fishing(null, false)` off); `ps.fishing()` prints it (its `phase` too). A third `true`
+       * makes the next faked claim that hooks a Wishiwashi again bring its shiny (`ps.realm('fake')` first).
        */
-      fishing: async (next?: unknown, auto?: boolean) => {
+      fishing: async (next?: unknown, auto?: boolean, shiny?: boolean) => {
+        if (shiny !== undefined) (await import('./realm/api')).fakeClaims.shiny = shiny
         const { fishingDev } = await import('./realm/games/fishing')
         const { CATCH_IDS, isCatchId } = await import('./realm/games/fishing.rules')
         if (next !== undefined && next !== null && !isCatchId(next)) return `ps.fishing: ${CATCH_IDS.join(', ')}`

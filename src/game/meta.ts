@@ -193,6 +193,8 @@ export type Save = {
   builds: Builds
   /** Temporada 1's map encounters ever made (`game/seasonOneFinds.ts`): each brings its family as a gift. */
   finds: readonly FindId[]
+  /** The finds whose repeat brought the family's shiny (`REPEAT_SHINY`): each waits as a game-made `shinyHatch` gift. */
+  shinyFinds: readonly FindId[]
   /** Temporada 1's research chains (`game/seasonOneUnlocks.ts`), tracked from run results. */
   research: ResearchSave
   /** Shadow Pokémon owned (`game/shadow.ts`): each one's heart gauge, purified or not, and the Normal/Shadow pick. */
@@ -258,6 +260,7 @@ export const EMPTY_SAVE: Save = {
   attempt: null,
   builds: {},
   finds: [],
+  shinyFinds: [],
   research: NO_RESEARCH,
   shadows: NO_SHADOWS,
   hideout: NO_HIDEOUT,
@@ -343,6 +346,7 @@ export const parseSaveData = (json: unknown): Save => {
     attempt: parseAttempt(data.attempt),
     builds: parseBuilds(data.builds),
     finds: parseFinds(data.finds),
+    shinyFinds: parseFinds(data.shinyFinds),
     research: parseResearch(data.research),
     shadows: parseShadows(data.shadows),
     hideout: parseHideout(data.hideout),

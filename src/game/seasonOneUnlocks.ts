@@ -1,7 +1,8 @@
 import { isHatchling, isStarter, PLAYABLE, PLAYABLE_IDS, type PlayableId } from '../data/hatchlings'
 import type { MinigameId } from '../data/minigames'
-import { FEAT_FAMILIES, FIND_IDS, FIND_ODDS, RESEARCH, RESEARCH_IDS, RESEARCH_TYPES, type FindId, type ResearchId } from '../data/seasonOneUnlocks'
+import { FEAT_FAMILIES, FIND_IDS, FIND_ODDS, REPEAT_SHINY, RESEARCH, RESEARCH_IDS, RESEARCH_TYPES, type FindId, type RepeatShinyId, type ResearchId } from '../data/seasonOneUnlocks'
 import { hash2 } from '../engine/rng'
+import type { Hatched } from './eggs'
 import type { Gift } from './gifts'
 import { isRecord, wholeNumber } from './parse'
 
@@ -24,6 +25,27 @@ export const parseFinds = (v: unknown): FindId[] => (Array.isArray(v) ? FIND_IDS
 
 /** Both lists in one, in the table's order so the merge comes out the same either way. */
 export const mergeFinds = (a: readonly FindId[], b: readonly FindId[]): FindId[] => FIND_IDS.filter((id) => a.includes(id) || b.includes(id))
+
+/* ---------------- Shinies on repeat finds ---------------- */
+
+const SHINY_SALT = 4099
+
+/** Whether a repeat find of `family` can still bring its shiny: the family owned, its shiny not yet. */
+export const repeatShinyOpen = (hatched: Hatched, family: RepeatShinyId) => hatched[family] !== undefined && hatched[family]?.shiny !== true
+
+/** Whether a roll in [0, 1) lands the repeat's shiny (`REPEAT_SHINY`). */
+export const repeatShinyHit = (family: RepeatShinyId, roll: number) => roll < REPEAT_SHINY[family]
+
+/** The roll for Rotom's shiny in the run of terrain seed `seed`, apart from the run's rng and from `rollFind`'s draw. */
+export const tvShinyRoll = (seed: number) => hash2(seed, 1, SHINY_SALT)
+
+const isRepeatShinyId = (id: string): id is RepeatShinyId => id in REPEAT_SHINY
+
+/** The family with a repeat shiny that a claim's `feats` hooked again (`was`, the account's feats before it, held it already), or null. */
+export const repeatFeatFamily = (game: MinigameId, was: readonly string[], feats: readonly string[]): RepeatShinyId | null => {
+  const had = featFamilies(game, was)
+  return featFamilies(game, feats).filter((family) => had.includes(family)).find(isRepeatShinyId) ?? null
+}
 
 /* ---------------- Research ---------------- */
 
@@ -94,14 +116,15 @@ const PREFIX = 'season:'
 
 export const isSeasonGift = (id: string) => id.startsWith(PREFIX)
 
-/** Every family these routes earned on this save, applied or not. */
-export const seasonGiftList = (save: { finds: readonly FindId[]; research: ResearchSave }): Gift[] => [
+/** Every family these routes earned on this save, applied or not, and the shinies repeat finds brought (`shinyFinds`). */
+export const seasonGiftList = (save: { finds: readonly FindId[]; shinyFinds: readonly FindId[]; research: ResearchSave }): Gift[] => [
   ...save.finds.map((family): Gift => ({ id: `${PREFIX}${family}`, content: { kind: 'family', family }, reason: { kind: 'season', way: 'find' } })),
   ...RESEARCH_IDS.filter((id) => researchStatus(save.research, id).complete).map((family): Gift => ({ id: `${PREFIX}${family}`, content: { kind: 'family', family }, reason: { kind: 'season', way: 'research' } })),
+  ...save.shinyFinds.map((family): Gift => ({ id: `${PREFIX}shiny:${family}`, content: { kind: 'shinyHatch', family }, reason: { kind: 'season', way: 'find' } })),
 ]
 
 /** The gifts waiting to be opened. */
-export const seasonGifts = (save: { finds: readonly FindId[]; research: ResearchSave; gifts: readonly string[] }): Gift[] => seasonGiftList(save).filter((g) => !save.gifts.includes(g.id))
+export const seasonGifts = (save: { finds: readonly FindId[]; shinyFinds: readonly FindId[]; research: ResearchSave; gifts: readonly string[] }): Gift[] => seasonGiftList(save).filter((g) => !save.gifts.includes(g.id))
 
 /* ---------------- Mini game feats ---------------- */
 

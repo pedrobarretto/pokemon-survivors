@@ -62,8 +62,30 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         fr: 'Des prix chromatiques au comptoir de la Salle de jeux : Ditto, Absol, Mawile, Gimmighoul, les deux Nidoran, Cleffa, Plusle et Minun existent aussi en chromatique.',
         zh: '遊戲城櫃台新增異色獎品：Ditto、Absol、Mawile、Gimmighoul、兩隻 Nidoran、Cleffa、Plusle 和 Minun 都有異色版了。',
       },
+      {
+        pt: 'Já tem Rotom ou Wishiwashi? Achar de novo agora pode trazer o shiny: a TV velha das casas abandonadas e a pesca longe do píer têm uma chance pequena.',
+        en: 'Already have Rotom or Wishiwashi? Finding them again can now bring the shiny: the old TV in abandoned cottages and fishing far from the pier have a small chance.',
+        es: '¿Ya tienes a Rotom o a Wishiwashi? Encontrarlos de nuevo ahora puede traer el shiny: la tele vieja de las casas abandonadas y la pesca lejos del muelle tienen una pequeña probabilidad.',
+        fr: 'Tu as déjà Rotom ou Wishiwashi ? Les retrouver peut maintenant donner le chromatique : la vieille télé des maisons abandonnées et la pêche loin du ponton ont une petite chance.',
+        zh: '已經有 Rotom 或 Wishiwashi 了嗎？再次找到牠們時有小機率得到異色：廢棄小屋的舊電視和離碼頭很遠的釣魚都有機會。',
+      },
     ],
     changes: [
+      {
+        title: { pt: 'Shiny em achados repetidos', en: 'Shinies on repeat finds', es: 'Shiny en hallazgos repetidos' },
+        notes: [
+          {
+            pt: 'Quem já tem o Rotom tem 1 chance em 20, a cada vez que a TV velha chia numa run, de soltar um Rotom shiny. Ele chega na caixa de presentes.',
+            en: 'If you already own Rotom, each run where the old TV crackles has a 1 in 20 chance of letting out a shiny Rotom. It arrives in the gift box.',
+            es: 'Si ya tienes a Rotom, cada partida en que la tele vieja chisporrotea tiene 1 probabilidad entre 20 de soltar un Rotom shiny. Llega a la caja de regalos.',
+          },
+          {
+            pt: 'Quem já tem o Wishiwashi tem 1 chance em 25, a cada pescaria que fisga outro, de ganhar um Wishiwashi shiny. Ele chega na caixa de presentes.',
+            en: 'If you already own Wishiwashi, each fishing session that hooks another has a 1 in 25 chance of bringing a shiny Wishiwashi. It arrives in the gift box.',
+            es: 'Si ya tienes a Wishiwashi, cada pesca que atrapa otro tiene 1 probabilidad entre 25 de traer un Wishiwashi shiny. Llega a la caja de regalos.',
+          },
+        ],
+      },
       {
         title: { pt: 'Game Corner', en: 'Game Corner', es: 'Casino' },
         notes: [

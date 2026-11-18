@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { FIND_ODDS } from '../data/seasonOneUnlocks'
+import { FIND_ODDS, REPEAT_SHINY } from '../data/seasonOneUnlocks'
 import { applyGift } from './gifts'
 import { isGameGift } from './gameGifts'
 import { EMPTY_SAVE } from './meta'
-import { countsAsPartner, featFamilies, mergeFinds, mergeResearch, newFeatFamily, NO_RESEARCH, parseFinds, parseResearch, recordResearch, researchStatus, rollFind, seasonGifts, type ResearchRun } from './seasonOneUnlocks'
+import { countsAsPartner, featFamilies, mergeFinds, mergeResearch, newFeatFamily, NO_RESEARCH, parseFinds, parseResearch, recordResearch, repeatFeatFamily, repeatShinyHit, repeatShinyOpen, researchStatus, rollFind, seasonGifts, tvShinyRoll, type ResearchRun } from './seasonOneUnlocks'
 import { mergeSaves } from './sync'
 
 const win = (over: Partial<ResearchRun> = {}): ResearchRun => ({ starter: 'charmander', victory: true, hits: 0, wet: false, ...over })
@@ -94,5 +94,39 @@ describe('mini game feats', () => {
     expect(newFeatFamily('fishing', [], ['wishiwashi'])).toBe('wishiwashi')
     expect(newFeatFamily('fishing', ['wishiwashi'], ['wishiwashi'])).toBeNull()
     expect(newFeatFamily('berryCatch', [], ['wishiwashi'])).toBeNull()
+  })
+})
+
+describe('shinies on repeat finds', () => {
+  it('opens only for an owner without the shiny', () => {
+    expect(repeatShinyOpen({}, 'rotom')).toBe(false)
+    expect(repeatShinyOpen({ rotom: { shiny: false } }, 'rotom')).toBe(true)
+    expect(repeatShinyOpen({ rotom: { shiny: true } }, 'rotom')).toBe(false)
+  })
+
+  it('rolls Rotom’s from the seed near its odds, apart from the TV’s own draw', () => {
+    const seeds = Array.from({ length: 40_000 }, (_, i) => i * 7919 + 13)
+    const hits = (pick: (s: number) => boolean) => seeds.filter(pick).length
+    expect(hits((s) => repeatShinyHit('rotom', tvShinyRoll(s))) / seeds.length).toBeCloseTo(REPEAT_SHINY.rotom, 2)
+    // Among the runs whose TV flickers, the shiny lands as often as anywhere.
+    const tv = seeds.filter((s) => rollFind(s, 'rotom'))
+    expect(tv.filter((s) => repeatShinyHit('rotom', tvShinyRoll(s))).length / tv.length).toBeCloseTo(REPEAT_SHINY.rotom, 1)
+  })
+
+  it('finds a repeat Wishiwashi only once it was hooked before', () => {
+    expect(repeatFeatFamily('fishing', [], ['wishiwashi'])).toBeNull()
+    expect(repeatFeatFamily('fishing', ['wishiwashi'], ['feebas'])).toBeNull()
+    expect(repeatFeatFamily('fishing', ['wishiwashi'], ['wishiwashi'])).toBe('wishiwashi')
+  })
+
+  it('waits as a game-made shiny hatch once banked, and survives a merge', () => {
+    const save = mergeSaves({ ...EMPTY_SAVE, finds: ['rotom' as const], hatched: { rotom: { shiny: false } }, gifts: ['season:rotom'] }, { ...EMPTY_SAVE, shinyFinds: ['rotom' as const] })
+    const [gift] = seasonGifts(save)
+    expect(gift?.content).toEqual({ kind: 'shinyHatch', family: 'rotom' })
+    expect(isGameGift(gift!.id)).toBe(true)
+    const out = applyGift(save, gift!)
+    if (out.status !== 'applied') throw new Error(out.status)
+    expect(out.save.hatched.rotom).toEqual({ shiny: true })
+    expect(seasonGifts(out.save)).toEqual([])
   })
 })
