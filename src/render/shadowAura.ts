@@ -94,13 +94,14 @@ export const drawPurifiedMark = (ctx: Ctx, x: number, y: number) => {
 /**
  * A Pokémon standing for a menu (the Game Corner's counter, the PC box): its
  * Idle frame facing down, feet on the canvas's floor, in its Shadow aura when
- * `shadow`; drawn once its sheets land. CSS scales the canvas, pixelated.
+ * `shadow`, in its shiny colors when `shiny`; drawn once its sheets land. CSS
+ * scales the canvas, pixelated.
  */
-export const standingCanvas = (dex: number, shadow: boolean, w = 56, h = 52) => {
+export const standingCanvas = (dex: number, shadow: boolean, w = 56, h = 52, shiny = false) => {
   const canvas = document.createElement('canvas')
   canvas.width = w
   canvas.height = h
-  void loadSpecies(dex).then((s) => {
+  void loadSpecies(dex, shiny).then((s) => {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
     const feet = h - 6

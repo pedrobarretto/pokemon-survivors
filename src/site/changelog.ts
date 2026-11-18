@@ -55,6 +55,13 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         fr: 'La Salle de jeux ne ferme plus : joue aux machines à sous et à la Chasse au Koffing autant que tu veux, et achète jusqu’à 5 000 jetons par jour (contre 500).',
         zh: '遊戲城不再打烊：拉霸機和瓦斯彈掃雷想玩多久就玩多久，每天最多可買 5,000 枚代幣（原本是 500）。',
       },
+      {
+        pt: 'Prêmios shiny no balcão do Game Corner: Ditto, Absol, Mawile, Gimmighoul, os Nidoran, Cleffa, Plusle e Minun, agora também em versão shiny.',
+        en: 'Shiny prizes at the Game Corner’s counter: Ditto, Absol, Mawile, Gimmighoul, both Nidoran, Cleffa, Plusle and Minun now come shiny too.',
+        es: 'Premios shiny en el mostrador del Casino: Ditto, Absol, Mawile, Gimmighoul, los Nidoran, Cleffa, Plusle y Minun, ahora también en versión shiny.',
+        fr: 'Des prix chromatiques au comptoir de la Salle de jeux : Ditto, Absol, Mawile, Gimmighoul, les deux Nidoran, Cleffa, Plusle et Minun existent aussi en chromatique.',
+        zh: '遊戲城櫃台新增異色獎品：Ditto、Absol、Mawile、Gimmighoul、兩隻 Nidoran、Cleffa、Plusle 和 Minun 都有異色版了。',
+      },
     ],
     changes: [
       {
@@ -89,6 +96,11 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             pt: 'O Soro Sombrio custa 11.000 fichas no balcão de prêmios e pode ser trocado quantas vezes quiser. Ele chega na caixa de presentes e, ao abrir, o Pokémon escolhido volta a ser Sombrio com o coração fechado.',
             en: 'The Shadow Serum costs 11,000 tokens at the prize counter and can be traded for as often as you like. It arrives in the gift box, and opening it turns the chosen Pokémon Shadow again, its heart closed.',
             es: 'El Suero Oscuro cuesta 11.000 fichas en el mostrador de premios y se puede canjear las veces que quieras. Llega a la caja de regalos y, al abrirlo, el Pokémon elegido vuelve a ser Oscuro con el corazón cerrado.',
+          },
+          {
+            pt: 'Cada família do balcão tem seu prêmio shiny, de 7.500 fichas (Ditto) a 15.000 (Cleffa). Ele chega na caixa de presentes e choca a família já shiny; se você já tinha a família, ela passa a ser shiny.',
+            en: 'Every counter family has a shiny prize, from 7,500 tokens (Ditto) to 15,000 (Cleffa). It arrives in the gift box and hatches the family shiny; if you already had the family, it turns shiny.',
+            es: 'Cada familia del mostrador tiene su premio shiny, de 7.500 fichas (Ditto) a 15.000 (Cleffa). Llega a la caja de regalos y eclosiona la familia ya shiny; si ya tenías la familia, pasa a ser shiny.',
           },
         ],
       },
