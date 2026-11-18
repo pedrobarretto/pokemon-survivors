@@ -612,8 +612,8 @@ export const fakeEra1Boards = (field: number | null) => {
 
 /* ---------------- Co-op boards ---------------- */
 
-/** A co-op board's filter: the team size (Duplas, Trios, Squads), difficulty, period and friends (teams with someone the player follows). */
-export type CoopBoardFilter = { size: TeamSize; difficulty: Difficulty; period: BoardPeriod; friends: boolean }
+/** A co-op board's filter: the team size (Duplas, Trios, Squads), difficulty, period, friends (teams with someone the player follows) and the mode (the Legend runs' boards, `mode=legend`; the normal ones without). */
+export type CoopBoardFilter = { size: TeamSize; difficulty: Difficulty; period: BoardPeriod; friends: boolean; mode?: RunMode }
 
 /** Dev: the co-op reads answer made-up boards (`coopBoardFakes.ts`, `ps.coopBoard('fake')`). */
 let coopFaked = false
@@ -638,8 +638,8 @@ const knownCoopBoard = <B extends CoopBoard | CoopChallengeBoard>(body: unknown)
 /** A co-op board (`GET /coop/boards/:difficulty`), or null when the API can't be reached. Guests read the public ones; friends needs an account. */
 export const fetchCoopBoard = async (f: CoopBoardFilter): Promise<CoopBoard | null> => {
   if (era1Faked !== null && f.period === 'era1') return fakeEra1CoopBoard(f.size, f.difficulty, era1Faked)
-  if (coopFaked) return fakeCoopBoard(f.size, f.difficulty, f.period)
-  const params = new URLSearchParams({ size: TEAM_SIZE_KEYS[f.size], period: f.period, ...(f.friends ? { friends: '1' } : {}) })
+  if (coopFaked) return fakeCoopBoard(f.size, f.difficulty, f.period, f.mode === 'legend')
+  const params = new URLSearchParams({ size: TEAM_SIZE_KEYS[f.size], period: f.period, ...(f.friends ? { friends: '1' } : {}), ...(f.mode === 'legend' ? { mode: 'legend' } : {}) })
   const { body } = await read(`/coop/boards/${f.difficulty}?${params}`, await sessionToken())
   return knownCoopBoard<CoopBoard>(body)
 }

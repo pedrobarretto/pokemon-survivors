@@ -1,4 +1,5 @@
-import { PLAYABLE_IDS } from '../data/hatchlings'
+import { PLAYABLE_IDS, type PlayableId } from '../data/hatchlings'
+import { isLegend, type LegendId } from '../data/legends'
 import { COOP } from '../data/coop'
 import { parseDifficulty, type Difficulty } from '../game/difficulty'
 import { createCoopGame, type CoopLoadout } from '../game/game'
@@ -21,12 +22,23 @@ import { isDayKey, type DayKey } from '../game/day'
 
 /**
  * What a player sends as their loadout: their Pokémon (a starter or a hatched
- * family, `PLAYABLE_IDS`: the Legend mode stays solo, `COOP_LOCKS`), Poké Mart
+ * family, `PLAYABLE_IDS`; in a room with the Modo Lendário on, a legend with
+ * the regular `partner` beside it), Poké Mart
  * ranks, whether it plays shiny and, in a Versus room, the team they asked for
  * and the Arena look they wear (`look`: shape only here, the shell reads it
  * with `parseLook`; never the simulation's, so `startGame` leaves it out).
  */
-export type CoopPick = { starter: (typeof PLAYABLE_IDS)[number]; ranks: Ranks; shiny: boolean; team?: Team; look?: WireLook }
+export type CoopPick = {
+  starter: PlayableId
+  ranks: Ranks
+  shiny: boolean
+  team?: Team
+  look?: WireLook
+  /** A legend room's fallback: the seat's regular Pokémon, played when its legend isn't vouched. */
+  partner?: (typeof PLAYABLE_IDS)[number]
+  /** The account's captured legends, written by the relay only (the API's word, never the client's). */
+  legends?: LegendId[]
+}
 
 /**
  * What a room plays: a co-op run against the horde, or a Versus match (`game/versus.ts`):
@@ -42,12 +54,15 @@ export type RoomMode = 'run' | 'versus'
  * (`dailyCoopChallenge`), whose difficulty replaces `difficulty`. `raid`: the day
  * whose Tera Raid the run's late den holds (`raidOfDay`), set by the host's Start.
  */
-export type CoopSettings = { difficulty: Difficulty; mode?: RoomMode; format?: ArenaFormat; map?: MapId; challenge?: DayKey; raid?: DayKey }
+export type CoopSettings = { difficulty: Difficulty; mode?: RoomMode; format?: ArenaFormat; map?: MapId; challenge?: DayKey; raid?: DayKey; legend?: true }
 
 export const loadoutOf = (pick: CoopPick): Loadout => ({
   starter: pick.starter,
   ranks: { ...pick.ranks },
   shiny: pick.shiny,
+  ...(pick.partner !== undefined && { partner: pick.partner }),
+  // A claim only: the relay replaces it with the API's word (a dev relay without an API keeps a guest's).
+  ...(pick.legends && pick.legends.length > 0 && { legends: [...pick.legends] }),
   ...(pick.team !== undefined && { team: pick.team }),
   ...(pick.look && Object.keys(pick.look).length > 0 && { look: { ...pick.look } }),
 })
@@ -60,19 +75,36 @@ export const settingsOf = (s: CoopSettings): Settings => ({
   ...(s.mode === 'versus' && s.map !== undefined && { map: s.map }),
   ...(s.mode !== 'versus' && s.challenge !== undefined && { challenge: s.challenge }),
   ...(s.mode !== 'versus' && s.raid !== undefined && { raid: s.raid }),
+  ...(s.mode !== 'versus' && s.challenge === undefined && s.legend === true && { legend: true }),
 })
 
 const rankOf = (raw: unknown, max: number) => (typeof raw === 'number' && Number.isInteger(raw) && raw >= 0 ? Math.min(raw, max) : 0)
 
-/** A loadout from the wire: an unknown Pokémon (or a legend) falls back to the first starter, ranks are clamped to the Poké Mart's. */
-export const parseLoadout = (raw: Loadout): CoopPick => {
-  const starter = PLAYABLE_IDS.find((id) => id === raw.starter) ?? PLAYABLE_IDS[0]!
+/**
+ * A loadout from the wire: in a legend room a legend stands only when the
+ * relay vouched for it (`legends`); otherwise, and for an unknown Pokémon,
+ * the seat plays its `partner`, else the first starter. Ranks are clamped to the Poké Mart's.
+ */
+export const parseLoadout = (raw: Loadout, legendRoom = false): CoopPick => {
+  const regular = (v: unknown) => PLAYABLE_IDS.find((id) => id === v)
+  const legends = Array.isArray(raw.legends) ? raw.legends.filter(isLegend) : []
+  const partner = regular(raw.partner)
+  const vouched = legendRoom && isLegend(raw.starter) && legends.includes(raw.starter) ? raw.starter : undefined
+  const starter: PlayableId = vouched ?? regular(raw.starter) ?? partner ?? PLAYABLE_IDS[0]!
   const r = raw.ranks
   const ranks: Record<UpgradeId, number> = { ...NO_RANKS }
   if (isRecord(r)) for (const id of UPGRADE_IDS) ranks[id] = rankOf(r[id], UPGRADES[id].maxRank)
   const team = raw.team === 0 || raw.team === 1 ? raw.team : undefined
   const look = parseWireLook(raw.look)
-  return { starter, ranks, shiny: raw.shiny === true, ...(team !== undefined && { team }), ...(look && { look }) }
+  return {
+    starter,
+    ranks,
+    shiny: raw.shiny === true,
+    ...(partner !== undefined && { partner }),
+    ...(legends.length > 0 && { legends }),
+    ...(team !== undefined && { team }),
+    ...(look && { look }),
+  }
 }
 
 /** Settings from the wire: an unknown map is Random (left out), a challenge that isn't a day is none. */
@@ -81,13 +113,15 @@ export const parseSettings = (raw: Settings): CoopSettings => {
   const mode = raw.mode === 'versus' ? 'versus' : 'run'
   const challenge = mode === 'run' && isDayKey(raw.challenge) ? raw.challenge : undefined
   const raid = mode === 'run' && isDayKey(raw.raid) ? raw.raid : undefined
-  return { difficulty: parseDifficulty(raw.difficulty), mode, format: parseArenaFormat(raw.format), ...(map && { map }), ...(challenge && { challenge }), ...(raid && { raid }) }
+  // A legend room never plays the Desafio co-op do dia: with both, the challenge wins.
+  const legend = mode === 'run' && challenge === undefined && raw.legend === true
+  return { difficulty: parseDifficulty(raw.difficulty), mode, format: parseArenaFormat(raw.format), ...(map && { map }), ...(challenge && { challenge }), ...(raid && { raid }), ...(legend && { legend: true }) }
 }
 
 /** The loadouts of a run, by slot (`RunStart.players` order), with each player's name. */
 export const runLoadouts = (start: RunStart): CoopLoadout[] =>
   start.players.map((p) => {
-    const { starter, ranks, shiny } = parseLoadout(p.loadout)
+    const { starter, ranks, shiny } = parseLoadout(p.loadout, parseSettings(start.settings).legend === true)
     return { starter, ranks, shiny, name: p.name }
   })
 

@@ -1,9 +1,10 @@
 import { PLAYABLE_IDS, type PlayableId } from '../data/hatchlings'
+import { isLegend, type LegendId } from '../data/legends'
 import { isVersusPick, type Team, type VersusPick } from '../data/versus'
 import type { CoopInvite } from '../game/friends'
 import { NO_RANKS } from '../game/meta'
-import type { Member, RoomView, WireLook } from '../net/protocol'
-import type { CoopPick } from './start'
+import type { Loadout, Member, RoomView, WireLook } from '../net/protocol'
+import { parseLoadout, type CoopPick } from './start'
 
 /**
  * The co-op room's rules as the lobby screens read them (`ui/coopRoom.ts`):
@@ -39,8 +40,42 @@ export const buildAdvice = (o: { own: string; room: string | null; latest: strin
   return (o.room ?? o.latest) === o.latest && o.own !== o.latest ? 'reload' : 'oldRoom'
 }
 
-/** The Pokémon a player brings to a room: their partner, unless it's a legend (the Legend mode stays solo, `COOP_LOCKS`), then the first starter. */
+/** The regular Pokémon a player brings to a room: their partner, unless it's a legend (a legend plays only in a room with the Modo Lendário on, `seatLoadout`), then the first starter. */
 export const coopStarter = (partner: PlayableId) => PLAYABLE_IDS.find((id) => id === partner) ?? PLAYABLE_IDS[0]!
+
+/**
+ * The legend a player brings to a legend room: the first of `wanted` (the one
+ * picked there last, the lobby's partner) among the `captured`, else the
+ * first captured; null with none.
+ */
+export const roomLegend = (captured: readonly LegendId[], wanted: readonly unknown[]): LegendId | null => {
+  for (const w of wanted) {
+    const found = captured.find((id) => id === w)
+    if (found) return found
+  }
+  return captured[0] ?? null
+}
+
+/**
+ * A room seat's loadout from the save: the regular partner, or in a legend
+ * room the legend (`legend`, from `roomLegend`) with the partner beside it as
+ * the fallback the relay plays when the API doesn't vouch for the legend.
+ */
+export const seatLoadout = (partner: PlayableId, legend: LegendId | null, ranks: CoopPick['ranks'], shinyOf: (id: PlayableId) => boolean): CoopPick => {
+  const regular = coopStarter(partner)
+  const starter = legend ?? regular
+  return { starter, ranks, shiny: shinyOf(starter), ...(legend && { partner: regular }) }
+}
+
+/**
+ * The Pokémon a room's seat card shows: in a legend room the legend the seat
+ * asked for (the relay vouches for it only as the run starts), else what the
+ * run would play.
+ */
+export const seatPokemon = (raw: Loadout, legendRoom: boolean): PlayableId => (legendRoom && isLegend(raw.starter) ? raw.starter : parseLoadout(raw).starter)
+
+/** Whether a seat's loadout is what the room plays: a legend in a legend room, a regular Pokémon elsewhere. */
+export const fitsRoom = (raw: Loadout, legendRoom: boolean) => isLegend(raw.starter) === legendRoom
 
 /** An Arena seat's loadout: the Pokémon, the side it asks for and the look it wears (the match brings nothing from the save: no ranks, no shiny). */
 export const arenaLoadout = (starter: VersusPick, team: Team, look: WireLook = {}): CoopPick => ({ starter, ranks: { ...NO_RANKS }, shiny: false, team, look })

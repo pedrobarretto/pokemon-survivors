@@ -256,7 +256,8 @@ import { activeCoopClient, addBots, arenaClient, botsTalk, tabBotLook, arenaQueu
 import { isQuickChat } from './game/versusSocial'
 import { noteDraw, type NetStats } from './coop/netStats'
 import type { CloseWhy, CoopClient } from './coop/client'
-import { arenaLoadout, arenaSeat, coopAccess, coopStarter, freshInvites } from './coop/lobby'
+import { arenaLoadout, arenaSeat, coopAccess, coopStarter, fitsRoom, freshInvites, roomLegend, seatLoadout } from './coop/lobby'
+import { capturedLegends, loadCoopLegend, saveCoopLegend } from './ui/coopLegend'
 import { FRIEND_MILESTONES, REF_PARAM, type FriendMilestone } from './game/referral'
 import { PROTOCOL, VPS_HOMES, parseRoomCode, type RoomView } from './net/protocol'
 import { isRecord } from './game/parse'
@@ -3258,9 +3259,9 @@ const endCoopRun = (r: Run, c: CoopRun) => {
   syncRunWatch()
 }
 
-/** The co-op end's Ranking: the board of the run's team size and difficulty, the day's co-op board for a Desafio co-op run. */
+/** The co-op end's Ranking: the board of the run's team size and difficulty (its Legend side for a Legend room's run, its seats playing legends), the day's co-op board for a Desafio co-op run. */
 const coopEndBoard = (g: Game, back: () => void) =>
-  rankingScreen(ui, input, back, { difficulty: g.difficulty, challenge: g.coop?.challenge != null, coop: { size: parseTeamSize(g.players.length) ?? 2 } })
+  rankingScreen(ui, input, back, { difficulty: g.difficulty, challenge: g.coop?.challenge != null, coop: { size: parseTeamSize(g.players.length) ?? 2, legend: g.players.some((p) => p.legend !== null) } })
 
 /** This player's `coop_net` for the co-op run (`coopShell.ts`): at its end, or when the page hides or unloads mid-run. */
 const reportNet = (c: CoopRun, outcome: CoopNetOutcome) => !c.versus?.local && reportCoopNet(c.client, c.runner, c.net, outcome, runPerf())
@@ -3563,6 +3564,7 @@ const watchCoop = (client: CoopClient) => {
         return syncPresence()
       case 'room':
         if (client === coopClient()) syncArenaLoadout(client, e.room)
+        if (client === coopClient()) syncLegendLoadout(client, e.room)
         if (c) playAgain(c)
         return
       case 'status':
@@ -3574,11 +3576,36 @@ const watchCoop = (client: CoopClient) => {
   })
 }
 
-/** A co-op seat's loadout from the save: the partner (`coopStarter`), its ranks and its shiny. */
-const coopLoadout = (): CoopPick => {
+/**
+ * A co-op seat's loadout from the save: the partner (`coopStarter`), its ranks
+ * and its shiny; in a room with the Modo Lendário on (`legend`), the device's
+ * legend (`roomLegend`) with the partner beside it as the fallback. A dev build
+ * also claims its captured legends: only a dev relay without an API keeps the
+ * claim (the relay writes the API's word otherwise).
+ */
+const coopLoadout = (legend = false): CoopPick => {
   const save = loadSave()
-  const starter = coopStarter(save.partner)
-  return { starter, ranks: save.ranks, shiny: playsShiny(save, starter) }
+  const captured = legend ? capturedLegends(save) : []
+  const pick = seatLoadout(save.partner, roomLegend(captured, [loadCoopLegend(), save.partner]), save.ranks, (id) => playsShiny(save, id))
+  return import.meta.env.DEV && captured.length > 0 ? { ...pick, legends: captured } : pick
+}
+
+/** Whether the room plays the Modo Lendário (`CoopSettings.legend`). */
+const legendRoomOf = (room: RoomView | null | undefined) => room !== null && room !== undefined && parseSettings(room.settings).legend === true
+
+/**
+ * In a run room, this player's loadout follows the room's Modo Lendário: the
+ * device's legend while it's on, the partner when it's off. A seat with no
+ * legend captured can't stay ready in a legend room (the room says why).
+ */
+const syncLegendLoadout = (client: CoopClient, room: RoomView) => {
+  if (parseSettings(room.settings).mode === 'versus' || room.phase === 'playing') return
+  const me = room.members.find((m) => m.seat === client.state().seat)
+  if (!me?.loadout) return
+  const legend = legendRoomOf(room)
+  const want = coopLoadout(legend)
+  if (!fitsRoom(me.loadout, legend) && me.loadout.starter !== want.starter) client.setLoadout(want)
+  if (legend && !isLegend(want.starter) && me.ready && !me.host) client.setReady(false)
 }
 
 /**
@@ -3598,7 +3625,7 @@ const joinCoop = async (code: string, via: 'code' | 'link' | 'invite' | null, pi
   if (via) track('coop', { step: 'join', via })
   // The room it landed in: an old link's room may have moved (`moved`).
   linkRoom(res.room.code)
-  client.setLoadout(pick ?? (parseSettings(res.room.settings).mode === 'versus' ? arenaLoadout(arenaStart(), 0, equippedLook()) : coopLoadout()))
+  client.setLoadout(pick ?? (parseSettings(res.room.settings).mode === 'versus' ? arenaLoadout(arenaStart(), 0, equippedLook()) : coopLoadout(legendRoomOf(res.room))))
   const me = res.room.members.find((m) => m.seat === res.seat)
   if (me && !me.host) client.setReady(true)
   return res
@@ -4091,20 +4118,28 @@ const showRoom = () => {
         leftRun = null
         void startCoopRun(client, runner)
       },
+      hasLegend: () => capturedLegends(loadSave()).length > 0,
     }),
   )
   coopShown = 'room'
 }
 
-/** The partner select for the room: the pick becomes this player's loadout (and the saved partner), then back to the room. */
+/**
+ * The partner select for the room: the pick becomes this player's loadout (and
+ * the saved partner), then back to the room. A room with the Modo Lendário on
+ * picks among the captured legends only, kept as this device's room legend
+ * (`saveCoopLegend`): the saved partner stays the seat's regular fallback.
+ */
 const showCoopPartner = () => {
-  // The co-op select has no Lendários tab; `coopStarter` keeps the type honest.
+  const legendRoom = legendRoomOf(coopClient()?.state().room)
+  // Outside a legend room the select has no Lendários tab; `coopStarter` keeps the type honest.
   const pick = (id: PlayableId) => {
-    const starter = coopStarter(id)
-    updateSave((s) => ({ ...s, partner: starter }))
-    coopClient()?.setLoadout(coopLoadout())
+    if (isLegend(id)) saveCoopLegend(id)
+    else updateSave((s) => ({ ...s, partner: coopStarter(id) }))
+    coopClient()?.setLoadout(coopLoadout(legendRoom))
     setTimeout(showRoom, 250)
   }
+  const save = loadSave()
   const select = starterSelect(
     ui,
     input,
@@ -4115,8 +4150,8 @@ const showCoopPartner = () => {
       // A hatch's "Jogar com" takes the newcomer into the room, never into a solo run.
       incubator: () => showIncubator(() => showCoopPartner(), pick),
     },
-    coopStarter(loadSave().partner),
-    { coop: true },
+    (legendRoom ? roomLegend(capturedLegends(save), [loadCoopLegend(), save.partner]) : null) ?? coopStarter(save.partner),
+    { coop: true, coopLegends: legendRoom },
   )
   setScreen(select)
 }
@@ -5220,24 +5255,25 @@ const devHall = (cmd?: 'fake' | 'pending' | 'fail' | 'off', count = 128, newest 
  * made-up teams (`coopBoardFakes.ts`), `'off'` asks the API again;
  * `ps.coopBoard('open', 3, 'hard')` opens the Ranking's Co-op side at that
  * team size (2 to 4, or `duo`, `trio`, `squad`) and difficulty, `'daily'`
- * its Desafio co-op tab and `'challenge'` the Desafio do dia's Co-op side.
+ * its Desafio co-op tab and `'challenge'` the Desafio do dia's Co-op side;
+ * `'legend'` (`ps.coopBoard('legend', 2, 'hard')`) opens its Co-op Lendário side.
  */
-const devCoopBoard = (cmd?: 'fake' | 'off' | 'open' | 'daily' | 'challenge', size?: number | string, difficulty?: Difficulty) => {
+const devCoopBoard = (cmd?: 'fake' | 'off' | 'open' | 'legend' | 'daily' | 'challenge', size?: number | string, difficulty?: Difficulty) => {
   if (cmd === 'fake' || cmd === 'off') {
     fakeCoopBoards(cmd === 'fake')
     return cmd === 'fake' ? 'Co-op boards: fake teams' : 'Co-op boards: the API again'
   }
   const teams = parseTeamSize(size) ?? 2
-  if (cmd === 'open' || cmd === 'daily') {
+  if (cmd === 'open' || cmd === 'legend' || cmd === 'daily') {
     endRun()
-    setScreen(rankingScreen(ui, input, () => showTitle({ focus: 'ranking' }), { difficulty: difficulty ?? 'normal', challenge: cmd === 'daily', coop: { size: teams } }))
+    setScreen(rankingScreen(ui, input, () => showTitle({ focus: 'ranking' }), { difficulty: difficulty ?? 'normal', challenge: cmd === 'daily', coop: { size: teams, legend: cmd === 'legend' } }))
     return `Co-op boards: ${cmd === 'daily' ? 'Desafio co-op' : difficulty ?? 'normal'}, ${teams} players${coopBoardsFaked() ? ' (fake)' : ''}`
   }
   if (cmd === 'challenge') {
     showChallenge('coop')
     return dailyCoopChallenge(brasiliaDay(new Date()))
   }
-  return "ps.coopBoard('fake' | 'off') · ('open', size?, difficulty?) · ('daily', size?) · ('challenge')"
+  return "ps.coopBoard('fake' | 'off') · ('open' | 'legend', size?, difficulty?) · ('daily', size?) · ('challenge')"
 }
 
 /**
@@ -5409,6 +5445,15 @@ const devCoop = async (cmd?: string, arg?: string | number | boolean | null, ext
     case 'say':
       // An Arena match: the tab's bots say a quick chat line (`help` without one) and ping where they stand.
       return botsTalk(isQuickChat(arg) ? arg : 'help', 'danger')
+    case 'legend': {
+      // ps.coop('legend', true): the room's Modo Lendário, as the host's switch sets it (false: off); the tab's bots follow it.
+      const room = st.room
+      if (!room) return "ps.coop('legend', on): join a room first"
+      const on = arg !== false && arg !== 0 && arg !== 'off'
+      const now = parseSettings(room.settings)
+      client.setSettings({ difficulty: now.difficulty, ...(on && { legend: true }) })
+      return on
+    }
     case 'ready':
       return client.setReady(arg !== 0 && arg !== 'no')
     case 'start':

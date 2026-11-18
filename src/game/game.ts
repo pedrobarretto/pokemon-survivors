@@ -12,7 +12,7 @@ import type { PathFormId } from '../data/legendPaths'
 import type { EvolutionStage } from '../data/starters'
 import { runBoost } from './evoItems'
 import { evolutionFreed, missingEvoItems, runEvoItems, stepOpen } from './evoGate'
-import { isStarter, PLAYABLE, type PLAYABLE_IDS, type PlayableId } from '../data/hatchlings'
+import { isStarter, PLAYABLE, type PlayableId } from '../data/hatchlings'
 import { abilityLuck, abilitySet, createAbilityState, grantAbility, updateAbility } from './abilities'
 import { BAG_ITEMS, type BagItem } from './bag'
 import { branchContext, evolutionOffers, playerForm } from './branch'
@@ -425,7 +425,7 @@ export const createGame = (
  * family: the Legend mode stays solo), Poké Mart ranks, whether it plays shiny,
  * and the name the team sees. Nothing else from the save comes along (`createCoopGame`).
  */
-export type CoopLoadout = { starter: (typeof PLAYABLE_IDS)[number]; ranks: Ranks; shiny: boolean; name: string }
+export type CoopLoadout = { starter: PlayableId; ranks: Ranks; shiny: boolean; name: string }
 
 /**
  * A co-op run's settings, the same on every client: the difficulty, the opening draft (on by default), the simulated

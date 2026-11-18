@@ -74,8 +74,10 @@ export const COOP = {
  * This is the one list of them.
  *
  * Never in co-op, by construction (`createCoopGame` reads no save, day or
- * clock): the Legend mode (`CoopLoadout.starter` is a starter or a hatched
- * family), the Poké Mart's Bag, armed TMs, owned evolution items and Bottle
+ * clock): the Legend mode, but in a room with the Modo Lendário on
+ * (`CoopSettings.legend`, `coop/start.ts`: each seat plays a legend its
+ * account captured, as the API vouches through the relay, never the client's
+ * word; it banks no capture), the Poké Mart's Bag, armed TMs, owned evolution items and Bottle
  * Caps (Kecleon's shop), the day's outbreak, the Noite das Bruxas (ghosts,
  * night bosses, candies, jack-o'-lanterns), the lucky first egg and the legend
  * paths' temple and forms (`ReplayStart.temple`, `.forms`). The run's

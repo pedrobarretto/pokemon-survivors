@@ -2,7 +2,8 @@ import { accountHandle, accountsEnabled, sessionToken } from './account'
 import { track, type RunPerf } from './analytics'
 import { bank, bankKey, paysAnything, type BankDelta, type Store } from './coop/bank'
 import { createBot, botPick, type Bot } from './coop/bot'
-import type { CoopPick } from './coop/start'
+import { parseSettings, type CoopPick } from './coop/start'
+import { REGULAR_LEGENDS } from './data/legends'
 import { COSMETIC_IDS, slotOf, type CosmeticSlot } from './data/cosmetics'
 import { SKIN_LINES } from './data/skinCatalog'
 import { skinsOf } from './arena/gemShop'
@@ -11,7 +12,7 @@ import { measureRelay, type VpsUrls } from './coop/relays'
 import type { QueueDeps } from './arena/queue'
 import type { PingKind, QuickChat } from './game/versusSocial'
 import { createLocalRelay, LOCAL_RELAY_URL, type LocalRelay } from './coop/localRelay'
-import { buildAdvice } from './coop/lobby'
+import { buildAdvice, coopStarter, fitsRoom } from './coop/lobby'
 import { netSummary, type NetStats } from './coop/netStats'
 import type { Runner } from './coop/runner'
 import { EGGS } from './game/eggs'
@@ -19,7 +20,7 @@ import { coopPayout, playerDexLog } from './game/coop'
 import { mergeDex, recordRun, type Pokedex } from './game/dex'
 import { localPlayer } from './game/players'
 import type { Game, GameEvent } from './game/types'
-import { ROOM_PARAM, VPS_HOMES, parseRoomCode, type VpsHome, type WireLook } from './net/protocol'
+import { ROOM_PARAM, VPS_HOMES, parseRoomCode, type Settings, type VpsHome, type WireLook } from './net/protocol'
 import { timeoutSignal } from './net/timeout'
 import { REF_PARAM } from './game/referral'
 import { ROUTES } from './site/routes'
@@ -432,6 +433,9 @@ export const tabBotLook = (seat: number): WireLook | null => {
   return null
 }
 
+/** Whether a room's settings play the Modo Lendário. */
+const legendRoom = (settings: Settings) => parseSettings(settings).legend === true
+
 /** Dev: `n` bots join room `code` (they set a loadout and get ready; the soak's bots in a tab), playing `starter` when given. */
 export const addBots = async (code: string, n: number, starter?: CoopPick['starter']) => {
   const url = coopUrl()
@@ -447,12 +451,21 @@ export const addBots = async (code: string, n: number, starter?: CoopPick['start
     // Each bot wears a look of its own (`botLook`), so a room shows every seat's look arriving.
     const look = botLook(k)
     botLooks.set(bot, look)
-    bot.client.setLoadout({ ...botPick(k + 1), ...(starter && { starter }), look })
+    const pick: CoopPick = { ...botPick(k + 1), ...(starter && { starter }), look }
+    /** In a room with the Modo Lendário on, a legend of its own (claimed: a dev relay without an API keeps a guest's claim), its pick beside it. */
+    const legend = REGULAR_LEGENDS[(k * 5 + 2) % REGULAR_LEGENDS.length]!
+    const legendPick: CoopPick = { ...pick, starter: legend, partner: coopStarter(pick.starter), shiny: false, legends: [legend] }
+    bot.client.setLoadout(legendRoom(res.room.settings) ? legendPick : pick)
     setTimeout(() => bot.client.setReady(true), 300)
-    // After a run the relay clears everyone's ready: a bot is ready for "Jogar de novo" a moment later.
     bot.client.on((e) => {
       const seat = bot.client.state().seat
-      if (e.kind === 'room' && e.room.phase === 'ended' && e.room.members.some((m) => m.seat === seat && !m.ready)) setTimeout(() => bot.client.setReady(true), 800)
+      if (e.kind !== 'room') return
+      // After a run the relay clears everyone's ready: a bot is ready for "Jogar de novo" a moment later.
+      if (e.room.phase === 'ended' && e.room.members.some((m) => m.seat === seat && !m.ready)) setTimeout(() => bot.client.setReady(true), 800)
+      // The host flipping the Modo Lendário: the bot brings a legend, or its own pick again.
+      const mine = e.room.members.find((m) => m.seat === seat)?.loadout
+      const want = legendRoom(e.room.settings)
+      if (e.room.phase !== 'playing' && mine && fitsRoom(mine, want) === false) bot.client.setLoadout(want ? legendPick : pick)
     })
     joined.push(res.seat)
   }

@@ -44,17 +44,34 @@ const PICKS: readonly (readonly [PlayableId, number, boolean])[] = [
   ['fennekin', 1, false],
 ]
 
+/** The Legend side's: captured legends (stage 0: an awakening isn't on the board). */
+const LEGEND_PICKS: readonly (readonly [PlayableId, number, boolean])[] = [
+  ['kyogre', 0, false],
+  ['groudon', 0, true],
+  ['rayquaza', 0, false],
+  ['mewtwo', 0, false],
+  ['lugia', 0, false],
+  ['hoOh', 0, false],
+  ['dialga', 0, false],
+  ['palkia', 0, true],
+  ['zapdos', 0, false],
+  ['suicune', 0, false],
+  ['latias', 0, false],
+  ['deoxys', 0, false],
+]
+
 const RUNS = 14
 
 const at = (minutes: number) => new Date(Date.now() - minutes * 60_000).toISOString()
 
-const member = (i: number): CoopMember => {
-  const [starter, stage, shiny] = PICKS[i % PICKS.length]!
+const member = (i: number, legend = false): CoopMember => {
+  const picks = legend ? LEGEND_PICKS : PICKS
+  const [starter, stage, shiny] = picks[i % picks.length]!
   return { ...TRAINERS[i % TRAINERS.length]!, starter, stage, branch: null, shiny }
 }
 
 /** Fake team `n` (0 the best) of `size`, on `difficulty`: times falling from a victory past 20:00. */
-const entry = (n: number, size: TeamSize, difficulty: Difficulty): CoopBoardEntry => ({
+const entry = (n: number, size: TeamSize, difficulty: Difficulty, legend = false): CoopBoardEntry => ({
   rank: n + 1,
   run: `fake-${size}-${n}`,
   size,
@@ -62,22 +79,23 @@ const entry = (n: number, size: TeamSize, difficulty: Difficulty): CoopBoardEntr
   time: n === 0 ? 1260 + size * 11 : Math.max(95, 1180 - n * 71 - size * 13),
   outcome: n === 0 ? 'victory' : 'wipe',
   at: at(17 + n * 41),
-  members: Array.from({ length: size }, (_, seat) => member(n * 3 + seat * 5)),
+  members: Array.from({ length: size }, (_, seat) => member(n * 3 + seat * 5, legend)),
 })
 
 /** The player's own team, under the top: `@you` and a friend. */
-const mine = (size: TeamSize, difficulty: Difficulty): CoopBoardEntry => ({
-  ...entry(RUNS + 9, size, difficulty),
+const mine = (size: TeamSize, difficulty: Difficulty, legend = false): CoopBoardEntry => ({
+  ...entry(RUNS + 9, size, difficulty, legend),
   run: `fake-${size}-me`,
-  members: Array.from({ length: size }, (_, seat) => (seat === 0 ? { ...member(6), handle: 'you', name: 'Você', supporter: 'supporter', og: false } : member(seat * 4 + 1))),
+  members: Array.from({ length: size }, (_, seat) => (seat === 0 ? { ...member(6, legend), handle: 'you', name: 'Você', supporter: 'supporter', og: false } : member(seat * 4 + 1, legend))),
 })
 
-export const fakeCoopBoard = (size: TeamSize, difficulty: Difficulty, period: BoardPeriod): CoopBoard => ({
+/** A fake board; `legend` its Legend side's (the teams play captured legends). */
+export const fakeCoopBoard = (size: TeamSize, difficulty: Difficulty, period: BoardPeriod, legend = false): CoopBoard => ({
   size,
   difficulty,
   period,
-  entries: Array.from({ length: period === 'day' ? 6 : RUNS }, (_, n) => entry(n, size, difficulty)),
-  me: mine(size, difficulty),
+  entries: Array.from({ length: period === 'day' ? 6 : RUNS }, (_, n) => entry(n, size, difficulty, legend)),
+  me: mine(size, difficulty, legend),
 })
 
 export const fakeCoopChallengeBoard = (day: DayKey, size: TeamSize): CoopChallengeBoard => {
