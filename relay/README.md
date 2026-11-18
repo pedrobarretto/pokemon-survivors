@@ -186,8 +186,8 @@ production`; the API's `ARENA_REPORT_SECRET`, the same value) and `ARENA_API_URL
 `https://api.pokemonsurvivors.com` in `env.production`, unset on the dev relay so dev matches never
 reach the production ladder). Without both, nothing is posted (`arena.report.noApi` in the logs)
 and every queued account matches at `mmr.start`. On the VPS relay they are env vars of the
-Dokploy app, and its watch paths need `src/net/arena.ts`, `src/net/arenaQueue.ts`, `src/net/coopReport.ts` and
-`src/data/arenaRanked.ts` too (the image bundles them).
+Dokploy app, and its watch paths need `src/net/arena.ts`, `src/net/arenaQueue.ts`, `src/net/coopReport.ts`,
+`src/net/looks.ts` and `src/data/arenaRanked.ts` too (the image bundles them).
 
 **Running it locally.** `npm run dev` (wrangler dev on :8791, guests on). For reports and MMR
 against a local API (`npm run dev --prefix server`, :3000), put in `relay/.dev.vars`:
@@ -315,7 +315,7 @@ The same steps for each relay, with its row of the table above (`<home>`: `sa`).
    - Source: this GitHub repository, branch `main`. Build type **Dockerfile**, Dockerfile
      `relay/node/Dockerfile`, build context `.` (the repository root).
    - Auto deploy on, with watch paths `relay/src/**`, `relay/node/**`, `src/net/protocol.ts`,
-     `src/net/arena.ts`, `src/net/arenaQueue.ts` and `src/data/arenaRanked.ts` (all the image bundles:
+     `src/net/arena.ts`, `src/net/arenaQueue.ts`, `src/net/looks.ts` and `src/data/arenaRanked.ts` (all the image bundles:
      game deploys never restart it).
    - **Volume** (Advanced → Mounts): a volume mount, name `ps-relay-<home>-data`, mount path `/data`.
      Without it every deploy loses the rooms in play.
