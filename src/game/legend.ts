@@ -44,13 +44,20 @@ export const createLegendState = (starter: PlayableId, forms: readonly PathFormI
 
 /**
  * The legend the world plays against: the first player's who plays one (the
- * Legend mode's Pressure, its lifted horde, the rifts and bosses it never
- * meets), or null when nobody does. Solo it's the player's.
+ * Legend mode's Pressure and its lifted horde, applied once for the whole
+ * team), or null when nobody does. Solo it's the player's. What the world
+ * never brings as a foe asks about every seat's (`teamLegendIds`, `playsLegend`).
  */
 export const teamLegend = (g: Game): LegendState | null => {
   for (const p of g.players) if (p.legend) return p.legend
   return null
 }
+
+/** Every legend the team plays, by slot (solo, the player's or none): the world never meets any of them. */
+export const teamLegendIds = (g: Game): LegendId[] => g.players.flatMap((p) => (p.legend ? [p.legend.id] : []))
+
+/** Whether a player of the team plays legend `id` (solo, the player). */
+export const playsLegend = (g: Game, id: LegendId) => g.players.some((p) => p.legend?.id === id)
 
 /* ---------------- Awakenings ---------------- */
 
@@ -244,24 +251,38 @@ export const hordeScale = (g: Game): HordeScale => (teamLegend(g) ? LEGEND_SCALE
 /* ---------------- Never facing yourself ---------------- */
 
 /**
- * The roster with the player's own legend taken out of its bosses: a trio it
- * belongs to gives way to the next trio, a mythical to the next mythical.
- * Swapped in data order, without a draw, so the rest of the run is the same.
+ * The roster with the team's own legends taken out of its bosses: a trio one
+ * of them belongs to gives way to the first trio none does, a mythical to the
+ * next mythical none plays. Swapped in data order, without a draw, so the rest
+ * of the run is the same. Solo, `legends` is the player's starter.
  */
-export const avoidLegend = (roster: Roster, legend: PlayableId, events: readonly WaveEvent[] = EVENTS): Roster => {
-  if (!isLegend(legend)) return roster
-  const mine = (ids: readonly EnemyId[]) => ids.some((id) => id === legend)
+export const avoidLegends = (roster: Roster, legends: readonly PlayableId[], events: readonly WaveEvent[] = EVENTS): Roster => {
+  const own = legends.filter(isLegend)
+  if (own.length === 0) return roster
+  const ours = (id: EnemyId) => own.some((l) => l === id)
+  const mine = (ids: readonly EnemyId[]) => ids.some(ours)
   const trio = mine(TRIOS[roster.trio]) ? (TRIO_IDS.find((id) => !mine(TRIOS[id])) ?? roster.trio) : roster.trio
   const swapped = trio === roster.trio ? roster : withTrio(roster, trio, events)
-  const next = MYTHICALS[(MYTHICALS.findIndex((id) => id === legend) + 1) % MYTHICALS.length]!
+  /** The mythical after `id` in data order that nobody on the team plays (itself when every one is). */
+  const nextMythical = (id: EnemyId) => {
+    const at = MYTHICALS.findIndex((m) => m === id)
+    for (let k = 1; k < MYTHICALS.length; k++) {
+      const m = MYTHICALS[(at + k) % MYTHICALS.length]!
+      if (!ours(m)) return m
+    }
+    return id
+  }
   return {
     ...swapped,
     events: swapped.events.map((id, i) => {
       const e = events[i]
-      return id === legend && e?.kind === 'boss' && 'mythical' in e ? next : id
+      return id !== null && ours(id) && e?.kind === 'boss' && 'mythical' in e ? nextMythical(id) : id
     }),
   }
 }
+
+/** `avoidLegends` for one player's legend (a solo run's). */
+export const avoidLegend = (roster: Roster, legend: PlayableId, events: readonly WaveEvent[] = EVENTS): Roster => avoidLegends(roster, [legend], events)
 
 /** A boss of a player's own species (Mewtwo's finale for a Mewtwo, Arceus's reaper for an Arceus): its dark Clone. */
 export const isClone = (g: Game, e: Enemy) => e.boss && g.players.some((p) => p.legend !== null && e.kind === p.legend.id)

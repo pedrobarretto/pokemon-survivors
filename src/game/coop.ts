@@ -57,9 +57,16 @@ export type CoopState = {
   challenge: DayKey | null
   /** Plusle and Minun's link (`updatePlusMinus`): on while both stand on the team, and seconds to the current's next hit. */
   plusMinus: { on: boolean; next: number }
+  /**
+   * A co-op Legend run: a seat plays a legend (a Legend room's, vouched by the
+   * API; `coop/start.ts`), so the run plays the Legend mode's rules once for
+   * the team (`teamLegend`). Set at tick 0 and never changes; its boards are
+   * the Lendário side's (`coopLegendRun`).
+   */
+  legend: boolean
 }
 
-export const createCoopState = (players: number): CoopState => ({
+export const createCoopState = (players: number, legend = false): CoopState => ({
   held: Array.from({ length: players }, () => 0),
   joined: players,
   names: Array.from({ length: players }, () => ''),
@@ -69,7 +76,11 @@ export const createCoopState = (players: number): CoopState => ({
   own: Array.from({ length: players }, () => new Map<number, boolean>()),
   challenge: null,
   plusMinus: { on: false, next: 0 },
+  legend,
 })
+
+/** Whether `g` is a co-op Legend run (`CoopState.legend`); never solo or in the Arena. */
+export const coopLegendRun = (g: Pick<Game, 'coop'>) => g.coop !== null && g.coop.legend
 
 /**
  * The run's Pokédex log as player `slot` banks it: the team's sightings and

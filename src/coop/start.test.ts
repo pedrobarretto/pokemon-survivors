@@ -4,6 +4,7 @@ import { createCoopGame } from '../game/game'
 import { NO_RANKS, UPGRADE_IDS } from '../game/meta'
 import { stateHash } from '../game/snapshot'
 import { COOP } from '../data/coop'
+import { PLAYABLE_IDS } from '../data/hatchlings'
 import type { RunStart } from '../net/protocol'
 import { loadoutOf, parseLoadout, parseSettings, runLoadouts, settingsOf, startGame } from './start'
 
@@ -57,5 +58,56 @@ describe('the Arena look in a loadout', () => {
     expect(loadoutOf({ ...pick, look: {} })).not.toHaveProperty('look')
     const start: RunStart = { id: 1, seed: 7, build: 'b1', settings: { difficulty: 'normal' }, players: [{ seat: 0, name: 'Ash', account: true, loadout: loadoutOf(pick) }] }
     expect(runLoadouts(start)).toEqual([{ starter: 'charmander', ranks: NO_RANKS, shiny: false, name: 'Ash' }])
+  })
+})
+
+describe('the Modo Lendário', () => {
+  const legendLoadout = (legends?: readonly string[], partner?: string) => ({ starter: 'kyogre', ranks: ranked, shiny: false, ...(partner && { partner }), ...(legends && { legends: [...legends] }) })
+
+  it('rides the wire in a run room only, and gives way to the Desafio co-op do dia', () => {
+    expect(parseSettings(settingsOf({ difficulty: 'hard', legend: true }))).toMatchObject({ mode: 'run', legend: true })
+    expect(settingsOf({ difficulty: 'hard' })).not.toHaveProperty('legend')
+    expect(settingsOf({ difficulty: 'hard', mode: 'versus', legend: true })).not.toHaveProperty('legend')
+    expect(parseSettings({ difficulty: 'hard', mode: 'versus', legend: true })).not.toHaveProperty('legend')
+    expect(settingsOf({ difficulty: 'hard', legend: true, challenge: DAY })).not.toHaveProperty('legend')
+    const both = parseSettings({ difficulty: 'hard', legend: true, challenge: DAY })
+    expect(both.challenge).toBe(DAY)
+    expect(both).not.toHaveProperty('legend')
+    expect(parseSettings({ difficulty: 'hard', legend: 'yes' })).not.toHaveProperty('legend')
+  })
+
+  it('seats a legend only in a Legend room and only when the relay vouched for it', () => {
+    expect(parseLoadout(legendLoadout(['kyogre', 'mewtwo'], 'gible'), true).starter).toBe('kyogre')
+    // Not vouched, vouched for another, or outside a Legend room: the partner plays.
+    expect(parseLoadout(legendLoadout(undefined, 'gible'), true).starter).toBe('gible')
+    expect(parseLoadout(legendLoadout(['groudon'], 'gible'), true).starter).toBe('gible')
+    expect(parseLoadout(legendLoadout(['kyogre'], 'gible'), false).starter).toBe('gible')
+    expect(parseLoadout(legendLoadout(['kyogre'], 'gible')).starter).toBe('gible')
+    // No partner (or a legend as one): the first starter.
+    expect(parseLoadout(legendLoadout(undefined, 'mewtwo'), true).starter).toBe(PLAYABLE_IDS[0])
+    expect(parseLoadout(legendLoadout(), true).starter).toBe(PLAYABLE_IDS[0])
+    // A regular Pokémon stands in a Legend room too; unknown vouched ids are dropped.
+    expect(parseLoadout({ ...loadout, legends: ['kyogre', 'nope'] }, true)).toMatchObject({ starter: 'pichu', legends: ['kyogre'] })
+  })
+
+  it("plays the seats' vouched legends at tick 0, the rest their partners", () => {
+    const start: RunStart = {
+      ...DUO,
+      settings: settingsOf({ difficulty: 'normal', legend: true }),
+      players: [
+        { seat: 0, name: 'Ana', account: true, loadout: legendLoadout(['kyogre'], 'gible') },
+        { seat: 1, name: 'Bia', account: true, loadout: { ...legendLoadout(undefined, 'squirtle'), starter: 'raikou' } },
+      ],
+    }
+    expect(runLoadouts(start).map((l) => l.starter)).toEqual(['kyogre', 'squirtle'])
+    const g = startGame(start)
+    expect(g.players.map((p) => p.legend?.id ?? null)).toEqual(['kyogre', null])
+    expect(g.coop?.legend).toBe(true)
+    // The same loadouts in a normal room: no legend stands.
+    const normal = startGame({ ...start, settings: settingsOf({ difficulty: 'normal' }) })
+    expect(normal.players.map((p) => p.starter)).toEqual(['gible', 'squirtle'])
+    expect(normal.coop?.legend).toBe(false)
+    // Nor with the challenge on.
+    expect(startGame({ ...start, settings: { difficulty: 'normal', legend: true, challenge: DAY } }).coop?.legend).toBe(false)
   })
 })
