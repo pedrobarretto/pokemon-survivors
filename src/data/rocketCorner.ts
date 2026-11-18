@@ -8,8 +8,10 @@ import type { CornerFamilyId } from './scFamilies'
  * The Rocket Game Corner's prize counter (`ui/cornerCounter.ts`; the API
  * redeems, `server/src/corner.ts`): what tokens buy. The player picks the
  * prize; the slots and Koffing Sweep only get them there sooner. Prices are a
- * goal of days: a day's tokens (`CORNER.buyDaily` bought, plus a fair day at
- * the games) is about 700, so a family is four to seven days.
+ * goal of days: playing only, Koffing Sweep's paid day (`CORNER.sweepDay`) is
+ * up to 2,250 tokens, so a family is two to five full days; tokens cost ₽20
+ * at the counter, so a family is ₽60k to ₽120k, a day or two of buying at
+ * most (`CORNER.buyDaily`).
  *
  * - `family`: one of the prize families, once: Team Rocket's four
  *   (`data/rocketFamilies.ts`) or the classic Celadon prizes, both Nidoran

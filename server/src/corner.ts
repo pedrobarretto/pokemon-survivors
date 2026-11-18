@@ -10,7 +10,7 @@ import { isRecord } from '../../src/game/parse'
 import { isPlayable } from '../../src/game/ranking'
 import type { CornerBought, CornerRedeemed, CornerSpun, CornerState, CornerSweep, CornerSwept } from '../../src/net/realmApi'
 import {
-  CORNER, canBuy, cappedWin, clampLevel, cleared, dealBoard, isBet, nextLevel, potOf, spinCost, spinStops, spinWins, sweepPay, sweepView,
+  CORNER, canBuy, clampLevel, cleared, dealBoard, isBet, nextLevel, potOf, spinCost, spinStops, spinWins, sweepCredit, sweepPay, sweepView,
   type Bet, type SweepLevel, type Tile,
 } from '../../src/realm/games/corner.rules'
 import type { Sql } from './db'
@@ -23,7 +23,9 @@ import { rateLimiter } from './rateLimit'
  * claw's credits, moved to `spent` so a merge never refunds them), spins are
  * rolled here from the OS's generator, Koffing Sweep boards are dealt and kept
  * here (a client learns a tile only when it flips it), and prizes go out as
- * gifts. Every count resets on a new Brasília day (`corner_wallets.day`).
+ * gifts. Both games play without a cap (the slots keep a house edge, Koffing
+ * Sweep's pay falls off with `won`, its tokens paid today); only buying is
+ * capped. Every count resets on a new Brasília day (`corner_wallets.day`).
  */
 
 type Q = Sql | TransactionSql
@@ -101,10 +103,10 @@ export const cornerStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
 
   const takenOf = async (q: Q, userId: string) => (await q<{ prize: string }[]>`select distinct prize from corner_redemptions where user_id = ${userId}`).map((r) => r.prize)
 
-  /** Ends a board: pays it (under the day's cap) and moves the level. */
+  /** Ends a board: pays it at the day's rate (`sweepCredit`, nothing in free play) and moves the level. */
   const finish = async (tx: TransactionSql, userId: string, w: WalletRow, row: SweepRow, outcome: 'clear' | 'koffing' | 'bank') => {
     const level = clampLevel(row.level)
-    const pay = outcome === 'koffing' ? 0 : cappedWin(sweepPay(potOf(row.board, row.flipped), level, outcome === 'clear'), w.won)
+    const pay = outcome === 'koffing' ? 0 : sweepCredit(sweepPay(potOf(row.board, row.flipped), level, outcome === 'clear'), w.won)
     const next: WalletRow = { ...w, tokens: w.tokens + pay, won: w.won + pay, level: nextLevel(level, outcome, row.flipped.length) }
     await saveWallet(tx, userId, next)
     const [done] = await tx<SweepRow[]>`
@@ -149,25 +151,24 @@ export const cornerStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
         return { ok: true, tokens: after.tokens, bought: after.bought, paid: { save: next, revision } }
       }),
 
-    /** `POST /realm/corner/spin`: rolls the reels and pays (past the day's cap a spin still spins, for nothing). The same nonce answers the same. */
+    /** `POST /realm/corner/spin`: rolls the reels and pays, as often as the tokens last. The same nonce answers the same. */
     spin: (userId: string, bet: Bet, nonce: string): Promise<Out<{ spun: CornerSpun }>> =>
       sql.begin(async (tx) => {
         const refused = await gate(tx, userId)
         if (refused) return { ok: false, error: refused }
         const w = await walletOf(tx, userId)
         if (w.last_nonce === nonce && isRecord(w.last_spin)) return { ok: true, spun: w.last_spin as CornerSpun }
-        if (w.spins >= CORNER.spinsDaily) return { ok: false, error: 'cap' }
         const cost = spinCost(bet)
         if (w.tokens < cost) return { ok: false, error: 'tokens' }
         const stops = spinStops(dice)
-        const paid = cappedWin(spinWins(stops, bet).reduce((a, x) => a + x.tokens, 0), w.won)
+        const paid = spinWins(stops, bet).reduce((a, x) => a + x.tokens, 0)
         const tokens = w.tokens - cost + paid
-        const spun: CornerSpun = { stops, paid, tokens, won: w.won + paid, spins: w.spins + 1 }
-        await saveWallet(tx, userId, { ...w, tokens, won: spun.won, spins: spun.spins, last_nonce: nonce, last_spin: spun })
+        const spun: CornerSpun = { stops, paid, tokens, won: w.won, spins: w.spins + 1 }
+        await saveWallet(tx, userId, { ...w, tokens, spins: spun.spins, last_nonce: nonce, last_spin: spun })
         return { ok: true, spun }
       }),
 
-    /** `POST /realm/corner/sweep/start`: deals a board at the account's level (the open one comes back). */
+    /** `POST /realm/corner/sweep/start`: deals a board at the account's level (the open one comes back), as many a day as the player likes. */
     deal: (userId: string): Promise<Out<{ swept: CornerSwept }>> =>
       sql.begin(async (tx) => {
         const refused = await gate(tx, userId)
@@ -175,7 +176,6 @@ export const cornerStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
         const w = await walletOf(tx, userId)
         const open = await openSweep(tx, userId)
         if (open) return { ok: true, swept: swept({ sweep: viewOf(open), paid: 0, wallet: w }) }
-        if (w.rounds >= CORNER.roundsDaily) return { ok: false, error: 'cap' }
         const level: SweepLevel = clampLevel(w.level)
         const board = dealBoard(level, dice)
         const [row] = await tx<SweepRow[]>`

@@ -7,7 +7,7 @@ import { h } from '../../ui/dom'
 import { isFailure } from '../api'
 import { fetchCorner, spinSlots } from '../cornerApi'
 import { burst, drawFx, drawText, image, stepFx, textWidth, type Particle, type Popup } from './arcadeKit'
-import { BETS, CORNER, LINES, ORAN_LEFT, PAYS, STRIP, SYMBOLS, spinCost, spinWins, type Bet, type LineWin, type SlotSymbol } from './corner.rules'
+import { BETS, LINES, ORAN_LEFT, PAYS, STRIP, SYMBOLS, spinCost, spinWins, type Bet, type LineWin, type SlotSymbol } from './corner.rules'
 import type { GameInput, GameRun, SoloCtx, SoloGame } from './frame'
 import { callout, gameSheet } from './gameSheet'
 
@@ -189,7 +189,7 @@ const start = (ctx: SoloCtx): GameRun => {
   /** Tokens falling from the chute into the tray. */
   const coins: { x: number; y: number; vy: number; vx: number; landed: number }[] = []
 
-  const tokensLine = () => h('p', { class: 'mg-small corner-tokens' }, `${c().balance(formatNumber(state?.tokens ?? 0))} · ${m().spinsLeft(formatNumber(Math.max(0, CORNER.spinsDaily - (state?.spins ?? 0))))}`)
+  const tokensLine = () => h('p', { class: 'mg-small corner-tokens' }, c().balance(formatNumber(state?.tokens ?? 0)))
 
   const idle = (lead?: HTMLElement) => say([lead ?? h('p', {}, m().blurb), tokensLine()])
 
@@ -267,10 +267,7 @@ const start = (ctx: SoloCtx): GameRun => {
       const cx = L.win.x + L.win.w / 2
       burst(parts, cx, L.win.y + L.win.h / 2, [C.gold, '#ffffff', C.redHi], jackpot ? 70 : 26, jackpot ? 130 : 85)
       idle(h('p', { class: 'hot' }, jackpot ? `${m().jackpot} ${m().win(formatNumber(paid))}` : m().win(formatNumber(paid))))
-    } else {
-      const capped = answer.wins.length > 0 && (state.won ?? 0) >= CORNER.wonDaily
-      idle(capped ? callout(m().capped) : h('p', {}, m().lose))
-    }
+    } else idle(h('p', {}, m().lose))
     answer = null
   }
 

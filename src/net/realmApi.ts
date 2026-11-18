@@ -56,8 +56,8 @@ import type { SweepView } from '../realm/games/corner.rules'
  * - `POST /realm/corner/buy` (auth) `{ pack, base }`: tokens for ₽ out of the stored save at revision `base`
  *   (`CORNER.packs`, `CORNER.buyDaily`). `CornerBought` with `{ save, revision }`. 402 `funds`, 403 `cap`, 409 `nosave`/`stale`.
  * - `POST /realm/corner/spin` (auth) `{ bet, nonce }`: a spin, rolled here (`realm/games/corner.rules.ts`). `CornerSpun`;
- *   the same `nonce` again answers the same. 403 `tokens`/`cap`.
- * - `POST /realm/corner/sweep/start` (auth): a Koffing Sweep board (the one left open comes back). `CornerSwept`. 403 `cap`.
+ *   the same `nonce` again answers the same. 403 `tokens`.
+ * - `POST /realm/corner/sweep/start` (auth): a Koffing Sweep board (the one left open comes back), no daily cap: its pay falls off instead (`sweepCredit`). `CornerSwept`.
  * - `POST /realm/corner/sweep/flip` (auth) `{ id, at }` and `/sweep/bank` `{ id }`: a tile turned, or the pot banked.
  *   `CornerSwept`; a tile already up or a round over answers its view again.
  * - `POST /realm/corner/redeem` (auth) `{ prize, target? }`: a prize for tokens (`data/rocketCorner.ts`), sent as a gift;
@@ -178,12 +178,12 @@ export type ClawInserted = { play: ClawPlay; used: number }
 /** What a drop came to: the plush it went for (its place in `prizes`), the grip, whether it held and every plush's misses after it. */
 export type ClawDropped = { target: number; grip: number; won: boolean; family: PlushFamily; misses: number[] }
 
-/** The Rocket Game Corner for this account: tokens held, what today bought and won, spins and boards played, the board left open and the once-only prizes taken. */
+/** The Rocket Game Corner for this account: tokens held, what today bought and Koffing Sweep paid (`won`), spins and boards played, the board left open and the once-only prizes taken. */
 export type CornerState = { tokens: number; bought: number; won: number; spins: number; rounds: number; level: number; sweep: CornerSweep | null; taken: string[] }
 
 export type CornerBought = { tokens: number; bought: number }
 
-/** A spin: where the three reels stopped, what it paid (after the day's cap) and the tokens after it. */
+/** A spin: where the three reels stopped, what it paid and the tokens after it (`won` is Koffing Sweep's, which a spin leaves). */
 export type CornerSpun = { stops: [number, number, number]; paid: number; tokens: number; won: number; spins: number }
 
 /** A Koffing Sweep round as its player sees it (`SweepView`), and what banking it paid. */

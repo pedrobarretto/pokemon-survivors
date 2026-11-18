@@ -5770,14 +5770,15 @@ if (import.meta.env.DEV) {
       },
       /**
        * The Rocket Game Corner (faked API): `ps.corner('prizes')` or `ps.corner('tokens')` opens the counter on that page,
-       * `ps.corner('stage', 5000)` sets the faked tokens (a second number the Koffing Sweep level), `ps.minigame('slots')` and
+       * `ps.corner('stage', 5000)` sets the faked tokens (a second number the Koffing Sweep level, a third the tokens it paid today:
+       * `ps.corner('stage', 5000, 3, 1500)` is its half pay, 2250 its free play), `ps.minigame('slots')` and
        * `ps.minigame('sweep')` its games; `ps.realm('room', 'gameCorner')` walks into the room.
        */
-      corner: async (cmd: string = 'prizes', tokens?: number | string, level?: number) => {
+      corner: async (cmd: string = 'prizes', tokens?: number | string, level?: number, won?: number) => {
         const [{ fakeRealm }, { stageCorner, rigSpin }, { openCornerCounter }] = await Promise.all([realmMode(), import('./realm/cornerApi'), import('./ui/cornerCounter')])
         fakeRealm(true, accountHandle() ?? 'you')
         if (cmd === 'win') return rigSpin(String(tokens ?? 'seven'))
-        if (cmd === 'stage') return stageCorner(typeof tokens === 'number' ? tokens : undefined, level)
+        if (cmd === 'stage') return stageCorner(typeof tokens === 'number' ? tokens : undefined, level, won)
         if (cmd !== 'prizes' && cmd !== 'tokens') return "ps.corner: 'prizes', 'tokens' or 'stage'"
         return setScreen(openCornerCounter(ui, input, { tab: cmd, close: () => showTitle() }))
       },
