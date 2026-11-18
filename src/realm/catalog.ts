@@ -1,6 +1,10 @@
 import { FURNITURE, FURNITURE_IDS, FURNITURE_SETS, type FurnitureId, type FurnitureSet } from '../data/furniture'
+import { LEGEND_PAINTINGS } from '../data/furnitureSets/paintings'
+import type { LegendId } from '../data/legends'
+import { MINIGAMES, type MinigameId, type Trophy } from '../data/minigames'
+import { STAMP_MILESTONES } from '../data/realmStamps'
 import { dayNumber, type DayKey } from '../game/day'
-import { onSale } from './placement'
+import { dollLegend, onSale } from './placement'
 
 /**
  * Bibarel's catalog as pure rules (`ui/carpentry.ts`): the pages are the
@@ -43,7 +47,7 @@ export const isFresh = (id: FurnitureId, day: DayKey): boolean => freshOn(FURNIT
 /**
  * A collection's page on `day`: what it has on sale and what's earned in it
  * (the legends' paintings in the gallery); `trophies` gathers every earned
- * piece (the dolls and the paintings). NOVO pieces first, then as the data
+ * piece (the dolls, the paintings and the trophies). NOVO pieces first, then as the data
  * lists them.
  */
 export const pageOf = (set: FurnitureSet, day: DayKey): FurnitureId[] => {
@@ -59,3 +63,32 @@ export const collectionsOn = (day: DayKey): FurnitureSet[] => FURNITURE_SETS.fil
 /** A page's pieces through the filters (an earned piece has no price, so it only shows unfiltered by price). */
 export const filterPage = (ids: readonly FurnitureId[], shelf: ShelfFilter, pay: PayFilter): FurnitureId[] =>
   ids.filter((id) => (shelf === 'all' || shelfOf(id) === shelf) && (pay === 'all' || payOf(id) === pay))
+
+/**
+ * How an earned piece (`source: 'trophy'`) comes to an account: capturing
+ * its legends (a doll, a painting; the device can tell), a mini game's goal
+ * (`MINIGAMES[game].trophies`) or a number of Estampas (`STAMP_MILESTONES`),
+ * both granted by the API only, so only its count says they're in. Null for
+ * a piece that's bought.
+ */
+export type EarnWay =
+  | { kind: 'legends'; legends: readonly LegendId[] }
+  | { kind: 'game'; game: MinigameId; after: Trophy['after'] }
+  | { kind: 'stamps'; at: number }
+
+const GAME_TROPHIES = new Map(
+  (Object.keys(MINIGAMES) as MinigameId[]).flatMap((game) => MINIGAMES[game].trophies.map((t: Trophy) => [t.furniture, { kind: 'game', game, after: t.after }] as const)),
+)
+
+const isPainting = (k: string): k is keyof typeof LEGEND_PAINTINGS => Object.hasOwn(LEGEND_PAINTINGS, k)
+
+export const earnWayOf = (id: FurnitureId): EarnWay | null => {
+  if (FURNITURE[id].source !== 'trophy') return null
+  const legend = dollLegend(id)
+  if (legend) return { kind: 'legends', legends: [legend] }
+  if (isPainting(id)) return { kind: 'legends', legends: LEGEND_PAINTINGS[id] }
+  const game = GAME_TROPHIES.get(id)
+  if (game) return game
+  const stamp = STAMP_MILESTONES.find((m) => m.reward.kind === 'furniture' && m.reward.id === id)
+  return stamp ? { kind: 'stamps', at: stamp.at } : null
+}

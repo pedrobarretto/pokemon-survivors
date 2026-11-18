@@ -126,6 +126,16 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
           },
         ],
       },
+      {
+        title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones' },
+        notes: [
+          {
+            pt: 'A Carpintaria do Bibarel dizia "Na sua coleção" em todos os troféus dos mini games e das Estampas, mesmo sem tê-los. Agora cada um diz o que falta para ganhar, como "Faça 400 pontos em Pesca no Píer".',
+            en: 'Bibarel’s Carpentry said "In your collection" on every mini game and Stamps trophy, even ones you didn’t have. Now each says what earns it, like "Score 400 points in Pier Fishing".',
+            es: 'La Carpintería de Bibarel decía "En tu colección" en todos los trofeos de los minijuegos y de las Estampas, aunque no los tuvieras. Ahora cada uno dice qué falta para ganarlo, como "Haz 400 puntos en Pesca en el Muelle".',
+          },
+        ],
+      },
     ],
   },
   {
