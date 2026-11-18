@@ -2,7 +2,7 @@ import { spendFromSave, stageGifts } from '../account'
 import { loadSave } from '../ui/save'
 import { apiCall } from '../api'
 import type { PlayableId } from '../data/hatchlings'
-import { CORNER_PRIZES, prizeContent, prizeOnce, type CornerPrizeId } from '../data/rocketCorner'
+import { prizeContent, prizeOnce, prizePrice, type CornerPrizeId } from '../data/rocketCorner'
 import { parseGift, type Gift } from '../game/gifts'
 import { isRecord } from '../game/parse'
 import type { CornerBought, CornerRedeemed, CornerSpun, CornerState, CornerSweep, CornerSwept } from '../net/realmApi'
@@ -221,12 +221,12 @@ export const bankSweep = async (id: string): Promise<CornerSwept | Failure> => {
  */
 export const redeemPrize = async (prize: CornerPrizeId, target: PlayableId | null = null): Promise<CornerRedeemed | Failure> => {
   if (realmFaked()) {
-    const def = CORNER_PRIZES[prize]
+    const price = prizePrice(prize, fake.taken)
     const content = prizeContent(prize, target)
     if (prizeOnce(prize) && fake.taken.includes(prize)) return { status: 403, error: 'owned' }
-    if (fake.tokens < def.price) return { status: 403, error: 'tokens' }
+    if (fake.tokens < price) return { status: 403, error: 'tokens' }
     if (!content || (content.kind === 'reshadow' && loadSave().shadows[content.id]?.purified !== true)) return { status: 409, error: 'unpurified' }
-    fake.tokens -= def.price
+    fake.tokens -= price
     fake.taken.push(prize)
     fake.n += 1
     const gift: Gift = { id: `dev-corner-${fake.n}-${prize}`, content, reason: { kind: 'rocket' } }

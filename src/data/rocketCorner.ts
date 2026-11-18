@@ -16,6 +16,11 @@ import type { CornerFamilyId } from './scFamilies'
  * - `family`: one of the prize families, once: Team Rocket's four
  *   (`data/rocketFamilies.ts`) or the classic Celadon prizes, both Nidoran
  *   lines, Cleffa's, Plusle and Minun (`CORNER_FAMILY_IDS`, `data/scFamilies.ts`).
+ * - `shiny`: that family hatched shiny, once (the family too if it isn't
+ *   owned yet): the counter's chase, priced at two and a half times its family
+ *   (a week or so of play for the dearest), since no egg, ticket or run brings
+ *   a prize family's shiny. Bought after the family, it costs only the rest
+ *   (`prizePrice`), so either order adds up to the same.
  * - `shadow`: that family as a Shadow (`game/shadow.ts`), the family too if it
  *   isn't owned yet, once.
  * - `reshadow`: the Shadow Serum, which turns one Purified Pokémon (the player
@@ -25,20 +30,22 @@ import type { CornerFamilyId } from './scFamilies'
  * - `bag`: Bag items, as often as the tokens last.
  * - `title` and `frame`: Team Rocket's title and card frame, once.
  *
- * Names and blurbs live in i18n `rocket.prizes`, keyed by these ids.
+ * Names and blurbs live in i18n `rocket.corner`, keyed by these ids (a shiny
+ * prize's name is `shinyName` of its family's).
  */
 /** A family the counter sells: Team Rocket's or a Celadon prize. */
 export type PrizeFamilyId = RocketFamilyId | CornerFamilyId
 
 export type CornerPrize =
   | { kind: 'family'; family: PrizeFamilyId; price: number }
+  | { kind: 'shiny'; family: PrizeFamilyId; price: number }
   | { kind: 'shadow'; family: PrizeFamilyId; price: number }
   | { kind: 'reshadow'; price: number }
   | { kind: 'bag'; item: BagItem; count: number; price: number }
   | { kind: 'title'; price: number }
   | { kind: 'frame'; price: number }
 
-/** What the Shadow Serum costs in tokens: about a Shadow Cleffa's, the dearest prize. */
+/** What the Shadow Serum costs in tokens: about a Shadow Cleffa's, the dearest Shadow. */
 export const SHADOW_SERUM_PRICE = 11000
 
 export const CORNER_PRIZES = {
@@ -51,6 +58,15 @@ export const CORNER_PRIZES = {
   cleffa: { kind: 'family', family: 'cleffa', price: 6000 },
   plusle: { kind: 'family', family: 'plusle', price: 4000 },
   minun: { kind: 'family', family: 'minun', price: 4000 },
+  shinyDitto: { kind: 'shiny', family: 'ditto', price: 7500 },
+  shinyGimmighoul: { kind: 'shiny', family: 'gimmighoul', price: 10000 },
+  shinyMawile: { kind: 'shiny', family: 'mawile', price: 10000 },
+  shinyAbsol: { kind: 'shiny', family: 'absol', price: 12500 },
+  shinyNidoranF: { kind: 'shiny', family: 'nidoranF', price: 11000 },
+  shinyNidoranM: { kind: 'shiny', family: 'nidoranM', price: 11000 },
+  shinyCleffa: { kind: 'shiny', family: 'cleffa', price: 15000 },
+  shinyPlusle: { kind: 'shiny', family: 'plusle', price: 10000 },
+  shinyMinun: { kind: 'shiny', family: 'minun', price: 10000 },
   shadowDitto: { kind: 'shadow', family: 'ditto', price: 6500 },
   shadowGimmighoul: { kind: 'shadow', family: 'gimmighoul', price: 8000 },
   shadowMawile: { kind: 'shadow', family: 'mawile', price: 8000 },
@@ -73,7 +89,31 @@ export type CornerPrizeId = keyof typeof CORNER_PRIZES
 
 export const CORNER_PRIZE_IDS = Object.keys(CORNER_PRIZES) as CornerPrizeId[]
 
+/** The shiny prizes, named from their family's name (`rocket.corner.shinyName`) rather than one line each. */
+export type ShinyPrizeId = { [K in CornerPrizeId]: (typeof CORNER_PRIZES)[K]['kind'] extends 'shiny' ? K : never }[CornerPrizeId]
+
+export const isShinyPrize = (id: CornerPrizeId): id is ShinyPrizeId => CORNER_PRIZES[id].kind === 'shiny'
+
 export const isCornerPrize = (v: unknown): v is CornerPrizeId => typeof v === 'string' && Object.hasOwn(CORNER_PRIZES, v)
+
+/** The prize that sells `family` in its normal colors. */
+const familyPrizeOf = (family: PrizeFamilyId) =>
+  CORNER_PRIZE_IDS.find((id) => {
+    const def: CornerPrize = CORNER_PRIZES[id]
+    return def.kind === 'family' && def.family === family
+  })
+
+/**
+ * What a prize costs an account that has redeemed `taken` (prize ids, the API's
+ * `corner_redemptions`): a shiny prize whose family was bought already costs its
+ * price less the family's, so the family then its shiny costs what the shiny alone does.
+ */
+export const prizePrice = (id: CornerPrizeId, taken: readonly string[]) => {
+  const def: CornerPrize = CORNER_PRIZES[id]
+  if (def.kind !== 'shiny') return def.price
+  const family = familyPrizeOf(def.family)
+  return family !== undefined && taken.includes(family) ? def.price - CORNER_PRIZES[family].price : def.price
+}
 
 /** Whether a prize is bought once (everything but Bag items and the Shadow Serum). */
 export const prizeOnce = (id: CornerPrizeId) => CORNER_PRIZES[id].kind !== 'bag' && CORNER_PRIZES[id].kind !== 'reshadow'
@@ -90,6 +130,7 @@ export const prizeContent = (id: CornerPrizeId, target: PlayableId | null): Gift
   const def: CornerPrize = CORNER_PRIZES[id]
   switch (def.kind) {
     case 'family': return { kind: 'family', family: def.family }
+    case 'shiny': return { kind: 'shinyHatch', family: def.family }
     case 'shadow': return { kind: 'shadow', family: def.family }
     case 'reshadow': return target && { kind: 'reshadow', id: target }
     case 'bag': return { kind: 'bag', item: def.item, count: def.count }

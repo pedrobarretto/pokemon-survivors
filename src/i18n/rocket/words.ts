@@ -66,6 +66,7 @@ const pt = {
     pickPurified: 'Qual Pokémon Purificado volta a ser Sombrio?',
     noPurified: 'Você ainda não tem nenhum Pokémon Purificado.',
     redeemed: (name: string) => `${name} está na sua caixa de presentes!`,
+    shinyName: (name: string) => `${name} Shiny`,
     short: (n: string) => `Faltam ${n} fichas`,
     errors: {
       funds: 'Faltam ₽ para essas fichas.',
@@ -77,7 +78,7 @@ const pt = {
       failed: 'O balcão não respondeu. Tente de novo.',
       unpurified: 'Esse Pokémon não está Purificado.',
     },
-    kinds: { family: 'Família', shadow: 'Sombrio', bag: 'Mochila', title: 'Título', frame: 'Moldura', reshadow: 'Soro' },
+    kinds: { family: 'Família', shiny: 'Shiny', shadow: 'Sombrio', bag: 'Mochila', title: 'Título', frame: 'Moldura', reshadow: 'Soro' },
     prizes: {
       ditto: 'Ditto',
       gimmighoul: 'Gimmighoul',
@@ -103,6 +104,7 @@ const pt = {
       mawile: 'Morde quem vem por trás. Tem Mega.',
       absol: 'Marca o inimigo condenado. Tem Mega.',
       shadow: 'A família, já como Pokémon Sombrio.',
+      shiny: 'A família, já shiny. Se você já tem a família, ela fica shiny.',
       bag: 'Direto para a Mochila. Pode trocar de novo.',
       title: 'Um título para o seu cartão.',
       frame: 'Uma moldura para o seu cartão de treinador.',
@@ -240,6 +242,7 @@ const en: RocketWords = {
     pickPurified: 'Which Purified Pokémon turns Shadow again?',
     noPurified: 'You don’t have any Purified Pokémon yet.',
     redeemed: (name) => `${name} is in your gift box!`,
+    shinyName: (name) => `Shiny ${name}`,
     short: (n) => `${n} tokens short`,
     errors: {
       funds: 'Not enough ₽ for those tokens.',
@@ -251,7 +254,7 @@ const en: RocketWords = {
       failed: "The counter didn't answer. Try again.",
       unpurified: 'That Pokémon isn’t Purified.',
     },
-    kinds: { family: 'Family', shadow: 'Shadow', bag: 'Bag', title: 'Title', frame: 'Frame', reshadow: 'Serum' },
+    kinds: { family: 'Family', shiny: 'Shiny', shadow: 'Shadow', bag: 'Bag', title: 'Title', frame: 'Frame', reshadow: 'Serum' },
     prizes: {
       ditto: 'Ditto',
       gimmighoul: 'Gimmighoul',
@@ -277,6 +280,7 @@ const en: RocketWords = {
       mawile: 'Bites whatever comes from behind. Has a Mega.',
       absol: 'Marks a doomed foe. Has a Mega.',
       shadow: 'The family, already a Shadow Pokémon.',
+      shiny: 'The family, already shiny. If you have the family, it turns shiny.',
       bag: 'Straight into the Bag. Trade for it again anytime.',
       title: 'A title for your card.',
       frame: 'A frame for your Trainer Card.',
@@ -409,6 +413,7 @@ const es: RocketWords = {
     pickPurified: '¿Qué Pokémon Purificado vuelve a ser Oscuro?',
     noPurified: 'Todavía no tienes ningún Pokémon Purificado.',
     redeemed: (name) => `¡${name} está en tu caja de regalos!`,
+    shinyName: (name) => `${name} Shiny`,
     short: (n) => `Faltan ${n} fichas`,
     errors: {
       funds: 'Faltan ₽ para esas fichas.',
@@ -420,7 +425,7 @@ const es: RocketWords = {
       failed: 'El mostrador no respondió. Inténtalo de nuevo.',
       unpurified: 'Ese Pokémon no está Purificado.',
     },
-    kinds: { family: 'Familia', shadow: 'Oscuro', bag: 'Mochila', title: 'Título', frame: 'Marco', reshadow: 'Suero' },
+    kinds: { family: 'Familia', shiny: 'Shiny', shadow: 'Oscuro', bag: 'Mochila', title: 'Título', frame: 'Marco', reshadow: 'Suero' },
     prizes: {
       ditto: 'Ditto',
       gimmighoul: 'Gimmighoul',
@@ -446,6 +451,7 @@ const es: RocketWords = {
       mawile: 'Muerde a quien viene por detrás. Tiene Mega.',
       absol: 'Marca al enemigo condenado. Tiene Mega.',
       shadow: 'La familia, ya como Pokémon Oscuro.',
+      shiny: 'La familia, ya shiny. Si ya tienes la familia, se vuelve shiny.',
       bag: 'Directo a la Mochila. Puedes canjearlo otra vez.',
       title: 'Un título para tu tarjeta.',
       frame: 'Un marco para tu Tarjeta de Entrenador.',
@@ -578,6 +584,7 @@ const fr: RocketWords = {
     pickPurified: 'Quel Pokémon Purifié redevient Obscur ?',
     noPurified: 'Vous n’avez encore aucun Pokémon Purifié.',
     redeemed: (name) => `${name} est dans votre boîte à cadeaux !`,
+    shinyName: (name) => `${name} chromatique`,
     short: (n) => `Il manque ${n} jetons`,
     errors: {
       funds: 'Pas assez de ₽ pour ces jetons.',
@@ -589,7 +596,7 @@ const fr: RocketWords = {
       failed: 'Le comptoir n’a pas répondu. Réessayez.',
       unpurified: 'Ce Pokémon n’est pas Purifié.',
     },
-    kinds: { family: 'Famille', shadow: 'Obscur', bag: 'Sac', title: 'Titre', frame: 'Cadre', reshadow: 'Sérum' },
+    kinds: { family: 'Famille', shiny: 'Chromatique', shadow: 'Obscur', bag: 'Sac', title: 'Titre', frame: 'Cadre', reshadow: 'Sérum' },
     prizes: {
       ditto: 'Ditto',
       gimmighoul: 'Gimmighoul',
@@ -615,6 +622,7 @@ const fr: RocketWords = {
       mawile: 'Mord ce qui arrive par derrière. A une Méga.',
       absol: 'Marque un ennemi condamné. A une Méga.',
       shadow: 'La famille, déjà en Pokémon Obscur.',
+      shiny: 'La famille, déjà chromatique. Si vous avez déjà la famille, elle devient chromatique.',
       bag: 'Directement dans le Sac. Échangeable à nouveau.',
       title: 'Un titre pour votre carte.',
       frame: 'Un cadre pour votre Carte de Dresseur.',
@@ -747,6 +755,7 @@ const zh: RocketWords = {
     pickPurified: '要讓哪隻淨化寶可夢變回暗影？',
     noPurified: '你還沒有任何淨化寶可夢。',
     redeemed: (name) => `${name} 已送到你的禮物盒！`,
+    shinyName: (name) => `異色 ${name}`,
     short: (n) => `還差 ${n} 枚代幣`,
     errors: {
       funds: '₽ 不足以購買這些代幣。',
@@ -758,7 +767,7 @@ const zh: RocketWords = {
       failed: '櫃台沒有回應，請再試一次。',
       unpurified: '這隻寶可夢沒有被淨化。',
     },
-    kinds: { family: '家族', shadow: '暗影', bag: '背包', title: '稱號', frame: '相框', reshadow: '血清' },
+    kinds: { family: '家族', shiny: '異色', shadow: '暗影', bag: '背包', title: '稱號', frame: '相框', reshadow: '血清' },
     prizes: {
       ditto: 'Ditto',
       gimmighoul: 'Gimmighoul',
@@ -784,6 +793,7 @@ const zh: RocketWords = {
       mawile: '咬住從背後靠近的敵人。有超級進化。',
       absol: '標記注定倒下的敵人。有超級進化。',
       shadow: '這個家族，直接就是暗影寶可夢。',
+      shiny: '這個家族，直接就是異色。已經擁有的家族會變成異色。',
       bag: '直接放進背包，可以再次兌換。',
       title: '訓練家卡片的稱號。',
       frame: '訓練家卡片的相框。',
