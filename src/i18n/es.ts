@@ -1037,6 +1037,7 @@ export const es: Messages = {
       legendPick: 'Cambiar legendario',
       noLegend: 'Todavía no capturaste un legendario. Vence a uno en solitario para jugar en esta sala.',
       noLegendSeat: 'sin legendario',
+      legendFellBack: (name: string, pokemon: string) => `El legendario de ${name} no fue confirmado por su cuenta: juega con ${pokemon} y la partida queda fuera del ranking.`,
       legendNote: 'Elige uno de tus legendarios capturados. El servidor confirma la captura al empezar; sin ella, juegas con tu compañero.',
       hintKeys: '← → elegir · ENTER confirmar · ESC salir',
       hintTouch: 'Toca para elegir',

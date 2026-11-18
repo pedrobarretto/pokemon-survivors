@@ -1036,6 +1036,7 @@ export const fr: Messages = {
       legendPick: 'Changer de légendaire',
       noLegend: 'Vous n’avez encore capturé aucun légendaire. Battez-en un en solo pour jouer dans ce salon.',
       noLegendSeat: 'sans légendaire',
+      legendFellBack: (name: string, pokemon: string) => `Le légendaire de ${name} n'a pas été confirmé par son compte : il joue ${pokemon}, et la partie reste hors classement.`,
       legendNote: 'Choisissez un de vos légendaires capturés. Le serveur vérifie la capture au départ ; sans elle, vous jouez votre partenaire.',
       hintKeys: '← → choisir · ENTER confirmer · ESC quitter',
       hintTouch: 'Touche pour choisir',

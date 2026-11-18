@@ -847,6 +847,8 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
       // The Ultra Beasts' grid sits under the legends': ↓ off the legends' last row goes into it, ↑ off its first comes back.
       const ultra = ultraLegendIds.includes(cursor.legends)
       const list = ultra ? ultraLegendIds : regularLegendIds
+      // A co-op Legend room's grid holds only the captured legends: none, no step.
+      if (list.length === 0) return
       const cols = getComputedStyle(ultra ? ultraGrid : legendGrid).gridTemplateColumns.split(' ').length || 1
       const at = list.indexOf(cursor.legends)
       const next = stepGrid(at, dir, cols, list.length)

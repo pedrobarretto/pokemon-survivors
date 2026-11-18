@@ -156,6 +156,16 @@ describe('never facing yourself', () => {
     expect(avoidLegends(roster, ['entei'])).toEqual(avoidLegend(roster, 'entei'))
   })
 
+  it('leaves a boss slot empty when the team holds a member of every trio, or every mythical', () => {
+    const roster = withTrio(drawRoster(createRng(5)), 'beasts')
+    const team = ['articuno', 'entei', 'regirock', ...MYTHICALS] as const
+    const events = avoidLegends(roster, team).events
+    for (const id of team) expect(events).not.toContain(id)
+    // Only the seat's own member leaves its slot: the rest of its trio still comes.
+    expect(events).toContain('raikou')
+    expect(events.filter((id, i) => EVENTS[i]?.kind === 'boss' && 'mythical' in EVENTS[i]! && id !== null)).toEqual([])
+  })
+
   it('plays the Legend rules once for a co-op team with a legend, and lists every seat\'s', () => {
     const seat = (starter: 'kyogre' | 'raikou' | 'pichu', name: string) => ({ starter, ranks: NO_RANKS, shiny: false, name })
     const g = createCoopGame(3, [seat('pichu', 'a'), seat('kyogre', 'b'), seat('raikou', 'c')], { difficulty: 'hard' })

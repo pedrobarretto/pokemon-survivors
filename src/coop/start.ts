@@ -30,11 +30,11 @@ export type RegularId = (typeof PLAYABLE_IDS)[number]
  * asked for and the Arena look they wear (`look`: shape only here, the shell
  * reads it with `parseLook`; never the simulation's, so `startGame` leaves it
  * out). `partner`: the regular Pokémon a legend seat plays when its legend
- * doesn't stand (`parseLoadout`). `legends`: the legends the API vouched the
+ * doesn't stand (`parseLoadout`), shiny when `partnerShiny`. `legends`: the legends the API vouched the
  * account captured, written by the relay as the run starts (it strips any the
  * client sent); a legend starter stands only when it's among them.
  */
-export type CoopPick = { starter: PlayableId; ranks: Ranks; shiny: boolean; team?: Team; look?: WireLook; partner?: RegularId; legends?: readonly LegendId[] }
+export type CoopPick = { starter: PlayableId; ranks: Ranks; shiny: boolean; team?: Team; look?: WireLook; partner?: RegularId; partnerShiny?: boolean; legends?: readonly LegendId[] }
 
 /**
  * What a room plays: a co-op run against the horde, or a Versus match (`game/versus.ts`):
@@ -61,6 +61,7 @@ export const loadoutOf = (pick: CoopPick): Loadout => ({
   ...(pick.team !== undefined && { team: pick.team }),
   ...(pick.look && Object.keys(pick.look).length > 0 && { look: { ...pick.look } }),
   ...(pick.partner !== undefined && { partner: pick.partner }),
+  ...(pick.partnerShiny === true && { partnerShiny: true }),
   ...(pick.legends && pick.legends.length > 0 && { legends: [...pick.legends] }),
 })
 
@@ -98,7 +99,10 @@ export const parseLoadout = (raw: Loadout, legendRoom = false): CoopPick => {
   const legends = legendsOf(raw.legends)
   const partner = regularOf(raw.partner)
   const legend = isLegend(raw.starter) ? raw.starter : null
-  const starter: PlayableId = legend !== null && legendRoom && legends.includes(legend) ? legend : (regularOf(raw.starter) ?? partner ?? PLAYABLE_IDS[0]!)
+  const stands = legend !== null && legendRoom && legends.includes(legend)
+  const starter: PlayableId = stands ? legend : (regularOf(raw.starter) ?? partner ?? PLAYABLE_IDS[0]!)
+  // A legend that doesn't stand hands the seat to its partner, shiny only if the partner is.
+  const shiny = legend !== null && !stands ? raw.partnerShiny === true : raw.shiny === true
   const r = raw.ranks
   const ranks: Record<UpgradeId, number> = { ...NO_RANKS }
   if (isRecord(r)) for (const id of UPGRADE_IDS) ranks[id] = rankOf(r[id], UPGRADES[id].maxRank)
@@ -107,10 +111,11 @@ export const parseLoadout = (raw: Loadout, legendRoom = false): CoopPick => {
   return {
     starter,
     ranks,
-    shiny: raw.shiny === true,
+    shiny,
     ...(team !== undefined && { team }),
     ...(look && { look }),
     ...(partner !== undefined && { partner }),
+    ...(raw.partnerShiny === true && { partnerShiny: true }),
     ...(legends.length > 0 && { legends }),
   }
 }

@@ -3415,6 +3415,14 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
         : null,
   }
   const me = localPlayer(live.game)
+  // A co-op Legend room's seat whose legend the account didn't vouch for plays its partner (`parseLoadout`): say so, since the run then lists on no board.
+  if (!live.game.versus && parseSettings(live.start.settings).legend === true)
+    live.start.players.forEach((p, i) => {
+      const asked = p.loadout.starter
+      const played = live.game.players[i]?.starter
+      if (typeof asked === 'string' && isLegend(asked) && played !== undefined && !isLegend(played))
+        later(() => toast(ui, t().coop.lobby.legendFellBack(p.name, PLAYABLE[played].name), 6000, `legendFellBack${i}`))
+    })
   // Each seat's look, in a co-op run as in the Arena, as the relay vouched for it; this player's own previews what it
   // equipped (shell state: the simulation never sees it). Dev: the tab's bots wear their own (`tabBotLook`).
   const seatLook = (p: (typeof live.start.players)[number], i: number) =>

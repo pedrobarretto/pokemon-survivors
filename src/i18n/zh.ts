@@ -1036,6 +1036,7 @@ export const zh: Messages = {
       legendPick: '更換傳說寶可夢',
       noLegend: '你還沒有捕獲傳說寶可夢。先在單人模式擊敗一隻，才能在這個房間遊玩。',
       noLegendSeat: '沒有傳說',
+      legendFellBack: (name: string, pokemon: string) => `${name} 的傳說未經帳號確認：改用 ${pokemon} 出戰，這場不列入排行榜。`,
       legendNote: '從已捕獲的傳說寶可夢中選一隻。開局時伺服器會確認捕獲紀錄；若無法確認，將改用你的夥伴。',
       hintKeys: '← → 選擇 · ENTER 確認 · ESC 離開',
       hintTouch: '點擊選擇',

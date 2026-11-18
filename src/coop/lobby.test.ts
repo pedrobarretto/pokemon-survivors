@@ -97,7 +97,7 @@ describe('the Modo Lendário seat', () => {
 
   it('sends the legend with the regular partner beside it, and the partner alone without one', () => {
     const shiny = (id: string) => id === 'kyogre'
-    expect(seatLoadout('gible', 'kyogre', NO_RANKS, shiny)).toEqual({ starter: 'kyogre', partner: 'gible', ranks: NO_RANKS, shiny: true })
+    expect(seatLoadout('gible', 'kyogre', NO_RANKS, shiny)).toEqual({ starter: 'kyogre', partner: 'gible', ranks: NO_RANKS, shiny: true, partnerShiny: false })
     expect(seatLoadout('mewtwo', 'kyogre', NO_RANKS, shiny)).toMatchObject({ starter: 'kyogre', partner: PLAYABLE_IDS[0] })
     expect(seatLoadout('gible', null, NO_RANKS, shiny)).toEqual({ starter: 'gible', ranks: NO_RANKS, shiny: false })
   })

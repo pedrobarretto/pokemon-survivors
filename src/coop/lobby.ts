@@ -64,7 +64,7 @@ export const roomLegend = (captured: readonly LegendId[], wanted: readonly unkno
 export const seatLoadout = (partner: PlayableId, legend: LegendId | null, ranks: CoopPick['ranks'], shinyOf: (id: PlayableId) => boolean): CoopPick => {
   const regular = coopStarter(partner)
   const starter = legend ?? regular
-  return { starter, ranks, shiny: shinyOf(starter), ...(legend && { partner: regular }) }
+  return { starter, ranks, shiny: shinyOf(starter), ...(legend && { partner: regular, partnerShiny: shinyOf(regular) }) }
 }
 
 /**

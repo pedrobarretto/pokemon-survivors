@@ -254,7 +254,9 @@ export const hordeScale = (g: Game): HordeScale => (teamLegend(g) ? LEGEND_SCALE
  * The roster with the team's own legends taken out of its bosses: a trio one
  * of them belongs to gives way to the first trio none does, a mythical to the
  * next mythical none plays. Swapped in data order, without a draw, so the rest
- * of the run is the same. Solo, `legends` is the player's starter.
+ * of the run is the same. A co-op team that holds a member of every trio (or
+ * every mythical) has those bosses left out instead: their slots stay empty.
+ * Solo, `legends` is the player's starter, which always leaves one free.
  */
 export const avoidLegends = (roster: Roster, legends: readonly PlayableId[], events: readonly WaveEvent[] = EVENTS): Roster => {
   const own = legends.filter(isLegend)
@@ -263,20 +265,23 @@ export const avoidLegends = (roster: Roster, legends: readonly PlayableId[], eve
   const mine = (ids: readonly EnemyId[]) => ids.some(ours)
   const trio = mine(TRIOS[roster.trio]) ? (TRIO_IDS.find((id) => !mine(TRIOS[id])) ?? roster.trio) : roster.trio
   const swapped = trio === roster.trio ? roster : withTrio(roster, trio, events)
-  /** The mythical after `id` in data order that nobody on the team plays (itself when every one is). */
+  /** The mythical after `id` in data order that nobody on the team plays (none when every one is). */
   const nextMythical = (id: EnemyId) => {
     const at = MYTHICALS.findIndex((m) => m === id)
     for (let k = 1; k < MYTHICALS.length; k++) {
       const m = MYTHICALS[(at + k) % MYTHICALS.length]!
       if (!ours(m)) return m
     }
-    return id
+    return null
   }
   return {
     ...swapped,
     events: swapped.events.map((id, i) => {
       const e = events[i]
-      return id !== null && ours(id) && e?.kind === 'boss' && 'mythical' in e ? nextMythical(id) : id
+      if (id === null || !ours(id) || e?.kind !== 'boss') return id
+      if ('mythical' in e) return nextMythical(id)
+      // Every trio holds one of the team's legends: its slot stays empty.
+      return 'trio' in e ? null : id
     }),
   }
 }

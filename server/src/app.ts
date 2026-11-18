@@ -39,7 +39,7 @@ import type { AdminStore } from './admin'
 import { ARENA_PAGES, parseAbandonedReport, parseArenaReport, shownSeason, verifyArenaSignature, type ArenaStore } from './arena'
 import type { Verify } from './auth'
 import type { BugReports } from './bugReports'
-import { coopListing, parseCoopReport, type CoopBoardStore } from './coopBoards'
+import { coopListing, legendsVouched, parseCoopReport, type CoopBoardStore } from './coopBoards'
 import type { SaveStore } from './db'
 import type { DiscordLink } from './discordLink'
 import type { Report, TellRevenue } from './errors'
@@ -908,7 +908,9 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     if (!r || r.endedAt > Date.now() + ARENA_CLOCK_SKEW_MS) return c.json({ error: 'invalid report' }, 400)
     // A run that doesn't list is still taken (200), so the relay's outbox lets it go.
     const listing = coopListing(r)
-    return c.json(listing ? await coop.report(r, listing) : { run: null, duplicate: false })
+    // A Legend run lists only when every seat's legend is one its account captured (the stored save's, not the relay's word alone).
+    const vouched = listing !== null && (!listing.result.legend || legendsVouched(listing, await store.capturedLegends(listing.members.map((m) => m.userId))))
+    return c.json(listing && vouched ? await coop.report(r, listing) : { run: null, duplicate: false })
   })
 
   app.post('/arena/tickets', smallBody, async (c) => {

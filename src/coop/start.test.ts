@@ -90,6 +90,13 @@ describe('the Modo Lendário', () => {
     expect(parseLoadout({ ...loadout, legends: ['kyogre', 'nope'] }, true)).toMatchObject({ starter: 'pichu', legends: ['kyogre'] })
   })
 
+  it("gives a fallback partner its own shiny, never the legend's", () => {
+    const shinyLegend = { ...legendLoadout(undefined, 'gible'), shiny: true }
+    expect(parseLoadout(shinyLegend, true).shiny).toBe(false)
+    expect(parseLoadout({ ...shinyLegend, partnerShiny: true }, true).shiny).toBe(true)
+    expect(parseLoadout({ ...legendLoadout(['kyogre'], 'gible'), shiny: true, partnerShiny: false }, true).shiny).toBe(true)
+  })
+
   it("plays the seats' vouched legends at tick 0, the rest their partners", () => {
     const start: RunStart = {
       ...DUO,

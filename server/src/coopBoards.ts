@@ -94,6 +94,15 @@ export const coopListing = (r: CoopReport): CoopListing | null => {
   return { result, size, team: teamKey(users), members }
 }
 
+/**
+ * Whether a Legend run's every seat played a legend its account has captured
+ * (`captured`: the stored saves', `store.capturedLegends`): the relay's
+ * stamp is checked again here, so neither an old relay nor clients agreeing
+ * on a made-up result can list one. A regular run always passes.
+ */
+export const legendsVouched = (listing: CoopListing, captured: ReadonlyMap<string, readonly string[]>) =>
+  !listing.result.legend || listing.members.every((m) => captured.get(m.userId)?.includes(m.starter) === true)
+
 /** A team's key: its members' user ids, sorted, joined by commas (ids never hold one). */
 export const teamKey = (userIds: readonly string[]) => [...userIds].sort().join(',')
 

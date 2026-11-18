@@ -1244,6 +1244,7 @@ export const pt = {
       /** This player has no legend captured: they can't get ready in a legend room. */
       noLegend: 'Você ainda não capturou um lendário. Vença um no modo solo para jogar nesta sala.',
       noLegendSeat: 'sem lendário',
+      legendFellBack: (name: string, pokemon: string) => `O lendário de ${name} não foi confirmado pela conta: joga com ${pokemon}, e a partida fica fora do placar.`,
       legendNote: 'Escolha um dos seus lendários capturados. O servidor confere a captura na largada; sem ela, você joga com seu parceiro.',
       hintKeys: '← → escolher · ENTER confirmar · ESC sair',
       hintTouch: 'Toque para escolher',
