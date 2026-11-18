@@ -7,8 +7,8 @@ import { AWAKEN_AT, EVENT_LEGENDS, FESTIVAL_LEGENDS, TERA_LEGENDS, ULTRA_LEGENDS
 import { ENEMIES, type EnemyDef } from '../data/enemies'
 import { EVENTS, MYTHICALS, STAGES, TRIOS } from '../data/waves'
 import { DIFFICULTIES, DIFFICULTY_IDS } from './difficulty'
-import { advancePhase, chooseOffer, createGame, EVOLUTION_TIME, LEGEND_RADIUS, step } from './game'
-import { avoidLegend, innateEffects, legendMods, pendingAwakening, PRESSURE } from './legend'
+import { advancePhase, chooseOffer, createCoopGame, createGame, EVOLUTION_TIME, LEGEND_RADIUS, step } from './game'
+import { avoidLegend, avoidLegends, innateEffects, legendMods, pendingAwakening, PRESSURE, runMods, teamLegend, teamLegendIds } from './legend'
 import { starterStats, xpFor } from './leveling'
 import { NO_RANKS } from './meta'
 import { OUTBREAK_SPECIES } from './outbreak'
@@ -141,9 +141,39 @@ describe('never facing yourself', () => {
     for (const m of MYTHICALS) expect(avoidLegend(roster, m).events).not.toContain(m)
   })
 
+  it("keeps every co-op seat's legend out of the bosses, never swapping one in for another", () => {
+    const roster = withTrio(drawRoster(createRng(5)), 'beasts')
+    // Entei's beasts give way, and the trio they give way to isn't Articuno's birds either.
+    const team = avoidLegends(roster, ['entei', 'articuno', 'pichu'])
+    for (const id of ['entei', 'articuno']) expect(TRIOS[team.trio]).not.toContain(id)
+    expect(team.stages).toEqual(roster.stages)
+    // Two mythicals on the team: the slot skips both.
+    for (const m of MYTHICALS) {
+      const others = MYTHICALS.filter((o) => o !== m)
+      expect(avoidLegends(roster, others).events.filter((id) => (MYTHICALS as readonly (string | null)[]).includes(id)).every((id) => id === m)).toBe(true)
+    }
+    // One legend plays as solo's `avoidLegend` does.
+    expect(avoidLegends(roster, ['entei'])).toEqual(avoidLegend(roster, 'entei'))
+  })
+
+  it('plays the Legend rules once for a co-op team with a legend, and lists every seat\'s', () => {
+    const seat = (starter: 'kyogre' | 'raikou' | 'pichu', name: string) => ({ starter, ranks: NO_RANKS, shiny: false, name })
+    const g = createCoopGame(3, [seat('pichu', 'a'), seat('kyogre', 'b'), seat('raikou', 'c')], { difficulty: 'hard' })
+    expect(g.coop?.legend).toBe(true)
+    expect(teamLegendIds(g)).toEqual(['kyogre', 'raikou'])
+    expect(teamLegend(g)?.id).toBe('kyogre')
+    expect(runMods(g)).toEqual(legendMods('hard'))
+    expect(g.roster.events).not.toContain('kyogre')
+    expect(g.roster.events).not.toContain('raikou')
+    const plain = createCoopGame(3, [seat('pichu', 'a'), seat('pichu', 'b')], { difficulty: 'hard' })
+    expect(plain.coop?.legend).toBe(false)
+    expect(runMods(plain)).toBe(DIFFICULTIES.hard)
+  })
+
   it('never opens a rift to the legend played', () => {
     const rng = createRng(2)
-    for (let i = 0; i < 200; i++) expect(pickLegend(rng, [], 'kyogre')).not.toBe('kyogre')
-    expect(pickLegend(rng, ['lugia', 'hoOh', 'groudon', 'rayquaza', 'dialga', 'latias', 'latios', 'deoxys'], 'kyogre')).not.toBe('kyogre')
+    for (let i = 0; i < 200; i++) expect(pickLegend(rng, [], ['kyogre'])).not.toBe('kyogre')
+    expect(pickLegend(rng, ['lugia', 'hoOh', 'groudon', 'rayquaza', 'dialga', 'latias', 'latios', 'deoxys'], ['kyogre'])).not.toBe('kyogre')
+    for (let i = 0; i < 200; i++) expect(['kyogre', 'groudon', 'latias']).not.toContain(pickLegend(rng, [], ['kyogre', 'groudon', 'latios']))
   })
 })

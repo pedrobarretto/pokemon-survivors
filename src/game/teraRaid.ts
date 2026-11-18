@@ -23,7 +23,7 @@ import { dropForEach } from './coop'
 import type { Enemy, Game } from './types'
 import * as dm from '../engine/dmath'
 import { maskOf, OGERPON, OGERPON_MASKS } from '../data/mythicals'
-import { teamLegend } from './legend'
+import { playsLegend } from './legend'
 
 /**
  * Tera Raids. A den opens on the map around 8:10 (the run's own raid, its
@@ -134,7 +134,7 @@ export const raidFits = (day: DayKey | undefined, startedAt: Date) => {
  * draw): its first den only, never for an Ogerpon's own run.
  */
 export const ogerponRaid = (g: Game) =>
-  g.raid.slot === 0 && mix(g.raid.seed, 41) % 1000 < OGERPON.raid * 1000 && teamLegend(g)?.id !== 'ogerpon'
+  g.raid.slot === 0 && mix(g.raid.seed, 41) % 1000 < OGERPON.raid * 1000 && !playsLegend(g, 'ogerpon')
 
 /**
  * The run's own raid at the den of `slot`: drawn from the seed, its stars by

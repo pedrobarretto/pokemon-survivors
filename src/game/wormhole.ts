@@ -3,7 +3,7 @@ import { RIFT } from '../data/rifts'
 import { ULTRA_BEASTS, WORMHOLE, type UltraBeast } from '../data/ultraBeasts'
 import { RUN_LENGTH } from '../data/waves'
 import { riftDomain } from './rift'
-import { teamLegend } from './legend'
+import { teamLegendIds } from './legend'
 import type { Game } from './types'
 import { setWeather } from './weather'
 
@@ -20,12 +20,12 @@ import { setWeather } from './weather'
 /**
  * The beast behind the wormhole: each one alike, the beast of the week
  * (`ultraWeek`) `WORMHOLE.weekly` times as likely, never the one the team
- * plays (Legend mode).
+ * plays (Legend mode; `selves`, every seat's).
  */
-export const drawUltraBeast = (rng: Rng, week: UltraBeast | null, self: string | null = null): UltraBeast =>
+export const drawUltraBeast = (rng: Rng, week: UltraBeast | null, selves: readonly string[] = []): UltraBeast =>
   weightedPick(
     rng,
-    ULTRA_BEASTS.filter((b) => b !== self).map((b) => [b, b === week ? WORMHOLE.weekly : 1] as const),
+    ULTRA_BEASTS.filter((b) => !selves.some((s) => s === b)).map((b) => [b, b === week ? WORMHOLE.weekly : 1] as const),
   )
 
 /**
@@ -45,7 +45,7 @@ export const wormholeDue = (s: { time: number; at: number; busy: boolean; bossAl
  * holds while Ultra Space's light cracks it, `render/legendSky.ts`) and no
  * other wormhole comes this run.
  */
-export const startWormhole = (g: Game, beast: UltraBeast = drawUltraBeast(g.rng, g.ultraWeek, teamLegend(g)?.id ?? null)) => {
+export const startWormhole = (g: Game, beast: UltraBeast = drawUltraBeast(g.rng, g.ultraWeek, teamLegendIds(g))) => {
   const rift = g.rift
   rift.omen = { legend: beast, left: RIFT.omenTime }
   rift.met.push(beast)

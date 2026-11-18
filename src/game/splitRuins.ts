@@ -1,7 +1,7 @@
 import { RUINS, RUINS_SIDES } from '../data/forces'
 import { RUINS_LEGENDS, type RuinsRegi } from '../data/legends'
 import { burst, shakeScreen } from './effects'
-import { teamLegend } from './legend'
+import { playsLegend } from './legend'
 import { momentBusy } from './legendMoments'
 import type { MapEventDef } from './mapEvents'
 import { playerWithin } from './players'
@@ -76,7 +76,7 @@ export const SPLIT_RUINS_EVENT: MapEventDef<'splitRuins'> = {
       })
       if (!pick) return
       // Another boss on the field (or a rift, a den, a Sword's duel under way) keeps them asleep: they wake once that's over.
-      if (g.bossId !== null || teamLegend(g)?.id === pick || momentBusy(g, 'ruins', ['roam'])) {
+      if (g.bossId !== null || playsLegend(g, pick) || momentBusy(g, 'ruins', ['roam'])) {
         if (!s.told) notify(g, { kind: 'ruins', moment: 'silent' })
         s.told = true
         return
