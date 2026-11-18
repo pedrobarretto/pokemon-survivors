@@ -19765,7 +19765,8 @@ button.hall-tile:hover {
   color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
-.coop-challenge {
+.coop-challenge,
+.coop-legend {
   flex: 1;
   min-width: 180px;
 }
@@ -19838,7 +19839,8 @@ button.hall-tile:hover {
 }
 
 .coop-mode .shell-seg-option,
-.coop-challenge .shell-seg-option {
+.coop-challenge .shell-seg-option,
+.coop-legend .shell-seg-option {
   min-height: 38px;
   padding: 0 10px;
   font-size: 18px;

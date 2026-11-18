@@ -1034,7 +1034,7 @@ export const en: Messages = {
       legendRules: 'Everyone plays a legend they captured: a tougher horde, Pressure and awakenings at Lv 12 and 28. Runs go on the Legendary Duos, Trios and Squads boards.',
       legendOff: 'off in the daily Challenge',
       legendPick: 'Change legend',
-      noLegend: "You haven't captured a legend yet. Beat one in solo play to join this room.",
+      noLegend: "You haven't captured a legend yet. Beat one solo to play in this room.",
       noLegendSeat: 'no legend',
       legendNote: "Pick one of your captured legends. The server checks the capture at the start; without it, you play your partner.",
       hintKeys: '← → choose · ENTER confirm · ESC leave',
