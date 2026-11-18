@@ -135,6 +135,7 @@ export const mergeSaves = (base: Save, incoming: Save): Save => {
     // A build saved again on another device replaces this one's for its family.
     builds: { ...base.builds, ...incoming.builds },
     finds: mergeFinds(base.finds, incoming.finds),
+    shinyFinds: mergeFinds(base.shinyFinds, incoming.shinyFinds),
     research: mergeResearch(base.research, incoming.research),
     shadows: mergeShadows(base.shadows, incoming.shadows),
     hideout: mergeHideout(base.hideout, incoming.hideout),

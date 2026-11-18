@@ -1038,7 +1038,7 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     if (!realm.takeGame(c.var.userId)) return c.json({ error: 'too many claims' }, 429)
     const got = await realm.claim(c.var.userId, claim, coins, brasiliaDay(new Date()))
     if (!got.ok) return c.json({ error: got.error }, 403)
-    return c.json({ coins: got.coins, today: got.today, trophies: got.trophies, furniture: got.furniture, family: got.family } satisfies GameClaimed)
+    return c.json({ coins: got.coins, today: got.today, trophies: got.trophies, furniture: got.furniture, family: got.family, shiny: got.shiny } satisfies GameClaimed)
   })
 
   const CLAW_REFUSALS = { profile: 403, banned: 403, cap: 403, funds: 402, nosave: 409, stale: 409 } as const satisfies Record<ClawRefusal, number>

@@ -1,10 +1,11 @@
+import { randomInt } from 'node:crypto'
 import type { Fragment, TransactionSql } from 'postgres'
 import { FURNITURE, isFurnitureId, type FurnitureCounts, type FurnitureId } from '../../src/data/furniture'
 import { checkLayout, EMPTY_BASE, isBaseVisibility, parseLayout, type BaseVisibility, type LayoutError } from '../../src/data/secretBases'
 import { brasiliaDay, type DayKey } from '../../src/game/day'
 import { donateFrom } from '../../src/game/festival'
 import type { HatchlingId } from '../../src/data/hatchlings'
-import { newFeatFamily } from '../../src/game/seasonOneUnlocks'
+import { newFeatFamily, repeatFeatFamily, repeatShinyHit, repeatShinyOpen } from '../../src/game/seasonOneUnlocks'
 import { sendGift } from './gifts'
 import { parseSaveData, type Save } from '../../src/game/meta'
 import { isRecord } from '../../src/game/parse'
@@ -312,7 +313,7 @@ export type ErrandClaimOutcome = ErrandOutcome | { ok: false; error: 'profile' |
 export type BuyError = 'profile' | 'gems' | 'funds' | 'nosave' | 'stale'
 
 /** What a mini game claim came to (`GameClaimed`), or why it was refused: no @handle, or kept out of the realm. */
-export type ClaimOutcome = { ok: true; coins: number; today: number; trophies: FurnitureId[]; furniture: FurnitureCounts | null; family: HatchlingId | null } | { ok: false; error: 'profile' | 'banned' }
+export type ClaimOutcome = { ok: true; coins: number; today: number; trophies: FurnitureId[]; furniture: FurnitureCounts | null; family: HatchlingId | null; shiny: HatchlingId | null } | { ok: false; error: 'profile' | 'banned' }
 
 export type FurnitureOutcome =
   | { ok: true; furniture: FurnitureCounts; pay: 'gems'; balance: number }
@@ -657,8 +658,8 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
      * account's row lock: the Brasília `day`'s caps (`capped`: the game's and
      * all games'), the game's stats (`statsAfter`) and the trophies they
      * reach for the first time (`trophiesEarned`, into `furniture_owned` as
-     * source `game`) and the family a feat brings (`newFeatFamily`, as a
-     * gift). The price grows before the caps with company in the
+     * source `game`), the family a feat brings (`newFeatFamily`, as a
+     * gift) and, on a repeat of it, maybe its shiny (`repeatFeatFamily`). The price grows before the caps with company in the
      * room (the relays' presence, never the client's word) and during the
      * game's Hora do Realm (`claimPay`). The ₽ goes to the wallet on the
      * device, like a run's. Then the game's deeds (`game:*`, `feat:*`).
@@ -693,6 +694,13 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
         // A feat's family, once per account: the first claim that hits it sends the gift (the key keeps a retry from sending two).
         const family = newFeatFamily(claim.game, was.feats, stats.feats)
         if (family) await sendGift(tx, userId, { kind: 'family', family }, { kind: 'season', way: 'fishing' }, `feat:${claim.game}:${family}`)
+        // Hooked again by an owner: a small chance at its shiny (`REPEAT_SHINY`), rolled here and sent once per account.
+        const again = repeatFeatFamily(claim.game, was.feats, claim.feats)
+        const shiny =
+          again && repeatShinyOpen((await slimOf(tx, userId)).hatched, again) && repeatShinyHit(again, randomInt(0, 2 ** 32) / 2 ** 32)
+            ? (await sendGift(tx, userId, { kind: 'shinyHatch', family: again }, { kind: 'season', way: 'fishing' }, `shiny:${claim.game}:${again}`)) ? again : null
+            : null
+        if (shiny) console.log(`realm: ${userId} hooked a shiny ${shiny} at ${claim.game}`)
         const points = boardPoints(claim.game, claim.outcome)
         if (points !== null) {
           for (const period of GAME_BOARD_PERIODS) {
@@ -714,6 +722,7 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
           trophies,
           furniture: trophies.length > 0 ? await ownedBy(tx, userId, await slimOf(tx, userId)) : null,
           family,
+          shiny,
         }
       })
       if (claimed.ok) {

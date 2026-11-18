@@ -49,13 +49,6 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         zh: '遊戲城喵喵櫃台新上架：暗影血清，可讓你選的一隻淨化寶可夢變回暗影。',
       },
       {
-        pt: 'Purificou o Mewtwo Sombrio sem querer? O Soro traz a forma Sombria de volta; para purificar de novo, é só andar o coração inteiro outra vez.',
-        en: 'Purified Shadow Mewtwo by mistake? The Serum brings its Shadow form back; to purify it again, walk its whole heart gauge again.',
-        es: '¿Purificaste a Mewtwo Oscuro sin querer? El Suero devuelve su forma Oscura; para purificarlo otra vez, camina todo su corazón de nuevo.',
-        fr: 'Mewtwo Obscur purifié par erreur ? Le Sérum lui rend sa forme Obscure ; pour le purifier à nouveau, il faut remarcher toute sa jauge.',
-        zh: '不小心淨化了暗影超夢？血清能讓暗影型態回來；想再淨化，就要重新走滿心門量表。',
-      },
-      {
         pt: 'O Game Corner não fecha mais: jogue o caça-níqueis e o Caça ao Koffing o quanto quiser, e compre até 5.000 fichas por dia (eram 500).',
         en: 'The Game Corner no longer closes: play the slots and Koffing Sweep as long as you like, and buy up to 5,000 tokens a day (it was 500).',
         es: 'El Casino ya no cierra: juega en las tragaperras y en la Caza de Koffing cuanto quieras, y compra hasta 5.000 fichas al día (eran 500).',
@@ -68,6 +61,13 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         es: 'Premios shiny en el mostrador del Casino: Ditto, Absol, Mawile, Gimmighoul, los Nidoran, Cleffa, Plusle y Minun, ahora también en versión shiny.',
         fr: 'Des prix chromatiques au comptoir de la Salle de jeux : Ditto, Absol, Mawile, Gimmighoul, les deux Nidoran, Cleffa, Plusle et Minun existent aussi en chromatique.',
         zh: '遊戲城櫃台新增異色獎品：Ditto、Absol、Mawile、Gimmighoul、兩隻 Nidoran、Cleffa、Plusle 和 Minun 都有異色版了。',
+      },
+      {
+        pt: 'Já tem Rotom ou Wishiwashi? Achar de novo agora pode trazer o shiny: a TV velha das casas abandonadas e a pesca longe do píer têm uma chance pequena.',
+        en: 'Already have Rotom or Wishiwashi? Finding them again can now bring the shiny: the old TV in abandoned cottages and fishing far from the pier have a small chance.',
+        es: '¿Ya tienes a Rotom o a Wishiwashi? Encontrarlos de nuevo ahora puede traer el shiny: la tele vieja de las casas abandonadas y la pesca lejos del muelle tienen una pequeña probabilidad.',
+        fr: 'Tu as déjà Rotom ou Wishiwashi ? Les retrouver peut maintenant donner le chromatique : la vieille télé des maisons abandonnées et la pêche loin du ponton ont une petite chance.',
+        zh: '已經有 Rotom 或 Wishiwashi 了嗎？再次找到牠們時有小機率得到異色：廢棄小屋的舊電視和離碼頭很遠的釣魚都有機會。',
       },
     ],
     changes: [
@@ -88,6 +88,21 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             pt: 'As partidas lendárias têm rankings próprios no Ranking, no lado Co-op Lendário. O Desafio co-op do dia continua no modo normal, e as fendas épicas seguem na arena antiga no co-op.',
             en: 'Legendary runs have their own boards in the Ranking, on the Legendary Co-op side. The daily co-op Challenge stays in the standard mode, and epic rifts are still fought in the old arena in co-op.',
             es: 'Las partidas legendarias tienen sus propias tablas en el Ranking, en el lado Co-op Legendario. El Desafío co-op del día sigue en el modo normal, y las fisuras épicas siguen en la arena antigua en co-op.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Shiny em achados repetidos', en: 'Shinies on repeat finds', es: 'Shiny en hallazgos repetidos' },
+        notes: [
+          {
+            pt: 'Quem já tem o Rotom tem 1 chance em 20, a cada vez que a TV velha chia numa run, de soltar um Rotom shiny. Ele chega na caixa de presentes.',
+            en: 'If you already own Rotom, each run where the old TV crackles has a 1 in 20 chance of letting out a shiny Rotom. It arrives in the gift box.',
+            es: 'Si ya tienes a Rotom, cada partida en que la tele vieja chisporrotea tiene 1 probabilidad entre 20 de soltar un Rotom shiny. Llega a la caja de regalos.',
+          },
+          {
+            pt: 'Quem já tem o Wishiwashi tem 1 chance em 25, a cada pescaria que fisga outro, de ganhar um Wishiwashi shiny. Ele chega na caixa de presentes.',
+            en: 'If you already own Wishiwashi, each fishing session that hooks another has a 1 in 25 chance of bringing a shiny Wishiwashi. It arrives in the gift box.',
+            es: 'Si ya tienes a Wishiwashi, cada pesca que atrapa otro tiene 1 probabilidad entre 25 de traer un Wishiwashi shiny. Llega a la caja de regalos.',
           },
         ],
       },
