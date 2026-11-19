@@ -229,6 +229,7 @@ src/
   realmMode.ts, arenaMode.ts  chunks loaded on demand (`ui/lazy.ts`: a loading line while they download): the Poké Realm's screens and shell, and the Arena's screens (picker, hub, queue, a match's HUD and end screen); the Boutique, the Kecleon shop and the admin desk load the same way. What the lobby needs of them stays light: realmUrl.ts, ui/realmSeen.ts, ui/arenaBits.ts, ui/boutiqueSeen.ts
   coopShell.ts  co-op's browser glue: the tab's client, the room link (`?sala=`), banking a run once, dev bots
   ranking.ts  ranked runs (start token, offline queue), boards, profiles and follows through the API
+worker/     the site's Cloudflare Worker (ps-site): serves dist/ as static assets (`_headers`, `_redirects`, the kept builds' chunks for open tabs, worker/site.mjs) and proxies PostHog under /ingest; deployed by the Site workflow
 server/     accounts API (Hono + Postgres, Clerk tokens), deployed with Docker: see server/README.md
 relay/      co-op relay: a Cloudflare Worker with one Durable Object per room, no game code (imports only net/protocol.ts and import-free data); relay/node, the VPS relay, also hosts the Poké Realm: see relay/README.md
 ```

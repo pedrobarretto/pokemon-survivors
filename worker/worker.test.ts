@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { ingestTarget } from './worker'
 
-const at = (path: string) => ingestTarget(new URL(path, 'https://ps-assets.example.workers.dev'))
+const at = (path: string) => ingestTarget(new URL(path, 'https://www.pokemonsurvivors.com'))
 
 describe('ingestTarget', () => {
-  it("sends PostHog's scripts and remote config to its assets host, as vercel.json does", () => {
+  it("sends PostHog's scripts and remote config to its assets host", () => {
     expect(at('/ingest/static/recorder.js?v=1.2')).toBe('https://us-assets.i.posthog.com/static/recorder.js?v=1.2')
     expect(at('/ingest/array/phc_x/config.js')).toBe('https://us-assets.i.posthog.com/array/phc_x/config.js')
   })

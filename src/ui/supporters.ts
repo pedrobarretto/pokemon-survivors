@@ -1,4 +1,3 @@
-import { assetImage } from '../assets'
 import { accountState, accountsEnabled, onAccountChange, signIn, syncSave } from '../account'
 import { playCry, playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
@@ -470,7 +469,8 @@ export const hallPortrait = (face: Face) => {
   const next = () => {
     const url = urls.shift()
     if (!url) return void img.classList.remove('wobble')
-    const probe = assetImage(url)
+    const probe = new Image()
+    probe.src = url
     probe.onload = () => ((img.src = url), img.classList.remove('ball', 'wobble'))
     probe.onerror = next
   }
