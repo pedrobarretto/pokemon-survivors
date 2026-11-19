@@ -341,7 +341,7 @@ The same steps for each relay, with its row of the table above (`<home>`: `sa`).
    a minute (Traefik's timeouts) and end with every check green.
 4. Ship the Cloudflare relay's code change (`npm run deploy:prod` here: its codes now always start
    with a letter) and wait 6 h, a room's longest life, so no live Cloudflare room has a digit code.
-5. Vercel, Production: `VITE_COOP_URL_SA=https://coop-sa.pokemonsurvivors.com`, then redeploy the site.
+5. The Site workflow's repo variable `VITE_COOP_URL_SA=https://coop-sa.pokemonsurvivors.com`, then redeploy the site.
 
 No Clerk change is needed: the issuer is the same, and a token's `azp` is checked against `ALLOWED_ORIGINS`.
 

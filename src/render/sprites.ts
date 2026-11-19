@@ -130,7 +130,7 @@ const pump = () => {
 const loadImage = (src: string, key: Key, rank: number) =>
   new Promise<HTMLImageElement>((resolve, reject) => {
     const start = () => {
-      // Loaded first (`loadAssetImage`: the site's copy when the CDN fails or stalls, a rejection rather than a wait forever),
+      // Loaded first (`loadAssetImage`: a rejection rather than a wait forever),
       // then decoded. A browser that can't decode ahead (a rejected `decode` on an image that did load) still gets the image,
       // but never a broken or empty one, which would throw on every frame that draws it (`drawable`).
       const fail = () => Promise.reject(new Error(`Failed to load ${src}`))

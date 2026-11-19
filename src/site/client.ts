@@ -9,15 +9,12 @@
  * the site never load each other's bundles.
  */
 
-import { watchAssetImages } from '../assets'
 import { inBrazil, parseDonation } from '../data/donations'
 
 /** Same key as `src/i18n`: picking PT/EN/ES here makes "Play" open the game in that language. */
 const LANG_KEY = 'ps:lang'
 
 document.documentElement.classList.add('js')
-// The pages' images from the asset CDN fall back to the site's copies where the CDN can't be reached.
-watchAssetImages()
 
 for (const link of document.querySelectorAll<HTMLAnchorElement>('a[data-lang]')) {
   link.addEventListener('click', () => {
