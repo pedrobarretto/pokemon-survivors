@@ -1,3 +1,4 @@
+import { hansDeep, loadHans } from './hans'
 import type { Messages } from './pt'
 
 export type { Messages }
@@ -8,10 +9,14 @@ export const LOCALES = {
   en: { name: 'English', short: 'EN', tag: 'en-US' },
   es: { name: 'Español', short: 'ES', tag: 'es-419' },
   fr: { name: 'Français', short: 'FR', tag: 'fr-FR' },
-  zh: { name: '繁體中文', short: '中文', tag: 'zh-TW' },
+  zh: { name: '繁體中文', short: '繁中', tag: 'zh-TW' },
+  zhHans: { name: '简体中文', short: '简中', tag: 'zh-CN' },
 } as const satisfies Record<string, { name: string; short: string; tag: string }>
 
 export type Locale = keyof typeof LOCALES
+
+/** The languages text tables are written in: Simplified Chinese is made from the Traditional (`hans.ts`). */
+export type Written = Exclude<Locale, 'zhHans'>
 
 /**
  * Each language's messages in a chunk of its own: the game downloads only the
@@ -23,6 +28,10 @@ const CATALOGS: Record<Locale, () => Promise<Messages>> = {
   es: () => import('./es').then((m) => m.es),
   fr: () => import('./fr').then((m) => m.fr),
   zh: () => import('./zh').then((m) => m.zh),
+  zhHans: async () => {
+    const [{ zh }] = await Promise.all([import('./zh'), loadHans()])
+    return hansDeep(zh)
+  },
 }
 
 const loaded: Partial<Record<Locale, Messages>> = {}
@@ -36,9 +45,21 @@ const KEY = 'ps:lang'
 
 const isLocale = (v: unknown): v is Locale => typeof v === 'string' && v in LOCALES
 
-/** Saved choice first, then the first browser language we support (`pt-PT` → pt, `es-MX` → es, any Chinese → zh, Traditional), else English. */
+/**
+ * A language tag's locale (`pt-PT` → pt, `es-MX` → es), or null. Chinese goes by script: Traditional for
+ * `Hant` and Taiwan, Hong Kong and Macau, Simplified for the rest (`zh-CN`, `zh-SG`, `zh-Hans`). A locale id
+ * (a page's `data-locale`) is itself: a bare `zh` is the Traditional page's.
+ */
+const localeOfTag = (tag: string): Locale | null => {
+  if (isLocale(tag)) return tag
+  const [lang = '', ...rest] = tag.toLowerCase().split(/[-_]/)
+  if (lang === 'zh') return rest.some((p) => p === 'hant' || p === 'tw' || p === 'hk' || p === 'mo') ? 'zh' : 'zhHans'
+  return isLocale(lang) ? lang : null
+}
+
+/** Saved choice first, then the first browser language we support, else English. */
 export const detectLocale = (saved: string | null, languages: readonly string[]): Locale =>
-  isLocale(saved) ? saved : (languages.map((l) => l.slice(0, 2).toLowerCase()).find(isLocale) ?? 'en')
+  isLocale(saved) ? saved : (languages.map(localeOfTag).find((l) => l !== null) ?? 'en')
 
 const readSaved = () => {
   try {
@@ -110,3 +131,12 @@ export const formatPokeDollars = (amount: number) => `₽ ${formatNumber(amount)
 /** Big ₽ in short (`₽ 41,2M`, `₽ 50k`; below 1,000 in full), for the festival's pot and its milestones. */
 export const formatPokeDollarsShort = (amount: number) =>
   amount >= 1_000_000 ? `₽ ${formatDecimal(Math.floor(amount / 100_000) / 10)}M` : amount >= 1_000 ? `₽ ${formatDecimal(Math.floor(amount / 100) / 10)}k` : formatPokeDollars(amount)
+
+/** Whether the language on show is Chinese, either script (the CJK font, character wrapping). */
+export const cjk = () => current === 'zh' || current === 'zhHans'
+
+/** The language a text table is read in: Simplified Chinese reads the Traditional, converted (`inLanguage`). */
+const written = (l: Locale): Written => (l === 'zhHans' ? 'zh' : l)
+
+/** A table's text in the language on show, for tables read outside `t()`: Simplified Chinese gets the Traditional, converted. */
+export const inLanguage = <T>(table: Readonly<Record<Written, T>>): T => (current === 'zhHans' ? hansDeep(table.zh) : table[written(current)])

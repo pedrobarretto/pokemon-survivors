@@ -24,6 +24,54 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-19',
+    title: { pt: 'Chinês simplificado', en: 'Simplified Chinese', es: 'Chino simplificado', fr: 'Chinois simplifié', zh: '簡體中文' },
+    highlights: [
+      {
+        pt: 'Novo idioma: chinês simplificado (简体中文), no jogo inteiro e no site, em /zh-cn/. Navegadores em chinês da China continental, de Singapura e da Malásia já abrem nele.',
+        en: 'New language: Simplified Chinese (简体中文), across the whole game and the site, at /zh-cn/. Chinese browsers in mainland China, Singapore and Malaysia open in it on their own.',
+        es: 'Nuevo idioma: chino simplificado (简体中文), en todo el juego y el sitio, en /zh-cn/. Los navegadores en chino de China continental, Singapur y Malasia ya abren en él.',
+        fr: 'Nouvelle langue : le chinois simplifié (简体中文), dans tout le jeu et sur le site, à /zh-cn/. Les navigateurs en chinois de Chine continentale, de Singapour et de Malaisie s’ouvrent directement dedans.',
+        zh: '新語言：簡體中文，遍及整個遊戲和網站，網址是 /zh-cn/。中國大陸、新加坡和馬來西亞的中文瀏覽器會直接以簡體中文開啟。',
+      },
+      {
+        pt: 'O jogo ganhou um nome em chinês: 寶可夢生存戰 (宝可梦生存战 no simplificado).',
+        en: 'The game has a Chinese name now: 寶可夢生存戰 (宝可梦生存战 in Simplified).',
+        es: 'El juego tiene un nombre en chino: 寶可夢生存戰 (宝可梦生存战 en simplificado).',
+        fr: 'Le jeu a désormais un nom chinois : 寶可夢生存戰 (宝可梦生存战 en simplifié).',
+        zh: '遊戲有了中文名稱：寶可夢生存戰。',
+      },
+      {
+        pt: 'Quem prefere o chinês tradicional (Taiwan, Hong Kong) continua com ele, e os dois aparecem em Ajustes > Idioma.',
+        en: 'Traditional Chinese (Taiwan, Hong Kong) stays as it was, and both are in Settings > Language.',
+        es: 'El chino tradicional (Taiwán, Hong Kong) sigue igual, y los dos están en Ajustes > Idioma.',
+        fr: 'Le chinois traditionnel (Taïwan, Hong Kong) reste tel quel, et les deux sont dans Réglages > Langue.',
+        zh: '繁體中文（台灣、香港）維持不變，兩種都能在設定 > 語言中切換。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Chinês simplificado', en: 'Simplified Chinese', es: 'Chino simplificado', fr: 'Chinois simplifié', zh: '簡體中文' },
+        notes: [
+          {
+            pt: 'O jogo, a Pokédex, o guia, a tier list, as novidades e as outras páginas do site agora existem em chinês simplificado (/zh-cn/), com o vocabulário da China continental. Nomes de Pokémon, golpes e itens continuam em inglês, como nos outros idiomas.',
+            en: 'The game, the Pokédex, the guide, the tier list, the changelog and the site’s other pages now come in Simplified Chinese (/zh-cn/), in mainland China’s vocabulary. Pokémon, move and item names stay in English, as in the other languages.',
+            es: 'El juego, la Pokédex, la guía, la tier list, las novedades y las demás páginas del sitio ahora están en chino simplificado (/zh-cn/), con el vocabulario de China continental. Los nombres de Pokémon, movimientos y objetos siguen en inglés, como en los demás idiomas.',
+            fr: 'Le jeu, le Pokédex, le guide, la tier list, les nouveautés et les autres pages du site existent maintenant en chinois simplifié (/zh-cn/), avec le vocabulaire de Chine continentale. Les noms des Pokémon, des capacités et des objets restent en anglais, comme dans les autres langues.',
+            zh: '遊戲、寶可夢圖鑑、攻略、強度排行、更新紀錄與網站其他頁面現在都有簡體中文版（/zh-cn/），使用中國大陸的用語。寶可夢、招式和道具名稱和其他語言一樣維持英文。',
+          },
+          {
+            pt: 'Em chinês, o jogo agora se chama 寶可夢生存戰, o mesmo nome que o portal 4388 já usava para ele.',
+            en: 'The game’s Chinese name is now 寶可夢生存戰, the name the 4388 games portal already used for it.',
+            es: 'El nombre del juego en chino ahora es 寶可夢生存戰, el mismo que ya usaba el portal 4388.',
+            fr: 'Le nom chinois du jeu est désormais 寶可夢生存戰, celui que le portail 4388 utilisait déjà.',
+            zh: '遊戲的中文名稱現在是寶可夢生存戰，和 4388 小遊戲上的名稱相同。',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-11-18',
     title: { pt: 'Soro Sombrio e Game Corner sem limite', en: 'Shadow Serum and an unlimited Game Corner', es: 'Suero Oscuro y un Casino sin límite', fr: 'Sérum Obscur et Salle de jeux sans limite', zh: '暗影血清與不設限的遊戲城' },
     highlights: [

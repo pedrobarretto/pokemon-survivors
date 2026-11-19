@@ -2,7 +2,7 @@ import { assetImage } from '../../assets'
 import type { Sfx } from '../../engine/audio'
 import { playCry, playSfx } from '../../engine/audio'
 import { canvasCache, context2d, createCanvas, fromStrings, lazy } from '../../engine/pixelart'
-import { locale, t } from '../../i18n'
+import { cjk, t } from '../../i18n'
 import type { TableView } from '../../net/realmTables'
 import { cryUrl, portraitUrl } from '../../render/sprites'
 import type { GameInput, TableUi } from './frame'
@@ -105,7 +105,7 @@ const big = (text: string, color = '#fff') => {
 /** Text in the UI's pixel font (Cubic 11 for Chinese), every pixel on or off, outlined. */
 const labels = canvasCache<string, HTMLCanvasElement>()
 const label = (text: string, color = '#fff', outline = INK) => {
-  const zh = locale() === 'zh'
+  const zh = cjk()
   const key = `${zh}|${color}|${outline}|${text}`
   const cached = labels.get(key)
   if (cached) return cached

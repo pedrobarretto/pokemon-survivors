@@ -19,8 +19,8 @@ const SITE_ENTRY = '/src/site/index.ts'
 const sitePages = (): Plugin => {
   let site: Site | null = null
   let root = process.cwd()
-  /** Every document the site renders: its pages and the 404. */
-  const documents = (of: Site) => [...of.SITE_PAGES, of.NOT_FOUND_PAGE]
+  /** Every document the site renders: its pages, the Simplified Chinese game page (made from `zh-tw/index.html`) and the 404. */
+  const documents = (of: Site) => [...of.SITE_PAGES, of.hansPlayPage(() => readFileSync(resolve(root, 'zh-tw/index.html'), 'utf8')), of.NOT_FOUND_PAGE]
   /** The build's documents by absolute file, looked up on every module Vite resolves. */
   let pages = new Map<string, ReturnType<typeof documents>[number]>()
   const pageFor = (id: string) => pages.get(id)
@@ -203,7 +203,7 @@ const assetCdn = async (mode: string) => {
   return { origin, versions: origin ? await servedVersions(origin) : {} }
 }
 
-// One page per language for the game (index.html, en/, es/, fr/ and zh-tw/index.html); the site pages are added by `sitePages`.
+// One page per language for the game (index.html, en/, es/, fr/ and zh-tw/index.html; zh-cn/ is made from zh-tw/ by `sitePages`, like the site pages).
 export default defineConfig(async ({ mode }) => ({
   plugins: [sitePages(), simBuildFile(), atelier()],
   // The co-op relay (`relay/`) is its own package with its own Workers test runner.

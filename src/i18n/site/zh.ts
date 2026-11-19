@@ -14,7 +14,7 @@ const REGION: Record<string, string> = {
 
 /** Traditional Chinese copy of the static site pages. Must match `pt.ts` key for key. */
 export const siteZh: SiteMessages = {
-  lang: { tag: 'zh-Hant', og: 'zh_TW', short: '中文', switchTo: '以繁體中文檢視' },
+  lang: { tag: 'zh-Hant', og: 'zh_TW', short: '繁中', switchTo: '以繁體中文檢視' },
   skip: '跳至主要內容',
   nav: {
     label: '主選單',
@@ -1029,7 +1029,7 @@ export const siteZh: SiteMessages = {
     play: (title: string) => `觀看：${title}`,
     watchOn: (platform: string) => `在 ${platform} 觀看`,
     videoAbout: (name: string) => `${name} 製作的 Pokémon Survivors 影片。`,
-    langs: { pt: '葡萄牙語', en: '英語', es: '西班牙語', fr: '法語', zh: '中文' },
+    langs: { pt: '葡萄牙語', en: '英語', es: '西班牙語', fr: '法語', zh: '中文', zhHans: '中文' },
     join: {
       title: '你有在拍這款遊戲的影片嗎？',
       lead: '實況、直播、攻略、Short 或 TikTok，任何語言都可以：每一部遊戲影片都能出現在這裡。',
