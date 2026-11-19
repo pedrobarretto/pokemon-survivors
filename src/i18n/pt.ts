@@ -6757,6 +6757,16 @@ export const pt = {
     },
     captured: 'Na sua coleção',
     locked: (legend: string) => `Capture ${legend}`,
+    /** What earns a mini game's or the Estampas' trophy (the API grants it). */
+    earn: {
+      plays: (game: string, n: number) => `Jogue ${n} partidas de ${game}`,
+      best: (game: string, n: number) => `Faça ${n} pontos em ${game}`,
+      wins: (game: string, n: number) => `Vença ${n} partidas de ${game}`,
+      feat: (game: string) => `Um feito em ${game}`,
+      stamps: (n: number) => `Junte ${n} Estampas`,
+      note: 'Este troféu chega quando você cumpre a meta. Não está à venda!',
+      featNote: (feat: string) => `Este troféu chega com o feito: ${feat} Não está à venda!`,
+    },
     /** The catalog (`realm/catalog.ts`): the collections' rail, the filters, a page's head, the close-up. */
     collections: 'Coleções',
     all: 'Tudo',

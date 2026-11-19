@@ -1,15 +1,15 @@
 import { accountState } from '../account'
 import { RARITY_PRICE } from '../data/cosmetics'
 import { FURNITURE, type FurnitureCounts, type FurnitureId, type FurnitureSet } from '../data/furniture'
-import { LEGEND_PAINTINGS } from '../data/furnitureSets/paintings'
-import { LEGENDS, type LegendId } from '../data/legends'
+import { LEGENDS } from '../data/legends'
+import type { MinigameId } from '../data/minigames'
 import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
 import { isCaptured } from '../game/capture'
 import { brasiliaDay } from '../game/day'
 import { formatNumber, t } from '../i18n'
 import { fetchMe, isFailure, realmFaked } from '../realm/api'
-import { collectionsOn, filterPage, isFresh, pageOf, payOf, SHELVES, shelfOf, type PayFilter, type ShelfFilter } from '../realm/catalog'
+import { collectionsOn, earnWayOf, filterPage, isFresh, pageOf, payOf, SHELVES, shelfOf, type PayFilter, type ShelfFilter } from '../realm/catalog'
 import { buyPiece, pieceName } from '../realm/furniture'
 import { dollLegend } from '../realm/placement'
 import { coinIcon } from '../render/art'
@@ -32,7 +32,8 @@ import { hint, type Screen } from './screens'
  * piece in a corner of a room (`piecePreview`), NOVO on a fresh one; tapping
  * it opens it up close with its price, which buys it (₽ out of the stored
  * save, a ₽ sink, or gems). The earned pieces (the legends' dolls and
- * paintings) say what earns them: never sold. Guests browse; buying asks
+ * paintings, the mini games' and the Estampas' trophies) say what earns them
+ * (`earnWayOf`): never sold. Guests browse; buying asks
  * them to sign in. Q E (or ← →) switch collections, ↑ ↓ scroll, Esc closes
  * the close-up, then goes back.
  */
@@ -49,14 +50,6 @@ const carpenterSpeaker = (): Speaker => ({
 
 const SHELF_FILTERS = ['all', ...SHELVES] as const satisfies readonly ShelfFilter[]
 const PAY_FILTERS = ['all', 'coins', 'gems'] as const satisfies readonly PayFilter[]
-
-/** The legends an earned piece shows (a doll its own, a painting the ones `LEGEND_PAINTINGS` lists). */
-const earnedBy = (id: FurnitureId): readonly LegendId[] => {
-  const legend = dollLegend(id)
-  if (legend) return [legend]
-  const known = (k: string): k is keyof typeof LEGEND_PAINTINGS => Object.hasOwn(LEGEND_PAINTINGS, k)
-  return known(id) ? LEGEND_PAINTINGS[id] : []
-}
 
 /** A collection's cover on the rail: its most precious piece (a legend's doll for the trophies). */
 const coverOf = (set: FurnitureSet, ids: readonly FurnitureId[]): FurnitureId | undefined =>
@@ -184,11 +177,36 @@ export const openCarpentry = (root: HTMLElement, input: Input, opts: CarpentryOp
       : h('span', { class: 'carpentry-price' }, h('img', { src: coinIcon(0), alt: '' }), formatNumber(price.coins))
   }
 
-  /** Whether the account has an earned piece: the API's count, or its legends captured on this device. */
-  const earned = (id: FurnitureId) => (owned[id] ?? 0) > 0 || earnedBy(id).every((l) => isCaptured(loadSave().legends, l))
+  /** Whether the account has an earned piece: the API's count, or, for a legend's piece, its legends captured on this device. */
+  const earned = (id: FurnitureId) => {
+    if ((owned[id] ?? 0) > 0) return true
+    const way = earnWayOf(id)
+    return way?.kind === 'legends' && way.legends.every((l) => isCaptured(loadSave().legends, l))
+  }
 
-  /** What earns a piece that's never sold: capturing its legends. */
-  const earnLine = (id: FurnitureId) => m.locked(earnedBy(id).map((l) => LEGENDS[l].name).join(m.and))
+  /** What earns a piece that's never sold: capturing its legends, a mini game's goal or a number of Estampas. */
+  const earnLine = (id: FurnitureId) => {
+    const way = earnWayOf(id)
+    if (way === null) return ''
+    if (way.kind === 'legends') return m.locked(way.legends.map((l) => LEGENDS[l].name).join(m.and))
+    if (way.kind === 'stamps') return m.earn.stamps(way.at)
+    const game = t().minigames.games[way.game].name
+    return 'feat' in way.after ? m.earn.feat(game) : m.earn[way.after.stat](game, way.after.at)
+  }
+
+  /** A mini game's feat in words (its brag line). */
+  const featWords = (game: MinigameId, feat: string) => {
+    const feats: Readonly<Record<string, string>> = t().minigames.feats[game]
+    return feats[feat] ?? ''
+  }
+
+  /** The close-up's note on an earned piece: how it comes, and that it's never sold. */
+  const earnNote = (id: FurnitureId) => {
+    const way = earnWayOf(id)
+    if (way?.kind === 'game' && 'feat' in way.after) return m.earn.featNote(featWords(way.game, way.after.feat))
+    if (way?.kind !== 'legends') return m.earn.note
+    return way.legends.length > 1 || !dollLegend(id) ? m.paintingNote : m.dollNote
+  }
 
   /** Under a card's name: how many the account has, or, for an earned piece, whether it's in or what earns it. */
   const status = (id: FurnitureId) => {
@@ -235,7 +253,7 @@ export const openCarpentry = (root: HTMLElement, input: Input, opts: CarpentryOp
           h('span', { class: 'carpentry-owned' }, status(id)),
           f.price
             ? h('button', { class: 'btn carpentry-buy', type: 'button', disabled: busy, onclick: () => buy(id) }, busy ? m.buying : m.buy, ' ', priceTag(id))
-            : h('p', { class: 'carpentry-note' }, earnedBy(id).length > 1 || !dollLegend(id) ? m.paintingNote : m.dollNote),
+            : h('p', { class: 'carpentry-note' }, earnNote(id)),
         ),
       ),
     )

@@ -2804,7 +2804,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
     case 'landmark':
       return landmarkFeedback(ui, e.landmark, e.moment)
     case 'seasonFind':
-      return seasonFindFeedback(ui, e.find, e.moment)
+      return seasonFindFeedback(ui, e.find, e.moment, r.game.terrain.seed)
     case 'path':
       return pathFeedback(ui, e.notice)
     case 'hexNut':
@@ -5137,11 +5137,12 @@ const devGifts = {
    * Puts a Mystery Gift in the lobby's gift box as if a sync listed it: `ps.gift('egg', 'friend')`, `ps.gift('coins', '500')`,
    * `ps.gift('title')`, `ps.gift('style', 'ambassador')` (a frame), `ps.gift('shinyHatch', 'munchlax')`,
    * `ps.gift('ribbon', 'gold')` (yesterday's challenge, #12 of 340), `ps.gift('shinyPick')` (a shiny of one's choice),
-   * `ps.gift('companion', 'pumpkaboo')` (a gift-only companion), `ps.gift('bag', 'lure')` (3 of a Bag item), `ps.gift('legend', 'cresselia')` (a festival legend).
+   * `ps.gift('companion', 'pumpkaboo')` (a gift-only companion), `ps.gift('bag', 'lure')` (3 of a Bag item), `ps.gift('legend', 'cresselia')` (a festival legend),
+   * `ps.gift('reshadow', 'mewtwo')` (the Game Corner's Shadow Serum: a Purified Pokémon back to Shadow).
    * `why`: an inviter's handle (welcome), a count of friends brought, or a legend path (`ps.gift('legend', 'solgaleo', 'cosmog')`: Cosmog's evolution scene as it opens).
    */
   gift: (kind: GiftKind = 'egg', arg?: string, why?: string | number) => {
-    const raw = { egg: { tier: arg ?? 'friend' }, coins: { amount: Number(arg ?? 500) }, title: { title: arg ?? 'ambassador' }, style: { style: { slot: 'frame', id: arg ?? 'ambassador' } }, shinyHatch: { family: arg ?? 'munchlax' }, family: { family: arg ?? 'mimikyu' }, shadow: { family: arg ?? 'ditto' }, ribbon: { ribbon: { day: previousDay(brasiliaDay(today())), tier: arg ?? 'gold', rank: 12, total: 340 } }, shinyPick: {}, companion: { id: arg ?? 'pumpkaboo' }, bag: { item: arg ?? 'lure', count: 3 }, legend: { legend: arg ?? 'cresselia' }, evoItem: { item: arg ?? 'fireStone' } }[kind]
+    const raw = { egg: { tier: arg ?? 'friend' }, coins: { amount: Number(arg ?? 500) }, title: { title: arg ?? 'ambassador' }, style: { style: { slot: 'frame', id: arg ?? 'ambassador' } }, shinyHatch: { family: arg ?? 'munchlax' }, family: { family: arg ?? 'mimikyu' }, shadow: { family: arg ?? 'ditto' }, reshadow: { id: arg ?? 'mewtwo' }, ribbon: { ribbon: { day: previousDay(brasiliaDay(today())), tier: arg ?? 'gold', rank: 12, total: 340 } }, shinyPick: {}, companion: { id: arg ?? 'pumpkaboo' }, bag: { item: arg ?? 'lure', count: 3 }, legend: { legend: arg ?? 'cresselia' }, evoItem: { item: arg ?? 'fireStone' } }[kind]
     const content = parseGiftContent({ kind, ...raw })
     if (!content) return 'Kinds: egg (tier), coins (amount), title, style (frame id), shinyHatch (family), ribbon (tier), shinyPick, companion (id), bag (item, 3 of it), legend (id)'
     const path = PATH_IDS.find((id) => id === why)
@@ -5765,14 +5766,15 @@ if (import.meta.env.DEV) {
       },
       /**
        * The Rocket Game Corner (faked API): `ps.corner('prizes')` or `ps.corner('tokens')` opens the counter on that page,
-       * `ps.corner('stage', 5000)` sets the faked tokens (a second number the Koffing Sweep level), `ps.minigame('slots')` and
+       * `ps.corner('stage', 5000)` sets the faked tokens (a second number the Koffing Sweep level, a third the tokens it paid today:
+       * `ps.corner('stage', 5000, 3, 1500)` is its half pay, 2250 its free play), `ps.minigame('slots')` and
        * `ps.minigame('sweep')` its games; `ps.realm('room', 'gameCorner')` walks into the room.
        */
-      corner: async (cmd: string = 'prizes', tokens?: number | string, level?: number) => {
+      corner: async (cmd: string = 'prizes', tokens?: number | string, level?: number, won?: number) => {
         const [{ fakeRealm }, { stageCorner, rigSpin }, { openCornerCounter }] = await Promise.all([realmMode(), import('./realm/cornerApi'), import('./ui/cornerCounter')])
         fakeRealm(true, accountHandle() ?? 'you')
         if (cmd === 'win') return rigSpin(String(tokens ?? 'seven'))
-        if (cmd === 'stage') return stageCorner(typeof tokens === 'number' ? tokens : undefined, level)
+        if (cmd === 'stage') return stageCorner(typeof tokens === 'number' ? tokens : undefined, level, won)
         if (cmd !== 'prizes' && cmd !== 'tokens') return "ps.corner: 'prizes', 'tokens' or 'stage'"
         return setScreen(openCornerCounter(ui, input, { tab: cmd, close: () => showTitle() }))
       },
@@ -5874,9 +5876,11 @@ if (import.meta.env.DEV) {
       /**
        * Fishing's staging (`realm/games/fishing.ts`, open it with `ps.minigame('fishing')`): `ps.fishing('feebas')` makes
        * that the next bite, at once (`shinyGyarados`, `wailmer`, `boot`…); a second `true` turns on the autopilot (casts,
-       * hooks and reels by itself; `ps.fishing(null, false)` off); `ps.fishing()` prints it (its `phase` too).
+       * hooks and reels by itself; `ps.fishing(null, false)` off); `ps.fishing()` prints it (its `phase` too). A third `true`
+       * makes the next faked claim that hooks a Wishiwashi again bring its shiny (`ps.realm('fake')` first).
        */
-      fishing: async (next?: unknown, auto?: boolean) => {
+      fishing: async (next?: unknown, auto?: boolean, shiny?: boolean) => {
+        if (shiny !== undefined) (await import('./realm/api')).fakeClaims.shiny = shiny
         const { fishingDev } = await import('./realm/games/fishing')
         const { CATCH_IDS, isCatchId } = await import('./realm/games/fishing.rules')
         if (next !== undefined && next !== null && !isCatchId(next)) return `ps.fishing: ${CATCH_IDS.join(', ')}`

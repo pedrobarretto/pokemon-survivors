@@ -1,14 +1,16 @@
 import { randomInt } from 'node:crypto'
 import type { TransactionSql } from 'postgres'
-import { CORNER_PRIZES, isCornerPrize, prizeOnce, ROCKET_FRAME, ROCKET_TITLE, type CornerPrizeId } from '../../src/data/rocketCorner'
+import type { PlayableId } from '../../src/data/hatchlings'
+import { isCornerPrize, prizeContent, prizeOnce, prizePrice, prizeTargets, type CornerPrizeId } from '../../src/data/rocketCorner'
 import { brasiliaDay, type DayKey } from '../../src/game/day'
 import { donateFrom } from '../../src/game/festival'
-import type { Gift, GiftContent } from '../../src/game/gifts'
+import type { Gift } from '../../src/game/gifts'
 import { parseSaveData, type Save } from '../../src/game/meta'
 import { isRecord } from '../../src/game/parse'
+import { isPlayable } from '../../src/game/ranking'
 import type { CornerBought, CornerRedeemed, CornerSpun, CornerState, CornerSweep, CornerSwept } from '../../src/net/realmApi'
 import {
-  CORNER, canBuy, cappedWin, clampLevel, cleared, dealBoard, isBet, nextLevel, potOf, spinCost, spinStops, spinWins, sweepPay, sweepView,
+  CORNER, canBuy, clampLevel, cleared, dealBoard, isBet, nextLevel, potOf, spinCost, spinStops, spinWins, sweepCredit, sweepPay, sweepView,
   type Bet, type SweepLevel, type Tile,
 } from '../../src/realm/games/corner.rules'
 import type { Sql } from './db'
@@ -21,7 +23,9 @@ import { rateLimiter } from './rateLimit'
  * claw's credits, moved to `spent` so a merge never refunds them), spins are
  * rolled here from the OS's generator, Koffing Sweep boards are dealt and kept
  * here (a client learns a tile only when it flips it), and prizes go out as
- * gifts. Every count resets on a new Brasília day (`corner_wallets.day`).
+ * gifts. Both games play without a cap (the slots keep a house edge, Koffing
+ * Sweep's pay falls off with `won`, its tokens paid today); only buying is
+ * capped. Every count resets on a new Brasília day (`corner_wallets.day`).
  */
 
 type Q = Sql | TransactionSql
@@ -48,8 +52,12 @@ export const parseCornerFlip = (v: unknown): { id: string; at: number } | null =
 /** `POST /realm/corner/sweep/bank`'s body. */
 export const parseCornerBank = (v: unknown): { id: string } | null => (isRecord(v) && typeof v.id === 'string' && UUID.test(v.id) ? { id: v.id } : null)
 
-/** `POST /realm/corner/redeem`'s body. */
-export const parseCornerRedeem = (v: unknown): { prize: CornerPrizeId } | null => (isRecord(v) && isCornerPrize(v.prize) ? { prize: v.prize } : null)
+/** `POST /realm/corner/redeem`'s body: the prize, and the Pokémon it's for when it needs one (the Shadow Serum's Purified one). */
+export const parseCornerRedeem = (v: unknown): { prize: CornerPrizeId; target: PlayableId | null } | null => {
+  if (!isRecord(v) || !isCornerPrize(v.prize)) return null
+  if (!prizeTargets(v.prize)) return { prize: v.prize, target: null }
+  return isPlayable(v.target) ? { prize: v.prize, target: v.target } : null
+}
 
 type WalletRow = { tokens: number; day: Date | string; bought: number; won: number; spins: number; rounds: number; level: number; last_nonce: string | null; last_spin: unknown }
 
@@ -63,7 +71,7 @@ const fresh = (w: WalletRow, day: DayKey): WalletRow => (dayOf(w.day) === day ? 
 
 const viewOf = (row: SweepRow): CornerSweep => ({ id: row.id, ...sweepView(clampLevel(row.level), row.board, row.flipped, row.outcome) })
 
-export type CornerRefusal = 'profile' | 'banned' | 'cap' | 'funds' | 'nosave' | 'stale' | 'tokens' | 'owned' | 'missing'
+export type CornerRefusal = 'profile' | 'banned' | 'cap' | 'funds' | 'nosave' | 'stale' | 'tokens' | 'owned' | 'missing' | 'unpurified'
 
 type Out<T> = ({ ok: true } & T) | { ok: false; error: CornerRefusal }
 
@@ -95,10 +103,10 @@ export const cornerStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
 
   const takenOf = async (q: Q, userId: string) => (await q<{ prize: string }[]>`select distinct prize from corner_redemptions where user_id = ${userId}`).map((r) => r.prize)
 
-  /** Ends a board: pays it (under the day's cap) and moves the level. */
+  /** Ends a board: pays it at the day's rate (`sweepCredit`, nothing in free play) and moves the level. */
   const finish = async (tx: TransactionSql, userId: string, w: WalletRow, row: SweepRow, outcome: 'clear' | 'koffing' | 'bank') => {
     const level = clampLevel(row.level)
-    const pay = outcome === 'koffing' ? 0 : cappedWin(sweepPay(potOf(row.board, row.flipped), level, outcome === 'clear'), w.won)
+    const pay = outcome === 'koffing' ? 0 : sweepCredit(sweepPay(potOf(row.board, row.flipped), level, outcome === 'clear'), w.won)
     const next: WalletRow = { ...w, tokens: w.tokens + pay, won: w.won + pay, level: nextLevel(level, outcome, row.flipped.length) }
     await saveWallet(tx, userId, next)
     const [done] = await tx<SweepRow[]>`
@@ -143,25 +151,24 @@ export const cornerStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
         return { ok: true, tokens: after.tokens, bought: after.bought, paid: { save: next, revision } }
       }),
 
-    /** `POST /realm/corner/spin`: rolls the reels and pays (past the day's cap a spin still spins, for nothing). The same nonce answers the same. */
+    /** `POST /realm/corner/spin`: rolls the reels and pays, as often as the tokens last. The same nonce answers the same. */
     spin: (userId: string, bet: Bet, nonce: string): Promise<Out<{ spun: CornerSpun }>> =>
       sql.begin(async (tx) => {
         const refused = await gate(tx, userId)
         if (refused) return { ok: false, error: refused }
         const w = await walletOf(tx, userId)
         if (w.last_nonce === nonce && isRecord(w.last_spin)) return { ok: true, spun: w.last_spin as CornerSpun }
-        if (w.spins >= CORNER.spinsDaily) return { ok: false, error: 'cap' }
         const cost = spinCost(bet)
         if (w.tokens < cost) return { ok: false, error: 'tokens' }
         const stops = spinStops(dice)
-        const paid = cappedWin(spinWins(stops, bet).reduce((a, x) => a + x.tokens, 0), w.won)
+        const paid = spinWins(stops, bet).reduce((a, x) => a + x.tokens, 0)
         const tokens = w.tokens - cost + paid
-        const spun: CornerSpun = { stops, paid, tokens, won: w.won + paid, spins: w.spins + 1 }
-        await saveWallet(tx, userId, { ...w, tokens, won: spun.won, spins: spun.spins, last_nonce: nonce, last_spin: spun })
+        const spun: CornerSpun = { stops, paid, tokens, won: w.won, spins: w.spins + 1 }
+        await saveWallet(tx, userId, { ...w, tokens, spins: spun.spins, last_nonce: nonce, last_spin: spun })
         return { ok: true, spun }
       }),
 
-    /** `POST /realm/corner/sweep/start`: deals a board at the account's level (the open one comes back). */
+    /** `POST /realm/corner/sweep/start`: deals a board at the account's level (the open one comes back), as many a day as the player likes. */
     deal: (userId: string): Promise<Out<{ swept: CornerSwept }>> =>
       sql.begin(async (tx) => {
         const refused = await gate(tx, userId)
@@ -169,7 +176,6 @@ export const cornerStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
         const w = await walletOf(tx, userId)
         const open = await openSweep(tx, userId)
         if (open) return { ok: true, swept: swept({ sweep: viewOf(open), paid: 0, wallet: w }) }
-        if (w.rounds >= CORNER.roundsDaily) return { ok: false, error: 'cap' }
         const level: SweepLevel = clampLevel(w.level)
         const board = dealBoard(level, dice)
         const [row] = await tx<SweepRow[]>`
@@ -209,26 +215,32 @@ export const cornerStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
         return { ok: true, swept: swept(await finish(tx, userId, w, row, 'bank')) }
       }),
 
-    /** `POST /realm/corner/redeem`: takes the tokens and sends the prize as a gift (a once-only prize, only once). */
-    redeem: (userId: string, prize: CornerPrizeId): Promise<Out<CornerRedeemed>> =>
+    /**
+     * `POST /realm/corner/redeem`: takes the tokens (`prizePrice`: a shiny after its family costs the rest) and sends
+     * the prize as a gift (a once-only prize, only once).
+     * The Shadow Serum needs `target` Purified in the stored save, or it's refused (`unpurified`) before any token moves.
+     */
+    redeem: (userId: string, prize: CornerPrizeId, target: PlayableId | null = null): Promise<Out<CornerRedeemed>> =>
       sql.begin(async (tx) => {
         const refused = await gate(tx, userId)
         if (refused) return { ok: false, error: refused }
         const w = await walletOf(tx, userId)
-        const def = CORNER_PRIZES[prize]
-        if (prizeOnce(prize) && (await takenOf(tx, userId)).includes(prize)) return { ok: false, error: 'owned' }
-        if (w.tokens < def.price) return { ok: false, error: 'tokens' }
-        const content: GiftContent =
-          def.kind === 'family' ? { kind: 'family', family: def.family }
-          : def.kind === 'shadow' ? { kind: 'shadow', family: def.family }
-          : def.kind === 'bag' ? { kind: 'bag', item: def.item, count: def.count }
-          : def.kind === 'title' ? { kind: 'title', title: ROCKET_TITLE }
-          : { kind: 'style', style: { slot: 'frame', id: ROCKET_FRAME } }
-        const [taken] = await tx<{ id: string }[]>`insert into corner_redemptions (user_id, prize, price) values (${userId}, ${prize}, ${def.price}) returning id`
+        const had = await takenOf(tx, userId)
+        if (prizeOnce(prize) && had.includes(prize)) return { ok: false, error: 'owned' }
+        const price = prizePrice(prize, had)
+        if (w.tokens < price) return { ok: false, error: 'tokens' }
+        const content = prizeContent(prize, target)
+        if (!content) return { ok: false, error: 'unpurified' }
+        if (content.kind === 'reshadow') {
+          const [row] = await tx<{ data: unknown }[]>`select data from saves where user_id = ${userId}`
+          if (!row) return { ok: false, error: 'nosave' }
+          if (parseSaveData(row.data).shadows[content.id]?.purified !== true) return { ok: false, error: 'unpurified' }
+        }
+        const [taken] = await tx<{ id: string }[]>`insert into corner_redemptions (user_id, prize, price) values (${userId}, ${prize}, ${price}) returning id`
         const key = `corner:${taken!.id}`
         await sendGift(tx, userId, content, { kind: 'rocket' }, key)
         const [g] = await tx<{ id: string }[]>`select id from gifts where user_id = ${userId} and key = ${key}`
-        const after = { ...w, tokens: w.tokens - def.price }
+        const after = { ...w, tokens: w.tokens - price }
         await saveWallet(tx, userId, after)
         console.log(`corner: ${userId} redeemed ${prize}`)
         const gift: Gift | null = g ? { id: g.id, content, reason: { kind: 'rocket' } } : null

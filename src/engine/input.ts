@@ -215,6 +215,8 @@ export const createInput = (target: HTMLElement, bindings: () => Bindings, fixed
     // Tab switches targets in a match, not the browser's focus. Space is the special while playing: never also
     // the browser's own press of whatever holds the focus, nor a scroll of the page.
     if (code in MOVE_KEYS || code !== e.code || (code === 'Tab' && context === 'arena') || (code === 'Space' && context !== 'menu')) e.preventDefault()
+    // A stick whose pointer the page no longer holds lost its end: left in place, it would outrank these keys for good.
+    if (code in MOVE_KEYS && grip && !target.hasPointerCapture(grip.id)) grip = null
     held.set(e.code, code)
     if (!e.repeat) dispatch(code)
   })
@@ -253,7 +255,11 @@ export const createInput = (target: HTMLElement, bindings: () => Bindings, fixed
   })
   // Any press in the page, menus included, says what the player plays with.
   window.addEventListener('pointerdown', (e) => used(e.pointerType === 'mouse' ? 'mouse' : 'touch'), { capture: true, passive: true })
-  window.addEventListener('pointermove', (e) => (grip = gripMove(grip, e.pointerId, { x: e.clientX, y: e.clientY })))
+  window.addEventListener('pointermove', (e) => {
+    // A mouse moving with no button held let go somewhere its pointerup never reached us.
+    if (e.pointerType === 'mouse' && e.buttons === 0) grip = gripUp(grip, e.pointerId)
+    else grip = gripMove(grip, e.pointerId, { x: e.clientX, y: e.clientY })
+  })
   const release = (e: PointerEvent) => (grip = gripUp(grip, e.pointerId))
   window.addEventListener('pointerup', release)
   window.addEventListener('pointercancel', release)

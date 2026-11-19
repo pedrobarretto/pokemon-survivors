@@ -919,7 +919,7 @@ export const siteEs: SiteMessages = {
     suggested: 'Sugerido para ti',
     br: {
       title: 'En Brasil',
-      methods: 'Pix o tarjeta de crédito, en reales.',
+      methods: 'Pix, tarjeta de crédito, Apple Pay o Google Pay, en reales.',
       amount: 'Monto de la donación',
       other: 'Otro monto',
       range: (min: number, max: number) => `De R$ ${min} a R$ ${max}, sin centavos.`,

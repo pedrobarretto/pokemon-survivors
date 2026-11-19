@@ -6,8 +6,14 @@
  * Tokens: bought only with ₽ (`CORNER.packs`, a Brasília day's cap), never
  * with gems or money, and won at the slots and at Koffing Sweep. The prize
  * counter (`data/rocketCorner.ts`) is where they go: the player picks the
- * prize, and luck only gets them there sooner. The house keeps the odds near
- * even (`slotsReturn`, tested) and the daily caps keep a lucky day a day.
+ * prize, and luck only gets them there sooner.
+ *
+ * Both games play as long as the player likes. The slots keep a house edge
+ * (`slotsReturn`, tested under 1), so spinning on only ever spends tokens on
+ * average and needs no cap. Koffing Sweep costs nothing to deal and pays the
+ * player's skill, so its pay falls off through the day instead of stopping
+ * (`sweepCredit`): full, then half, then free play, where boards still deal
+ * and the level still moves but nothing pays.
  */
 
 export const CORNER = {
@@ -15,15 +21,12 @@ export const CORNER = {
   packs: [
     { tokens: 50, price: 1000 },
     { tokens: 250, price: 5000 },
+    { tokens: 1000, price: 20000 },
   ],
-  /** Tokens a Brasília day may buy. */
-  buyDaily: 500,
-  /** Spins a Brasília day, whatever the bet. */
-  spinsDaily: 200,
-  /** Koffing Sweep rounds a Brasília day. */
-  roundsDaily: 12,
-  /** Tokens the two games may pay out in a Brasília day, together; past it a spin still spins but pays nothing. */
-  wonDaily: 1500,
+  /** Tokens a Brasília day may buy (₽100k: a hoard spends over days, a day's runs rarely reach it). */
+  buyDaily: 5000,
+  /** Koffing Sweep's day, in tokens paid: in full up to `full`, at half up to `half`, then free play. */
+  sweepDay: { full: 1500, half: 2250 },
 } as const
 
 /* ---------------- The slots ---------------- */
@@ -39,7 +42,7 @@ export const STRIP: readonly SlotSymbol[] = [
 ]
 
 /** What three of a symbol on a line pay, per token bet on it. */
-export const PAYS: Readonly<Record<SlotSymbol, number>> = { seven: 300, master: 200, ultra: 80, great: 28, poke: 12, oran: 14, magikarp: 9 }
+export const PAYS: Readonly<Record<SlotSymbol, number>> = { seven: 300, master: 200, ultra: 80, great: 28, poke: 10, oran: 14, magikarp: 7 }
 
 /** An Oran Berry on the left reel's square of a line pays this alone (the classic cherry). */
 export const ORAN_LEFT = 2
@@ -172,8 +175,16 @@ export const sweepView = (level: SweepLevel, board: readonly Tile[], flipped: re
 
 /* ---------------- The day ---------------- */
 
-/** What the caps leave of a payout `tokens`, `won` already paid today. */
-export const cappedWin = (tokens: number, won: number) => Math.max(0, Math.min(tokens, CORNER.wonDaily - won))
+/** What Koffing Sweep's pay rate is with `won` tokens already paid today: 1 in full, 0.5 at half, 0 in free play. */
+export const sweepRate = (won: number): 1 | 0.5 | 0 => (won < CORNER.sweepDay.full ? 1 : won < CORNER.sweepDay.half ? 0.5 : 0)
+
+/** What a board's pay `tokens` comes to with `won` already paid today: the full part, then half of the rest, up to the day's end. */
+export const sweepCredit = (tokens: number, won: number) => {
+  const { full, half } = CORNER.sweepDay
+  const whole = Math.max(0, Math.min(tokens, full - won))
+  const halved = Math.max(0, Math.min(Math.floor((tokens - whole) / 2), half - Math.max(won, full)))
+  return whole + halved
+}
 
 /** Whether a pack can be bought with `bought` tokens bought today. */
 export const canBuy = (pack: number, bought: number) => {

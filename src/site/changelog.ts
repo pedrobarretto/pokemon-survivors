@@ -24,6 +24,121 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-18',
+    title: { pt: 'Soro Sombrio e Game Corner sem limite', en: 'Shadow Serum and an unlimited Game Corner', es: 'Suero Oscuro y un Casino sin límite', fr: 'Sérum Obscur et Salle de jeux sans limite', zh: '暗影血清與不設限的遊戲城' },
+    highlights: [
+      {
+        pt: 'Purificar um Pokémon Sombrio agora pede confirmação, com o nome dele e o aviso de que a forma Sombria vai embora.',
+        en: 'Purifying a Shadow Pokémon now asks first, naming it and warning that its Shadow form goes away.',
+        es: 'Purificar un Pokémon Oscuro ahora pide confirmación, con su nombre y el aviso de que la forma Oscura se va.',
+        fr: 'Purifier un Pokémon Obscur demande désormais confirmation, avec son nom et l’avertissement que sa forme Obscure disparaît.',
+        zh: '淨化暗影寶可夢前會先確認，並寫出牠的名字，提醒暗影型態會消失。',
+      },
+      {
+        pt: 'Novo no balcão do Meowth, no Game Corner: o Soro Sombrio, que faz um Pokémon Purificado (você escolhe qual) voltar a ser Sombrio.',
+        en: 'New at Meowth’s counter in the Game Corner: the Shadow Serum turns a Purified Pokémon of your choice back into a Shadow.',
+        es: 'Nuevo en el mostrador de Meowth, en el Casino: el Suero Oscuro hace que un Pokémon Purificado (tú eliges cuál) vuelva a ser Oscuro.',
+        fr: 'Nouveau au comptoir de Meowth, dans la Salle de jeux : le Sérum Obscur rend sa forme Obscure au Pokémon Purifié de ton choix.',
+        zh: '遊戲城喵喵櫃台新上架：暗影血清，可讓你選的一隻淨化寶可夢變回暗影。',
+      },
+      {
+        pt: 'Purificou o Mewtwo Sombrio sem querer? O Soro traz a forma Sombria de volta; para purificar de novo, é só andar o coração inteiro outra vez.',
+        en: 'Purified Shadow Mewtwo by mistake? The Serum brings its Shadow form back; to purify it again, walk its whole heart gauge again.',
+        es: '¿Purificaste a Mewtwo Oscuro sin querer? El Suero devuelve su forma Oscura; para purificarlo otra vez, camina todo su corazón de nuevo.',
+        fr: 'Mewtwo Obscur purifié par erreur ? Le Sérum lui rend sa forme Obscure ; pour le purifier à nouveau, il faut remarcher toute sa jauge.',
+        zh: '不小心淨化了暗影超夢？血清能讓暗影型態回來；想再淨化，就要重新走滿心門量表。',
+      },
+      {
+        pt: 'O Game Corner não fecha mais: jogue o caça-níqueis e o Caça ao Koffing o quanto quiser, e compre até 5.000 fichas por dia (eram 500).',
+        en: 'The Game Corner no longer closes: play the slots and Koffing Sweep as long as you like, and buy up to 5,000 tokens a day (it was 500).',
+        es: 'El Casino ya no cierra: juega en las tragaperras y en la Caza de Koffing cuanto quieras, y compra hasta 5.000 fichas al día (eran 500).',
+        fr: 'La Salle de jeux ne ferme plus : joue aux machines à sous et à la Chasse au Koffing autant que tu veux, et achète jusqu’à 5 000 jetons par jour (contre 500).',
+        zh: '遊戲城不再打烊：拉霸機和瓦斯彈掃雷想玩多久就玩多久，每天最多可買 5,000 枚代幣（原本是 500）。',
+      },
+      {
+        pt: 'Prêmios shiny no balcão do Game Corner: Ditto, Absol, Mawile, Gimmighoul, os Nidoran, Cleffa, Plusle e Minun, agora também em versão shiny.',
+        en: 'Shiny prizes at the Game Corner’s counter: Ditto, Absol, Mawile, Gimmighoul, both Nidoran, Cleffa, Plusle and Minun now come shiny too.',
+        es: 'Premios shiny en el mostrador del Casino: Ditto, Absol, Mawile, Gimmighoul, los Nidoran, Cleffa, Plusle y Minun, ahora también en versión shiny.',
+        fr: 'Des prix chromatiques au comptoir de la Salle de jeux : Ditto, Absol, Mawile, Gimmighoul, les deux Nidoran, Cleffa, Plusle et Minun existent aussi en chromatique.',
+        zh: '遊戲城櫃台新增異色獎品：Ditto、Absol、Mawile、Gimmighoul、兩隻 Nidoran、Cleffa、Plusle 和 Minun 都有異色版了。',
+      },
+      {
+        pt: 'Já tem Rotom ou Wishiwashi? Achar de novo agora pode trazer o shiny: a TV velha das casas abandonadas e a pesca longe do píer têm uma chance pequena.',
+        en: 'Already have Rotom or Wishiwashi? Finding them again can now bring the shiny: the old TV in abandoned cottages and fishing far from the pier have a small chance.',
+        es: '¿Ya tienes a Rotom o a Wishiwashi? Encontrarlos de nuevo ahora puede traer el shiny: la tele vieja de las casas abandonadas y la pesca lejos del muelle tienen una pequeña probabilidad.',
+        fr: 'Tu as déjà Rotom ou Wishiwashi ? Les retrouver peut maintenant donner le chromatique : la vieille télé des maisons abandonnées et la pêche loin du ponton ont une petite chance.',
+        zh: '已經有 Rotom 或 Wishiwashi 了嗎？再次找到牠們時有小機率得到異色：廢棄小屋的舊電視和離碼頭很遠的釣魚都有機會。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Shiny em achados repetidos', en: 'Shinies on repeat finds', es: 'Shiny en hallazgos repetidos' },
+        notes: [
+          {
+            pt: 'Quem já tem o Rotom tem 1 chance em 20, a cada vez que a TV velha chia numa run, de soltar um Rotom shiny. Ele chega na caixa de presentes.',
+            en: 'If you already own Rotom, each run where the old TV crackles has a 1 in 20 chance of letting out a shiny Rotom. It arrives in the gift box.',
+            es: 'Si ya tienes a Rotom, cada partida en que la tele vieja chisporrotea tiene 1 probabilidad entre 20 de soltar un Rotom shiny. Llega a la caja de regalos.',
+          },
+          {
+            pt: 'Quem já tem o Wishiwashi tem 1 chance em 25, a cada pescaria que fisga outro, de ganhar um Wishiwashi shiny. Ele chega na caixa de presentes.',
+            en: 'If you already own Wishiwashi, each fishing session that hooks another has a 1 in 25 chance of bringing a shiny Wishiwashi. It arrives in the gift box.',
+            es: 'Si ya tienes a Wishiwashi, cada pesca que atrapa otro tiene 1 probabilidad entre 25 de traer un Wishiwashi shiny. Llega a la caja de regalos.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Game Corner', en: 'Game Corner', es: 'Casino' },
+        notes: [
+          {
+            pt: 'O caça-níqueis não tem mais limite de giros nem cofre que fecha: cada giro paga o que tirar. Três Poké Balls agora pagam 10 (eram 12) e três Magikarp 7 (eram 9); os prêmios grandes não mudaram.',
+            en: 'The slots no longer have a spin limit or a vault that closes: every spin pays what it lands. Three Poké Balls now pay 10 (was 12) and three Magikarp 7 (was 9); the big prizes are the same.',
+            es: 'Las tragaperras ya no tienen límite de giros ni una caja que cierra: cada giro paga lo que saque. Tres Poké Balls ahora pagan 10 (eran 12) y tres Magikarp 7 (eran 9); los premios grandes no cambian.',
+          },
+          {
+            pt: 'O Caça ao Koffing não tem mais limite de mesas. Ele paga cheio até 1.500 fichas por dia, metade até 2.250, e depois entra no modo livre: as mesas continuam valendo o nível, só não dão fichas até o dia seguinte.',
+            en: 'Koffing Sweep no longer has a board limit. It pays in full up to 1,500 tokens a day and half up to 2,250, then goes into free play: boards still count for your level, they just give no tokens until the next day.',
+            es: 'La Caza de Koffing ya no tiene límite de mesas. Paga completo hasta 1.500 fichas al día, la mitad hasta 2.250, y luego pasa al modo libre: las mesas siguen valiendo el nivel, solo que no dan fichas hasta el día siguiente.',
+          },
+          {
+            pt: 'No balcão do Meowth dá para comprar até 5.000 fichas por dia, e tem um pacote novo de 1.000 fichas por ₽20.000.',
+            en: 'Meowth’s counter sells up to 5,000 tokens a day, with a new pack of 1,000 tokens for ₽20,000.',
+            es: 'En el mostrador de Meowth puedes comprar hasta 5.000 fichas al día, y hay un paquete nuevo de 1.000 fichas por ₽20.000.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Pokémon Sombrios', en: 'Shadow Pokémon', es: 'Pokémon Oscuros' },
+        notes: [
+          {
+            pt: 'O botão Purificar abre uma janela de confirmação (Cancelar já vem selecionado) que diz qual Pokémon vai ser purificado e que a forma Sombria se perde, a não ser com o Soro Sombrio.',
+            en: 'The Purify button opens a confirmation (Cancel comes selected) that names the Pokémon and says its Shadow form is lost, unless you use the Shadow Serum.',
+            es: 'El botón Purificar abre una ventana de confirmación (Cancelar viene seleccionado) que dice qué Pokémon se purifica y que la forma Oscura se pierde, salvo con el Suero Oscuro.',
+          },
+          {
+            pt: 'O Soro Sombrio custa 11.000 fichas no balcão de prêmios e pode ser trocado quantas vezes quiser. Ele chega na caixa de presentes e, ao abrir, o Pokémon escolhido volta a ser Sombrio com o coração fechado.',
+            en: 'The Shadow Serum costs 11,000 tokens at the prize counter and can be traded for as often as you like. It arrives in the gift box, and opening it turns the chosen Pokémon Shadow again, its heart closed.',
+            es: 'El Suero Oscuro cuesta 11.000 fichas en el mostrador de premios y se puede canjear las veces que quieras. Llega a la caja de regalos y, al abrirlo, el Pokémon elegido vuelve a ser Oscuro con el corazón cerrado.',
+          },
+          {
+            pt: 'Cada família do balcão tem seu prêmio shiny, de 7.500 fichas (Ditto) a 15.000 (Cleffa). Ele chega na caixa de presentes e choca a família já shiny; se você já tinha a família, ela passa a ser shiny. Quem já trocou a família normal paga só a diferença.',
+            en: 'Every counter family has a shiny prize, from 7,500 tokens (Ditto) to 15,000 (Cleffa). It arrives in the gift box and hatches the family shiny; if you already had the family, it turns shiny. If you already traded for the regular family, you only pay the difference.',
+            es: 'Cada familia del mostrador tiene su premio shiny, de 7.500 fichas (Ditto) a 15.000 (Cleffa). Llega a la caja de regalos y eclosiona la familia ya shiny; si ya tenías la familia, pasa a ser shiny. Si ya canjeaste la familia normal, pagas solo la diferencia.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones' },
+        notes: [
+          {
+            pt: 'A Carpintaria do Bibarel dizia "Na sua coleção" em todos os troféus dos mini games e das Estampas, mesmo sem tê-los. Agora cada um diz o que falta para ganhar, como "Faça 400 pontos em Pesca no Píer".',
+            en: 'Bibarel’s Carpentry said "In your collection" on every mini game and Stamps trophy, even ones you didn’t have. Now each says what earns it, like "Score 400 points in Pier Fishing".',
+            es: 'La Carpintería de Bibarel decía "En tu colección" en todos los trofeos de los minijuegos y de las Estampas, aunque no los tuvieras. Ahora cada uno dice qué falta para ganarlo, como "Haz 400 puntos en Pesca en el Muelle".',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-11-17',
     title: { pt: 'Correções da Temporada 1', en: 'Season 1 fixes', es: 'Correcciones de la Temporada 1', fr: 'Correctifs de la Saison 1', zh: '第 1 賽季修正' },
     highlights: [
@@ -86,6 +201,16 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             es: 'Después eliges tu primer compañero entre los 27 iniciales de todas las regiones. Y en Ajustes > Juego, "Ver el tutorial otra vez" lo muestra todo de nuevo, con un paseo por el lobby.',
             fr: 'Ensuite, tu choisis ton premier partenaire parmi les 27 starters de toutes les régions. Et dans Réglages > Jeu, « Revoir le tutoriel » montre tout à nouveau, avec une visite du lobby.',
             zh: '接著從各地區的 27 隻御三家中選出第一位夥伴。在設定 > 遊戲裡的「重看教學」可以再看一次，還會帶你逛一圈大廳。',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Doações com Apple Pay e Google Pay no Brasil', en: 'Apple Pay and Google Pay for donations in Brazil', es: 'Donaciones con Apple Pay y Google Pay en Brasil' },
+        notes: [
+          {
+            pt: 'Na página Apoie, a doação em reais (AbacatePay) agora aceita Apple Pay e Google Pay, além de Pix e cartão.',
+            en: 'On the Support page, donations in reais (AbacatePay) now take Apple Pay and Google Pay, besides Pix and card.',
+            es: 'En la página Apoya, las donaciones en reales (AbacatePay) ahora aceptan Apple Pay y Google Pay, además de Pix y tarjeta.',
           },
         ],
       },
@@ -171,6 +296,16 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             pt: 'Textos mais claros: a chance dos míticos no final das 15:00, o que acontece com um shiny selvagem derrotado e o que o Esquecer faz.',
             en: 'Clearer texts: the mythicals’ chance at the 15:00 finale, what happens to a wild shiny you beat, and what Forget does.',
             es: 'Textos más claros: la probabilidad de los míticos en el final de las 15:00, qué pasa con un shiny salvaje derrotado y qué hace Olvidar.',
+          },
+          {
+            pt: 'O Ponyta de Galar agora fica junto das outras formas de Galar: aparece na seção de Galar da escolha de parceiro e choca do Ovo de Viagem na semana de Galar (não mais do Ovo Raro). Quem já tem continua com ele.',
+            en: 'Galarian Ponyta now sits with the other Galarian forms: it shows in the partner select’s Galar section and hatches from the Travel Egg in Galar’s week (no longer from the Rare Egg). If you have it, you keep it.',
+            es: 'El Ponyta de Galar ahora está junto a las otras formas de Galar: aparece en la sección de Galar de la elección de compañero y sale del Huevo de Viaje en la semana de Galar (ya no del Huevo Raro). Si ya lo tienes, lo conservas.',
+          },
+          {
+            pt: 'O ranking do Desafio do dia de 17/11 misturou Stufful e Starly: o Pokémon do dia mudou no meio do dia. Os próximos dias não mudam mais. Desculpa!',
+            en: 'The Daily Challenge board of 11/17 mixed Stufful and Starly: the day’s Pokémon changed mid-day. The next days won’t change anymore. Sorry!',
+            es: 'El ranking del Desafío del día del 17/11 mezcló Stufful y Starly: el Pokémon del día cambió a mitad del día. Los próximos días ya no cambian. ¡Perdón!',
           },
         ],
       },

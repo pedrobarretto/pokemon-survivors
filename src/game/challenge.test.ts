@@ -52,6 +52,13 @@ describe('dailyChallenge', () => {
     expect(['2026-10-21', '2026-10-24', '2026-11-02'].map((d) => dailyChallenge(d).starter)).toEqual(['larvitar', 'roggenrola', 'honedge'])
   })
 
+  it('keeps the Pokémon each Temporada 1 day had', () => {
+    // Pinned: any change to the pool's size reshuffles every day from the season on, the day being played too.
+    // A family leaving the draw goes in `KEPT_IN`; one joining it needs a pool of its own from a later day.
+    const days = ['2026-11-18', '2026-11-19', '2026-11-20', '2026-11-21', '2026-11-22']
+    expect(days.map((d) => dailyChallenge(d).starter)).toEqual(['finizen', 'chespin', 'wimpod', 'fennekin', 'happiny'])
+  })
+
   it('keeps the past Nightmares and draws none after `nightmareUntil`, every other day as it was', () => {
     // Pinned: the days already played keep their difficulty, so their runs still check.
     expect(['2026-10-26', '2026-10-27', '2026-10-28', '2026-10-30'].map((d) => dailyChallenge(d).difficulty)).toEqual(['nightmare', 'nightmare', 'hard', 'normal'])

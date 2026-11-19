@@ -973,7 +973,7 @@ export const sitePt = {
     suggested: 'Sugerido para você',
     br: {
       title: 'No Brasil',
-      methods: 'Pix ou cartão de crédito, em reais.',
+      methods: 'Pix, cartão de crédito, Apple Pay ou Google Pay, em reais.',
       amount: 'Valor da doação',
       other: 'Outro valor',
       range: (min: number, max: number) => `De R$ ${min} a R$ ${max}, sem centavos.`,

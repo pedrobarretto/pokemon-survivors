@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BETS, cappedWin, CORNER, canBuy, cleared, dealBoard, hintsOf, nextLevel, slotsReturn, spinWins, STRIP, SWEEP, sweepPay, sweepView, type Tile } from './corner.rules'
+import { BETS, CORNER, canBuy, cleared, dealBoard, hintsOf, nextLevel, slotsReturn, spinWins, STRIP, SWEEP, sweepCredit, sweepPay, sweepRate, sweepView, type Tile } from './corner.rules'
 
 /** A seeded stand-in for the API's dice. */
 const dice = (seed: number) => {
@@ -13,10 +13,10 @@ const dice = (seed: number) => {
 }
 
 describe('the slots', () => {
-  it('give back about what they take over a long day, at every bet', () => {
+  it('keep a small house edge at every bet, so endless spinning only spends tokens', () => {
     for (const bet of BETS) {
-      expect(slotsReturn(bet)).toBeGreaterThan(0.97)
-      expect(slotsReturn(bet)).toBeLessThan(1.04)
+      expect(slotsReturn(bet)).toBeGreaterThan(0.94)
+      expect(slotsReturn(bet)).toBeLessThan(0.97)
     }
   })
 
@@ -66,9 +66,18 @@ describe('Koffing Sweep', () => {
 })
 
 describe('the day', () => {
-  it('caps what the games pay and what the counter sells', () => {
-    expect(cappedWin(100, CORNER.wonDaily - 30)).toBe(30)
-    expect(cappedWin(100, CORNER.wonDaily)).toBe(0)
+  const { full, half } = CORNER.sweepDay
+
+  it('pays Koffing Sweep in full, then at half, then not at all', () => {
+    expect(sweepCredit(100, 0)).toBe(100)
+    expect(sweepCredit(100, full - 30)).toBe(30 + 35)
+    expect(sweepCredit(100, full)).toBe(50)
+    expect(sweepCredit(100, half - 20)).toBe(20)
+    expect(sweepCredit(100, half)).toBe(0)
+    expect([sweepRate(0), sweepRate(full), sweepRate(half)]).toEqual([1, 0.5, 0])
+  })
+
+  it('caps what the counter sells', () => {
     expect(canBuy(1, CORNER.buyDaily - 250)).toBe(true)
     expect(canBuy(1, CORNER.buyDaily - 200)).toBe(false)
     expect(canBuy(9, 0)).toBe(false)

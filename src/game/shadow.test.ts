@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canPurify, grantShadow, mergeShadows, NO_SHADOWS, parseShadows, pickShadow, purify, purifySteps, runVariant, SHADOW, variantDeltas, walkShadows } from './shadow'
+import { canPurify, grantShadow, mergeShadows, NO_SHADOWS, parseShadows, pickShadow, purifiedIds, purify, purifySteps, reshadow, runVariant, SHADOW, variantDeltas, walkShadows } from './shadow'
 
 describe('Shadow Pokémon', () => {
   it('play as Shadow once owned, Purified once purified, plain when switched off', () => {
@@ -20,12 +20,36 @@ describe('Shadow Pokémon', () => {
     expect(canPurify(walked, 'mewtwo')).toBe(false)
     expect(walkShadows(walked, 10 ** 9).mewtwo!.steps).toBe(purifySteps('mewtwo'))
     expect(runVariant(purify(walked, 'absol'), 'absol')).toBe('purified')
+    expect(purify(walked, 'absol').absol!.rev).toBe(1)
   })
 
-  it('merge for good: purified wins, the further gauge wins, the incoming pick wins', () => {
-    const a = { absol: { purified: true, steps: 100, pick: true } }
-    const b = { absol: { purified: false, steps: 500, pick: false }, ditto: { purified: false, steps: 3, pick: true } }
-    expect(mergeShadows(a, b)).toEqual({ absol: { purified: true, steps: 500, pick: false }, ditto: { purified: false, steps: 3, pick: true } })
-    expect(parseShadows({ absol: { purified: true, steps: -4, pick: 1 }, nope: { steps: 3 } })).toEqual({ absol: { purified: true, steps: 0, pick: false } })
+  it('the Shadow Serum turns a Purified one back, its gauge to walk again; anything else stays', () => {
+    const purified = purify(walkShadows(grantShadow(NO_SHADOWS, 'absol'), SHADOW.steps), 'absol')
+    expect(purifiedIds(purified)).toEqual(['absol'])
+    const back = reshadow(pickShadow(purified, 'absol', false), 'absol')
+    expect(back.absol).toEqual({ purified: false, steps: 0, pick: true, rev: 2 })
+    expect(runVariant(back, 'absol')).toBe('shadow')
+    expect(canPurify(back, 'absol')).toBe(false)
+    expect(reshadow(back, 'absol')).toBe(back)
+    expect(reshadow(back, 'ditto')).toBe(back)
+  })
+
+  it('merge: at the same rev purified wins and the further gauge; a later purify or Serum wins over a stale side', () => {
+    const a = { absol: { purified: true, steps: 100, pick: true, rev: 0 } }
+    const b = { absol: { purified: false, steps: 500, pick: false, rev: 0 }, ditto: { purified: false, steps: 3, pick: true, rev: 0 } }
+    expect(mergeShadows(a, b)).toEqual({ absol: { purified: true, steps: 500, pick: false, rev: 0 }, ditto: { purified: false, steps: 3, pick: true, rev: 0 } })
+    // A device still holding the purified Absol (rev 1) can't undo the Serum (rev 2), nor bring back its full gauge.
+    const stale = { absol: { purified: true, steps: SHADOW.steps, pick: true, rev: 1 } }
+    const reverted = { absol: { purified: false, steps: 0, pick: true, rev: 2 } }
+    expect(mergeShadows(reverted, stale).absol).toEqual({ purified: false, steps: 0, pick: true, rev: 2 })
+    expect(mergeShadows(stale, reverted).absol).toEqual({ purified: false, steps: 0, pick: true, rev: 2 })
+    // And a stale revert loses to the purify that came after it.
+    const again = { absol: { purified: true, steps: SHADOW.steps, pick: false, rev: 3 } }
+    expect(mergeShadows(again, reverted).absol).toEqual({ purified: true, steps: SHADOW.steps, pick: true, rev: 3 })
+  })
+
+  it('parse: old entries (no rev) at rev 0, malformed ones cleaned', () => {
+    expect(parseShadows({ absol: { purified: true, steps: -4, pick: 1 }, nope: { steps: 3 } })).toEqual({ absol: { purified: true, steps: 0, pick: false, rev: 0 } })
+    expect(parseShadows({ absol: { purified: false, steps: 30, pick: true, rev: 2 } }).absol!.rev).toBe(2)
   })
 })

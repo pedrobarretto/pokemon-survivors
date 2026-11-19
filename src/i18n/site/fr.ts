@@ -916,7 +916,7 @@ export const siteFr: SiteMessages = {
     suggested: 'Suggéré pour toi',
     br: {
       title: 'Au Brésil',
-      methods: 'Pix ou carte bancaire, en réais brésiliens.',
+      methods: 'Pix, carte bancaire, Apple Pay ou Google Pay, en réais brésiliens.',
       amount: 'Montant du don',
       other: 'Autre montant',
       range: (min: number, max: number) => `De R$ ${min} à R$ ${max}, en réais entiers.`,

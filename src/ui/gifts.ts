@@ -1,5 +1,5 @@
 import { isSafariHabitat } from '../data/safari'
-import { HATCHLINGS } from '../data/hatchlings'
+import { HATCHLINGS, PLAYABLE } from '../data/hatchlings'
 import { eggLegend, LEGENDS, type LegendId } from '../data/legends'
 import type { CosmogLegend } from '../game/legendPaths'
 import { BAG_ITEMS, EVO_ITEMS } from '../data/shop'
@@ -70,6 +70,8 @@ export const contentLine = (gift: Pick<Gift, 'content'>): { src: string; text: s
       return { src: itemArt(c.item), text: EVO_ITEMS[c.item].name }
     case 'shadow':
       return { src: portraitUrl(HATCHLINGS[c.family].line[0].dex), text: t().rocket.gifts.shadow(HATCHLINGS[c.family].name) }
+    case 'reshadow':
+      return { src: portraitUrl(PLAYABLE[c.id].line[0].dex), text: t().rocket.gifts.reshadow(PLAYABLE[c.id].name) }
   }
 }
 

@@ -51,6 +51,17 @@ export type ResearchId = keyof typeof RESEARCH
 
 export const RESEARCH_IDS = Object.keys(RESEARCH) as ResearchId[]
 
+/**
+ * A shiny on a repeat find, once the account owns the family and not its
+ * shiny yet, sent as a `shinyHatch` gift: `rotom` each run whose flickering TV
+ * an owner stands at again (drawn from the run's seed, apart from its rng:
+ * `tvShinyRoll`), `wishiwashi` each fishing claim that hooks one again (the
+ * API's roll, sent once per account). A rough pass, rare but reachable.
+ */
+export const REPEAT_SHINY = { rotom: 1 / 20, wishiwashi: 1 / 25 } as const satisfies Partial<Record<HatchlingId, number>>
+
+export type RepeatShinyId = keyof typeof REPEAT_SHINY
+
 /** The mini game feats that bring a family, once per account: the API sends it as a gift on the first claim (`POST /realm/game/claim`). */
 export const FEAT_FAMILIES: Partial<Record<MinigameId, Readonly<Record<string, HatchlingId>>>> = {
   fishing: { wishiwashi: 'wishiwashi' },
