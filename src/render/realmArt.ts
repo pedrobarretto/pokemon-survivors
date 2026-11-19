@@ -1,4 +1,4 @@
-import { assetImage, assetUrl } from '../assets'
+import { assetUrl } from '../assets'
 import { canvasCache, context2d, createCanvas, drawable, readPixels } from '../engine/pixelart'
 import { hash2 } from '../engine/rng'
 import { BASE_GRID, BASE_ROOM, CORNER_STAIRS, REALM_ROOMS, type Point, type Shape, type TownRoomId } from '../data/realmMap'
@@ -65,7 +65,8 @@ const measure = (img: HTMLImageElement): Art => {
 }
 
 const loadArt = (id: TownArt, tries = 3) => {
-  const img = assetImage(assetUrl(`${TOWN_ART[id]}.png`))
+  const img = new Image()
+  img.src = assetUrl(`${TOWN_ART[id]}.png`)
   const landed = () => {
     if (drawable(img)) arts.set(id, measure(img))
     else if (tries > 1) setTimeout(() => loadArt(id, tries - 1), 5000)

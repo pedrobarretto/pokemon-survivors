@@ -1,4 +1,3 @@
-import { assetImage } from '../assets'
 import { t } from '../i18n'
 import type { PokeType } from '../data/types'
 import { context2d, createCanvas } from '../engine/pixelart'
@@ -12,7 +11,8 @@ const PORTRAIT = 40
 /** The purple brother's portrait: the green one's, recolored like his sprites once it loads. */
 const purplePortrait = (emotion: Emotion) => {
   const canvas = createCanvas(PORTRAIT, PORTRAIT)
-  const img = assetImage(emotionUrl(KECLEON_DEX, emotion))
+  const img = new Image()
+  img.src = emotionUrl(KECLEON_DEX, emotion)
   img.onload = () => context2d(canvas).drawImage(purpleize(img) ?? img, 0, 0)
   return canvas
 }

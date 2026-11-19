@@ -1,9 +1,8 @@
 /**
- * The script of the asset CDN (`cdn/wrangler.jsonc`) and of the site's Worker (`cdn/site.wrangler.jsonc`).
- * Static files never reach it: the Worker serves them first, for free. It only runs for PostHog's proxy
- * under `/ingest/`, the same rewrites `vercel.json` has, so the game's analytics (`ingestHost` in
- * `src/analytics.ts`) cost Vercel nothing. Anything else that reaches it is a 404 (the site's Worker
- * sends only `/ingest/*` here, and answers its other misses with its 404 page).
+ * The script of the site's Worker (`worker/wrangler.jsonc`). Static files never reach it: the Worker
+ * serves them first, for free. It only runs for PostHog's proxy under `/ingest/` (`api_host` in
+ * `src/analytics.ts`). Anything else that reaches it is a 404 (the Worker sends only `/ingest/*` here,
+ * and answers its other misses with its 404 page).
  */
 
 const API = 'https://us.i.posthog.com'

@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-/** Build-time settings (`.env`, Vercel). The first two are needed for accounts; without them the game is guest only. */
+/** Build-time settings (`.env`; in production, the Site workflow's variables). The first two are needed for accounts; without them the game is guest only. */
 interface ImportMetaEnv {
   /** Clerk's publishable key (`pk_…`). */
   readonly VITE_CLERK_PUBLISHABLE_KEY?: string

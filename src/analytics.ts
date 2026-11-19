@@ -1,5 +1,4 @@
 import type { PostHog } from 'posthog-js'
-import { CDN_ORIGIN, cdnState } from './assets'
 import type { AbilityId, HitKind } from './data/abilities'
 import type { BranchId } from './data/branches'
 import type { EnemyId } from './data/enemies'
@@ -133,8 +132,6 @@ type AnalyticsEvents = {
     arm: Arm | null
     tutorial: TutorialOutcome['how'] | null
     tutorialStep: string | null
-    /** The asset CDN as the load ended (`cdnState`): `down` where it couldn't be reached and the site served the assets. */
-    cdn: 'off' | 'unknown' | 'ok' | 'down'
     /** 1 inside another site's page (a portal's frame, `handoff.ts`). */
     framed: 0 | 1
     /** Seconds since the page started, as the event went. */
@@ -454,16 +451,16 @@ const stackUrl = (stack: string) => /(?:https?|[a-z-]+-extension):\/\/[^\s)]+?(?
  * None of that is ours to fix. Those scripts may run in a JavaScript world
  * of their own, whose errors aren't this page's `Error`s (no `instanceof`)
  * though they are errors: the game's never are. With nothing to go on, it counts as ours.
- * The game's scripts come from any of `origins`: the site's, and the asset CDN's (`cdn/loader.ts`).
+ * The game's scripts come from the site's `origin`.
  */
-export const isOwnError = (error: unknown, filename: string | undefined, ...origins: string[]) => {
+export const isOwnError = (error: unknown, filename: string | undefined, origin: string) => {
   if (!(error instanceof Error) && Object.prototype.toString.call(error) === '[object Error]') return false
   const stack = error instanceof Error ? error.stack : undefined
   const url = filename || (stack ? stackUrl(stack) : null)
   if (!url) return true
   try {
     const u = new URL(url)
-    return origins.includes(u.origin) && /\.[cm]?[jt]sx?$/.test(u.pathname)
+    return u.origin === origin && /\.[cm]?[jt]sx?$/.test(u.pathname)
   } catch {
     return true
   }
@@ -512,12 +509,6 @@ const reportError = (error: unknown, context: () => ErrorContext) => {
   withPosthog((ph) => ph.captureException(error, props))
 }
 
-/**
- * Where PostHog's requests go: the asset CDN's proxy (`cdn/worker.ts`), whose requests Vercel doesn't bill,
- * or the site's own (`vercel.json`'s rewrites) without a CDN or where it couldn't be reached (`cdnState`).
- */
-const ingestHost = () => (CDN_ORIGIN && cdnState() !== 'down' ? `${CDN_ORIGIN}/ingest` : '/ingest')
-
 const live = () => {
   if (!POSTHOG_KEY) return false
   if (LIVE_HOSTS.includes(location.hostname)) return true
@@ -537,14 +528,14 @@ export const startAnalytics = (context: () => ErrorContext) => {
   const key = POSTHOG_KEY
   if (!key || !live()) return giveUp()
   // "Script error." comes from other origins (extensions) with nothing to go on.
-  const origins = [location.origin, ...(CDN_ORIGIN ? [CDN_ORIGIN] : [])]
-  addEventListener('error', (e) => e.error && isOwnError(e.error, e.filename, ...origins) && reportError(e.error, context))
-  addEventListener('unhandledrejection', (e) => isOwnError(e.reason, undefined, ...origins) && reportError(e.reason, context))
+  addEventListener('error', (e) => e.error && isOwnError(e.error, e.filename, location.origin) && reportError(e.error, context))
+  addEventListener('unhandledrejection', (e) => isOwnError(e.reason, undefined, location.origin) && reportError(e.reason, context))
   const load = () =>
     import('posthog-js')
       .then(({ default: ph }) => {
         ph.init(key, {
-          api_host: ingestHost(),
+          // PostHog's proxy on the site (`worker/worker.ts`).
+          api_host: '/ingest',
           ui_host: 'https://us.posthog.com',
           persistence: 'localStorage',
           persistence_name: 'ps',
@@ -557,7 +548,7 @@ export const startAnalytics = (context: () => ErrorContext) => {
           enable_heatmaps: false,
           // Replays only for the sampled new devices (`recordReplay`). They wait for the remote config
           // (`/array/<key>/config.js`), which says recording is on for the project: feature flags
-          // (`/flags/?v=2`) and remote config load, both through `/ingest` (`ingestHost`).
+          // (`/flags/?v=2`) and remote config load, both through `/ingest`.
           disable_session_recording: true,
           session_recording: { maskAllInputs: true },
           disable_surveys: true,

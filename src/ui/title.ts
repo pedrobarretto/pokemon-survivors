@@ -1,4 +1,4 @@
-import { assetImage, assetUrl } from '../assets'
+import { assetUrl } from '../assets'
 import { realmHourTag } from './realmHour'
 import { accountState, accountsEnabled, giftInbox, onInbox, onSaveSynced } from '../account'
 import { lobbyPress } from '../analytics'
@@ -611,7 +611,8 @@ const castPainter = (canvas: HTMLCanvasElement, slot: HTMLElement) => {
     cast = castOf(mode)
     picture = null
     if (cast.img) {
-      picture = assetImage(cast.img.src)
+      picture = new Image()
+      picture.src = cast.img.src
     }
     for (const f of cast.figures) void loadSpecies(f.dex, f.shiny).catch(() => {})
     if (cast.cafe) for (const p of CAFE_PATRONS) void loadSpecies(p.dex).catch(() => {})

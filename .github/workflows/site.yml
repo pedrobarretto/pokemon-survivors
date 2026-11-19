@@ -1,10 +1,7 @@
 name: Site
 
-# Builds the whole site and deploys it to its Cloudflare Worker (`ps-site`, cdn/site.wrangler.jsonc), Vercel's
-# replacement. By hand any time (before the cutover it only reaches ps-site.pedrobarretto.workers.dev), and on
-# every push to main once the repo variable SITE_DEPLOY is `on`. `npm run site:build` never deploys the asset CDN
-# (`ps-assets`, cdn/deploy.mjs): Vercel's builds keep deploying that one, and two deploys at once would clobber
-# its builds.json.
+# Builds the whole site and deploys it to its Cloudflare Worker (`ps-site`, worker/wrangler.jsonc): by hand any
+# time, and on every push to main once the repo variable SITE_DEPLOY is `on`.
 on:
   push:
     branches: [main]
@@ -41,5 +38,6 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm run site:build
-      - run: npx --yes wrangler@4.154.0 deploy --config cdn/site.wrangler.jsonc
+      # `--keep` goes to the build's last step (worker/site.mjs): it carries the live Worker's kept builds along.
+      - run: npm run build -- --keep
+      - run: npx --yes wrangler@4.154.0 deploy --config worker/wrangler.jsonc

@@ -53,7 +53,7 @@ export const SITE_PAGES: readonly SitePage[] = [
 ]
 
 /**
- * The 404 page: `404.html` at the root, which Vercel serves (status 404) for any
+ * The 404 page: `404.html` at the root, which the site's Worker serves (status 404) for any
  * path that doesn't exist. Not a route: no hreflang, not in the sitemap, never indexed.
  */
 export const NOT_FOUND_PAGE = { path: '/404.html', file: '404.html', render: notFoundPage } as const

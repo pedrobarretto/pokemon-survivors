@@ -4,7 +4,6 @@ import { firstTime } from './firstTime'
 import { answerGate, furthest, isFirstLoad, NO_STEPS, reach, REPLAY_RATE, type FirstStep, type FirstSteps, type GateAnswer } from './firstSteps'
 import { hostApp, onOnboarding, type OnboardingStep } from './onboarding'
 import { deviceNow } from './telemetry'
-import { cdnState } from './assets'
 import { framed } from './handoff'
 
 /**
@@ -94,7 +93,6 @@ const send = (sent: 'minute' | 'hidden') => {
       arm: onboarding.arm,
       tutorial: onboarding.tutorial?.how ?? null,
       tutorialStep: onboarding.tutorial?.step ?? null,
-      cdn: cdnState(),
       framed: framed() ? 1 : 0,
       at: Math.round(performance.now() / 100) / 10,
       sheets,

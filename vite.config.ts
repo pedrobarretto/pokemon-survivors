@@ -1,8 +1,7 @@
 import { execSync } from 'node:child_process'
 import { readFileSync, statSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { defineConfig, loadEnv, runnerImport, type Plugin } from 'vite'
-import { servedVersions } from './cdn/versions.mjs'
+import { defineConfig, runnerImport, type Plugin } from 'vite'
 import { SIM_ROOTS, simBuildId } from './src/coop/simBuild'
 
 type Site = typeof import('./src/site/index.ts')
@@ -30,7 +29,7 @@ const sitePages = (): Plugin => {
     async config(config, { command }) {
       if (command !== 'build') return
       root = resolve(config.root ?? process.cwd())
-      // The pages render with the game's build constants (the asset CDN's, `src/assets.ts`).
+      // The pages render with the game's build constants.
       site = (await runnerImport<Site>(SITE_ENTRY, { configFile: false, root, define: config.define })).module
       pages = new Map(documents(site).map((p) => [resolve(root, p.file), p]))
       // Entry names from the output file: `en/guide/index.html` → `en-guide`, `404.html` → `404`.
@@ -55,11 +54,11 @@ const sitePages = (): Plugin => {
           res.setHeader('Content-Type', 'application/xml')
           return res.end(dev.sitemap())
         }
-        // Like Vercel's `trailingSlash: true`: /guia → /guia/
+        // Like the site's Worker (`worker/siteRules.ts`): /guia → /guia/
         const page = documents(dev).find((p) => p.path === path || p.path === `${path}/`)
         if (!page) {
           if (!missing(path, req.headers.accept)) return next()
-          // Like Vercel: a page that doesn't exist gets the 404 page, with its status.
+          // Like the site's Worker: a page that doesn't exist gets the 404 page, with its status.
           res.statusCode = 404
           res.setHeader('Content-Type', 'text/html')
           return res.end(await server.transformIndexHtml(path, dev.NOT_FOUND_PAGE.render(), req.originalUrl))
@@ -77,7 +76,7 @@ const sitePages = (): Plugin => {
 }
 
 /**
- * Whether a dev request is a page navigation Vercel would answer with the 404:
+ * Whether a dev request is a page navigation the site's Worker would answer with the 404:
  * HTML, not Vite's own paths or a file (an extension), and no game page on disk.
  */
 const missing = (path: string, accept: string | undefined) =>
@@ -94,9 +93,9 @@ const statSafe = (file: string) => {
   }
 }
 
-/** The commit being built (Vercel or GitHub Actions say which; locally, git), for `__GAME_VERSION__`. */
+/** The commit being built (GitHub Actions says which; locally, git), for `__GAME_VERSION__`. */
 const gameVersion = () => {
-  const sha = process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GITHUB_SHA
+  const sha = process.env.GITHUB_SHA
   if (sha) return sha.slice(0, 7)
   try {
     return execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim() || 'dev'
@@ -193,34 +192,17 @@ const atelier = (): Plugin => ({
   },
 })
 
-/**
- * `__ASSET_CDN__` (`src/assets.ts`): with `VITE_ASSET_ORIGIN` set, the asset CDN
- * and the groups of `public/assets/` it serves as they are here; unset (dev,
- * tests, previews), none, and every asset loads from the site.
- */
-const assetCdn = async (mode: string) => {
-  const origin = (loadEnv(mode, import.meta.dirname, 'VITE_').VITE_ASSET_ORIGIN ?? '').replace(/\/+$/, '')
-  return { origin, versions: origin ? await servedVersions(origin) : {} }
-}
-
 // One page per language for the game (index.html, en/, es/, fr/ and zh-tw/index.html); the site pages are added by `sitePages`.
-export default defineConfig(async ({ mode }) => ({
+export default defineConfig({
   plugins: [sitePages(), simBuildFile(), atelier()],
   // The co-op relay (`relay/`) is its own package with its own Workers test runner.
   test: { exclude: ['**/node_modules/**', '**/.git/**', 'relay/**'] },
   define: {
     __GAME_VERSION__: JSON.stringify(gameVersion()),
     __SIM_BUILD__: JSON.stringify(SIM_BUILD),
-    __ASSET_CDN__: JSON.stringify(await assetCdn(mode)),
   },
-  // PostHog's proxy, as vercel.json has it, to try analytics locally (`ps:analytics` set to `on` in localStorage).
+  // PostHog's proxy, as the site's Worker has it (`worker/worker.ts`), to try analytics locally (`ps:analytics` set to `on` in localStorage).
   server: { proxy: { '/ingest': { target: 'https://us.i.posthog.com', changeOrigin: true, rewrite: (path) => path.replace(/^\/ingest/, '') } } },
-  experimental: {
-    // Chunks find each other relative to the one importing them (preloads, lazy chunks, the wear worker),
-    // so a page whose entry came from the asset CDN keeps loading from it, and one that fell back to the
-    // site (`cdn/loader.ts`) keeps loading from the site.
-    renderBuiltUrl: (_file: string, { hostType }: { hostType: 'js' | 'css' | 'html' }) => (hostType === 'js' ? { relative: true } : undefined),
-  },
   build: {
     // Hidden source maps, for `scripts/sourcemaps.mjs` to upload to PostHog, only where it will.
     sourcemap: process.env.POSTHOG_CLI_API_KEY ? 'hidden' : false,
@@ -228,4 +210,4 @@ export default defineConfig(async ({ mode }) => ({
       input: { main: 'index.html', en: 'en/index.html', es: 'es/index.html', fr: 'fr/index.html', zh: 'zh-tw/index.html' },
     },
   },
-}))
+})

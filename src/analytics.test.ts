@@ -15,12 +15,6 @@ describe('isOwnError', () => {
     expect(isOwnError(new Error('La'), `${origin}/en/?ref=sdog`, origin)).toBe(false)
   })
 
-  it("keeps errors from the game's scripts on the asset CDN", () => {
-    const cdn = 'https://ps-assets.example.workers.dev'
-    expect(isOwnError(new Error('x'), `${cdn}/assets/main-DHVVhsKK.js`, origin, cdn)).toBe(true)
-    expect(isOwnError(new Error('x'), `${cdn}/assets/main-DHVVhsKK.js`, origin)).toBe(false)
-  })
-
   it('drops errors from other origins and extensions', () => {
     expect(isOwnError(new Error('x'), 'https://cdn.example.com/script.js', origin)).toBe(false)
     expect(isOwnError(new Error('x'), 'safari-web-extension://abc/content.js', origin)).toBe(false)
