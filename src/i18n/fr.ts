@@ -1292,6 +1292,7 @@ export const fr: Messages = {
     inAppOpen: 'Ouvrir dans Chrome',
     inAppIos: 'Touche *...* puis *Ouvrir dans le navigateur*',
     inAppSignIn: "Google refuse la connexion depuis cette appli. Ouvre le jeu dans ton navigateur pour te connecter.",
+    framedSignIn: "On a ouvert le jeu dans un nouvel onglet pour que tu te connectes, avec ta progression. Continue d'y jouer.",
     close: 'Fermer',
   },
 

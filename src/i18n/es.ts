@@ -1294,6 +1294,7 @@ export const es: Messages = {
     inAppOpen: 'Abrir en Chrome',
     inAppIos: 'Toca *...* y elige *Abrir en el navegador*',
     inAppSignIn: 'Google no deja iniciar sesión dentro de esta app. Abre el juego en el navegador para entrar con tu cuenta.',
+    framedSignIn: 'Abrimos el juego en una pestaña nueva para que inicies sesión, con tu progreso. Sigue jugando allí.',
     close: 'Cerrar',
   },
 

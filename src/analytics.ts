@@ -132,6 +132,16 @@ type AnalyticsEvents = {
     arm: Arm | null
     tutorial: TutorialOutcome['how'] | null
     tutorialStep: string | null
+    /** 1 inside another site's page (a portal's frame, `handoff.ts`). */
+    framed: 0 | 1
+    /** Seconds since the page started, as the event went. */
+    at: number
+    /** The first run's opening sheets loaded of those it waits for (null before a run loads). */
+    sheets: { done: number; total: number } | null
+    /** The Pokémon sheets fetched: how many, median and slowest ms, KB over the network (null: none yet). */
+    sprites: { n: number; p50: number; max: number; kb: number } | null
+    /** The browser's network guess (Chrome only): effective type and round trip ms. */
+    network: { type: string | null; rtt: number | null } | null
     account: 0 | 1
     replay: 0 | 1
   } & DeviceInfo

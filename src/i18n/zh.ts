@@ -1292,6 +1292,7 @@ export const zh: Messages = {
     inAppOpen: '用 Chrome 開啟',
     inAppIos: '點 *...*，再選 *在瀏覽器中開啟*',
     inAppSignIn: 'Google 不允許在這個 App 內登入。請在瀏覽器中開啟遊戲再登入。',
+    framedSignIn: '已在新分頁開啟遊戲讓你登入，進度也一起帶過去了。請在那裡繼續玩。',
     close: '關閉',
   },
 

@@ -1526,6 +1526,7 @@ export const pt = {
     inAppOpen: 'Abrir no Chrome',
     inAppIos: 'Toque em *...* e escolha *Abrir no navegador*',
     inAppSignIn: 'O Google não deixa entrar por dentro deste app. Abra o jogo no navegador para entrar com sua conta.',
+    framedSignIn: 'Abrimos o jogo numa aba nova para você entrar, com o seu progresso. Continue jogando por lá.',
     close: 'Fechar',
   },
 

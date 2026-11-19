@@ -55,7 +55,7 @@ import { festivalAnnounced } from './game/festival'
 import { openFestival } from './ui/festival'
 import type { BoutiqueTab } from './ui/boutiqueSeen'
 import { identify, lobbyPress, startAnalytics, takeOpened, track, type ErrorContext, type QueueEnd, type RunPerf } from './analytics'
-import { firstGate, firstRunClock, firstStep, holdRunSteps, startFirstSession } from './firstSession'
+import { firstGate, firstRunClock, firstSheets, firstStep, holdRunSteps, startFirstSession } from './firstSession'
 import { enrolDevice, firstTime, forgetFirstTime, nextFirst, tourDue, updateFirstTime, type Arm, type TutorialOutcome } from './firstTime'
 import { welcomeScreen } from './ui/welcome'
 import { firstPartnerScreen } from './ui/firstPartner'
@@ -239,6 +239,7 @@ import { runShare, sharePreview, trainerShare } from './ui/share'
 import type { ShopPlaza, VisitorShelf } from './ui/shop'
 import { starterSelect } from './ui/starterSelect'
 import { firstRunDue, guestChosenAt, guestGateDue, hostApp, onboardingStep, onOnboarding, rememberGuest, savePromptDue } from './onboarding'
+import { takeHandoff } from './handoff'
 import { firstRunTip, hideInAppHint, saveCard, showInAppHint } from './ui/onboarding'
 import { startLobbyTour, type LobbyTourEnd } from './ui/lobbyTour'
 import { invitesScreen, resultsInvite } from './ui/invites'
@@ -1719,7 +1720,7 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
   // The 1/64 roll unlocks this Pokémon's shiny for good (Normal/Shiny on the select screen).
   if (me.luckyShiny) updateSave((s) => ({ ...s, shinyStarters: unlockShinyStarter(s.shinyStarters, starter) }))
   // A shiny run starts in its own colors (and loads only those).
-  await loadRunSheets(familySheets(starter, me.shiny), openingDex(plan))
+  await loadRunSheets(familySheets(starter, me.shiny), openingDex(plan), firstSheets)
   // The outbreak's shiny can show up in the first minute (in safe mode it loads when one does).
   if (!detail.safe) void preloadShinies([ENEMIES[plan.outbreak].dex])
   loading.remove()
@@ -4943,10 +4944,13 @@ const boot = () => {
   watchSupporterStatus()
   // Coming back to the game syncs again, but not mid-run: a run syncs when it ends.
   startAccount(() => run === null)
-  // A Google sign in held back inside an app's browser (`signIn`): the hint says why and how to leave it.
+  // A tab a portal's frame opened to sign in: the frame's progress lands here first, then the sign in it asked for (`handoff.ts`).
+  void takeHandoff(stageSyncedSave).then((provider) => provider && signIn(provider))
+  // A Google sign in held back inside an app's browser (`signIn`): the hint says why and how to leave it. One moved out of a portal's frame: where it went.
   onOnboarding((step) => {
     const app = hostApp()
     if (step === 'inAppSignInHeld' && app) showInAppHint(ui, app, true)
+    if (step === 'framedSignIn') toast(ui, t().onboarding.framedSignIn, 7000, 'framedSignIn')
   })
   // The Festival da Praça's pot, in the background (its gifts join the gift box).
   startFestival()
