@@ -1,6 +1,6 @@
 import { PLAYABLE } from '../../data/hatchlings'
 import { context2d, createCanvas, fromStrings, lazy, type PixelSprite } from '../../engine/pixelart'
-import { locale } from '../../i18n'
+import { cjk as chinese } from '../../i18n'
 import type { TableView } from '../../net/realmTables'
 import { loadSpecies } from '../../render/sprites'
 import type { Sitter, TableCtx } from './frame'
@@ -23,7 +23,7 @@ const texts = new Map<string, PixelSprite>()
  * off, outlined in `outline`: cached once the font has loaded.
  */
 export const label = (text: string, color = '#f8f8f8', outline = INK): PixelSprite => {
-  const cjk = locale() === 'zh'
+  const cjk = chinese()
   const size = cjk ? 12 : 8
   const font = `${size}px "Press Start 2P", "Cubic 11", monospace`
   const key = `${font}|${color}|${outline}|${text}`
@@ -68,7 +68,7 @@ export const clip = (text: string, max: number) => (text.length > max ? `${text.
  * Chinese, without spaces, breaks anywhere at 12 px a character).
  */
 export const wrap = (text: string, width: number): string[] => {
-  const cjk = locale() === 'zh'
+  const cjk = chinese()
   const max = Math.max(4, Math.floor(width / (cjk ? 12 : 8)))
   if (cjk) return Array.from({ length: Math.ceil([...text].length / max) }, (_, i) => [...text].slice(i * max, (i + 1) * max).join(''))
   const out: string[] = []

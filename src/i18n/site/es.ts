@@ -1026,7 +1026,7 @@ export const siteEs: SiteMessages = {
     play: (title: string) => `Ver: ${title}`,
     watchOn: (platform: string) => `Ver en ${platform}`,
     videoAbout: (name: string) => `Video de Pokémon Survivors hecho por ${name}.`,
-    langs: { pt: 'En portugués', en: 'En inglés', es: 'En español', fr: 'En francés', zh: 'En chino' },
+    langs: { pt: 'En portugués', en: 'En inglés', es: 'En español', fr: 'En francés', zh: 'En chino', zhHans: 'En chino' },
     join: {
       title: '¿Haces videos del juego?',
       lead: 'Gameplay, directo, guía, Short o TikTok, en cualquier idioma: todo video del juego puede estar aquí.',

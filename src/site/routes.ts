@@ -37,14 +37,14 @@ export const STRIPE_DONATION_URL = 'https://donate.stripe.com/5kQ28l1x45My6ci4ib
  * These paths are linked from the game's title screen, so keep them stable.
  */
 export const ROUTES = {
-  play: { pt: '/', en: '/en/', es: '/es/', fr: '/fr/', zh: '/zh-tw/' },
-  pokedex: { pt: '/pokedex/', en: '/en/pokedex/', es: '/es/pokedex/', fr: '/fr/pokedex/', zh: '/zh-tw/pokedex/' },
-  tierList: { pt: '/tier-list/', en: '/en/tier-list/', es: '/es/tier-list/', fr: '/fr/tier-list/', zh: '/zh-tw/tier-list/' },
-  guide: { pt: '/guia/', en: '/en/guide/', es: '/es/guia/', fr: '/fr/guide/', zh: '/zh-tw/guide/' },
-  changelog: { pt: '/novidades/', en: '/en/changelog/', es: '/es/novedades/', fr: '/fr/nouveautes/', zh: '/zh-tw/changelog/' },
-  legal: { pt: '/legal/', en: '/en/legal/', es: '/es/legal/', fr: '/fr/legal/', zh: '/zh-tw/legal/' },
-  support: { pt: '/apoie/', en: '/en/support/', es: '/es/apoya/', fr: '/fr/soutenir/', zh: '/zh-tw/support/' },
-  creators: { pt: '/criadores/', en: '/en/creators/', es: '/es/creadores/', fr: '/fr/createurs/', zh: '/zh-tw/creators/' },
+  play: { pt: '/', en: '/en/', es: '/es/', fr: '/fr/', zh: '/zh-tw/', zhHans: '/zh-cn/' },
+  pokedex: { pt: '/pokedex/', en: '/en/pokedex/', es: '/es/pokedex/', fr: '/fr/pokedex/', zh: '/zh-tw/pokedex/', zhHans: '/zh-cn/pokedex/' },
+  tierList: { pt: '/tier-list/', en: '/en/tier-list/', es: '/es/tier-list/', fr: '/fr/tier-list/', zh: '/zh-tw/tier-list/', zhHans: '/zh-cn/tier-list/' },
+  guide: { pt: '/guia/', en: '/en/guide/', es: '/es/guia/', fr: '/fr/guide/', zh: '/zh-tw/guide/', zhHans: '/zh-cn/guide/' },
+  changelog: { pt: '/novidades/', en: '/en/changelog/', es: '/es/novedades/', fr: '/fr/nouveautes/', zh: '/zh-tw/changelog/', zhHans: '/zh-cn/changelog/' },
+  legal: { pt: '/legal/', en: '/en/legal/', es: '/es/legal/', fr: '/fr/legal/', zh: '/zh-tw/legal/', zhHans: '/zh-cn/legal/' },
+  support: { pt: '/apoie/', en: '/en/support/', es: '/es/apoya/', fr: '/fr/soutenir/', zh: '/zh-tw/support/', zhHans: '/zh-cn/support/' },
+  creators: { pt: '/criadores/', en: '/en/creators/', es: '/es/creadores/', fr: '/fr/createurs/', zh: '/zh-tw/creators/', zhHans: '/zh-cn/creators/' },
   // The two pages that answer searches for the other games (`src/site/rivals.ts`): their paths carry the names people type.
   compare: {
     pt: '/pokemon-survivors-vs-pokesurvivor/',
@@ -52,6 +52,7 @@ export const ROUTES = {
     es: '/es/pokemon-survivors-vs-pokesurvivor/',
     fr: '/fr/pokemon-survivors-vs-pokesurvivor/',
     zh: '/zh-tw/pokemon-survivors-vs-pokesurvivor/',
+    zhHans: '/zh-cn/pokemon-survivors-vs-pokesurvivor/',
   },
   alternatives: {
     pt: '/jogos-pokemon-estilo-vampire-survivors/',
@@ -59,6 +60,7 @@ export const ROUTES = {
     es: '/es/juegos-pokemon-como-vampire-survivors/',
     fr: '/fr/jeux-pokemon-comme-vampire-survivors/',
     zh: '/zh-tw/pokemon-games-like-vampire-survivors/',
+    zhHans: '/zh-cn/pokemon-games-like-vampire-survivors/',
   },
 } as const satisfies Record<string, Record<Locale, string>>
 
@@ -73,8 +75,8 @@ export type PageId = (typeof PAGE_IDS)[number]
 
 export const absolute = (path: string) => `${SITE_URL}${path}`
 
-/** hreflang of each language (Spanish for all of Latin America and beyond, not one country; Traditional Chinese for Taiwan and Hong Kong). */
-export const HREFLANG = { pt: 'pt-BR', en: 'en', es: 'es', fr: 'fr', zh: 'zh-Hant' } as const satisfies Record<Locale, string>
+/** hreflang of each language (Spanish for all of Latin America and beyond, not one country; Traditional Chinese for Taiwan and Hong Kong, Simplified for the rest). */
+export const HREFLANG = { pt: 'pt-BR', en: 'en', es: 'es', fr: 'fr', zh: 'zh-Hant', zhHans: 'zh-Hans' } as const satisfies Record<Locale, string>
 
 /** One page's path in every language. */
 export type Paths = Readonly<Record<Locale, string>>
@@ -94,6 +96,7 @@ export const dexPaths = (slug: string): Paths => ({
   es: `${ROUTES.pokedex.es}${slug}/`,
   fr: `${ROUTES.pokedex.fr}${slug}/`,
   zh: `${ROUTES.pokedex.zh}${slug}/`,
+  zhHans: `${ROUTES.pokedex.zhHans}${slug}/`,
 })
 
 /** A region's Pokédex, below the Pokédex: `/pokedex/kanto/`, `/en/pokedex/kanto/` (no species is named after a region). */

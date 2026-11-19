@@ -1,0 +1,32 @@
+{
+  "id": "/",
+  "name": "Pokémon Survivors",
+  "short_name": "Survivors",
+  "description": "免费的宝可梦割草游戏，Vampire Survivors 风格。带着你的初始宝可梦在野生兽群中存活下来。",
+  "lang": "zh-CN",
+  "start_url": "/zh-cn/",
+  "scope": "/",
+  "display": "fullscreen",
+  "display_override": [
+    "fullscreen",
+    "standalone"
+  ],
+  "orientation": "any",
+  "background_color": "#101820",
+  "theme_color": "#101820",
+  "icons": [
+    { "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    { "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    { "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

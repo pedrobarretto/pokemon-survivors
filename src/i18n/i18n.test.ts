@@ -14,6 +14,14 @@ describe('detectLocale', () => {
     expect(detectLocale(null, ['de-DE', 'en-GB', 'pt-BR'])).toBe('en')
   })
 
+  it('tells Chinese apart by script: Traditional for Taiwan, Hong Kong and Macau, Simplified for the rest', () => {
+    for (const tag of ['zh-TW', 'zh-HK', 'zh-MO', 'zh-Hant', 'zh-Hant-HK']) expect(detectLocale(null, [tag])).toBe('zh')
+    for (const tag of ['zh-CN', 'zh-SG', 'zh-Hans', 'zh-Hans-CN']) expect(detectLocale(null, [tag])).toBe('zhHans')
+    // A page's own language (`data-locale`) is a locale id: the /zh-tw/ page's `zh`, the /zh-cn/ page's `zhHans`.
+    expect(detectLocale(null, ['zh'])).toBe('zh')
+    expect(detectLocale(null, ['zhHans'])).toBe('zhHans')
+  })
+
   it('falls back to English for unknown saves and languages', () => {
     expect(detectLocale('klingon', ['ja-JP'])).toBe('en')
   })

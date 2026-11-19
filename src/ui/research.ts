@@ -3,7 +3,7 @@ import { HATCHLINGS, PLAYABLE, type HatchlingId } from '../data/hatchlings'
 import { RESEARCH, RESEARCH_IDS, type ResearchId } from '../data/seasonOneUnlocks'
 import { COSMOG, COSMOG_DEX } from '../data/legendPaths'
 import { researchStatus } from '../game/seasonOneUnlocks'
-import { formatNumber, locale, t } from '../i18n'
+import { formatNumber, t, inLanguage } from '../i18n'
 import { MEGA_FAMILIES_B_WORDS } from '../i18n/megaFamiliesB'
 import { portraitUrl } from '../render/sprites'
 import { h } from './dom'
@@ -33,7 +33,7 @@ export const lockedWhere = (id: HatchlingId): string | null => {
   if (egg === 'fossil') return words.amberBlurb
   // The Mega families and the Safári and Game Corner wave's families say where they come from too.
   const where: Partial<Record<HatchlingId, string>> = { ...words.where, ...t().megaFamiliesWhere, ...t().scWave.where }
-  const megaWhere: Partial<Record<HatchlingId, string>> = MEGA_FAMILIES_B_WORDS[locale()].where
+  const megaWhere: Partial<Record<HatchlingId, string>> = inLanguage(MEGA_FAMILIES_B_WORDS).where
   return where[id] ?? megaWhere[id] ?? null
 }
 

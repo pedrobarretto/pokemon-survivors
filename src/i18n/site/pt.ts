@@ -1081,7 +1081,7 @@ export const sitePt = {
     play: (title: string) => `Assistir: ${title}`,
     watchOn: (platform: string) => `Ver no ${platform}`,
     videoAbout: (name: string) => `Vídeo de Pokémon Survivors feito por ${name}.`,
-    langs: { pt: 'Em português', en: 'Em inglês', es: 'Em espanhol', fr: 'Em francês', zh: 'Em chinês' } satisfies Record<Locale, string>,
+    langs: { pt: 'Em português', en: 'Em inglês', es: 'Em espanhol', fr: 'Em francês', zh: 'Em chinês', zhHans: 'Em chinês' } satisfies Record<Locale, string>,
     join: {
       title: 'Faz vídeos do jogo?',
       lead: 'Gameplay, live, guia, Short ou TikTok, em qualquer língua: todo vídeo do jogo pode entrar aqui.',
