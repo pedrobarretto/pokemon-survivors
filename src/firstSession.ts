@@ -5,6 +5,7 @@ import { answerGate, furthest, isFirstLoad, NO_STEPS, reach, REPLAY_RATE, type F
 import { hostApp, onOnboarding, type OnboardingStep } from './onboarding'
 import { deviceNow } from './telemetry'
 import { cdnState } from './assets'
+import { framed } from './handoff'
 
 /**
  * A new device's first visit, as one `first_session` event: where it got to
@@ -29,6 +30,26 @@ let moments: OnboardingStep[] = []
 let held = false
 /** The steps only a real run marks. */
 const RUN_STEPS: readonly FirstStep[] = ['loading', 'firstFrame', 'minute']
+/** The first run's opening sheets as they load (`firstSheets`): how many of how many were in when the visit was sent. */
+let sheets: { done: number; total: number } | null = null
+
+/**
+ * The Pokémon sheets this page fetched (resource timing): how many, the median
+ * and slowest in ms, and the KB that came over the network. It tells a slow or
+ * lossy route (a first run stuck loading) from a page left before playing.
+ */
+const spriteFetches = () => {
+  const got = performance.getEntriesByType('resource').filter((e): e is PerformanceResourceTiming => e instanceof PerformanceResourceTiming && e.name.includes('/pokemon/'))
+  if (got.length === 0) return null
+  const ms = got.map((e) => e.duration).sort((a, b) => a - b)
+  return { n: got.length, p50: Math.round(ms[ms.length >> 1] ?? 0), max: Math.round(ms[ms.length - 1] ?? 0), kb: Math.round(got.reduce((sum, e) => sum + e.transferSize, 0) / 1024) }
+}
+
+/** The browser's guess at the network (Chrome on Android and desktop only): its kind and round trip in ms. */
+const network = () => {
+  const c = (navigator as Navigator & { connection?: { effectiveType?: string; rtt?: number } }).connection
+  return c ? { type: c.effectiveType ?? null, rtt: c.rtt ?? null } : null
+}
 
 const loadsBefore = () => {
   try {
@@ -74,6 +95,11 @@ const send = (sent: 'minute' | 'hidden') => {
       tutorial: onboarding.tutorial?.how ?? null,
       tutorialStep: onboarding.tutorial?.step ?? null,
       cdn: cdnState(),
+      framed: framed() ? 1 : 0,
+      at: Math.round(performance.now() / 100) / 10,
+      sheets,
+      sprites: spriteFetches(),
+      network: network(),
       account: accountUserId() ? 1 : 0,
       replay: replay ? 1 : 0,
       ...deviceNow(),
@@ -92,6 +118,8 @@ export const startFirstSession = (runs: number): boolean => {
   load = before + 1
   countLoad(load)
   steps = NO_STEPS
+  // Room for every sheet a first run fetches (the default keeps 250 entries), so `spriteFetches` sees them all.
+  performance.setResourceTimingBufferSize(2000)
   onOnboarding((m) => {
     if (steps && !moments.includes(m)) moments = [...moments, m]
   })
@@ -123,4 +151,9 @@ export const firstGate = (answer: GateAnswer) => {
 /** A run's clock (`g.time`), each frame it's drawn: a minute in is the visit's last step. */
 export const firstRunClock = (seconds: number) => {
   if (steps && !held && seconds >= 60) firstStep('minute')
+}
+
+/** The first run's opening sheets loaded so far (`loadRunSheets`' progress); the training run's don't count. */
+export const firstSheets = (done: number, total: number) => {
+  if (steps && !held) sheets = { done, total }
 }

@@ -1293,6 +1293,7 @@ export const en: Messages = {
     inAppOpen: 'Open in Chrome',
     inAppIos: 'Tap *...* and choose *Open in browser*',
     inAppSignIn: "Google won't sign in from inside this app. Open the game in your browser to sign in.",
+    framedSignIn: 'We opened the game in a new tab so you can sign in, with your progress. Keep playing there.',
     close: 'Close',
   },
 
