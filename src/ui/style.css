@@ -33125,7 +33125,7 @@ span.arena-hub-face {
 
 /* ---------- Gem promotions and the free gems' nudge (ui/gemBits.ts, `GEM_PROMOS`) ---------- */
 
-/* A promotion's tag: black and gold, on the packs, the checkout, the lobby's Boutique row and the gem chip. */
+/* A promotion's tag: black and gold, on the packs, the checkout and the gem chip. */
 .gem-promo-tag {
   display: inline-block;
   padding: 1px 5px;
@@ -33149,11 +33149,6 @@ span.arena-hub-face {
   font-size: 16px;
 }
 
-.gem-promo-tag.lobby {
-  margin-left: 6px;
-  vertical-align: 2px;
-}
-
 .gem-pack.promo {
   border-color: #18141f;
   box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25), 0 0 0 2px #f8d070 inset;
@@ -33168,8 +33163,8 @@ span.arena-hub-face {
 
 .gem-promo-tag.pack {
   max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  text-align: center;
+  white-space: normal;
 }
 
 /* Over the packs: the promotion's name and share, and the time it has left. */
@@ -33270,6 +33265,8 @@ span.arena-hub-face {
 
 .result-gems-text b {
   display: inline-flex;
+  flex-basis: 100%;
+  justify-content: center;
   align-items: center;
   gap: 4px;
   font-family: var(--title);

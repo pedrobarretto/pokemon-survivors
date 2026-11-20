@@ -37,10 +37,13 @@ export const promoLeftText = () => {
   return t().gems.promo.left(days, hours)
 }
 
-/** The lobby's line for the Boutique while a promotion runs ("+50% de gemas nos pacotes · Termina em 2 d"), or null. */
+/** The lobby's line for the Boutique while a promotion runs ("+50% Black Friday · 2 d 5 h"), short enough for a phone's row, or null. */
 export const promoLobbyLine = () => {
   const promo = livePromo()
-  return promo ? `${t().gems.promo.lobby(formatNumber(promo.extra))} · ${promoLeftText()}` : null
+  if (!promo) return null
+  const m = t().gems.promo
+  const { days, hours } = promoLeft(promo)
+  return `${m.tag(formatNumber(promo.extra), m.names[promo.name])} · ${m.short(days, hours)}`
 }
 
 /* ---------------- The free gems' nudge ---------------- */
@@ -135,9 +138,9 @@ export const runGemsLine = (gems: Promise<RunGems | null>, open: (id: CosmeticId
     const earned = h('b', {}, h('img', { class: 'gem-icon', src: gemIconUrl(), alt: '' }), m.earned(formatNumber(got.earned), formatNumber(got.balance)))
     const rest =
       nudge?.kind === 'covers'
-        ? [h('span', {}, ` — ${m.covers(itemName(nudge.id))}`), h('button', { class: 'btn small result-gems-go', type: 'button', onclick: () => (playSfx('select'), later(() => open(nudge.id))) }, m.see)]
+        ? [h('span', {}, m.covers(itemName(nudge.id))), h('button', { class: 'btn small result-gems-go', type: 'button', onclick: () => (playSfx('select'), later(() => open(nudge.id))) }, m.see)]
         : nudge?.kind === 'short'
-          ? [h('span', {}, ` · ${m.short(formatNumber(nudge.missing), nudge.first)}`)]
+          ? [h('span', {}, m.short(formatNumber(nudge.missing), nudge.first))]
           : []
     el.replaceChildren(h('p', { class: 'result-gems-text' }, earned, ...rest))
     el.hidden = false
