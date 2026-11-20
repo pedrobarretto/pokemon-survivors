@@ -1,4 +1,4 @@
-import { assetImage, assetUrl } from '../assets'
+import { assetUrl } from '../assets'
 import { MAX_CAPS } from '../data/shop'
 import { context2d, createCanvas } from '../engine/pixelart'
 import { MOVES } from '../game/moves'
@@ -33,7 +33,8 @@ const squared = new Map<string, Promise<string>>()
 const squaredArt = (url: string) => {
   let made = squared.get(url)
   if (!made) {
-    const img = assetImage(url)
+    const img = new Image()
+    img.src = url
     made = img.decode().then(() => {
       const size = Math.max(32, img.naturalWidth, img.naturalHeight)
       const canvas = createCanvas(size, size)

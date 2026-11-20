@@ -14,6 +14,7 @@ import { donateFrom } from './game/festival'
 import { loadSave, today, writeSave } from './ui/save'
 import { timeoutSignal } from './net/timeout'
 import { hostApp, onboardingStep } from './onboarding'
+import { continueOnSite, framed, leaveTo, type Provider } from './handoff'
 
 /**
  * Optional player accounts (Google or Discord through Clerk). Playing as a guest stays
@@ -468,7 +469,7 @@ export const linkDiscord = async (): Promise<boolean> => {
     if (!account) return true
     const to = account.verification?.externalVerificationRedirectURL
     if (!to) throw new Error('no redirect')
-    location.assign(to.href)
+    leaveTo(to.href)
     return true
   } catch (err) {
     console.warn('discord link failed', err)
@@ -745,7 +746,9 @@ export const donateToFestival = async (amount: number): Promise<FestivalDonation
  * to this page (`?login`), where `startAccount` finishes it. Already signed
  * in to Clerk (another tab), it just links this device.
  */
-export const signIn = async (provider: 'google' | 'discord' = 'google') => {
+export const signIn = async (provider: Provider = 'google') => {
+  // Inside a portal's frame Google and Discord won't open: the site signs in in a tab of its own, the progress handed over (`handoff.ts`).
+  if (framed()) return onboardingStep(continueOnSite(provider) ? 'framedSignIn' : 'framedLeft')
   // Google refuses to sign in inside an app's WebView (`disallowed_useragent`): the shell shows the way to a real browser instead.
   if (provider === 'google' && hostApp()) return onboardingStep('inAppSignInHeld')
   setState({ kind: 'busy' })

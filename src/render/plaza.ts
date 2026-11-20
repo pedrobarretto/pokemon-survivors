@@ -1,4 +1,4 @@
-import { assetImage, assetUrl } from '../assets'
+import { assetUrl } from '../assets'
 import { clamp, dir8, type Dir8, type Vec } from '../engine/math'
 import { blitCentered, blitPacked, canvasCache, context2d, createCanvas, drawable, drawLoaded, ellipse, glow, onCanvasReset, readPixels } from '../engine/pixelart'
 import { EMOTES, type Emote } from './art'
@@ -186,7 +186,8 @@ const ART_RETRY_MS = 5000
 
 const loadArt = (ids: Iterable<ArtId>, tries = ART_TRIES) => {
   for (const id of ids) {
-    const img = assetImage(artFile(id))
+    const img = new Image()
+    img.src = artFile(id)
     const landed = () => {
       if (drawable(img)) arts.set(id, measure(img))
       else if (tries > 1) setTimeout(() => loadArt([id], tries - 1), ART_RETRY_MS)

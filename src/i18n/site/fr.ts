@@ -1001,7 +1001,7 @@ export const siteFr: SiteMessages = {
     ],
     privacyAfter: [
       'Pour supprimer ces données, efface les données du site dans les réglages de ton navigateur.',
-      'Les sprites, sons et polices sont servis par ce site, sans appel à des services tiers. Le site est hébergé chez Vercel qui, comme tout serveur web, peut enregistrer des données techniques d’accès (comme les adresses IP) pour faire fonctionner et protéger le service.',
+      'Les sprites, sons et polices sont servis par ce site, sans appel à des services tiers. Le site est hébergé chez Cloudflare qui, comme tout serveur web, peut enregistrer des données techniques d’accès (comme les adresses IP) pour faire fonctionner et protéger le service.',
       'Dans le jeu, nous utilisons PostHog (posthog.com, avec des données stockées aux États-Unis) pour comprendre comment on y joue et corriger les bugs. Il reçoit un résumé de chaque partie (Pokémon, difficulté, capacités, objets, minute et niveau atteints et la façon dont elle s’est terminée), les écrans de menu que tu ouvres et, quand le jeu rencontre une erreur, le message d’erreur et le replay de la partie en cours (sa graine et tes commandes, rien de personnel). Tout cela est lié à l’identifiant aléatoire de ph_ps et, si tu es connecté, à l’identifiant et au pseudo de ton compte, jamais à ton e-mail ou à ton nom. PostHog n’utilise pas de cookies ici et ne te suit pas d’un site à l’autre.',
       'Les dons sont payés sur les pages d’AbacatePay (abacatepay.com : Pix et cartes brésiliennes) ou de Stripe (stripe.com : cartes d’autres pays, Apple Pay et Google Pay). Tes données de paiement vont directement chez eux, et le jeu ne voit jamais ta carte. Ils nous indiquent le montant et, comme ils le feraient pour quiconque reçoit un paiement, des informations sur la personne qui a payé (comme le nom et l’e-mail), que nous n’utilisons que pour enregistrer le don. Si tu indiques un @ (ou utilises le code du don), il est lié à ce compte de jeu pour que les récompenses y arrivent ; le montant n’est jamais affiché publiquement, seulement le badge de soutien, que tu peux masquer.',
     ],
@@ -1023,7 +1023,7 @@ export const siteFr: SiteMessages = {
     play: (title: string) => `Regarder : ${title}`,
     watchOn: (platform: string) => `Voir sur ${platform}`,
     videoAbout: (name: string) => `Une vidéo de Pokémon Survivors par ${name}.`,
-    langs: { pt: 'En portugais', en: 'En anglais', es: 'En espagnol', fr: 'En français', zh: 'En chinois' },
+    langs: { pt: 'En portugais', en: 'En anglais', es: 'En espagnol', fr: 'En français', zh: 'En chinois', zhHans: 'En chinois' },
     join: {
       title: 'Vous faites des vidéos du jeu ?',
       lead: 'Gameplay, live, guide, Short ou TikTok, dans n’importe quelle langue : chaque vidéo du jeu peut figurer ici.',

@@ -1301,6 +1301,7 @@ export const zh: Messages = {
     inAppOpen: '用 Chrome 開啟',
     inAppIos: '點 *...*，再選 *在瀏覽器中開啟*',
     inAppSignIn: 'Google 不允許在這個 App 內登入。請在瀏覽器中開啟遊戲再登入。',
+    framedSignIn: '已在新分頁開啟遊戲讓你登入，進度也一起帶過去了。請在那裡繼續玩。',
     close: '關閉',
   },
 
@@ -6347,6 +6348,15 @@ export const zh: Messages = {
     },
     captured: '已收藏',
     locked: (legend) => `捕捉${legend}`,
+    earn: {
+      plays: (game, n) => `玩${n}場${game}`,
+      best: (game, n) => `在${game}拿到${n}分`,
+      wins: (game, n) => `贏得${n}場${game}`,
+      feat: (game) => `${game}的特殊成就`,
+      stamps: (n) => `收集${n}枚郵票`,
+      note: '達成目標就會獲得這個獎盃。非賣品！',
+      featNote: (feat) => `達成這項成就即可獲得：${feat} 非賣品！`,
+    },
     collections: '系列',
     all: '全部',
     pay: { all: '全部', coins: '₽', gems: '寶石' },

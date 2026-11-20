@@ -4,6 +4,7 @@ import type { PollKind, PollOption } from './data/supporters'
 import type { Save } from './game/meta'
 import { isRecord } from './game/parse'
 import { parseHidden, parsePoll, parseSupporterStatus, parseWall, savedSupporterTier, withVote, type Poll, type SupporterStatus, type SupporterTier, type Wall } from './game/supporters'
+import { leaveTo } from './handoff'
 
 /**
  * The supporters' side of the API (`server/`): the player's own standing,
@@ -97,7 +98,7 @@ export const redeemCode = async (code: string): Promise<Redeemed> => {
 export const linkPatreon = async (): Promise<boolean> => {
   const { status, body } = await apiCall(`/patreon/link?page=${encodeURIComponent(location.pathname)}`, { auth: true })
   if (status !== 200 || !isRecord(body) || typeof body.url !== 'string') return false
-  location.assign(body.url)
+  leaveTo(body.url)
   return true
 }
 

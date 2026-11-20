@@ -1,5 +1,5 @@
 import { context2d, createCanvas, fromStrings, lazy, type Palette, type PixelSprite } from '../../engine/pixelart'
-import { locale } from '../../i18n'
+import { cjk } from '../../i18n'
 import { outlined } from '../../render/art'
 import type { JunkId } from './fishing.rules'
 
@@ -196,7 +196,7 @@ export const CLOUDS = [
 const masks = new Map<string, HTMLCanvasElement>()
 
 /** The game's pixel font for the current language (Cubic 11 for Chinese), at the size it's drawn crisp. */
-const fontOf = () => (locale() === 'zh' ? '11px "Cubic 11"' : '8px "Press Start 2P"')
+const fontOf = () => (cjk() ? '11px "Cubic 11"' : '8px "Press Start 2P"')
 
 /** Loads the fonts a round's text draws in (text drawn before them falls back to a smooth font, and isn't kept). */
 export const loadFonts = (sample: string) => document.fonts.load(fontOf(), sample).catch(() => [])
@@ -214,7 +214,7 @@ export const pixelText = (text: string, color: string, outline: string = INK): H
   const probe = context2d(createCanvas(1, 1))
   probe.font = font
   const width = Math.ceil(probe.measureText(text).width)
-  const size = locale() === 'zh' ? 11 : 8
+  const size = cjk() ? 11 : 8
   const glyphs = createCanvas(width + 2, size + 4)
   const gx = glyphs.getContext('2d', { willReadFrequently: true })!
   gx.font = font
@@ -253,8 +253,8 @@ export const wrapText = (text: string, max: number): string[] => {
   for (const part of text.split(' · ')) {
     let line = ''
     // Chinese wraps between any two characters; the rest between words.
-    const words = locale() === 'zh' ? [...part] : part.split(' ')
-    const sep = locale() === 'zh' ? '' : ' '
+    const words = cjk() ? [...part] : part.split(' ')
+    const sep = cjk() ? '' : ' '
     for (const w of words) {
       const next = line ? line + sep + w : w
       if (line && probe.measureText(next).width > max) {

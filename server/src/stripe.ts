@@ -1,7 +1,7 @@
 import { GEM_PACKS, packGems, type GemCurrency, type GemPackId } from '../../src/data/gems'
 
 /** The game's languages, as a checkout names the buyer's (`GemCheckoutRequest.locale`). */
-const CHECKOUT_LOCALES = ['pt', 'en', 'es', 'fr', 'zh'] as const
+const CHECKOUT_LOCALES = ['pt', 'en', 'es', 'fr', 'zh', 'zhHans'] as const
 
 export type CheckoutLocale = (typeof CHECKOUT_LOCALES)[number]
 
@@ -53,6 +53,13 @@ const CHECKOUT_TEXT: Record<CheckoutLocale, { stripe: string; name: (gems: numbe
     description: 'Pokémon Survivors 寶石：只能購買造型物品，沒有現金價值。',
     submit:
       '付款後寶石會立即存入你的帳號。付款即表示你要求立即交付這項數位內容，並了解在法律允許的範圍內，交付後即不再享有撤回權。未使用的寶石可在 7 天內申請退款：pokemonsurvivors.com/zh-tw/legal/',
+  },
+  zhHans: {
+    stripe: 'zh',
+    name: (n) => `${n} 颗宝石 · Pokémon Survivors`,
+    description: 'Pokémon Survivors 宝石：只能购买造型物品，没有现金价值。',
+    submit:
+      '付款后宝石会立即存入你的账号。付款即表示你要求立即交付这项数字内容，并了解在法律允许的范围内，交付后即不再享有撤回权。未使用的宝石可在 7 天内申请退款：pokemonsurvivors.com/zh-cn/legal/',
   },
 }
 

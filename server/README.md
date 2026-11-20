@@ -461,10 +461,10 @@ New versions roll out with no downtime:
 | `ROLE` | Dokploy (`checks`) | `checks` |
 | `DATABASE_URL` | Dokploy (`checks`) | The same as `api`'s |
 | `CHECKS` | Dokploy (`checks`) | Unset; `off` pauses the verifier (relief when the VPS is short of CPU) |
-| `VITE_CLERK_PUBLISHABLE_KEY` | Vercel, production only | `pk_live_…`, which only works on `pokemonsurvivors.com` |
-| `VITE_API_URL` | Vercel, production only | `https://api.pokemonsurvivors.com` |
-| `VITE_POSTHOG_KEY` | Vercel, production only | The same PostHog project token: the game's events and errors (`src/analytics.ts`) |
-| `POSTHOG_CLI_API_KEY`, `POSTHOG_CLI_PROJECT_ID` | Vercel, production only | A PostHog personal key with error tracking write access and the project's id, for `scripts/sourcemaps.mjs` to upload the source maps |
+| `VITE_CLERK_PUBLISHABLE_KEY` | GitHub repo variable, the Site workflow | `pk_live_…`, which only works on `pokemonsurvivors.com` |
+| `VITE_API_URL` | GitHub repo variable, the Site workflow | `https://api.pokemonsurvivors.com` |
+| `VITE_POSTHOG_KEY` | GitHub repo variable, the Site workflow | The same PostHog project token: the game's events and errors (`src/analytics.ts`) |
+| `POSTHOG_CLI_API_KEY`, `POSTHOG_CLI_PROJECT_ID` | GitHub, the Site workflow (the key a secret, the id a variable) | A PostHog personal key with error tracking write access and the project's id, for `scripts/sourcemaps.mjs` to upload the source maps |
 
 ### Local development
 

@@ -1,4 +1,3 @@
-import { assetImage } from '../assets'
 import type { Sheet } from './pokedex'
 
 /**
@@ -147,7 +146,8 @@ const readBest = () => {
 
 const load = (src: string) =>
   new Promise<HTMLImageElement>((done, fail) => {
-    const img = assetImage(src)
+    const img = new Image()
+    img.src = src
     img.onload = () => done(img)
     img.onerror = fail
   })
