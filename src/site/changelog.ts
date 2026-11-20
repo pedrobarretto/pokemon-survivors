@@ -24,6 +24,45 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-20',
+    title: { pt: 'Beast Boost e Moxie consertados', en: 'Beast Boost and Moxie fixed', es: 'Beast Boost y Moxie arreglados', fr: 'Beast Boost et Moxie corrigés', zh: '修正異獸提升與自信過度' },
+    highlights: [
+      {
+        pt: 'Beast Boost (Ultra Beasts) e Moxie: o nível que você acabou de ganhar não some mais na hora.',
+        en: 'Beast Boost (Ultra Beasts) and Moxie: the stack you just earned no longer vanishes at once.',
+        es: 'Beast Boost (Ultraentes) y Moxie: el nivel que acabas de ganar ya no desaparece al instante.',
+        fr: 'Beast Boost (Ultra-Chimères) et Moxie : le niveau que vous venez de gagner ne disparaît plus aussitôt.',
+        zh: '異獸提升（究極異獸）與自信過度：剛獲得的層數不會再立刻消失。',
+      },
+      {
+        pt: 'Um nível só cai depois de 4 s sem nocautes (1 s no Moxie), então uma sequência de nocautes chega ao máximo.',
+        en: 'A stack only drops after 4 s without KOs (1 s for Moxie), so a streak of KOs reaches the cap.',
+        es: 'Un nivel solo se pierde tras 4 s sin derrotas (1 s en Moxie), así que una racha de derrotas llega al máximo.',
+        fr: 'Un niveau ne retombe qu’après 4 s sans K.O. (1 s pour Moxie), donc une série de K.O. atteint le maximum.',
+        zh: '只有連續 4 秒沒有擊倒（自信過度為 1 秒）才會掉一層，連續擊倒就能疊到上限。',
+      },
+      {
+        pt: 'Partidas ranqueadas começam numa versão nova das regras; corridas da versão anterior continuam valendo.',
+        en: 'Ranked runs start on a new rules version; runs from the previous one still count.',
+        es: 'Las partidas clasificatorias empiezan en una nueva versión de las reglas; las de la versión anterior siguen valiendo.',
+        fr: 'Les parties classées passent à une nouvelle version des règles ; celles de la version précédente comptent toujours.',
+        zh: '排名對局改用新版規則，舊版規則的對局仍然有效。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Correctifs', zh: '修正' },
+        notes: [
+          {
+            pt: 'Beast Boost (Ultra Beasts) e Moxie: o nível que você acabou de ganhar não some mais na hora; um nível só cai depois de 4 s sem nocautes (1 s no Moxie).',
+            en: 'Beast Boost (Ultra Beasts) and Moxie: the stack you just earned no longer vanishes at once; a stack only drops after 4 s without KOs (1 s for Moxie).',
+            es: 'Beast Boost (Ultraentes) y Moxie: el nivel que acabas de ganar ya no desaparece al instante; un nivel solo se pierde tras 4 s sin derrotas (1 s en Moxie).',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-11-19',
     title: { pt: 'Chinês simplificado', en: 'Simplified Chinese', es: 'Chino simplificado', fr: 'Chinois simplifié', zh: '簡體中文' },
     highlights: [
@@ -324,11 +363,6 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             pt: 'A sombra do coqueiro no píer do Poké Realm agora fica embaixo dele.',
             en: 'The palm tree’s shadow on the Poké Realm pier now sits under it.',
             es: 'La sombra de la palmera del muelle del Poké Realm ahora queda debajo de ella.',
-          },
-          {
-            pt: 'Beast Boost (Ultra Beasts) e Moxie: o nível que você acabou de ganhar não some mais na hora; um nível só cai depois de 4 s sem nocautes (1 s no Moxie).',
-            en: 'Beast Boost (Ultra Beasts) and Moxie: the stack you just earned no longer vanishes at once; a stack only drops after 4 s without KOs (1 s for Moxie).',
-            es: 'Beast Boost (Ultraentes) y Moxie: el nivel que acabas de ganar ya no desaparece al instante; un nivel solo se pierde tras 4 s sin derrotas (1 s en Moxie).',
           },
         ],
       },
