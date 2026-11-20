@@ -1,5 +1,8 @@
 import { Worker } from 'node:worker_threads'
+import { unbackedLoadout } from '../../src/game/loadoutBacking'
+import { EMPTY_SAVE } from '../../src/game/meta'
 import { parseReplay, RULES_VERSION, rulesStanding } from '../../src/game/replay'
+import type { SaveStore } from './db'
 import { sameTime, type RankingStore } from './ranking'
 import { FROZEN_RULES, judge, type Job, type Judged } from './sims'
 
@@ -55,10 +58,12 @@ const inlineRunner = (): Runner => (job) =>
  * machinery failed) is tried again once it does, up to `attempts` times, and
  * then loses its replay unchecked. A replay of newer rules than the
  * verifier's gives its attempt back: it waits for the updated verifier
- * however long its deploy takes. With nothing
+ * however long its deploy takes, and so does a run whose stored save doesn't back its
+ * loadout yet, for `loadoutWaitSeconds` after it last reported (the device pushes the save
+ * after the run, unless it went offline). With nothing
  * pending the loop asks again after `idleMs`, after a database error after `errorMs`.
  */
-export const CHECK_LOOP = { leaseSeconds: 30 * 60, attempts: 3, idleMs: 5000, errorMs: 15_000 } as const
+export const CHECK_LOOP = { leaseSeconds: 30 * 60, attempts: 3, loadoutWaitSeconds: 6 * 3600, idleMs: 5000, errorMs: 15_000 } as const
 
 type Claimed = NonNullable<Awaited<ReturnType<RankingStore['claimCheck']>>>
 
@@ -75,7 +80,13 @@ type Claimed = NonNullable<Awaited<ReturnType<RankingStore['claimCheck']>>>
  * took, whatever the game said; otherwise it's marked failed and leaves the
  * boards. A replay that played another day's outbreak (`outbreakFits`), or a
  * haunted run outside the Noite das Bruxas (`halloweenFits`), fails without
- * re-simulating. When the machinery fails instead, the run stays pending and
+ * re-simulating. Before its re-simulation, a regular run's loadout (its
+ * Pokémon, ranks, Bottle Caps, TMs, evolution items, Shadow and path forms)
+ * must be backed by the account's stored save (`unbackedLoadout`): one that
+ * isn't waits for the save to catch up (`CHECK_LOOP.loadoutWaitSeconds`, its
+ * claim running out every `leaseSeconds`, its attempts given back), still on
+ * the boards meanwhile; past that it's unlisted for good (`setUnbacked`: it
+ * stays the player's) and re-simulated all the same. When the machinery fails instead, the run stays pending and
  * is tried again once its claim runs out, `CHECK_LOOP.attempts` times at most
  * (a replay that crashes the worker would cost a crash every time): then its
  * replay is dropped and it stays unverified.
@@ -89,7 +100,7 @@ type Claimed = NonNullable<Awaited<ReturnType<RankingStore['claimCheck']>>>
  * `paused` (`CHECKS=off`) claims nothing: runs stay pending, replays kept,
  * until a start without it. `stop` ends the loop after the check in hand.
  */
-export const startChecks = (ranking: RankingStore, { paused = false } = {}) => {
+export const startChecks = (ranking: RankingStore, saves: Pick<SaveStore, 'read'>, { paused = false } = {}) => {
   const run: Runner = import.meta.url.endsWith('.ts') ? inlineRunner() : workerRunner()
   let stopped = paused
   let wake = () => {}
@@ -104,7 +115,8 @@ export const startChecks = (ranking: RankingStore, { paused = false } = {}) => {
 
   const check = async (claimed: Claimed) => {
     const { id } = claimed
-    const rules = parseReplay(claimed.replay)?.rules ?? RULES_VERSION
+    const replay = parseReplay(claimed.replay)
+    const rules = replay?.rules ?? RULES_VERSION
     const standing = rulesStanding(rules)
     // Rules bump almost daily: a verifier whose deploy lags behind the API's mustn't wear out the top runs' attempts.
     if (standing === 'newer') {
@@ -126,6 +138,19 @@ export const startChecks = (ranking: RankingStore, { paused = false } = {}) => {
       await ranking.dropReplay(id)
       console.log(`check ${id}: replay under older rules (${rules}), left unverified`)
       return
+    }
+    // A Desafio do dia plays the day's own loadout; any other run plays what the account's save holds.
+    if (replay && !claimed.challenge) {
+      const gap = unbackedLoadout(replay.start, (await saves.read(claimed.userId))?.save ?? EMPTY_SAVE)
+      if (gap.length > 0 && claimed.age < CHECK_LOOP.loadoutWaitSeconds) {
+        await ranking.giveBackAttempt(id)
+        console.log(`check ${id}: the stored save doesn't back its ${gap.join(', ')} yet, waiting for it`)
+        return
+      }
+      if (gap.length > 0) {
+        await ranking.setUnbacked(id, claimed.time, gap)
+        console.log(`check ${id}: unlisted, the stored save doesn't back its ${gap.join(', ')} (${replay.start.starter})`)
+      }
     }
     const answer = await run({ id, replay: claimed.replay, rules, startedAt: claimed.startedAt.getTime() })
     if (!answer) return
