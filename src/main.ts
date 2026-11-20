@@ -74,7 +74,7 @@ import { biomeDevTools } from './ui/biomeDev'
 import { addCandies, HAUNT_DEX, recordHunt } from './game/halloween'
 import { HALLOWEEN, isNightBoss, NIGHT_BOSSES } from './data/halloween'
 import { jackIcon, treatIcon } from './render/halloweenArt'
-import { brasiliaDay, previousDay, type DayKey } from './game/day'
+import { brasiliaDay, isDayKey, previousDay, type DayKey } from './game/day'
 import { spawnEnemy } from './game/enemies'
 import { pickAlpha, spawnAlpha } from './game/alphas'
 import { EVENTS, stageIndexAt } from './data/waves'
@@ -189,7 +189,7 @@ import { h, later, rich } from './ui/dom'
 import { setActivePad } from './ui/inputLabels'
 import { watchCursorMode } from './ui/cursorMode'
 import { detectKeyLayout } from './ui/keyLayout'
-import { captureRef, coopBoardsFaked, fakeCoopBoards, fakeEra1Boards, flushRuns, onRulesBehind, prefetchRanked, PROFILE_PARAM, rankingEnabled, stageInvite, startRanked, type RankedRun, type RankOutcome } from './ranking'
+import { captureRef, coopBoardsFaked, fakeCoopBoards, fakeEra1Boards, flushRuns, onRulesBehind, outcomeGems, prefetchRanked, PROFILE_PARAM, rankingEnabled, stageInvite, startRanked, type RankedRun, type RankOutcome } from './ranking'
 import { applyGift, DISCORD_GIFT, parseGiftContent, type GiftKind, type GiftReason } from './game/gifts'
 import { ERA1_GIFTS, era1Gifts, type Era1Tier } from './game/era1'
 import { giftScreen } from './ui/gifts'
@@ -273,8 +273,9 @@ import { coopOver } from './game/coop'
 import { createTeamLayer, type TeamLayer } from './ui/teamLayer'
 import { teamFeedback, teamMoment } from './ui/teamScreens'
 import { arenaFormat, arenaPick, isArenaHubTab, isVersusEvent, keepArenaPick, preseason, stagePreseason, type ArenaHubTab } from './ui/arenaBits'
-import { equippedLook, fakeGems, fetchGems, gemsFaked, knownGems, onGems, stageCheckout, stageGems, stageRefusal, takeCheckoutReturn } from './gems'
-import { isGemPackId } from './data/gems'
+import { equippedLook, fakeGems, fetchGems, gemsFaked, gemsSignedIn, holdPromoDay, knownGems, onGems, promoDay, stageCheckout, stageGems, stageRefusal, stageRunGems, takeCheckoutReturn } from './gems'
+import { runGemsLine } from './ui/gemBits'
+import { GEM_PLAY, isGemPackId, promoOf } from './data/gems'
 import { arenaSignedIn, awaitRpChange, fakeArena, keepArenaMatch, postPractice, type RpChange } from './arenaApi'
 import { isFakeScenario } from './arena/fakes'
 import { historyEntry } from './arena/history'
@@ -288,8 +289,8 @@ import type { VersusHud } from './ui/versusHud'
 import { arenaFxEvent, arenaFxStats, playBurst, resetArenaFx } from './render/arenaFx'
 import { lookOf, setLooks, setLooksGame, setLocalLook } from './render/looks'
 import { freeWearables, wearMemory } from './render/wearables'
-import { COSMETIC_IDS, COSMETIC_SLOTS, isCosmeticId, parseLook, slotOf, withSkins, type Look, type CosmeticSlot } from './data/cosmetics'
-import { isSkinId, SKIN_IDS, SKIN_LINES, SKINS, type SkinId } from './data/skinCatalog'
+import { COSMETIC_IDS, COSMETIC_SLOTS, isCosmeticId, parseLook, slotOf, withSkins, type Look, type CosmeticId, type CosmeticSlot } from './data/cosmetics'
+import { isSkinId, SKIN_IDS, SKIN_LINES, SKINS } from './data/skinCatalog'
 import { equip } from './arena/gemShop'
 import { effectIn } from './data/arenaEffects'
 import type { VersusTray } from './ui/versusTray'
@@ -715,8 +716,8 @@ const openShop = (close: () => void, shelf?: VisitorShelf, festival?: () => void
 /** The ref a gem pack's checkout came back with (`?gems=<ref>`), for the Boutique's Loja to wait on as it opens. */
 let boutiqueCheckout: string | null = null
 
-/** The skin the Boutique's Skins opens on (the partner select's skins row), once. */
-let boutiqueItem: SkinId | null = null
+/** The item the Boutique opens on, once: a skin on Skins (the partner select's skins row), anything else chosen on the Loja (the results' gem line). */
+let boutiqueItem: CosmeticId | null = null
 
 /** Leavanny's Boutique over the plaza's north-west (`ui/boutique.ts`); closing it leaves `?boutique` behind too. */
 const openBoutiqueSheet = (close: () => void, tab: BoutiqueTab) => {
@@ -743,9 +744,9 @@ const openBoutiqueSheet = (close: () => void, tab: BoutiqueTab) => {
  * Card's look, `?boutique`, a checkout's return): the lobby lands on the
  * plaza's north-west with the sheet open on `tab`; leaving it calls `back`
  * when given (where it came from), else pans home. `checkout`: the
- * `?gems=<ref>` the Loja waits on; `item`, the skin Skins opens on.
+ * `?gems=<ref>` the Loja waits on; `item`, the skin Skins opens on or the item the Loja shows chosen.
  */
-const showBoutique = (tab: BoutiqueTab, back?: () => void, checkout: string | null = null, item: SkinId | null = null) => {
+const showBoutique = (tab: BoutiqueTab, back?: () => void, checkout: string | null = null, item: CosmeticId | null = null) => {
   boutiqueCheckout = checkout
   boutiqueItem = item
   showTitle({ shop: tab === 'shop' ? 'boutique' : tab, instant: true, ...(back && { back }) })
@@ -2354,6 +2355,8 @@ const syncOverlay = (r: Run) => {
           ranking: rankingEnabled
             ? { panel: rankPanel(r.rank, r.challenge !== null, runMode(me.starter)), open: (back) => rankingScreen(ui, input, back, { difficulty: g.difficulty, mode: runMode(me.starter), challenge: r.challenge !== null }) }
             : null,
+          // The day's free gems, once the report answers: what they buy now, a tap away in the Boutique (banked by `afterRun` first, as the other ways out).
+          gems: runGems(r.rank),
           share: {
             open: (back) => sharePreview(ui, input, runShare(g, r.dexBase, r.challenge && r.rank ? r.rank.then((o) => (o.kind === 'ranked' ? o.challenge : null)) : null), back),
             glow: me.shiny || g.dexLog.shinies.size > 0 || wonRun(g) || g.time > r.bestBefore,
@@ -2367,6 +2370,18 @@ const syncOverlay = (r: Run) => {
   }
   // Co-op pick screens wear the auto-pick clock (and the level-up who already picked).
   if (c && r.overlay) c.team.decorate(r.overlay, g, me, phase)
+}
+
+/** Dev: the next results' gem line as if the report brought this many gems (`ps.gems('run', n)`, faking), or null. */
+let stagedRunGems: number | null = null
+
+/** The results' gem line (`runGemsLine`) for a signed-in player's ranked run, or null; its button opens the Boutique on the item, banked first (`afterRun`). */
+const runGems = (rank: Promise<RankOutcome> | null) => {
+  const staged = stagedRunGems
+  stagedRunGems = null
+  const gems = staged !== null ? Promise.resolve(stageRunGems(staged)) : rank?.then(outcomeGems)
+  if (!gems || !gemsSignedIn()) return null
+  return runGemsLine(gems, (id) => afterRun(() => showBoutique(isSkinId(id) ? 'skins' : 'shop', undefined, null, id)))
 }
 
 /** A guest's first runs (`savePromptDue`, this one banked): the results' card for what an account keeps, or null. */
@@ -5664,9 +5679,11 @@ const devSkin = (id?: string, seat?: number) => {
  * checkout of that pack (`'never'`: the gems never land and the wait runs
  * out); `('refuse', 'cap')` turns every checkout down as the API would
  * (`'once'`: the welcome pack taken; no reason: none again); `('shop')`,
- * `('skins')` and `('locker')` open the Boutique's tabs; `('fetch')` asks the API now.
+ * `('skins')` and `('locker')` open the Boutique's tabs; `('fetch')` asks the API now;
+ * `('promo', '2026-11-28')` shows the gem promotions as on that Brasília day until a reload (null: today's);
+ * `('run', 15)` makes the next results' gem line show as if the run's report brought 15 gems (faking).
  */
-const devGems = (cmd?: string, arg?: string | number) => {
+const devGems = (cmd?: string, arg?: string | number | null) => {
   if (cmd === 'fake') {
     fakeGems(arg !== 'off', typeof arg === 'number' ? arg : undefined)
     return arg === 'off' ? 'Gems: the API again' : `Gems: fake (${knownGems()?.balance ?? 0})`
@@ -5683,7 +5700,18 @@ const devGems = (cmd?: string, arg?: string | number) => {
   } else if (cmd === 'refuse') stageRefusal(arg === 'cap' || arg === 'once' ? arg : null)
   else if (cmd === 'shop' || cmd === 'skins' || cmd === 'locker') showBoutique(cmd)
   else if (cmd === 'fetch') void fetchGems().then((s) => console.info('gems', s))
-  else if (cmd !== undefined) return "ps.gems() · ('fake', balance? | 'off') · ('balance', n) · ('own', id?) · ('lock', id?) · ('return', pack | 'never') · ('refuse', 'cap' | 'once'?) · ('shop') · ('skins') · ('locker') · ('fetch')"
+  else if (cmd === 'promo') {
+    const day = arg === undefined || arg === null ? null : typeof arg === 'string' && isDayKey(arg) ? arg : undefined
+    if (day === undefined) return "ps.gems('promo', 'YYYY-MM-DD' | null)"
+    holdPromoDay(day)
+    showTitle()
+    return { day: promoDay(), promo: promoOf(promoDay()) }
+  } else if (cmd === 'run') {
+    if (!gemsFaked()) fakeGems(true)
+    stagedRunGems = typeof arg === 'number' ? arg : GEM_PLAY.run.gems
+    return `The next results' gem line: +${stagedRunGems}`
+  } else if (cmd !== undefined)
+    return "ps.gems() · ('fake', balance? | 'off') · ('balance', n) · ('own', id?) · ('lock', id?) · ('return', pack | 'never') · ('refuse', 'cap' | 'once'?) · ('shop') · ('skins') · ('locker') · ('fetch') · ('promo', day | null) · ('run', n?)"
   // In a run or a match, each seat's look as the shell holds it.
   return { faked: gemsFaked(), gems: knownGems(), look: equippedLook(), seats: run ? run.game.players.map((p) => lookOf(p.slot)) : null }
 }

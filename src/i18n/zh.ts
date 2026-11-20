@@ -714,6 +714,20 @@ export const zh: Messages = {
       wear: (name: string) => `穿上${name}`,
       see: (name: string) => `${name}：到服飾店看看`,
     },
+    promo: {
+      names: { blackFriday: '黑色星期五' },
+      tag: (pct: string, name: string) => `${name} +${pct}%`,
+      banner: (name: string, pct: string) => `${name}：所有寶石包多送 ${pct}%`,
+      split: (gems: string, extra: string, name: string) => `${gems} + ${name}加贈 ${extra}`,
+      left: (days: number, hours: number) => (days > 0 ? `剩 ${days} 天 ${hours} 小時` : hours > 0 ? `剩 ${hours} 小時` : '剩不到 1 小時'),
+      lobby: (pct: string) => `寶石包多送 ${pct}%`,
+    },
+    run: {
+      earned: (n: string, balance: string) => `+${n} 顆寶石 · 餘額 ${balance}`,
+      covers: (item: string) => `已經可以買「${item}」了`,
+      short: (n: string, first: boolean) => (first ? `再 ${n} 顆就能買第一個外觀` : `再 ${n} 顆就能買下一個外觀`),
+      see: '去服飾店看看',
+    },
     chipGuest: '服飾店：用寶石換外觀',
     locker: {
       pick: '預覽寶可夢',

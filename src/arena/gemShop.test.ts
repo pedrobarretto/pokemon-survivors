@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { catalogSections, currencyFor, dailyPicks, equip, methodsFor, ownedOnly, packFor, sameLook, shopCatalog, shownPacks, takeOff, unequip } from './gemShop'
-import { cosmeticPrice, showsIn, slotOf } from '../data/cosmetics'
+import { catalogSections, currencyFor, dailyPicks, equip, lookNudge, methodsFor, ownedOnly, packFor, sameLook, shopCatalog, shownPacks, takeOff, unequip } from './gemShop'
+import { COSMETIC_IDS, cosmeticPrice, showsIn, slotOf } from '../data/cosmetics'
+import { onSale } from '../game/gems'
 import { isSkinId } from '../data/skinCatalog'
 
 describe('currencyFor', () => {
@@ -84,5 +85,30 @@ describe('packFor', () => {
     expect(packFor(150, ['welcome'], 'usd')).toBe('pouch')
     expect(packFor(450, ['welcome'], 'brl')).toBe('bag')
     expect(packFor(99_999, ['welcome'], 'usd')).toBe('vault')
+  })
+})
+
+describe('lookNudge', () => {
+  const day = '2026-11-20'
+  const price = (id: string) => cosmeticPrice(id as never) ?? 0
+
+  it('says how far the cheapest item is, first look or next', () => {
+    expect(lookNudge(day, new Set(), 15)).toEqual({ kind: 'short', missing: 85, first: true })
+    expect(lookNudge(day, new Set(['strawHat']), 0)).toMatchObject({ kind: 'short', first: false })
+  })
+
+  it('names the Vitrine’s pick when the balance covers it, else the cheapest item on sale', () => {
+    const [pick] = dailyPicks(day)
+    expect(lookNudge(day, new Set(), price(pick!))).toEqual({ kind: 'covers', id: pick })
+    const cheap = lookNudge(day, new Set(), 100)
+    expect(cheap?.kind).toBe('covers')
+    if (cheap?.kind === 'covers') {
+      expect(price(cheap.id)).toBe(100)
+      expect(showsIn(slotOf(cheap.id), 'run')).toBe(true)
+    }
+  })
+
+  it('is null once everything on sale is owned', () => {
+    expect(lookNudge(day, new Set(COSMETIC_IDS.filter((id) => onSale(id, day))), 5000)).toBeNull()
   })
 })

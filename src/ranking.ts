@@ -3,6 +3,7 @@ import { accountHandle, accountUserId, API_URL, sessionToken, storedRef, storeRe
 import type { EnemyId } from './data/enemies'
 import type { PlayableId } from './data/hatchlings'
 import type { Difficulty } from './game/difficulty'
+import { parseRunGems, type RunGems } from './game/gems'
 import { isRecord } from './game/parse'
 import { isDayKey, type DayKey } from './game/day'
 import { isOutbreakSpecies } from './game/outbreak'
@@ -130,8 +131,16 @@ const writeQueue = (queue: Pending[]) => {
  * updated while it played), never ranked because its start got no token (`unranked`), or taken but
  * kept off the boards because its replay didn't reach the API in time while
  * it played (`unlisted`: the connection dropped; only with the API's `STREAM_ENFORCE`).
+ * A run the API took (`ranked`, `unlisted`) carries the run gems its report
+ * brought (`gems`, null for none: the results' gem line).
  */
-export type RankOutcome = { kind: 'ranked'; ranks: RunRanks; challenge: ChallengePlace | null } | { kind: 'queued' | 'rejected' | 'outdated' | 'unranked' | 'unlisted' }
+export type RankOutcome =
+  | { kind: 'ranked'; ranks: RunRanks; challenge: ChallengePlace | null; gems: RunGems | null }
+  | { kind: 'unlisted'; gems: RunGems | null }
+  | { kind: 'queued' | 'rejected' | 'outdated' | 'unranked' }
+
+/** The run gems an outcome brought, or null. */
+export const outcomeGems = (o: RankOutcome): RunGems | null => ('gems' in o ? o.gems : null)
 
 const parseRanks = (body: unknown): RunRanks | null => {
   const ranks = isRecord(body) && isRecord(body.ranks) ? body.ranks : null
@@ -249,7 +258,8 @@ const flushOnce = async () => {
     const listed = !isRecord(body) || body.listed !== false
     const outdated = status === 400 && error === 'outdated'
     if (outdated) rulesBehind()
-    done.set(p.token, outdated ? { kind: 'outdated' } : !ranks ? { kind: 'rejected' } : listed ? { kind: 'ranked', ranks, challenge: isRecord(body) ? parseChallengePlace(body.challenge) : null } : { kind: 'unlisted' })
+    const gems = isRecord(body) ? parseRunGems(body.gems) : null
+    done.set(p.token, outdated ? { kind: 'outdated' } : !ranks ? { kind: 'rejected' } : listed ? { kind: 'ranked', ranks, challenge: isRecord(body) ? parseChallengePlace(body.challenge) : null, gems } : { kind: 'unlisted', gems })
     // A newer result of the same run (endless mode) may have queued meanwhile: only this one is done.
     writeQueue(readQueue().filter((q) => q.token !== p.token || q.result.time > p.result.time))
   }

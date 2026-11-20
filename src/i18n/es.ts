@@ -715,6 +715,20 @@ export const es: Messages = {
       wear: (name: string) => `Usar ${name}`,
       see: (name: string) => `${name}: ver en la Boutique`,
     },
+    promo: {
+      names: { blackFriday: 'Black Friday' },
+      tag: (pct: string, name: string) => `+${pct}% ${name}`,
+      banner: (name: string, pct: string) => `${name}: +${pct}% de gemas en todos los paquetes`,
+      split: (gems: string, extra: string, name: string) => `${gems} + ${extra} de ${name}`,
+      left: (days: number, hours: number) => (days > 0 ? `Termina en ${days} d ${hours} h` : hours > 0 ? `Termina en ${hours} h` : 'Termina en menos de 1 h'),
+      lobby: (pct: string) => `+${pct}% de gemas en los paquetes`,
+    },
+    run: {
+      earned: (n: string, balance: string) => `+${n} gemas · saldo ${balance}`,
+      covers: (item: string) => `ya te alcanza para ${item}`,
+      short: (n: string, first: boolean) => (first ? `faltan ${n} para tu primer visual` : `faltan ${n} para tu próximo visual`),
+      see: 'Ver en la Boutique',
+    },
     chipGuest: 'Boutique: visuales con gemas',
     locker: {
       pick: 'Pokémon de la vista previa',

@@ -59,7 +59,7 @@ import type { ArenaEffectId } from '../data/arenaEffects'
 import type { CatalogSlot, Rarity } from '../data/cosmetics'
 import type { ShopFurnitureId } from '../data/furniture'
 import type { Season, SkinId } from '../data/skinCatalog'
-import type { GemPackId } from '../data/gems'
+import type { GemPackId, GemPromoName } from '../data/gems'
 import type { GemReason } from '../game/gems'
 import type { ArenaFormat } from '../data/arenaFormats'
 import type { BoardStat, PingKind, QuickChat } from '../game/versusSocial'
@@ -908,6 +908,22 @@ export const pt = {
       see: (name: string) => `${name}: ver na Boutique`,
     },
     /** The gem chip for a guest (no balance): the way to the Boutique. */
+    /** A gem promotion (`GEM_PROMOS`): its name, the packs' tag, the Loja's banner, the split of a pack's gems, the time left and the lobby's line. */
+    promo: {
+      names: { blackFriday: 'Black Friday' } satisfies Record<GemPromoName, string>,
+      tag: (pct: string, name: string) => `+${pct}% ${name}`,
+      banner: (name: string, pct: string) => `${name}: +${pct}% de gemas em todos os pacotes`,
+      split: (gems: string, extra: string, name: string) => `${gems} + ${extra} da ${name}`,
+      left: (days: number, hours: number) => (days > 0 ? `Termina em ${days} d ${hours} h` : hours > 0 ? `Termina em ${hours} h` : 'Termina em menos de 1 h'),
+      lobby: (pct: string) => `+${pct}% de gemas nos pacotes`,
+    },
+    /** The results' gem line (`runGemsLine`): the run gems the report brought and the balance, then what they buy now or how far the next look is. */
+    run: {
+      earned: (n: string, balance: string) => `+${n} gemas · saldo ${balance}`,
+      covers: (item: string) => `já dá para comprar ${item}`,
+      short: (n: string, first: boolean) => (first ? `faltam ${n} para o primeiro visual` : `faltam ${n} para o próximo visual`),
+      see: 'Ver na Boutique',
+    },
     chipGuest: 'Boutique: visuais com gemas',
     locker: {
       pick: 'Pokémon da prévia',

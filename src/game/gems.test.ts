@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { GEM_CHECKOUT, GEM_PACKS, GEM_PATREON, GEM_PLAY, packGems } from '../data/gems'
+import { GEM_CHECKOUT, GEM_PACKS, GEM_PATREON, GEM_PLAY, GEM_PROMOS, packGems, packGemsOn, promoOf } from '../data/gems'
+import { addDays } from './day'
 import { PATREON_TIERS } from '../data/supporters'
 import { bundleLastDay, bundleOnSale, bundlePrice, checkoutRefusal, lockedCosmetics, playGems, refundedGems, runEarnsGems, wearableLook, type OwnedCosmetic } from './gems'
 
@@ -110,5 +111,26 @@ describe('lockedCosmetics', () => {
     expect(lockedCosmetics(-1, owned, 0)).not.toContain('crown')
     expect(lockedCosmetics(0, owned, 0)).toEqual([])
     expect(lockedCosmetics(-1, owned, null)).toEqual([])
+  })
+})
+
+describe('gem promos', () => {
+  it('adds Black Friday’s half to every paid pack but the welcome pack, from its first day to its last', () => {
+    expect(promoOf('2026-11-26')).toBeNull()
+    expect(promoOf('2026-11-27')?.name).toBe('blackFriday')
+    expect(promoOf('2026-11-30')?.name).toBe('blackFriday')
+    expect(promoOf('2026-12-01')).toBeNull()
+    expect(packGemsOn('pouch', '2026-11-28')).toBe(300)
+    expect(packGemsOn('bag', '2026-11-28')).toBe(825)
+    expect(packGemsOn('welcome', '2026-11-28')).toBe(packGems('welcome'))
+    expect(packGemsOn('pouch', '2026-11-26')).toBe(packGems('pouch'))
+  })
+
+  it('never overlap', () => {
+    GEM_PROMOS.forEach((p, i) => {
+      expect(p.from <= p.to).toBe(true)
+      const next = GEM_PROMOS[i + 1]
+      if (next) expect(addDays(p.to, 1) <= next.from).toBe(true)
+    })
   })
 })

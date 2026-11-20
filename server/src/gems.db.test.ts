@@ -229,8 +229,12 @@ describe.skipIf(!url)('gem ledger (Postgres)', () => {
     for (const day of ['2026-11-02', '2026-11-03', '2026-11-05', '2026-11-06', '2026-11-06']) await run(['u_a', 'u_a'], day)
     expect(await balance('u_a')).toBe(4 * GEM_PLAY.run.gems)
     // The fifth day (a Sunday) brings the week's; another run that day, nothing more.
-    await run(['u_a', 'u_b'], '2026-11-08')
-    await run(['u_a'], '2026-11-08')
+    const fifth = await run(['u_a', 'u_b'], '2026-11-08')
+    expect(Object.fromEntries(fifth)).toEqual({
+      u_a: { earned: GEM_PLAY.run.gems + GEM_PLAY.week.gems, balance: 5 * GEM_PLAY.run.gems + GEM_PLAY.week.gems },
+      u_b: { earned: GEM_PLAY.run.gems, balance: GEM_PLAY.run.gems },
+    })
+    expect((await run(['u_a'], '2026-11-08')).size).toBe(0)
     expect(await balance('u_a')).toBe(5 * GEM_PLAY.run.gems + GEM_PLAY.week.gems)
     expect(await balance('u_b')).toBe(GEM_PLAY.run.gems)
     // Days of the next week count for that week alone.

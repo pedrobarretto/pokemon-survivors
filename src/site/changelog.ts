@@ -24,6 +24,47 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-20',
+    title: { pt: 'Gemas grátis à vista', en: 'Free gems in sight', es: 'Gemas gratis a la vista', fr: 'Des gemmes gratuites en vue', zh: '免費寶石一目了然' },
+    highlights: [
+      {
+        pt: 'Com conta, o resultado da partida mostra as gemas grátis do dia assim que chegam, e o seu saldo.',
+        en: 'Signed in, the run’s results show the day’s free gems as soon as they land, and your balance.',
+        es: 'Con cuenta, el resultado de la partida muestra las gemas gratis del día apenas llegan, y tu saldo.',
+        fr: 'Connecté, l’écran de fin de partie montre les gemmes gratuites du jour dès qu’elles arrivent, et ton solde.',
+        zh: '登入後，結算畫面會在每日免費寶石入帳時立刻顯示，連同你的餘額。',
+      },
+      {
+        pt: 'Quando o saldo já dá para um visual, um toque abre a Boutique nele. Se ainda não dá, a linha diz quantas gemas faltam.',
+        en: 'When your balance already buys a look, one tap opens the Boutique on it. If not yet, the line says how many gems are left to go.',
+        es: 'Cuando tu saldo ya alcanza para un visual, un toque abre la Boutique en él. Si todavía no, la línea dice cuántas gemas faltan.',
+        fr: 'Quand ton solde suffit pour un look, un toucher ouvre la Boutique dessus. Sinon, la ligne dit combien de gemmes il manque.',
+        zh: '餘額夠買外觀時，點一下就會在服飾店打開它；還不夠的話，會告訴你還差幾顆。',
+      },
+      {
+        pt: 'O contador de gemas do lobby brilha quando o saldo cobre um visual que você ainda não tem, até você dar uma olhada na Boutique.',
+        en: 'The lobby’s gem counter glows when your balance covers a look you don’t own yet, until you take a look in the Boutique.',
+        es: 'El contador de gemas del lobby brilla cuando tu saldo cubre un visual que aún no tienes, hasta que pases por la Boutique.',
+        fr: 'Le compteur de gemmes du lobby brille quand ton solde couvre un look que tu n’as pas encore, jusqu’à ton passage à la Boutique.',
+        zh: '當餘額足以購買你還沒有的外觀時，大廳的寶石計數會發亮，直到你去服飾店看看。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Gemas grátis no resultado', en: 'Free gems on the results', es: 'Gemas gratis en el resultado', fr: 'Gemmes gratuites en fin de partie', zh: '結算畫面的免費寶石' },
+        notes: [
+          {
+            pt: 'A primeira partida do dia de 5 minutos ou mais dá 15 gemas, e jogar 5 dias na semana dá mais 35. Agora o resultado mostra quando elas entram, o saldo, e o visual mais barato (ou o da Vitrine do dia) que já dá para comprar, com um botão que abre a Boutique nele.',
+            en: 'The day’s first run of 5 minutes or more gives 15 gems, and playing 5 days in a week gives 35 more. The results now show when they land, your balance, and the cheapest look (or the Vitrine do dia’s) you can already buy, with a button that opens the Boutique on it.',
+            es: 'La primera partida del día de 5 minutos o más da 15 gemas, y jugar 5 días en la semana da 35 más. Ahora el resultado muestra cuándo llegan, tu saldo y el visual más barato (o el de la Vitrine do dia) que ya puedes comprar, con un botón que abre la Boutique en él.',
+            fr: 'La première partie du jour de 5 minutes ou plus donne 15 gemmes, et jouer 5 jours dans la semaine en donne 35 de plus. L’écran de fin montre maintenant quand elles arrivent, ton solde et le look le moins cher (ou celui de la Vitrine do dia) que tu peux déjà acheter, avec un bouton qui ouvre la Boutique dessus.',
+            zh: '每天第一場 5 分鐘以上的對局可得 15 顆寶石，一週玩滿 5 天再得 35 顆。現在結算畫面會顯示入帳、你的餘額，以及已經買得起的最便宜外觀（或每日櫥窗的那件），並附上直接在服飾店打開它的按鈕。',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-11-19',
     title: { pt: 'Chinês simplificado', en: 'Simplified Chinese', es: 'Chino simplificado', fr: 'Chinois simplifié', zh: '簡體中文' },
     highlights: [

@@ -4,6 +4,7 @@ import { isSkinId, lineOf, SKIN_IDS, SKIN_LINES, SKINS, type SkinId, type SkinLi
 import { GEM_PACK_IDS, GEM_PACKS, oncePack, packGems, type GemCurrency, type GemMethod, type GemPackId } from '../data/gems'
 import { createRng, pick, seedFrom } from '../engine/rng'
 import type { DayKey } from '../game/day'
+import { onSale } from '../game/gems'
 
 /**
  * The Arena shop's rules, DOM-free (`ui/gemShop.ts` draws them, `gems.ts`
@@ -104,6 +105,30 @@ export const dailyPicks = (day: DayKey, owned: ReadonlySet<CosmeticId> = new Set
   const look = draw(onSale.filter((id) => !isSkinId(id)))
   const skin = draw(onSale.filter(isSkinId)) ?? draw(onSale.filter((id) => !isSkinId(id) && look !== null && slotOf(id) !== slotOf(look)))
   return [look, skin].filter((id): id is CosmeticId => id !== null)
+}
+
+/**
+ * What a balance of free gems can buy now, for the results' gem line and
+ * the lobby's chip: the Vitrine do dia's first pick the account lacks when
+ * the balance covers it (`dailyPicks`), else the cheapest item on sale it
+ * lacks (`onSale`; ties go to what shows in a run, then the catalog's
+ * order), as `covers`; when nothing is in reach, how many gems the cheapest
+ * is `missing` (`first`: the account owns nothing bought yet). Null when
+ * the account owns everything on sale.
+ */
+export type LookNudge = { kind: 'covers'; id: CosmeticId } | { kind: 'short'; missing: number; first: boolean }
+
+export const lookNudge = (day: DayKey, owned: ReadonlySet<CosmeticId>, balance: number): LookNudge | null => {
+  const price = (id: CosmeticId) => cosmeticPrice(id) ?? 0
+  const buyable = (id: CosmeticId) => !owned.has(id) && onSale(id, day)
+  const featured = dailyPicks(day, owned).find((id) => buyable(id) && price(id) <= balance)
+  if (featured) return { kind: 'covers', id: featured }
+  const runs = (id: CosmeticId) => (showsIn(slotOf(id), 'run') ? 0 : 1)
+  const cheapest = COSMETIC_IDS.filter(buyable).sort((a, b) => price(a) - price(b) || runs(a) - runs(b))[0]
+  if (cheapest === undefined) return null
+  if (price(cheapest) <= balance) return { kind: 'covers', id: cheapest }
+  const first = ![...owned].some((id) => price(id) > 0)
+  return { kind: 'short', missing: price(cheapest) - Math.max(0, balance), first }
 }
 
 /**

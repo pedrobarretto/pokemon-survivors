@@ -18,7 +18,8 @@ const WALLETS: readonly Method[] = ['APPLE_PAY', 'GOOGLE_PAY']
 type Envelope<T> = { data: T | null; error: string | null; success: boolean }
 
 /** Opens a Pix checkout (AbacatePay) for a gem pack and returns its URL. `externalId` comes back in its webhooks. */
-export type GemPix = (pack: GemPackId, urls: DonationUrls, externalId: string) => Promise<string>
+/** A gem pack's Pix checkout; `gems`: what it brings (`packGemsOn`: a promotion's included). */
+export type GemPix = (pack: GemPackId, urls: DonationUrls, externalId: string, gems: number) => Promise<string>
 
 /** A product of the AbacatePay catalog, by its `externalId` (prefixed `pokemon-survivors-`: the account is shared with other products). */
 type Product = { externalId: string; name: string; description: string; price: number }
@@ -31,14 +32,15 @@ const donationProduct = (amount: number): Product => ({
 })
 
 /**
- * A gem pack's product. Its id carries the price, like a donation's, so a
- * price change in `GEM_PACKS` makes a new product instead of meeting an old
- * one at another price (the checkout refuses to open while they differ,
- * `productFor`).
+ * A gem pack's product, bringing `gems`. Its id carries the price, like a
+ * donation's, so a price change in `GEM_PACKS` makes a new product instead
+ * of meeting an old one at another price (the checkout refuses to open
+ * while they differ, `productFor`); a promotion's gems make one of their
+ * own too (its name says them), the plain pack keeping its old id.
  */
-const gemProduct = (pack: GemPackId): Product => ({
-  externalId: `pokemon-survivors-gems-${pack}-${GEM_PACKS[pack].brl}`,
-  name: `Pokémon Survivors: ${packGems(pack)} gemas`,
+const gemProduct = (pack: GemPackId, gems: number): Product => ({
+  externalId: `pokemon-survivors-gems-${pack}-${GEM_PACKS[pack].brl}${gems === packGems(pack) ? '' : `-${gems}`}`,
+  name: `Pokémon Survivors: ${gems} gemas`,
   description: 'Gemas do Pokémon Survivors: só para itens cosméticos, sem valor em dinheiro.',
   price: GEM_PACKS[pack].brl,
 })
@@ -118,6 +120,6 @@ export const abacatePay = (apiKey: string): { donate: Donate; gems: GemPix } => 
 
   return {
     donate: (amount, urls, externalId) => checkout(donationProduct(amount), ['PIX', 'CARD', 'APPLE_PAY', 'GOOGLE_PAY'], urls, externalId),
-    gems: (pack, urls, externalId) => checkout(gemProduct(pack), ['PIX'], urls, externalId),
+    gems: (pack, urls, externalId, gems) => checkout(gemProduct(pack, gems), ['PIX'], urls, externalId),
   }
 }

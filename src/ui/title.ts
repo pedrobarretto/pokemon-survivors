@@ -30,7 +30,7 @@ import type { VisitorShelf } from './shop'
 import { dialogue, type Dialogue } from './dialogue'
 import { carpenterSpeaker, judgeSpeaker, senseiSpeaker, tailorSpeaker } from './visitors'
 import { boutiqueSeen, type BoutiqueTab } from './boutiqueSeen'
-import { gemChip } from './gemBits'
+import { gemChip, promoLobbyLine, promoTag } from './gemBits'
 import { gemIconUrl } from '../render/gemArt'
 import { inviterName } from '../ranking'
 import { ROUTES, SOCIAL_IDS, SOCIALS, type SocialId } from '../site/routes'
@@ -1056,7 +1056,8 @@ export const titleScreen = (
         entries: [
           ...(festivalCardShows() ? [entry('festival', sparkleIcon(), t().festival.card)] : []),
           entry('mart', shopIcon(), m.shopName, m.shopLine),
-          entry('boutique', assetUrl('shop/boutique.png'), m.boutiqueName, m.boutiqueLine),
+          // A gem promotion's tag and time left while it runs.
+          { ...entry('boutique', assetUrl('shop/boutique.png'), m.boutiqueName, promoLobbyLine() ?? m.boutiqueLine), extra: promoTag(true, 'lobby') },
           entry('carpentry', assetUrl('shop/carpentry.png'), m.carpentryName, m.carpentryLine),
           hallEntry(),
         ],
@@ -1143,13 +1144,17 @@ export const titleScreen = (
       h('div', { class: 'lobby-today-cards', 'data-tour': 'today' }, ...(kind === 'landscape' && festival ? [festival] : []), ...dayCards),
     )
 
-    const shopRow = (key: 'mart' | 'boutique' | 'carpentry', art: string, name: string, line: string) =>
-      pressable(h('button', { class: 'lobby-shop-row', type: 'button', 'aria-label': `${name}: ${line}` }, h('span', { class: 'lobby-shop-art' }, iconImg(art, 'lobby-shop-img')), h('span', { class: 'lobby-day-text' }, h('b', {}, name), h('small', {}, line))), key)
+    const shopRow = (key: 'mart' | 'boutique' | 'carpentry', art: string, name: string, line: string, tag: HTMLElement | null = null) =>
+      pressable(
+        h('button', { class: 'lobby-shop-row', type: 'button', 'aria-label': `${name}: ${line}` }, h('span', { class: 'lobby-shop-art' }, iconImg(art, 'lobby-shop-img')), h('span', { class: 'lobby-day-text' }, h('b', {}, name, tag ?? ''), h('small', {}, line))),
+        key,
+      )
     const shops = h(
       'div',
       { class: 'arc-card lobby-shops', 'data-tour': 'plaza' },
       shopRow('mart', assetUrl(`shop/shop-lv${save.shop.level}.png`), m.shopName, m.shopLine),
-      shopRow('boutique', assetUrl('shop/boutique.png'), m.boutiqueName, m.boutiqueLine),
+      // A gem promotion's tag and time left while it runs.
+      shopRow('boutique', assetUrl('shop/boutique.png'), m.boutiqueName, promoLobbyLine() ?? m.boutiqueLine, promoTag(true, 'lobby')),
       shopRow('carpentry', assetUrl('shop/carpentry.png'), m.carpentryName, m.carpentryLine),
     )
     const hall = navigable(hallStrip(openHall), 'hall')

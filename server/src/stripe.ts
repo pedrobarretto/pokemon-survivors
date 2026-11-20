@@ -1,4 +1,4 @@
-import { GEM_PACKS, packGems, type GemCurrency, type GemPackId } from '../../src/data/gems'
+import { GEM_PACKS, type GemCurrency, type GemPackId } from '../../src/data/gems'
 
 /** The game's languages, as a checkout names the buyer's (`GemCheckoutRequest.locale`). */
 const CHECKOUT_LOCALES = ['pt', 'en', 'es', 'fr', 'zh', 'zhHans'] as const
@@ -8,8 +8,8 @@ export type CheckoutLocale = (typeof CHECKOUT_LOCALES)[number]
 /** The buyer's language from a checkout's body, or null for one the game doesn't have. */
 export const checkoutLocale = (v: unknown): CheckoutLocale | null => CHECKOUT_LOCALES.find((l) => l === v) ?? null
 
-/** A gem pack's Stripe Checkout: our purchase `ref`, who buys, the pack, its currency, the buyer's language, and where Stripe sends them back. */
-export type StripeGemOrder = { ref: string; userId: string; pack: GemPackId; currency: GemCurrency; locale: CheckoutLocale; successUrl: string; cancelUrl: string }
+/** A gem pack's Stripe Checkout: our purchase `ref`, who buys, the pack, the gems it brings (`packGemsOn`: a promotion's included), its currency, the buyer's language, and where Stripe sends them back. */
+export type StripeGemOrder = { ref: string; userId: string; pack: GemPackId; gems: number; currency: GemCurrency; locale: CheckoutLocale; successUrl: string; cancelUrl: string }
 
 /**
  * What the Checkout page says, in the buyer's language: Stripe's own
@@ -88,7 +88,7 @@ export const stripeGemForm = (o: StripeGemOrder, now = Date.now()): [string, str
     ['line_items[0][quantity]', '1'],
     ['line_items[0][price_data][currency]', o.currency],
     ['line_items[0][price_data][unit_amount]', String(GEM_PACKS[o.pack][o.currency])],
-    ['line_items[0][price_data][product_data][name]', text.name(packGems(o.pack))],
+    ['line_items[0][price_data][product_data][name]', text.name(o.gems)],
     ['line_items[0][price_data][product_data][description]', text.description],
     ['locale', text.stripe],
     ['custom_text[submit][message]', text.submit],

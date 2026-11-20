@@ -40,7 +40,7 @@ import { CHECKED, checkRank, rankOnShow, type BoardLine } from './checkRank'
 import type { Sql } from './db'
 import { standingOf, type StandingRow } from './supporters'
 import { creditRun } from './gems'
-import { runEarnsGems } from '../../src/game/gems'
+import { runEarnsGems, type RunGems } from '../../src/game/gems'
 import type { TokenRules } from './rulesGrace'
 import { boardFrom, frozenBoards } from './era1Board'
 
@@ -60,7 +60,8 @@ export type FinishError = 'unknown' | 'replaced' | 'mismatch' | 'seed' | 'clock'
  * `ranks`: where the player stands on the day, week and total boards of its mode and difficulty (null off them,
  * and before they pick a handle).
  */
-export type Finished = { ok: true; challenge: DayKey | null; official: boolean | null; listed: boolean; ranks: RunRanks }
+/** `gems`: the run gems this report brought (`creditRun`), null when none. */
+export type Finished = { ok: true; challenge: DayKey | null; official: boolean | null; listed: boolean; ranks: RunRanks; gems: RunGems | null }
 
 /** A query of the pool, or of a transaction. */
 type Q = Sql | TransactionSql
@@ -438,7 +439,7 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
           where id = ${token}`
         await tx`delete from run_chunks where run_id = ${token} and to_tick <= ${settled.total}`
         // The day's run gems, for a run the clock allowed this long (endless mode's later reports land on the same ref).
-        if (runEarnsGems(result.time)) await creditRun(tx, [userId], brasiliaDay(new Date()))
+        const gems = runEarnsGems(result.time) ? ((await creditRun(tx, [userId], brasiliaDay(new Date()))).get(userId) ?? null) : null
         // Decided at the door, on every report (endless mode reports again as it grows): the replay is kept only for a check.
         const standing = (await standingOf(tx, token))!
         const rank = checkRank(standing, rankOnShow(standing) === null && (await sampleDue(tx, token)))
@@ -449,7 +450,7 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
         const late = stream.lag === null ? '-' : `${stream.lag.toFixed(1)} s`
         const kept = rank === null ? '' : `, replay kept for its check (rank ${rank})`
         console.log(`stream ${token}: ${chunks.length} chunks, tail ${settled.tail} ticks, worst lag ${late}${inTime ? '' : streamEnforce ? ', unlisted' : ', not in time (observing)'}${kept}`)
-        return { ok: true, challenge: run.challenge, official, listed, ranks } as const
+        return { ok: true, challenge: run.challenge, official, listed, ranks, gems } as const
       }),
 
     /**

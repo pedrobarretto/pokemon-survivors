@@ -3,8 +3,10 @@ import { track } from './analytics'
 import { apiCall } from './api'
 import { equip, ownedOnly, sameLook } from './arena/gemShop'
 import { COSMETICS, COSMETIC_IDS, COSMETIC_SLOTS, cosmeticPrice, isCosmeticId, parseLook, slotOf, type Look, type CosmeticId } from './data/cosmetics'
-import { isGemPackId, oncePack, packGems, type GemCurrency, type GemMethod, type GemPackId } from './data/gems'
-import { bundleMissing, bundlePrice, isGemPurchaseStatus, isGemReason, type GemBuyResponse, type GemCheckoutRefusal, type GemCheckoutRequest, type GemLedgerEntry, type GemPurchaseResponse, type GemsStatus } from './game/gems'
+import { isGemPackId, oncePack, packGems, packGemsOn, promoOf, type GemCurrency, type GemMethod, type GemPackId, type GemPromo } from './data/gems'
+import { brasiliaDay, dayNumber, msToNextDay, type DayKey } from './game/day'
+import { today } from './ui/save'
+import { bundleMissing, bundlePrice, isGemPurchaseStatus, isGemReason, type GemBuyResponse, type GemCheckoutRefusal, type GemCheckoutRequest, type GemLedgerEntry, type GemPurchaseResponse, type GemsStatus, type RunGems } from './game/gems'
 import { locale } from './i18n'
 import { isRecord } from './game/parse'
 import { setLocalLook } from './render/looks'
@@ -79,6 +81,15 @@ export const stageGems = (patch: { balance?: number; own?: readonly CosmeticId[]
   remember(f.status)
 }
 
+/** Dev, faking: a run's report brought `n` gems (the results' gem line, `ps.gems('run', n)`): they land as the API's would. */
+export const stageRunGems = (n: number): RunGems | null => {
+  if (!fake) return null
+  fake.status = { ...fake.status, balance: fake.status.balance + n }
+  fake.ledger.unshift({ amount: n, reason: 'run', ref: 'dev', at: Date.now() })
+  notify()
+  return { earned: n, balance: fake.status.balance }
+}
+
 /** Dev, faking: every checkout is turned down for `refusal` (null: none again). */
 export const stageRefusal = (refusal: GemCheckoutRefusal | null) => {
   if (!fake) fakeGems(true)
@@ -93,7 +104,7 @@ export const stageRefusal = (refusal: GemCheckoutRefusal | null) => {
 export const stageCheckout = (pack: GemPackId | 'never') => {
   if (!fake) fakeGems(true)
   const ref = `dev-${pack}`
-  fake!.landing = { ref, gems: packGems(pack === 'never' ? 'pouch' : pack), at: pack === 'never' ? null : Date.now() + 2500, landed: false }
+  fake!.landing = { ref, gems: pack === 'never' ? packGems('pouch') : packGemsOn(pack, promoDay()), at: pack === 'never' ? null : Date.now() + 2500, landed: false }
   return ref
 }
 
@@ -106,6 +117,29 @@ const landFake = (f: Fake) => {
   const taken = isGemPackId(pack) && oncePack(pack) ? [...f.status.taken, pack] : f.status.taken
   f.status = { ...f.status, balance: f.status.balance + land.gems, taken }
   f.ledger.unshift({ amount: land.gems, reason: 'pack', ref: 'dev', at: Date.now() })
+}
+
+/* ---------------- Promotions ---------------- */
+
+/** The day `ps.gems('promo', day)` holds the promotions on, or null: today's. */
+let promoDayHeld: DayKey | null = null
+
+/** Dev: shows the gem promotions (`GEM_PROMOS`) as on Brasília `day` until a reload; null goes back to today. */
+export const holdPromoDay = (day: DayKey | null) => {
+  promoDayHeld = day
+  notify()
+}
+
+/** The Brasília day the shop's promotions follow (the missions' clock, `today`, or the held one). The API decides by its own clock as a checkout opens. */
+export const promoDay = (): DayKey => promoDayHeld ?? brasiliaDay(today())
+
+/** The promotion on show now, or null. */
+export const livePromo = (): GemPromo | null => promoOf(promoDay())
+
+/** What's left of `promo`: whole days and hours to the midnight in Brasília after its last day. */
+export const promoLeft = (promo: GemPromo, now = new Date()) => {
+  const hours = Math.max(0, Math.floor((msToNextDay(now) + (dayNumber(promo.to) - dayNumber(promoDay())) * 86_400_000) / 3_600_000))
+  return { days: Math.floor(hours / 24), hours: hours % 24 }
 }
 
 /* ---------------- The device's mirror ---------------- */
