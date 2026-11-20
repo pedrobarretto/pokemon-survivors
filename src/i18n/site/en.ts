@@ -895,7 +895,7 @@ export const siteEn: SiteMessages = {
         'A companion that follows them in runs.',
         'Their name on the wall below and in the victory thanks.',
         'A vote on the next egg Pokémon.',
-        'Gold and Diamond are monthly now, on Patreon (see below): one-time donations don’t add up to Gold.',
+        'Gold and Diamond are monthly now, on Patreon (see above): one-time donations don’t add up to Gold.',
       ],
       note: 'All cosmetic: nothing changes a run or the ranking. Rewards need an account in the game (signing in with Google is free).',
     },
@@ -944,7 +944,7 @@ export const siteEn: SiteMessages = {
       'Pokémon and Pokémon character names are trademarks of Nintendo. Pokémon © Nintendo, Creatures Inc. and GAME FREAK inc. All other trademarks belong to their respective owners.',
     ],
     free: [
-      'The game is free and will stay that way: no ads, and nothing that changes a run or the ranking costs money. The only possible purchase is optional gems, for looks (see below).',
+      'The game is free and will stay that way: no ads, and nothing that changes a run or the ranking costs money. The only possible purchase is optional gems, for looks (see above).',
       'Poké Dollars (₽) exist only inside the game and can\'t be bought with real money.',
       'If you want, you can donate on the Support the project page. Donations are voluntary and, with an account, only bring a cosmetic thank-you (a title, a card frame, a badge, a shiny of your choice, a companion), nothing that changes a run or the ranking.',
     ],

@@ -896,7 +896,7 @@ export const siteFr: SiteMessages = {
         'Un compagnon qui les suit pendant les parties.',
         'Leur nom sur le mur ci-dessous et dans les remerciements de la victoire.',
         'Un vote pour le prochain Pokémon des œufs.',
-        'Or et Diamant sont désormais mensuels, sur Patreon (voir plus bas) : les dons ponctuels ne s’additionnent plus pour l’Or.',
+        'Or et Diamant sont désormais mensuels, sur Patreon (voir plus haut) : les dons ponctuels ne s’additionnent plus pour l’Or.',
       ],
       note: 'Tout est cosmétique : rien ne change une partie ni le classement. Les récompenses demandent un compte dans le jeu (la connexion avec Google est gratuite).',
     },
@@ -945,7 +945,7 @@ export const siteFr: SiteMessages = {
       'Pokémon et les noms des personnages Pokémon sont des marques déposées de Nintendo. Pokémon © Nintendo, Creatures Inc. et GAME FREAK inc. Toutes les autres marques appartiennent à leurs propriétaires respectifs.',
     ],
     free: [
-      'Le jeu est gratuit et le restera : pas de pubs, et rien qui change une partie ou le classement ne coûte d’argent. Le seul achat possible, ce sont des gemmes facultatives, pour des styles (voir plus bas).',
+      'Le jeu est gratuit et le restera : pas de pubs, et rien qui change une partie ou le classement ne coûte d’argent. Le seul achat possible, ce sont des gemmes facultatives, pour des styles (voir plus haut).',
       'Les Pokédollars (₽) n’existent que dans le jeu et ne peuvent pas être achetés avec de l’argent réel.',
       'Si tu le souhaites, tu peux faire un don sur la page Soutenir le projet. Les dons sont volontaires et, avec un compte, n’apportent qu’un remerciement cosmétique (un titre, un cadre de carte, un badge, un chromatique au choix, un compagnon), rien qui change une partie ou le classement.',
     ],

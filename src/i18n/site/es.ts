@@ -899,7 +899,7 @@ export const siteEs: SiteMessages = {
         'Un compañero que lo sigue en las partidas.',
         'Su nombre en el mural de abajo y en los agradecimientos de la victoria.',
         'Voto en el próximo Pokémon de los huevos.',
-        'Oro y Diamante ahora son mensuales, en Patreon (mira abajo): las donaciones únicas no suman para Oro.',
+        'Oro y Diamante ahora son mensuales, en Patreon (mira arriba): las donaciones únicas no suman para Oro.',
       ],
       note: 'Todo cosmético: nada cambia una partida ni el ranking. Las recompensas necesitan una cuenta en el juego (entrar con Google es gratis).',
     },

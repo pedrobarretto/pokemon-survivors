@@ -953,7 +953,7 @@ export const sitePt = {
         'Um companheiro que te segue nas partidas.',
         'O nome no mural abaixo e nos agradecimentos da vitória.',
         'Voto no próximo Pokémon dos ovos.',
-        'Ouro e Diamante agora são mensais, no Patreon (veja abaixo): doações avulsas não somam para Ouro.',
+        'Ouro e Diamante agora são mensais, no Patreon (veja acima): doações avulsas não somam para Ouro.',
       ],
       note: 'Tudo cosmético: nada muda uma partida nem o ranking. As recompensas precisam de uma conta no jogo (entrar com Google é grátis).',
     },
@@ -1003,7 +1003,7 @@ export const sitePt = {
       'Pokémon e os nomes dos personagens são marcas registradas da Nintendo. Pokémon © Nintendo, Creatures Inc. e GAME FREAK inc. As demais marcas pertencem aos seus donos.',
     ],
     free: [
-      'O jogo é gratuito e vai continuar assim: não tem anúncios, e nada que mude uma partida ou o ranking custa dinheiro. A única compra possível são gemas, opcionais, para visuais (veja abaixo).',
+      'O jogo é gratuito e vai continuar assim: não tem anúncios, e nada que mude uma partida ou o ranking custa dinheiro. A única compra possível são gemas, opcionais, para visuais (veja acima).',
       'Poké Dollars (₽) existem só dentro do jogo e não podem ser comprados com dinheiro de verdade.',
       'Quem quiser pode doar na página Apoie o projeto. Doações são voluntárias e, com uma conta, dão só um agradecimento cosmético (título, moldura, selo, um shiny à escolha, um companheiro), nada que mude uma partida ou o ranking.',
     ],
