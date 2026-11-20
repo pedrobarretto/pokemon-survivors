@@ -276,7 +276,7 @@ import { coopOver } from './game/coop'
 import { createTeamLayer, type TeamLayer } from './ui/teamLayer'
 import { teamFeedback, teamMoment } from './ui/teamScreens'
 import { arenaFormat, arenaPick, isArenaHubTab, isVersusEvent, keepArenaPick, preseason, stagePreseason, type ArenaHubTab } from './ui/arenaBits'
-import { equippedLook, fakeGems, fetchGems, gemsFaked, knownGems, onGems, stageCheckout, stageGems, stageRefusal, takeCheckoutReturn } from './gems'
+import { equippedLook, fakeGems, fetchGems, gemsFaked, knownGems, onGems, stageCheckout, stageGems, stageRefusal, takeCheckoutReturn, type CheckoutReturn } from './gems'
 import { isGemPackId } from './data/gems'
 import { arenaSignedIn, awaitRpChange, fakeArena, keepArenaMatch, postPractice, type RpChange } from './arenaApi'
 import { isFakeScenario } from './arena/fakes'
@@ -715,8 +715,8 @@ const openShop = (close: () => void, shelf?: VisitorShelf, festival?: () => void
   )
 }
 
-/** The ref a gem pack's checkout came back with (`?gems=<ref>`), for the Boutique's Loja to wait on as it opens. */
-let boutiqueCheckout: string | null = null
+/** What a gem pack's checkout came back with (`?gems=<ref>`, and `&cancel=<pack>` when given up), for the Boutique's Loja to open on. */
+let boutiqueCheckout: CheckoutReturn | null = null
 
 /** The skin the Boutique's Skins opens on (the partner select's skins row), once. */
 let boutiqueItem: SkinId | null = null
@@ -746,9 +746,9 @@ const openBoutiqueSheet = (close: () => void, tab: BoutiqueTab) => {
  * Card's look, `?boutique`, a checkout's return): the lobby lands on the
  * plaza's north-west with the sheet open on `tab`; leaving it calls `back`
  * when given (where it came from), else pans home. `checkout`: the
- * `?gems=<ref>` the Loja waits on; `item`, the skin Skins opens on.
+ * `?gems=<ref>` the Loja waits on (or, given up, offers again); `item`, the skin Skins opens on.
  */
-const showBoutique = (tab: BoutiqueTab, back?: () => void, checkout: string | null = null, item: SkinId | null = null) => {
+const showBoutique = (tab: BoutiqueTab, back?: () => void, checkout: CheckoutReturn | null = null, item: SkinId | null = null) => {
   boutiqueCheckout = checkout
   boutiqueItem = item
   showTitle({ shop: tab === 'shop' ? 'boutique' : tab, instant: true, ...(back && { back }) })
@@ -4974,7 +4974,7 @@ const boot = () => {
     const city = new URLSearchParams(location.search).get(REALM_PARAM)
     enterRealm(isCityId(city) ? city : null)
   } else if (patreonReturn()) showPatreonReturn(patreonReturn() === 'linked')
-  // Back from a gem pack's checkout (`?gems=<ref>`): the Boutique's Loja, waiting for that pack.
+  // Back from a gem pack's checkout (`?gems=<ref>`): the Boutique's Loja, waiting for that pack (or, given up, offering it again).
   else if (checkoutRef !== null) showBoutique('shop', undefined, checkoutRef)
   else if (poll) showPollLink(poll)
   // Back from signing in, the player already pressed start before leaving: straight to the menu.
@@ -5718,7 +5718,8 @@ const devSkin = (id?: string, seat?: number) => {
  * balance negative as after a refund of spent gems (`('lock')` unlocks it all,
  * the balance back to 0); `('return', 'chest')` comes back from a
  * checkout of that pack (`'never'`: the gems never land and the wait runs
- * out); `('refuse', 'cap')` turns every checkout down as the API would
+ * out); `('cancel', 'bag')` comes back from one given up, on the "Não deu
+ * certo?" sheet; `('refuse', 'cap')` turns every checkout down as the API would
  * (`'once'`: the welcome pack taken; no reason: none again); `('shop')`,
  * `('skins')` and `('locker')` open the Boutique's tabs; `('fetch')` asks the API now.
  */
@@ -5735,11 +5736,14 @@ const devGems = (cmd?: string, arg?: string | number) => {
     if (arg !== undefined && !isCosmeticId(arg)) return `Cosmetics: ${COSMETIC_IDS.join(', ')}`
     stageGems({ lock: arg === undefined ? [] : [arg] })
   } else if (cmd === 'return') {
-    showBoutique('shop', undefined, stageCheckout(isGemPackId(arg) ? arg : arg === 'never' ? 'never' : 'bag'))
+    showBoutique('shop', undefined, { ref: stageCheckout(isGemPackId(arg) ? arg : arg === 'never' ? 'never' : 'bag'), cancel: null })
+  } else if (cmd === 'cancel') {
+    if (!gemsFaked()) fakeGems(true)
+    showBoutique('shop', undefined, { ref: 'dev-cancel', cancel: isGemPackId(arg) ? arg : 'bag' })
   } else if (cmd === 'refuse') stageRefusal(arg === 'cap' || arg === 'once' ? arg : null)
   else if (cmd === 'shop' || cmd === 'skins' || cmd === 'locker') showBoutique(cmd)
   else if (cmd === 'fetch') void fetchGems().then((s) => console.info('gems', s))
-  else if (cmd !== undefined) return "ps.gems() · ('fake', balance? | 'off') · ('balance', n) · ('own', id?) · ('lock', id?) · ('return', pack | 'never') · ('refuse', 'cap' | 'once'?) · ('shop') · ('skins') · ('locker') · ('fetch')"
+  else if (cmd !== undefined) return "ps.gems() · ('fake', balance? | 'off') · ('balance', n) · ('own', id?) · ('lock', id?) · ('return', pack | 'never') · ('cancel', pack?) · ('refuse', 'cap' | 'once'?) · ('shop') · ('skins') · ('locker') · ('fetch')"
   // In a run or a match, each seat's look as the shell holds it.
   return { faked: gemsFaked(), gems: knownGems(), look: equippedLook(), seats: run ? run.game.players.map((p) => lookOf(p.slot)) : null }
 }

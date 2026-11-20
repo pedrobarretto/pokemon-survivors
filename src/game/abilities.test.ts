@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { ABILITIES, ABILITY, ABILITY_IDS, BRANCH_ABILITIES, FAMILY_ABILITIES } from '../data/abilities'
 import { PLAYABLE_IDS } from '../data/hatchlings'
-import { abilityBoosting, abilityKey, grantAbility, updateAbility } from './abilities'
+import { BEAST_BOOST } from '../data/legends'
+import { abilityBoosting, abilityKey, abilityKill, abilityStacks, grantAbility, updateAbility } from './abilities'
+import { spawnEnemy } from './enemies'
 import { hazardHit } from './bosses'
 import { hurtPlayer } from './combat'
 import { curseCast, updateCurses } from './curseSystem'
@@ -83,6 +85,44 @@ describe('Speed Boost', () => {
     expect(g.player.stats.speed).toBe(base + 3)
     tick(g, 20 * 15)
     expect(g.player.stats.speed).toBe(base + 30)
+  })
+})
+
+describe('decaying KO stacks', () => {
+  /** `n` knockouts, one per frame. */
+  const ko = (g: Game, n: number) => {
+    const e = spawnEnemy(g, 'rattata', g.player.x + 40, g.player.y)
+    for (let i = 0; i < n; i++) abilityKill(g, e)
+  }
+
+  it('holds a fresh Beast Boost stack, then drops one whole stack every few seconds without KOs', () => {
+    const g = createGame('kartana', { ...VIEW }, 1)
+    ko(g, BEAST_BOOST.per * 2)
+    tick(g, 0.1)
+    expect(abilityStacks(g)).toBe(2)
+    tick(g, BEAST_BOOST.decay - 0.2)
+    expect(abilityStacks(g)).toBe(2)
+    tick(g, 0.2)
+    expect(abilityStacks(g)).toBe(1)
+    tick(g, BEAST_BOOST.decay)
+    expect(abilityStacks(g)).toBe(0)
+  })
+
+  it('keeps Beast Boost while KOs keep coming, even short of the next stack', () => {
+    const g = createGame('kartana', { ...VIEW }, 1)
+    ko(g, BEAST_BOOST.per)
+    for (let i = 0; i < 3; i++) {
+      tick(g, BEAST_BOOST.decay - 1)
+      ko(g, 1)
+    }
+    expect(abilityStacks(g)).toBe(1)
+  })
+
+  it('counts every Moxie knockout', () => {
+    const g = withAbility('moxie')
+    ko(g, 5)
+    tick(g, 0.5)
+    expect(abilityStacks(g)).toBe(5)
   })
 })
 

@@ -24,8 +24,84 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-21',
+    title: { pt: 'Gemas na sua moeda', en: 'Gems in your currency', es: 'Gemas en tu moneda', fr: 'Des gemmes dans ta devise', zh: '以你的幣別購買寶石' },
+    highlights: [
+      {
+        pt: 'Pacotes de gemas agora mostram o preço na sua moeda (dólar, euro, NT$, peso…), e o pagamento cobra nela.',
+        en: 'Gem packs now show their price in your currency (dollars, euros, NT$, pesos…), and checkout charges in it.',
+        es: 'Los paquetes de gemas ahora muestran el precio en tu moneda (dólar, euro, NT$, peso…), y el pago cobra en ella.',
+        fr: 'Les packs de gemmes affichent maintenant leur prix dans ta devise (dollar, euro, NT$, peso…), et le paiement se fait dans celle-ci.',
+        zh: '寶石包現在會以你的幣別顯示價格（美元、歐元、新台幣、披索…），付款也以該幣別扣款。',
+      },
+      {
+        pt: 'Um só pagamento com tudo junto: cartão, Apple Pay, Google Pay e, no Brasil, Pix.',
+        en: 'One checkout with everything in it: card, Apple Pay, Google Pay, and Pix in Brazil.',
+        es: 'Un solo pago con todo junto: tarjeta, Apple Pay, Google Pay y, en Brasil, Pix.',
+        fr: 'Un seul paiement avec tout dedans : carte, Apple Pay, Google Pay, et Pix au Brésil.',
+        zh: '同一個付款頁面就有全部方式：信用卡、Apple Pay、Google Pay，在巴西還有 Pix。',
+      },
+      {
+        pt: 'Faltam gemas para um visual? O botão dele já abre o pacote que cobre a diferença.',
+        en: 'Short of gems for a look? Its button now opens the pack that covers the difference.',
+        es: '¿Te faltan gemas para un visual? Su botón ya abre el paquete que cubre la diferencia.',
+        fr: 'Il te manque des gemmes pour un look ? Son bouton ouvre directement le pack qui couvre la différence.',
+        zh: '寶石不夠買外觀嗎？它的按鈕會直接打開能補足差額的寶石包。',
+      },
+      {
+        pt: 'A Loja de gemas mostra o apoio mensal no Patreon: cada nível traz gemas todo mês, e quem já vinculou vê o próprio nível.',
+        en: 'The gem shop now shows monthly support on Patreon: every tier brings gems each month, and patrons who linked see their own tier.',
+        es: 'La tienda de gemas muestra el apoyo mensual en Patreon: cada nivel trae gemas cada mes, y quien ya lo vinculó ve su propio nivel.',
+        fr: 'La boutique de gemmes montre le soutien mensuel sur Patreon : chaque niveau apporte des gemmes chaque mois, et qui l’a déjà lié voit son propre niveau.',
+        zh: '寶石商店現在會顯示 Patreon 每月贊助：每個等級每月都會帶來寶石，已連結的玩家會看到自己的等級。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Compra de gemas', en: 'Buying gems', es: 'Compra de gemas', fr: 'Achat de gemmes', zh: '購買寶石' },
+        notes: [
+          {
+            pt: 'Fora do Brasil, a Loja mostra um preço aproximado na moeda do seu aparelho, e a página de pagamento mostra e cobra o valor exato na sua moeda. No Brasil, nada muda: os mesmos preços em reais, agora com Pix na mesma página do cartão.',
+            en: 'Outside Brazil, the Shop shows an approximate price in your device’s currency, and the checkout page shows and charges the exact amount in your currency. In Brazil nothing changes: the same prices in reais, now with Pix on the same page as cards.',
+            es: 'Fuera de Brasil, la Tienda muestra un precio aproximado en la moneda de tu dispositivo, y la página de pago muestra y cobra el valor exacto en tu moneda. En Brasil no cambia nada: los mismos precios en reales, ahora con Pix en la misma página que la tarjeta.',
+          },
+          {
+            pt: 'Desistiu no meio do pagamento? Você volta para a Boutique, que oferece o mesmo pacote de novo e lembra dos outros jeitos de pagar, em vez de cair na tela inicial.',
+            en: 'Backed out of a payment? You land back in the Boutique, which offers the same pack again and the other ways to pay, instead of the title screen.',
+            es: '¿Te arrepentiste a mitad del pago? Vuelves a la Boutique, que te ofrece el mismo paquete otra vez y las otras formas de pagar, en vez de caer en la pantalla inicial.',
+          },
+          {
+            pt: 'Um visual caro demais mostra no próprio botão quantas gemas faltam e o pacote que cobre a diferença, com o preço; tocar abre o pagamento dele.',
+            en: 'A look you can’t afford yet shows on its own button how many gems you’re short and the pack that covers them, with its price; tapping opens that pack’s checkout.',
+            es: 'Un visual que aún no alcanzas muestra en su propio botón cuántas gemas faltan y el paquete que las cubre, con su precio; tocarlo abre el pago de ese paquete.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Apoio ao jogo', en: 'Supporting the game', es: 'Apoyo al juego', fr: 'Soutenir le jeu', zh: '支持遊戲' },
+        notes: [
+          {
+            pt: 'A Loja de gemas ganhou um card do Patreon com as gemas por mês de cada nível e as vantagens de quem apoia. Quem já vinculou o Patreon vê o próprio nível no lugar do convite, e o Hall da Fama e a página Apoie também passam a dizer as gemas por mês.',
+            en: 'The gem shop has a Patreon card with every tier’s gems a month and what supporters get. Patrons who linked Patreon see their own tier instead, and the Hall of Fame and the Support page now say the gems a month too.',
+            es: 'La tienda de gemas tiene una tarjeta de Patreon con las gemas al mes de cada nivel y lo que recibe quien apoya. Quien ya vinculó Patreon ve su propio nivel en lugar de la invitación, y el Salón de la Fama y la página Apoya también dicen las gemas al mes.',
+          },
+          {
+            pt: 'Doações avulsas agora são pelo Stripe, do Brasil e de fora, num só formulário: Pix e cartão em reais, e quem é de outro país vê o valor na própria moeda.',
+            en: 'One-time donations now go through Stripe, from Brazil and abroad, in a single form: Pix and cards in reais, and donors from other countries see the amount in their own currency.',
+            es: 'Las donaciones únicas ahora van por Stripe, desde Brasil y desde fuera, en un solo formulario: Pix y tarjeta en reales, y quien es de otro país ve el monto en su propia moneda.',
+          },
+          {
+            pt: 'Depois de alguns marcos (25 partidas, a primeira vitória no Pesadelo, 100 partidas), o lobby pergunta uma vez se você quer apoiar o jogo. Quem já apoia não vê a pergunta.',
+            en: 'After a few milestones (25 runs, a first Nightmare win, 100 runs), the lobby asks once whether you’d like to support the game. Supporters never see it.',
+            es: 'Después de algunos hitos (25 partidas, la primera victoria en Pesadilla, 100 partidas), el lobby pregunta una vez si quieres apoyar el juego. Quien ya apoya no ve la pregunta.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-11-20',
-    title: { pt: 'Lendários no co-op', en: 'Legendaries in co-op', es: 'Legendarios en co-op', fr: 'Légendaires en coop', zh: '合作模式的傳說寶可夢' },
+    title: { pt: 'Lendários no co-op e Beast Boost consertado', en: 'Legendaries in co-op and Beast Boost fixed', es: 'Legendarios en co-op y Beast Boost arreglado', fr: 'Légendaires en coop et Beast Boost corrigé', zh: '合作模式的傳說寶可夢與異獸提升修正' },
     highlights: [
       {
         pt: 'Modo Lendário no co-op: o anfitrião liga na sala e cada um joga com um lendário que já capturou, com horda mais forte, Pressão e despertares.',
@@ -49,11 +125,25 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         zh: '只有帳號裡捕獲過的傳說寶可夢才算：還沒捕獲任何一隻的玩家，無法在傳說模式房間準備。',
       },
       {
-        pt: 'A Loja de gemas mostra o apoio mensal no Patreon: cada nível traz gemas todo mês, e quem já vinculou vê o próprio nível.',
-        en: 'The gem shop now shows monthly support on Patreon: every tier brings gems each month, and patrons who linked see their own tier.',
-        es: 'La tienda de gemas muestra el apoyo mensual en Patreon: cada nivel trae gemas cada mes, y quien ya lo vinculó ve su propio nivel.',
-        fr: 'La boutique de gemmes montre le soutien mensuel sur Patreon : chaque niveau apporte des gemmes chaque mois, et qui l’a déjà lié voit son propre niveau.',
-        zh: '寶石商店現在會顯示 Patreon 每月贊助：每個等級每月都會帶來寶石，已連結的玩家會看到自己的等級。',
+        pt: 'Beast Boost (Ultra Beasts) e Moxie: o nível que você acabou de ganhar não some mais na hora.',
+        en: 'Beast Boost (Ultra Beasts) and Moxie: the stack you just earned no longer vanishes at once.',
+        es: 'Beast Boost (Ultraentes) y Moxie: el nivel que acabas de ganar ya no desaparece al instante.',
+        fr: 'Beast Boost (Ultra-Chimères) et Moxie : le niveau que vous venez de gagner ne disparaît plus aussitôt.',
+        zh: '異獸提升（究極異獸）與自信過度：剛獲得的層數不會再立刻消失。',
+      },
+      {
+        pt: 'Um nível só cai depois de 4 s sem nocautes (1 s no Moxie), então uma sequência de nocautes chega ao máximo.',
+        en: 'A stack only drops after 4 s without KOs (1 s for Moxie), so a streak of KOs reaches the cap.',
+        es: 'Un nivel solo se pierde tras 4 s sin derrotas (1 s en Moxie), así que una racha de derrotas llega al máximo.',
+        fr: 'Un niveau ne retombe qu’après 4 s sans K.O. (1 s pour Moxie), donc une série de K.O. atteint le maximum.',
+        zh: '只有連續 4 秒沒有擊倒（自信過度為 1 秒）才會掉一層，連續擊倒就能疊到上限。',
+      },
+      {
+        pt: 'Partidas ranqueadas começam numa versão nova das regras; corridas da versão anterior continuam valendo.',
+        en: 'Ranked runs start on a new rules version; runs from the previous one still count.',
+        es: 'Las partidas clasificatorias empiezan en una nueva versión de las reglas; las de la versión anterior siguen valiendo.',
+        fr: 'Les parties classées passent à une nouvelle version des règles ; celles de la version précédente comptent toujours.',
+        zh: '排名對局改用新版規則，舊版規則的對局仍然有效。',
       },
     ],
     changes: [
@@ -78,22 +168,12 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         ],
       },
       {
-        title: { pt: 'Apoio ao jogo', en: 'Supporting the game', es: 'Apoyo al juego' },
+        title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Correctifs', zh: '修正' },
         notes: [
           {
-            pt: 'A Loja de gemas ganhou um card do Patreon com as gemas por mês de cada nível e as vantagens de quem apoia. Quem já vinculou o Patreon vê o próprio nível no lugar do convite, e o Hall da Fama e a página Apoie também passam a dizer as gemas por mês.',
-            en: 'The gem shop has a Patreon card with every tier’s gems a month and what supporters get. Patrons who linked Patreon see their own tier instead, and the Hall of Fame and the Support page now say the gems a month too.',
-            es: 'La tienda de gemas tiene una tarjeta de Patreon con las gemas al mes de cada nivel y lo que recibe quien apoya. Quien ya vinculó Patreon ve su propio nivel en lugar de la invitación, y el Salón de la Fama y la página Apoya también dicen las gemas al mes.',
-          },
-          {
-            pt: 'Doações avulsas agora são pelo Stripe, do Brasil e de fora, num só formulário: Pix e cartão em reais, e quem é de outro país vê o valor na própria moeda.',
-            en: 'One-time donations now go through Stripe, from Brazil and abroad, in a single form: Pix and cards in reais, and donors from other countries see the amount in their own currency.',
-            es: 'Las donaciones únicas ahora van por Stripe, desde Brasil y desde fuera, en un solo formulario: Pix y tarjeta en reales, y quien es de otro país ve el monto en su propia moneda.',
-          },
-          {
-            pt: 'Depois de alguns marcos (25 partidas, a primeira vitória no Pesadelo, 100 partidas), o lobby pergunta uma vez se você quer apoiar o jogo. Quem já apoia não vê a pergunta.',
-            en: 'After a few milestones (25 runs, a first Nightmare win, 100 runs), the lobby asks once whether you’d like to support the game. Supporters never see it.',
-            es: 'Después de algunos hitos (25 partidas, la primera victoria en Pesadilla, 100 partidas), el lobby pregunta una vez si quieres apoyar el juego. Quien ya apoya no ve la pregunta.',
+            pt: 'Beast Boost (Ultra Beasts) e Moxie: o nível que você acabou de ganhar não some mais na hora; um nível só cai depois de 4 s sem nocautes (1 s no Moxie).',
+            en: 'Beast Boost (Ultra Beasts) and Moxie: the stack you just earned no longer vanishes at once; a stack only drops after 4 s without KOs (1 s for Moxie).',
+            es: 'Beast Boost (Ultraentes) y Moxie: el nivel que acabas de ganar ya no desaparece al instante; un nivel solo se pierde tras 4 s sin derrotas (1 s en Moxie).',
           },
         ],
       },

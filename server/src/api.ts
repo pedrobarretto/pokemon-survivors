@@ -24,7 +24,6 @@ import { cornerStore } from './corner'
 import { safariStore } from './safari'
 import { digStore } from './dig'
 import { festivalStore } from './festival'
-import { abacatePay } from './donations'
 import { gemStore } from './gems'
 import { stripeCheckout } from './stripe'
 import { stripeDonate } from './stripeDonations'
@@ -93,8 +92,6 @@ createArenaRewards(arena).start()
 const coop = coopBoardStore(sql)
 createEra1Rewards(sql, [ranking, coop]).start()
 
-const abacate = env.abacatePayKey ? abacatePay(env.abacatePayKey) : null
-
 const realm = realmStore(sql, { staff: env.discord ? discordStaffChannel(env.discord) : null })
 
 const app = createApp({
@@ -105,7 +102,7 @@ const app = createApp({
   verify: clerkVerifier(env),
   donate: env.stripeSecretKey ? stripeDonate(env.stripeSecretKey) : null,
   gems: gemStore(sql),
-  gemCheckout: { card: env.stripeSecretKey ? stripeCheckout(env.stripeSecretKey) : null, pix: abacate?.gems ?? null },
+  gemCheckout: env.stripeSecretKey ? stripeCheckout(env.stripeSecretKey) : null,
   supporters,
   festival: festivalStore(sql),
   candyGoal: candyGoalStore(sql),

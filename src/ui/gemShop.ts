@@ -1,7 +1,8 @@
 import { lobbyPress } from '../analytics'
-import { catalogSections, currencyFor, dailyPicks, equip, methodsFor, ownedSkinLines, packFor, priceText, rarityOf, shopCatalog, shownPacks, stageName, takeOff, unequip, wearing } from '../arena/gemShop'
+import { PATREON_URL } from '../data/supporters'
+import { approxText, catalogSections, dailyPicks, equip, marketFor, ownedSkinLines, packFor, packPriceText, priceText, rarityOf, shopCatalog, shownCurrency, shownPacks, stageName, takeOff, unequip, wearing } from '../arena/gemShop'
 import { COSMETIC_SLOTS, WEARABLE_SLOTS, arenaOnly, cosmeticPrice, showsIn, skinFor, slotOf, type CatalogSlot, type Look, type CosmeticId, type CosmeticSlot, type WearableSlot } from '../data/cosmetics'
-import { GEM_CHECKOUT, GEM_PACK_IDS, GEM_PACKS, GEM_PLAY, oncePack, packGems, type GemCurrency, type GemMethod, type GemPackId } from '../data/gems'
+import { GEM_CHECKOUT, GEM_PACK_IDS, GEM_PACKS, GEM_PLAY, isGemMarket, oncePack, packGems, packPrice, type GemMarket, type GemPackId, type ShownCurrency } from '../data/gems'
 import { effectIn } from '../data/arenaEffects'
 import { VERSUS, VERSUS_PICKS, type VersusPick } from '../data/versus'
 import { isWearableId } from '../data/wearables'
@@ -11,7 +12,7 @@ import type { Input } from '../engine/input'
 import type { Dir8 } from '../engine/math'
 import { blitPacked, context2d, textSprite } from '../engine/pixelart'
 import { brasiliaDay } from '../game/day'
-import { awaitCheckout, buyCosmetic, fetchGems, fetchReceipts, gemsEnabled, gemsFaked, gemsSignedIn, knownGems, onGems, openCheckout, ownedSet, saveLook } from '../gems'
+import { awaitCheckout, buyCosmetic, fetchGems, fetchReceipts, gemsEnabled, gemsFaked, gemsSignedIn, knownGems, onGems, openCheckout, ownedSet, reportCancel, saveLook, type CheckoutFrom, type CheckoutReturn } from '../gems'
 import type { GemLedgerEntry, GemsStatus } from '../game/gems'
 import { formatNumber, locale, LOCALES, t } from '../i18n'
 import { createFxPreview } from '../render/arenaFx'
@@ -34,15 +35,17 @@ import { patreonCard } from './patreonCard'
 /**
  * The gem shop's two pages, which Leavanny's Boutique on the plaza holds
  * (`ui/boutique.ts`) and the Arena hub's Visual tab shows too
- * (`ui/arenaHub.ts`): Loja (the balance, the gem packs in the buyer's
- * currency, the catalog by slot, a live preview of the `wearer` trying an
- * item on, buying with a confirm, the receipts) and Visual (the look by slot,
+ * (`ui/arenaHub.ts`): Loja (the balance, the gem packs at the buyer's
+ * price, in reais in Brazil and guessed in their currency elsewhere, the
+ * catalog by slot, a live preview of the `wearer` trying an item on, buying with a confirm, the receipts) and Visual (the look by slot,
  * a big preview walking and turning through its 8 directions, any roster
  * Pokémon wearing it), plus the gem chip the Arena screen, the hub's title
- * and the Boutique's sheet show. A pack opens its checkout in a sheet (card,
- * and Pix in reais, behind the buyer's word on their age) and leaves for
- * it; back on `?gems=`, the Loja opens on
- * the return sheet, which waits for the gems (`awaitCheckout`). Guests
+ * and the Boutique's sheet show. A pack opens its checkout in a sheet (behind
+ * the buyer's word on their age) and leaves for Stripe Checkout; back on
+ * `?gems=`, the Loja opens on the return sheet, which waits for the gems
+ * (`awaitCheckout`), or, given up (`&cancel=`), on "Não deu certo?", which
+ * offers the pack again. An item the balance can't reach offers the pack
+ * that covers it (`packFor`) on its own button. Guests
  * browse and try things on; anything that needs the account leads to sign
  * in. The API lives in `gems.ts`, the rules in `arena/gemShop.ts`.
  */
@@ -259,31 +262,42 @@ const sheet = (root: HTMLElement, input: Input, cls: string, closable: () => boo
   return { box, close }
 }
 
+/** How the shop shows a buyer's prices: which price list (`market`) and the currency it guesses prices abroad in (`shown`). */
+type Prices = { market: GemMarket; shown: ShownCurrency }
+
+/** Pack `id`'s price as the shop shows it (`packPriceText`). */
+const packPriceOf = (id: GemPackId, p: Prices) => packPriceText(id, p.market, p.shown, tag())
+
+/** The currency `gems_checkout` says the price showed in. */
+const shownIn = (p: Prices) => (p.market === 'br' ? 'brl' : p.shown)
+
 /**
- * A pack's checkout sheet: what it gives and costs in `currency`, the box
- * the buyer ticks for their age (18, or a parent's or guardian's leave),
- * which the pay buttons need, and a button per way to pay (`methodsFor`, Pix
- * first in reais); one opens the checkout and leaves for it, or says why the
- * API turned it down. Faking (`ps.gems('fake')`), the checkout comes back at
- * once: `returned`, with its ref.
+ * A pack's checkout sheet: what it gives and costs (exactly in reais in
+ * Brazil, a guess in the buyer's currency elsewhere, with the note that the
+ * checkout shows the final one), the box the buyer ticks for their age (18,
+ * or a parent's or guardian's leave), which the pay button needs, and the
+ * ways Stripe Checkout takes; the button opens the checkout and leaves for
+ * it, or says why the API turned it down. Faking (`ps.gems('fake')`), the
+ * checkout comes back at once: `returned`, with its ref.
  */
-const checkoutSheet = (root: HTMLElement, input: Input, pack: GemPackId, currency: GemCurrency, returned: (ref: string) => void, onClose: () => void) => {
+const checkoutSheet = (root: HTMLElement, input: Input, pack: GemPackId, prices: Prices, from: CheckoutFrom, returned: (ref: string) => void, onClose: () => void) => {
   const m = t().gems
   const def = GEM_PACKS[pack]
   let busy = false
   const s = sheet(root, input, 'gem-checkout', () => !busy, onClose)
   const status = h('p', { class: 'gem-sheet-status', role: 'status' })
   const age = h('input', { type: 'checkbox', class: 'gem-age-box' })
-  const ready = () => buttons.forEach((b) => (b.disabled = busy || !age.checked))
+  const ready = () => (go.disabled = busy || !age.checked)
   age.addEventListener('change', () => (playSfx('move'), ready()))
-  const pay = (method: GemMethod) => {
+  const cap = () => (prices.market === 'br' ? priceText(GEM_CHECKOUT.daily, 'brl', tag()) : approxText(GEM_CHECKOUT.daily, prices.shown, tag()))
+  const pay = () => {
     if (busy || !age.checked) return
     busy = true
     playSfx('select')
     status.textContent = m.checkout.opening
     status.classList.add('blink')
-    buttons.forEach((b) => (b.disabled = true))
-    void openCheckout(pack, method, currency).then((res) => {
+    go.disabled = true
+    void openCheckout(pack, prices.market, shownIn(prices), from).then((res) => {
       if (res.ok && res.staged !== null) {
         busy = false
         s.close()
@@ -293,33 +307,54 @@ const checkoutSheet = (root: HTMLElement, input: Input, pack: GemPackId, currenc
       busy = false
       playSfx('denied')
       status.classList.remove('blink')
-      status.textContent = {
-        busy: m.shop.busy,
-        banned: m.shop.banned,
-        offline: m.checkout.failed,
-        once: m.checkout.once,
-        cap: m.checkout.cap(priceText(GEM_CHECKOUT.daily[currency], currency, tag())),
-      }[res.why]
+      status.textContent = { busy: m.shop.busy, banned: m.shop.banned, offline: m.checkout.failed, once: m.checkout.once, cap: m.checkout.cap(cap()) }[res.why]
       ready()
     })
   }
-  const buttons = methodsFor(currency).map((method) =>
-    h('button', { class: `btn gem-pay ${method}`, type: 'button', disabled: true, onclick: () => pay(method) }, method === 'pix' ? m.checkout.pix : m.checkout.card),
-  )
+  const go = h('button', { class: 'btn confirm gem-pay', type: 'button', disabled: true, onclick: pay }, m.checkout.go)
   s.box.append(
     ...present(
       h('div', { class: 'dialog-title gem-sheet-title' }, h('img', { class: 'gem-icon big', src: gemIconUrl(), alt: '' }), h('span', {}, m.packs[pack])),
       h('b', { class: 'gem-sheet-gems' }, m.gems(formatNumber(packGems(pack)))),
       def.bonus > 0 ? h('small', { class: 'gem-sheet-split' }, m.checkout.split(formatNumber(def.gems), formatNumber(def.bonus))) : null,
-      h('b', { class: 'gem-sheet-price' }, priceText(def[currency], currency, tag())),
+      h('b', { class: 'gem-sheet-price' }, packPriceOf(pack, prices)),
+      prices.market === 'intl' ? h('small', { class: 'gem-sheet-approx' }, m.checkout.approx) : null,
       h('label', { class: 'gem-age' }, age, h('span', {}, m.checkout.age)),
       h('span', { class: 'field-label' }, m.checkout.pay),
-      h('div', { class: 'gem-pay-list' }, ...buttons),
+      h('small', { class: 'gem-pay-ways' }, m.checkout.ways[prices.market]),
+      h('div', { class: 'gem-pay-list' }, go),
       status,
       h('button', { class: 'btn small gem-sheet-cancel', type: 'button', onclick: () => !busy && (playSfx('select'), s.close()) }, m.checkout.cancel),
     ),
   )
   later(() => age.focus())
+}
+
+/**
+ * Back from a checkout given up (`&cancel=<pack>`): "Não deu certo?", nothing
+ * charged, the same pack again (`retry`), the other ways to pay (Pix and the
+ * wallets in Brazil; abroad, a wallet or another card, since some banks turn
+ * down a shop from another country) and a line for Patreon's monthly support.
+ */
+const cancelSheet = (root: HTMLElement, input: Input, pack: GemPackId, prices: Prices, retry: () => void, onClose: () => void) => {
+  const m = t().gems.cancelled
+  reportCancel()
+  const s = sheet(root, input, 'gem-cancel', () => true, onClose)
+  const again = h(
+    'button',
+    { class: 'btn confirm gem-act', type: 'button', onclick: () => (s.close(), later(retry)) },
+    m.retry(t().gems.packs[pack], packPriceOf(pack, prices)),
+  )
+  s.box.append(
+    h('img', { class: 'gem-return-icon', src: gemIconUrl(), alt: '' }),
+    h('b', { class: 'gem-return-title' }, m.title),
+    h('p', {}, m.text),
+    again,
+    h('p', { class: 'gem-cancel-ways' }, m.ways[prices.market]),
+    h('p', { class: 'gem-cancel-patreon' }, m.patreon, ' ', h('a', { href: PATREON_URL, target: '_blank', rel: 'noopener' }, m.patreonLink)),
+    h('button', { class: 'btn small gem-sheet-cancel', type: 'button', onclick: () => (playSfx('select'), s.close()) }, m.close),
+  )
+  later(() => again.focus())
 }
 
 /** Back from the checkout of pack `ref`: waits for that pack (`awaitCheckout`), then celebrates its gems, or says they're on their way. */
@@ -373,24 +408,31 @@ export type GemTabId = 'shop' | 'locker'
 /** A gem tab as its screen holds it: its page (kept across tab switches), `enter` when it shows, whether a sheet or a dialog has the keys, and `dispose` with the screen. */
 export type GemTab = { el: HTMLElement; enter: () => void; busy: () => boolean; dispose: () => void }
 
-const CURRENCY_KEY = 'ps:gemCurrency'
+/** The buyer's own pick of price list (the Loja's Brasil / Outro país switch), a device preference; `ps:gemCurrency` held it as `brl` or `usd` before. */
+const MARKET_KEY = 'ps:gemMarket'
+const OLD_CURRENCY_KEY = 'ps:gemCurrency'
 
-const savedCurrency = (): GemCurrency | null => {
+const savedMarket = (): GemMarket | null => {
   try {
-    const v = localStorage.getItem(CURRENCY_KEY)
-    return v === 'brl' || v === 'usd' ? v : null
+    const v = localStorage.getItem(MARKET_KEY)
+    if (isGemMarket(v)) return v
+    const old = localStorage.getItem(OLD_CURRENCY_KEY)
+    return old === 'brl' ? 'br' : old === 'usd' ? 'intl' : null
   } catch {
     return null
   }
 }
 
-const keepCurrency = (c: GemCurrency) => {
+const keepMarket = (market: GemMarket) => {
   try {
-    localStorage.setItem(CURRENCY_KEY, c)
+    localStorage.setItem(MARKET_KEY, market)
   } catch {
     // Storage blocked: the switch lasts this page.
   }
 }
+
+/** The device's place for prices: its time zone and its languages. */
+const deviceZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone
 
 export const signInCard = (ctx: GemTabsContext) => {
   const m = t().gems.shop
@@ -408,10 +450,13 @@ export const signInCard = (ctx: GemTabsContext) => {
 /** A receipt's moment, short. */
 const when = (ms: number) => new Date(ms).toLocaleString(tag(), { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 
-/** The Loja. `checkout`: the ref the page came back from a checkout with (`?gems=<ref>`), so it opens on its return sheet; null otherwise. */
-export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab => {
+/** The Loja. `checkout`: what the page came back from a checkout with (`?gems=<ref>`, `&cancel=<pack>`), so it opens on its return sheet or on "Não deu certo?"; null otherwise. */
+export const shopTab = (ctx: GemTabsContext, checkout: CheckoutReturn | null): GemTab => {
   let status = knownGems()
-  let currency: GemCurrency = savedCurrency() ?? currencyFor(tag(), Intl.DateTimeFormat().resolvedOptions().timeZone)
+  const prices: Prices = {
+    market: savedMarket() ?? marketFor(tag(), deviceZone()),
+    shown: shownCurrency(typeof navigator === 'undefined' ? [] : navigator.languages ?? [navigator.language], deviceZone()),
+  }
   /** The catalog's filter: a slot, every slot that shows in every mode (null), or the Arena-only section. */
   let filter: CosmeticSlot | 'arena' | null = null
   let chosen: CosmeticId | null = null
@@ -438,31 +483,36 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
     paint()
   }
 
-  const openPack = (pack: GemPackId) => {
+  const openPack = (pack: GemPackId, from: CheckoutFrom = 'pack') => {
     lobbyPress('gemPack')
     if (!signedIn()) return ctx.signIn?.()
     playSfx('select')
     modal = true
-    checkoutSheet(ctx.root, ctx.input, pack, currency, openReturn, () => (modal = false))
+    checkoutSheet(ctx.root, ctx.input, pack, prices, from, (ref) => openReturn({ ref, cancel: null }), () => (modal = false))
   }
 
-  const openReturn = (ref: string) => {
+  const openReturn = (back: CheckoutReturn) => {
     modal = true
-    returnSheet(ctx.root, ctx.input, ref, () => (modal = false))
+    const closed = () => (modal = false)
+    if (back.cancel === null) return returnSheet(ctx.root, ctx.input, back.ref, closed)
+    const pack = back.cancel
+    // A once pack bought meanwhile isn't offered again: the cheapest pack in its place.
+    const offered = shownPacks(status?.taken ?? []).includes(pack) ? pack : packFor(0, status?.taken ?? [], prices.market)
+    cancelSheet(ctx.root, ctx.input, offered, prices, () => openPack(offered, 'retry'), closed)
+  }
+
+  /** The pack an item the balance can't reach points at (`packFor`), and the gems missing; null when it's within reach. */
+  const shortOf = (price: number) => {
+    const missing = price - (status?.balance ?? 0)
+    return missing > 0 ? { missing, pack: packFor(missing, status?.taken ?? [], prices.market) } : null
   }
 
   const buy = (id: CosmeticId) => {
     const price = cosmeticPrice(id) ?? 0
     const m = t().gems.shop
-    if ((status?.balance ?? 0) < price) {
-      playSfx('denied')
-      say(m.short(formatNumber(price - (status?.balance ?? 0))), true)
-      packsEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-      packsEl.classList.remove('nudge')
-      void packsEl.offsetWidth
-      packsEl.classList.add('nudge')
-      return
-    }
+    // Short of gems (the balance moved since the button showed): straight to the pack that covers them.
+    const short = shortOf(price)
+    if (short) return openPack(short.pack, 'short')
     playSfx('select')
     later(() => {
       dialog = confirmDialog(
@@ -515,6 +565,16 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
       )
     }
     if (price === null) return h('button', { class: 'btn gem-act', type: 'button', disabled: true }, m.unsold)
+    // Out of reach: the button buys the pack that covers it (the Vitrine's `packFor`).
+    const short = shortOf(price)
+    if (short)
+      return h(
+        'button',
+        { class: 'btn confirm gem-act gem-short', type: 'button', onclick: () => openPack(short.pack, 'short') },
+        m.shortPack(formatNumber(short.missing), t().gems.packs[short.pack]),
+        ' ',
+        h('span', { class: 'gem-vitrine-pack-price' }, packPriceOf(short.pack, prices)),
+      )
     return h('button', { class: 'btn confirm gem-act', type: 'button', disabled: buying, onclick: () => buy(id) }, m.buy, ' ', gemAmount(price))
   }
 
@@ -560,7 +620,7 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
       h('small', { class: 'gem-pack-name' }, m.packs[pack]),
       once ? h('em', { class: 'gem-pack-bonus once' }, m.shop.welcomeTag) : GEM_PACKS[pack].bonus > 0 ? h('em', { class: 'gem-pack-bonus' }, m.shop.bonus(formatNumber(GEM_PACKS[pack].bonus))) : null,
       note ? h('small', { class: 'gem-pack-note' }, note) : null,
-      h('span', { class: 'gem-pack-price' }, priceText(GEM_PACKS[pack][currency], currency, tag())),
+      h('span', { class: 'gem-pack-price' }, packPriceOf(pack, prices)),
     )
   }
 
@@ -578,7 +638,7 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
       const owned = ownedSet(status).has(id)
       const price = cosmeticPrice(id) ?? 0
       const missing = signedIn() && !owned ? price - (status?.balance ?? 0) : 0
-      const pack = missing > 0 ? packFor(missing, status?.taken ?? [], currency) : null
+      const pack = missing > 0 ? packFor(missing, status?.taken ?? [], prices.market) : null
       return h(
         'div',
         { class: `gem-vitrine-item ${rarityOf(id)}${owned ? ' owned' : ''}`, style: `--rarity:${RARITY_COLORS[rarityOf(id)]}` },
@@ -594,10 +654,10 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
                 h('small', { class: 'gem-vitrine-missing' }, m.vitrine.missing(formatNumber(missing))),
                 h(
                   'button',
-                  { class: 'btn confirm gem-act gem-vitrine-pack', type: 'button', onclick: () => openPack(pack) },
+                  { class: 'btn confirm gem-act gem-vitrine-pack', type: 'button', onclick: () => openPack(pack, 'vitrine') },
                   m.vitrine.covers(m.packs[pack]),
                   ' ',
-                  h('span', { class: 'gem-vitrine-pack-price' }, priceText(GEM_PACKS[pack][currency], currency, tag())),
+                  h('span', { class: 'gem-vitrine-pack-price' }, packPriceOf(pack, prices)),
                 ),
               ]
             : [act(id)]),
@@ -605,8 +665,7 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
       )
     }
     const welcome = shownPacks(status?.taken ?? []).includes('welcome')
-    const { welcome: w, pouch } = GEM_PACKS
-    const times = w[currency] === pouch[currency] && packGems('welcome') > packGems('pouch') ? packGems('welcome') / packGems('pouch') : null
+    const times = packPrice('welcome', prices.market) === packPrice('pouch', prices.market) && packGems('welcome') > packGems('pouch') ? packGems('welcome') / packGems('pouch') : null
     return h(
       'section',
       { class: `gem-vitrine${welcome ? ' with-pack' : ''}` },
@@ -670,21 +729,30 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
     const groups = filter === 'arena' ? arena : main.filter((g) => filter === null || g.slot === filter)
     const packs = shownPacks(status?.taken ?? [])
     const { run, week, arena: inArena } = GEM_PLAY
-    const seg = (c: GemCurrency) =>
+    // Brazil's price list or everyone else's: guessed from the device, switched here (the checkout charges where the buyer pays).
+    const seg = (market: GemMarket) =>
       h(
         'button',
-        { class: `shell-seg-option${currency === c ? ' on' : ''}`, type: 'button', 'aria-pressed': String(currency === c), onclick: () => currency !== c && (playSfx('move'), (currency = c), keepCurrency(c), paint()) },
-        c === 'brl' ? 'R$' : 'US$',
+        {
+          class: `shell-seg-option${prices.market === market ? ' on' : ''}`,
+          type: 'button',
+          'aria-pressed': String(prices.market === market),
+          onclick: () => prices.market !== market && (playSfx('move'), (prices.market = market), keepMarket(market), paint()),
+        },
+        market === 'br' ? m.shop.marketBr : m.shop.marketIntl,
       )
     packsEl.replaceChildren(
-      h('div', { class: 'gem-section-head' }, h('span', { class: 'field-label' }, m.shop.packs), h('div', { class: 'shell-seg gem-currency', role: 'group', 'aria-label': m.shop.currency }, seg('brl'), seg('usd'))),
-      h(
-        'div',
-        { class: 'gem-pack-grid', style: `--packs:${packs.length}` },
-        ...packs.map((pack) => packCard(pack)),
-        patreonCard({ signedIn: signedIn(), signIn: ctx.signIn ?? null, offline: (text) => say(text, true) }),
+      ...present(
+        h('div', { class: 'gem-section-head' }, h('span', { class: 'field-label' }, m.shop.packs), h('div', { class: 'shell-seg gem-currency', role: 'group', 'aria-label': m.shop.market }, seg('br'), seg('intl'))),
+        h(
+          'div',
+          { class: 'gem-pack-grid', style: `--packs:${packs.length}` },
+          ...packs.map((pack) => packCard(pack)),
+          patreonCard({ signedIn: signedIn(), signIn: ctx.signIn ?? null, offline: (text) => say(text, true) }),
+        ),
+        prices.market === 'intl' ? h('p', { class: 'gem-approx' }, m.shop.approx) : null,
+        h('p', { class: 'gem-free' }, m.shop.free(formatNumber(run.gems), formatNumber(run.seconds / 60), formatNumber(week.gems), formatNumber(week.days), formatNumber(inArena.daily))),
       ),
-      h('p', { class: 'gem-free' }, m.shop.free(formatNumber(run.gems), formatNumber(run.seconds / 60), formatNumber(week.gems), formatNumber(week.days), formatNumber(inArena.daily))),
     )
     const chip = (slot: CosmeticSlot | 'arena' | null) =>
       h(

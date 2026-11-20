@@ -19,7 +19,7 @@ import type { DeviceInfo } from './telemetry'
 import type { ArenaFormat } from './data/arenaFormats'
 import type { CatalogSlot, CosmeticId, Rarity } from './data/cosmetics'
 import type { SkinBundleId } from './data/skinCatalog'
-import type { GemCurrency, GemMethod, GemPackId } from './data/gems'
+import type { GemMarket, GemPackId } from './data/gems'
 import type { FirstStep, GateAnswer, StepTimes } from './firstSteps'
 import type { InAppApp, OnboardingStep } from './onboarding'
 import type { Arm, TourOutcome, TutorialOutcome } from './firstTime'
@@ -311,10 +311,15 @@ type AnalyticsEvents = {
    * handle: the queues and rooms are open), else only bots are.
    */
   arena_open: { screen: 'arena' | 'hub'; account: 0 | 1 }
-  /** The Arena's gem shop (`ui/gemShop.ts`): a pack's checkout opened (Stripe for `card`, AbacatePay for `pix`), in the currency shown. */
-  gems_checkout: { pack: GemPackId; method: GemMethod; currency: GemCurrency }
-  /** A checkout came back (`?gems=`): the gems landed (`ok`, how many and after how long) or the wait ran out first (`timeout`). */
-  gems_return: { outcome: 'ok' | 'timeout'; gems: number; seconds: number }
+  /**
+   * The gem shop (`ui/gemShop.ts`): a pack's Stripe Checkout opened, at `market`'s price, with the price shown
+   * in `currency` (`brl` in Brazil, the shop's guess elsewhere: `usd`, `twd`…), from a pack's card, an item's
+   * "Faltam" button, the Vitrine or the "Não deu certo?" sheet (`from`). Before 2026-11-20 it carried `method`
+   * (`card`, `pix`) and `currency` was `brl` or `usd`.
+   */
+  gems_checkout: { pack: GemPackId; market: GemMarket; currency: string; from: 'pack' | 'short' | 'vitrine' | 'retry' }
+  /** A checkout came back (`?gems=`): the gems landed (`ok`, how many and after how long), the wait ran out first (`timeout`) or the buyer gave up (`cancel`, `&cancel=`). */
+  gems_return: { outcome: 'ok' | 'timeout' | 'cancel'; gems: number; seconds: number }
   /** A Poké Realm visit, summed as it ends (`ui/realm.ts`): one event per city entered, never per line or step. */
   realm_session: { city: string; seconds: number; rooms: number; peers: number; lines: number; emotes: number; party: 0 | 1; portal: 'coop' | 'arena' | 'none' }
   /** A cosmetic bought with gems (a skin's `slot` is `skin`). */
