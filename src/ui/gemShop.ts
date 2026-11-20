@@ -683,7 +683,9 @@ export const shopTab = (ctx: GemTabsContext, checkout: CheckoutReturn | null, it
       )
     }
     const welcome = shownPacks(status?.taken ?? []).includes('welcome')
-    const times = packPrice('welcome', prices.market) === packPrice('pouch', prices.market) && packGems('welcome') > packGems('pouch') ? packGems('welcome') / packGems('pouch') : null
+    // "2× the Punhado's gems", counted on the day (a promotion grows the Punhado): only a whole multiple is worth saying.
+    const ratio = packGemsOn('welcome', promoDay()) / packGemsOn('pouch', promoDay())
+    const times = packPrice('welcome', prices.market) === packPrice('pouch', prices.market) && ratio > 1 && Number.isInteger(ratio) ? ratio : null
     return h(
       'section',
       { class: `gem-vitrine${welcome ? ' with-pack' : ''}` },
