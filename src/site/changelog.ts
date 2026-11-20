@@ -55,6 +55,20 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         fr: 'La boutique de gemmes montre le soutien mensuel sur Patreon : chaque niveau apporte des gemmes chaque mois, et qui l’a déjà lié voit son propre niveau.',
         zh: '寶石商店現在會顯示 Patreon 每月贊助：每個等級每月都會帶來寶石，已連結的玩家會看到自己的等級。',
       },
+      {
+        pt: 'Black Friday de 27 a 30 de novembro: +50% de gemas em todos os pacotes pagos.',
+        en: 'Black Friday from November 27 to 30: +50% gems on every paid pack.',
+        es: 'Black Friday del 27 al 30 de noviembre: +50% de gemas en todos los paquetes pagos.',
+        fr: 'Black Friday du 27 au 30 novembre : +50 % de gemmes sur tous les packs payants.',
+        zh: '黑色星期五 11 月 27 日至 30 日：所有付費寶石包多送 50% 寶石。',
+      },
+      {
+        pt: 'Com conta, o resultado da partida mostra as gemas grátis do dia e o que o seu saldo já compra, a um toque da Boutique.',
+        en: 'Signed in, the run’s results show the day’s free gems and what your balance already buys, one tap from the Boutique.',
+        es: 'Con cuenta, el resultado de la partida muestra las gemas gratis del día y lo que tu saldo ya compra, a un toque de la Boutique.',
+        fr: 'Connecté, l’écran de fin montre les gemmes gratuites du jour et ce que ton solde peut déjà acheter, à un toucher de la Boutique.',
+        zh: '登入後，結算畫面會顯示當天的免費寶石，以及你的餘額已經買得起的外觀，點一下就到服飾店。',
+      },
     ],
     changes: [
       {
@@ -94,6 +108,36 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             pt: 'Depois de alguns marcos (25 partidas, a primeira vitória no Pesadelo, 100 partidas), o lobby pergunta uma vez se você quer apoiar o jogo. Quem já apoia não vê a pergunta.',
             en: 'After a few milestones (25 runs, a first Nightmare win, 100 runs), the lobby asks once whether you’d like to support the game. Supporters never see it.',
             es: 'Después de algunos hitos (25 partidas, la primera victoria en Pesadilla, 100 partidas), el lobby pregunta una vez si quieres apoyar el juego. Quien ya apoya no ve la pregunta.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Black Friday', en: 'Black Friday', es: 'Black Friday', fr: 'Black Friday', zh: '黑色星期五' },
+        notes: [
+          {
+            pt: 'De 27 a 30 de novembro (horário de Brasília), todo pacote pago traz 50% a mais de gemas, pelo mesmo preço. O Pacote de boas-vindas fica de fora: ele já dá o dobro. A Loja, o contador de gemas e a Boutique no lobby mostram o selo e quanto falta para acabar.',
+            en: 'From November 27 to 30 (Brasília time), every paid pack brings 50% more gems for the same price. The welcome pack is left out: it already gives twice as many. The Shop, the gem counter and the Boutique in the lobby show the tag and how long is left.',
+            es: 'Del 27 al 30 de noviembre (hora de Brasilia), todo paquete pago trae 50% más de gemas por el mismo precio. El paquete de bienvenida queda fuera: ya da el doble. La Tienda, el contador de gemas y la Boutique en el lobby muestran la etiqueta y cuánto falta para que termine.',
+          },
+          {
+            pt: 'Vale o que a Loja mostrou quando você abriu o pagamento: um pacote aberto na Black Friday e pago depois ainda traz as gemas a mais.',
+            en: 'What counts is what the Shop showed when you opened the checkout: a pack opened during Black Friday and paid later still brings the extra gems.',
+            es: 'Vale lo que la Tienda mostró cuando abriste el pago: un paquete abierto en Black Friday y pagado después igual trae las gemas de más.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Gemas grátis', en: 'Free gems', es: 'Gemas gratis', fr: 'Gemmes gratuites', zh: '免費寶石' },
+        notes: [
+          {
+            pt: 'A primeira partida do dia de 5 minutos ou mais dá 15 gemas, e jogar 5 dias na semana dá mais 35. Agora o resultado mostra quando elas entram e o saldo, com o visual mais barato que você ainda não tem (ou o da Vitrine do dia) que já dá para comprar e um botão que abre a Boutique nele; se ainda não dá, quantas gemas faltam.',
+            en: 'The day’s first run of 5 minutes or more gives 15 gems, and playing 5 days in a week gives 35 more. The results now show when they land and your balance, with the cheapest look you don’t own yet (or the Vitrine do dia’s) that you can already buy and a button that opens the Boutique on it; if none yet, how many gems are left to go.',
+            es: 'La primera partida del día de 5 minutos o más da 15 gemas, y jugar 5 días en la semana da 35 más. Ahora el resultado muestra cuándo llegan y tu saldo, con el visual más barato que aún no tienes (o el de la Vitrine do dia) que ya puedes comprar y un botón que abre la Boutique en él; si todavía no alcanza, cuántas gemas faltan.',
+          },
+          {
+            pt: 'O contador de gemas do lobby brilha quando o saldo cobre um visual que você ainda não tem, até você passar na Boutique.',
+            en: 'The lobby’s gem counter glows when your balance covers a look you don’t own yet, until you visit the Boutique.',
+            es: 'El contador de gemas del lobby brilla cuando tu saldo cubre un visual que aún no tienes, hasta que pases por la Boutique.',
           },
         ],
       },

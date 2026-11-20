@@ -736,6 +736,20 @@ export const en: Messages = {
       wear: (name: string) => `Wear ${name}`,
       see: (name: string) => `${name}: see it at the Boutique`,
     },
+    promo: {
+      names: { blackFriday: 'Black Friday' },
+      tag: (pct: string, name: string) => `+${pct}% ${name}`,
+      banner: (name: string, pct: string) => `${name}: +${pct}% gems on every pack`,
+      split: (gems: string, extra: string, name: string) => `${gems} + ${extra} ${name}`,
+      left: (days: number, hours: number) => (days > 0 ? `Ends in ${days}d ${hours}h` : hours > 0 ? `Ends in ${hours}h` : 'Ends in under 1h'),
+      short: (days: number, hours: number) => (days > 0 ? `${days}d ${hours}h` : `${hours}h`),
+    },
+    run: {
+      earned: (n: string, balance: string) => `+${n} gems · balance ${balance}`,
+      covers: (item: string) => `Enough for ${item}`,
+      short: (n: string, first: boolean) => (first ? `${n} more gems for your first look` : `${n} more gems for your next look`),
+      see: 'See in the Boutique',
+    },
     chipGuest: 'Boutique: looks for gems',
     locker: {
       pick: 'Preview Pokémon',

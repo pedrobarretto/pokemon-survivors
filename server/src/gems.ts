@@ -19,6 +19,7 @@ import {
   type GemReason,
   type GemsStatus,
   type PurchaseState,
+  type RunGems,
 } from '../../src/game/gems'
 import { addDays, DAY_TIME_ZONE, weekStart, type DayKey } from '../../src/game/day'
 import type { Sql } from './db'
@@ -139,18 +140,24 @@ export const creditPlay = async (tx: TransactionSql, seats: readonly PlaySeat[],
  * (Monday to Sunday) holds `GEM_PLAY.week.days` such days, the week's gems
  * (`week:<user>:<Monday>`). The accounts' rows must exist; they're locked in
  * id order, so two reports of one account take turns and the week counts right.
+ * Returns the gems each account got now and its balance after, for those
+ * that got any (a run's report answers with its own: `RunGems`).
  */
-export const creditRun = async (tx: TransactionSql, userIds: readonly string[], day: DayKey) => {
+export const creditRun = async (tx: TransactionSql, userIds: readonly string[], day: DayKey): Promise<Map<string, RunGems>> => {
   const ids = [...new Set(userIds)].sort()
-  if (ids.length === 0) return
+  const credited = new Map<string, RunGems>()
+  if (ids.length === 0) return credited
   await tx`select id from users where id = any(${ids}::text[]) order by id for update`
   const monday = weekStart(day)
   for (const id of ids) {
     if (!(await moveGems(tx, id, GEM_PLAY.run.gems, 'run', `run:${id}:${day}`, day))) continue
     const [week] = await tx<{ days: number }[]>`
       select count(distinct day)::int as days from gem_ledger where user_id = ${id} and reason = 'run' and day between ${monday} and ${addDays(monday, 6)}`
-    if ((week?.days ?? 0) >= GEM_PLAY.week.days) await moveGems(tx, id, GEM_PLAY.week.gems, 'week', `week:${id}:${monday}`, day)
+    const weekly = (week?.days ?? 0) >= GEM_PLAY.week.days && (await moveGems(tx, id, GEM_PLAY.week.gems, 'week', `week:${id}:${monday}`, day))
+    const [u] = await tx<{ gems: number }[]>`select gems from users where id = ${id}`
+    credited.set(id, { earned: GEM_PLAY.run.gems + (weekly ? GEM_PLAY.week.gems : 0), balance: u?.gems ?? 0 })
   }
+  return credited
 }
 
 /** Which purchase a payment event is about: our ref (AbacatePay's `externalId`) or the provider's payment (Stripe's PaymentIntent). */

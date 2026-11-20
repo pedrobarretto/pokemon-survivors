@@ -2,7 +2,7 @@ import { lobbyPress } from '../analytics'
 import { PATREON_URL } from '../data/supporters'
 import { approxText, catalogSections, dailyPicks, equip, marketFor, ownedSkinLines, packFor, packPriceText, priceText, rarityOf, shopCatalog, shownCurrency, shownPacks, stageName, takeOff, unequip, wearing } from '../arena/gemShop'
 import { COSMETIC_SLOTS, WEARABLE_SLOTS, arenaOnly, cosmeticPrice, showsIn, skinFor, slotOf, type CatalogSlot, type Look, type CosmeticId, type CosmeticSlot, type WearableSlot } from '../data/cosmetics'
-import { GEM_CHECKOUT, GEM_PACK_IDS, GEM_PACKS, GEM_PLAY, isGemMarket, oncePack, packGems, packPrice, type GemMarket, type GemPackId, type ShownCurrency } from '../data/gems'
+import { GEM_CHECKOUT, GEM_PACK_IDS, GEM_PACKS, GEM_PLAY, isGemMarket, oncePack, packGems, packGemsOn, packPrice, type GemMarket, type GemPackId, type ShownCurrency } from '../data/gems'
 import { effectIn } from '../data/arenaEffects'
 import { VERSUS, VERSUS_PICKS, type VersusPick } from '../data/versus'
 import { isWearableId } from '../data/wearables'
@@ -12,7 +12,7 @@ import type { Input } from '../engine/input'
 import type { Dir8 } from '../engine/math'
 import { blitPacked, context2d, textSprite } from '../engine/pixelart'
 import { brasiliaDay } from '../game/day'
-import { awaitCheckout, buyCosmetic, fetchGems, fetchReceipts, gemsEnabled, gemsFaked, gemsSignedIn, knownGems, onGems, openCheckout, ownedSet, reportCancel, saveLook, type CheckoutFrom, type CheckoutReturn } from '../gems'
+import { awaitCheckout, buyCosmetic, fetchGems, fetchReceipts, gemsEnabled, gemsFaked, gemsSignedIn, knownGems, livePromo, onGems, openCheckout, ownedSet, promoDay, reportCancel, saveLook, type CheckoutFrom, type CheckoutReturn } from '../gems'
 import type { GemLedgerEntry, GemsStatus } from '../game/gems'
 import { formatNumber, locale, LOCALES, t } from '../i18n'
 import { createFxPreview } from '../render/arenaFx'
@@ -25,7 +25,7 @@ import { drawDressed, fitsWearer, loadWearables, wearableIcon } from '../render/
 import { firstForm } from './arena'
 import { titleChip } from './arenaTitle'
 import { h, later } from './dom'
-import { gemAmount, itemName } from './gemBits'
+import { gemAmount, itemName, promoLeftText, promoTag } from './gemBits'
 import { today } from './save'
 import { celebrate } from './confetti'
 import { confirmDialog, type Screen } from './screens'
@@ -283,6 +283,9 @@ const shownIn = (p: Prices) => (p.market === 'br' ? 'brl' : p.shown)
 const checkoutSheet = (root: HTMLElement, input: Input, pack: GemPackId, prices: Prices, from: CheckoutFrom, returned: (ref: string) => void, onClose: () => void) => {
   const m = t().gems
   const def = GEM_PACKS[pack]
+  const promo = livePromo()
+  const gems = packGemsOn(pack, promoDay())
+  const extra = gems - packGems(pack)
   let busy = false
   const s = sheet(root, input, 'gem-checkout', () => !busy, onClose)
   const status = h('p', { class: 'gem-sheet-status', role: 'status' })
@@ -315,8 +318,12 @@ const checkoutSheet = (root: HTMLElement, input: Input, pack: GemPackId, prices:
   s.box.append(
     ...present(
       h('div', { class: 'dialog-title gem-sheet-title' }, h('img', { class: 'gem-icon big', src: gemIconUrl(), alt: '' }), h('span', {}, m.packs[pack])),
-      h('b', { class: 'gem-sheet-gems' }, m.gems(formatNumber(packGems(pack)))),
+      h('b', { class: 'gem-sheet-gems' }, m.gems(formatNumber(gems))),
       def.bonus > 0 ? h('small', { class: 'gem-sheet-split' }, m.checkout.split(formatNumber(def.gems), formatNumber(def.bonus))) : null,
+      // A promotion's share on top, with its tag and the time it has left.
+      promo && extra > 0
+        ? h('small', { class: 'gem-sheet-promo' }, promoTag(), ' ', m.promo.split(formatNumber(packGems(pack)), formatNumber(extra), m.promo.names[promo.name]), ' · ', promoLeftText())
+        : null,
       h('b', { class: 'gem-sheet-price' }, packPriceOf(pack, prices)),
       prices.market === 'intl' ? h('small', { class: 'gem-sheet-approx' }, m.checkout.approx) : null,
       h('label', { class: 'gem-age' }, age, h('span', {}, m.checkout.age)),
@@ -450,16 +457,23 @@ export const signInCard = (ctx: GemTabsContext) => {
 /** A receipt's moment, short. */
 const when = (ms: number) => new Date(ms).toLocaleString(tag(), { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 
-/** The Loja. `checkout`: what the page came back from a checkout with (`?gems=<ref>`, `&cancel=<pack>`), so it opens on its return sheet or on "Não deu certo?"; null otherwise. */
-export const shopTab = (ctx: GemTabsContext, checkout: CheckoutReturn | null): GemTab => {
+/**
+ * The Loja. `checkout`: what the page came back from a checkout with
+ * (`?gems=<ref>`, `&cancel=<pack>`), so it opens on its return sheet or on
+ * "Não deu certo?"; null otherwise. `item`: the item it opens with chosen
+ * and in view (the results' gem line), or null.
+ */
+export const shopTab = (ctx: GemTabsContext, checkout: CheckoutReturn | null, item: CosmeticId | null = null): GemTab => {
   let status = knownGems()
   const prices: Prices = {
     market: savedMarket() ?? marketFor(tag(), deviceZone()),
     shown: shownCurrency(typeof navigator === 'undefined' ? [] : navigator.languages ?? [navigator.language], deviceZone()),
   }
   /** The catalog's filter: a slot, every slot that shows in every mode (null), or the Arena-only section. */
-  let filter: CosmeticSlot | 'arena' | null = null
-  let chosen: CosmeticId | null = null
+  let filter: CosmeticSlot | 'arena' | null = item && arenaOnly(item) ? 'arena' : null
+  let chosen: CosmeticId | null = item
+  /** The chosen item is brought into view once, as the page first shows. */
+  let reveal = item !== null
   let note: { text: string; bad: boolean } | null = null
   let modal = false
   let dialog: Screen | null = null
@@ -497,14 +511,14 @@ export const shopTab = (ctx: GemTabsContext, checkout: CheckoutReturn | null): G
     if (back.cancel === null) return returnSheet(ctx.root, ctx.input, back.ref, closed)
     const pack = back.cancel
     // A once pack bought meanwhile isn't offered again: the cheapest pack in its place.
-    const offered = shownPacks(status?.taken ?? []).includes(pack) ? pack : packFor(0, status?.taken ?? [], prices.market)
+    const offered = shownPacks(status?.taken ?? []).includes(pack) ? pack : packFor(0, status?.taken ?? [], prices.market, promoDay())
     cancelSheet(ctx.root, ctx.input, offered, prices, () => openPack(offered, 'retry'), closed)
   }
 
   /** The pack an item the balance can't reach points at (`packFor`), and the gems missing; null when it's within reach. */
   const shortOf = (price: number) => {
     const missing = price - (status?.balance ?? 0)
-    return missing > 0 ? { missing, pack: packFor(missing, status?.taken ?? [], prices.market) } : null
+    return missing > 0 ? { missing, pack: packFor(missing, status?.taken ?? [], prices.market, promoDay()) } : null
   }
 
   const buy = (id: CosmeticId) => {
@@ -610,13 +624,18 @@ export const shopTab = (ctx: GemTabsContext, checkout: CheckoutReturn | null): G
   const packCard = (pack: GemPackId, note: string | null = null) => {
     const m = t().gems
     const once = oncePack(pack)
+    const gems = packGemsOn(pack, promoDay())
+    const promoted = gems > packGems(pack)
     // The art grows with the regular packs' order; a once pack shows two.
     const art = once ? 2 : Math.min(GEM_PACK_IDS.filter((id) => !oncePack(id)).indexOf(pack) + 1, 4)
     return h(
       'button',
-      { class: `gem-pack${once ? ' once' : ''}`, type: 'button', onclick: () => openPack(pack) },
+      { class: `gem-pack${once ? ' once' : ''}${promoted ? ' promo' : ''}`, type: 'button', onclick: () => openPack(pack) },
       h('span', { class: 'gem-pack-art' }, ...Array.from({ length: art }, () => h('img', { src: gemIconUrl(), alt: '' }))),
-      h('b', { class: 'gem-pack-gems' }, formatNumber(packGems(pack))),
+      // In a promotion, the pack's own count struck through beside what it brings now, and the promotion's tag.
+      promoted ? h('s', { class: 'gem-pack-was' }, formatNumber(packGems(pack))) : null,
+      h('b', { class: 'gem-pack-gems' }, formatNumber(gems)),
+      promoted ? promoTag(false, 'pack') : null,
       h('small', { class: 'gem-pack-name' }, m.packs[pack]),
       once ? h('em', { class: 'gem-pack-bonus once' }, m.shop.welcomeTag) : GEM_PACKS[pack].bonus > 0 ? h('em', { class: 'gem-pack-bonus' }, m.shop.bonus(formatNumber(GEM_PACKS[pack].bonus))) : null,
       note ? h('small', { class: 'gem-pack-note' }, note) : null,
@@ -638,7 +657,7 @@ export const shopTab = (ctx: GemTabsContext, checkout: CheckoutReturn | null): G
       const owned = ownedSet(status).has(id)
       const price = cosmeticPrice(id) ?? 0
       const missing = signedIn() && !owned ? price - (status?.balance ?? 0) : 0
-      const pack = missing > 0 ? packFor(missing, status?.taken ?? [], prices.market) : null
+      const pack = missing > 0 ? packFor(missing, status?.taken ?? [], prices.market, promoDay()) : null
       return h(
         'div',
         { class: `gem-vitrine-item ${rarityOf(id)}${owned ? ' owned' : ''}`, style: `--rarity:${RARITY_COLORS[rarityOf(id)]}` },
@@ -665,7 +684,9 @@ export const shopTab = (ctx: GemTabsContext, checkout: CheckoutReturn | null): G
       )
     }
     const welcome = shownPacks(status?.taken ?? []).includes('welcome')
-    const times = packPrice('welcome', prices.market) === packPrice('pouch', prices.market) && packGems('welcome') > packGems('pouch') ? packGems('welcome') / packGems('pouch') : null
+    // "2× the Punhado's gems", counted on the day (a promotion grows the Punhado): only a whole multiple is worth saying.
+    const ratio = packGemsOn('welcome', promoDay()) / packGemsOn('pouch', promoDay())
+    const times = packPrice('welcome', prices.market) === packPrice('pouch', prices.market) && ratio > 1 && Number.isInteger(ratio) ? ratio : null
     return h(
       'section',
       { class: `gem-vitrine${welcome ? ' with-pack' : ''}` },
@@ -721,6 +742,14 @@ export const shopTab = (ctx: GemTabsContext, checkout: CheckoutReturn | null): G
     return details
   }
 
+  /** The running promotion over the packs: its name and share, and the time it has left. */
+  const promoBanner = () => {
+    const promo = livePromo()
+    if (!promo) return null
+    const m = t().gems.promo
+    return h('p', { class: 'gem-promo-banner', role: 'note' }, h('b', {}, m.banner(m.names[promo.name], formatNumber(promo.extra))), h('small', {}, promoLeftText()))
+  }
+
   const paint = () => {
     const m = t().gems
     const owned = ownedSet(status)
@@ -744,6 +773,7 @@ export const shopTab = (ctx: GemTabsContext, checkout: CheckoutReturn | null): G
     packsEl.replaceChildren(
       ...present(
         h('div', { class: 'gem-section-head' }, h('span', { class: 'field-label' }, m.shop.packs), h('div', { class: 'shell-seg gem-currency', role: 'group', 'aria-label': m.shop.market }, seg('br'), seg('intl'))),
+        promoBanner(),
         h(
           'div',
           { class: 'gem-pack-grid', style: `--packs:${packs.length}` },
@@ -801,6 +831,11 @@ export const shopTab = (ctx: GemTabsContext, checkout: CheckoutReturn | null): G
       ),
     )
     if (el.parentElement) el.parentElement.scrollTop = scroll
+    // Opened on an item (the results' gem line): its card and the preview trying it on come into view.
+    if (reveal && el.isConnected) {
+      reveal = false
+      later(() => el.querySelector('.gem-try')?.scrollIntoView({ block: 'start', behavior: 'smooth' }))
+    }
     stage.start()
     for (const f of featured) f.stage.start()
   }

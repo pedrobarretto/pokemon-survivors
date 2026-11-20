@@ -2,6 +2,7 @@ import { GEM_CHECKOUT, GEM_PLAY, oncePack, packPrice, type GemMarket, type GemPa
 import { COSMETICS, COSMETIC_SLOTS, cosmeticPrice, isCosmeticId, parseLook, withSkins, type Look, type CosmeticBase, type CosmeticId } from '../data/cosmetics'
 import { bundleOf, SKIN_LAUNCH, type SkinBundleId } from '../data/skinCatalog'
 import { addDays, type DayKey } from './day'
+import { isRecord } from './parse'
 
 /**
  * The gem shop's rules, shared by the API (`server/src/gems.ts`, which keeps
@@ -80,6 +81,17 @@ export const isGemPurchaseStatus = (v: unknown): v is GemPurchaseStatus => v ===
 
 /** `GET /gems/purchase/:ref`'s answer: where the account's pack stands, the gems it brings and the balance now. */
 export type GemPurchaseResponse = { status: GemPurchaseStatus; gems: number; balance: number }
+
+/**
+ * The gems a run's report brought (`PUT /runs/:token` answers with them):
+ * `earned` now (the day's first long run, the week's on its fifth day) and
+ * the `balance` after. Absent when the report brought none.
+ */
+export type RunGems = { earned: number; balance: number }
+
+/** A run report's `gems`, or null (none, or an API from before them). */
+export const parseRunGems = (v: unknown): RunGems | null =>
+  isRecord(v) && typeof v.earned === 'number' && typeof v.balance === 'number' && v.earned > 0 ? { earned: v.earned, balance: v.balance } : null
 
 /** Whether a cosmetic is free: price 0 counts as owned by every account. */
 export const isFree = (id: CosmeticId) => cosmeticPrice(id) === 0

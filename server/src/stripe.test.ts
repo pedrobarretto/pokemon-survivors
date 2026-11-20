@@ -3,12 +3,13 @@ import { GEM_CHECKOUT, GEM_PACKS } from '../../src/data/gems'
 import { checkoutLocale, PIX_SECONDS, stripeGemForm } from './stripe'
 
 describe('stripeGemForm', () => {
-  const order = { ref: 'r1', userId: 'u_a', pack: 'bag', market: 'intl', successUrl: 'https://x/?gems=r1', cancelUrl: 'https://x/?gems=r1&cancel=bag' } as const
+  const order = { ref: 'r1', userId: 'u_a', pack: 'bag', gems: 825, market: 'intl', successUrl: 'https://x/?gems=r1', cancelUrl: 'https://x/?gems=r1&cancel=bag' } as const
 
   it("speaks the buyer's language, asks for the immediate delivery and expires within the checkout's hold", () => {
     const form = new Map(stripeGemForm({ ...order, locale: 'fr' }, 1_000_000))
     expect(form.get('locale')).toBe('fr')
     expect(form.get('custom_text[submit][message]')).toContain('rétractation')
+    expect(form.get('line_items[0][price_data][product_data][name]')).toBe('825 gemmes · Pokémon Survivors')
     expect(form.get('expires_at')).toBe(String(1000 + 31 * 60))
     expect(form.get('cancel_url')).toBe(order.cancelUrl)
     expect(new Map(stripeGemForm({ ...order, locale: 'pt' })).get('line_items[0][price_data][product_data][description]')).toMatch(/^Gemas do Pokémon Survivors/)

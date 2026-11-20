@@ -736,6 +736,20 @@ export const fr: Messages = {
       wear: (name: string) => `Porter ${name}`,
       see: (name: string) => `${name} : voir à la Boutique`,
     },
+    promo: {
+      names: { blackFriday: 'Black Friday' },
+      tag: (pct: string, name: string) => `+${pct} % ${name}`,
+      banner: (name: string, pct: string) => `${name} : +${pct} % de gemmes sur tous les packs`,
+      split: (gems: string, extra: string, name: string) => `${gems} + ${extra} du ${name}`,
+      left: (days: number, hours: number) => (days > 0 ? `Se termine dans ${days} j ${hours} h` : hours > 0 ? `Se termine dans ${hours} h` : 'Se termine dans moins d’1 h'),
+      short: (days: number, hours: number) => (days > 0 ? `${days} j ${hours} h` : `${hours} h`),
+    },
+    run: {
+      earned: (n: string, balance: string) => `+${n} gemmes · solde ${balance}`,
+      covers: (item: string) => `De quoi t’offrir : ${item}`,
+      short: (n: string, first: boolean) => (first ? `Encore ${n} pour ton premier look` : `Encore ${n} pour ton prochain look`),
+      see: 'Voir à la Boutique',
+    },
     chipGuest: 'Boutique : des looks contre des gemmes',
     locker: {
       pick: 'Pokémon de l’aperçu',

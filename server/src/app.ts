@@ -10,7 +10,7 @@ import { challengeOpen } from '../../src/game/challenge'
 import { cosmeticPrice, isCosmeticId } from '../../src/data/cosmetics'
 import { parseTeamSize } from '../../src/game/coopBoard'
 import { parseDonation } from '../../src/data/donations'
-import { isGemMarket, isGemPackId, packGems, packPrice, type GemMarket } from '../../src/data/gems'
+import { isGemMarket, isGemPackId, packGemsOn, packPrice, type GemMarket } from '../../src/data/gems'
 import { isPollOptionOf, type PollKind } from '../../src/data/supporters'
 import { brasiliaDay, isDayKey } from '../../src/game/day'
 import { parseDonationAmount } from '../../src/game/festival'
@@ -459,7 +459,8 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     if (verdict === 'grace') console.log(`run ${token}: taken under the previous rules (${replay.rules})`)
     void gifts.credit(c.var.userId).catch((err) => console.error('invite credit failed', err))
     const challenge = finished.challenge ? await ranking.challengePlace(c.var.userId, finished.challenge, finished.official === true) : null
-    return c.json({ ranks: finished.ranks, challenge, listed: finished.listed })
+    // `gems` only when the report brought some (an older client ignores it): the results' gem line.
+    return c.json({ ranks: finished.ranks, challenge, listed: finished.listed, ...(finished.gems && { gems: finished.gems }) })
   })
 
   app.get('/boards/:difficulty', maybeAuth, async (c) => {
@@ -640,13 +641,16 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     const origin = c.req.header('Origin')
     const base = origin && allowedOrigin(origin) ? origin : SITE
     const ref = crypto.randomUUID()
+    // The pack's gems as the Loja shows them today (a promotion's included): stored now, so a checkout paid after the window still brings them.
+    const packGems = packGemsOn(pack, brasiliaDay(new Date()))
     // A once pack bought already, or past the day's limit: 409 with why (`GemCheckoutRefusal`), before any payment opens.
-    const refused = await gems.open({ ref, userId: c.var.userId, pack, gems: packGems(pack), provider: 'stripe', market, amount: packPrice(pack, market) })
+    const refused = await gems.open({ ref, userId: c.var.userId, pack, gems: packGems, provider: 'stripe', market, amount: packPrice(pack, market) })
     if (refused) return c.json({ error: refused }, 409)
     const opened = await gemCheckout({
       ref,
       userId: c.var.userId,
       pack,
+      gems: packGems,
       market,
       locale: locale ?? (market === 'br' ? 'pt' : 'en'),
       successUrl: `${base}/?gems=${ref}`,

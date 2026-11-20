@@ -8,12 +8,14 @@ import { gemIconUrl, slotIconUrl } from '../render/gemArt'
 import { wearsLooks } from '../render/wearables'
 import { dialogue } from './dialogue'
 import { h, later } from './dom'
+import { markGemsLooked } from './gemBits'
 import { gemChip, lockerTab, pickWearer, shopTab, type GemTab, type GemTabsContext, type Wearer } from './gemShop'
 import { skinsTab } from './skinShop'
 import { loadSave } from './save'
 import { hint, type Screen } from './screens'
 import { tailorSpeaker } from './visitors'
-import type { SkinId } from '../data/skinCatalog'
+import { isSkinId } from '../data/skinCatalog'
+import type { CosmeticId } from '../data/cosmetics'
 import { BOUTIQUE_TABS, markBoutiqueSeen, type BoutiqueTab } from './boutiqueSeen'
 
 /**
@@ -23,7 +25,8 @@ import { BOUTIQUE_TABS, markBoutiqueSeen, type BoutiqueTab } from './boutiqueSee
  * one Visual's picker takes. `checkout`: what the page came back from a gem
  * pack's checkout with (`?gems=<ref>`, `&cancel=<pack>`), so Loja opens on its
  * return sheet (or, given up, on "Não deu certo?").
- * `item`: the skin Skins opens on (the partner select's skins row), or null.
+ * `item`: the skin Skins opens on (the partner select's skins row), or
+ * any other item the Loja opens with chosen (the results' gem line), or null.
  */
 export type BoutiqueOpts = {
   close: () => void
@@ -32,7 +35,7 @@ export type BoutiqueOpts = {
   pick: VersusPick
   keepPick: (id: VersusPick) => void
   checkout: CheckoutReturn | null
-  item: SkinId | null
+  item: CosmeticId | null
 }
 
 /**
@@ -48,6 +51,8 @@ export type BoutiqueOpts = {
 export const openBoutique = (root: HTMLElement, input: Input, opts: BoutiqueOpts): Screen => {
   const m = t().boutique
   markBoutiqueSeen()
+  // The lobby's gem chip stops glowing until the balance grows again (`markGemsLooked`).
+  markGemsLooked()
   const el = h('div', { class: 'shop-layer boutique-layer' })
   root.append(el)
   const talk = dialogue(root, input, { speaker: tailorSpeaker(), lines: [{ text: gemsSignedIn() ? m.browse : m.guest, emotion: 'Happy' }], onDone: () => {}, className: 'shop-talk', passive: true })
@@ -74,7 +79,7 @@ export const openBoutique = (root: HTMLElement, input: Input, opts: BoutiqueOpts
   }
   // Each page is made the first time it shows and kept (with its preview) across tab switches.
   const pages: Partial<Record<BoutiqueTab, GemTab>> = {}
-  const page = (id: BoutiqueTab) => (pages[id] ??= id === 'shop' ? shopTab(ctx, opts.checkout) : id === 'skins' ? skinsTab(ctx, opts.item) : lockerTab(ctx))
+  const page = (id: BoutiqueTab) => (pages[id] ??= id === 'shop' ? shopTab(ctx, opts.checkout, isSkinId(opts.item) ? null : opts.item) : id === 'skins' ? skinsTab(ctx, isSkinId(opts.item) ? opts.item : null) : lockerTab(ctx))
   const busy = () => BOUTIQUE_TABS.some((id) => pages[id]?.busy() === true)
 
   const icons = { shop: gemIconUrl(), skins: slotIconUrl('skin'), locker: slotIconUrl('head') } as const satisfies Record<BoutiqueTab, string>
@@ -137,7 +142,9 @@ export const openBoutique = (root: HTMLElement, input: Input, opts: BoutiqueOpts
   })
   // Signing in (or out) meanwhile: Leavanny says the line for it.
   let signedIn = gemsSignedIn()
-  const offGems = onGems(() => {
+  const offGems = onGems((s) => {
+    // Gems landing while it's open were seen too.
+    markGemsLooked(s)
     if (gemsSignedIn() === signedIn) return
     signedIn = gemsSignedIn()
     talk.say([{ text: signedIn ? m.browse : m.guest, emotion: 'Happy' }], tailorSpeaker())

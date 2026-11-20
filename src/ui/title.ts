@@ -30,7 +30,7 @@ import type { VisitorShelf } from './shop'
 import { dialogue, type Dialogue } from './dialogue'
 import { carpenterSpeaker, judgeSpeaker, senseiSpeaker, tailorSpeaker } from './visitors'
 import { boutiqueSeen, type BoutiqueTab } from './boutiqueSeen'
-import { gemChip } from './gemBits'
+import { gemChip, promoLobbyLine } from './gemBits'
 import { gemIconUrl } from '../render/gemArt'
 import { inviterName } from '../ranking'
 import { ROUTES, SOCIAL_IDS, SOCIALS, type SocialId } from '../site/routes'
@@ -1060,7 +1060,8 @@ export const titleScreen = (
         entries: [
           ...(festivalCardShows() ? [entry('festival', sparkleIcon(), t().festival.card)] : []),
           entry('mart', shopIcon(), m.shopName, m.shopLine),
-          entry('boutique', assetUrl('shop/boutique.png'), m.boutiqueName, m.boutiqueLine),
+          // A gem promotion's tag and time left while it runs.
+          entry('boutique', assetUrl('shop/boutique.png'), m.boutiqueName, promoLobbyLine() ?? m.boutiqueLine),
           entry('carpentry', assetUrl('shop/carpentry.png'), m.carpentryName, m.carpentryLine),
           hallEntry(),
         ],
@@ -1153,7 +1154,8 @@ export const titleScreen = (
       'div',
       { class: 'arc-card lobby-shops', 'data-tour': 'plaza' },
       shopRow('mart', assetUrl(`shop/shop-lv${save.shop.level}.png`), m.shopName, m.shopLine),
-      shopRow('boutique', assetUrl('shop/boutique.png'), m.boutiqueName, m.boutiqueLine),
+      // A gem promotion's tag and time left while it runs.
+      shopRow('boutique', assetUrl('shop/boutique.png'), m.boutiqueName, promoLobbyLine() ?? m.boutiqueLine),
       shopRow('carpentry', assetUrl('shop/carpentry.png'), m.carpentryName, m.carpentryLine),
     )
     const hall = navigable(hallStrip(openHall), 'hall')

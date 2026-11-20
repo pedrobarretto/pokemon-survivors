@@ -52,6 +52,39 @@ export const oncePack = (id: GemPackId) => {
   return pack.once === true
 }
 
+/** A promotion's name, for its words (`gems.promo.names` in i18n). A new kind of date is a member here and a name in every language. */
+export type GemPromoName = 'blackFriday'
+
+/**
+ * A window of extra gems on the packs bought with money: `from` to `to`
+ * (Brasília days, both included), `extra` percent more gems on every pack
+ * (its `gems` and `bonus` together, rounded down), the `once` packs only
+ * with `welcome` (the welcome pack already gives twice the Punhado for its
+ * price). Prices never move: a promo only adds gems.
+ */
+export type GemPromo = { id: string; name: GemPromoName; from: string; to: string; extra: number; welcome?: true }
+
+/** The promotions, in date order and never overlapping. Natal or any later date is one more entry. */
+export const GEM_PROMOS = [{ id: 'blackFriday2026', name: 'blackFriday', from: '2026-11-27', to: '2026-11-30', extra: 50 }] as const satisfies readonly GemPromo[]
+
+/** The promotion running on Brasília `day` (`YYYY-MM-DD`), or null. */
+export const promoOf = (day: string): GemPromo | null => GEM_PROMOS.find((p) => p.from <= day && day <= p.to) ?? null
+
+/** Whether promotion `promo` adds gems to pack `id`. */
+export const promoCovers = (promo: GemPromo | null, id: GemPackId): promo is GemPromo => promo !== null && (!oncePack(id) || promo.welcome === true)
+
+/**
+ * The gems pack `id` brings when its checkout opens on Brasília `day`: its
+ * own (`packGems`) plus the promotion's share (`promoOf`). The API stores
+ * this at the checkout (`gem_purchases.gems`), so a pack opened in the
+ * window and paid after it brings what the Loja showed.
+ */
+export const packGemsOn = (id: GemPackId, day: string) => {
+  const base = packGems(id)
+  const promo = promoOf(day)
+  return promoCovers(promo, id) ? base + Math.floor((base * promo.extra) / 100) : base
+}
+
 /** Which price a buyer pays: Brazil's (`brl`) or everyone else's (`intl`). Both are charged in reais. */
 export type GemMarket = 'br' | 'intl'
 

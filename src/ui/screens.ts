@@ -1008,6 +1008,8 @@ type ResultsExtras = {
   save?: SaveCard | null
   /** After a win or a new best, the nudge to invite a friend (`resultsInvite`), under the run's news. */
   invite?: ResultsInvite | null
+  /** A signed-in player's run gems, once the report answers (`runGemsLine`), under the ranking line. */
+  gems?: HTMLElement | null
 }
 
 const NO_EXTRAS: ResultsExtras = { badge: null, report: null, medals: [], eggs: { converted: { full: [], cap: [] }, ready: 0 }, news: { species: 0, shinies: 0 }, ranking: null, share: null }
@@ -1149,6 +1151,7 @@ export const results = (
       // Right under the run's news, where a phone held upright sees it before scrolling.
       invite?.card,
       ranking?.panel,
+      extras.gems,
       goOn && h('p', { class: 'endless-hint' }, r.continueHint),
       h(
         'div',
