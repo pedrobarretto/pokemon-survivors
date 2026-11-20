@@ -612,8 +612,11 @@ export const fakeEra1Boards = (field: number | null) => {
 
 /* ---------------- Co-op boards ---------------- */
 
-/** A co-op board's filter: the team size (Duplas, Trios, Squads), difficulty, period and friends (teams with someone the player follows). */
-export type CoopBoardFilter = { size: TeamSize; difficulty: Difficulty; period: BoardPeriod; friends: boolean }
+/**
+ * A co-op board's filter: the team size (Duplas, Trios, Squads), difficulty, period, friends (teams with someone the
+ * player follows) and side (`mode`: `legend` for the co-op Legend runs' Lendário boards; the regular ones when left out).
+ */
+export type CoopBoardFilter = { size: TeamSize; difficulty: Difficulty; period: BoardPeriod; friends: boolean; mode?: RunMode }
 
 /** Dev: the co-op reads answer made-up boards (`coopBoardFakes.ts`, `ps.coopBoard('fake')`). */
 let coopFaked = false
@@ -635,13 +638,20 @@ const knownCoopBoard = <B extends CoopBoard | CoopChallengeBoard>(body: unknown)
   return { ...board, entries: board.entries.filter(knownTeam), me: knownTeam(board.me) ? board.me : null }
 }
 
-/** A co-op board (`GET /coop/boards/:difficulty`), or null when the API can't be reached. Guests read the public ones; friends needs an account. */
+/**
+ * A co-op board (`GET /coop/boards/:difficulty`), or null when the API can't be reached. Guests read the public ones; friends
+ * needs an account. The Lendário side (`mode: 'legend'`) has no Era 1: co-op Legend runs came after it.
+ */
 export const fetchCoopBoard = async (f: CoopBoardFilter): Promise<CoopBoard | null> => {
-  if (era1Faked !== null && f.period === 'era1') return fakeEra1CoopBoard(f.size, f.difficulty, era1Faked)
-  if (coopFaked) return fakeCoopBoard(f.size, f.difficulty, f.period)
-  const params = new URLSearchParams({ size: TEAM_SIZE_KEYS[f.size], period: f.period, ...(f.friends ? { friends: '1' } : {}) })
+  const mode = f.mode ?? 'standard'
+  if (era1Faked !== null && f.period === 'era1' && mode === 'standard') return fakeEra1CoopBoard(f.size, f.difficulty, era1Faked)
+  if (coopFaked) return fakeCoopBoard(f.size, f.difficulty, f.period, mode)
+  const params = new URLSearchParams({ size: TEAM_SIZE_KEYS[f.size], period: f.period, ...(f.friends ? { friends: '1' } : {}), ...(mode === 'legend' ? { mode } : {}) })
   const { body } = await read(`/coop/boards/${f.difficulty}?${params}`, await sessionToken())
-  return knownCoopBoard<CoopBoard>(body)
+  const board = knownCoopBoard<CoopBoard>(body)
+  // An API from before the Lendário side answers a legend ask with the regular board (no `mode`): an empty one then.
+  const served = isRecord(body) && body.mode === 'legend' ? 'legend' : 'standard'
+  return board && (served === mode ? { ...board, mode } : { ...board, mode, entries: [], me: null, total: 0 })
 }
 
 /** A day's Desafio co-op board for one team size (`GET /coop/challenge/:day`), or null when the API can't be reached. */

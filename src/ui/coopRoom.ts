@@ -1,8 +1,9 @@
 import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
 import { PLAYABLE } from '../data/hatchlings'
+import { isLegend } from '../data/legends'
 import type { CoopClient } from '../coop/client'
-import { memberState, readiness } from '../coop/lobby'
+import { fitsRoom, memberState, readiness, seatPokemon } from '../coop/lobby'
 import { parseLoadout, parseSettings } from '../coop/start'
 import { roomLink } from '../coopShell'
 import { DIFFICULTY_IDS, type Difficulty } from '../game/difficulty'
@@ -10,7 +11,7 @@ import { dailyCoopChallenge } from '../game/coopBoard'
 import { brasiliaDay, type DayKey } from '../game/day'
 import { formatDay, t } from '../i18n'
 import { parseRoomCode, ROOM_CODE_LENGTH, MAX_PLAYERS, type Member } from '../net/protocol'
-import { arenaIcon, coopIcon, crownIcon, pokeballIcon } from '../render/art'
+import { arenaIcon, coopIcon, crownIcon, moveIcon, pokeballIcon } from '../render/art'
 import { slotColor } from '../render/team'
 import { portraitUrl } from '../render/sprites'
 import { h, later } from './dom'
@@ -175,6 +176,8 @@ export type RoomActions = {
   leave: () => void
   /** Back into the run the team is playing (this player left its screen). Null: none to go back to. */
   rejoin: (() => void) | null
+  /** Whether this player has a legend captured (a legend room needs one to get ready or start). */
+  hasLegend: () => boolean
 }
 
 /** Phones and tablets share through the system sheet; computers copy. */
@@ -198,22 +201,27 @@ const shareRoom = async (root: HTMLElement, code: string) => {
  * A seat's card: their Pokémon's portrait in the seat's color, name, crown,
  * partner and what they're up to; the host can remove them. In an Arena room
  * (`team` set, the card in its team's column) the color is their team's, with the Pokémon's role.
+ * In a legend room (`legendRoom`) the card shows the legend the seat asked for, with a gold
+ * frame, or that the seat has no legend to play.
  */
-const seatCard = (member: Member, index: number, me: boolean, kick: (() => void) | null, team: Team | null = null) => {
+const seatCard = (member: Member, index: number, me: boolean, kick: (() => void) | null, team: Team | null = null, legendRoom = false) => {
   const m = t().coop.lobby
   const pick = member.loadout ? parseLoadout(member.loadout) : null
-  const form = pick ? PLAYABLE[pick.starter].line[0] : null
+  const shown = member.loadout ? seatPokemon(member.loadout, legendRoom) : null
+  const form = shown ? PLAYABLE[shown].line[0] : null
   const state = memberState(member)
   const role = team !== null && pick && isVersusPick(pick.starter) ? roleChip(VERSUS_ROSTER[pick.starter]) : null
+  const legend = legendRoom && shown !== null && isLegend(shown)
+  const missing = legendRoom && member.loadout !== null && !fitsRoom(member.loadout, true)
   return h(
     'div',
-    { class: `coop-seat ${state}${me ? ' me' : ''}${team !== null ? ` arena-seat team${team}` : ''}`, style: `--slot:${team !== null ? teamColor(team) : slotColor(index)}` },
+    { class: `coop-seat ${state}${me ? ' me' : ''}${legend ? ' legend' : ''}${team !== null ? ` arena-seat team${team}` : ''}`, style: `--slot:${team !== null ? teamColor(team) : slotColor(index)}` },
     h('img', { class: 'coop-seat-portrait', src: form && pick ? portraitUrl(form.dex, pick.shiny) : pokeballIcon(), alt: '' }),
     h(
       'div',
       { class: 'coop-seat-text' },
       h('b', { class: 'coop-seat-name' }, member.host ? h('img', { class: 'coop-crown', src: crownIcon(), alt: m.host, title: m.host }) : null, h('span', {}, member.name)),
-      h('span', { class: 'coop-seat-partner' }, form?.name ?? '…', role, me ? h('em', { class: 'coop-you' }, m.you) : null),
+      h('span', { class: 'coop-seat-partner' }, form?.name ?? '…', missing && h('small', { class: 'coop-seat-nolegend' }, m.noLegendSeat), role, me ? h('em', { class: 'coop-you' }, m.you) : null),
       h('span', { class: `coop-seat-state ${state}` }, m.state[state]),
     ),
     kick ? navButton(`kick:${member.seat}`, m.kick, kick, 'btn small coop-kick') : null,
@@ -279,12 +287,15 @@ export const coopRoom = (root: HTMLElement, input: Input, client: CoopClient, ac
     const ready = readiness(room)
     const v = t().versus
     const mine = me?.loadout ? parseLoadout(me.loadout) : null
+    /** The Modo Lendário (`settings.legend`): every seat plays a captured legend; one without any can't get ready or start. */
+    const legendRoom = !arena && settings.legend === true
+    const blocked = legendRoom && !actions.hasLegend()
     const teamOf = (member: Member): Team | null => (arena ? (member.loadout ? (parseLoadout(member.loadout).team ?? 0) : 0) : null)
 
     const kickOf = (member: Member) => (host && lobby && member.seat !== st.seat ? () => ask(m.kickConfirm(member.name), m.kick, () => client.kick(member.seat)) : null)
     const seats = Array.from({ length: MAX_PLAYERS }, (_, i) => {
       const member = room.members[i]
-      if (member) return seatCard(member, i, member.seat === st.seat, kickOf(member), teamOf(member))
+      if (member) return seatCard(member, i, member.seat === st.seat, kickOf(member), teamOf(member), legendRoom)
       return h(
         'div',
         { class: 'coop-seat empty' },
@@ -438,6 +449,39 @@ export const coopRoom = (root: HTMLElement, input: Input, client: CoopClient, ac
         h('span', {}, h('b', {}, m.challengeBadge(formatDay(challenge))), h('small', {}, m.challengeRules)),
       )
 
+    /**
+     * A run room's Modo Lendário (`settings.legend`), the host's switch:
+     * off while the Desafio co-op do dia is on (the challenge is the normal
+     * mode's), and turning it on leaves the challenge.
+     */
+    const legendPick = host && lobby && !challenge
+      ? h(
+          'div',
+          { class: 'shell-seg coop-legend', role: 'radiogroup', 'aria-label': m.legend },
+          ...(['off', 'on'] as const).map((id) =>
+            h(
+              'button',
+              {
+                class: `shell-seg-option${(id === 'on') === legendRoom ? ' on' : ''}`,
+                type: 'button',
+                'data-nav': `legend:${id}`,
+                'aria-pressed': String((id === 'on') === legendRoom),
+                onclick: () => (id === 'on') !== legendRoom && (playSfx('move'), client.setSettings({ difficulty: settings.difficulty, ...(id === 'on' && { legend: true }) })),
+              },
+              m.challengeModes[id],
+            ),
+          ),
+        )
+      : h('span', { class: 'coop-difficulty-read' }, m.challengeModes[legendRoom ? 'on' : 'off'], h('small', {}, challenge ? m.legendOff : m.hostPicks))
+    const legendBadge =
+      legendRoom &&
+      h(
+        'div',
+        { class: 'coop-challenge-badge coop-legend-badge', role: 'status' },
+        h('img', { src: moveIcon('dragonAscent'), alt: '' }),
+        h('span', {}, h('b', {}, m.legendBadge), h('small', {}, m.legendRules)),
+      )
+
     const difficulty = challenge
       ? h('span', { class: 'coop-difficulty-read' }, difficultyTag(dailyCoopChallenge(challenge).difficulty), h('small', {}, m.challengeFixed))
       : host && lobby
@@ -447,7 +491,7 @@ export const coopRoom = (root: HTMLElement, input: Input, client: CoopClient, ac
             ...DIFFICULTY_IDS.map((d: Difficulty) =>
               h(
                 'button',
-                { class: `shell-seg-option ${d}${d === settings.difficulty ? ' on' : ''}`, type: 'button', 'data-nav': `diff:${d}`, 'aria-pressed': String(d === settings.difficulty), onclick: () => d !== settings.difficulty && (playSfx('move'), client.setSettings({ difficulty: d })) },
+                { class: `shell-seg-option ${d}${d === settings.difficulty ? ' on' : ''}`, type: 'button', 'data-nav': `diff:${d}`, 'aria-pressed': String(d === settings.difficulty), onclick: () => d !== settings.difficulty && (playSfx('move'), client.setSettings({ difficulty: d, ...(legendRoom && { legend: true }) })) },
                 t().difficulty.names[d],
               ),
             ),
@@ -472,13 +516,17 @@ export const coopRoom = (root: HTMLElement, input: Input, client: CoopClient, ac
             : me?.ready
               ? m.waitHost
               : m.getReady
-    const said = notice && notice.until > performance.now() ? notice.text : waiting
+    const said = notice && notice.until > performance.now() ? notice.text : blocked && lobby ? m.noLegend : waiting
 
     const main = !lobby
       ? actions.rejoin && navButton('rejoin', m.rejoin, actions.rejoin, 'btn confirm')
       : host
-        ? h('button', { class: 'btn confirm', type: 'button', 'data-nav': 'start', disabled: !ready.all || connecting || moving, onclick: () => (playSfx('select'), startNow(challenge, settings.difficulty)) }, m.start)
-        : navButton('ready', me?.ready ? m.unready : m.ready, () => client.setReady(!me?.ready), me?.ready ? 'btn' : 'btn confirm')
+        ? h('button', { class: 'btn confirm', type: 'button', 'data-nav': 'start', disabled: !ready.all || connecting || moving || blocked, onclick: () => (playSfx('select'), startNow(challenge, settings.difficulty)) }, m.start)
+        : h(
+            'button',
+            { class: me?.ready ? 'btn' : 'btn confirm', type: 'button', 'data-nav': 'ready', disabled: blocked && !me?.ready, onclick: () => (playSfx('select'), later(() => client.setReady(!me?.ready))) },
+            me?.ready ? m.unready : m.ready,
+          )
 
     el.replaceChildren(
       h(
@@ -500,17 +548,19 @@ export const coopRoom = (root: HTMLElement, input: Input, client: CoopClient, ac
           arena && h('div', { class: 'coop-settings' }, h('span', { class: 'field-label' }, v.room.format), formatPick),
           arena && h('div', { class: 'coop-settings' }, h('span', { class: 'field-label' }, v.room.map), mapPick),
           !arena && h('div', { class: 'coop-settings' }, h('span', { class: 'field-label' }, m.challenge), challengePick),
+          !arena && h('div', { class: 'coop-settings' }, h('span', { class: 'field-label' }, m.legend), legendPick),
           !arena && h('div', { class: 'coop-settings' }, h('span', { class: 'field-label' }, m.difficulty), difficulty),
           challengeBadge,
+          legendBadge,
           arena
             ? h('ol', { class: 'arena-room-steps' }, ...v.room.steps.map((step, i) => h('li', {}, h('span', { class: 'arena-step-n' }, String(i + 1)), h('span', {}, step))))
             : h('p', { class: 'invite-tip coop-rules' }, `${t().coop.hub.intro} ${m.rules}`),
         ),
-        h('p', { class: `coop-wait${notice && notice.until > performance.now() ? ' error' : ''}`, role: 'status' }, said),
+        h('p', { class: `coop-wait${(notice && notice.until > performance.now()) || (blocked && lobby) ? ' error' : ''}`, role: 'status' }, said),
         h(
           'div',
           { class: 'buttons coop-buttons' },
-          lobby ? navButton('partner', arena ? v.room.pokemon : m.partner, arena ? actions.arena : actions.partner) : null,
+          lobby ? navButton('partner', arena ? v.room.pokemon : legendRoom ? m.legendPick : m.partner, arena ? actions.arena : actions.partner) : null,
           main,
           actions.friends ? navButton('friends', m.friends, actions.friends) : null,
           navButton('leave', m.leave, confirmLeave),

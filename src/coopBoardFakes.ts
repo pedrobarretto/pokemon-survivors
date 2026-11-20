@@ -2,7 +2,7 @@ import type { PlayableId } from './data/hatchlings'
 import { dailyCoopChallenge, type CoopBoard, type CoopBoardEntry, type CoopChallengeBoard, type CoopMember, type TeamSize } from './game/coopBoard'
 import type { DayKey } from './game/day'
 import type { Difficulty } from './game/difficulty'
-import type { BoardPeriod } from './game/ranking'
+import type { BoardPeriod, RunMode } from './game/ranking'
 
 /**
  * Made-up co-op boards (`ps.coopBoard('fake')`), so the Ranking's Co-op side,
@@ -44,6 +44,18 @@ const PICKS: readonly (readonly [PlayableId, number, boolean])[] = [
   ['fennekin', 1, false],
 ]
 
+/** The Lendário side's seats (`fakeCoopBoard` with `mode: 'legend'`): a legend each, at its one stage. */
+const LEGEND_PICKS: readonly (readonly [PlayableId, boolean])[] = [
+  ['kyogre', false],
+  ['groudon', true],
+  ['rayquaza', false],
+  ['lugia', false],
+  ['hoOh', false],
+  ['mewtwo', false],
+  ['dialga', true],
+  ['mew', false],
+]
+
 const RUNS = 14
 
 const at = (minutes: number) => new Date(Date.now() - minutes * 60_000).toISOString()
@@ -72,13 +84,26 @@ const mine = (size: TeamSize, difficulty: Difficulty): CoopBoardEntry => ({
   members: Array.from({ length: size }, (_, seat) => (seat === 0 ? { ...member(6), handle: 'you', name: 'Você', supporter: 'supporter', og: false } : member(seat * 4 + 1))),
 })
 
-export const fakeCoopBoard = (size: TeamSize, difficulty: Difficulty, period: BoardPeriod): CoopBoard => ({
-  size,
-  difficulty,
-  period,
-  entries: Array.from({ length: period === 'day' ? 6 : RUNS }, (_, n) => entry(n, size, difficulty)),
-  me: mine(size, difficulty),
+/** A fake team as the Lendário side shows it (team `n`): the same trainers, each on a legend at its one stage. */
+const onLegends = (e: CoopBoardEntry, n: number): CoopBoardEntry => ({
+  ...e,
+  members: e.members.map((m, seat) => {
+    const [starter, shiny] = LEGEND_PICKS[(n * 3 + seat * 5) % LEGEND_PICKS.length]!
+    return { ...m, starter, stage: 0, branch: null, shiny }
+  }),
 })
+
+export const fakeCoopBoard = (size: TeamSize, difficulty: Difficulty, period: BoardPeriod, mode: RunMode = 'standard'): CoopBoard => {
+  const side = (e: CoopBoardEntry, n: number) => (mode === 'legend' ? onLegends(e, n) : e)
+  return {
+    size,
+    difficulty,
+    period,
+    mode,
+    entries: Array.from({ length: period === 'day' ? 6 : RUNS }, (_, n) => side(entry(n, size, difficulty), n)),
+    me: side(mine(size, difficulty), RUNS + 9),
+  }
+}
 
 export const fakeCoopChallengeBoard = (day: DayKey, size: TeamSize): CoopChallengeBoard => {
   const { difficulty } = dailyCoopChallenge(day)

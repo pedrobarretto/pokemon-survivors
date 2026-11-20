@@ -88,6 +88,7 @@ export const fakeEra1CoopBoard = (size: TeamSize, difficulty: Difficulty, field:
   size,
   difficulty,
   period: 'era1',
+  mode: 'standard',
   entries: Array.from({ length: Math.min(field, 20) }, (_, n) => team(n, size, difficulty)),
   me: null,
   total: field,

@@ -15,12 +15,11 @@ import { formatNumber, formatPokeDollars, locale, LOCALES, t } from '../i18n'
 import { abilityIcon } from '../render/abilityArt'
 import { coinIcon, moveIcon, sparkleIcon, teamBallIcon } from '../render/art'
 import { specialIcon } from '../render/specialFx'
-import { portraitUrl } from '../render/sprites'
 import { slotColor } from '../render/team'
 import { h, later, rich, setStyle, setText } from './dom'
 import { difficultyTag, menu, type Screen } from './screens'
 import { teamAwards } from './teamAwards'
-import { seatName } from './teamHud'
+import { seatLook, seatName } from './teamHud'
 import { runToast } from './toasts'
 
 /**
@@ -35,10 +34,7 @@ import { runToast } from './toasts'
 const secondsLeft = (p: Player) => Math.max(0, Math.ceil(p.pickLeft))
 
 /** A small portrait chip framed in a seat's color. */
-const face = (p: Player, cls = 'team-chip-face') => {
-  const dex = formAt(p.starter, p.branch, p.stage).dex
-  return h('img', { class: cls, src: portraitUrl(dex, p.shiny), alt: '', style: `--slot:${slotColor(p.slot)}` })
-}
+const face = (g: Game, p: Player, cls = 'team-chip-face') => h('img', { class: cls, src: seatLook(g, p).src, alt: '', style: `--slot:${slotColor(p.slot)}` })
 
 /** Whether `p` is still on the team's level-up (the pause that holds the world). */
 const onLevelUp = (g: Game, p: Player) => !p.gone && phaseOf(g, p) === 'levelup'
@@ -52,7 +48,7 @@ const teamChips = (g: Game, skip: Player | null) => {
   for (const p of g.players) {
     if (p === skip || p.gone) continue
     const state = h('span', { class: 'team-chip-state' })
-    const chip = h('span', { class: 'team-chip', style: `--slot:${slotColor(p.slot)}` }, face(p), h('span', { class: 'team-chip-name' }, seatName(g, p.slot)), state)
+    const chip = h('span', { class: 'team-chip', style: `--slot:${slotColor(p.slot)}` }, face(g, p), h('span', { class: 'team-chip-name' }, seatName(g, p.slot)), state)
     chips.set(p.slot, { el: chip, state })
     el.append(chip)
   }
@@ -229,7 +225,7 @@ const statRow = (label: string, value: string) => h('div', { class: 'team-stat' 
 const resultCard = (g: Game, s: PlayerStats, me: Player, award: string | null, teamDamage: number) => {
   const m = t().team.results
   const p = g.players[s.slot]!
-  const form = formAt(p.starter, p.branch, p.stage)
+  const form = seatLook(g, p)
   const pay = coopPayout(g, s.slot)
   const share = teamDamage > 0 ? s.damage / teamDamage : 0
   const mine = p === me
@@ -240,7 +236,7 @@ const resultCard = (g: Game, s: PlayerStats, me: Player, award: string | null, t
     h(
       'div',
       { class: 'team-result-head' },
-      h('div', { class: 'team-result-face' }, h('img', { src: portraitUrl(form.dex, p.shiny), alt: '' }), p.shiny && h('img', { class: 'shiny-badge', src: sparkleIcon(), alt: 'Shiny' })),
+      h('div', { class: 'team-result-face' }, h('img', { src: form.src, alt: '' }), p.shiny && h('img', { class: 'shiny-badge', src: sparkleIcon(), alt: 'Shiny' })),
       h(
         'div',
         { class: 'team-result-who' },
@@ -278,7 +274,7 @@ const voteView = (input: Input, g: Game, me: Player, actions: EndActions) => {
       .map((p) => {
         const state = h('span', { class: 'team-chip-state' })
         states.set(p.slot, state)
-        return h('span', { class: 'team-chip', style: `--slot:${slotColor(p.slot)}` }, face(p), h('span', { class: 'team-chip-name' }, seatName(g, p.slot)), state)
+        return h('span', { class: 'team-chip', style: `--slot:${slotColor(p.slot)}` }, face(g, p), h('span', { class: 'team-chip-name' }, seatName(g, p.slot)), state)
       }),
   )
   const bar = clockBar()
@@ -437,14 +433,14 @@ export const teamFeedback = (root: HTMLElement, g: Game, me: Player, e: Extract<
 /**
  * A teammate's own big moments (`slot` pushed it), as a short toast with
  * their face and name, quieter than the solo ones (their sounds stay
- * theirs): an evolution, a Mega Evolution, a duo move.
+ * theirs): an evolution, a Mega Evolution, a duo move, a legend's new form.
  */
 export const teamMoment = (root: HTMLElement, g: Game, slot: number, e: GameEvent) => {
   const p = g.players[slot]
   if (!p || p.slot === localPlayer(g).slot) return
   const m = t().team.toast
   const name = seatName(g, slot)
-  const say = (text: string) => runToast(root, 'minor', h('span', { class: 'item-toast team-moment' }, face(p), rich(text)), 3000)
+  const say = (text: string) => runToast(root, 'minor', h('span', { class: 'item-toast team-moment' }, face(g, p), rich(text)), 3000)
   switch (e.kind) {
     case 'evolved':
       return say(m.evolved(name, formAt(p.starter, p.branch, p.stage - 1).name, formAt(p.starter, p.branch, p.stage).name))
@@ -452,5 +448,8 @@ export const teamMoment = (root: HTMLElement, g: Game, slot: number, e: GameEven
       return say(m.mega(name, e.name))
     case 'duoFused':
       return say(m.duo(name, MOVES[e.to].name))
+    case 'awakened':
+      // A co-op Legend room: a teammate's legend taking a new form (Primal, Mega, Origin…).
+      return e.changed ? say(m.awakened(name, seatLook(g, p).name)) : undefined
   }
 }

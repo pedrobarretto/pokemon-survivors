@@ -3,7 +3,7 @@ import { PLAYABLE_IDS } from '../data/hatchlings'
 import type { CoopInvite } from '../game/friends'
 import { NO_RANKS } from '../game/meta'
 import type { Member, RoomView } from '../net/protocol'
-import { arenaLoadout, arenaSeat, buildAdvice, coopAccess, coopStarter, freshInvites, memberState, readiness } from './lobby'
+import { arenaLoadout, arenaSeat, buildAdvice, coopAccess, coopStarter, fitsRoom, freshInvites, memberState, readiness, roomLegend, seatLoadout, seatPokemon } from './lobby'
 
 const member = (seat: number, o: Partial<Member> = {}): Member => ({
   seat,
@@ -84,6 +84,32 @@ describe('coopAccess', () => {
     expect(coopAccess(true, { kind: 'busy' })).toBe('wait')
     // A dev build without accounts plays as a guest on the dev relay.
     expect(coopAccess(false, { kind: 'guest' })).toBe('open')
+  })
+})
+
+describe('the Modo Lendário seat', () => {
+  it('brings the legend picked last, else the partner if captured, else the first captured, else none', () => {
+    expect(roomLegend(['kyogre', 'mewtwo'], ['mewtwo', 'kyogre'])).toBe('mewtwo')
+    expect(roomLegend(['kyogre', 'mewtwo'], ['lugia', 'kyogre'])).toBe('kyogre')
+    expect(roomLegend(['kyogre', 'mewtwo'], [null, 'charmander'])).toBe('kyogre')
+    expect(roomLegend([], ['kyogre'])).toBeNull()
+  })
+
+  it('sends the legend with the regular partner beside it, and the partner alone without one', () => {
+    const shiny = (id: string) => id === 'kyogre'
+    expect(seatLoadout('gible', 'kyogre', NO_RANKS, shiny)).toEqual({ starter: 'kyogre', partner: 'gible', ranks: NO_RANKS, shiny: true, partnerShiny: false })
+    expect(seatLoadout('mewtwo', 'kyogre', NO_RANKS, shiny)).toMatchObject({ starter: 'kyogre', partner: PLAYABLE_IDS[0] })
+    expect(seatLoadout('gible', null, NO_RANKS, shiny)).toEqual({ starter: 'gible', ranks: NO_RANKS, shiny: false })
+  })
+
+  it("shows the legend a seat asked for only in a legend room, and tells a loadout that doesn't fit", () => {
+    const legend = { starter: 'kyogre', partner: 'gible' }
+    expect(seatPokemon(legend, true)).toBe('kyogre')
+    expect(seatPokemon(legend, false)).toBe('gible')
+    expect(seatPokemon({ starter: 'piplup' }, true)).toBe('piplup')
+    expect(fitsRoom(legend, true)).toBe(true)
+    expect(fitsRoom(legend, false)).toBe(false)
+    expect(fitsRoom({ starter: 'piplup' }, true)).toBe(false)
   })
 })
 

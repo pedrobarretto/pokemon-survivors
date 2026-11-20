@@ -39,7 +39,7 @@ import type { AdminStore } from './admin'
 import { ARENA_PAGES, parseAbandonedReport, parseArenaReport, shownSeason, verifyArenaSignature, type ArenaStore } from './arena'
 import type { Verify } from './auth'
 import type { BugReports } from './bugReports'
-import { coopListing, parseCoopReport, type CoopBoardStore } from './coopBoards'
+import { coopListing, legendsVouched, parseCoopReport, type CoopBoardStore } from './coopBoards'
 import type { SaveStore } from './db'
 import type { DiscordLink } from './discordLink'
 import type { Report, TellRevenue } from './errors'
@@ -328,7 +328,8 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  * - `POST /arena/report` (relay, signed: `x-arena-signature`) `ArenaReport`: a finished match, once per (room, run); an abandoned one (`abandoned: true`) only moves Fair Play.
  *   `ArenaReportResponse`; a retry gets the stored match with `duplicate`. 400 invalid, 401 bad signature, 503 without `ARENA_REPORT_SECRET`.
  * - `POST /arena/tickets` (relay, signed) `{ userIds }`: `ArenaTicketsResponse`, each player's current-season MMR, RP and games, and their Fair Play.
- * - `POST /looks` (relay, signed) `{ userIds }`: `LooksResponse`, each account's vouched look (a room, co-op or Arena, asks as its run starts).
+ * - `POST /looks` (relay, signed) `{ userIds }`: `LooksResponse`, each account's vouched look and captured legends (from its stored
+ *   save, for a co-op room's Legend mode); a room, co-op or Arena, asks as its run starts.
  * - `POST /arena/practice` (auth) `ArenaPracticeRequest`: a quick match against bots, for history and totals only.
  *   201 `{ match }` (200 `{ duplicate: true }` for a retried `key`), 400 invalid or a bot's slot, 429 past the hourly limit.
  * - `GET /arena/me` (auth): `ArenaProfile`. `GET /arena/history?before=<ms>&limit=` (auth): `ArenaHistoryEntry[]`, newest first.
@@ -336,10 +337,11 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  * - `POST /coop/report` (relay, signed like `/arena/report`) `CoopReport`: a finished co-op run, once per (room, run, endedAt).
  *   `CoopReportResponse`: the stored run (a retry gets it with `duplicate`), or `run: null` (200) when it doesn't list
  *   (`coopListing`: a guest seat, a single player, under 2 votes, a result that doesn't parse, a challenge off its day or
- *   difficulty). 400 malformed or ended in the future, 401 bad signature, 503 without `ARENA_REPORT_SECRET`.
- * - `GET /coop/boards/:difficulty?size=duo|trio|squad&period=day|week|all&friends=1`: `CoopBoard`, the top teams (best run
- *   each; challenge runs stay off it) and with a token the asker's best team (`me`). `size` 2 to 4 or its key (duo when
- *   left out), `period` all when left out, `friends` (needs a token) only teams with the asker or someone they follow.
+ *   difficulty, a Legend run with a seat that isn't a legend or on a challenge). 400 malformed or ended in the future, 401 bad signature, 503 without `ARENA_REPORT_SECRET`.
+ * - `GET /coop/boards/:difficulty?size=duo|trio|squad&period=day|week|all&friends=1&mode=standard|legend`: `CoopBoard`, the top
+ *   teams (best run each; challenge runs stay off it) and with a token the asker's best team (`me`). `size` 2 to 4 or its key
+ *   (duo when left out), `period` all when left out, `friends` (needs a token) only teams with the asker or someone they follow,
+ *   `mode=legend` the co-op Legend runs' side (the Lendário boards), the regular side without it.
  * - `GET /coop/challenge/:day?size=&friends=1`: `CoopChallengeBoard`, the day's Desafio co-op board for that size.
  * - The Poké Realm (`src/realm.ts`): the game's routes as `src/net/realmApi.ts` lists them (`/realm/me`, `/realm/cities`,
  *   `/realm/friends`, `/realm/settings`, `/realm/base…`, `/realm/bases`, `/realm/furniture/buy`, `/realm/game/claim`, `/realm/claw…`, `/realm/corner…`, `/realm/safari…`, `/realm/dig…`, `/realm/boards/:game`, `/realm/report`, `/realm/book`, `/realm/errands/claim`), and the relay's, signed like
@@ -478,9 +480,10 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     const size = parseTeamSize(c.req.query('size') ?? 'duo')
     const period = c.req.query('period') ?? 'all'
     const friends = c.req.query('friends') === '1'
-    if (!isDifficulty(difficulty) || size === null || !isBoardPeriod(period)) return c.json({ error: 'unknown board' }, 400)
+    const mode = c.req.query('mode') ?? 'standard'
+    if (!isDifficulty(difficulty) || size === null || !isBoardPeriod(period) || !isRunMode(mode)) return c.json({ error: 'unknown board' }, 400)
     if (friends && !c.var.userId) return c.json({ error: 'unauthorized' }, 401)
-    return c.json(await coop.board({ size, difficulty, period, friends, viewer: c.var.userId }))
+    return c.json(await coop.board({ mode, size, difficulty, period, friends, viewer: c.var.userId }))
   })
 
   app.get('/coop/challenge/:day', maybeAuth, async (c) => {
@@ -911,7 +914,9 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     if (!r || r.endedAt > Date.now() + ARENA_CLOCK_SKEW_MS) return c.json({ error: 'invalid report' }, 400)
     // A run that doesn't list is still taken (200), so the relay's outbox lets it go.
     const listing = coopListing(r)
-    return c.json(listing ? await coop.report(r, listing) : { run: null, duplicate: false })
+    // A Legend run lists only when every seat's legend is one its account captured (the stored save's, not the relay's word alone).
+    const vouched = listing !== null && (!listing.result.legend || legendsVouched(listing, await store.capturedLegends(listing.members.map((m) => m.userId))))
+    return c.json(listing && vouched ? await coop.report(r, listing) : { run: null, duplicate: false })
   })
 
   app.post('/arena/tickets', smallBody, async (c) => {
@@ -927,8 +932,11 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     if ('error' in signed) return signed.error
     const ids = isRecord(signed.body) && Array.isArray(signed.body.userIds) ? signed.body.userIds : null
     if (!ids || ids.length > 64 || !ids.every((id): id is string => typeof id === 'string' && id.length > 0 && id.length <= 64)) return c.json({ error: 'expected { userIds }' }, 400)
-    const looks = await gems.looks(ids)
-    return c.json({ looks: Object.fromEntries(ids.map((id) => [id, looks.get(id) ?? {}])) } satisfies LooksResponse)
+    const [looks, legends] = await Promise.all([gems.looks(ids), store.capturedLegends(ids)])
+    return c.json({
+      looks: Object.fromEntries(ids.map((id) => [id, looks.get(id) ?? {}])),
+      legends: Object.fromEntries(ids.map((id) => [id, legends.get(id) ?? []])),
+    } satisfies LooksResponse)
   }
   app.post('/looks', smallBody, looksLookup)
   // The old path, for relays deployed before the API's rename: drop it once both relays ask `/looks`.
