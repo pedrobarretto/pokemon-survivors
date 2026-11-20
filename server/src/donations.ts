@@ -1,5 +1,3 @@
-import { GEM_PACKS, packGems, type GemPackId } from '../../src/data/gems'
-
 const API = 'https://api.abacatepay.com/v2'
 
 /** Where AbacatePay's checkout sends the donor back to. */
@@ -17,10 +15,6 @@ const WALLETS: readonly Method[] = ['APPLE_PAY', 'GOOGLE_PAY']
 
 type Envelope<T> = { data: T | null; error: string | null; success: boolean }
 
-/** Opens a Pix checkout (AbacatePay) for a gem pack and returns its URL. `externalId` comes back in its webhooks. */
-/** A gem pack's Pix checkout; `gems`: what it brings (`packGemsOn`: a promotion's included). */
-export type GemPix = (pack: GemPackId, urls: DonationUrls, externalId: string, gems: number) => Promise<string>
-
 /** A product of the AbacatePay catalog, by its `externalId` (prefixed `pokemon-survivors-`: the account is shared with other products). */
 type Product = { externalId: string; name: string; description: string; price: number }
 
@@ -32,28 +26,16 @@ const donationProduct = (amount: number): Product => ({
 })
 
 /**
- * A gem pack's product, bringing `gems`. Its id carries the price, like a
- * donation's, so a price change in `GEM_PACKS` makes a new product instead
- * of meeting an old one at another price (the checkout refuses to open
- * while they differ, `productFor`); a promotion's gems make one of their
- * own too (its name says them), the plain pack keeping its old id.
- */
-const gemProduct = (pack: GemPackId, gems: number): Product => ({
-  externalId: `pokemon-survivors-gems-${pack}-${GEM_PACKS[pack].brl}${gems === packGems(pack) ? '' : `-${gems}`}`,
-  name: `Pokémon Survivors: ${gems} gemas`,
-  description: 'Gemas do Pokémon Survivors: só para itens cosméticos, sem valor em dinheiro.',
-  price: GEM_PACKS[pack].brl,
-})
-
-/**
- * Checkouts through AbacatePay's hosted page: donations (Pix, Brazilian cards,
- * Apple Pay and Google Pay) and gem packs (Pix only: cards and wallets go
- * through Stripe). A checkout only sells catalog products, so each donation amount and each pack gets its own
- * product (`donationProduct`, `gemProduct`), found or created the first time
- * someone pays it and remembered afterwards. Donation amounts come from
+ * Donation checkouts through AbacatePay's hosted page (Pix, Brazilian cards,
+ * Apple Pay and Google Pay). Gem packs left it on 2026-11-20 for Stripe
+ * Checkout, Pix included; the packs bought here before still get their
+ * refunds and disputes from its webhooks (`abacateGems`). A checkout only
+ * sells catalog products, so each donation amount gets its own product
+ * (`donationProduct`), found or created the first time someone pays it and
+ * remembered afterwards. Donation amounts come from
  * `parseDonation`, so there are at most a thousand of them.
  */
-export const abacatePay = (apiKey: string): { donate: Donate; gems: GemPix } => {
+export const abacatePay = (apiKey: string): { donate: Donate } => {
   /**
    * One API call: its `data`, or null when AbacatePay refuses the request
    * (a 4xx such as "Product not found", which it answers with 400, not 404).
@@ -120,6 +102,5 @@ export const abacatePay = (apiKey: string): { donate: Donate; gems: GemPix } => 
 
   return {
     donate: (amount, urls, externalId) => checkout(donationProduct(amount), ['PIX', 'CARD', 'APPLE_PAY', 'GOOGLE_PAY'], urls, externalId),
-    gems: (pack, urls, externalId, gems) => checkout(gemProduct(pack, gems), ['PIX'], urls, externalId),
   }
 }

@@ -113,6 +113,7 @@ export const startRelay = async (config: Config, log: Log = jsonLog, fetcher: Fe
     now: Date.now,
     report: (r) => void outbox.add(r),
     looks: (ids) => lookUpLooks(api, ids, fetcher),
+    claims: { guestLegends: config.allowGuests && !api },
     identify: async (auth) => {
       if (auth.kind === 'guest') return { id: `g:${auth.id}`, account: false }
       const sub = await verifyClerkToken(auth.token, { keys: jwks, issuer: config.clerkIssuer, allowedParty: (o) => allowedOrigin(origins, o), now: Date.now() })

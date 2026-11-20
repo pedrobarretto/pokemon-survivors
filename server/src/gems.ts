@@ -1,6 +1,6 @@
 import type { TransactionSql } from 'postgres'
 import { isCosmeticId, type Look, type CosmeticId } from '../../src/data/cosmetics'
-import { GEM_CHECKOUT, GEM_PACK_IDS, GEM_PLAY, oncePack, type GemCurrency, type GemPackId } from '../../src/data/gems'
+import { GEM_CHECKOUT, GEM_PACK_IDS, GEM_PLAY, oncePack, type GemMarket, type GemPackId } from '../../src/data/gems'
 import type { SkinBundleId } from '../../src/data/skinCatalog'
 import {
   bundleMissing,
@@ -178,8 +178,8 @@ export type GemEvent =
   | { kind: 'dispute'; provider: GemProvider; purchase: PurchaseKey; key: string }
   | { kind: 'disputeWon'; provider: GemProvider; purchase: PurchaseKey; dispute: string; key: string }
 
-/** A checkout about to open: the pack, its price and who buys it. */
-export type GemOrder = { ref: string; userId: string; pack: GemPackId; gems: number; provider: GemProvider; currency: GemCurrency; amount: number }
+/** A checkout about to open: the pack, the price it's bought at (`market`; `amount` centavos, always reais) and who buys it. */
+export type GemOrder = { ref: string; userId: string; pack: GemPackId; gems: number; provider: GemProvider; market: GemMarket; amount: number }
 
 export type BuyOutcome = ({ ok: true } & GemBuyResponse) | { ok: false; error: 'gems' | 'owned' }
 
@@ -309,8 +309,8 @@ export const gemStore = (sql: Sql) => {
     /**
      * A checkout about to open: its purchase row, unpaid, unless the brakes
      * turn it down (`checkoutRefusal`): a `once` pack the account holds, or
-     * past the Brasília day's limit in the order's currency, paid and pending
-     * packs counted (`counting`). Behind the account's row lock, so two
+     * past the Brasília day's limit in reais, paid and pending packs counted
+     * (`counting`; dollar packs from before 2026-11-20 don't). Behind the account's row lock, so two
      * checkouts at once take turns. The refusal, or null once it's open.
      */
     open: (o: GemOrder): Promise<GemCheckoutRefusal | null> =>
@@ -320,13 +320,13 @@ export const gemStore = (sql: Sql) => {
         const today = tx`(now() at time zone ${DAY_TIME_ZONE})::date`
         const [spent] = await tx<{ cents: number }[]>`
           select coalesce(sum(amount), 0)::int as cents from gem_purchases
-          where user_id = ${o.userId} and currency = ${o.currency} and (created_at at time zone ${DAY_TIME_ZONE})::date = ${today} and ${counting(tx, false)}`
+          where user_id = ${o.userId} and currency = 'brl' and (created_at at time zone ${DAY_TIME_ZONE})::date = ${today} and ${counting(tx, false)}`
         const taken = oncePack(o.pack) && (await takenPacks(tx, o.userId)).includes(o.pack)
-        const refusal = checkoutRefusal(o.pack, o.currency, spent?.cents ?? 0, taken)
+        const refusal = checkoutRefusal(o.pack, o.market, spent?.cents ?? 0, taken)
         if (refusal) return refusal
         await tx`
           insert into gem_purchases (ref, user_id, pack, gems, provider, currency, amount)
-          values (${o.ref}::uuid, ${o.userId}, ${o.pack}, ${o.gems}, ${o.provider}, ${o.currency}, ${o.amount})`
+          values (${o.ref}::uuid, ${o.userId}, ${o.pack}, ${o.gems}, ${o.provider}, 'brl', ${o.amount})`
         return null
       }),
 

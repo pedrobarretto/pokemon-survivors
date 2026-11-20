@@ -621,7 +621,11 @@ export const es: Messages = {
     shop: {
       pitch: 'Estilos para tu Pokémon en las partidas, el co-op y la Arena: todos los ven, y ninguno da poder.',
       balance: 'Tu saldo',
-      currency: 'Moneda',
+      /** The Brasil / Outro país switch over the packs (which price list, `GemMarket`), and the note under them abroad, where prices are a guess in the buyer's currency. */
+      market: 'Dónde pagas',
+      marketBr: 'Brasil',
+      marketIntl: 'Otro país',
+      approx: 'Precios aproximados en tu moneda: el valor final aparece al pagar.',
       packs: 'Paquetes de gemas',
       bonus: (n: string) => `+${n} de bono`,
       catalog: 'Estilos',
@@ -644,6 +648,8 @@ export const es: Messages = {
       confirm: (name: string, price: string) => `¿Comprar ${name} por ${price} gemas?`,
       bought: (name: string) => `¡${name} es tuyo, y ya lo estás usando!`,
       short: (n: string) => `Te faltan ${n} gemas. ¿Qué tal un paquete?`,
+      /** An item out of reach: its button buys the pack that covers it (gems missing and the pack's name; its price follows). */
+      shortPack: (n: string, pack: string) => `Faltan ${n} · ${pack}`,
       busy: '¡Calma! Demasiadas compras seguidas. Inténtalo de nuevo en un minuto.',
       offline: 'La tienda está fuera de alcance ahora. Inténtalo de nuevo en un momento.',
       banned: 'Esta cuenta no puede usar la tienda.',
@@ -661,13 +667,15 @@ export const es: Messages = {
     checkout: {
       split: (gems: string, bonus: string) => `${gems} + ${bonus} de bono`,
       pay: 'Pagar con',
-      card: 'Tarjeta, Apple Pay o Google Pay',
-      pix: 'Pix',
+      /** What Stripe Checkout takes, by price list (Pix only shows in reais), the button to it and the note on a price abroad. */
+      ways: { br: 'Pix, tarjeta, Apple Pay o Google Pay', intl: 'Tarjeta, Apple Pay, Google Pay y más, en tu moneda' },
+      go: 'Ir al pago',
+      approx: 'Valor aproximado: el precio final, en tu moneda, aparece al pagar.',
       /** The box the pay buttons need ticked. */
       age: 'Tengo 18 años o más, o tengo permiso de mis padres o tutores.',
       /** The checkout turned down (`GemCheckoutRefusal`): a once pack taken, the day's limit (`GEM_CHECKOUT.daily`, as a price). */
       once: 'Esta cuenta ya obtuvo el paquete de bienvenida.',
-      cap: (limit: string) => `Por seguridad, cada cuenta compra hasta ${limit} en gemas por día, y un pago abierto cuenta durante media hora. Inténtalo de nuevo mañana (el día cambia a medianoche, hora de Brasilia).`,
+      cap: (limit: string) => `Por seguridad, cada cuenta compra hasta ${limit} en gemas por día, y un pago abierto cuenta durante cerca de una hora. Inténtalo de nuevo mañana (el día cambia a medianoche, hora de Brasilia).`,
       cancel: 'Cancelar',
       opening: 'Abriendo el pago…',
       failed: 'No se pudo abrir el pago. Inténtalo de nuevo.',
@@ -678,6 +686,19 @@ export const es: Messages = {
       timeout: 'Pago en camino',
       timeoutNote: 'Todavía estamos confirmando el pago. Las gemas llegan a tu cuenta en unos minutos (un Pix puede tardar un poco más), y puedes seguir jugando.',
       ok: 'Continuar',
+    },
+    /** Back from a checkout given up (`&cancel=`): nothing charged, the same pack again, the other ways to pay (by price list) and Patreon. */
+    cancelled: {
+      title: '¿No funcionó?',
+      text: 'No se cobró nada. ¿Quieres intentarlo de nuevo?',
+      retry: (pack: string, price: string) => `Intentar de nuevo: ${pack} · ${price}`,
+      ways: {
+        br: 'Puedes pagar con Pix, Apple Pay o Google Pay, además de tarjeta.',
+        intl: '¿Tarjeta rechazada? Prueba Apple Pay, Google Pay u otra tarjeta: algunos bancos rechazan compras en tiendas de otro país.',
+      },
+      patreon: '¿Prefieres apoyar cada mes? Patreon también da gemas.',
+      patreonLink: 'Ver Patreon',
+      close: 'Ahora no',
     },
     skinShop: {
       pitch: 'Tu Pokémon redibujado, en todas las etapas de su línea. Aparece en tus partidas, en el co-op y en la Arena.',
@@ -1038,12 +1059,21 @@ export const es: Messages = {
       choosing: 'Eligiendo el mejor servidor…',
       playing: 'El equipo está en una partida.',
       rejoin: 'Volver a la partida',
-      rules: 'El co-op es el modo normal: sin Modo Legendario, Horda del día, Noche de Brujas, Mochila ni MT de la tienda. Las partidas entran en las tablas de Dúos, Tríos y Escuadras.',
+      rules: 'El co-op es el modo normal (o el Modo Legendario, si el anfitrión lo activa): sin Horda del día, Noche de Brujas, Mochila ni MT de la tienda. Las partidas entran en las tablas de Dúos, Tríos y Escuadras.',
       challenge: 'Desafío del día',
       challengeModes: { off: 'Apagado', on: 'Encendido' },
       challengeBadge: (date) => `Desafío co-op del día · ${date}`,
       challengeRules: 'Semilla y dificultad del día, sin mejoras del Poké Mart. Cuenta la mejor partida del equipo.',
       challengeFixed: 'la del desafío',
+      legend: 'Modo Legendario',
+      legendBadge: 'Modo Legendario',
+      legendRules: 'Cada uno juega un legendario que ya capturó: horda más fuerte, Presión y despertares en Nv. 12 y 28. Cuenta en las tablas Legendarias de Dúos, Tríos y Escuadras.',
+      legendOff: 'apagado en el Desafío del día',
+      legendPick: 'Cambiar legendario',
+      noLegend: 'Todavía no capturaste un legendario. Vence a uno en solitario para jugar en esta sala.',
+      noLegendSeat: 'sin legendario',
+      legendFellBack: (name: string, pokemon: string) => `El legendario de ${name} no fue confirmado por su cuenta: juega con ${pokemon} y la partida queda fuera del ranking.`,
+      legendNote: 'Elige uno de tus legendarios capturados. El servidor confirma la captura al empezar; sin ella, juegas con tu compañero.',
       hintKeys: '← → elegir · ENTER confirmar · ESC salir',
       hintTouch: 'Toca para elegir',
       pick: 'Elegir',
@@ -1395,6 +1425,7 @@ export const es: Messages = {
     modes: { standard: 'Estándar', legend: 'Legendario' },
     legendGroup: 'Legendarios',
     coop: 'Co-op',
+    coopLegend: 'Co-op Legendario',
     sizes: { duo: 'Dúos', trio: 'Tríos', squad: 'Escuadras' },
     coopOutcomes: { victory: 'Ganó', wipe: 'Cayeron' },
     coopEmpty: 'Ningún equipo en esta tabla todavía. ¡Llama a tus amigos y sé el primero!',
@@ -6554,6 +6585,7 @@ export const es: Messages = {
       evolved: (name, from, to) => `*${name}*: ¡${from} evolucionó a *${to}*!`,
       mega: (name, form) => `¡*${name}* megaevolucionó a *${form}*!`,
       duo: (name, move) => `¡*${name}* fusionó un movimiento dúo: *${move}*!`,
+      awakened: (name, form) => `¡*${name}* despertó: *${form}*!`,
     },
     vote: {
       title: '¡El equipo venció a Mewtwo!',
@@ -6721,6 +6753,7 @@ export const es: Messages = {
     },
     tags: {
       solo: 'Solo',
+      soloCoop: 'Solo y co-op',
       minutes: (n) => `${n} min`,
       endless: '+ modo infinito',
       legends: (n) => `${n} legendarios`,

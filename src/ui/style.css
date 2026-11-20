@@ -19765,7 +19765,8 @@ button.hall-tile:hover {
   color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
 }
 
-.coop-challenge {
+.coop-challenge,
+.coop-legend {
   flex: 1;
   min-width: 180px;
 }
@@ -19807,6 +19808,30 @@ button.hall-tile:hover {
   color: var(--dk-ink-2, #505870);
 }
 
+/* A co-op Legend room (Modo Lendário): the badge in violet, each seat's legend in a gold frame. */
+.coop-legend-badge {
+  background: var(--dk-wash-purple, #f2ecff);
+  border-color: #8a68d8;
+}
+
+.coop-legend-badge b {
+  color: color-mix(in srgb, #6040b0 var(--dk-lift, 100%), #fff);
+}
+
+.coop-seat.legend .coop-seat-portrait {
+  border-color: #e0a828;
+  box-shadow: 0 0 0 1px #fff6d8 inset;
+}
+
+.coop-seat-nolegend {
+  font-family: var(--title);
+  font-size: 13px;
+  padding: 1px 4px;
+  color: #fff;
+  background: #c83838;
+  border-radius: 3px;
+}
+
 .invite-tip.coop-rules {
   margin: 0;
   font-size: 17px;
@@ -19814,7 +19839,8 @@ button.hall-tile:hover {
 }
 
 .coop-mode .shell-seg-option,
-.coop-challenge .shell-seg-option {
+.coop-challenge .shell-seg-option,
+.coop-legend .shell-seg-option {
   min-height: 38px;
   padding: 0 10px;
   font-size: 18px;
@@ -25352,6 +25378,7 @@ span.arena-hub-face {
   min-height: 32px;
   padding: 0 10px;
   font-size: 18px;
+  white-space: nowrap;
 }
 
 .gem-pack-grid {
@@ -25454,23 +25481,20 @@ span.arena-hub-face {
 }
 
 /* How gems come free: one line under the packs. */
+.gem-approx {
+  margin: 6px 0 0;
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.05;
+  color: var(--dk-ink-2, #505870);
+}
+
 .gem-free {
   margin: 6px 0 0;
   font-family: var(--body);
   font-size: 17px;
   line-height: 1.05;
   color: var(--dk-ink-2, #505870);
-}
-
-/* Short of gems: the packs nudge. */
-.gem-packs.nudge .gem-pack {
-  animation: gem-nudge 0.5s steps(4) 2;
-}
-
-@keyframes gem-nudge {
-  50% {
-    transform: translateY(-4px);
-  }
 }
 
 .gem-catalog-main {
@@ -25555,6 +25579,12 @@ span.arena-hub-face {
   justify-content: center;
   gap: 6px;
   margin-top: 4px;
+}
+
+/* An item out of reach: its button names the pack that covers it, and may wrap on a phone. */
+.gem-act.gem-short {
+  flex-wrap: wrap;
+  line-height: 1.1;
 }
 
 .gem-note {
@@ -26064,9 +26094,25 @@ span.arena-hub-face {
   gap: 8px;
 }
 
-.gem-pay.pix {
-  color: #fff;
-  background: #32bcad;
+/* The ways Stripe Checkout takes, over its one button; a price abroad's note under the price. */
+.gem-pay-ways,
+.gem-sheet-approx {
+  margin-top: -4px;
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.05;
+  color: var(--dk-ink-2, #505870);
+}
+
+/* Back from a checkout given up: the other ways to pay and Patreon's line, quieter than the retry. */
+.gem-sheet .gem-cancel-ways,
+.gem-sheet .gem-cancel-patreon {
+  font-size: 16px;
+}
+
+.gem-cancel-patreon a {
+  color: #6a30a8;
+  text-decoration: underline;
 }
 
 .gem-pay:disabled {

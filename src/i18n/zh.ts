@@ -620,7 +620,11 @@ export const zh: Messages = {
     shop: {
       pitch: '寶可夢的造型，在對局、合作模式和競技場都會出現：所有人都看得到，而且都不會增加能力。',
       balance: '你的餘額',
-      currency: '幣別',
+      /** The Brasil / Outro país switch over the packs (which price list, `GemMarket`), and the note under them abroad, where prices are a guess in the buyer's currency. */
+      market: '付款地區',
+      marketBr: '巴西',
+      marketIntl: '其他國家',
+      approx: '以你的幣別顯示的約略價格：最終金額會在付款頁面顯示。',
       packs: '寶石組合',
       bonus: (n: string) => `+${n} 加贈`,
       catalog: '造型',
@@ -643,6 +647,8 @@ export const zh: Messages = {
       confirm: (name: string, price: string) => `要用 ${price} 顆寶石購買 ${name} 嗎？`,
       bought: (name: string) => `${name} 是你的了，而且已經在使用中！`,
       short: (n: string) => `還差 ${n} 顆寶石。來一份寶石組合吧？`,
+      /** An item out of reach: its button buys the pack that covers it (gems missing and the pack's name; its price follows). */
+      shortPack: (n: string, pack: string) => `還差 ${n} · ${pack}`,
       busy: '慢一點！連續購買太多次了，請一分鐘後再試。',
       offline: '目前無法連線到商店，請稍後再試。',
       banned: '此帳號無法使用商店。',
@@ -660,13 +666,15 @@ export const zh: Messages = {
     checkout: {
       split: (gems: string, bonus: string) => `${gems} + ${bonus} 加贈`,
       pay: '付款方式',
-      card: '信用卡、Apple Pay 或 Google Pay',
-      pix: 'Pix',
+      /** What Stripe Checkout takes, by price list (Pix only shows in reais), the button to it and the note on a price abroad. */
+      ways: { br: 'Pix、信用卡、Apple Pay 或 Google Pay', intl: '信用卡、Apple Pay、Google Pay 等，以你的幣別付款' },
+      go: '前往付款',
+      approx: '約略金額：最終價格會以你的幣別在付款頁面顯示。',
       /** The box the pay buttons need ticked. */
       age: '我已年滿 18 歲，或已取得父母或監護人的同意。',
       /** The checkout turned down (`GemCheckoutRefusal`): a once pack taken, the day's limit (`GEM_CHECKOUT.daily`, as a price). */
       once: '這個帳號已經領過新手禮包。',
-      cap: (limit: string) => `為了安全，每個帳號每天最多購買 ${limit} 的寶石，未完成的付款會保留半小時。請明天再試（以巴西利亞時間午夜換日）。`,
+      cap: (limit: string) => `為了安全，每個帳號每天最多購買 ${limit} 的寶石，未完成的付款會保留約一小時。請明天再試（以巴西利亞時間午夜換日）。`,
       cancel: '取消',
       opening: '正在開啟付款頁面…',
       failed: '無法開啟付款頁面，請再試一次。',
@@ -677,6 +685,19 @@ export const zh: Messages = {
       timeout: '付款處理中',
       timeoutNote: '我們還在確認你的付款。寶石會在幾分鐘內送到你的帳號（Pix 可能會久一點），你可以繼續遊玩。',
       ok: '繼續',
+    },
+    /** Back from a checkout given up (`&cancel=`): nothing charged, the same pack again, the other ways to pay (by price list) and Patreon. */
+    cancelled: {
+      title: '沒有成功嗎？',
+      text: '沒有任何扣款。要再試一次嗎？',
+      retry: (pack: string, price: string) => `再試一次：${pack} · ${price}`,
+      ways: {
+        br: '除了信用卡，也可以用 Pix、Apple Pay 或 Google Pay 付款。',
+        intl: '信用卡被拒絕了嗎？試試 Apple Pay、Google Pay 或其他卡片：有些銀行會拒絕國外商店的交易。',
+      },
+      patreon: '想每個月支持我們嗎？Patreon 也會送寶石。',
+      patreonLink: '前往 Patreon',
+      close: '先不用',
     },
     skinShop: {
       pitch: '重新繪製的寶可夢，整條進化線的每個階段都適用。會出現在你的對局、合作模式和競技場中。',
@@ -1037,12 +1058,21 @@ export const zh: Messages = {
       choosing: '正在選擇最佳伺服器…',
       playing: '隊伍正在對局中。',
       rejoin: '回到對局',
-      rules: '合作模式為標準模式：沒有傳說模式、今日大量出現、女巫之夜、背包或商店的招式學習器。成績會列入雙人、三人與四人小隊排行榜。',
+      rules: '合作模式為標準模式（房主也可開啟傳說模式）：沒有今日大量出現、女巫之夜、背包或商店的招式學習器。成績會列入雙人、三人與四人小隊排行榜。',
       challenge: '每日挑戰',
       challengeModes: { off: '關閉', on: '開啟' },
       challengeBadge: (date) => `合作每日挑戰 · ${date}`,
       challengeRules: '使用當日的種子與難度，不使用寶可夢商店的強化。以隊伍最佳成績計算。',
       challengeFixed: '挑戰指定',
+      legend: '傳說模式',
+      legendBadge: '傳說模式',
+      legendRules: '每人使用一隻已捕獲的傳說寶可夢：更強的敵群、壓迫感，並在 Lv 12 與 28 覺醒。成績列入傳說雙人、三人與四人小隊排行榜。',
+      legendOff: '每日挑戰時關閉',
+      legendPick: '更換傳說寶可夢',
+      noLegend: '你還沒有捕獲傳說寶可夢。先在單人模式擊敗一隻，才能在這個房間遊玩。',
+      noLegendSeat: '沒有傳說',
+      legendFellBack: (name: string, pokemon: string) => `${name} 的傳說未經帳號確認：改用 ${pokemon} 出戰，這場不列入排行榜。`,
+      legendNote: '從已捕獲的傳說寶可夢中選一隻。開局時伺服器會確認捕獲紀錄；若無法確認，將改用你的夥伴。',
       hintKeys: '← → 選擇 · ENTER 確認 · ESC 離開',
       hintTouch: '點擊選擇',
       pick: '選擇',
@@ -1393,6 +1423,7 @@ export const zh: Messages = {
     modes: { standard: '標準', legend: '傳說' },
     legendGroup: '傳說寶可夢',
     coop: '合作',
+    coopLegend: '傳說合作',
     sizes: { duo: '雙人', trio: '三人', squad: '四人小隊' },
     coopOutcomes: { victory: '勝利', wipe: '全滅' },
     coopEmpty: '這個排行榜還沒有隊伍。找朋友一起來，搶下第一名！',
@@ -6548,6 +6579,7 @@ export const zh: Messages = {
       evolved: (name, from, to) => `*${name}*：${from} 進化成了 *${to}*！`,
       mega: (name, form) => `*${name}* 超級進化成了 *${form}*！`,
       duo: (name, move) => `*${name}* 融合出合體招式：*${move}*！`,
+      awakened: (name, form) => `*${name}* 覺醒了：*${form}*！`,
     },
     vote: {
       title: '隊伍打倒了 Mewtwo！',
@@ -6715,6 +6747,7 @@ export const zh: Messages = {
     },
     tags: {
       solo: '單人',
+      soloCoop: '單人與合作',
       minutes: (n) => `${n} 分鐘`,
       endless: '+ 無盡模式',
       legends: (n) => `${n} 隻傳說`,

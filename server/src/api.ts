@@ -104,7 +104,7 @@ const app = createApp({
   verify: clerkVerifier(env),
   donate: abacate?.donate ?? null,
   gems: gemStore(sql),
-  gemCheckout: { card: env.stripeSecretKey ? stripeCheckout(env.stripeSecretKey) : null, pix: abacate?.gems ?? null },
+  gemCheckout: env.stripeSecretKey ? stripeCheckout(env.stripeSecretKey) : null,
   supporters,
   festival: festivalStore(sql),
   candyGoal: candyGoalStore(sql),

@@ -7,7 +7,7 @@ import { EVENTS } from '../data/waves'
 import { spawnHazard } from './bosses'
 import { burst, shakeScreen } from './effects'
 import { harmBy } from './harm'
-import { teamLegend } from './legend'
+import { playsLegend } from './legend'
 import { momentBusy } from './legendMoments'
 import { standing } from './players'
 import { riftScale } from './rift'
@@ -63,7 +63,7 @@ const bossSoon = (g: Game, s: number) => {
 }
 
 /** The storm may gather: the open map, no boss or scene, no other legend moment under way, and no Zeraora of the player's own. */
-const calm = (g: Game) => roomOf(g) === null && g.bossId === null && g.legendScene === null && !momentBusy(g, 'storm') && teamLegend(g)?.id !== 'zeraora'
+const calm = (g: Game) => roomOf(g) === null && g.bossId === null && g.legendScene === null && !momentBusy(g, 'storm') && !playsLegend(g, 'zeraora')
 
 /** Lightning on each standing player's path: `count` bolts each, landing a beat after they show. */
 const bolts = (g: Game, count: number, damage: number) => {

@@ -801,7 +801,11 @@ export const pt = {
     shop: {
       pitch: 'Visuais para o seu Pokémon nas partidas, no co-op e na Arena: todo mundo vê, e nenhum dá poder.',
       balance: 'Seu saldo',
-      currency: 'Moeda',
+      /** The Brasil / Outro país switch over the packs (which price list, `GemMarket`), and the note under them abroad, where prices are a guess in the buyer's currency. */
+      market: 'Onde você paga',
+      marketBr: 'Brasil',
+      marketIntl: 'Outro país',
+      approx: 'Preços aproximados na sua moeda: o valor final aparece no pagamento.',
       packs: 'Pacotes de gemas',
       bonus: (n: string) => `+${n} bônus`,
       catalog: 'Visuais',
@@ -827,6 +831,8 @@ export const pt = {
       confirm: (name: string, price: string) => `Comprar ${name} por ${price} gemas?`,
       bought: (name: string) => `${name} é seu, e você já está usando!`,
       short: (n: string) => `Faltam ${n} gemas. Que tal um pacote?`,
+      /** An item out of reach: its button buys the pack that covers it (gems missing and the pack's name; its price follows). */
+      shortPack: (n: string, pack: string) => `Faltam ${n} · ${pack}`,
       busy: 'Calma! Muitas compras seguidas. Tente de novo em um minuto.',
       offline: 'A loja está fora de alcance agora. Tente de novo em instantes.',
       banned: 'Esta conta não pode usar a Loja.',
@@ -844,13 +850,15 @@ export const pt = {
     checkout: {
       split: (gems: string, bonus: string) => `${gems} + ${bonus} bônus`,
       pay: 'Pagar com',
-      card: 'Cartão, Apple Pay ou Google Pay',
-      pix: 'Pix',
+      /** What Stripe Checkout takes, by price list (Pix only shows in reais), the button to it and the note on a price abroad. */
+      ways: { br: 'Pix, cartão, Apple Pay ou Google Pay', intl: 'Cartão, Apple Pay, Google Pay e outros, na sua moeda' },
+      go: 'Ir para o pagamento',
+      approx: 'Valor aproximado: o preço final, na sua moeda, aparece no pagamento.',
       /** The box the pay buttons need ticked. */
       age: 'Tenho 18 anos ou mais, ou tenho a permissão dos meus pais ou responsáveis.',
       /** The checkout turned down (`GemCheckoutRefusal`): a once pack taken, the day's limit (`GEM_CHECKOUT.daily`, as a price). */
       once: 'Esta conta já pegou o pacote de boas-vindas.',
-      cap: (limit: string) => `Por segurança, cada conta compra até ${limit} em gemas por dia, e um pagamento em aberto conta por meia hora. Tente de novo amanhã (o dia vira à meia-noite de Brasília).`,
+      cap: (limit: string) => `Por segurança, cada conta compra até ${limit} em gemas por dia, e um pagamento em aberto conta por cerca de uma hora. Tente de novo amanhã (o dia vira à meia-noite de Brasília).`,
       cancel: 'Cancelar',
       opening: 'Abrindo o pagamento…',
       failed: 'Não deu para abrir o pagamento. Tente de novo.',
@@ -861,6 +869,19 @@ export const pt = {
       timeout: 'Pagamento a caminho',
       timeoutNote: 'Ainda estamos confirmando o pagamento. As gemas chegam à sua conta em alguns minutos (um Pix pode demorar um pouco mais), e você pode continuar jogando.',
       ok: 'Continuar',
+    },
+    /** Back from a checkout given up (`&cancel=`): nothing charged, the same pack again, the other ways to pay (by price list) and Patreon. */
+    cancelled: {
+      title: 'Não deu certo?',
+      text: 'Nada foi cobrado. Quer tentar de novo?',
+      retry: (pack: string, price: string) => `Tentar de novo: ${pack} · ${price}`,
+      ways: {
+        br: 'Dá para pagar com Pix, Apple Pay ou Google Pay, além de cartão.',
+        intl: 'Cartão recusado? Tente Apple Pay, Google Pay ou outro cartão: alguns bancos recusam compras de lojas de outro país.',
+      },
+      patreon: 'Prefere apoiar todo mês? O Patreon também traz gemas.',
+      patreonLink: 'Ver o Patreon',
+      close: 'Agora não',
     },
     /** The Skins page (`ui/skinShop.ts`): skins by line, the bundles and the launch offers. */
     skinShop: {
@@ -907,7 +928,6 @@ export const pt = {
       wear: (name: string) => `Usar ${name}`,
       see: (name: string) => `${name}: ver na Boutique`,
     },
-    /** The gem chip for a guest (no balance): the way to the Boutique. */
     /** A gem promotion (`GEM_PROMOS`): its name, the packs' tag, the Loja's banner, the split of a pack's gems, the time left (and short, for the lobby's Boutique row). */
     promo: {
       names: { blackFriday: 'Black Friday' } satisfies Record<GemPromoName, string>,
@@ -924,6 +944,7 @@ export const pt = {
       short: (n: string, first: boolean) => (first ? `Faltam ${n} para o primeiro visual` : `Faltam ${n} para o próximo visual`),
       see: 'Ver na Boutique',
     },
+    /** The gem chip for a guest (no balance): the way to the Boutique. */
     chipGuest: 'Boutique: visuais com gemas',
     locker: {
       pick: 'Pokémon da prévia',
@@ -1244,13 +1265,24 @@ export const pt = {
       /** Back in the room while the others still play (the endless mode). */
       playing: 'A equipe está numa partida.',
       rejoin: 'Voltar para a partida',
-      rules: 'Co-op é o modo normal: sem Modo Lendário, Surto do dia, Noite das Bruxas, Mochila nem TMs da loja. As partidas entram no ranking de Duplas, Trios e Squads.',
+      rules: 'Co-op é o modo normal (ou o Modo Lendário, se o anfitrião ligar): sem Surto do dia, Noite das Bruxas, Mochila nem TMs da loja. As partidas entram no ranking de Duplas, Trios e Squads.',
       /** The host's switch for the Desafio co-op do dia (run rooms): the day's seed and difficulty, upgrades off. */
       challenge: 'Desafio do dia',
       challengeModes: { off: 'Desligado', on: 'Ligado' },
       challengeBadge: (date: string) => `Desafio co-op do dia · ${date}`,
       challengeRules: 'Semente e dificuldade do dia, sem melhorias da Poké Mart. Vale a melhor partida do time.',
       challengeFixed: 'a do desafio',
+      /** The host's switch for the Modo Lendário (run rooms, never with the Desafio co-op do dia): every seat plays a legend it captured. */
+      legend: 'Modo Lendário',
+      legendBadge: 'Modo Lendário',
+      legendRules: 'Cada um joga um lendário que já capturou: horda mais forte, Pressão e despertares no Lv 12 e 28. Vale nos rankings Lendários de Duplas, Trios e Squads.',
+      legendOff: 'desligado no Desafio do dia',
+      legendPick: 'Trocar lendário',
+      /** This player has no legend captured: they can't get ready in a legend room. */
+      noLegend: 'Você ainda não capturou um lendário. Vença um no modo solo para jogar nesta sala.',
+      noLegendSeat: 'sem lendário',
+      legendFellBack: (name: string, pokemon: string) => `O lendário de ${name} não foi confirmado pela conta: joga com ${pokemon}, e a partida fica fora do placar.`,
+      legendNote: 'Escolha um dos seus lendários capturados. O servidor confere a captura na largada; sem ela, você joga com seu parceiro.',
       hintKeys: '← → escolher · ENTER confirmar · ESC sair',
       hintTouch: 'Toque para escolher',
       /** The partner select, picking for the room. */
@@ -1641,6 +1673,7 @@ export const pt = {
     legendGroup: 'Lendários',
     /** The Co-op side (a third mode): boards of teams by size (Duplas, Trios, Squads), and the Desafio co-op do dia's. */
     coop: 'Co-op',
+    coopLegend: 'Co-op Lendário',
     sizes: { duo: 'Duplas', trio: 'Trios', squad: 'Squads' },
     coopOutcomes: { victory: 'Venceu', wipe: 'Desmaiaram' },
     coopEmpty: 'Nenhum time neste quadro ainda. Chame a galera e seja o primeiro!',
@@ -6998,6 +7031,7 @@ export const pt = {
       evolved: (name: string, from: string, to: string) => `*${name}*: ${from} evoluiu para *${to}*!`,
       mega: (name: string, form: string) => `*${name}* Mega Evoluiu em *${form}*!`,
       duo: (name: string, move: string) => `*${name}* fundiu um golpe duplo: *${move}*!`,
+      awakened: (name: string, form: string) => `*${name}* despertou: *${form}*!`,
     },
     vote: {
       title: 'A equipe venceu Mewtwo!',
@@ -7173,6 +7207,8 @@ export const pt = {
     },
     tags: {
       solo: 'Solo',
+      /** The Legend mode's card: solo, or a co-op room with the Modo Lendário on. */
+      soloCoop: 'Solo e co-op',
       minutes: (n: number) => `${n} min`,
       endless: '+ modo sem fim',
       legends: (n: number) => `${n} lendários`,

@@ -12,7 +12,7 @@ import type { PathFormId } from '../data/legendPaths'
 import type { EvolutionStage } from '../data/starters'
 import { runBoost } from './evoItems'
 import { evolutionFreed, missingEvoItems, runEvoItems, stepOpen } from './evoGate'
-import { isStarter, PLAYABLE, type PLAYABLE_IDS, type PlayableId } from '../data/hatchlings'
+import { isStarter, PLAYABLE, type PlayableId } from '../data/hatchlings'
 import { abilityLuck, abilitySet, createAbilityState, grantAbility, updateAbility } from './abilities'
 import { BAG_ITEMS, type BagItem } from './bag'
 import { branchContext, evolutionOffers, playerForm } from './branch'
@@ -73,7 +73,7 @@ import { createTmState, pickTm } from './tms'
 import { updateVerbEvolved } from './verbEvolutions'
 import { updateLegendary } from './legendary'
 import { createSpecialState, specialBusy, specialSpeedFactor, updateSpecial } from './special'
-import { AWAKENING, avoidLegend, createLegendState, formAfter, legendLook, pendingAwakening, updateLegend } from './legend'
+import { AWAKENING, avoidLegends, createLegendState, LEGEND_HORDE, formAfter, legendLook, pendingAwakening, updateLegend } from './legend'
 import { decidePokeball, updatePickups } from './pickups'
 import { restTurnedDown } from './itemDrop'
 import { rollShiny, SHINY_ODDS, shinyBoost } from './shiny'
@@ -305,7 +305,9 @@ export const createRun = (view: Game['view'], seed: number, setups: readonly Pla
   const lucky = setups.map((setup) => rollShiny(rng, SHINY_ODDS.player) && isStarter(setup.starter))
   const players = setups.map((setup, slot) => createPlayer(slot, setup, lucky[slot]!, coop ? (slot - (setups.length - 1) / 2) * COOP.spacing : 0, view))
   const player = players[0]!
-  const starter = player.starter
+  // The legends the team plays (solo, the player's starter if it's one): the run plays the Legend mode's horde once for all of them.
+  const legends = setups.flatMap((setup) => (isLegend(setup.starter) ? [setup.starter] : []))
+  const legendRun = legends.length > 0
   const g: Game = {
     difficulty: options.difficulty ?? DEFAULT_DIFFICULTY,
     rng,
@@ -328,15 +330,16 @@ export const createRun = (view: Game['view'], seed: number, setups: readonly Pla
     hitstopRest: 0,
     kills: 0,
     coins: 0,
-    // A legend never meets itself among the bosses (`avoidLegend`), nor the outbreak's basic in its horde (`LEGEND_HORDE`).
+    // A legend never meets itself among the bosses (`avoidLegends`, every seat's), nor the outbreak's basic in its horde (`LEGEND_HORDE`).
+    // A co-op Legend run draws its lifted horde from the run's rng here; solo, the shell draws it ahead (`runRoster`).
     roster: withHunt(
-      avoidLegend(
+      avoidLegends(
         withHoney(
-          withOutbreak(withHaunts(roster ?? drawRoster(rng), options.halloween === true, seed, isLegend(starter)), isLegend(starter) ? null : (options.outbreak ?? null)),
-          isLegend(starter) ? null : (options.outbreak ?? null),
+          withOutbreak(withHaunts(roster ?? drawRoster(rng, coop && legendRun ? LEGEND_HORDE : undefined), options.halloween === true, seed, legendRun), legendRun ? null : (options.outbreak ?? null)),
+          legendRun ? null : (options.outbreak ?? null),
           bag.includes('honey') ? BAG_ITEMS.honey.effect.outbreakWeight : 1,
         ),
-        starter,
+        legends,
       ),
       options.mythical,
       seed,
@@ -377,7 +380,7 @@ export const createRun = (view: Game['view'], seed: number, setups: readonly Pla
     worldHazards: createWorldHazards(),
     now: 0,
     legendScene: null,
-    coop: coop ? createCoopState(players.length) : null,
+    coop: coop ? createCoopState(players.length, legendRun) : null,
     training: null,
   }
   for (const p of players) {
@@ -422,10 +425,11 @@ export const createGame = (
 
 /**
  * What a player brings into a co-op run: their Pokémon (a starter or a hatched
- * family: the Legend mode stays solo), Poké Mart ranks, whether it plays shiny,
- * and the name the team sees. Nothing else from the save comes along (`createCoopGame`).
+ * family; in a Legend room, a legend the API vouched they captured,
+ * `coop/start.ts`), Poké Mart ranks, whether it plays shiny, and the name the
+ * team sees. Nothing else from the save comes along (`createCoopGame`).
  */
-export type CoopLoadout = { starter: (typeof PLAYABLE_IDS)[number]; ranks: Ranks; shiny: boolean; name: string }
+export type CoopLoadout = { starter: PlayableId; ranks: Ranks; shiny: boolean; name: string }
 
 /**
  * A co-op run's settings, the same on every client: the difficulty, the opening draft (on by default), the simulated
@@ -437,10 +441,12 @@ export type CoopOptions = { difficulty?: Difficulty; draft?: boolean; view?: Gam
 /**
  * A fresh co-op run for 1 to `COOP.maxPlayers` loadouts (by slot). Every
  * client that calls it with the same seed, loadouts and options gets the same
- * game, so nothing here reads a save, the day or the clock: co-op plays the
- * normal mode (`COOP_LOCKS` in `data/coop.ts`) — no outbreak, Noite das Bruxas,
- * Bag, armed TMs, evolution items or Bottle Caps, no lucky first egg, and the
- * roster from the run's rng (or `options.roster`, drawn the same way).
+ * game, so nothing here reads a save, the day or the clock (`COOP_LOCKS` in
+ * `data/coop.ts`) — no outbreak, Noite das Bruxas, Bag, armed TMs, evolution
+ * items or Bottle Caps, no lucky first egg, no path forms, and the roster from
+ * the run's rng (or `options.roster`, drawn the same way). A seat playing a
+ * legend plays it as solo's Legend mode does, and the run is a co-op Legend
+ * run (`CoopState.legend`): the lifted horde and Pressure, once for the team.
  */
 export const createCoopGame = (seed: number, loadouts: readonly CoopLoadout[], options: CoopOptions = {}): Game => {
   if (loadouts.length < 1 || loadouts.length > COOP.maxPlayers) throw new RangeError(`co-op takes 1 to ${COOP.maxPlayers} players, got ${loadouts.length}`)

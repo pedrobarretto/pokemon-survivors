@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { GEM_CHECKOUT, GEM_PACKS, GEM_PATREON, GEM_PLAY, GEM_PROMOS, packGems, packGemsOn, promoOf } from '../data/gems'
+import { GEM_CHECKOUT, GEM_FX, GEM_PACKS, GEM_PATREON, GEM_PLAY, GEM_PROMOS, packGems, packGemsOn, promoOf } from '../data/gems'
 import { addDays } from './day'
 import { PATREON_TIERS } from '../data/supporters'
 import { bundleLastDay, bundleOnSale, bundlePrice, checkoutRefusal, lockedCosmetics, playGems, refundedGems, runEarnsGems, wearableLook, type OwnedCosmetic } from './gems'
@@ -22,14 +22,24 @@ describe('playGems', () => {
 
 describe('checkoutRefusal', () => {
   it('sells a once pack once and stops at the day’s limit in each currency', () => {
-    expect(checkoutRefusal('welcome', 'brl', 0, false)).toBeNull()
-    expect(checkoutRefusal('welcome', 'brl', 0, true)).toBe('once')
-    expect(checkoutRefusal('pouch', 'brl', 0, true)).toBeNull()
-    expect(checkoutRefusal('vault', 'brl', 0, false)).toBeNull()
-    expect(checkoutRefusal('pouch', 'brl', GEM_PACKS.vault.brl, false)).toBe('cap')
-    expect(checkoutRefusal('vault', 'usd', 0, false)).toBeNull()
-    expect(checkoutRefusal('pouch', 'usd', GEM_CHECKOUT.daily.usd - GEM_PACKS.pouch.usd, false)).toBeNull()
-    expect(checkoutRefusal('pouch', 'usd', GEM_CHECKOUT.daily.usd - GEM_PACKS.pouch.usd + 1, false)).toBe('cap')
+    expect(checkoutRefusal('welcome', 'br', 0, false)).toBeNull()
+    expect(checkoutRefusal('welcome', 'br', 0, true)).toBe('once')
+    expect(checkoutRefusal('pouch', 'br', 0, true)).toBeNull()
+    expect(checkoutRefusal('vault', 'br', 0, false)).toBeNull()
+    expect(checkoutRefusal('vault', 'intl', 0, false)).toBeNull()
+    expect(checkoutRefusal('pouch', 'intl', GEM_CHECKOUT.daily - GEM_PACKS.pouch.intl, false)).toBeNull()
+    expect(checkoutRefusal('pouch', 'intl', GEM_CHECKOUT.daily - GEM_PACKS.pouch.intl + 1, false)).toBe('cap')
+    expect(checkoutRefusal('pouch', 'br', GEM_CHECKOUT.daily - GEM_PACKS.pouch.brl + 1, false)).toBe('cap')
+  })
+})
+
+describe('GEM_PACKS', () => {
+  it('prices abroad in reais from the dollar reference, ending in ,90', () => {
+    for (const pack of Object.values(GEM_PACKS)) {
+      expect(pack.intl % 100).toBe(90)
+      expect(Math.abs(pack.intl - pack.usd * GEM_FX.brlPerUsd)).toBeLessThanOrEqual(50)
+      expect(pack.intl).toBeGreaterThanOrEqual(pack.brl)
+    }
   })
 })
 

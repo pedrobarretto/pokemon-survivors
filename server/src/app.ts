@@ -10,7 +10,7 @@ import { challengeOpen } from '../../src/game/challenge'
 import { cosmeticPrice, isCosmeticId } from '../../src/data/cosmetics'
 import { parseTeamSize } from '../../src/game/coopBoard'
 import { parseDonation } from '../../src/data/donations'
-import { GEM_PACKS, isGemPackId, packGemsOn, type GemCurrency } from '../../src/data/gems'
+import { isGemMarket, isGemPackId, packGemsOn, packPrice, type GemMarket } from '../../src/data/gems'
 import { isPollOptionOf, type PollKind } from '../../src/data/supporters'
 import { brasiliaDay, isDayKey } from '../../src/game/day'
 import { parseDonationAmount } from '../../src/game/festival'
@@ -39,11 +39,11 @@ import type { AdminStore } from './admin'
 import { ARENA_PAGES, parseAbandonedReport, parseArenaReport, shownSeason, verifyArenaSignature, type ArenaStore } from './arena'
 import type { Verify } from './auth'
 import type { BugReports } from './bugReports'
-import { coopListing, parseCoopReport, type CoopBoardStore } from './coopBoards'
+import { coopListing, legendsVouched, parseCoopReport, type CoopBoardStore } from './coopBoards'
 import type { SaveStore } from './db'
 import type { DiscordLink } from './discordLink'
 import type { Report, TellRevenue } from './errors'
-import type { Donate, GemPix } from './donations'
+import type { Donate } from './donations'
 import type { CandyGoalStore } from './candyGoal'
 import type { DonateError, FestivalStore } from './festival'
 import type { FriendStore } from './friends'
@@ -63,7 +63,7 @@ import { checkoutLocale, type StripeCheckout } from './stripe'
 import { rulesVerdict } from './rulesGrace'
 import type { SupporterStore } from './supporters'
 import { SUGGESTION_ID, type SuggestionStore } from './suggestions'
-import { abacateDonation, abacateGems, ABACATE_GEMS_REF, ABACATE_REF, patreonCharge, patreonMember, stripeDonation, stripeGems, verifyAbacate, verifyPatreon, verifyStandard, verifyStripe } from './webhooks'
+import { abacateDonation, abacateGems, ABACATE_REF, patreonCharge, patreonMember, stripeDonation, stripeGems, verifyAbacate, verifyPatreon, verifyStandard, verifyStripe } from './webhooks'
 
 export type AppDeps = {
   store: SaveStore
@@ -77,8 +77,8 @@ export type AppDeps = {
   supporters: SupporterStore
   /** Gems: the ledger, packs bought with money, cosmetics bought with gems and the equipped Arena look. */
   gems: Pick<GemStore, 'status' | 'ledger' | 'purchase' | 'buy' | 'buyBundle' | 'setLook' | 'looks' | 'open' | 'opened' | 'event' | 'takeCheckout' | 'takeBuy' | 'takeLook'>
-  /** Gem pack checkouts: `card` Stripe Checkout, `pix` AbacatePay; null when the server has no key for one (it answers 503). */
-  gemCheckout: { card: StripeCheckout | null; pix: GemPix | null }
+  /** Gem pack checkouts (Stripe Checkout); null when the server has no Stripe key (it answers 503). */
+  gemCheckout: StripeCheckout | null
   /** Festival da Praça: the pot, donations from the stored save and the plaque. */
   festival: Pick<FestivalStore, 'status' | 'donate' | 'setPublic' | 'takeDonate' | 'takeToggle' | 'held' | 'review'>
   /** Meta da comunidade: every account's candy jar summed, toward the goal that opens Mega Darkrai. */
@@ -270,9 +270,11 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  *   negative, `lockedCosmetics`; the look leaves them out). `GET /gems/ledger` (auth): the latest 50 `GemLedgerEntry`, newest first.
  * - `GET /gems/purchase/:ref` (auth): `GemPurchaseResponse` `{ status, gems, balance }`, where the account's own pack `ref` (the
  *   checkout's `?gems=<ref>`) stands; 404 for anyone else's or an unknown one.
- * - `POST /gems/checkout` (auth) `{ pack, method, currency }`: `{ url }`, a checkout for a gem pack: `card` Stripe Checkout in
- *   `currency`, `pix` AbacatePay in reais (whatever `currency` says). Paid, it comes back to the game with `?gems=<ref>`, and
- *   the webhook credits the pack. 400 invalid, 429 past the checkout limit, 503 without the method's key.
+ * - `POST /gems/checkout` (auth) `{ pack, market, locale? }`: `{ url }`, a Stripe Checkout for a gem pack, in reais at
+ *   `market`'s price (`br` Brazil's, `intl` everyone else's, which Stripe shows in the buyer's currency); a page from before
+ *   2026-11-20 sends `{ method, currency }` instead (`brl` or Pix as `br`). Paid, it comes back to the game with
+ *   `?gems=<ref>`; given up, with `?gems=<ref>&cancel=<pack>`; the webhook credits the pack. 400 invalid, 409 refused
+ *   (`once`, `cap`), 429 past the checkout limit, 503 without the Stripe key.
  * - `POST /gems/buy` (auth) `{ id }`: buys a cosmetic. `{ balance, owned, locked }`; 402 `{ error: 'gems' }` short (or negative),
  *   409 owned already (a free one too), 404 unknown or not on sale. The debit and the ownership land together, once.
  * - `POST /gems/bundle` (auth) `{ id }`: buys a skin bundle (`SKIN_BUNDLES`): the skins the account lacks, for what they cost
@@ -326,7 +328,8 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  * - `POST /arena/report` (relay, signed: `x-arena-signature`) `ArenaReport`: a finished match, once per (room, run); an abandoned one (`abandoned: true`) only moves Fair Play.
  *   `ArenaReportResponse`; a retry gets the stored match with `duplicate`. 400 invalid, 401 bad signature, 503 without `ARENA_REPORT_SECRET`.
  * - `POST /arena/tickets` (relay, signed) `{ userIds }`: `ArenaTicketsResponse`, each player's current-season MMR, RP and games, and their Fair Play.
- * - `POST /looks` (relay, signed) `{ userIds }`: `LooksResponse`, each account's vouched look (a room, co-op or Arena, asks as its run starts).
+ * - `POST /looks` (relay, signed) `{ userIds }`: `LooksResponse`, each account's vouched look and captured legends (from its stored
+ *   save, for a co-op room's Legend mode); a room, co-op or Arena, asks as its run starts.
  * - `POST /arena/practice` (auth) `ArenaPracticeRequest`: a quick match against bots, for history and totals only.
  *   201 `{ match }` (200 `{ duplicate: true }` for a retried `key`), 400 invalid or a bot's slot, 429 past the hourly limit.
  * - `GET /arena/me` (auth): `ArenaProfile`. `GET /arena/history?before=<ms>&limit=` (auth): `ArenaHistoryEntry[]`, newest first.
@@ -334,10 +337,11 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  * - `POST /coop/report` (relay, signed like `/arena/report`) `CoopReport`: a finished co-op run, once per (room, run, endedAt).
  *   `CoopReportResponse`: the stored run (a retry gets it with `duplicate`), or `run: null` (200) when it doesn't list
  *   (`coopListing`: a guest seat, a single player, under 2 votes, a result that doesn't parse, a challenge off its day or
- *   difficulty). 400 malformed or ended in the future, 401 bad signature, 503 without `ARENA_REPORT_SECRET`.
- * - `GET /coop/boards/:difficulty?size=duo|trio|squad&period=day|week|all&friends=1`: `CoopBoard`, the top teams (best run
- *   each; challenge runs stay off it) and with a token the asker's best team (`me`). `size` 2 to 4 or its key (duo when
- *   left out), `period` all when left out, `friends` (needs a token) only teams with the asker or someone they follow.
+ *   difficulty, a Legend run with a seat that isn't a legend or on a challenge). 400 malformed or ended in the future, 401 bad signature, 503 without `ARENA_REPORT_SECRET`.
+ * - `GET /coop/boards/:difficulty?size=duo|trio|squad&period=day|week|all&friends=1&mode=standard|legend`: `CoopBoard`, the top
+ *   teams (best run each; challenge runs stay off it) and with a token the asker's best team (`me`). `size` 2 to 4 or its key
+ *   (duo when left out), `period` all when left out, `friends` (needs a token) only teams with the asker or someone they follow,
+ *   `mode=legend` the co-op Legend runs' side (the Lendário boards), the regular side without it.
  * - `GET /coop/challenge/:day?size=&friends=1`: `CoopChallengeBoard`, the day's Desafio co-op board for that size.
  * - The Poké Realm (`src/realm.ts`): the game's routes as `src/net/realmApi.ts` lists them (`/realm/me`, `/realm/cities`,
  *   `/realm/friends`, `/realm/settings`, `/realm/base…`, `/realm/bases`, `/realm/furniture/buy`, `/realm/game/claim`, `/realm/claw…`, `/realm/corner…`, `/realm/safari…`, `/realm/dig…`, `/realm/boards/:game`, `/realm/report`, `/realm/book`, `/realm/errands/claim`), and the relay's, signed like
@@ -477,9 +481,10 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     const size = parseTeamSize(c.req.query('size') ?? 'duo')
     const period = c.req.query('period') ?? 'all'
     const friends = c.req.query('friends') === '1'
-    if (!isDifficulty(difficulty) || size === null || !isBoardPeriod(period)) return c.json({ error: 'unknown board' }, 400)
+    const mode = c.req.query('mode') ?? 'standard'
+    if (!isDifficulty(difficulty) || size === null || !isBoardPeriod(period) || !isRunMode(mode)) return c.json({ error: 'unknown board' }, 400)
     if (friends && !c.var.userId) return c.json({ error: 'unauthorized' }, 401)
-    return c.json(await coop.board({ size, difficulty, period, friends, viewer: c.var.userId }))
+    return c.json(await coop.board({ mode, size, difficulty, period, friends, viewer: c.var.userId }))
   })
 
   app.get('/coop/challenge/:day', maybeAuth, async (c) => {
@@ -618,27 +623,32 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
   app.post('/gems/checkout', auth, smallBody, async (c) => {
     const body = await json(c)
     const pack = isRecord(body) && isGemPackId(body.pack) ? body.pack : null
-    const method = isRecord(body) && (body.method === 'card' || body.method === 'pix') ? body.method : null
-    const asked: GemCurrency | null = isRecord(body) && (body.currency === 'brl' || body.currency === 'usd') ? body.currency : null
-    if (!pack || !method || !asked) return c.json({ error: 'expected { pack, method, currency }' }, 400)
+    // Pages from before one price list per market sent a method and a currency: reais (or Pix, reais only) were Brazil's.
+    const legacy = isRecord(body) && (body.currency === 'brl' || body.method === 'pix') ? 'br' : isRecord(body) && body.currency === 'usd' ? 'intl' : null
+    const market: GemMarket | null = isRecord(body) && isGemMarket(body.market) ? body.market : legacy
+    if (!pack || !market) return c.json({ error: 'expected { pack, market }' }, 400)
     const locale = isRecord(body) ? checkoutLocale(body.locale) : null
-    // Pix is reais only.
-    const currency = method === 'pix' ? 'brl' : asked
-    const card = method === 'card' ? gemCheckout.card : null
-    const pix = method === 'pix' ? gemCheckout.pix : null
-    if (!card && !pix) return c.json({ error: `${method} is off` }, 503)
+    if (!gemCheckout) return c.json({ error: 'checkout is off' }, 503)
     if (!gems.takeCheckout(c.var.userId)) return c.json({ error: 'too many checkouts' }, 429)
     const origin = c.req.header('Origin')
     const base = origin && allowedOrigin(origin) ? origin : SITE
     const ref = crypto.randomUUID()
-    const back = `${base}/?gems=${ref}`
     // The pack's gems as the Loja shows them today (a promotion's included): stored now, so a checkout paid after the window still brings them.
     const packGems = packGemsOn(pack, brasiliaDay(new Date()))
     // A once pack bought already, or past the day's limit: 409 with why (`GemCheckoutRefusal`), before any payment opens.
-    const refused = await gems.open({ ref, userId: c.var.userId, pack, gems: packGems, provider: card ? 'stripe' : 'abacatepay', currency, amount: GEM_PACKS[pack][currency] })
+    const refused = await gems.open({ ref, userId: c.var.userId, pack, gems: packGems, provider: 'stripe', market, amount: packPrice(pack, market) })
     if (refused) return c.json({ error: refused }, 409)
-    if (pix) return c.json({ url: await pix(pack, { completionUrl: back, returnUrl: `${base}/` }, `${ABACATE_GEMS_REF}${ref}`, packGems) })
-    const opened = await card!({ ref, userId: c.var.userId, pack, gems: packGems, currency, locale: locale ?? (currency === 'brl' ? 'pt' : 'en'), successUrl: back, cancelUrl: `${base}/` })
+    const opened = await gemCheckout({
+      ref,
+      userId: c.var.userId,
+      pack,
+      gems: packGems,
+      market,
+      locale: locale ?? (market === 'br' ? 'pt' : 'en'),
+      successUrl: `${base}/?gems=${ref}`,
+      // Given up (Stripe's back link): the Boutique's "Não deu certo?" sheet, which offers the same pack again.
+      cancelUrl: `${base}/?gems=${ref}&cancel=${pack}`,
+    })
     await gems.opened(ref, opened.session)
     return c.json({ url: opened.url })
   })
@@ -908,7 +918,9 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     if (!r || r.endedAt > Date.now() + ARENA_CLOCK_SKEW_MS) return c.json({ error: 'invalid report' }, 400)
     // A run that doesn't list is still taken (200), so the relay's outbox lets it go.
     const listing = coopListing(r)
-    return c.json(listing ? await coop.report(r, listing) : { run: null, duplicate: false })
+    // A Legend run lists only when every seat's legend is one its account captured (the stored save's, not the relay's word alone).
+    const vouched = listing !== null && (!listing.result.legend || legendsVouched(listing, await store.capturedLegends(listing.members.map((m) => m.userId))))
+    return c.json(listing && vouched ? await coop.report(r, listing) : { run: null, duplicate: false })
   })
 
   app.post('/arena/tickets', smallBody, async (c) => {
@@ -924,8 +936,11 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     if ('error' in signed) return signed.error
     const ids = isRecord(signed.body) && Array.isArray(signed.body.userIds) ? signed.body.userIds : null
     if (!ids || ids.length > 64 || !ids.every((id): id is string => typeof id === 'string' && id.length > 0 && id.length <= 64)) return c.json({ error: 'expected { userIds }' }, 400)
-    const looks = await gems.looks(ids)
-    return c.json({ looks: Object.fromEntries(ids.map((id) => [id, looks.get(id) ?? {}])) } satisfies LooksResponse)
+    const [looks, legends] = await Promise.all([gems.looks(ids), store.capturedLegends(ids)])
+    return c.json({
+      looks: Object.fromEntries(ids.map((id) => [id, looks.get(id) ?? {}])),
+      legends: Object.fromEntries(ids.map((id) => [id, legends.get(id) ?? []])),
+    } satisfies LooksResponse)
   }
   app.post('/looks', smallBody, looksLookup)
   // The old path, for relays deployed before the API's rename: drop it once both relays ask `/looks`.

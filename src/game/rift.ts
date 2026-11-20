@@ -91,11 +91,13 @@ export const clockRuns = (g: Pick<Game, 'rift' | 'raid'>) => g.rift.arena === nu
 
 /**
  * A legendary not met yet this run; once all were met, any of them. Latias
- * brings Latios along (`RIFT_DRAWS`). Never `self`, the legend the player plays
- * (Legend mode), nor a domain fighting alongside it (no Eon duo for a Latios).
+ * brings Latios along (`RIFT_DRAWS`). Never one of `selves`, the legends the
+ * team plays (Legend mode), nor a domain fighting alongside one (no Eon duo
+ * for a Latios).
  */
-export const pickLegend = (rng: Rng, met: readonly RiftLegend[], self: string | null = null): RiftLegend => {
-  const open = RIFT_DRAWS.filter((l) => l !== self && domainOf(l)?.partner?.id !== self)
+export const pickLegend = (rng: Rng, met: readonly RiftLegend[], selves: readonly string[] = []): RiftLegend => {
+  const ours = (id: string | undefined) => selves.some((s) => s === id)
+  const open = RIFT_DRAWS.filter((l) => !ours(l) && !ours(domainOf(l)?.partner?.id))
   const fresh = open.filter((l) => !met.includes(l))
   return pick(rng, fresh.length > 0 ? fresh : open)
 }
