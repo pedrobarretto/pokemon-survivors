@@ -1,7 +1,7 @@
 import { ARENA_RANKED } from '../../src/data/arenaRanked'
 import { arenaPlayers, parseArenaFormat } from '../../src/data/arenaFormats'
 import type { ArenaReport, MatchedSettings } from '../../src/net/arena'
-import { COOP_REPORT_PATH, type CoopReport } from '../../src/net/coopReport'
+import { COOP_REPORT_PATH, relayedTimeFits, type CoopReport } from '../../src/net/coopReport'
 import { countsForRank, humansOnBothSides } from '../../src/net/arenaQueue'
 import {
   COALESCED_KINDS,
@@ -131,6 +131,8 @@ export type Run = {
   start: RunStart
   /** Relay clock (ms) of tick 0's start: tick `t` goes out once `now >= clockBase + (t + 1) * 1000 / TICK_HZ`. */
   clockBase: number
+  /** `clockBase` as the run started (pauses move `clockBase`, never this): the wall clock its report counts from. Null for a run saved before it. */
+  startedAt: number | null
   /** The next tick to send: every tick below it went out. */
   next: number
   /** No frame ever reached this tick: after a restart the clock resumes here, so no sent tick is reused. */
@@ -313,6 +315,7 @@ export const loadState = (room: Room | null, gen: Gen, now: number, bound = 0): 
     room.run.agreedBy ??= null
     room.run.demoted ??= []
     room.run.who ??= []
+    room.run.startedAt ??= null
   }
   if (room?.run && !room.run.ended) {
     room.run.bound = Math.max(room.run.bound, bound)
@@ -884,7 +887,7 @@ const startRun = (state: State, room: Room, now: number, looks: Readonly<Record<
   })
   const start: RunStart = { id: room.runs, seed: state.gen.seed() >>> 0, build: room.build, settings: room.settings, players }
   const who = players.map((p) => room.seats.find((s) => s.seat === p.seat)?.identity ?? '')
-  room.run = { start, clockBase: now + TIMES.startDelay, next: 0, bound: BOUND_AHEAD, paused: false, left: [], agreed: null, agreedBy: null, demoted: [], overs: {}, ended: null, dumps: 0, who }
+  room.run = { start, clockBase: now + TIMES.startDelay, startedAt: now + TIMES.startDelay, next: 0, bound: BOUND_AHEAD, paused: false, left: [], agreed: null, agreedBy: null, demoted: [], overs: {}, ended: null, dumps: 0, who }
   room.phase = 'playing'
   const live = state.live
   live.pending = []
@@ -993,27 +996,40 @@ export const abandonedReport = (room: Room, now: number): ArenaReport | null => 
   return { v: 1, room: room.code, run: run.start.id, kind: reportKind(room, run), region: room.region, endedAt: now, seats: reportSeats(room, run, () => true), result: null, abandoned: true }
 }
 
+/** A JSON result as sent, or undefined when it isn't JSON. */
+const parseJson = (raw: string): unknown => {
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return undefined
+  }
+}
+
+/** The `time` (seconds) a co-op result claims, or NaN when it has none. */
+const claimedTime = (result: unknown) => (typeof result === 'object' && result !== null && 'time' in result && typeof result.time === 'number' ? result.time : NaN)
+
 /**
  * What the relay tells the API about a co-op run for the boards
  * (`CoopReport`): each slot that started it, by account (`userId` the Clerk
  * id, null for a guest seat; `handle` from an account's `@name`), `left` for
- * a seat that left before the end, and the agreed `CoopResult` as the clients
- * built it, with how many sent it. Null for a run of one player, or a result
- * that isn't JSON.
+ * a seat that left before the end, the agreed `CoopResult` as the clients
+ * built it, with how many sent it, and what the relay saw of the run (its
+ * tick 0's wall clock, `startedAt`, and the ticks it sent). Null for a run of
+ * one player, a result that isn't JSON, or one that claims more time than the
+ * relay played (`relayedTimeFits`): clients agreeing on it can all be one
+ * person's accounts, the relay's clock can't.
  */
 export const coopReport = (room: Room, run: Run, agreed: { result: string; votes: number }, now: number): CoopReport | null => {
   if (run.start.players.length < 2) return null
-  let result: unknown
-  try {
-    result = JSON.parse(agreed.result)
-  } catch {
-    return null
-  }
+  const result = parseJson(agreed.result)
+  if (result === undefined) return null
+  const seen = { endedAt: now, ticks: run.next, ...(run.startedAt !== null && { startedAt: run.startedAt }) }
+  if (!relayedTimeFits(claimedTime(result), seen)) return null
   const seats = run.start.players.map((p, slot): CoopReport['seats'][number] => {
     const id = run.who[slot] ?? ''
     return { slot, userId: id.startsWith('u:') ? id.slice(2) : null, handle: p.account && p.name.startsWith('@') ? p.name.slice(1) : null, left: run.left.includes(p.seat) }
   })
-  return { v: 1, room: room.code, run: run.start.id, region: room.region, endedAt: now, seats, result, votes: agreed.votes }
+  return { v: 1, room: room.code, run: run.start.id, region: room.region, seats, result, votes: agreed.votes, ...seen }
 }
 
 /** The report of a run that just ended on `agreed` (`arenaReport` or `coopReport`), or null. */
@@ -1070,6 +1086,8 @@ const evaluateOver = (state: State, room: Room, now: number): Effect[] => {
   run.left.push(...gone)
   run.ended = { tick: Number(tick), h, result: agreed?.result ?? null }
   const posting = reportOf(room, run, agreed, now)
+  // A co-op team's agreed result that didn't go out (not JSON, or more time than the run had) is logged with what it claimed.
+  const refused = !posting && agreed !== null && !isArena(room) && run.start.players.length > 1
   room.phase = 'ended'
   for (const s of room.seats) {
     s.ready = false
@@ -1084,6 +1102,7 @@ const evaluateOver = (state: State, room: Room, now: number): Effect[] => {
     ...toSeated(state, { t: 'ended', run: run.start.id, tick: run.ended.tick, h }),
     ...broadcastRoom(state, room),
     ...(posting ? [reportEvent(room, run, posting, agreed?.votes ?? 0), { k: 'report' as const, ...posting }] : []),
+    ...(refused ? [event(room, 'coop.refused', { run: run.start.id, votes: agreed.votes, ticks: run.next, time: claimedTime(parseJson(agreed.result)) })] : []),
   ]
 }
 

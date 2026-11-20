@@ -821,13 +821,20 @@ describe('co-op run reports', () => {
   const reports = (effects: readonly Effect[]) => effects.flatMap((e) => (e.k === 'report' && e.path === COOP_REPORT_PATH ? [e.report] : []))
 
   /** A `CoopResult`-shaped JSON (opaque to the relay) for `players` seats. */
-  const result = (players: number, time = 754.5) =>
+  const result = (players: number, time = 4.5) =>
     JSON.stringify({ v: 1, difficulty: 'normal', challenge: null, time, outcome: 'wipe', kills: players, players: Array.from({ length: players }, (_, slot) => ({ slot, starter: 'pichu', stage: 1, branch: null, shiny: false, level: 30, kills: 1 })) })
 
-  it("reports a run its end's voters agree on, once, with its seats and votes", () => {
+  /** Plays the run's clock to `now` (everyone in it here): the ticks a result's time is held to. */
+  const play = (state: State, players: number, now: number) => {
+    alive(state, players, now)
+    tick(state, now)
+  }
+
+  it("reports a run its end's voters agree on, once, with its seats, votes and what the relay saw of it", () => {
     const { state, t0 } = playing(2)
-    say(state, 'c0', { t: 'over', tick: 900, h: 'end', result: result(2) }, t0)
-    const out = say(state, 'c1', { t: 'over', tick: 900, h: 'end', result: result(2) }, t0 + 10)
+    play(state, 2, t0 + 5000)
+    say(state, 'c0', { t: 'over', tick: 270, h: 'end', result: result(2) }, t0 + 5000)
+    const out = say(state, 'c1', { t: 'over', tick: 270, h: 'end', result: result(2) }, t0 + 5010)
     const [report] = reports(out)
     expect(reports(out)).toHaveLength(1)
     expect(report).toEqual({
@@ -835,13 +842,32 @@ describe('co-op run reports', () => {
       room: 'ABCDE',
       run: 1,
       region: 'sam',
-      endedAt: t0 + 10,
+      endedAt: t0 + 5010,
       seats: [0, 1].map((slot) => ({ slot, userId: null, handle: null, left: false })),
       result: JSON.parse(result(2)),
       votes: 2,
+      startedAt: t0,
+      ticks: 300,
     })
     expect(out).toContainEqual(expect.objectContaining({ k: 'event', ev: 'coop.result' }))
-    expect(reports(say(state, 'c0', { t: 'over', tick: 900, h: 'end', result: result(2) }, t0 + 20))).toHaveLength(0)
+    expect(reports(say(state, 'c0', { t: 'over', tick: 270, h: 'end', result: result(2) }, t0 + 5020))).toHaveLength(0)
+  })
+
+  it('never reports a result that claims more time than the relay played, whoever agrees on it', () => {
+    // Two accounts of one person, 41 s into the run, both claiming 8 hours (2026-11-17).
+    const { state, t0 } = playing(2)
+    play(state, 2, t0 + 41_000)
+    say(state, 'c0', { t: 'over', tick: 2460, h: 'end', result: result(2, 28_800) }, t0 + 41_000)
+    const out = say(state, 'c1', { t: 'over', tick: 2460, h: 'end', result: result(2, 28_800) }, t0 + 41_000)
+    expect(roomOf(state).phase).toBe('ended')
+    expect(reports(out)).toHaveLength(0)
+    expect(out).toContainEqual({ k: 'event', ev: 'coop.refused', data: { code: 'ABCDE', run: 1, votes: 2, ticks: 2460, time: 28_800 } })
+
+    // Within the slack of the ticks sent, it goes out.
+    const { state: fair } = playing(2)
+    play(fair, 2, t0 + 41_000)
+    say(fair, 'c0', { t: 'over', tick: 2460, h: 'end', result: result(2, 42.5) }, t0 + 41_000)
+    expect(reports(say(fair, 'c1', { t: 'over', tick: 2460, h: 'end', result: result(2, 42.5) }, t0 + 41_000))).toHaveLength(1)
   })
 
   it('names an account by its Clerk id and handle, and a leaver as left', () => {
@@ -854,6 +880,8 @@ describe('co-op run reports', () => {
     say(state, 'a', { t: 'start' }, T0)
     looked(state, 1, {}, T0)
     say(state, 'c', { t: 'leave' }, T0 + 5000)
+    for (const c of ['a', 'b']) say(state, c, { t: 'hb' }, T0 + 9000)
+    tick(state, T0 + 9000)
     say(state, 'a', { t: 'over', tick: 900, h: 'end', result: result(3) }, T0 + 9000)
     const [report] = reports(say(state, 'b', { t: 'over', tick: 900, h: 'end', result: result(3) }, T0 + 9000))
     expect(report?.seats).toEqual([
@@ -871,7 +899,7 @@ describe('co-op run reports', () => {
 
     const { state: split } = playing(2)
     say(split, 'c0', { t: 'over', tick: 900, h: 'end', result: result(2) }, t0)
-    expect(reports(say(split, 'c1', { t: 'over', tick: 900, h: 'end', result: result(2, 755) }, t0))).toHaveLength(0)
+    expect(reports(say(split, 'c1', { t: 'over', tick: 900, h: 'end', result: result(2, 5) }, t0))).toHaveLength(0)
     expect(roomOf(split).phase).toBe('ended')
 
     const { state: old } = playing(2)

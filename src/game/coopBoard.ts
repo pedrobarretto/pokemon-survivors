@@ -109,19 +109,30 @@ export const coopResult = (g: Game): CoopResult | null => {
 
 const isWhole = (v: unknown, min: number, max: number): v is number => typeof v === 'number' && Number.isInteger(v) && v >= min && v <= max
 
+/**
+ * How fast a co-op seat can level, a sanity bound well above play: the
+ * fastest co-op seats climb ~6.5 levels a minute (a Dupla's Lv 1210 at
+ * 186 min) and solo's fastest short runs ~23 (Lv 131 at 5:48), as of
+ * 2026-11-20. Faints already have theirs (`maxKills`, per seat).
+ */
+export const COOP_LEVELS = { base: 100, perMinute: 30 } as const
+
+/** The highest level a seat of a co-op run of `time` seconds can report (`COOP_LEVELS`, never past `RANKED.maxLevel`). */
+export const maxCoopLevel = (time: number) => Math.min(RANKED.maxLevel, Math.floor(COOP_LEVELS.base + (COOP_LEVELS.perMinute * time) / 60))
+
 /** A seat of a result, or null: a Legend run's seat plays a legend (its one stage, never a branch), any other run's a regular Pokémon. */
 const parsePlayer = (raw: unknown, slot: number, time: number, legend: boolean): CoopResultPlayer | null => {
   if (!isRecord(raw) || raw.slot !== slot || !isPlayable(raw.starter) || isLegend(raw.starter) !== legend) return null
   const { starter, stage, level, kills } = raw
-  if (!isWhole(stage, 0, PLAYABLE[starter].line.length - 1) || !isWhole(level, 1, RANKED.maxLevel) || !isWhole(kills, 0, maxKills(time))) return null
+  if (!isWhole(stage, 0, PLAYABLE[starter].line.length - 1) || !isWhole(level, 1, maxCoopLevel(time)) || !isWhole(kills, 0, maxKills(time))) return null
   return { slot, starter, stage, branch: runBranch(starter, stage, raw.branch), shiny: raw.shiny === true, level, kills }
 }
 
 /**
  * A co-op result from an untrusted body for a run `size` players started, or
  * null when its shape is wrong or it can't have been played: another number
- * of seats, a victory before Mewtwo shows up, more faints than the clock
- * allows, a Legend run with a seat that isn't a legend (or a regular run with
+ * of seats, a victory before Mewtwo shows up, more faints or levels than
+ * the clock allows (`maxKills`, `maxCoopLevel`), a Legend run with a seat that isn't a legend (or a regular run with
  * one that is), or a Legend run of the Desafio co-op do dia. A missing
  * `legend` (an older client) is a regular run.
  */

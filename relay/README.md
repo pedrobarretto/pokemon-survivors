@@ -158,8 +158,11 @@ four things, all additive (no `PROTOCOL` bump: a client or relay before them wor
   (`src/game/coopBoard.ts`). A run of 2 to 4 players whose end's voters agree on it (more than half
   of them) is posted as a `CoopReport` (`src/net/coopReport.ts`, `POST <ARENA_API_URL>/coop/report`,
   signed and kept in the same outbox): seats by slot (Clerk id and handle, `left` for a leaver), the
-  result and its `votes`. The API decides what lists (accounts only, 2+ votes). A room of one, a
-  split result or a run its room closed on mid-run is never reported.
+  result and its `votes`, and what the relay saw of the run (`startedAt`, its tick 0's wall clock, and
+  the `ticks` it sent). The API decides what lists (accounts only, 2+ votes). A room of one, a
+  split result, a run its room closed on mid-run or a result whose `time` runs past the ticks sent
+  (`relayedTimeFits`: agreeing clients can be one person's accounts) is never reported; the last is
+  logged as `coop.refused`.
 - **The matchmaker** (`GET /arena/queue`, one `Matchmaker` Durable Object for everyone, created on
   the US east coast): the first message is `queue` (`QueueClientMessage` in `src/net/arena.ts`)
   with its auth, checked like a room's hello (a guest only where `ALLOW_GUESTS` is `on`), and its
