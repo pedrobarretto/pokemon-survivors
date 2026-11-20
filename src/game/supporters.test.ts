@@ -146,7 +146,7 @@ describe('the wall', () => {
 })
 
 describe('polls', () => {
-  const status = (tier: SupporterStatus['tier']): SupporterStatus => ({ tier, since: null, public: true, og: false, vote: null, diamondVote: null, patreon: null })
+  const status = (tier: SupporterStatus['tier']): SupporterStatus => ({ tier, since: null, public: true, og: false, vote: null, diamondVote: null, patreon: null, pledge: null })
   const pick = POLL.options[0].id
   const diamondPick = DIAMOND_POLL.options[0].id
 

@@ -74,7 +74,7 @@ import { biomeDevTools } from './ui/biomeDev'
 import { addCandies, HAUNT_DEX, recordHunt } from './game/halloween'
 import { HALLOWEEN, isNightBoss, NIGHT_BOSSES } from './data/halloween'
 import { jackIcon, treatIcon } from './render/halloweenArt'
-import { brasiliaDay, previousDay, type DayKey } from './game/day'
+import { brasiliaDay, isDayKey, previousDay, type DayKey } from './game/day'
 import { spawnEnemy } from './game/enemies'
 import { pickAlpha, spawnAlpha } from './game/alphas'
 import { EVENTS, stageIndexAt } from './data/waves'
@@ -189,7 +189,7 @@ import { h, later, rich } from './ui/dom'
 import { setActivePad } from './ui/inputLabels'
 import { watchCursorMode } from './ui/cursorMode'
 import { detectKeyLayout } from './ui/keyLayout'
-import { captureRef, coopBoardsFaked, fakeCoopBoards, fakeEra1Boards, flushRuns, onRulesBehind, prefetchRanked, PROFILE_PARAM, rankingEnabled, stageInvite, startRanked, type RankedRun, type RankOutcome } from './ranking'
+import { captureRef, coopBoardsFaked, fakeCoopBoards, fakeEra1Boards, flushRuns, onRulesBehind, outcomeGems, prefetchRanked, PROFILE_PARAM, rankingEnabled, stageInvite, startRanked, type RankedRun, type RankOutcome } from './ranking'
 import { applyGift, DISCORD_GIFT, parseGiftContent, type GiftKind, type GiftReason } from './game/gifts'
 import { ERA1_GIFTS, era1Gifts, type Era1Tier } from './game/era1'
 import { giftScreen } from './ui/gifts'
@@ -244,6 +244,8 @@ import { firstRunTip, hideInAppHint, saveCard, showInAppHint } from './ui/onboar
 import { startLobbyTour, type LobbyTourEnd } from './ui/lobbyTour'
 import { invitesScreen, resultsInvite } from './ui/invites'
 import { forgetInstallNudge, installNudgeScreen } from './ui/install'
+import { forgetSupportAsk, supportAskScreen, takeSupportAsk } from './ui/supportAsk'
+import { SUPPORT_MILESTONES, type SupportMilestone } from './ui/supportAskRules'
 import { titleScreen, type LobbyFocus, type Meadow, type ShopTrip } from './ui/title'
 import { creditsLine, supportersScreen } from './ui/supporters'
 import type { PollKind } from './data/supporters'
@@ -274,8 +276,9 @@ import { coopOver } from './game/coop'
 import { createTeamLayer, type TeamLayer } from './ui/teamLayer'
 import { teamFeedback, teamMoment } from './ui/teamScreens'
 import { arenaFormat, arenaPick, isArenaHubTab, isVersusEvent, keepArenaPick, preseason, stagePreseason, type ArenaHubTab } from './ui/arenaBits'
-import { equippedLook, fakeGems, fetchGems, gemsFaked, knownGems, onGems, stageCheckout, stageGems, stageRefusal, takeCheckoutReturn } from './gems'
-import { isGemPackId } from './data/gems'
+import { equippedLook, fakeGems, fetchGems, gemsFaked, gemsSignedIn, holdPromoDay, knownGems, onGems, promoDay, stageCheckout, stageGems, stageRefusal, stageRunGems, takeCheckoutReturn, type CheckoutReturn } from './gems'
+import { runGemsLine } from './ui/gemBits'
+import { GEM_PLAY, isGemPackId, promoOf } from './data/gems'
 import { arenaSignedIn, awaitRpChange, fakeArena, keepArenaMatch, postPractice, type RpChange } from './arenaApi'
 import { isFakeScenario } from './arena/fakes'
 import { historyEntry } from './arena/history'
@@ -289,8 +292,8 @@ import type { VersusHud } from './ui/versusHud'
 import { arenaFxEvent, arenaFxStats, playBurst, resetArenaFx } from './render/arenaFx'
 import { lookOf, setLooks, setLooksGame, setLocalLook } from './render/looks'
 import { freeWearables, wearMemory } from './render/wearables'
-import { COSMETIC_IDS, COSMETIC_SLOTS, isCosmeticId, parseLook, slotOf, withSkins, type Look, type CosmeticSlot } from './data/cosmetics'
-import { isSkinId, SKIN_IDS, SKIN_LINES, SKINS, type SkinId } from './data/skinCatalog'
+import { COSMETIC_IDS, COSMETIC_SLOTS, isCosmeticId, parseLook, slotOf, withSkins, type Look, type CosmeticId, type CosmeticSlot } from './data/cosmetics'
+import { isSkinId, SKIN_IDS, SKIN_LINES, SKINS } from './data/skinCatalog'
 import { equip } from './arena/gemShop'
 import { effectIn } from './data/arenaEffects'
 import type { VersusTray } from './ui/versusTray'
@@ -713,11 +716,11 @@ const openShop = (close: () => void, shelf?: VisitorShelf, festival?: () => void
   )
 }
 
-/** The ref a gem pack's checkout came back with (`?gems=<ref>`), for the Boutique's Loja to wait on as it opens. */
-let boutiqueCheckout: string | null = null
+/** What a gem pack's checkout came back with (`?gems=<ref>`, and `&cancel=<pack>` when given up), for the Boutique's Loja to open on. */
+let boutiqueCheckout: CheckoutReturn | null = null
 
-/** The skin the Boutique's Skins opens on (the partner select's skins row), once. */
-let boutiqueItem: SkinId | null = null
+/** The item the Boutique opens on, once: a skin on Skins (the partner select's skins row), anything else chosen on the Loja (the results' gem line). */
+let boutiqueItem: CosmeticId | null = null
 
 /** Leavanny's Boutique over the plaza's north-west (`ui/boutique.ts`); closing it leaves `?boutique` behind too. */
 const openBoutiqueSheet = (close: () => void, tab: BoutiqueTab) => {
@@ -744,9 +747,9 @@ const openBoutiqueSheet = (close: () => void, tab: BoutiqueTab) => {
  * Card's look, `?boutique`, a checkout's return): the lobby lands on the
  * plaza's north-west with the sheet open on `tab`; leaving it calls `back`
  * when given (where it came from), else pans home. `checkout`: the
- * `?gems=<ref>` the Loja waits on; `item`, the skin Skins opens on.
+ * `?gems=<ref>` the Loja waits on (or, given up, offers again); `item`, the skin Skins opens on or the item the Loja shows chosen.
  */
-const showBoutique = (tab: BoutiqueTab, back?: () => void, checkout: string | null = null, item: SkinId | null = null) => {
+const showBoutique = (tab: BoutiqueTab, back?: () => void, checkout: CheckoutReturn | null = null, item: CosmeticId | null = null) => {
   boutiqueCheckout = checkout
   boutiqueItem = item
   showTitle({ shop: tab === 'shop' ? 'boutique' : tab, instant: true, ...(back && { back }) })
@@ -863,6 +866,7 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
       survey: () => surveyScreen(ui, input, () => showTitle({ focus: 'survey' })),
       designSurvey: () => designSurveyScreen(ui, input, () => showTitle({ focus: 'survey' })),
       install: (offer, focus) => installNudgeScreen(ui, input, offer, () => showTitle({ focus })),
+      supportAsk: (milestone, focus) => supportAskScreen(ui, input, milestone, () => showTitle({ focus })),
       halloween: (focus) =>
         halloweenScreen(ui, input, {
           gifts: showGifts,
@@ -2355,6 +2359,8 @@ const syncOverlay = (r: Run) => {
           ranking: rankingEnabled
             ? { panel: rankPanel(r.rank, r.challenge !== null, runMode(me.starter)), open: (back) => rankingScreen(ui, input, back, { difficulty: g.difficulty, mode: runMode(me.starter), challenge: r.challenge !== null }) }
             : null,
+          // The day's free gems, once the report answers: what they buy now, a tap away in the Boutique (banked by `afterRun` first, as the other ways out).
+          gems: runGems(r.rank),
           share: {
             open: (back) => sharePreview(ui, input, runShare(g, r.dexBase, r.challenge && r.rank ? r.rank.then((o) => (o.kind === 'ranked' ? o.challenge : null)) : null), back),
             glow: me.shiny || g.dexLog.shinies.size > 0 || wonRun(g) || g.time > r.bestBefore,
@@ -2368,6 +2374,18 @@ const syncOverlay = (r: Run) => {
   }
   // Co-op pick screens wear the auto-pick clock (and the level-up who already picked).
   if (c && r.overlay) c.team.decorate(r.overlay, g, me, phase)
+}
+
+/** Dev: the next results' gem line as if the report brought this many gems (`ps.gems('run', n)`, faking), or null. */
+let stagedRunGems: number | null = null
+
+/** The results' gem line (`runGemsLine`) for a signed-in player's ranked run, or null; its button opens the Boutique on the item, banked first (`afterRun`). */
+const runGems = (rank: Promise<RankOutcome> | null) => {
+  const staged = stagedRunGems
+  stagedRunGems = null
+  const gems = staged !== null ? Promise.resolve(stageRunGems(staged)) : rank?.then(outcomeGems)
+  if (!gems || !gemsSignedIn()) return null
+  return runGemsLine(gems, (id) => afterRun(() => showBoutique(isSkinId(id) ? 'skins' : 'shop', undefined, null, id)))
 }
 
 /** A guest's first runs (`savePromptDue`, this one banked): the results' card for what an account keeps, or null. */
@@ -4971,7 +4989,7 @@ const boot = () => {
     const city = new URLSearchParams(location.search).get(REALM_PARAM)
     enterRealm(isCityId(city) ? city : null)
   } else if (patreonReturn()) showPatreonReturn(patreonReturn() === 'linked')
-  // Back from a gem pack's checkout (`?gems=<ref>`): the Boutique's Loja, waiting for that pack.
+  // Back from a gem pack's checkout (`?gems=<ref>`): the Boutique's Loja, waiting for that pack (or, given up, offering it again).
   else if (checkoutRef !== null) showBoutique('shop', undefined, checkoutRef)
   else if (poll) showPollLink(poll)
   // Back from signing in, the player already pressed start before leaving: straight to the menu.
@@ -5715,11 +5733,14 @@ const devSkin = (id?: string, seat?: number) => {
  * balance negative as after a refund of spent gems (`('lock')` unlocks it all,
  * the balance back to 0); `('return', 'chest')` comes back from a
  * checkout of that pack (`'never'`: the gems never land and the wait runs
- * out); `('refuse', 'cap')` turns every checkout down as the API would
+ * out); `('cancel', 'bag')` comes back from one given up, on the "Não deu
+ * certo?" sheet; `('refuse', 'cap')` turns every checkout down as the API would
  * (`'once'`: the welcome pack taken; no reason: none again); `('shop')`,
- * `('skins')` and `('locker')` open the Boutique's tabs; `('fetch')` asks the API now.
+ * `('skins')` and `('locker')` open the Boutique's tabs; `('fetch')` asks the API now;
+ * `('promo', '2026-11-28')` shows the gem promotions as on that Brasília day until a reload (null: today's);
+ * `('run', 15)` makes the next results' gem line show as if the run's report brought 15 gems (faking).
  */
-const devGems = (cmd?: string, arg?: string | number) => {
+const devGems = (cmd?: string, arg?: string | number | null) => {
   if (cmd === 'fake') {
     fakeGems(arg !== 'off', typeof arg === 'number' ? arg : undefined)
     return arg === 'off' ? 'Gems: the API again' : `Gems: fake (${knownGems()?.balance ?? 0})`
@@ -5732,11 +5753,25 @@ const devGems = (cmd?: string, arg?: string | number) => {
     if (arg !== undefined && !isCosmeticId(arg)) return `Cosmetics: ${COSMETIC_IDS.join(', ')}`
     stageGems({ lock: arg === undefined ? [] : [arg] })
   } else if (cmd === 'return') {
-    showBoutique('shop', undefined, stageCheckout(isGemPackId(arg) ? arg : arg === 'never' ? 'never' : 'bag'))
+    showBoutique('shop', undefined, { ref: stageCheckout(isGemPackId(arg) ? arg : arg === 'never' ? 'never' : 'bag'), cancel: null })
+  } else if (cmd === 'cancel') {
+    if (!gemsFaked()) fakeGems(true)
+    showBoutique('shop', undefined, { ref: 'dev-cancel', cancel: isGemPackId(arg) ? arg : 'bag' })
   } else if (cmd === 'refuse') stageRefusal(arg === 'cap' || arg === 'once' ? arg : null)
   else if (cmd === 'shop' || cmd === 'skins' || cmd === 'locker') showBoutique(cmd)
   else if (cmd === 'fetch') void fetchGems().then((s) => console.info('gems', s))
-  else if (cmd !== undefined) return "ps.gems() · ('fake', balance? | 'off') · ('balance', n) · ('own', id?) · ('lock', id?) · ('return', pack | 'never') · ('refuse', 'cap' | 'once'?) · ('shop') · ('skins') · ('locker') · ('fetch')"
+  else if (cmd === 'promo') {
+    const day = arg === undefined || arg === null ? null : typeof arg === 'string' && isDayKey(arg) ? arg : undefined
+    if (day === undefined) return "ps.gems('promo', 'YYYY-MM-DD' | null)"
+    holdPromoDay(day)
+    showTitle()
+    return { day: promoDay(), promo: promoOf(promoDay()) }
+  } else if (cmd === 'run') {
+    if (!gemsFaked()) fakeGems(true)
+    stagedRunGems = typeof arg === 'number' ? arg : GEM_PLAY.run.gems
+    return `The next results' gem line: +${stagedRunGems}`
+  } else if (cmd !== undefined)
+    return "ps.gems() · ('fake', balance? | 'off') · ('balance', n) · ('own', id?) · ('lock', id?) · ('return', pack | 'never') · ('cancel', pack?) · ('refuse', 'cap' | 'once'?) · ('shop') · ('skins') · ('locker') · ('fetch') · ('promo', day | null) · ('run', n?)"
   // In a run or a match, each seat's look as the shell holds it.
   return { faked: gemsFaked(), gems: knownGems(), look: equippedLook(), seats: run ? run.game.players.map((p) => lookOf(p.slot)) : null }
 }
@@ -6180,6 +6215,18 @@ if (import.meta.env.DEV) {
         endRun()
         if (mode === 'reset') return (forgetInstallNudge(), showTitle())
         setScreen(installNudgeScreen(ui, input, mode, () => showTitle()))
+      },
+      /**
+       * The lobby's ask for support at a milestone (`ui/supportAsk.ts`), now, whatever the save (`runs25` without an
+       * argument; `nightmare`, `runs100`); `ps.supportAsk('due')` prints whether the next lobby would ask and marks it
+       * asked if so, and `ps.supportAsk('reset')` forgets the milestones asked about, so the next lobby asks where the save has one.
+       */
+      supportAsk: (milestone: SupportMilestone | 'due' | 'reset' = 'runs25') => {
+        if (milestone === 'reset') return void forgetSupportAsk()
+        if (milestone === 'due') return takeSupportAsk()
+        if (!SUPPORT_MILESTONES.includes(milestone)) return console.warn(`ps: one of ${SUPPORT_MILESTONES.join(', ')}`)
+        endRun()
+        setScreen(supportAskScreen(ui, input, milestone, () => showTitle()))
       },
       /** The Caixa do PC over the title; `ps.card()` opens the Trainer Card's share preview. */
       pc: () => (endRun(), setScreen(showPcBox(() => showTitle()))),

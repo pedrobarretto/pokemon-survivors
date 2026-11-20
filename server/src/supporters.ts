@@ -93,11 +93,11 @@ export const supporterStore = (sql: Sql, hooks: { onTierChange?: (userId: string
   }
 
   return {
-    /** An AbacatePay checkout about to open: its row, for the account of `handle` when given. False when nobody has that handle. */
-    open: async (ref: string, handle: string | null) => {
+    /** A donation checkout about to open (`POST /donations`, Stripe; AbacatePay's before it): its row, for the account of `handle` when given. False when nobody has that handle. */
+    open: async (ref: string, handle: string | null, provider: PaidDonation['provider']) => {
       const [user] = handle ? await sql<{ id: string }[]>`select id from users where handle = ${handle}` : []
       if (handle && !user) return false
-      await sql`insert into donations (provider, ref, handle, user_id) values ('abacatepay', ${ref}, ${handle}, ${user?.id ?? null})`
+      await sql`insert into donations (provider, ref, handle, user_id) values (${provider}, ${ref}, ${handle}, ${user?.id ?? null})`
       return true
     },
 
@@ -253,6 +253,7 @@ export const supporterStore = (sql: Sql, hooks: { onTierChange?: (userId: string
         vote: pollOptionIds('supporters').find((id) => id === row?.vote) ?? null,
         diamondVote: pollOptionIds('diamond').find((id) => id === row?.diamond_vote) ?? null,
         patreon: row?.patreon ?? false,
+        pledge: parseTier(row?.patreon_tier),
       }
     },
 

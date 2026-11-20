@@ -33,8 +33,8 @@ import { modIcon } from '../render/modFx'
 import { specialIcon } from '../render/specialFx'
 import { portraitUrl, sprites } from '../render/sprites'
 import { placeIcon } from '../render/places'
-import { formatNumber, formatPokeDollars, locale, t } from '../i18n'
-import { ROUTES } from '../site/routes'
+import { formatNumber, formatPokeDollars, t } from '../i18n'
+import { supportPageUrl } from './supportLink'
 import { treatIcon } from '../render/halloweenArt'
 import { h, later } from './dom'
 import type { ResultsInvite } from './invites'
@@ -1008,6 +1008,8 @@ type ResultsExtras = {
   save?: SaveCard | null
   /** After a win or a new best, the nudge to invite a friend (`resultsInvite`), under the run's news. */
   invite?: ResultsInvite | null
+  /** A signed-in player's run gems, once the report answers (`runGemsLine`), under the ranking line. */
+  gems?: HTMLElement | null
 }
 
 const NO_EXTRAS: ResultsExtras = { badge: null, report: null, medals: [], eggs: { converted: { full: [], cap: [] }, ready: 0 }, news: { species: 0, shinies: 0 }, ranking: null, share: null }
@@ -1149,6 +1151,7 @@ export const results = (
       // Right under the run's news, where a phone held upright sees it before scrolling.
       invite?.card,
       ranking?.panel,
+      extras.gems,
       goOn && h('p', { class: 'endless-hint' }, r.continueHint),
       h(
         'div',
@@ -1162,7 +1165,7 @@ export const results = (
       extras.save?.el,
       h('div', { class: 'buttons result-buttons' }, ...row),
       victory && extras.credits,
-      victory && h('a', { class: 'support-link result-support', href: ROUTES.support[locale()], target: '_blank', rel: 'noopener' }, `♥ ${m.support}`),
+      victory && h('a', { class: 'support-link result-support', href: supportPageUrl('victory'), target: '_blank', rel: 'noopener' }, `♥ ${m.support}`),
     ),
   )
   root.append(el)

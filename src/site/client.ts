@@ -2,14 +2,15 @@
  * Progressive enhancement for the static site pages. The HTML is complete
  * without it; this only adds the Pokédex filters, the cards' shiny toggles and tap-to-walk,
  * the 404 page's suggestion and mini game (`notFoundClient.ts`, loaded only there),
- * the donation form (with the account's @, the thank-you's code and the
- * supporters' wall), the creators page's videos playing on a tap, and remembers
+ * the donation form (with the account's @, the thank-you's code, the
+ * supporters' wall and the page's few analytics events), the creators page's videos playing on a tap, and remembers
  * the language for the game. It must never
  * import game code (plain data like `data/donations` is fine), so the game and
  * the site never load each other's bundles.
  */
 
-import { inBrazil, parseDonation } from '../data/donations'
+import { parseDonation } from '../data/donations'
+import { track } from './siteAnalytics'
 
 /** Same key as `src/i18n`: picking PT/EN/ES here makes "Play" open the game in that language. */
 const LANG_KEY = 'ps:lang'
@@ -140,7 +141,7 @@ if (form) pokedex(form)
 // The 404 page: its client (the "did you mean" and the Rota 404 mini game) loads only there.
 if (document.getElementById('nf-index')) void import('./notFoundClient')
 
-/** The accounts API, which opens AbacatePay checkouts (`POST /donations`) and knows the handles and supporters. */
+/** The accounts API, which opens donations' Stripe checkouts (`POST /donations`) and knows the handles and supporters. */
 const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '')
 
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null
@@ -178,7 +179,7 @@ const knownHandle = () => {
  * (`GET /profiles/:handle`) and says whose it is. `handle()` is the checked
  * handle, or null when the field is empty or nobody has it.
  */
-const accountField = (box: HTMLElement, onChange: (handle: string | null) => void) => {
+const accountField = (box: HTMLElement) => {
   const input = box.querySelector<HTMLInputElement>('input[name="handle"]')
   const status = box.querySelector<HTMLElement>('.donate-handle-status')
   let checked: string | null = null
@@ -192,7 +193,6 @@ const accountField = (box: HTMLElement, onChange: (handle: string | null) => voi
     const id = ++request
     const handle = typedHandle(input.value)
     checked = null
-    onChange(null)
     if (!handle) return say('')
     if (!HANDLE.test(handle)) return say(input.dataset.missing ?? '', true)
     say(input.dataset.checking ?? '')
@@ -200,7 +200,6 @@ const accountField = (box: HTMLElement, onChange: (handle: string | null) => voi
     if (id !== request) return
     if (!isObject(profile) || typeof profile.name !== 'string') return say(input.dataset.missing ?? '', true)
     checked = handle
-    onChange(handle)
     say((input.dataset.found ?? '').replace('{name}', `${profile.name} (@${handle})`))
   }
   let timer = 0
@@ -240,12 +239,16 @@ const thanks = (box: HTMLElement) => {
     const paid = isObject(body) && body.paid === true
     if (!paid) {
       if (++tries < 40) return void setTimeout(() => void poll(), 3000)
+      track('support_thanks', { outcome: 'late' })
       return void (status.textContent = d.late ?? '')
     }
-    if (isObject(body) && typeof body.handle === 'string') return void (status.textContent = (d.sent ?? '').replace('{handle}', body.handle))
-    if (isObject(body) && typeof body.code === 'string') {
+    const handle = isObject(body) && typeof body.handle === 'string' ? body.handle : null
+    const found = isObject(body) && typeof body.code === 'string' ? body.code : null
+    track('support_thanks', { outcome: handle ? 'account' : found ? 'code' : 'used' })
+    if (handle) return void (status.textContent = (d.sent ?? '').replace('{handle}', handle))
+    if (found) {
       status.textContent = ''
-      code.textContent = body.code
+      code.textContent = found
       codeBox.hidden = false
       return
     }
@@ -280,34 +283,24 @@ const supportersWall = async (section: HTMLElement) => {
 }
 
 /**
- * The support page: puts first (and marks) the way to pay that the time zone
- * suggests, says where a donation went once a checkout comes back, carries
- * the account's @ into both checkouts (the Stripe link's `client_reference_id`,
- * the AbacatePay request's `handle`) and turns the Brazilian form into an AbacatePay checkout.
+ * The support page: says where a donation went once a checkout comes back,
+ * carries the account's @ into the donation's request (`handle`), turns the
+ * form into a Stripe Checkout (`POST /donations`, in the page's language), and
+ * reports the visit and the choice (`siteAnalytics.ts`).
  */
-const support = (ways: HTMLElement) => {
-  const zone = Intl.DateTimeFormat().resolvedOptions().timeZone
-  const guess = document.getElementById(inBrazil(zone) ? 'donate-br' : 'donate-intl')
-  if (guess) {
-    ways.prepend(guess)
-    guess.classList.add('is-guess')
-  }
-
+const support = (form: HTMLFormElement) => {
+  const params = new URLSearchParams(location.search)
+  const from = params.get('from')
   const thanksBox = document.getElementById('donate-thanks')
   if (thanksBox) thanks(thanksBox)
   const wall = document.getElementById('donate-wall')
   if (wall) void supportersWall(wall)
 
-  // The Stripe link carries the account as `client_reference_id`, which its webhook hands back.
-  const stripe = document.querySelector<HTMLAnchorElement>('#donate-intl a.btn-play')
-  const stripeBase = stripe?.href ?? ''
   const accountBox = document.getElementById('donate-account')
-  const account = accountBox
-    ? accountField(accountBox, (handle) => stripe && (stripe.href = handle ? `${stripeBase}?client_reference_id=${encodeURIComponent(handle)}` : stripeBase))
-    : { handle: () => null }
+  const account = accountBox ? accountField(accountBox) : { handle: () => null }
+  if (!params.has('thanks')) track('support_view', { from, handle: knownHandle() ? 1 : 0 })
+  document.querySelector('#donate-monthly a.btn-play')?.addEventListener('click', () => track('support_choice', { way: 'patreon', from }))
 
-  const form = document.querySelector<HTMLFormElement>('#donate-form')
-  if (!form) return
   const button = form.querySelector('button')
   const error = form.querySelector<HTMLElement>('.donate-error')
   const other = form.elements.namedItem('other')
@@ -338,14 +331,16 @@ const support = (ways: HTMLElement) => {
     button.textContent = form.dataset.loading ?? ''
     try {
       if (!API_URL) throw new Error('no API')
+      const handle = account.handle()
       const res = await fetch(`${API_URL}/donations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: value, page: location.pathname, handle: account.handle() ?? undefined }),
+        body: JSON.stringify({ amount: value, page: location.pathname, handle: handle ?? undefined, locale: form.dataset.locale }),
       })
       const body: unknown = await res.json()
       const url = typeof body === 'object' && body !== null && 'url' in body && typeof body.url === 'string' ? body.url : null
       if (!res.ok || !url) throw new Error(`donation: ${res.status}`)
+      track('support_choice', { way: 'donation', amount: value, handle: handle ? 1 : 0, from })
       location.href = url
     } catch {
       error.textContent = form.dataset.error ?? ''
@@ -359,8 +354,8 @@ const support = (ways: HTMLElement) => {
   sync()
 }
 
-const ways = document.getElementById('donate-ways')
-if (ways) support(ways)
+const donateForm = document.querySelector<HTMLFormElement>('#donate-form')
+if (donateForm) support(donateForm)
 
 /**
  * The creators page: a video's thumbnail links to it on its platform; with JS,

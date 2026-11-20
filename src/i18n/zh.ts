@@ -2,6 +2,7 @@ import { CAFE_TABLES_WORDS } from './cafeTables'
 import type { DexRegion } from '../data/nationalDex'
 import { GALLOP_WORDS } from './gallop'
 import { ITEM_DROP_WORDS } from './itemDrop'
+import { SUPPORT_WORDS } from './support'
 import { LOBBY_TOUR_WORDS } from './lobbyTour'
 import { TUTORIAL_WORDS } from './tutorial'
 import { WELCOME_WORDS } from './welcome'
@@ -620,7 +621,11 @@ export const zh: Messages = {
     shop: {
       pitch: '寶可夢的造型，在對局、合作模式和競技場都會出現：所有人都看得到，而且都不會增加能力。',
       balance: '你的餘額',
-      currency: '幣別',
+      /** The Brasil / Outro país switch over the packs (which price list, `GemMarket`), and the note under them abroad, where prices are a guess in the buyer's currency. */
+      market: '付款地區',
+      marketBr: '巴西',
+      marketIntl: '其他國家',
+      approx: '以你的幣別顯示的約略價格：最終金額會在付款頁面顯示。',
       packs: '寶石組合',
       bonus: (n: string) => `+${n} 加贈`,
       catalog: '造型',
@@ -643,6 +648,8 @@ export const zh: Messages = {
       confirm: (name: string, price: string) => `要用 ${price} 顆寶石購買 ${name} 嗎？`,
       bought: (name: string) => `${name} 是你的了，而且已經在使用中！`,
       short: (n: string) => `還差 ${n} 顆寶石。來一份寶石組合吧？`,
+      /** An item out of reach: its button buys the pack that covers it (gems missing and the pack's name; its price follows). */
+      shortPack: (n: string, pack: string) => `還差 ${n} · ${pack}`,
       busy: '慢一點！連續購買太多次了，請一分鐘後再試。',
       offline: '目前無法連線到商店，請稍後再試。',
       banned: '此帳號無法使用商店。',
@@ -660,13 +667,15 @@ export const zh: Messages = {
     checkout: {
       split: (gems: string, bonus: string) => `${gems} + ${bonus} 加贈`,
       pay: '付款方式',
-      card: '信用卡、Apple Pay 或 Google Pay',
-      pix: 'Pix',
+      /** What Stripe Checkout takes, by price list (Pix only shows in reais), the button to it and the note on a price abroad. */
+      ways: { br: 'Pix、信用卡、Apple Pay 或 Google Pay', intl: '信用卡、Apple Pay、Google Pay 等，以你的幣別付款' },
+      go: '前往付款',
+      approx: '約略金額：最終價格會以你的幣別在付款頁面顯示。',
       /** The box the pay buttons need ticked. */
       age: '我已年滿 18 歲，或已取得父母或監護人的同意。',
       /** The checkout turned down (`GemCheckoutRefusal`): a once pack taken, the day's limit (`GEM_CHECKOUT.daily`, as a price). */
       once: '這個帳號已經領過新手禮包。',
-      cap: (limit: string) => `為了安全，每個帳號每天最多購買 ${limit} 的寶石，未完成的付款會保留半小時。請明天再試（以巴西利亞時間午夜換日）。`,
+      cap: (limit: string) => `為了安全，每個帳號每天最多購買 ${limit} 的寶石，未完成的付款會保留約一小時。請明天再試（以巴西利亞時間午夜換日）。`,
       cancel: '取消',
       opening: '正在開啟付款頁面…',
       failed: '無法開啟付款頁面，請再試一次。',
@@ -677,6 +686,19 @@ export const zh: Messages = {
       timeout: '付款處理中',
       timeoutNote: '我們還在確認你的付款。寶石會在幾分鐘內送到你的帳號（Pix 可能會久一點），你可以繼續遊玩。',
       ok: '繼續',
+    },
+    /** Back from a checkout given up (`&cancel=`): nothing charged, the same pack again, the other ways to pay (by price list) and Patreon. */
+    cancelled: {
+      title: '沒有成功嗎？',
+      text: '沒有任何扣款。要再試一次嗎？',
+      retry: (pack: string, price: string) => `再試一次：${pack} · ${price}`,
+      ways: {
+        br: '除了信用卡，也可以用 Pix、Apple Pay 或 Google Pay 付款。',
+        intl: '信用卡被拒絕了嗎？試試 Apple Pay、Google Pay 或其他卡片：有些銀行會拒絕國外商店的交易。',
+      },
+      patreon: '想每個月支持我們嗎？Patreon 也會送寶石。',
+      patreonLink: '前往 Patreon',
+      close: '先不用',
     },
     skinShop: {
       pitch: '重新繪製的寶可夢，整條進化線的每個階段都適用。會出現在你的對局、合作模式和競技場中。',
@@ -713,6 +735,20 @@ export const zh: Messages = {
       normal: '原版',
       wear: (name: string) => `穿上${name}`,
       see: (name: string) => `${name}：到服飾店看看`,
+    },
+    promo: {
+      names: { blackFriday: '黑色星期五' },
+      tag: (pct: string, name: string) => `${name} +${pct}%`,
+      banner: (name: string, pct: string) => `${name}：所有寶石包多送 ${pct}%`,
+      split: (gems: string, extra: string, name: string) => `${gems} + ${name}加贈 ${extra}`,
+      left: (days: number, hours: number) => (days > 0 ? `剩 ${days} 天 ${hours} 小時` : hours > 0 ? `剩 ${hours} 小時` : '剩不到 1 小時'),
+      short: (days: number, hours: number) => (days > 0 ? `${days} 天 ${hours} 小時` : `${hours} 小時`),
+    },
+    run: {
+      earned: (n: string, balance: string) => `+${n} 顆寶石 · 餘額 ${balance}`,
+      covers: (item: string) => `已經可以買「${item}」了`,
+      short: (n: string, first: boolean) => (first ? `再 ${n} 顆就能買第一個外觀` : `再 ${n} 顆就能買下一個外觀`),
+      see: '去服飾店看看',
     },
     chipGuest: '服飾店：用寶石換外觀',
     locker: {
@@ -1084,6 +1120,7 @@ export const zh: Messages = {
   },
 
   itemDrop: ITEM_DROP_WORDS.zh,
+  support: SUPPORT_WORDS.zh,
   welcome: WELCOME_WORDS.zh,
   tutorial: TUTORIAL_WORDS.zh,
   lobbyTour: LOBBY_TOUR_WORDS.zh,

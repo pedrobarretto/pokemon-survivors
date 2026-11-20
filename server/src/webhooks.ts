@@ -43,12 +43,18 @@ export const verifyStripe = (body: string, header: string | undefined, secret: s
   return parts.some((p) => p.key === 'v1' && sameText(p.value, expected))
 }
 
+/** Our purchase refs (`gem_purchases.ref`, a donation's `ref`): uuids, nothing else reaches a query. */
+const PURCHASE_REF = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
+
 /**
  * The donation a Stripe event pays, or null for any other event: a finished
  * Checkout Session that's paid (`checkout.session.completed`, or
- * `async_payment_succeeded` for slower methods), of our Payment Link when
- * `paymentLink` is set. The handle comes as `client_reference_id`; with
- * Adaptive Pricing the amount is read in the link's own currency.
+ * `async_payment_succeeded` for Pix and other slower methods), either one the
+ * API opened (`metadata.kind: donation`, `stripeDonationForm`: its `ref` is
+ * our uuid, whose row `POST /donations` already opened for the account) or,
+ * from before those, one of our Payment Link when `paymentLink` is set (its
+ * `ref` the session id, the handle as `client_reference_id`). With Adaptive
+ * Pricing the amount is read in the session's own currency.
  */
 export const stripeDonation = (event: unknown, paymentLink: string | null): PaidDonation | null => {
   if (!isRecord(event) || !isRecord(event.data) || !isRecord(event.data.object)) return null
@@ -56,18 +62,20 @@ export const stripeDonation = (event: unknown, paymentLink: string | null): Paid
   const s = event.data.object
   if (type !== 'checkout.session.completed' && type !== 'checkout.session.async_payment_succeeded') return null
   if (s.payment_status !== 'paid' || typeof s.id !== 'string') return null
+  const meta = isRecord(s.metadata) ? s.metadata : null
   // A gem pack's session (`stripeGems`), never a donation.
-  if (isRecord(s.metadata) && s.metadata.kind === 'gems') return null
-  if (paymentLink && s.payment_link !== paymentLink) return null
+  if (meta?.kind === 'gems') return null
+  const ours = meta?.kind === 'donation'
+  const ref = ours && typeof meta.ref === 'string' && PURCHASE_REF.test(meta.ref) ? meta.ref : null
+  if (ours ? !ref : paymentLink && s.payment_link !== paymentLink) return null
   const conversion = isRecord(s.currency_conversion) ? s.currency_conversion : null
   const amount = conversion ? conversion.amount_total : s.amount_total
   const currency = conversion ? conversion.source_currency : s.currency
   if (typeof amount !== 'number' || typeof currency !== 'string') return null
-  return { provider: 'stripe', ref: s.id, amount, currency, handle: parseHandle(s.client_reference_id) }
+  return ref
+    ? { provider: 'stripe', ref, amount, currency: currency.toLowerCase(), handle: parseHandle(meta?.handle) }
+    : { provider: 'stripe', ref: s.id, amount, currency, handle: parseHandle(s.client_reference_id) }
 }
-
-/** Our purchase refs (`gem_purchases.ref`): uuids, nothing else reaches a query. */
-const PURCHASE_REF = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
 /** A Stripe object id (`pi_…`, `ch_…`, `du_…`, `cs_…`). */
 const STRIPE_ID = /^[a-z]{2,4}_[A-Za-z0-9_]{6,250}$/

@@ -10,7 +10,7 @@ import { challengeOpen } from '../../src/game/challenge'
 import { cosmeticPrice, isCosmeticId } from '../../src/data/cosmetics'
 import { parseTeamSize } from '../../src/game/coopBoard'
 import { parseDonation } from '../../src/data/donations'
-import { GEM_PACKS, isGemPackId, packGems, type GemCurrency } from '../../src/data/gems'
+import { isGemMarket, isGemPackId, packGemsOn, packPrice, type GemMarket } from '../../src/data/gems'
 import { isPollOptionOf, type PollKind } from '../../src/data/supporters'
 import { brasiliaDay, isDayKey } from '../../src/game/day'
 import { parseDonationAmount } from '../../src/game/festival'
@@ -43,7 +43,6 @@ import { coopListing, legendsVouched, parseCoopReport, type CoopBoardStore } fro
 import type { SaveStore } from './db'
 import type { DiscordLink } from './discordLink'
 import type { Report, TellRevenue } from './errors'
-import type { Donate, GemPix } from './donations'
 import type { CandyGoalStore } from './candyGoal'
 import type { DonateError, FestivalStore } from './festival'
 import type { FriendStore } from './friends'
@@ -60,10 +59,12 @@ import { parseDigHit, parseDigStart, parseDigStop, type DigRefusal, type DigStor
 import { parseDeedsReport, parseErrandClaim } from './realmDeeds'
 import { furniturePrice, IDENTITY_BATCH, parseBaseSave, parseFurnitureBuy, parseGameClaim, parsePresenceReport, parseRealmReport, parseRealmSettings, type BuyError, type RealmStore } from './realm'
 import { checkoutLocale, type StripeCheckout } from './stripe'
+import type { StripeDonate } from './stripeDonations'
+import { rateLimiter } from './rateLimit'
 import { rulesVerdict } from './rulesGrace'
 import type { SupporterStore } from './supporters'
 import { SUGGESTION_ID, type SuggestionStore } from './suggestions'
-import { abacateDonation, abacateGems, ABACATE_GEMS_REF, ABACATE_REF, patreonCharge, patreonMember, stripeDonation, stripeGems, verifyAbacate, verifyPatreon, verifyStandard, verifyStripe } from './webhooks'
+import { abacateDonation, abacateGems, patreonCharge, patreonMember, stripeDonation, stripeGems, verifyAbacate, verifyPatreon, verifyStandard, verifyStripe } from './webhooks'
 
 export type AppDeps = {
   store: SaveStore
@@ -72,13 +73,13 @@ export type AppDeps = {
   friends: FriendStore
   gifts: Pick<GiftStore, 'inbox' | 'claim' | 'refer' | 'credit' | 'invites'>
   verify: Verify
-  /** Donation checkouts (AbacatePay), null when the server has no key for them. */
-  donate: Donate | null
+  /** Donation checkouts (Stripe Checkout, in reais), null when the server has no key for them. */
+  donate: StripeDonate | null
   supporters: SupporterStore
   /** Gems: the ledger, packs bought with money, cosmetics bought with gems and the equipped Arena look. */
   gems: Pick<GemStore, 'status' | 'ledger' | 'purchase' | 'buy' | 'buyBundle' | 'setLook' | 'looks' | 'open' | 'opened' | 'event' | 'takeCheckout' | 'takeBuy' | 'takeLook'>
-  /** Gem pack checkouts: `card` Stripe Checkout, `pix` AbacatePay; null when the server has no key for one (it answers 503). */
-  gemCheckout: { card: StripeCheckout | null; pix: GemPix | null }
+  /** Gem pack checkouts (Stripe Checkout); null when the server has no Stripe key (it answers 503). */
+  gemCheckout: StripeCheckout | null
   /** Festival da Praça: the pot, donations from the stored save and the plaque. */
   festival: Pick<FestivalStore, 'status' | 'donate' | 'setPublic' | 'takeDonate' | 'takeToggle' | 'held' | 'review'>
   /** Meta da comunidade: every account's candy jar summed, toward the goal that opens Mega Darkrai. */
@@ -133,7 +134,7 @@ const SITE = 'https://www.pokemonsurvivors.com'
 /** A same-site path to come back to (`/apoie/`, `/en/support/`). */
 const SITE_PATH = /^\/[a-z0-9/-]{0,40}$/
 
-/** A donation's `ref`: our uuid (AbacatePay) or a Stripe Checkout Session id. */
+/** A donation's `ref`: our uuid (`POST /donations`) or a Stripe Payment Link's Checkout Session id (from before). */
 const DONATION_REF = /^(?:[0-9a-f-]{36}|cs_(?:test|live)_[A-Za-z0-9]{10,200})$/
 
 /**
@@ -155,6 +156,9 @@ const REPORT_ERRORS = { self: 400, limit: 429 } as const
 
 /** What inviting a friend answers when it doesn't go, by `Invited`'s error. */
 const INVITE_ERRORS = { notFriend: 404, limit: 429 } as const
+
+/** Donation checkouts an address may open: enough to change one's mind a few times, not to script sessions. */
+const DONATION_LIMIT = { count: 10, windowMs: 10 * 60_000 } as const
 
 /** What a festival donation answers when it's refused, by `DonateError`. */
 const DONATE_ERRORS = { closed: 409, profile: 403, runs: 403, cap: 409, funds: 409, nosave: 409, stale: 409 } as const satisfies Record<DonateError, number>
@@ -248,10 +252,11 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  * - `POST /referral` (auth) `{ ref }`: the inviter's handle a new account came with. `{ referred }`:
  *   whether it counted (only a new account, never oneself: `canRefer`).
  * - `GET /invites` (auth): `{ friends }` (`InvitedFriend[]`), who signed up with the player's link, newest first.
- * - `POST /donations` `{ amount, page, handle? }`: `{ url }`, an AbacatePay checkout (Pix or a
- *   Brazilian card) for `amount` whole reais (`parseDonation`), for the account of `handle`
- *   (400 when nobody has it). The donor comes back to `page` on the site, with
- *   `?thanks=<ref>` once paid. 503 without an AbacatePay key.
+ * - `POST /donations` `{ amount, page, handle?, locale? }`: `{ url }`, a Stripe Checkout (Pix and cards in reais,
+ *   the donor's own currency abroad by Adaptive Pricing) for `amount` whole reais (`parseDonation`), for the
+ *   account of `handle` (400 when nobody has it), in `locale`'s language. The donor comes back to `page` on the
+ *   site, with `?thanks=<ref>` once paid. 429 past `DONATION_LIMIT` an address, 503 without a Stripe key.
+ *   Donations of AbacatePay checkouts opened before still land through its webhook.
  * - `GET /donations/:ref`: `DonationStatus`, for the thank-you page (404 until the payment is known).
  * - `POST /donations/redeem` (auth) `{ code }`: credits a donation's code to the player. `{ tier }`;
  *   404 for an unknown code, 409 for one already used.
@@ -270,9 +275,11 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  *   negative, `lockedCosmetics`; the look leaves them out). `GET /gems/ledger` (auth): the latest 50 `GemLedgerEntry`, newest first.
  * - `GET /gems/purchase/:ref` (auth): `GemPurchaseResponse` `{ status, gems, balance }`, where the account's own pack `ref` (the
  *   checkout's `?gems=<ref>`) stands; 404 for anyone else's or an unknown one.
- * - `POST /gems/checkout` (auth) `{ pack, method, currency }`: `{ url }`, a checkout for a gem pack: `card` Stripe Checkout in
- *   `currency`, `pix` AbacatePay in reais (whatever `currency` says). Paid, it comes back to the game with `?gems=<ref>`, and
- *   the webhook credits the pack. 400 invalid, 429 past the checkout limit, 503 without the method's key.
+ * - `POST /gems/checkout` (auth) `{ pack, market, locale? }`: `{ url }`, a Stripe Checkout for a gem pack, in reais at
+ *   `market`'s price (`br` Brazil's, `intl` everyone else's, which Stripe shows in the buyer's currency); a page from before
+ *   2026-11-20 sends `{ method, currency }` instead (`brl` or Pix as `br`). Paid, it comes back to the game with
+ *   `?gems=<ref>`; given up, with `?gems=<ref>&cancel=<pack>`; the webhook credits the pack. 400 invalid, 409 refused
+ *   (`once`, `cap`), 429 past the checkout limit, 503 without the Stripe key.
  * - `POST /gems/buy` (auth) `{ id }`: buys a cosmetic. `{ balance, owned, locked }`; 402 `{ error: 'gems' }` short (or negative),
  *   409 owned already (a free one too), 404 unknown or not on sale. The debit and the ownership land together, once.
  * - `POST /gems/bundle` (auth) `{ id }`: buys a skin bundle (`SKIN_BUNDLES`): the skins the account lacks, for what they cost
@@ -351,6 +358,7 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
 export const createApp = ({ store, ranking, friends, gifts, verify, donate, supporters, gems, gemCheckout, festival, candyGoal, suggestions, bugReports, discord, admin, moderation, arena, coop, realm, claw, safari, dig, corner, arenaReportSecret, patreon, webhooks, allowedOrigin, ping, report, revenue = () => {} }: AppDeps) => {
   // `userId` is set by `auth` or `maybeAuth` on the routes that ask who's calling; `onError` reports it.
   const app = new Hono<MaybeAuth>()
+  const donations = rateLimiter(DONATION_LIMIT.count, DONATION_LIMIT.windowMs)
 
   app.use(logger())
   app.use(cors({ origin: (origin) => (allowedOrigin(origin) ? origin : null), allowMethods: ['GET', 'PUT', 'POST', 'DELETE'], allowHeaders: ['Authorization', 'Content-Type'], maxAge: 86400 }))
@@ -451,7 +459,8 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     if (verdict === 'grace') console.log(`run ${token}: taken under the previous rules (${replay.rules})`)
     void gifts.credit(c.var.userId).catch((err) => console.error('invite credit failed', err))
     const challenge = finished.challenge ? await ranking.challengePlace(c.var.userId, finished.challenge, finished.official === true) : null
-    return c.json({ ranks: finished.ranks, challenge, listed: finished.listed })
+    // `gems` only when the report brought some (an older client ignores it): the results' gem line.
+    return c.json({ ranks: finished.ranks, challenge, listed: finished.listed, ...(finished.gems && { gems: finished.gems }) })
   })
 
   app.get('/boards/:difficulty', maybeAuth, async (c) => {
@@ -584,12 +593,14 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     const typed = isRecord(body) && typeof body.handle === 'string' ? body.handle.trim() : ''
     const handle = typed ? parseHandle(typed) : null
     if (typed && !handle) return c.json({ error: 'no such player' }, 400)
+    if (!donations.take([clientIp(c.req.header('X-Real-IP'), c.req.header('X-Forwarded-For'))], Date.now())) return c.json({ error: 'too many checkouts' }, 429)
     const origin = c.req.header('Origin')
     const base = origin && allowedOrigin(origin) ? origin : SITE
     const page = isRecord(body) && typeof body.page === 'string' && SITE_PATH.test(body.page) ? body.page : '/'
+    const locale = (isRecord(body) ? checkoutLocale(body.locale) : null) ?? 'pt'
     const ref = crypto.randomUUID()
-    if (!(await supporters.open(ref, handle))) return c.json({ error: 'no such player' }, 400)
-    const url = await donate(amount, { completionUrl: `${base}${page}?thanks=${ref}`, returnUrl: `${base}${page}` }, `${ABACATE_REF}${ref}`)
+    if (!(await supporters.open(ref, handle, 'stripe'))) return c.json({ error: 'no such player' }, 400)
+    const url = await donate({ ref, amount, handle, locale, successUrl: `${base}${page}?thanks=${ref}`, cancelUrl: `${base}${page}` })
     return c.json({ url })
   })
 
@@ -620,25 +631,32 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
   app.post('/gems/checkout', auth, smallBody, async (c) => {
     const body = await json(c)
     const pack = isRecord(body) && isGemPackId(body.pack) ? body.pack : null
-    const method = isRecord(body) && (body.method === 'card' || body.method === 'pix') ? body.method : null
-    const asked: GemCurrency | null = isRecord(body) && (body.currency === 'brl' || body.currency === 'usd') ? body.currency : null
-    if (!pack || !method || !asked) return c.json({ error: 'expected { pack, method, currency }' }, 400)
+    // Pages from before one price list per market sent a method and a currency: reais (or Pix, reais only) were Brazil's.
+    const legacy = isRecord(body) && (body.currency === 'brl' || body.method === 'pix') ? 'br' : isRecord(body) && body.currency === 'usd' ? 'intl' : null
+    const market: GemMarket | null = isRecord(body) && isGemMarket(body.market) ? body.market : legacy
+    if (!pack || !market) return c.json({ error: 'expected { pack, market }' }, 400)
     const locale = isRecord(body) ? checkoutLocale(body.locale) : null
-    // Pix is reais only.
-    const currency = method === 'pix' ? 'brl' : asked
-    const card = method === 'card' ? gemCheckout.card : null
-    const pix = method === 'pix' ? gemCheckout.pix : null
-    if (!card && !pix) return c.json({ error: `${method} is off` }, 503)
+    if (!gemCheckout) return c.json({ error: 'checkout is off' }, 503)
     if (!gems.takeCheckout(c.var.userId)) return c.json({ error: 'too many checkouts' }, 429)
     const origin = c.req.header('Origin')
     const base = origin && allowedOrigin(origin) ? origin : SITE
     const ref = crypto.randomUUID()
-    const back = `${base}/?gems=${ref}`
+    // The pack's gems as the Loja shows them today (a promotion's included): stored now, so a checkout paid after the window still brings them.
+    const packGems = packGemsOn(pack, brasiliaDay(new Date()))
     // A once pack bought already, or past the day's limit: 409 with why (`GemCheckoutRefusal`), before any payment opens.
-    const refused = await gems.open({ ref, userId: c.var.userId, pack, gems: packGems(pack), provider: card ? 'stripe' : 'abacatepay', currency, amount: GEM_PACKS[pack][currency] })
+    const refused = await gems.open({ ref, userId: c.var.userId, pack, gems: packGems, provider: 'stripe', market, amount: packPrice(pack, market) })
     if (refused) return c.json({ error: refused }, 409)
-    if (pix) return c.json({ url: await pix(pack, { completionUrl: back, returnUrl: `${base}/` }, `${ABACATE_GEMS_REF}${ref}`) })
-    const opened = await card!({ ref, userId: c.var.userId, pack, currency, locale: locale ?? (currency === 'brl' ? 'pt' : 'en'), successUrl: back, cancelUrl: `${base}/` })
+    const opened = await gemCheckout({
+      ref,
+      userId: c.var.userId,
+      pack,
+      gems: packGems,
+      market,
+      locale: locale ?? (market === 'br' ? 'pt' : 'en'),
+      successUrl: `${base}/?gems=${ref}`,
+      // Given up (Stripe's back link): the Boutique's "Não deu certo?" sheet, which offers the same pack again.
+      cancelUrl: `${base}/?gems=${ref}&cancel=${pack}`,
+    })
     await gems.opened(ref, opened.session)
     return c.json({ url: opened.url })
   })

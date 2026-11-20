@@ -3969,6 +3969,23 @@ button {
 }
 
 /* The lobby's own install offer (`installNudgeScreen`): the app's icon over the pitch. */
+/* The lobby's ask for support at a milestone (`ui/supportAsk.ts`). */
+.support-ask-icon {
+  display: block;
+  width: 48px;
+  height: 48px;
+  margin: 2px auto 6px;
+  image-rendering: pixelated;
+}
+
+.support-ask-perks {
+  color: var(--dk-ink-2, #505870);
+}
+
+.support-ask-buttons {
+  flex-wrap: wrap;
+}
+
 .install-nudge-icon {
   display: block;
   width: 64px;
@@ -25378,6 +25395,7 @@ span.arena-hub-face {
   min-height: 32px;
   padding: 0 10px;
   font-size: 18px;
+  white-space: nowrap;
 }
 
 .gem-pack-grid {
@@ -25475,28 +25493,126 @@ span.arena-hub-face {
   background: #b06a10;
 }
 
+/* The Patreon card (`ui/patreonCard.ts`): a row across the packs' grid, each tier's price and gems a month. */
+.gem-pack.patreon-card {
+  grid-column: 1 / -1;
+  align-items: stretch;
+  gap: 8px;
+  min-height: 0;
+  padding: 10px 12px;
+  text-align: left;
+  border-color: #e0604c;
+  background: var(--dk-wash-red, #fff0ec);
+  cursor: default;
+}
+
+.gem-pack.patreon-card:hover {
+  background: var(--dk-wash-red, #fff0ec);
+}
+
+.patreon-card-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--title);
+  font-size: 22px;
+}
+
+.patreon-card-head img {
+  width: 26px;
+  height: 20px;
+  image-rendering: pixelated;
+}
+
+.patreon-card-tiers {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.patreon-card-tier {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 4px;
+  text-align: center;
+  background: var(--dk-surface-0, #fff);
+  border: 2px solid #e0a090;
+  border-radius: 6px;
+}
+
+.patreon-card-tier b {
+  font-family: var(--title);
+  font-size: 18px;
+}
+
+.patreon-card-tier.gold b {
+  color: #b06a10;
+}
+
+.patreon-card-tier.diamond b {
+  color: #2878c8;
+}
+
+.patreon-card-tier small {
+  font-size: 16px;
+  color: var(--dk-ink-2, #505870);
+}
+
+.patreon-card-tier em {
+  font-family: var(--title);
+  font-size: 16px;
+  font-style: normal;
+  color: #6a30a8;
+}
+
+.patreon-card-perks,
+.patreon-card-mine small {
+  font-family: var(--body);
+  font-size: 17px;
+  color: var(--dk-ink-2, #505870);
+}
+
+.patreon-card-mine {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.patreon-card-mine b {
+  font-family: var(--title);
+  font-size: 20px;
+}
+
+.patreon-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.patreon-card-actions .btn {
+  flex: 1 1 auto;
+}
+
 .gem-pack-bonus.once {
   background: #d85020;
 }
 
 /* How gems come free: one line under the packs. */
+.gem-approx {
+  margin: 6px 0 0;
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.05;
+  color: var(--dk-ink-2, #505870);
+}
+
 .gem-free {
   margin: 6px 0 0;
   font-family: var(--body);
   font-size: 17px;
   line-height: 1.05;
   color: var(--dk-ink-2, #505870);
-}
-
-/* Short of gems: the packs nudge. */
-.gem-packs.nudge .gem-pack {
-  animation: gem-nudge 0.5s steps(4) 2;
-}
-
-@keyframes gem-nudge {
-  50% {
-    transform: translateY(-4px);
-  }
 }
 
 .gem-catalog-main {
@@ -25581,6 +25697,12 @@ span.arena-hub-face {
   justify-content: center;
   gap: 6px;
   margin-top: 4px;
+}
+
+/* An item out of reach: its button names the pack that covers it, and may wrap on a phone. */
+.gem-act.gem-short {
+  flex-wrap: wrap;
+  line-height: 1.1;
 }
 
 .gem-note {
@@ -26090,9 +26212,25 @@ span.arena-hub-face {
   gap: 8px;
 }
 
-.gem-pay.pix {
-  color: #fff;
-  background: #32bcad;
+/* The ways Stripe Checkout takes, over its one button; a price abroad's note under the price. */
+.gem-pay-ways,
+.gem-sheet-approx {
+  margin-top: -4px;
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.05;
+  color: var(--dk-ink-2, #505870);
+}
+
+/* Back from a checkout given up: the other ways to pay and Patreon's line, quieter than the retry. */
+.gem-sheet .gem-cancel-ways,
+.gem-sheet .gem-cancel-patreon {
+  font-size: 16px;
+}
+
+.gem-cancel-patreon a {
+  color: #6a30a8;
+  text-decoration: underline;
 }
 
 .gem-pay:disabled {
@@ -33147,4 +33285,159 @@ span.arena-hub-face {
   .ruins-hint {
     font-size: 13px;
   }
+}
+
+/* ---------- Gem promotions and the free gems' nudge (ui/gemBits.ts, `GEM_PROMOS`) ---------- */
+
+/* A promotion's tag: black and gold, on the packs, the checkout and the gem chip. */
+.gem-promo-tag {
+  display: inline-block;
+  padding: 1px 5px;
+  font-family: var(--title);
+  font-size: 14px;
+  font-style: normal;
+  line-height: 1.1;
+  color: #f8d070;
+  white-space: nowrap;
+  background: #18141f;
+  border: 2px solid #f8d070;
+  border-radius: 4px;
+}
+
+.gem-promo-tag.chip {
+  margin-left: 2px;
+  font-size: 13px;
+}
+
+.title-home .gem-promo-tag.chip {
+  font-size: 16px;
+}
+
+.gem-pack.promo {
+  border-color: #18141f;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25), 0 0 0 2px #f8d070 inset;
+}
+
+.gem-pack-was {
+  margin-bottom: -6px;
+  font-family: var(--title);
+  font-size: 16px;
+  color: var(--dk-ink-2, #505870);
+}
+
+.gem-promo-tag.pack {
+  max-width: 100%;
+  text-align: center;
+  white-space: normal;
+}
+
+/* Over the packs: the promotion's name and share, and the time it has left. */
+.gem-promo-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 10px;
+  margin: 0 0 8px;
+  padding: 6px 10px;
+  font-family: var(--body);
+  font-size: 18px;
+  line-height: 1.05;
+  color: #fff;
+  background: #18141f;
+  border: 2px solid #f8d070;
+  border-radius: 6px;
+}
+
+.gem-promo-banner b {
+  font-family: var(--title);
+  font-size: 20px;
+  font-weight: 400;
+  color: #f8d070;
+}
+
+.gem-sheet-promo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-family: var(--body);
+  font-size: 17px;
+  line-height: 1.05;
+  color: var(--dk-ink-2, #505870);
+}
+
+/* The balance covers a look the account lacks: the chip glows softly until the Boutique opens. */
+.gem-chip.glow {
+  animation: gem-chip-glow 2.4s ease-in-out infinite;
+}
+
+@keyframes gem-chip-glow {
+  0%,
+  100% {
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(216, 160, 255, 0);
+  }
+  50% {
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3), 0 0 10px 3px rgba(216, 160, 255, 0.85);
+  }
+}
+
+.title-home .gem-chip.glow {
+  animation-name: gem-chip-glow-kit;
+}
+
+@keyframes gem-chip-glow-kit {
+  0%,
+  100% {
+    box-shadow: 0 4px 0 var(--kit-tinta), 0 0 0 0 rgba(160, 80, 224, 0);
+  }
+  50% {
+    box-shadow: 0 4px 0 var(--kit-tinta), 0 0 12px 4px rgba(160, 80, 224, 0.7);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gem-chip.glow,
+  .title-home .gem-chip.glow {
+    animation: none;
+    outline: 2px solid rgba(160, 80, 224, 0.8);
+    outline-offset: 2px;
+  }
+}
+
+/* Results: the day's free gems, once the report answers, with the way to what they buy. */
+.result-gems[hidden] {
+  display: none;
+}
+
+.result-gems-text {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 6px;
+  margin: 0;
+  padding: 6px 10px;
+  font-size: 19px;
+  line-height: 1.1;
+  text-align: center;
+  background: var(--dk-wash-purple, #efe4fb);
+  border: 2px solid #8848c8;
+  border-radius: 6px;
+}
+
+.result-gems-text b {
+  display: inline-flex;
+  flex-basis: 100%;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--title);
+  font-weight: 400;
+  font-size: 20px;
+}
+
+.result-gems-go {
+  margin-left: 4px;
 }

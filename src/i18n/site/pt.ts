@@ -10,6 +10,7 @@ import type { StatusKind } from '../../game/status'
 import type { Difficulty } from '../../game/difficulty'
 import type { Locale } from '..'
 import type { OurFacts } from '../../site/rivals'
+import type { SupporterTier } from '../../game/supporters'
 
 /** Number in Brazilian format (`1.250`, `0,75`). */
 const n = (v: number) => v.toLocaleString('pt-BR', { maximumFractionDigits: 2 })
@@ -920,7 +921,7 @@ export const sitePt = {
   support: {
     title: 'Apoie o Pokémon Survivors | Doe por Pix ou cartão',
     description:
-      'O Pokémon Survivors é grátis e sem anúncios, e nada que dê poder é vendido. Se quiser ajudar a pagar os servidores, doe por Pix ou cartão brasileiro (AbacatePay) ou, de outros países, com cartão, Apple Pay ou Google Pay (Stripe). Com uma conta, quem doa ganha um agradecimento cosmético no jogo: título, moldura, selo, um shiny à escolha e um companheiro.',
+      'O Pokémon Survivors é grátis e sem anúncios, e nada que dê poder é vendido. Se quiser ajudar a pagar os servidores, doe por Pix, cartão, Apple Pay ou Google Pay, de qualquer país (Stripe), ou apoie todo mês no Patreon, que também dá gemas. Com uma conta, quem doa ganha um agradecimento cosmético no jogo: título, moldura, selo, um shiny à escolha e um companheiro.',
     h1: 'Apoie o projeto',
     lead: 'O jogo é grátis e vai continuar assim, sem anúncios e sem nada que dê poder à venda. Se ele te divertiu e você quiser ajudar a pagar os servidores (contas, ranking e o Desafio do dia), qualquer valor ajuda. Como agradecimento, quem doa com uma conta ganha recompensas cosméticas no jogo, nada que mude uma partida.',
     thanks: 'Obrigado pelo apoio! ♥',
@@ -952,41 +953,34 @@ export const sitePt = {
         'Um companheiro que te segue nas partidas.',
         'O nome no mural abaixo e nos agradecimentos da vitória.',
         'Voto no próximo Pokémon dos ovos.',
-        'Ouro e Diamante agora são mensais, no Patreon (veja abaixo): doações avulsas não somam para Ouro.',
+        'Ouro e Diamante agora são mensais, no Patreon (veja acima): doações avulsas não somam para Ouro.',
       ],
       note: 'Tudo cosmético: nada muda uma partida nem o ranking. As recompensas precisam de uma conta no jogo (entrar com Google é grátis).',
     },
     /** The Patreon tiers, by the pledge kept active (`PATREON_TIERS`). */
     monthly: {
       title: 'Apoio mensal no Patreon',
-      lead: 'Quer apoiar todo mês? No Patreon, seu nível segue o valor que você mantém ativo. Depois, vincule o Patreon à sua conta no Hall da Fama do jogo.',
-      tiers: [
-        '<b>Apoiador(a), US$ 5/mês:</b> tudo o que quem doa ganha, o cargo Supporter e o canal exclusivo no Discord, e o Hall da Fama enquanto o apoio durar.',
-        '<b>Ouro, US$ 10/mês:</b> tudo de Apoiador(a), selo e cargo Ouro, fundo e papel de parede dourados, e o Hall da Fama para sempre.',
-        '<b>Diamante, US$ 20/mês:</b> tudo de Ouro, selo e cargo Diamante, um lendário que você capturou como companheiro (shiny se capturado shiny), voto mensal num novo Pokémon ultrarraro e decoração de diamante no Hall da Fama.',
+      lead: 'Quer apoiar todo mês? No Patreon, seu nível segue o valor que você mantém ativo, e cada mês pago traz gemas para a Boutique. Depois, vincule o Patreon à sua conta no Hall da Fama do jogo.',
+      tiers: (g: Readonly<Record<SupporterTier, number>>): string[] => [
+        `<b>Apoiador(a), US$ 5/mês:</b> ${n(g.supporter)} gemas por mês, tudo o que quem doa ganha, o cargo Supporter e o canal exclusivo no Discord, e o Hall da Fama enquanto o apoio durar.`,
+        `<b>Ouro, US$ 10/mês:</b> ${n(g.gold)} gemas por mês, tudo de Apoiador(a), selo e cargo Ouro, fundo e papel de parede dourados, e o Hall da Fama para sempre.`,
+        `<b>Diamante, US$ 20/mês:</b> ${n(g.diamond)} gemas por mês, tudo de Ouro, selo e cargo Diamante, um lendário que você capturou como companheiro (shiny se capturado shiny), voto mensal num novo Pokémon ultrarraro e decoração de diamante no Hall da Fama.`,
       ],
       cta: 'Apoiar no Patreon',
       note: 'Quem doou antes do Patreon é Apoiador(a) OG: mantém tudo o que tem, para sempre, com uma seção só sua no Hall da Fama.',
     },
     wall: { title: 'Mural de apoiadores', empty: 'Ainda ninguém por aqui. Seu nome pode ser o primeiro!' },
-    pick: 'Escolha como pagar',
-    suggested: 'Sugerido para você',
-    br: {
-      title: 'No Brasil',
-      methods: 'Pix, cartão de crédito, Apple Pay ou Google Pay, em reais.',
+    once: {
+      title: 'Doação avulsa',
+      methods: 'Pix, cartão, Apple Pay ou Google Pay. O valor é em reais; de outro país, o Stripe mostra quanto dá na sua moeda.',
       amount: 'Valor da doação',
       other: 'Outro valor',
       range: (min: number, max: number) => `De R$ ${min} a R$ ${max}, sem centavos.`,
       cta: (amount: number) => `Doar R$ ${amount}`,
       loading: 'Abrindo o pagamento…',
       error: 'Não deu para abrir o pagamento agora. Tente de novo em instantes.',
-      via: 'O pagamento abre na AbacatePay. Seus dados de pagamento vão direto para eles.',
-    },
-    intl: {
-      title: 'Outros países',
-      methods: 'Cartão, Apple Pay ou Google Pay, em dólares.',
-      cta: 'Doar pelo Stripe',
-      via: 'Você escolhe o valor na próxima página, que abre no Stripe. Seus dados de pagamento vão direto para eles.',
+      via: 'O pagamento abre no Stripe. Seus dados de pagamento vão direto para eles.',
+      noJs: 'Para doar, ative o JavaScript nesta página.',
     },
   },
 
@@ -1009,13 +1003,13 @@ export const sitePt = {
       'Pokémon e os nomes dos personagens são marcas registradas da Nintendo. Pokémon © Nintendo, Creatures Inc. e GAME FREAK inc. As demais marcas pertencem aos seus donos.',
     ],
     free: [
-      'O jogo é gratuito e vai continuar assim: não tem anúncios, e nada que mude uma partida ou o ranking custa dinheiro. A única compra possível são gemas, opcionais, para visuais (veja abaixo).',
+      'O jogo é gratuito e vai continuar assim: não tem anúncios, e nada que mude uma partida ou o ranking custa dinheiro. A única compra possível são gemas, opcionais, para visuais (veja acima).',
       'Poké Dollars (₽) existem só dentro do jogo e não podem ser comprados com dinheiro de verdade.',
       'Quem quiser pode doar na página Apoie o projeto. Doações são voluntárias e, com uma conta, dão só um agradecimento cosmético (título, moldura, selo, um shiny à escolha, um companheiro), nada que mude uma partida ou o ranking.',
     ],
     gems: [
       'Gemas são um item virtual do jogo: compram só itens cosméticos (como chapéus, rastros, títulos e móveis para a base secreta), que aparecem nas partidas, no co-op, na Arena e no Poké Realm, nunca nada que mude uma partida ou o ranking. Elas não têm valor em dinheiro, não podem ser trocadas por dinheiro nem passadas para outra conta e ficam ligadas à sua conta do jogo.',
-      'Você ganha gemas jogando (na primeira partida do dia de 5 minutos ou mais, ao jogar cinco dias na mesma semana e na Arena, com um limite por dia), apoiando no Patreon ou comprando um pacote. Cada conta compra até R$ 250 ou US$ 50 em pacotes por dia, e quem tem menos de 18 anos precisa da permissão dos pais ou responsáveis para comprar. Pacotes são pagos no Stripe (cartão, Apple Pay e Google Pay) ou na AbacatePay (Pix), e os dados de pagamento vão direto para eles: o jogo nunca vê seu cartão.',
+      'Você ganha gemas jogando (na primeira partida do dia de 5 minutos ou mais, ao jogar cinco dias na mesma semana e na Arena, com um limite por dia), apoiando no Patreon ou comprando um pacote. Cada conta compra até R$ 300 em pacotes por dia, e quem tem menos de 18 anos precisa da permissão dos pais ou responsáveis para comprar. Pacotes são cobrados em reais e pagos no Stripe (cartão, Pix, Apple Pay, Google Pay e outros), que mostra o valor na moeda de quem compra fora do Brasil, e os dados de pagamento vão direto para eles: o jogo nunca vê seu cartão.',
       'Direito de arrependimento: até 7 dias depois da compra de um pacote, você pode pedir o reembolso das gemas dele que ainda não gastou (Código de Defesa do Consumidor, art. 49). Peça pelo e-mail pedro@wavyia.com.br, com a referência da compra. Gemas já gastas e os itens cosméticos comprados com elas não são reembolsáveis.',
       'Um estorno ou uma contestação do pagamento (chargeback) tira da conta as gemas daquele pacote, mesmo as já gastas. O saldo pode ficar negativo e, enquanto estiver, não dá para comprar nada com gemas.',
     ],
@@ -1061,7 +1055,7 @@ export const sitePt = {
       'Para apagar esses dados, limpe os dados do site nas configurações do navegador.',
       'Sprites, sons e fontes vêm do próprio site, sem chamadas a serviços de terceiros. O site é hospedado na Cloudflare, que, como qualquer servidor, pode registrar dados técnicos de acesso (como endereço IP) para operar e proteger o serviço.',
       'No jogo, usamos o PostHog (posthog.com, com os dados guardados nos Estados Unidos) para entender como ele é jogado e corrigir erros. Ele recebe o resumo de cada partida (Pokémon, dificuldade, golpes, itens, até que minuto e nível você chegou e como ela terminou), quais telas você abre no menu e, quando o jogo dá erro, a mensagem do erro e o replay da partida em andamento (a semente e os comandos, sem nada pessoal). Tudo isso vai ligado ao identificador aleatório do ph_ps e, se você entrou com uma conta, ao id dela e ao seu nome de usuário, nunca ao seu e-mail ou nome. O PostHog não usa cookies aqui e não segue você entre sites.',
-      'Doações são pagas nas páginas da AbacatePay (abacatepay.com: Pix e cartões brasileiros) ou do Stripe (stripe.com: cartões de outros países, Apple Pay e Google Pay). Os dados de pagamento vão direto para eles, e o jogo nunca vê seu cartão. Eles nos mostram o valor e, como a qualquer recebedor, dados de quem pagou (como nome e e-mail), que não usamos para nada além de registrar a doação. Se você der um @ (ou resgatar o código da doação), ela fica ligada a essa conta do jogo para as recompensas chegarem; o valor nunca aparece em público, só o selo de apoiador, que dá para esconder.',
+      'Doações são pagas nas páginas do Stripe (stripe.com: Pix, cartões, Apple Pay e Google Pay; as mais antigas, também nas da AbacatePay, abacatepay.com). Os dados de pagamento vão direto para eles, e o jogo nunca vê seu cartão. Eles nos mostram o valor e, como a qualquer recebedor, dados de quem pagou (como nome e e-mail), que não usamos para nada além de registrar a doação. Se você der um @ (ou resgatar o código da doação), ela fica ligada a essa conta do jogo para as recompensas chegarem; o valor nunca aparece em público, só o selo de apoiador, que dá para esconder.',
     ],
     contact: [
       'Se você tem direitos sobre algum material usado aqui e quer que ele seja removido ou ajustado, abra uma issue no GitHub. O pedido vai ser atendido rapidamente.',

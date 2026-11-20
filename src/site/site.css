@@ -1035,13 +1035,6 @@ td small {
 
 /* ---------- Support page (donations) ---------- */
 
-.donate-ways {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
-  gap: 20px;
-  align-items: start;
-}
-
 .donate-way {
   padding: 18px 20px 20px;
 }
@@ -1066,18 +1059,6 @@ td small {
   opacity: 0.6;
   cursor: default;
   transform: none;
-}
-
-/* "Suggested for you", only on the way the time zone picked (`client.ts`). */
-.donate-guess {
-  display: none;
-  font-family: var(--title);
-  font-size: 8px;
-  color: color-mix(in srgb, var(--blue) var(--dk-lift, 100%), #fff);
-}
-
-.donate-way.is-guess .donate-guess {
-  display: block;
 }
 
 .donate-amounts {
@@ -1125,8 +1106,8 @@ td small {
   font-size: 22px;
 }
 
-/* Without JS the form can't reach the API, so only the Stripe link is offered (and no @ to carry). */
-html:not(.js) #donate-br,
+/* Without JS the form can't reach the API (its <noscript> says so), and there's no @ to carry. */
+html:not(.js) #donate-form,
 html:not(.js) #donate-account {
   display: none;
 }

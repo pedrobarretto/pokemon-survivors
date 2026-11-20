@@ -2,6 +2,7 @@ import { CAFE_TABLES_WORDS } from './cafeTables'
 import type { DexRegion } from '../data/nationalDex'
 import { GALLOP_WORDS } from './gallop'
 import { ITEM_DROP_WORDS } from './itemDrop'
+import { SUPPORT_WORDS } from './support'
 import { LOBBY_TOUR_WORDS } from './lobbyTour'
 import { TUTORIAL_WORDS } from './tutorial'
 import { WELCOME_WORDS } from './welcome'
@@ -59,7 +60,7 @@ import type { ArenaEffectId } from '../data/arenaEffects'
 import type { CatalogSlot, Rarity } from '../data/cosmetics'
 import type { ShopFurnitureId } from '../data/furniture'
 import type { Season, SkinId } from '../data/skinCatalog'
-import type { GemPackId } from '../data/gems'
+import type { GemPackId, GemPromoName } from '../data/gems'
 import type { GemReason } from '../game/gems'
 import type { ArenaFormat } from '../data/arenaFormats'
 import type { BoardStat, PingKind, QuickChat } from '../game/versusSocial'
@@ -801,7 +802,11 @@ export const pt = {
     shop: {
       pitch: 'Visuais para o seu Pokémon nas partidas, no co-op e na Arena: todo mundo vê, e nenhum dá poder.',
       balance: 'Seu saldo',
-      currency: 'Moeda',
+      /** The Brasil / Outro país switch over the packs (which price list, `GemMarket`), and the note under them abroad, where prices are a guess in the buyer's currency. */
+      market: 'Onde você paga',
+      marketBr: 'Brasil',
+      marketIntl: 'Outro país',
+      approx: 'Preços aproximados na sua moeda: o valor final aparece no pagamento.',
       packs: 'Pacotes de gemas',
       bonus: (n: string) => `+${n} bônus`,
       catalog: 'Visuais',
@@ -827,6 +832,8 @@ export const pt = {
       confirm: (name: string, price: string) => `Comprar ${name} por ${price} gemas?`,
       bought: (name: string) => `${name} é seu, e você já está usando!`,
       short: (n: string) => `Faltam ${n} gemas. Que tal um pacote?`,
+      /** An item out of reach: its button buys the pack that covers it (gems missing and the pack's name; its price follows). */
+      shortPack: (n: string, pack: string) => `Faltam ${n} · ${pack}`,
       busy: 'Calma! Muitas compras seguidas. Tente de novo em um minuto.',
       offline: 'A loja está fora de alcance agora. Tente de novo em instantes.',
       banned: 'Esta conta não pode usar a Loja.',
@@ -844,13 +851,15 @@ export const pt = {
     checkout: {
       split: (gems: string, bonus: string) => `${gems} + ${bonus} bônus`,
       pay: 'Pagar com',
-      card: 'Cartão, Apple Pay ou Google Pay',
-      pix: 'Pix',
+      /** What Stripe Checkout takes, by price list (Pix only shows in reais), the button to it and the note on a price abroad. */
+      ways: { br: 'Pix, cartão, Apple Pay ou Google Pay', intl: 'Cartão, Apple Pay, Google Pay e outros, na sua moeda' },
+      go: 'Ir para o pagamento',
+      approx: 'Valor aproximado: o preço final, na sua moeda, aparece no pagamento.',
       /** The box the pay buttons need ticked. */
       age: 'Tenho 18 anos ou mais, ou tenho a permissão dos meus pais ou responsáveis.',
       /** The checkout turned down (`GemCheckoutRefusal`): a once pack taken, the day's limit (`GEM_CHECKOUT.daily`, as a price). */
       once: 'Esta conta já pegou o pacote de boas-vindas.',
-      cap: (limit: string) => `Por segurança, cada conta compra até ${limit} em gemas por dia, e um pagamento em aberto conta por meia hora. Tente de novo amanhã (o dia vira à meia-noite de Brasília).`,
+      cap: (limit: string) => `Por segurança, cada conta compra até ${limit} em gemas por dia, e um pagamento em aberto conta por cerca de uma hora. Tente de novo amanhã (o dia vira à meia-noite de Brasília).`,
       cancel: 'Cancelar',
       opening: 'Abrindo o pagamento…',
       failed: 'Não deu para abrir o pagamento. Tente de novo.',
@@ -861,6 +870,19 @@ export const pt = {
       timeout: 'Pagamento a caminho',
       timeoutNote: 'Ainda estamos confirmando o pagamento. As gemas chegam à sua conta em alguns minutos (um Pix pode demorar um pouco mais), e você pode continuar jogando.',
       ok: 'Continuar',
+    },
+    /** Back from a checkout given up (`&cancel=`): nothing charged, the same pack again, the other ways to pay (by price list) and Patreon. */
+    cancelled: {
+      title: 'Não deu certo?',
+      text: 'Nada foi cobrado. Quer tentar de novo?',
+      retry: (pack: string, price: string) => `Tentar de novo: ${pack} · ${price}`,
+      ways: {
+        br: 'Dá para pagar com Pix, Apple Pay ou Google Pay, além de cartão.',
+        intl: 'Cartão recusado? Tente Apple Pay, Google Pay ou outro cartão: alguns bancos recusam compras de lojas de outro país.',
+      },
+      patreon: 'Prefere apoiar todo mês? O Patreon também traz gemas.',
+      patreonLink: 'Ver o Patreon',
+      close: 'Agora não',
     },
     /** The Skins page (`ui/skinShop.ts`): skins by line, the bundles and the launch offers. */
     skinShop: {
@@ -906,6 +928,22 @@ export const pt = {
       normal: 'Normal',
       wear: (name: string) => `Usar ${name}`,
       see: (name: string) => `${name}: ver na Boutique`,
+    },
+    /** A gem promotion (`GEM_PROMOS`): its name, the packs' tag, the Loja's banner, the split of a pack's gems, the time left (and short, for the lobby's Boutique row). */
+    promo: {
+      names: { blackFriday: 'Black Friday' } satisfies Record<GemPromoName, string>,
+      tag: (pct: string, name: string) => `+${pct}% ${name}`,
+      banner: (name: string, pct: string) => `${name}: +${pct}% de gemas em todos os pacotes`,
+      split: (gems: string, extra: string, name: string) => `${gems} + ${extra} da ${name}`,
+      left: (days: number, hours: number) => (days > 0 ? `Termina em ${days} d ${hours} h` : hours > 0 ? `Termina em ${hours} h` : 'Termina em menos de 1 h'),
+      short: (days: number, hours: number) => (days > 0 ? `${days} d ${hours} h` : `${hours} h`),
+    },
+    /** The results' gem line (`runGemsLine`): the run gems the report brought and the balance, then what they buy now or how far the next look is. */
+    run: {
+      earned: (n: string, balance: string) => `+${n} gemas · saldo ${balance}`,
+      covers: (item: string) => `Já dá para comprar ${item}`,
+      short: (n: string, first: boolean) => (first ? `Faltam ${n} para o primeiro visual` : `Faltam ${n} para o próximo visual`),
+      see: 'Ver na Boutique',
     },
     /** The gem chip for a guest (no balance): the way to the Boutique. */
     chipGuest: 'Boutique: visuais com gemas',
@@ -1295,6 +1333,7 @@ export const pt = {
   },
 
   itemDrop: ITEM_DROP_WORDS.pt,
+  support: SUPPORT_WORDS.pt,
   welcome: WELCOME_WORDS.pt,
   tutorial: TUTORIAL_WORDS.pt,
   lobbyTour: LOBBY_TOUR_WORDS.pt,

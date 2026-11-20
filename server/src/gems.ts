@@ -1,6 +1,6 @@
 import type { TransactionSql } from 'postgres'
 import { isCosmeticId, type Look, type CosmeticId } from '../../src/data/cosmetics'
-import { GEM_CHECKOUT, GEM_PACK_IDS, GEM_PLAY, oncePack, type GemCurrency, type GemPackId } from '../../src/data/gems'
+import { GEM_CHECKOUT, GEM_PACK_IDS, GEM_PLAY, oncePack, type GemMarket, type GemPackId } from '../../src/data/gems'
 import type { SkinBundleId } from '../../src/data/skinCatalog'
 import {
   bundleMissing,
@@ -19,6 +19,7 @@ import {
   type GemReason,
   type GemsStatus,
   type PurchaseState,
+  type RunGems,
 } from '../../src/game/gems'
 import { addDays, DAY_TIME_ZONE, weekStart, type DayKey } from '../../src/game/day'
 import type { Sql } from './db'
@@ -139,18 +140,24 @@ export const creditPlay = async (tx: TransactionSql, seats: readonly PlaySeat[],
  * (Monday to Sunday) holds `GEM_PLAY.week.days` such days, the week's gems
  * (`week:<user>:<Monday>`). The accounts' rows must exist; they're locked in
  * id order, so two reports of one account take turns and the week counts right.
+ * Returns the gems each account got now and its balance after, for those
+ * that got any (a run's report answers with its own: `RunGems`).
  */
-export const creditRun = async (tx: TransactionSql, userIds: readonly string[], day: DayKey) => {
+export const creditRun = async (tx: TransactionSql, userIds: readonly string[], day: DayKey): Promise<Map<string, RunGems>> => {
   const ids = [...new Set(userIds)].sort()
-  if (ids.length === 0) return
+  const credited = new Map<string, RunGems>()
+  if (ids.length === 0) return credited
   await tx`select id from users where id = any(${ids}::text[]) order by id for update`
   const monday = weekStart(day)
   for (const id of ids) {
     if (!(await moveGems(tx, id, GEM_PLAY.run.gems, 'run', `run:${id}:${day}`, day))) continue
     const [week] = await tx<{ days: number }[]>`
       select count(distinct day)::int as days from gem_ledger where user_id = ${id} and reason = 'run' and day between ${monday} and ${addDays(monday, 6)}`
-    if ((week?.days ?? 0) >= GEM_PLAY.week.days) await moveGems(tx, id, GEM_PLAY.week.gems, 'week', `week:${id}:${monday}`, day)
+    const weekly = (week?.days ?? 0) >= GEM_PLAY.week.days && (await moveGems(tx, id, GEM_PLAY.week.gems, 'week', `week:${id}:${monday}`, day))
+    const [u] = await tx<{ gems: number }[]>`select gems from users where id = ${id}`
+    credited.set(id, { earned: GEM_PLAY.run.gems + (weekly ? GEM_PLAY.week.gems : 0), balance: u?.gems ?? 0 })
   }
+  return credited
 }
 
 /** Which purchase a payment event is about: our ref (AbacatePay's `externalId`) or the provider's payment (Stripe's PaymentIntent). */
@@ -171,8 +178,8 @@ export type GemEvent =
   | { kind: 'dispute'; provider: GemProvider; purchase: PurchaseKey; key: string }
   | { kind: 'disputeWon'; provider: GemProvider; purchase: PurchaseKey; dispute: string; key: string }
 
-/** A checkout about to open: the pack, its price and who buys it. */
-export type GemOrder = { ref: string; userId: string; pack: GemPackId; gems: number; provider: GemProvider; currency: GemCurrency; amount: number }
+/** A checkout about to open: the pack, the price it's bought at (`market`; `amount` centavos, always reais) and who buys it. */
+export type GemOrder = { ref: string; userId: string; pack: GemPackId; gems: number; provider: GemProvider; market: GemMarket; amount: number }
 
 export type BuyOutcome = ({ ok: true } & GemBuyResponse) | { ok: false; error: 'gems' | 'owned' }
 
@@ -302,8 +309,8 @@ export const gemStore = (sql: Sql) => {
     /**
      * A checkout about to open: its purchase row, unpaid, unless the brakes
      * turn it down (`checkoutRefusal`): a `once` pack the account holds, or
-     * past the Brasília day's limit in the order's currency, paid and pending
-     * packs counted (`counting`). Behind the account's row lock, so two
+     * past the Brasília day's limit in reais, paid and pending packs counted
+     * (`counting`; dollar packs from before 2026-11-20 don't). Behind the account's row lock, so two
      * checkouts at once take turns. The refusal, or null once it's open.
      */
     open: (o: GemOrder): Promise<GemCheckoutRefusal | null> =>
@@ -313,13 +320,13 @@ export const gemStore = (sql: Sql) => {
         const today = tx`(now() at time zone ${DAY_TIME_ZONE})::date`
         const [spent] = await tx<{ cents: number }[]>`
           select coalesce(sum(amount), 0)::int as cents from gem_purchases
-          where user_id = ${o.userId} and currency = ${o.currency} and (created_at at time zone ${DAY_TIME_ZONE})::date = ${today} and ${counting(tx, false)}`
+          where user_id = ${o.userId} and currency = 'brl' and (created_at at time zone ${DAY_TIME_ZONE})::date = ${today} and ${counting(tx, false)}`
         const taken = oncePack(o.pack) && (await takenPacks(tx, o.userId)).includes(o.pack)
-        const refusal = checkoutRefusal(o.pack, o.currency, spent?.cents ?? 0, taken)
+        const refusal = checkoutRefusal(o.pack, o.market, spent?.cents ?? 0, taken)
         if (refusal) return refusal
         await tx`
           insert into gem_purchases (ref, user_id, pack, gems, provider, currency, amount)
-          values (${o.ref}::uuid, ${o.userId}, ${o.pack}, ${o.gems}, ${o.provider}, ${o.currency}, ${o.amount})`
+          values (${o.ref}::uuid, ${o.userId}, ${o.pack}, ${o.gems}, ${o.provider}, 'brl', ${o.amount})`
         return null
       }),
 

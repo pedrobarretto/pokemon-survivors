@@ -867,7 +867,7 @@ export const siteEs: SiteMessages = {
   support: {
     title: 'Apoya Pokémon Survivors | Dona con tarjeta, Apple Pay o Google Pay',
     description:
-      'Pokémon Survivors es gratis, sin anuncios y sin nada a la venta que dé poder. Si quieres ayudar a pagar los servidores, dona con tarjeta, Apple Pay o Google Pay desde cualquier país (Stripe), o con Pix o tarjeta brasileña desde Brasil (AbacatePay). Con una cuenta, quien dona recibe un agradecimiento cosmético en el juego: título, marco, sello, un shiny a su elección y un compañero.',
+      'Pokémon Survivors es gratis, sin anuncios y sin nada a la venta que dé poder. Si quieres ayudar a pagar los servidores, dona con tarjeta, Apple Pay, Google Pay o Pix desde cualquier país (Stripe), o apoya cada mes en Patreon, que también da gemas. Con una cuenta, quien dona recibe un agradecimiento cosmético en el juego: título, marco, sello, un shiny a su elección y un compañero.',
     h1: 'Apoya el proyecto',
     lead: 'El juego es gratis y seguirá así, sin anuncios y sin nada a la venta que dé poder. Si te divirtió y quieres ayudar a pagar los servidores (cuentas, ranking y el Desafío del día), cualquier monto ayuda. Como agradecimiento, quien dona con una cuenta recibe recompensas cosméticas en el juego, nada que cambie una partida.',
     thanks: '¡Gracias por tu apoyo! ♥',
@@ -899,40 +899,33 @@ export const siteEs: SiteMessages = {
         'Un compañero que lo sigue en las partidas.',
         'Su nombre en el mural de abajo y en los agradecimientos de la victoria.',
         'Voto en el próximo Pokémon de los huevos.',
-        'Oro y Diamante ahora son mensuales, en Patreon (mira abajo): las donaciones únicas no suman para Oro.',
+        'Oro y Diamante ahora son mensuales, en Patreon (mira arriba): las donaciones únicas no suman para Oro.',
       ],
       note: 'Todo cosmético: nada cambia una partida ni el ranking. Las recompensas necesitan una cuenta en el juego (entrar con Google es gratis).',
     },
     monthly: {
       title: 'Apoyo mensual en Patreon',
-      lead: '¿Quieres apoyar cada mes? En Patreon, tu nivel sigue el monto que mantienes activo. Después, vincula Patreon a tu cuenta desde el Salón de la Fama del juego.',
-      tiers: [
-        '<b>Patrocinador(a), US$ 5/mes:</b> todo lo que reciben quienes donan, el rol Supporter y el canal exclusivo en Discord, y el Salón de la Fama mientras dure tu apoyo.',
-        '<b>Oro, US$ 10/mes:</b> todo lo de Patrocinador(a), sello y rol Oro, fondo y fondo de la caja dorados, y el Salón de la Fama para siempre.',
-        '<b>Diamante, US$ 20/mes:</b> todo lo de Oro, sello y rol Diamante, un legendario que capturaste como compañero (shiny si lo capturaste shiny), voto mensual por un nuevo Pokémon ultrarraro y decoración de diamante en el Salón de la Fama.',
+      lead: '¿Quieres apoyar cada mes? En Patreon, tu nivel sigue el monto que mantienes activo, y cada mes pagado trae gemas para la Boutique. Después, vincula Patreon a tu cuenta desde el Salón de la Fama del juego.',
+      tiers: (g) => [
+        `<b>Patrocinador(a), US$ 5/mes:</b> ${n(g.supporter)} gemas al mes, todo lo que reciben quienes donan, el rol Supporter y el canal exclusivo en Discord, y el Salón de la Fama mientras dure tu apoyo.`,
+        `<b>Oro, US$ 10/mes:</b> ${n(g.gold)} gemas al mes, todo lo de Patrocinador(a), sello y rol Oro, fondo y fondo de la caja dorados, y el Salón de la Fama para siempre.`,
+        `<b>Diamante, US$ 20/mes:</b> ${n(g.diamond)} gemas al mes, todo lo de Oro, sello y rol Diamante, un legendario que capturaste como compañero (shiny si lo capturaste shiny), voto mensual por un nuevo Pokémon ultrarraro y decoración de diamante en el Salón de la Fama.`,
       ],
       cta: 'Apoyar en Patreon',
       note: 'Quien donó antes de Patreon es Patrocinador(a) OG: conserva todo lo que tiene, para siempre, con una sección propia en el Salón de la Fama.',
     },
     wall: { title: 'Mural de patrocinadores', empty: 'Todavía no hay nadie. ¡Tu nombre puede ser el primero!' },
-    pick: 'Elige cómo pagar',
-    suggested: 'Sugerido para ti',
-    br: {
-      title: 'En Brasil',
-      methods: 'Pix, tarjeta de crédito, Apple Pay o Google Pay, en reales.',
+    once: {
+      title: 'Donación única',
+      methods: 'Tarjeta, Apple Pay, Google Pay o Pix. El monto está en reales; Stripe te muestra cuánto es en tu moneda.',
       amount: 'Monto de la donación',
       other: 'Otro monto',
       range: (min: number, max: number) => `De R$ ${min} a R$ ${max}, sin centavos.`,
       cta: (amount: number) => `Donar R$ ${amount}`,
       loading: 'Abriendo el pago…',
       error: 'No se pudo abrir el pago ahora. Inténtalo de nuevo en unos instantes.',
-      via: 'El pago se abre en AbacatePay. Tus datos de pago van directo a ellos.',
-    },
-    intl: {
-      title: 'Otros países',
-      methods: 'Tarjeta, Apple Pay o Google Pay, en dólares.',
-      cta: 'Donar con Stripe',
-      via: 'Eliges el monto en la página siguiente, en Stripe. Tus datos de pago van directo a ellos.',
+      via: 'El pago se abre en Stripe. Tus datos de pago van directo a ellos.',
+      noJs: 'Para donar, activa JavaScript en esta página.',
     },
   },
 
@@ -961,7 +954,7 @@ export const siteEs: SiteMessages = {
     ],
     gems: [
       'Las gemas son un ítem virtual del juego: solo compran ítems cosméticos (como sombreros, estelas, títulos y muebles para la base secreta), que aparecen en las partidas, el co-op, la Arena y el Poké Realm, nunca nada que cambie una partida o el ranking. No tienen valor en dinero, no se pueden cambiar por dinero ni pasar a otra cuenta y quedan ligadas a tu cuenta del juego.',
-      'Ganas gemas jugando (la primera partida del día de 5 minutos o más, al jugar cinco días en la misma semana y en la Arena, con un límite diario), apoyando en Patreon o comprando un paquete. Cada cuenta compra hasta R$ 250 o US$ 50 en paquetes por día, y quien tiene menos de 18 años necesita el permiso de sus padres o tutores para comprar. Los paquetes se pagan en Stripe (tarjeta, Apple Pay y Google Pay) o en AbacatePay (Pix), y tus datos de pago van directo a ellos: el juego nunca ve tu tarjeta.',
+      'Ganas gemas jugando (la primera partida del día de 5 minutos o más, al jugar cinco días en la misma semana y en la Arena, con un límite diario), apoyando en Patreon o comprando un paquete. Cada cuenta compra hasta R$ 300 en paquetes por día, y quien tiene menos de 18 años necesita el permiso de sus padres o tutores para comprar. Los paquetes tienen precio en reales y se pagan en Stripe (tarjeta, Pix, Apple Pay, Google Pay y más), que muestra el valor en tu moneda fuera de Brasil, y tus datos de pago van directo a ellos: el juego nunca ve tu tarjeta.',
       'Derecho de arrepentimiento: hasta 7 días después de comprar un paquete, puedes pedir el reembolso de las gemas de ese paquete que aún no gastaste (Código de Defensa del Consumidor de Brasil, art. 49). Pídelo por correo a pedro@wavyia.com.br, con la referencia de la compra. Las gemas ya gastadas y los ítems cosméticos comprados con ellas no son reembolsables.',
       'Un contracargo o disputa del pago (chargeback) quita de la cuenta las gemas de ese paquete, incluso las ya gastadas. El saldo puede quedar negativo y, mientras lo esté, no se puede comprar nada con gemas.',
     ],
@@ -1006,7 +999,7 @@ export const siteEs: SiteMessages = {
       'Para borrar estos datos, elimina los datos del sitio en la configuración del navegador.',
       'Los sprites, sonidos y fuentes vienen del propio sitio, sin llamadas a servicios de terceros. El sitio está alojado en Cloudflare, que, como cualquier servidor, puede registrar datos técnicos de acceso (como la dirección IP) para operar y proteger el servicio.',
       'En el juego usamos PostHog (posthog.com, con los datos guardados en Estados Unidos) para entender cómo se juega y corregir errores. Recibe el resumen de cada partida (Pokémon, dificultad, movimientos, objetos, hasta qué minuto y nivel llegaste y cómo terminó), qué pantallas abres en el menú y, cuando el juego tiene un error, el mensaje del error y el replay de la partida en curso (la semilla y los comandos, nada personal). Todo va ligado al identificador aleatorio de ph_ps y, si iniciaste sesión, al id de tu cuenta y a tu nombre de usuario, nunca a tu correo ni a tu nombre. PostHog no usa cookies aquí y no te sigue entre sitios.',
-      'Las donaciones se pagan en las páginas de AbacatePay (abacatepay.com: Pix y tarjetas brasileñas) o de Stripe (stripe.com: tarjetas de otros países, Apple Pay y Google Pay). Tus datos de pago van directo a ellos, y el juego nunca ve tu tarjeta. Nos muestran el monto y, como a cualquiera que recibe un pago, datos de quien pagó (como nombre y correo), que solo usamos para registrar la donación. Si das un @ (o canjeas el código de la donación), queda ligada a esa cuenta del juego para que lleguen las recompensas; el monto nunca se muestra en público, solo el sello de patrocinador, que puedes ocultar.',
+      'Las donaciones se pagan en las páginas de Stripe (stripe.com: tarjetas, Apple Pay, Google Pay y Pix; las más antiguas, también en las de AbacatePay, abacatepay.com). Tus datos de pago van directo a ellos, y el juego nunca ve tu tarjeta. Nos muestran el monto y, como a cualquiera que recibe un pago, datos de quien pagó (como nombre y correo), que solo usamos para registrar la donación. Si das un @ (o canjeas el código de la donación), queda ligada a esa cuenta del juego para que lleguen las recompensas; el monto nunca se muestra en público, solo el sello de patrocinador, que puedes ocultar.',
     ],
     contact: [
       'Si tienes derechos sobre algún material usado aquí y quieres que se retire o se modifique, abre un issue en GitHub. La solicitud se atenderá rápidamente.',
