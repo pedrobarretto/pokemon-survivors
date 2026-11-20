@@ -23,6 +23,8 @@ import type { GemCurrency, GemMethod, GemPackId } from './data/gems'
 import type { FirstStep, GateAnswer, StepTimes } from './firstSteps'
 import type { InAppApp, OnboardingStep } from './onboarding'
 import type { Arm, TourOutcome, TutorialOutcome } from './firstTime'
+import { analyticsLive } from './liveHosts'
+import type { SupportMilestone } from './ui/supportAskRules'
 
 /**
  * Analytics and error reports. Events go to PostHog (product analytics and
@@ -242,6 +244,10 @@ type AnalyticsEvents = {
    * from our button or the browser's menu (`installed`).
    */
   install: { step: 'prompt' | 'accepted' | 'dismissed' | 'ios' | 'installed' }
+  /** The lobby's ask for support at a milestone (`ui/supportAsk.ts`, once per device per milestone): what the player chose. */
+  support_ask: { milestone: SupportMilestone; choice: 'patreon' | 'donate' | 'later' }
+  /** The gem shop's Patreon card (`ui/patreonCard.ts`): Patreon's page opened (`join`, `manage`) or the Hall's link started (`link`). */
+  patreon_card: { action: 'join' | 'link' | 'manage' }
   /** The lobby's survey (`ui/survey.ts`): how each difficulty feels, with the runs and wins the player had when answering. */
   survey_difficulty: Record<Difficulty, SurveyAnswer> & { runs: number; wins: number }
   /**
@@ -355,7 +361,6 @@ type AnalyticsEvents = {
 }
 
 const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY
-const LIVE_HOSTS = ['www.pokemonsurvivors.com', 'www.pokemonsurvivors.com.br']
 /** Errors one page load reports at most: a bug in the game loop throws every frame. */
 const MAX_ERRORS = 20
 /** Longest replay attached to an error report, in characters; PostHog drops events past 1 MB. */
@@ -509,15 +514,7 @@ const reportError = (error: unknown, context: () => ErrorContext) => {
   withPosthog((ph) => ph.captureException(error, props))
 }
 
-const live = () => {
-  if (!POSTHOG_KEY) return false
-  if (LIVE_HOSTS.includes(location.hostname)) return true
-  try {
-    return localStorage.getItem('ps:analytics') === 'on'
-  } catch {
-    return false
-  }
-}
+const live = () => analyticsLive(POSTHOG_KEY)
 
 /**
  * Starts reporting: catches uncaught errors and rejections right away (with

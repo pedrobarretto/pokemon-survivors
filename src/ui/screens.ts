@@ -33,8 +33,8 @@ import { modIcon } from '../render/modFx'
 import { specialIcon } from '../render/specialFx'
 import { portraitUrl, sprites } from '../render/sprites'
 import { placeIcon } from '../render/places'
-import { formatNumber, formatPokeDollars, locale, t } from '../i18n'
-import { ROUTES } from '../site/routes'
+import { formatNumber, formatPokeDollars, t } from '../i18n'
+import { supportPageUrl } from './supportLink'
 import { treatIcon } from '../render/halloweenArt'
 import { h, later } from './dom'
 import type { ResultsInvite } from './invites'
@@ -1162,7 +1162,7 @@ export const results = (
       extras.save?.el,
       h('div', { class: 'buttons result-buttons' }, ...row),
       victory && extras.credits,
-      victory && h('a', { class: 'support-link result-support', href: ROUTES.support[locale()], target: '_blank', rel: 'noopener' }, `♥ ${m.support}`),
+      victory && h('a', { class: 'support-link result-support', href: supportPageUrl('victory'), target: '_blank', rel: 'noopener' }, `♥ ${m.support}`),
     ),
   )
   root.append(el)

@@ -43,7 +43,7 @@ import { coopListing, legendsVouched, parseCoopReport, type CoopBoardStore } fro
 import type { SaveStore } from './db'
 import type { DiscordLink } from './discordLink'
 import type { Report, TellRevenue } from './errors'
-import type { Donate, GemPix } from './donations'
+import type { GemPix } from './donations'
 import type { CandyGoalStore } from './candyGoal'
 import type { DonateError, FestivalStore } from './festival'
 import type { FriendStore } from './friends'
@@ -60,10 +60,12 @@ import { parseDigHit, parseDigStart, parseDigStop, type DigRefusal, type DigStor
 import { parseDeedsReport, parseErrandClaim } from './realmDeeds'
 import { furniturePrice, IDENTITY_BATCH, parseBaseSave, parseFurnitureBuy, parseGameClaim, parsePresenceReport, parseRealmReport, parseRealmSettings, type BuyError, type RealmStore } from './realm'
 import { checkoutLocale, type StripeCheckout } from './stripe'
+import type { StripeDonate } from './stripeDonations'
+import { rateLimiter } from './rateLimit'
 import { rulesVerdict } from './rulesGrace'
 import type { SupporterStore } from './supporters'
 import { SUGGESTION_ID, type SuggestionStore } from './suggestions'
-import { abacateDonation, abacateGems, ABACATE_GEMS_REF, ABACATE_REF, patreonCharge, patreonMember, stripeDonation, stripeGems, verifyAbacate, verifyPatreon, verifyStandard, verifyStripe } from './webhooks'
+import { abacateDonation, abacateGems, ABACATE_GEMS_REF, patreonCharge, patreonMember, stripeDonation, stripeGems, verifyAbacate, verifyPatreon, verifyStandard, verifyStripe } from './webhooks'
 
 export type AppDeps = {
   store: SaveStore
@@ -72,8 +74,8 @@ export type AppDeps = {
   friends: FriendStore
   gifts: Pick<GiftStore, 'inbox' | 'claim' | 'refer' | 'credit' | 'invites'>
   verify: Verify
-  /** Donation checkouts (AbacatePay), null when the server has no key for them. */
-  donate: Donate | null
+  /** Donation checkouts (Stripe Checkout, in reais), null when the server has no key for them. */
+  donate: StripeDonate | null
   supporters: SupporterStore
   /** Gems: the ledger, packs bought with money, cosmetics bought with gems and the equipped Arena look. */
   gems: Pick<GemStore, 'status' | 'ledger' | 'purchase' | 'buy' | 'buyBundle' | 'setLook' | 'looks' | 'open' | 'opened' | 'event' | 'takeCheckout' | 'takeBuy' | 'takeLook'>
@@ -133,7 +135,7 @@ const SITE = 'https://www.pokemonsurvivors.com'
 /** A same-site path to come back to (`/apoie/`, `/en/support/`). */
 const SITE_PATH = /^\/[a-z0-9/-]{0,40}$/
 
-/** A donation's `ref`: our uuid (AbacatePay) or a Stripe Checkout Session id. */
+/** A donation's `ref`: our uuid (`POST /donations`) or a Stripe Payment Link's Checkout Session id (from before). */
 const DONATION_REF = /^(?:[0-9a-f-]{36}|cs_(?:test|live)_[A-Za-z0-9]{10,200})$/
 
 /**
@@ -155,6 +157,9 @@ const REPORT_ERRORS = { self: 400, limit: 429 } as const
 
 /** What inviting a friend answers when it doesn't go, by `Invited`'s error. */
 const INVITE_ERRORS = { notFriend: 404, limit: 429 } as const
+
+/** Donation checkouts an address may open: enough to change one's mind a few times, not to script sessions. */
+const DONATION_LIMIT = { count: 10, windowMs: 10 * 60_000 } as const
 
 /** What a festival donation answers when it's refused, by `DonateError`. */
 const DONATE_ERRORS = { closed: 409, profile: 403, runs: 403, cap: 409, funds: 409, nosave: 409, stale: 409 } as const satisfies Record<DonateError, number>
@@ -248,10 +253,11 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  * - `POST /referral` (auth) `{ ref }`: the inviter's handle a new account came with. `{ referred }`:
  *   whether it counted (only a new account, never oneself: `canRefer`).
  * - `GET /invites` (auth): `{ friends }` (`InvitedFriend[]`), who signed up with the player's link, newest first.
- * - `POST /donations` `{ amount, page, handle? }`: `{ url }`, an AbacatePay checkout (Pix or a
- *   Brazilian card) for `amount` whole reais (`parseDonation`), for the account of `handle`
- *   (400 when nobody has it). The donor comes back to `page` on the site, with
- *   `?thanks=<ref>` once paid. 503 without an AbacatePay key.
+ * - `POST /donations` `{ amount, page, handle?, locale? }`: `{ url }`, a Stripe Checkout (Pix and cards in reais,
+ *   the donor's own currency abroad by Adaptive Pricing) for `amount` whole reais (`parseDonation`), for the
+ *   account of `handle` (400 when nobody has it), in `locale`'s language. The donor comes back to `page` on the
+ *   site, with `?thanks=<ref>` once paid. 429 past `DONATION_LIMIT` an address, 503 without a Stripe key.
+ *   Donations of AbacatePay checkouts opened before still land through its webhook.
  * - `GET /donations/:ref`: `DonationStatus`, for the thank-you page (404 until the payment is known).
  * - `POST /donations/redeem` (auth) `{ code }`: credits a donation's code to the player. `{ tier }`;
  *   404 for an unknown code, 409 for one already used.
@@ -351,6 +357,7 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
 export const createApp = ({ store, ranking, friends, gifts, verify, donate, supporters, gems, gemCheckout, festival, candyGoal, suggestions, bugReports, discord, admin, moderation, arena, coop, realm, claw, safari, dig, corner, arenaReportSecret, patreon, webhooks, allowedOrigin, ping, report, revenue = () => {} }: AppDeps) => {
   // `userId` is set by `auth` or `maybeAuth` on the routes that ask who's calling; `onError` reports it.
   const app = new Hono<MaybeAuth>()
+  const donations = rateLimiter(DONATION_LIMIT.count, DONATION_LIMIT.windowMs)
 
   app.use(logger())
   app.use(cors({ origin: (origin) => (allowedOrigin(origin) ? origin : null), allowMethods: ['GET', 'PUT', 'POST', 'DELETE'], allowHeaders: ['Authorization', 'Content-Type'], maxAge: 86400 }))
@@ -584,12 +591,14 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     const typed = isRecord(body) && typeof body.handle === 'string' ? body.handle.trim() : ''
     const handle = typed ? parseHandle(typed) : null
     if (typed && !handle) return c.json({ error: 'no such player' }, 400)
+    if (!donations.take([clientIp(c.req.header('X-Real-IP'), c.req.header('X-Forwarded-For'))], Date.now())) return c.json({ error: 'too many checkouts' }, 429)
     const origin = c.req.header('Origin')
     const base = origin && allowedOrigin(origin) ? origin : SITE
     const page = isRecord(body) && typeof body.page === 'string' && SITE_PATH.test(body.page) ? body.page : '/'
+    const locale = (isRecord(body) ? checkoutLocale(body.locale) : null) ?? 'pt'
     const ref = crypto.randomUUID()
-    if (!(await supporters.open(ref, handle))) return c.json({ error: 'no such player' }, 400)
-    const url = await donate(amount, { completionUrl: `${base}${page}?thanks=${ref}`, returnUrl: `${base}${page}` }, `${ABACATE_REF}${ref}`)
+    if (!(await supporters.open(ref, handle, 'stripe'))) return c.json({ error: 'no such player' }, 400)
+    const url = await donate({ ref, amount, handle, locale, successUrl: `${base}${page}?thanks=${ref}`, cancelUrl: `${base}${page}` })
     return c.json({ url })
   })
 

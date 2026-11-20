@@ -30,6 +30,18 @@ describe('Stripe webhooks', () => {
     expect(stripeDonation({ ...session(), type: 'invoice.paid' }, null)).toBeNull()
   })
 
+  it('reads a donation the API opened by its ref, whatever the link, in reais under Adaptive Pricing', () => {
+    const REF = '8f14e45f-ceea-467f-a0e6-1b7a2c1c9a01'
+    const ours = (over: Record<string, unknown> = {}) => session({ payment_link: null, client_reference_id: REF, metadata: { kind: 'donation', ref: REF, handle: 'ash' }, ...over })
+    expect(stripeDonation(ours(), 'plink_1')).toEqual({ provider: 'stripe', ref: REF, amount: 1000, currency: 'usd', handle: 'ash' })
+    expect(stripeDonation(ours({ amount_total: 190, currency: 'usd', currency_conversion: { amount_total: 1000, source_currency: 'BRL' } }), null)).toMatchObject({ ref: REF, amount: 1000, currency: 'brl' })
+    // Pix: the session completes unpaid and the payment comes after.
+    expect(stripeDonation(ours({ payment_status: 'unpaid' }), null)).toBeNull()
+    expect(stripeDonation({ ...ours(), type: 'checkout.session.async_payment_succeeded' }, null)?.ref).toBe(REF)
+    expect(stripeDonation(ours({ metadata: { kind: 'donation', ref: "x'; drop table users" } }), null)).toBeNull()
+    expect(stripeDonation(ours({ metadata: { kind: 'donation', ref: REF } }), null)?.handle).toBeNull()
+  })
+
   it("counts an Adaptive Pricing session in the link's own currency", () => {
     const converted = session({ amount_total: 920, currency: 'eur', currency_conversion: { amount_total: 1000, source_currency: 'usd' } })
     expect(stripeDonation(converted, null)).toMatchObject({ amount: 1000, currency: 'usd' })

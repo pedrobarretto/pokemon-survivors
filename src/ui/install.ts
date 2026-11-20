@@ -163,6 +163,9 @@ export const takeInstallNudge = (): InstallOffer => {
   return offer
 }
 
+/** This device's visits to the game so far (`countVisit`), this one included: the support ask waits for a few (`ui/supportAsk.ts`). */
+export const deviceVisits = () => (readNudge() ?? visit).count
+
 /** Forgets that the lobby offered the app (dev tools), counting this as a second visit so it asks again at the next lobby. */
 export const forgetInstallNudge = () => writeNudge({ count: 2, last: Date.now(), asked: false })
 

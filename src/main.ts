@@ -244,6 +244,8 @@ import { firstRunTip, hideInAppHint, saveCard, showInAppHint } from './ui/onboar
 import { startLobbyTour, type LobbyTourEnd } from './ui/lobbyTour'
 import { invitesScreen, resultsInvite } from './ui/invites'
 import { forgetInstallNudge, installNudgeScreen } from './ui/install'
+import { forgetSupportAsk, supportAskScreen, takeSupportAsk } from './ui/supportAsk'
+import { SUPPORT_MILESTONES, type SupportMilestone } from './ui/supportAskRules'
 import { titleScreen, type LobbyFocus, type Meadow, type ShopTrip } from './ui/title'
 import { creditsLine, supportersScreen } from './ui/supporters'
 import type { PollKind } from './data/supporters'
@@ -863,6 +865,7 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
       survey: () => surveyScreen(ui, input, () => showTitle({ focus: 'survey' })),
       designSurvey: () => designSurveyScreen(ui, input, () => showTitle({ focus: 'survey' })),
       install: (offer, focus) => installNudgeScreen(ui, input, offer, () => showTitle({ focus })),
+      supportAsk: (milestone, focus) => supportAskScreen(ui, input, milestone, () => showTitle({ focus })),
       halloween: (focus) =>
         halloweenScreen(ui, input, {
           gifts: showGifts,
@@ -6180,6 +6183,18 @@ if (import.meta.env.DEV) {
         endRun()
         if (mode === 'reset') return (forgetInstallNudge(), showTitle())
         setScreen(installNudgeScreen(ui, input, mode, () => showTitle()))
+      },
+      /**
+       * The lobby's ask for support at a milestone (`ui/supportAsk.ts`), now, whatever the save (`runs25` without an
+       * argument; `nightmare`, `runs100`); `ps.supportAsk('due')` prints whether the next lobby would ask and marks it
+       * asked if so, and `ps.supportAsk('reset')` forgets the milestones asked about, so the next lobby asks where the save has one.
+       */
+      supportAsk: (milestone: SupportMilestone | 'due' | 'reset' = 'runs25') => {
+        if (milestone === 'reset') return void forgetSupportAsk()
+        if (milestone === 'due') return takeSupportAsk()
+        if (!SUPPORT_MILESTONES.includes(milestone)) return console.warn(`ps: one of ${SUPPORT_MILESTONES.join(', ')}`)
+        endRun()
+        setScreen(supportAskScreen(ui, input, milestone, () => showTitle()))
       },
       /** The Caixa do PC over the title; `ps.card()` opens the Trainer Card's share preview. */
       pc: () => (endRun(), setScreen(showPcBox(() => showTitle()))),

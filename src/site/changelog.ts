@@ -48,6 +48,13 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         fr: 'Seuls comptent les légendaires capturés sur ton compte : qui n’en a capturé aucun ne peut pas se déclarer prêt dans un salon en Mode Légendaire.',
         zh: '只有帳號裡捕獲過的傳說寶可夢才算：還沒捕獲任何一隻的玩家，無法在傳說模式房間準備。',
       },
+      {
+        pt: 'A Loja de gemas mostra o apoio mensal no Patreon: cada nível traz gemas todo mês, e quem já vinculou vê o próprio nível.',
+        en: 'The gem shop now shows monthly support on Patreon: every tier brings gems each month, and patrons who linked see their own tier.',
+        es: 'La tienda de gemas muestra el apoyo mensual en Patreon: cada nivel trae gemas cada mes, y quien ya lo vinculó ve su propio nivel.',
+        fr: 'La boutique de gemmes montre le soutien mensuel sur Patreon : chaque niveau apporte des gemmes chaque mois, et qui l’a déjà lié voit son propre niveau.',
+        zh: '寶石商店現在會顯示 Patreon 每月贊助：每個等級每月都會帶來寶石，已連結的玩家會看到自己的等級。',
+      },
     ],
     changes: [
       {
@@ -67,6 +74,26 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             pt: 'As partidas lendárias têm rankings próprios no Ranking, no lado Co-op Lendário. O Desafio co-op do dia continua no modo normal, e as fendas épicas seguem na arena antiga no co-op.',
             en: 'Legendary runs have their own boards in the Ranking, on the Legendary Co-op side. The daily co-op Challenge stays in the standard mode, and epic rifts are still fought in the old arena in co-op.',
             es: 'Las partidas legendarias tienen sus propias tablas en el Ranking, en el lado Co-op Legendario. El Desafío co-op del día sigue en el modo normal, y las fisuras épicas siguen en la arena antigua en co-op.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Apoio ao jogo', en: 'Supporting the game', es: 'Apoyo al juego' },
+        notes: [
+          {
+            pt: 'A Loja de gemas ganhou um card do Patreon com as gemas por mês de cada nível e as vantagens de quem apoia. Quem já vinculou o Patreon vê o próprio nível no lugar do convite, e o Hall da Fama e a página Apoie também passam a dizer as gemas por mês.',
+            en: 'The gem shop has a Patreon card with every tier’s gems a month and what supporters get. Patrons who linked Patreon see their own tier instead, and the Hall of Fame and the Support page now say the gems a month too.',
+            es: 'La tienda de gemas tiene una tarjeta de Patreon con las gemas al mes de cada nivel y lo que recibe quien apoya. Quien ya vinculó Patreon ve su propio nivel en lugar de la invitación, y el Salón de la Fama y la página Apoya también dicen las gemas al mes.',
+          },
+          {
+            pt: 'Doações avulsas agora são pelo Stripe, do Brasil e de fora, num só formulário: Pix e cartão em reais, e quem é de outro país vê o valor na própria moeda.',
+            en: 'One-time donations now go through Stripe, from Brazil and abroad, in a single form: Pix and cards in reais, and donors from other countries see the amount in their own currency.',
+            es: 'Las donaciones únicas ahora van por Stripe, desde Brasil y desde fuera, en un solo formulario: Pix y tarjeta en reales, y quien es de otro país ve el monto en su propia moneda.',
+          },
+          {
+            pt: 'Depois de alguns marcos (25 partidas, a primeira vitória no Pesadelo, 100 partidas), o lobby pergunta uma vez se você quer apoiar o jogo. Quem já apoia não vê a pergunta.',
+            en: 'After a few milestones (25 runs, a first Nightmare win, 100 runs), the lobby asks once whether you’d like to support the game. Supporters never see it.',
+            es: 'Después de algunos hitos (25 partidas, la primera victoria en Pesadilla, 100 partidas), el lobby pregunta una vez si quieres apoyar el juego. Quien ya apoya no ve la pregunta.',
           },
         ],
       },

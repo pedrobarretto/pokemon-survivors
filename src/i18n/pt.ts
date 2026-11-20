@@ -2,6 +2,7 @@ import { CAFE_TABLES_WORDS } from './cafeTables'
 import type { DexRegion } from '../data/nationalDex'
 import { GALLOP_WORDS } from './gallop'
 import { ITEM_DROP_WORDS } from './itemDrop'
+import { SUPPORT_WORDS } from './support'
 import { LOBBY_TOUR_WORDS } from './lobbyTour'
 import { TUTORIAL_WORDS } from './tutorial'
 import { WELCOME_WORDS } from './welcome'
@@ -1295,6 +1296,7 @@ export const pt = {
   },
 
   itemDrop: ITEM_DROP_WORDS.pt,
+  support: SUPPORT_WORDS.pt,
   welcome: WELCOME_WORDS.pt,
   tutorial: TUTORIAL_WORDS.pt,
   lobbyTour: LOBBY_TOUR_WORDS.pt,

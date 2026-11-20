@@ -51,6 +51,8 @@ import { isUnread, latestUpdate } from './news'
 import { hallFace, hallPortrait, type HallOpen } from './supporters'
 import { designSurveyOffered, noteDesignSeen, surveyLabel, takeSurveyOffer, waitingSurvey, type SurveyId } from './survey'
 import { takeInstallNudge } from './install'
+import { takeSupportAsk } from './supportAsk'
+import type { SupportMilestone } from './supportAskRules'
 import type { InstallOffer } from './installOffer'
 import type { Screen } from './screens'
 import { gearButton, iconButton, shellBody, topBar, walletChip } from './shell'
@@ -162,6 +164,8 @@ export type TitleActions = {
   designSurvey: (focus: LobbyFocus) => Screen
   /** Opens the install offer over the title, like `settings`: the lobby opens it by itself, once per device (`takeInstallNudge`). */
   install: (offer: Exclude<InstallOffer, null>, focus: LobbyFocus) => Screen
+  /** Opens the ask for support over the title, like `settings`: the lobby opens it by itself at a milestone, once per device per milestone (`takeSupportAsk`). */
+  supportAsk: (milestone: SupportMilestone, focus: LobbyFocus) => Screen
   /** Opens the Discord screen (the community server, linking a Discord account) over the title, like `settings`. */
   discord: (focus: LobbyFocus) => Screen
   /** Opens the in-game Pokédex over the title; closing it rebuilds the title on `focus`, like `settings`. */
@@ -1587,9 +1591,12 @@ export const titleScreen = (
       const survey = takeSurveyOffer()
       if (survey) openOver(survey === 'design' ? actions.designSurvey : actions.survey)
       // Or the app's install, once per device, after a few runs or a second visit (not right after the design survey: enough asking for one visit).
+      // Or, past both, the ask for support at a milestone (25 runs, Nightmare, 100 runs), once per device each.
       else if (!designSurveyOffered()) {
         const offer = takeInstallNudge()
+        const milestone = offer ? null : takeSupportAsk()
         if (offer) openOver((focus) => actions.install(offer, focus))
+        else if (milestone) openOver((focus) => actions.supportAsk(milestone, focus))
       }
     }
   }

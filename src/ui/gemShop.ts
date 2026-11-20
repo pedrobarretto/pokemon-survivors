@@ -29,6 +29,7 @@ import { today } from './save'
 import { celebrate } from './confetti'
 import { confirmDialog, type Screen } from './screens'
 import { leaveTo } from '../handoff'
+import { patreonCard } from './patreonCard'
 
 /**
  * The gem shop's two pages, which Leavanny's Boutique on the plaza holds
@@ -681,6 +682,7 @@ export const shopTab = (ctx: GemTabsContext, checkout: string | null): GemTab =>
         'div',
         { class: 'gem-pack-grid', style: `--packs:${packs.length}` },
         ...packs.map((pack) => packCard(pack)),
+        patreonCard({ signedIn: signedIn(), signIn: ctx.signIn ?? null, offline: (text) => say(text, true) }),
       ),
       h('p', { class: 'gem-free' }, m.shop.free(formatNumber(run.gems), formatNumber(run.seconds / 60), formatNumber(week.gems), formatNumber(week.days), formatNumber(inArena.daily))),
     )

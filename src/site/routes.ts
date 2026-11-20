@@ -24,14 +24,6 @@ export type SocialId = keyof typeof SOCIALS
 export const SOCIAL_IDS = Object.keys(SOCIALS) as SocialId[]
 
 /**
- * Stripe Payment Link for donations from outside Brazil (cards, Apple Pay and
- * Google Pay, in US$; the donor picks the amount there). Linked from the support
- * page with the account's handle as `client_reference_id`; once paid it redirects to
- * the support page with `?thanks={CHECKOUT_SESSION_ID}` (set in Stripe's dashboard).
- */
-export const STRIPE_DONATION_URL = 'https://donate.stripe.com/5kQ28l1x45My6ci4ibcjS00'
-
-/**
  * Every public URL, per language. `play` is the game itself (`index.html`,
  * `en/index.html`); the others are the static pages generated at build time.
  * These paths are linked from the game's title screen, so keep them stable.

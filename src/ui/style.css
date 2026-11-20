@@ -3969,6 +3969,23 @@ button {
 }
 
 /* The lobby's own install offer (`installNudgeScreen`): the app's icon over the pitch. */
+/* The lobby's ask for support at a milestone (`ui/supportAsk.ts`). */
+.support-ask-icon {
+  display: block;
+  width: 48px;
+  height: 48px;
+  margin: 2px auto 6px;
+  image-rendering: pixelated;
+}
+
+.support-ask-perks {
+  color: var(--dk-ink-2, #505870);
+}
+
+.support-ask-buttons {
+  flex-wrap: wrap;
+}
+
 .install-nudge-icon {
   display: block;
   width: 64px;
@@ -25473,6 +25490,107 @@ span.arena-hub-face {
 
 .gem-pack.once .gem-pack-price {
   background: #b06a10;
+}
+
+/* The Patreon card (`ui/patreonCard.ts`): a row across the packs' grid, each tier's price and gems a month. */
+.gem-pack.patreon-card {
+  grid-column: 1 / -1;
+  align-items: stretch;
+  gap: 8px;
+  min-height: 0;
+  padding: 10px 12px;
+  text-align: left;
+  border-color: #e0604c;
+  background: var(--dk-wash-red, #fff0ec);
+  cursor: default;
+}
+
+.gem-pack.patreon-card:hover {
+  background: var(--dk-wash-red, #fff0ec);
+}
+
+.patreon-card-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--title);
+  font-size: 22px;
+}
+
+.patreon-card-head img {
+  width: 26px;
+  height: 20px;
+  image-rendering: pixelated;
+}
+
+.patreon-card-tiers {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.patreon-card-tier {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 4px;
+  text-align: center;
+  background: var(--dk-surface-0, #fff);
+  border: 2px solid #e0a090;
+  border-radius: 6px;
+}
+
+.patreon-card-tier b {
+  font-family: var(--title);
+  font-size: 18px;
+}
+
+.patreon-card-tier.gold b {
+  color: #b06a10;
+}
+
+.patreon-card-tier.diamond b {
+  color: #2878c8;
+}
+
+.patreon-card-tier small {
+  font-size: 16px;
+  color: var(--dk-ink-2, #505870);
+}
+
+.patreon-card-tier em {
+  font-family: var(--title);
+  font-size: 16px;
+  font-style: normal;
+  color: #6a30a8;
+}
+
+.patreon-card-perks,
+.patreon-card-mine small {
+  font-family: var(--body);
+  font-size: 17px;
+  color: var(--dk-ink-2, #505870);
+}
+
+.patreon-card-mine {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.patreon-card-mine b {
+  font-family: var(--title);
+  font-size: 20px;
+}
+
+.patreon-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.patreon-card-actions .btn {
+  flex: 1 1 auto;
 }
 
 .gem-pack-bonus.once {

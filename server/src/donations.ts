@@ -2,18 +2,8 @@ import { GEM_PACKS, packGems, type GemPackId } from '../../src/data/gems'
 
 const API = 'https://api.abacatepay.com/v2'
 
-/** Where AbacatePay's checkout sends the donor back to. */
+/** Where AbacatePay's checkout sends the buyer back to. */
 export type DonationUrls = { completionUrl: string; returnUrl: string }
-
-/**
- * Opens a checkout for a donation of `amount` reais and returns its URL.
- * `externalId` comes back in the webhook that says it's paid (`webhooks.ts`).
- */
-export type Donate = (amount: number, urls: DonationUrls, externalId: string) => Promise<string>
-
-/** AbacatePay's payment methods. A wallet payment arrives in the webhook as `CARD`. */
-type Method = 'PIX' | 'CARD' | 'APPLE_PAY' | 'GOOGLE_PAY'
-const WALLETS: readonly Method[] = ['APPLE_PAY', 'GOOGLE_PAY']
 
 type Envelope<T> = { data: T | null; error: string | null; success: boolean }
 
@@ -23,15 +13,8 @@ export type GemPix = (pack: GemPackId, urls: DonationUrls, externalId: string) =
 /** A product of the AbacatePay catalog, by its `externalId` (prefixed `pokemon-survivors-`: the account is shared with other products). */
 type Product = { externalId: string; name: string; description: string; price: number }
 
-const donationProduct = (amount: number): Product => ({
-  externalId: `pokemon-survivors-donation-${amount}`,
-  name: `Doação Pokémon Survivors (R$ ${amount})`,
-  description: 'Apoio ao Pokémon Survivors, um fan game gratuito. Com uma conta, dá um agradecimento cosmético no jogo.',
-  price: amount * 100,
-})
-
 /**
- * A gem pack's product. Its id carries the price, like a donation's, so a
+ * A gem pack's product. Its id carries the price, so a
  * price change in `GEM_PACKS` makes a new product instead of meeting an old
  * one at another price (the checkout refuses to open while they differ,
  * `productFor`).
@@ -44,14 +27,14 @@ const gemProduct = (pack: GemPackId): Product => ({
 })
 
 /**
- * Checkouts through AbacatePay's hosted page: donations (Pix, Brazilian cards,
- * Apple Pay and Google Pay) and gem packs (Pix only: cards and wallets go
- * through Stripe). A checkout only sells catalog products, so each donation amount and each pack gets its own
- * product (`donationProduct`, `gemProduct`), found or created the first time
- * someone pays it and remembered afterwards. Donation amounts come from
- * `parseDonation`, so there are at most a thousand of them.
+ * Gem packs' Pix checkouts through AbacatePay's hosted page (cards and wallets
+ * go through Stripe, and so do donations since they moved there,
+ * `stripeDonations.ts`: AbacatePay's webhook still lands the ones opened
+ * before). A checkout only sells catalog products, so each pack gets its own
+ * product (`gemProduct`), found or created the first time someone pays it and
+ * remembered afterwards.
  */
-export const abacatePay = (apiKey: string): { donate: Donate; gems: GemPix } => {
+export const abacatePay = (apiKey: string): { gems: GemPix } => {
   /**
    * One API call: its `data`, or null when AbacatePay refuses the request
    * (a 4xx such as "Product not found", which it answers with 400, not 404).
@@ -93,31 +76,14 @@ export const abacatePay = (apiKey: string): { donate: Donate; gems: GemPix } => 
     return id
   }
 
-  const open = async (id: string, methods: readonly Method[], urls: DonationUrls, externalId: string) =>
-    (await call<{ url: string }>('/checkouts/create', { body: { items: [{ id, quantity: 1 }], methods, externalId, ...urls } }))?.url ?? null
-
-  /**
-   * Wallets need the store enabled for them on AbacatePay's side ("not
-   * available for this store" otherwise). Until a checkout with them is
-   * refused, donations offer them; after one is, this instance stops asking.
-   */
-  let wallets = true
-
-  const checkout = async (p: Product, methods: readonly Method[], urls: DonationUrls, externalId: string) => {
+  const checkout = async (p: Product, urls: DonationUrls, externalId: string) => {
     const id = await productFor(p)
-    const plain = methods.filter((m) => !WALLETS.includes(m))
-    const withWallets = wallets && plain.length < methods.length
-    let url = await open(id, withWallets ? methods : plain, urls, externalId)
-    if (!url && withWallets) {
-      wallets = false
-      url = await open(id, plain, urls, externalId)
-    }
+    const url = (await call<{ url: string }>('/checkouts/create', { body: { items: [{ id, quantity: 1 }], methods: ['PIX'], externalId, ...urls } }))?.url
     if (!url) throw new Error(`AbacatePay refused a checkout of ${p.externalId}`)
     return url
   }
 
   return {
-    donate: (amount, urls, externalId) => checkout(donationProduct(amount), ['PIX', 'CARD', 'APPLE_PAY', 'GOOGLE_PAY'], urls, externalId),
-    gems: (pack, urls, externalId) => checkout(gemProduct(pack), ['PIX'], urls, externalId),
+    gems: (pack, urls, externalId) => checkout(gemProduct(pack), urls, externalId),
   }
 }

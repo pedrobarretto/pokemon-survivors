@@ -42,11 +42,14 @@ export const loadEnv = () => {
     /** Optional: the Stripe webhook's signing secret (`whsec_…`). Without it `POST /webhooks/stripe` answers 503. */
     stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || undefined,
     /**
-     * Optional: a Stripe secret key for gem packs' Checkout Sessions (`src/stripe.ts`), best a restricted `rk_` key
-     * that may write Checkout Sessions. Without it `POST /gems/checkout` answers 503 for `card`.
+     * Optional: a Stripe secret key for gem packs' and donations' Checkout Sessions (`src/stripe.ts`, `src/stripeDonations.ts`),
+     * best a restricted `rk_` key that may write Checkout Sessions. Without it `POST /gems/checkout` answers 503 for `card`, and `POST /donations` 503.
      */
     stripeSecretKey: process.env.STRIPE_SECRET_KEY || undefined,
-    /** Optional: the donation Payment Link's id (`plink_…`); set, other Checkout Sessions of the account are ignored. */
+    /**
+     * Optional: the retired donation Payment Link's id (`plink_…`); set, the webhook ignores Checkout Sessions of the
+     * account that are neither the API's own (`metadata.kind`) nor that link's.
+     */
     stripePaymentLink: process.env.STRIPE_PAYMENT_LINK || null,
     /**
      * Optional: the Patreon OAuth client (patreon.com/portal) and its redirect URI (the API's `/patreon/callback`),

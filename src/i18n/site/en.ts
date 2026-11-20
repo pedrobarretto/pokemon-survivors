@@ -863,7 +863,7 @@ export const siteEn: SiteMessages = {
   support: {
     title: 'Support Pokémon Survivors | Donate by card, Apple Pay or Google Pay',
     description:
-      'Pokémon Survivors is free, with no ads and nothing for sale that gives power. If you want to help pay for the servers, donate by card, Apple Pay or Google Pay from any country (Stripe), or by Pix or a Brazilian card from Brazil (AbacatePay). With an account, donors get a cosmetic thank-you in the game: a title, a card frame, a badge, a shiny of their choice and a companion.',
+      'Pokémon Survivors is free, with no ads and nothing for sale that gives power. If you want to help pay for the servers, donate by card, Apple Pay, Google Pay or Pix from any country (Stripe), or support every month on Patreon, which brings gems too. With an account, donors get a cosmetic thank-you in the game: a title, a card frame, a badge, a shiny of their choice and a companion.',
     h1: 'Support the project',
     lead: 'The game is free and will stay that way, with no ads and nothing for sale that gives power. If you had fun and want to help pay for the servers (accounts, rankings and the Daily Challenge), any amount helps. As a thank-you, donors with an account get cosmetic rewards in the game, nothing that changes a run.',
     thanks: 'Thank you for your support! ♥',
@@ -901,34 +901,27 @@ export const siteEn: SiteMessages = {
     },
     monthly: {
       title: 'Monthly support on Patreon',
-      lead: 'Want to support every month? On Patreon, your tier follows the amount you keep active. Then link Patreon to your account from the game’s Hall of Fame.',
-      tiers: [
-        '<b>Supporter, US$ 5/month:</b> everything donors get, the Supporter role and the exclusive Discord channel, and the Hall of Fame while your support lasts.',
-        '<b>Gold, US$ 10/month:</b> everything a Supporter gets, the Gold badge and role, a golden card background and wallpaper, and the Hall of Fame for good.',
-        '<b>Diamond, US$ 20/month:</b> everything Gold gets, the Diamond badge and role, a legendary you captured as your companion (shiny if caught shiny), a monthly vote on a new ultra-rare Pokémon and diamond decorations on the Hall of Fame.',
+      lead: 'Want to support every month? On Patreon, your tier follows the amount you keep active, and every paid month brings gems for the Boutique. Then link Patreon to your account from the game’s Hall of Fame.',
+      tiers: (g) => [
+        `<b>Supporter, US$ 5/month:</b> ${n(g.supporter)} gems a month, everything donors get, the Supporter role and the exclusive Discord channel, and the Hall of Fame while your support lasts.`,
+        `<b>Gold, US$ 10/month:</b> ${n(g.gold)} gems a month, everything a Supporter gets, the Gold badge and role, a golden card background and wallpaper, and the Hall of Fame for good.`,
+        `<b>Diamond, US$ 20/month:</b> ${n(g.diamond)} gems a month, everything Gold gets, the Diamond badge and role, a legendary you captured as your companion (shiny if caught shiny), a monthly vote on a new ultra-rare Pokémon and diamond decorations on the Hall of Fame.`,
       ],
       cta: 'Support on Patreon',
       note: 'Everyone who donated before Patreon is an OG Supporter: they keep everything they have, for good, with their own section on the Hall of Fame.',
     },
     wall: { title: 'Supporters wall', empty: 'Nobody here yet. Your name could be the first!' },
-    pick: 'Choose how to pay',
-    suggested: 'Suggested for you',
-    br: {
-      title: 'In Brazil',
-      methods: 'Pix, credit card, Apple Pay or Google Pay, in Brazilian reais.',
+    once: {
+      title: 'One-time donation',
+      methods: 'Card, Apple Pay, Google Pay or Pix. The amount is in Brazilian reais; Stripe shows what it comes to in your own currency.',
       amount: 'Donation amount',
       other: 'Other amount',
       range: (min: number, max: number) => `From R$ ${min} to R$ ${max}, whole reais.`,
       cta: (amount: number) => `Donate R$ ${amount}`,
       loading: 'Opening the payment…',
       error: "Couldn't open the payment right now. Please try again in a moment.",
-      via: 'The payment opens on AbacatePay. Your payment details go straight to them.',
-    },
-    intl: {
-      title: 'Other countries',
-      methods: 'Card, Apple Pay or Google Pay, in US dollars.',
-      cta: 'Donate with Stripe',
-      via: 'You choose the amount on the next page, on Stripe. Your payment details go straight to them.',
+      via: 'The payment opens on Stripe. Your payment details go straight to them.',
+      noJs: 'To donate, turn on JavaScript for this page.',
     },
   },
 
@@ -1002,7 +995,7 @@ export const siteEn: SiteMessages = {
       'To delete this data, clear the site data in your browser settings.',
       'Sprites, sounds and fonts are served by this site, with no calls to third-party services. The site is hosted on Cloudflare which, like any web server, may log technical access data (such as IP addresses) to run and protect the service.',
       'In the game we use PostHog (posthog.com, with data stored in the United States) to understand how it is played and to fix bugs. It receives a summary of each run (Pokémon, difficulty, moves, items, the minute and level you reached and how it ended), which menu screens you open and, when the game hits an error, the error message and the replay of the run in progress (its seed and your inputs, nothing personal). All of it is tied to the random id in ph_ps and, if you signed in, to your account id and username, never to your email or name. PostHog uses no cookies here and does not follow you across sites.',
-      'Donations are paid on AbacatePay\'s pages (abacatepay.com: Pix and Brazilian cards) or Stripe\'s (stripe.com: cards from other countries, Apple Pay and Google Pay). Your payment details go straight to them, and the game never sees your card. They show us the amount and, as they would to anyone receiving a payment, details of who paid (such as name and email), which we use for nothing but recording the donation. If you give an @ (or redeem the donation\'s code), it\'s tied to that game account so the rewards reach it; the amount is never shown publicly, only the supporter badge, which you can hide.',
+      'Donations are paid on Stripe\'s pages (stripe.com: cards, Apple Pay, Google Pay and Pix; older ones also on AbacatePay\'s, abacatepay.com). Your payment details go straight to them, and the game never sees your card. They show us the amount and, as they would to anyone receiving a payment, details of who paid (such as name and email), which we use for nothing but recording the donation. If you give an @ (or redeem the donation\'s code), it\'s tied to that game account so the rewards reach it; the amount is never shown publicly, only the supporter badge, which you can hide.',
     ],
     contact: [
       'If you hold rights to any material used here and want it removed or changed, open an issue on GitHub. It will be addressed promptly.',

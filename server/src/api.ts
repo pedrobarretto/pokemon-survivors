@@ -27,6 +27,7 @@ import { festivalStore } from './festival'
 import { abacatePay } from './donations'
 import { gemStore } from './gems'
 import { stripeCheckout } from './stripe'
+import { stripeDonate } from './stripeDonations'
 import { friendStore } from './friends'
 import { giftStore } from './gifts'
 import { moderationStore } from './moderation'
@@ -102,7 +103,7 @@ const app = createApp({
   friends: friendStore(sql),
   gifts,
   verify: clerkVerifier(env),
-  donate: abacate?.donate ?? null,
+  donate: env.stripeSecretKey ? stripeDonate(env.stripeSecretKey) : null,
   gems: gemStore(sql),
   gemCheckout: { card: env.stripeSecretKey ? stripeCheckout(env.stripeSecretKey) : null, pix: abacate?.gems ?? null },
   supporters,
