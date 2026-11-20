@@ -24,6 +24,55 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-20',
+    title: { pt: 'Gemas na sua moeda', en: 'Gems in your currency', es: 'Gemas en tu moneda', fr: 'Des gemmes dans ta devise', zh: '以你的幣別購買寶石' },
+    highlights: [
+      {
+        pt: 'Pacotes de gemas agora mostram o preço na sua moeda (dólar, euro, NT$, peso…), e o pagamento cobra nela.',
+        en: 'Gem packs now show their price in your currency (dollars, euros, NT$, pesos…), and checkout charges in it.',
+        es: 'Los paquetes de gemas ahora muestran el precio en tu moneda (dólar, euro, NT$, peso…), y el pago cobra en ella.',
+        fr: 'Les packs de gemmes affichent maintenant leur prix dans ta devise (dollar, euro, NT$, peso…), et le paiement se fait dans celle-ci.',
+        zh: '寶石包現在會以你的幣別顯示價格（美元、歐元、新台幣、披索…），付款也以該幣別扣款。',
+      },
+      {
+        pt: 'Um só pagamento com tudo junto: cartão, Apple Pay, Google Pay e, no Brasil, Pix.',
+        en: 'One checkout with everything in it: card, Apple Pay, Google Pay, and Pix in Brazil.',
+        es: 'Un solo pago con todo junto: tarjeta, Apple Pay, Google Pay y, en Brasil, Pix.',
+        fr: 'Un seul paiement avec tout dedans : carte, Apple Pay, Google Pay, et Pix au Brésil.',
+        zh: '同一個付款頁面就有全部方式：信用卡、Apple Pay、Google Pay，在巴西還有 Pix。',
+      },
+      {
+        pt: 'Faltam gemas para um visual? O botão dele já abre o pacote que cobre a diferença.',
+        en: 'Short of gems for a look? Its button now opens the pack that covers the difference.',
+        es: '¿Te faltan gemas para un visual? Su botón ya abre el paquete que cubre la diferencia.',
+        fr: 'Il te manque des gemmes pour un look ? Son bouton ouvre directement le pack qui couvre la différence.',
+        zh: '寶石不夠買外觀嗎？它的按鈕會直接打開能補足差額的寶石包。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Compra de gemas', en: 'Buying gems', es: 'Compra de gemas', fr: 'Achat de gemmes', zh: '購買寶石' },
+        notes: [
+          {
+            pt: 'Fora do Brasil, a Loja mostra um preço aproximado na moeda do seu aparelho, e a página de pagamento mostra e cobra o valor exato na sua moeda. No Brasil, nada muda: os mesmos preços em reais, agora com Pix na mesma página do cartão.',
+            en: 'Outside Brazil, the Shop shows an approximate price in your device’s currency, and the checkout page shows and charges the exact amount in your currency. In Brazil nothing changes: the same prices in reais, now with Pix on the same page as cards.',
+            es: 'Fuera de Brasil, la Tienda muestra un precio aproximado en la moneda de tu dispositivo, y la página de pago muestra y cobra el valor exacto en tu moneda. En Brasil no cambia nada: los mismos precios en reales, ahora con Pix en la misma página que la tarjeta.',
+          },
+          {
+            pt: 'Desistiu no meio do pagamento? Você volta para a Boutique, que oferece o mesmo pacote de novo e lembra dos outros jeitos de pagar, em vez de cair na tela inicial.',
+            en: 'Backed out of a payment? You land back in the Boutique, which offers the same pack again and the other ways to pay, instead of the title screen.',
+            es: '¿Te arrepentiste a mitad del pago? Vuelves a la Boutique, que te ofrece el mismo paquete otra vez y las otras formas de pagar, en vez de caer en la pantalla inicial.',
+          },
+          {
+            pt: 'Um visual caro demais mostra no próprio botão quantas gemas faltam e o pacote que cobre a diferença, com o preço; tocar abre o pagamento dele.',
+            en: 'A look you can’t afford yet shows on its own button how many gems you’re short and the pack that covers them, with its price; tapping opens that pack’s checkout.',
+            es: 'Un visual que aún no alcanzas muestra en su propio botón cuántas gemas faltan y el paquete que las cubre, con su precio; tocarlo abre el pago de ese paquete.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-11-19',
     title: { pt: 'Chinês simplificado', en: 'Simplified Chinese', es: 'Chino simplificado', fr: 'Chinois simplifié', zh: '簡體中文' },
     highlights: [

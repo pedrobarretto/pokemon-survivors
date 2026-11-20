@@ -10,7 +10,7 @@ import { challengeOpen } from '../../src/game/challenge'
 import { cosmeticPrice, isCosmeticId } from '../../src/data/cosmetics'
 import { parseTeamSize } from '../../src/game/coopBoard'
 import { parseDonation } from '../../src/data/donations'
-import { GEM_PACKS, isGemPackId, packGems, type GemCurrency } from '../../src/data/gems'
+import { isGemMarket, isGemPackId, packGems, packPrice, type GemMarket } from '../../src/data/gems'
 import { isPollOptionOf, type PollKind } from '../../src/data/supporters'
 import { brasiliaDay, isDayKey } from '../../src/game/day'
 import { parseDonationAmount } from '../../src/game/festival'
@@ -43,7 +43,7 @@ import { coopListing, parseCoopReport, type CoopBoardStore } from './coopBoards'
 import type { SaveStore } from './db'
 import type { DiscordLink } from './discordLink'
 import type { Report, TellRevenue } from './errors'
-import type { Donate, GemPix } from './donations'
+import type { Donate } from './donations'
 import type { CandyGoalStore } from './candyGoal'
 import type { DonateError, FestivalStore } from './festival'
 import type { FriendStore } from './friends'
@@ -63,7 +63,7 @@ import { checkoutLocale, type StripeCheckout } from './stripe'
 import { rulesVerdict } from './rulesGrace'
 import type { SupporterStore } from './supporters'
 import { SUGGESTION_ID, type SuggestionStore } from './suggestions'
-import { abacateDonation, abacateGems, ABACATE_GEMS_REF, ABACATE_REF, patreonCharge, patreonMember, stripeDonation, stripeGems, verifyAbacate, verifyPatreon, verifyStandard, verifyStripe } from './webhooks'
+import { abacateDonation, abacateGems, ABACATE_REF, patreonCharge, patreonMember, stripeDonation, stripeGems, verifyAbacate, verifyPatreon, verifyStandard, verifyStripe } from './webhooks'
 
 export type AppDeps = {
   store: SaveStore
@@ -77,8 +77,8 @@ export type AppDeps = {
   supporters: SupporterStore
   /** Gems: the ledger, packs bought with money, cosmetics bought with gems and the equipped Arena look. */
   gems: Pick<GemStore, 'status' | 'ledger' | 'purchase' | 'buy' | 'buyBundle' | 'setLook' | 'looks' | 'open' | 'opened' | 'event' | 'takeCheckout' | 'takeBuy' | 'takeLook'>
-  /** Gem pack checkouts: `card` Stripe Checkout, `pix` AbacatePay; null when the server has no key for one (it answers 503). */
-  gemCheckout: { card: StripeCheckout | null; pix: GemPix | null }
+  /** Gem pack checkouts (Stripe Checkout); null when the server has no Stripe key (it answers 503). */
+  gemCheckout: StripeCheckout | null
   /** Festival da Praça: the pot, donations from the stored save and the plaque. */
   festival: Pick<FestivalStore, 'status' | 'donate' | 'setPublic' | 'takeDonate' | 'takeToggle' | 'held' | 'review'>
   /** Meta da comunidade: every account's candy jar summed, toward the goal that opens Mega Darkrai. */
@@ -270,9 +270,11 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  *   negative, `lockedCosmetics`; the look leaves them out). `GET /gems/ledger` (auth): the latest 50 `GemLedgerEntry`, newest first.
  * - `GET /gems/purchase/:ref` (auth): `GemPurchaseResponse` `{ status, gems, balance }`, where the account's own pack `ref` (the
  *   checkout's `?gems=<ref>`) stands; 404 for anyone else's or an unknown one.
- * - `POST /gems/checkout` (auth) `{ pack, method, currency }`: `{ url }`, a checkout for a gem pack: `card` Stripe Checkout in
- *   `currency`, `pix` AbacatePay in reais (whatever `currency` says). Paid, it comes back to the game with `?gems=<ref>`, and
- *   the webhook credits the pack. 400 invalid, 429 past the checkout limit, 503 without the method's key.
+ * - `POST /gems/checkout` (auth) `{ pack, market, locale? }`: `{ url }`, a Stripe Checkout for a gem pack, in reais at
+ *   `market`'s price (`br` Brazil's, `intl` everyone else's, which Stripe shows in the buyer's currency); a page from before
+ *   2026-11-20 sends `{ method, currency }` instead (`brl` or Pix as `br`). Paid, it comes back to the game with
+ *   `?gems=<ref>`; given up, with `?gems=<ref>&cancel=<pack>`; the webhook credits the pack. 400 invalid, 409 refused
+ *   (`once`, `cap`), 429 past the checkout limit, 503 without the Stripe key.
  * - `POST /gems/buy` (auth) `{ id }`: buys a cosmetic. `{ balance, owned, locked }`; 402 `{ error: 'gems' }` short (or negative),
  *   409 owned already (a free one too), 404 unknown or not on sale. The debit and the ownership land together, once.
  * - `POST /gems/bundle` (auth) `{ id }`: buys a skin bundle (`SKIN_BUNDLES`): the skins the account lacks, for what they cost
@@ -617,25 +619,29 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
   app.post('/gems/checkout', auth, smallBody, async (c) => {
     const body = await json(c)
     const pack = isRecord(body) && isGemPackId(body.pack) ? body.pack : null
-    const method = isRecord(body) && (body.method === 'card' || body.method === 'pix') ? body.method : null
-    const asked: GemCurrency | null = isRecord(body) && (body.currency === 'brl' || body.currency === 'usd') ? body.currency : null
-    if (!pack || !method || !asked) return c.json({ error: 'expected { pack, method, currency }' }, 400)
+    // Pages from before one price list per market sent a method and a currency: reais (or Pix, reais only) were Brazil's.
+    const legacy = isRecord(body) && (body.currency === 'brl' || body.method === 'pix') ? 'br' : isRecord(body) && body.currency === 'usd' ? 'intl' : null
+    const market: GemMarket | null = isRecord(body) && isGemMarket(body.market) ? body.market : legacy
+    if (!pack || !market) return c.json({ error: 'expected { pack, market }' }, 400)
     const locale = isRecord(body) ? checkoutLocale(body.locale) : null
-    // Pix is reais only.
-    const currency = method === 'pix' ? 'brl' : asked
-    const card = method === 'card' ? gemCheckout.card : null
-    const pix = method === 'pix' ? gemCheckout.pix : null
-    if (!card && !pix) return c.json({ error: `${method} is off` }, 503)
+    if (!gemCheckout) return c.json({ error: 'checkout is off' }, 503)
     if (!gems.takeCheckout(c.var.userId)) return c.json({ error: 'too many checkouts' }, 429)
     const origin = c.req.header('Origin')
     const base = origin && allowedOrigin(origin) ? origin : SITE
     const ref = crypto.randomUUID()
-    const back = `${base}/?gems=${ref}`
     // A once pack bought already, or past the day's limit: 409 with why (`GemCheckoutRefusal`), before any payment opens.
-    const refused = await gems.open({ ref, userId: c.var.userId, pack, gems: packGems(pack), provider: card ? 'stripe' : 'abacatepay', currency, amount: GEM_PACKS[pack][currency] })
+    const refused = await gems.open({ ref, userId: c.var.userId, pack, gems: packGems(pack), provider: 'stripe', market, amount: packPrice(pack, market) })
     if (refused) return c.json({ error: refused }, 409)
-    if (pix) return c.json({ url: await pix(pack, { completionUrl: back, returnUrl: `${base}/` }, `${ABACATE_GEMS_REF}${ref}`) })
-    const opened = await card!({ ref, userId: c.var.userId, pack, currency, locale: locale ?? (currency === 'brl' ? 'pt' : 'en'), successUrl: back, cancelUrl: `${base}/` })
+    const opened = await gemCheckout({
+      ref,
+      userId: c.var.userId,
+      pack,
+      market,
+      locale: locale ?? (market === 'br' ? 'pt' : 'en'),
+      successUrl: `${base}/?gems=${ref}`,
+      // Given up (Stripe's back link): the Boutique's "Não deu certo?" sheet, which offers the same pack again.
+      cancelUrl: `${base}/?gems=${ref}&cancel=${pack}`,
+    })
     await gems.opened(ref, opened.session)
     return c.json({ url: opened.url })
   })

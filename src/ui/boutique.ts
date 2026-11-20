@@ -2,7 +2,7 @@ import type { VersusPick } from '../data/versus'
 import { PLAYABLE } from '../data/hatchlings'
 import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
-import { gemsSignedIn, onGems } from '../gems'
+import { gemsSignedIn, onGems, type CheckoutReturn } from '../gems'
 import { t } from '../i18n'
 import { gemIconUrl, slotIconUrl } from '../render/gemArt'
 import { wearsLooks } from '../render/wearables'
@@ -20,8 +20,9 @@ import { BOUTIQUE_TABS, markBoutiqueSeen, type BoutiqueTab } from './boutiqueSee
  * `close`: Voltar (the lobby pans home). `signIn`: the way to an account
  * (null in a build without accounts). `pick`: the Arena's Pokémon, who wears
  * the previews when the partner can't (no anchors), and `keepPick` saves the
- * one Visual's picker takes. `checkout`: the ref the page came back from a gem
- * pack's checkout with (`?gems=<ref>`), so Loja opens on its return sheet.
+ * one Visual's picker takes. `checkout`: what the page came back from a gem
+ * pack's checkout with (`?gems=<ref>`, `&cancel=<pack>`), so Loja opens on its
+ * return sheet (or, given up, on "Não deu certo?").
  * `item`: the skin Skins opens on (the partner select's skins row), or null.
  */
 export type BoutiqueOpts = {
@@ -30,7 +31,7 @@ export type BoutiqueOpts = {
   signIn: (() => void) | null
   pick: VersusPick
   keepPick: (id: VersusPick) => void
-  checkout: string | null
+  checkout: CheckoutReturn | null
   item: SkinId | null
 }
 

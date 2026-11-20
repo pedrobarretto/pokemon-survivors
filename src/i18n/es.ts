@@ -621,7 +621,11 @@ export const es: Messages = {
     shop: {
       pitch: 'Estilos para tu Pokémon en las partidas, el co-op y la Arena: todos los ven, y ninguno da poder.',
       balance: 'Tu saldo',
-      currency: 'Moneda',
+      /** The Brasil / Outro país switch over the packs (which price list, `GemMarket`), and the note under them abroad, where prices are a guess in the buyer's currency. */
+      market: 'Dónde pagas',
+      marketBr: 'Brasil',
+      marketIntl: 'Otro país',
+      approx: 'Precios aproximados en tu moneda: el valor final aparece al pagar.',
       packs: 'Paquetes de gemas',
       bonus: (n: string) => `+${n} de bono`,
       catalog: 'Estilos',
@@ -644,6 +648,8 @@ export const es: Messages = {
       confirm: (name: string, price: string) => `¿Comprar ${name} por ${price} gemas?`,
       bought: (name: string) => `¡${name} es tuyo, y ya lo estás usando!`,
       short: (n: string) => `Te faltan ${n} gemas. ¿Qué tal un paquete?`,
+      /** An item out of reach: its button buys the pack that covers it (gems missing and the pack's name; its price follows). */
+      shortPack: (n: string, pack: string) => `Faltan ${n} · ${pack}`,
       busy: '¡Calma! Demasiadas compras seguidas. Inténtalo de nuevo en un minuto.',
       offline: 'La tienda está fuera de alcance ahora. Inténtalo de nuevo en un momento.',
       banned: 'Esta cuenta no puede usar la tienda.',
@@ -661,13 +667,15 @@ export const es: Messages = {
     checkout: {
       split: (gems: string, bonus: string) => `${gems} + ${bonus} de bono`,
       pay: 'Pagar con',
-      card: 'Tarjeta, Apple Pay o Google Pay',
-      pix: 'Pix',
+      /** What Stripe Checkout takes, by price list (Pix only shows in reais), the button to it and the note on a price abroad. */
+      ways: { br: 'Pix, tarjeta, Apple Pay o Google Pay', intl: 'Tarjeta, Apple Pay, Google Pay y más, en tu moneda' },
+      go: 'Ir al pago',
+      approx: 'Valor aproximado: el precio final, en tu moneda, aparece al pagar.',
       /** The box the pay buttons need ticked. */
       age: 'Tengo 18 años o más, o tengo permiso de mis padres o tutores.',
       /** The checkout turned down (`GemCheckoutRefusal`): a once pack taken, the day's limit (`GEM_CHECKOUT.daily`, as a price). */
       once: 'Esta cuenta ya obtuvo el paquete de bienvenida.',
-      cap: (limit: string) => `Por seguridad, cada cuenta compra hasta ${limit} en gemas por día, y un pago abierto cuenta durante media hora. Inténtalo de nuevo mañana (el día cambia a medianoche, hora de Brasilia).`,
+      cap: (limit: string) => `Por seguridad, cada cuenta compra hasta ${limit} en gemas por día, y un pago abierto cuenta durante cerca de una hora. Inténtalo de nuevo mañana (el día cambia a medianoche, hora de Brasilia).`,
       cancel: 'Cancelar',
       opening: 'Abriendo el pago…',
       failed: 'No se pudo abrir el pago. Inténtalo de nuevo.',
@@ -678,6 +686,19 @@ export const es: Messages = {
       timeout: 'Pago en camino',
       timeoutNote: 'Todavía estamos confirmando el pago. Las gemas llegan a tu cuenta en unos minutos (un Pix puede tardar un poco más), y puedes seguir jugando.',
       ok: 'Continuar',
+    },
+    /** Back from a checkout given up (`&cancel=`): nothing charged, the same pack again, the other ways to pay (by price list) and Patreon. */
+    cancelled: {
+      title: '¿No funcionó?',
+      text: 'No se cobró nada. ¿Quieres intentarlo de nuevo?',
+      retry: (pack: string, price: string) => `Intentar de nuevo: ${pack} · ${price}`,
+      ways: {
+        br: 'Puedes pagar con Pix, Apple Pay o Google Pay, además de tarjeta.',
+        intl: '¿Tarjeta rechazada? Prueba Apple Pay, Google Pay u otra tarjeta: algunos bancos rechazan compras en tiendas de otro país.',
+      },
+      patreon: '¿Prefieres apoyar cada mes? Patreon también da gemas.',
+      patreonLink: 'Ver Patreon',
+      close: 'Ahora no',
     },
     skinShop: {
       pitch: 'Tu Pokémon redibujado, en todas las etapas de su línea. Aparece en tus partidas, en el co-op y en la Arena.',

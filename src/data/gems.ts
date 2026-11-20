@@ -3,11 +3,15 @@
  * only, never power. The API keeps every account's balance in a ledger (the
  * device never decides one), fed from three sources:
  *
- * - `GEM_PACKS`: bought with money. Card, Apple Pay and Google Pay through
- *   Stripe Checkout, in reais in Brazil and dollars elsewhere; Pix through
- *   AbacatePay. A refund or a dispute takes the pack's gems back. An account
- *   buys at most `GEM_CHECKOUT.daily` of them a Brasília day, and a `once`
- *   pack (the welcome pack) once ever.
+ * - `GEM_PACKS`: bought with money through Stripe Checkout (card, Pix,
+ *   Apple Pay, Google Pay, Link: whatever the account turns on and the buyer
+ *   can use), always priced in reais (the account settles in reais), at the
+ *   Brazilian price in Brazil and `intl` elsewhere, which Stripe's Adaptive
+ *   Pricing shows each buyer in their own currency. A refund or a dispute
+ *   takes the pack's gems back. An account buys at most `GEM_CHECKOUT.daily`
+ *   of them a Brasília day, and a `once` pack (the welcome pack) once ever.
+ *   (Packs bought through AbacatePay's Pix before 2026-11-20 still get their
+ *   refunds and disputes from its webhooks.)
  * - `GEM_PATREON`: a member's first paid Patreon charge each Brasília month,
  *   by that pledge's active tier, worth what the pack of the same price gives.
  * - `GEM_PLAY`: play the API saw on its own (a run's report, a relay's): the
@@ -15,17 +19,23 @@
  *   with its own limit. Never from the device's word (missions, a save).
  */
 
-/** Gems a pack gives (`gems` + `bonus`) and its price in cents of each currency. `once`: an account buys it once ever (the shop shows it until then). */
-export type GemPack = { gems: number; bonus: number; brl: number; usd: number; once?: true }
+/**
+ * Gems a pack gives (`gems` + `bonus`) and what it costs, in cents of reais
+ * (centavos): `brl` in Brazil, `intl` everywhere else. `usd` is the dollar
+ * price `intl` was set from (`GEM_FX.brlPerUsd`, rounded to ,90), a
+ * reference never charged. `once`: an account buys it once ever (the shop
+ * shows it until then).
+ */
+export type GemPack = { gems: number; bonus: number; brl: number; intl: number; usd: number; once?: true }
 
 /** The packs, in the shop's order. Prices and gems match the cosmetics' (`RARITY_PRICE`): the Bolsa buys one epic, the Baú one legendary. */
 export const GEM_PACKS = {
-  welcome: { gems: 400, bonus: 0, brl: 990, usd: 199, once: true },
-  pouch: { gems: 200, bonus: 0, brl: 990, usd: 199 },
-  bag: { gems: 500, bonus: 50, brl: 2490, usd: 499 },
-  chest: { gems: 1000, bonus: 200, brl: 4990, usd: 999 },
-  hoard: { gems: 2000, bonus: 600, brl: 9990, usd: 1999 },
-  vault: { gems: 5000, bonus: 2000, brl: 24990, usd: 4999 },
+  welcome: { gems: 400, bonus: 0, brl: 990, intl: 1190, usd: 199, once: true },
+  pouch: { gems: 200, bonus: 0, brl: 990, intl: 1190, usd: 199 },
+  bag: { gems: 500, bonus: 50, brl: 2490, intl: 2990, usd: 499 },
+  chest: { gems: 1000, bonus: 200, brl: 4990, intl: 5890, usd: 999 },
+  hoard: { gems: 2000, bonus: 600, brl: 9990, intl: 11790, usd: 1999 },
+  vault: { gems: 5000, bonus: 2000, brl: 24990, intl: 29490, usd: 4999 },
 } as const satisfies Record<string, GemPack>
 
 export type GemPackId = keyof typeof GEM_PACKS
@@ -42,18 +52,54 @@ export const oncePack = (id: GemPackId) => {
   return pack.once === true
 }
 
-export type GemCurrency = 'brl' | 'usd'
+/** Which price a buyer pays: Brazil's (`brl`) or everyone else's (`intl`). Both are charged in reais. */
+export type GemMarket = 'br' | 'intl'
 
-/** How a pack is paid: `card` is Stripe Checkout (cards, Apple Pay, Google Pay), `pix` AbacatePay (reais only). */
-export type GemMethod = 'card' | 'pix'
+export const isGemMarket = (v: unknown): v is GemMarket => v === 'br' || v === 'intl'
+
+/** What pack `id` costs in `market`, in centavos. */
+export const packPrice = (id: GemPackId, market: GemMarket) => GEM_PACKS[id][market === 'br' ? 'brl' : 'intl']
 
 /**
- * The checkout's brakes, per account: `daily` cents of packs a Brasília day
- * in each currency (paid ones and pending ones count), and `holdMinutes`, how
- * long an unpaid checkout counts as pending (a Stripe session expires sooner,
- * `stripe.ts`; a Pix paid later still lands).
+ * The checkout's brakes, per account: `daily` centavos of packs a Brasília
+ * day (paid ones and pending ones count; enough for the Cofre abroad), and
+ * `holdMinutes`, how long an unpaid checkout counts as pending: its Stripe
+ * session's life (31 min, `stripe.ts`) plus a Pix's, once the buyer asked
+ * for one at its end (30 min, `PIX_SECONDS`), so an unpaid one stops
+ * counting only once it can't be paid.
  */
-export const GEM_CHECKOUT = { daily: { brl: 25000, usd: 5000 }, holdMinutes: 35 } as const
+export const GEM_CHECKOUT = { daily: 30000, holdMinutes: 65 } as const
+
+/**
+ * The shop's approximate prices abroad: Stripe converts each checkout from
+ * reais into the buyer's currency at its own rate (Adaptive Pricing), so the
+ * shop only guesses with this table, a snapshot of 2026-11-20 (Stripe's own
+ * BRL/USD of the week was 5.93; `perUsd` from the market's), and says the
+ * final price shows at checkout. `whole`: written without cents.
+ */
+export const GEM_FX = {
+  brlPerUsd: 5.9,
+  perUsd: {
+    usd: { rate: 1 },
+    eur: { rate: 0.87 },
+    gbp: { rate: 0.76 },
+    chf: { rate: 0.8 },
+    twd: { rate: 31, whole: true },
+    hkd: { rate: 7.78 },
+    cny: { rate: 7.1 },
+    sgd: { rate: 1.3 },
+    myr: { rate: 4.2 },
+    mxn: { rate: 18.4 },
+    cad: { rate: 1.4 },
+    aud: { rate: 1.53 },
+    clp: { rate: 940, whole: true },
+    cop: { rate: 3900, whole: true },
+    pen: { rate: 3.7 },
+  },
+} as const satisfies { brlPerUsd: number; perUsd: Record<string, { rate: number; whole?: true }> }
+
+/** A currency the shop can guess a price in (`GEM_FX`). */
+export type ShownCurrency = keyof typeof GEM_FX.perUsd
 
 /**
  * Gems each paid Patreon charge brings, by the pledge's active tier

@@ -620,7 +620,11 @@ export const fr: Messages = {
     shop: {
       pitch: 'Des styles pour ton Pokémon dans tes parties, en coop et dans l’Arène : tout le monde les voit, et aucun ne donne de puissance.',
       balance: 'Ton solde',
-      currency: 'Devise',
+      /** The Brasil / Outro país switch over the packs (which price list, `GemMarket`), and the note under them abroad, where prices are a guess in the buyer's currency. */
+      market: 'Où tu paies',
+      marketBr: 'Brésil',
+      marketIntl: 'Autre pays',
+      approx: 'Prix approximatifs dans ta devise : le montant final s’affiche au paiement.',
       packs: 'Packs de gemmes',
       bonus: (n: string) => `+${n} en bonus`,
       catalog: 'Styles',
@@ -643,6 +647,8 @@ export const fr: Messages = {
       confirm: (name: string, price: string) => `Acheter ${name} pour ${price} gemmes ?`,
       bought: (name: string) => `${name} est à toi, et tu le portes déjà !`,
       short: (n: string) => `Il te manque ${n} gemmes. Un pack, peut-être ?`,
+      /** An item out of reach: its button buys the pack that covers it (gems missing and the pack's name; its price follows). */
+      shortPack: (n: string, pack: string) => `Il manque ${n} · ${pack}`,
       busy: 'Doucement ! Trop d’achats d’affilée. Réessaie dans une minute.',
       offline: 'La boutique est hors de portée pour le moment. Réessaie dans un instant.',
       banned: 'Ce compte ne peut pas utiliser la boutique.',
@@ -660,13 +666,15 @@ export const fr: Messages = {
     checkout: {
       split: (gems: string, bonus: string) => `${gems} + ${bonus} en bonus`,
       pay: 'Payer avec',
-      card: 'Carte, Apple Pay ou Google Pay',
-      pix: 'Pix',
+      /** What Stripe Checkout takes, by price list (Pix only shows in reais), the button to it and the note on a price abroad. */
+      ways: { br: 'Pix, carte, Apple Pay ou Google Pay', intl: 'Carte, Apple Pay, Google Pay et plus, dans ta devise' },
+      go: 'Passer au paiement',
+      approx: 'Montant approximatif : le prix final, dans ta devise, s’affiche au paiement.',
       /** The box the pay buttons need ticked. */
       age: 'J’ai 18 ans ou plus, ou j’ai la permission de mes parents ou de mon tuteur.',
       /** The checkout turned down (`GemCheckoutRefusal`): a once pack taken, the day's limit (`GEM_CHECKOUT.daily`, as a price). */
       once: 'Ce compte a déjà pris le pack de bienvenue.',
-      cap: (limit: string) => `Par sécurité, chaque compte achète jusqu’à ${limit} de gemmes par jour, et un paiement en cours compte pendant une demi-heure. Réessaie demain (le jour change à minuit, heure de Brasília).`,
+      cap: (limit: string) => `Par sécurité, chaque compte achète jusqu’à ${limit} de gemmes par jour, et un paiement en cours compte pendant environ une heure. Réessaie demain (le jour change à minuit, heure de Brasília).`,
       cancel: 'Annuler',
       opening: 'Ouverture du paiement…',
       failed: 'Impossible d’ouvrir le paiement. Réessaie.',
@@ -677,6 +685,19 @@ export const fr: Messages = {
       timeout: 'Paiement en route',
       timeoutNote: 'Nous confirmons encore ton paiement. Les gemmes arrivent sur ton compte d’ici quelques minutes (un Pix peut prendre un peu plus longtemps), et tu peux continuer à jouer.',
       ok: 'Continuer',
+    },
+    /** Back from a checkout given up (`&cancel=`): nothing charged, the same pack again, the other ways to pay (by price list) and Patreon. */
+    cancelled: {
+      title: 'Ça n’a pas marché ?',
+      text: 'Rien n’a été débité. Tu veux réessayer ?',
+      retry: (pack: string, price: string) => `Réessayer : ${pack} · ${price}`,
+      ways: {
+        br: 'Tu peux payer par Pix, Apple Pay ou Google Pay, en plus de la carte.',
+        intl: 'Carte refusée ? Essaie Apple Pay, Google Pay ou une autre carte : certaines banques refusent les boutiques d’un autre pays.',
+      },
+      patreon: 'Tu préfères soutenir chaque mois ? Patreon donne aussi des gemmes.',
+      patreonLink: 'Voir le Patreon',
+      close: 'Pas maintenant',
     },
     skinShop: {
       pitch: 'Votre Pokémon redessiné, à chaque stade de sa lignée. Il apparaît dans vos parties, en coop et dans l’Arène.',
