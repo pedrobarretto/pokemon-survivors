@@ -4,7 +4,7 @@ import { Hono } from 'hono'
 // First: src/game's import cycles resolve by load order, and entering it through ranking.ts is an order that works (under tsx too).
 import { rankingStore } from './ranking'
 import { startChecks } from './checks'
-import { connect } from './db'
+import { connect, saveStore } from './db'
 import { loadChecksEnv } from './env'
 
 /**
@@ -25,7 +25,7 @@ try {
 const env = loadChecksEnv()
 // One claim and a check's board queries at a time.
 const sql = connect(env.databaseUrl, 3)
-const checks = startChecks(rankingStore(sql), { paused: env.checksPaused })
+const checks = startChecks(rankingStore(sql), saveStore(sql), { paused: env.checksPaused })
 console.log(env.checksPaused ? 'verifier paused (CHECKS=off)' : 'verifier checking ranked runs')
 
 const ping = () => sql`select 1`.then(() => true, () => false)
