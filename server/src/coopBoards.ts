@@ -22,7 +22,7 @@ import {
 import { brasiliaDay, type DayKey } from '../../src/game/day'
 import { isRecord } from '../../src/game/parse'
 import { BOARD_SIZE, BOARD_TIME_ZONE, type BoardPeriod, type RunMode } from '../../src/game/ranking'
-import type { CoopReport, CoopReportResponse } from '../../src/net/coopReport'
+import { relayedTimeFits, type CoopReport, type CoopReportResponse } from '../../src/net/coopReport'
 import type { Fragment } from 'postgres'
 import type { Sql } from './db'
 import { creditRun } from './gems'
@@ -45,10 +45,14 @@ const text = (v: unknown, max: number) => (typeof v === 'string' && v.length > 0
 /** Seats a report may carry: a room seats at most 8 (the Arena's), co-op 4. */
 const MAX_SEATS = 8
 
+/** A relay's optional count (`startedAt`, `ticks`): absent from older relays, else a whole number from 0. */
+const optionalCount = (v: unknown): v is number | undefined => v === undefined || (typeof v === 'number' && Number.isSafeInteger(v) && v >= 0)
+
 /**
  * A relay's co-op report, field by field (its `result` left as sent, for
  * `coopListing`), or null when its shape is off: seats in slot order, each
- * with an account id or null and whether it left.
+ * with an account id or null and whether it left; `startedAt` and `ticks`
+ * when the relay sent them.
  */
 export const parseCoopReport = (raw: unknown): CoopReport | null => {
   if (!isRecord(raw) || raw.v !== 1 || !Array.isArray(raw.seats) || raw.seats.length > MAX_SEATS) return null
@@ -57,12 +61,14 @@ export const parseCoopReport = (raw: unknown): CoopReport | null => {
   const { run, endedAt, votes } = raw
   if (!room || !region || typeof run !== 'number' || !Number.isSafeInteger(run) || run < 0) return null
   if (typeof endedAt !== 'number' || !Number.isFinite(endedAt) || endedAt <= 0 || typeof votes !== 'number' || !Number.isInteger(votes) || votes < 0) return null
+  const { startedAt, ticks } = raw
+  if (!optionalCount(startedAt) || !optionalCount(ticks) || (startedAt !== undefined && startedAt > endedAt)) return null
   const seats: CoopReport['seats'] = []
   for (const [slot, s] of raw.seats.entries()) {
     if (!isRecord(s) || s.slot !== slot || typeof s.left !== 'boolean' || (s.userId !== null && !text(s.userId, 64)) || (s.handle !== null && !text(s.handle, 64))) return null
     seats.push({ slot, userId: typeof s.userId === 'string' ? s.userId : null, handle: typeof s.handle === 'string' ? s.handle : null, left: s.left })
   }
-  return { v: 1, room, run, region, endedAt, seats, result: raw.result, votes }
+  return { v: 1, room, run, region, endedAt, seats, result: raw.result, votes, ...(startedAt !== undefined && { startedAt }), ...(ticks !== undefined && { ticks }) }
 }
 
 /** A seat of a listed run: its account, whether it left and what it played. */
@@ -77,9 +83,10 @@ export const MIN_VOTES = 2
 /**
  * Whether a report goes on the boards, and how: 2 to 4 seats, every one a
  * distinct account, at least `MIN_VOTES` clients agreeing, a result that
- * parses for that many seats (`parseCoopResult`) and, for a challenge run,
- * the day's difficulty and a start on its day (`coopChallengeCounts`). Null
- * when it doesn't (the API answers `run: null`).
+ * parses for that many seats (`parseCoopResult`), a `time` no longer than
+ * the relay says the run lasted (`relayedTimeFits`, when it says) and, for a
+ * challenge run, the day's difficulty and a start on its day
+ * (`coopChallengeCounts`). Null when it doesn't (the API answers `run: null`).
  */
 export const coopListing = (r: CoopReport): CoopListing | null => {
   const size = r.seats.length
@@ -87,7 +94,7 @@ export const coopListing = (r: CoopReport): CoopListing | null => {
   const users = r.seats.flatMap((s) => (s.userId ? [s.userId] : []))
   if (users.length !== size || new Set(users).size !== size) return null
   const result = parseCoopResult(r.result, size)
-  if (!result) return null
+  if (!result || !relayedTimeFits(result.time, r)) return null
   const day = result.challenge
   if (day !== null && (result.difficulty !== dailyCoopChallenge(day).difficulty || !coopChallengeCounts(day, r.endedAt, result.time))) return null
   const members = result.players.map((p, slot): CoopListingMember => ({ ...p, userId: users[slot]!, left: r.seats[slot]?.left ?? false }))
