@@ -1292,6 +1292,7 @@ export const fr: Messages = {
     inAppOpen: 'Ouvrir dans Chrome',
     inAppIos: 'Touche *...* puis *Ouvrir dans le navigateur*',
     inAppSignIn: "Google refuse la connexion depuis cette appli. Ouvre le jeu dans ton navigateur pour te connecter.",
+    framedSignIn: "On a ouvert le jeu dans un nouvel onglet pour que tu te connectes, avec ta progression. Continue d'y jouer.",
     close: 'Fermer',
   },
 
@@ -6337,6 +6338,15 @@ export const fr: Messages = {
     },
     captured: 'Dans ta collection',
     locked: (legend) => `Capture ${legend}`,
+    earn: {
+      plays: (game, n) => `Joue ${n} parties de ${game}`,
+      best: (game, n) => `Fais ${n} points à ${game}`,
+      wins: (game, n) => `Gagne ${n} parties de ${game}`,
+      feat: (game) => `Un exploit à ${game}`,
+      stamps: (n) => `Réunis ${n} Timbres`,
+      note: 'Ce trophée arrive quand tu atteins l’objectif. Pas à vendre !',
+      featNote: (feat) => `Ce trophée arrive avec l’exploit : ${feat} Pas à vendre !`,
+    },
     collections: 'Collections',
     all: 'Tout',
     pay: { all: 'Tous', coins: '₽', gems: 'Gemmes' },

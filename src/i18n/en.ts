@@ -1293,6 +1293,7 @@ export const en: Messages = {
     inAppOpen: 'Open in Chrome',
     inAppIos: 'Tap *...* and choose *Open in browser*',
     inAppSignIn: "Google won't sign in from inside this app. Open the game in your browser to sign in.",
+    framedSignIn: 'We opened the game in a new tab so you can sign in, with your progress. Keep playing there.',
     close: 'Close',
   },
 
@@ -6341,6 +6342,15 @@ export const en: Messages = {
     },
     captured: 'In your collection',
     locked: (legend) => `Capture ${legend}`,
+    earn: {
+      plays: (game, n) => `Play ${n} games of ${game}`,
+      best: (game, n) => `Score ${n} points in ${game}`,
+      wins: (game, n) => `Win ${n} games of ${game}`,
+      feat: (game) => `A feat in ${game}`,
+      stamps: (n) => `Collect ${n} Stamps`,
+      note: 'This trophy arrives when you reach the goal. Not for sale!',
+      featNote: (feat) => `This trophy arrives with the feat: ${feat} Not for sale!`,
+    },
     collections: 'Collections',
     all: 'All',
     pay: { all: 'All', coins: '₽', gems: 'Gems' },

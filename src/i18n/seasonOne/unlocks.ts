@@ -12,7 +12,7 @@ type UnlockWords = {
   amberBlurb: string
   /** Why the family came, in the gift box. */
   way: Record<'find' | 'research' | 'fishing' | 'safari' | 'dig', string>
-  find: { rotom: string; castformSighted: string; castformFound: string; castformGone: string; spiritomb: string }
+  find: { rotom: string; rotomAgain: string; rotomShiny: string; castformSighted: string; castformFound: string; castformGone: string; spiritomb: string }
   research: {
     tab: string
     intro: string
@@ -23,6 +23,8 @@ type UnlockWords = {
     have: (names: string) => string
   }
   fishingFamily: (name: string) => string
+  /** A repeat catch brought the family's shiny (`REPEAT_SHINY`). */
+  fishingShiny: (name: string) => string
 }
 
 export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', UnlockWords> = {
@@ -34,8 +36,8 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       mankey: 'Vem de uma *Pesquisa*: vença apanhando bastante. Veja em Missões, aba Pesquisa.',
       goomy: 'Vem de uma *Pesquisa*: vença com os pés molhados. Veja em Missões, aba Pesquisa.',
       tatsugiri: 'Vem de uma *Pesquisa*: vença com parceiros de Água ou Dragão. Veja em Missões, aba Pesquisa.',
-      wishiwashi: 'Morde o anzol *longe do píer*, na pesca do Poké Realm. Precisa de conta.',
-      rotom: 'Tem algo morando numa *TV velha*, dentro de uma casa abandonada. Quando ela chiar, fique por perto.',
+      wishiwashi: 'Morde o anzol *longe do píer*, na pesca do Poké Realm. Precisa de conta. Quem já tem, às vezes fisga um *shiny*.',
+      rotom: 'Tem algo morando numa *TV velha*, dentro de uma casa abandonada. Quando ela chiar, fique por perto. Quem já tem o Rotom, às vezes acha um *shiny*.',
       castform: 'Às vezes flutua pelo mapa quando o *tempo fecha*. Alcance antes que suma.',
       lapras: 'Só na *Zona Safári*, na semana da Enseada, no Bosque das Bases do Poké Realm. Precisa de conta.',
       spiritomb: 'Desperte o *Odd Keystone* no Cemitério e derrote o Spiritomb que sai dele.',
@@ -45,6 +47,8 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
     way: { find: 'Por um encontro no mapa', research: 'Por concluir uma Pesquisa', fishing: 'Pela sua pescaria', safari: 'Pela sua captura na Zona Safári', dig: 'Da Escavação' },
     find: {
       rotom: 'A TV deu um estalo e *Rotom* escapou! Ele espera na caixa de presentes.',
+      rotomAgain: 'A TV deu um estalo… era o Rotom de sempre, só de passagem.',
+      rotomShiny: 'A TV soltou faíscas douradas: um *Rotom shiny*! Ele espera na caixa de presentes.',
       castformSighted: 'Um *Castform* está flutuando por perto!',
       castformFound: 'Você alcançou o *Castform*! Ele espera na caixa de presentes.',
       castformGone: 'O Castform sumiu com o vento.',
@@ -60,6 +64,7 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       have: (names) => `Já venceram: ${names}`,
     },
     fishingFamily: (name) => `${name} veio junto! Ele chega na caixa de presentes.`,
+    fishingShiny: (name) => `Um ${name} shiny! Ele chega na caixa de presentes.`,
   },
   en: {
     where: {
@@ -69,8 +74,8 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       mankey: 'Comes from *Research*: win after taking a beating. See Missions, Research tab.',
       goomy: 'Comes from *Research*: win with your feet wet. See Missions, Research tab.',
       tatsugiri: 'Comes from *Research*: win with Water or Dragon partners. See Missions, Research tab.',
-      wishiwashi: 'Bites the hook *far from the pier*, fishing in the Poké Realm. Needs an account.',
-      rotom: 'Something lives in an *old TV*, inside an abandoned cottage. When it crackles, stay close.',
+      wishiwashi: 'Bites the hook *far from the pier*, fishing in the Poké Realm. Needs an account. Owners sometimes hook a *shiny*.',
+      rotom: 'Something lives in an *old TV*, inside an abandoned cottage. When it crackles, stay close. Rotom’s owners sometimes find a *shiny* there.',
       castform: 'Sometimes drifts across the map when the *weather turns*. Reach it before it’s gone.',
       lapras: 'Only in the *Safari Zone*, on the Cove’s week, in the Poké Realm’s Secret Base Grove. Needs an account.',
       spiritomb: 'Wake the *Odd Keystone* in the Graveyard and beat the Spiritomb that breaks out.',
@@ -80,6 +85,8 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
     way: { find: 'For an encounter on the map', research: 'For finishing a Research', fishing: 'For your fishing', safari: 'For your catch in the Safari Zone', dig: 'From the Mine Dig' },
     find: {
       rotom: 'The TV crackled and *Rotom* got out! It’s waiting in your gift box.',
+      rotomAgain: 'The TV crackled… just your Rotom passing through.',
+      rotomShiny: 'The TV threw golden sparks: a *shiny Rotom*! It’s waiting in your gift box.',
       castformSighted: 'A *Castform* is drifting nearby!',
       castformFound: 'You reached the *Castform*! It’s waiting in your gift box.',
       castformGone: 'The Castform drifted away.',
@@ -95,6 +102,7 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       have: (names) => `Already won with: ${names}`,
     },
     fishingFamily: (name) => `${name} came along! It’s on its way to your gift box.`,
+    fishingShiny: (name) => `A shiny ${name}! It’s on its way to your gift box.`,
   },
   es: {
     where: {
@@ -104,8 +112,8 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       mankey: 'Viene de una *Investigación*: gana después de recibir una paliza. Mira Misiones, pestaña Investigación.',
       goomy: 'Viene de una *Investigación*: gana con los pies mojados. Mira Misiones, pestaña Investigación.',
       tatsugiri: 'Viene de una *Investigación*: gana con compañeros de Agua o Dragón. Mira Misiones, pestaña Investigación.',
-      wishiwashi: 'Pica el anzuelo *lejos del muelle*, pescando en el Poké Realm. Necesita una cuenta.',
-      rotom: 'Algo vive en un *televisor viejo*, dentro de una casa abandonada. Cuando chisporrotee, quédate cerca.',
+      wishiwashi: 'Pica el anzuelo *lejos del muelle*, pescando en el Poké Realm. Necesita una cuenta. Quien ya lo tiene, a veces pesca uno *shiny*.',
+      rotom: 'Algo vive en un *televisor viejo*, dentro de una casa abandonada. Cuando chisporrotee, quédate cerca. Quien ya tiene a Rotom, a veces encuentra uno *shiny*.',
       castform: 'A veces flota por el mapa cuando *cambia el clima*. Alcánzalo antes de que se vaya.',
       lapras: 'Solo en la *Zona Safari*, en la semana de la Ensenada, en la Arboleda de Bases del Poké Realm. Necesitas una cuenta.',
       spiritomb: 'Despierta la *Odd Keystone* en el Cementerio y vence al Spiritomb que sale de ella.',
@@ -115,6 +123,8 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
     way: { find: 'Por un encuentro en el mapa', research: 'Por completar una Investigación', fishing: 'Por tu pesca', safari: 'Por tu captura en la Zona Safari', dig: 'De la Excavación' },
     find: {
       rotom: '¡El televisor chisporroteó y *Rotom* escapó! Te espera en la caja de regalos.',
+      rotomAgain: 'El televisor chisporroteó… era tu Rotom de paso.',
+      rotomShiny: '¡El televisor soltó chispas doradas: un *Rotom shiny*! Te espera en la caja de regalos.',
       castformSighted: '¡Un *Castform* flota cerca!',
       castformFound: '¡Alcanzaste al *Castform*! Te espera en la caja de regalos.',
       castformGone: 'El Castform se fue con el viento.',
@@ -130,6 +140,7 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       have: (names) => `Ya ganaron: ${names}`,
     },
     fishingFamily: (name) => `¡${name} vino también! Llegará a tu caja de regalos.`,
+    fishingShiny: (name) => `¡Un ${name} shiny! Llegará a tu caja de regalos.`,
   },
   fr: {
     where: {
@@ -139,8 +150,8 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       mankey: 'Vient d’une *Recherche* : gagne après avoir pris des coups. Vois Missions, onglet Recherche.',
       goomy: 'Vient d’une *Recherche* : gagne les pieds mouillés. Vois Missions, onglet Recherche.',
       tatsugiri: 'Vient d’une *Recherche* : gagne avec des partenaires Eau ou Dragon. Vois Missions, onglet Recherche.',
-      wishiwashi: 'Mord à l’hameçon *loin du ponton*, à la pêche du Poké Realm. Un compte est nécessaire.',
-      rotom: 'Quelque chose vit dans une *vieille télé*, au fond d’une maison abandonnée. Quand elle grésille, reste près d’elle.',
+      wishiwashi: 'Mord à l’hameçon *loin du ponton*, à la pêche du Poké Realm. Un compte est nécessaire. Qui l’a déjà en pêche parfois un *chromatique*.',
+      rotom: 'Quelque chose vit dans une *vieille télé*, au fond d’une maison abandonnée. Quand elle grésille, reste près d’elle. Qui a déjà Rotom y trouve parfois un *chromatique*.',
       castform: 'Flotte parfois sur la carte quand le *temps se gâte*. Rejoins-le avant qu’il disparaisse.',
       lapras: 'Seulement au *Parc Safari*, la semaine de la Crique, au Bosquet des Bases du Poké Realm. Compte requis.',
       spiritomb: 'Réveille la *Odd Keystone* au Cimetière et bats le Spiritomb qui en sort.',
@@ -150,6 +161,8 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
     way: { find: 'Pour une rencontre sur la carte', research: 'Pour avoir terminé une Recherche', fishing: 'Pour ta pêche', safari: 'Pour ta capture au Parc Safari', dig: 'De l’Excavation' },
     find: {
       rotom: 'La télé a grésillé et *Rotom* s’est échappé ! Il t’attend dans la boîte à cadeaux.',
+      rotomAgain: 'La télé a grésillé… juste ton Rotom de passage.',
+      rotomShiny: 'La télé a lancé des étincelles dorées : un *Rotom chromatique* ! Il t’attend dans la boîte à cadeaux.',
       castformSighted: 'Un *Castform* flotte tout près !',
       castformFound: 'Tu as rejoint le *Castform* ! Il t’attend dans la boîte à cadeaux.',
       castformGone: 'Le Castform s’est envolé.',
@@ -165,6 +178,7 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       have: (names) => `Déjà gagné avec : ${names}`,
     },
     fishingFamily: (name) => `${name} est venu aussi ! Il arrive dans ta boîte à cadeaux.`,
+    fishingShiny: (name) => `Un ${name} chromatique ! Il arrive dans ta boîte à cadeaux.`,
   },
   zh: {
     where: {
@@ -174,8 +188,8 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       mankey: '來自*研究*：挨了不少打之後獲勝。請到任務的「研究」分頁查看。',
       goomy: '來自*研究*：在潮濕的地方獲勝。請到任務的「研究」分頁查看。',
       tatsugiri: '來自*研究*：用水系或龍系夥伴獲勝。請到任務的「研究」分頁查看。',
-      wishiwashi: '在 Poké Realm 釣魚時，會在*離碼頭很遠*的地方上鉤。需要帳號。',
-      rotom: '廢棄小屋裡的*舊電視*住著什麼東西。電視發出雜音時，請待在旁邊。',
+      wishiwashi: '在 Poké Realm 釣魚時，會在*離碼頭很遠*的地方上鉤。需要帳號。已經擁有的人，偶爾會釣到*異色*的。',
+      rotom: '廢棄小屋裡的*舊電視*住著什麼東西。電視發出雜音時，請待在旁邊。已經擁有 Rotom 的人，偶爾會在那裡找到*異色*的。',
       castform: '*天氣變化*時，偶爾會飄過地圖。要在它消失前追上。',
       lapras: '只在 Poké Realm 秘密基地樹林的*狩獵地帶*出現，限海灣週。需要帳號。',
       spiritomb: '在墓地喚醒*楔石*，打倒從中出現的 Spiritomb。',
@@ -185,6 +199,8 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
     way: { find: '獎勵你在地圖上的邂逅', research: '獎勵你完成研究', fishing: '獎勵你的釣魚成果', safari: '獎勵你在狩獵地帶的捕捉', dig: '來自礦坑挖掘' },
     find: {
       rotom: '電視一陣雜音，*Rotom* 跑出來了！牠在禮物箱等你。',
+      rotomAgain: '電視一陣雜音……只是你的 Rotom 路過而已。',
+      rotomShiny: '電視迸出金色火花：*異色 Rotom*！牠在禮物箱等你。',
       castformSighted: '有隻 *Castform* 在附近飄著！',
       castformFound: '你追上了 *Castform*！牠在禮物箱等你。',
       castformGone: 'Castform 隨風飄走了。',
@@ -200,5 +216,6 @@ export const SEASON_ONE_UNLOCKS_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', 
       have: (names) => `已獲勝：${names}`,
     },
     fishingFamily: (name) => `${name} 也來了！牠會送到你的禮物箱。`,
+    fishingShiny: (name) => `異色 ${name}！牠會送到你的禮物箱。`,
   },
 }

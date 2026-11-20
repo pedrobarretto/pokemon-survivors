@@ -27,6 +27,14 @@ const GATE = true
 
 const SITE = 'https://www.pokemonsurvivors.com'
 
+// The networks whose followers get a rare egg, each in its own #<network>-reward
+// channel (the profiles are SOCIALS in src/site/routes.ts).
+const SOCIAL_REWARDS = [
+  { channel: 'tiktok-reward', network: 'TikTok', verb: 'Follow', doing: 'following', proof: 'you follow us', handle: '@pokemonsurvivors', url: 'https://www.tiktok.com/@pokemonsurvivors', color: 0xfe2c55 },
+  { channel: 'instagram-reward', network: 'Instagram', verb: 'Follow', doing: 'following', proof: 'you follow us', handle: '@pokemonsurvivors', url: 'https://www.instagram.com/pokemonsurvivors/', color: 0xe1306c },
+  { channel: 'youtube-reward', network: 'YouTube', verb: 'Subscribe to', doing: 'subscribing to', proof: 'you’re subscribed', handle: '@PokemonSurvivors', url: 'https://www.youtube.com/@PokemonSurvivors', color: 0xff0000 },
+]
+
 // Permission bits (https://discord.com/developers/docs/topics/permissions).
 const P = {
   kick: 1n << 1n,
@@ -140,11 +148,11 @@ const LAYOUT = [
       { name: 'daily-challenge', topic: 'Same seed for everyone, one official try a day. Post your time and build. Yesterday’s podium lands here.' },
       { name: 'daily-outbreak', topic: 'Today’s outbreak: which Pokémon is everywhere and how to farm it.' },
       { name: 'shiny-showcase', topic: 'Show off your shinies ✨' },
-      {
-        name: 'tiktok-reward',
+      ...SOCIAL_REWARDS.map((r) => ({
+        name: r.channel,
         slowmode: 60,
-        topic: 'Follow us on TikTok (@pokemonsurvivors), post a screenshot that shows it with your in-game @handle, and a Dev sends you a rare egg.',
-      },
+        topic: `${r.verb} us on ${r.network} (${r.handle}), post a screenshot that shows it with your in-game @handle, and a Dev sends you a rare egg.`,
+      })),
       {
         name: 'builds-and-strategy',
         type: 'forum',
@@ -242,7 +250,7 @@ const WELCOME = {
     GATE ? '👋 Introduce yourself in <#introductions> to unlock chatting everywhere' : '👋 Say hi in <#introductions>',
     '🗣️ Change your starter, languages and pings in **Channels & Roles** (top of the channel list)',
     '💬 Hang out in <#general>',
-    '🎁 Follow us on TikTok for a free rare egg: <#tiktok-reward>',
+    '🎁 A free rare egg for each network you follow us on: <#tiktok-reward> <#instagram-reward> <#youtube-reward>',
     '🏆 Post your Daily Challenge time in <#daily-challenge>',
     '🐛 Found a bug? <#bug-reports>',
     '💡 Have an idea? <#suggestions>',
@@ -251,18 +259,21 @@ const WELCOME = {
   ].join('\n'),
 }
 
-// The TikTok reward is checked and sent by hand from the game's admin panel (Painel admin: egg, rare).
-const TIKTOK_REWARD = {
-  title: '🎁 A rare egg for following us on TikTok',
-  color: 0xfe2c55,
+/**
+ * A rare egg for following each of the game's networks, one channel per network.
+ * Checked and sent by hand from the game's admin panel (Painel admin: egg, rare).
+ */
+const rewardEmbed = (r) => ({
+  title: `🎁 A rare egg for ${r.doing} us on ${r.network}`,
+  color: r.color,
   description: [
-    '**1.** Follow **@pokemonsurvivors** on TikTok: https://www.tiktok.com/@pokemonsurvivors',
-    '**2.** Post a screenshot here that shows you follow us, with your in-game **@handle** (it’s on your Trainer Card).',
+    `**1.** ${r.verb} **${r.handle}** on ${r.network}: ${r.url}`,
+    `**2.** Post a screenshot here that shows ${r.proof}, with your in-game **@handle** (it’s on your Trainer Card).`,
     '**3.** A Dev sends you a **rare egg** as a Mystery Gift. Open it from the gift box in the lobby.',
     '',
-    'You need a game account: sign in from the lobby (guests can’t get gifts). One egg per account. Gifts go out by hand, so give us a little time.',
+    `You need a game account: sign in from the lobby (guests can’t get gifts). One egg per account for ${r.network}; TikTok, Instagram and YouTube each have their own channel and egg. Gifts go out by hand, so give us a little time.`,
   ].join('\n'),
-}
+})
 
 const RULES = {
   title: 'Rules',
@@ -286,7 +297,7 @@ const STEPS = {
   channels: 'channel and category permissions, slowmode, forum tags; creates the missing ones',
   topics: 'channel topics, with the gate’s hint',
   community: 'Community settings, system and rules channels, the server description',
-  messages: 'the bot’s welcome, rules and TikTok reward texts',
+  messages: 'the bot’s welcome, rules and social reward texts',
   welcome: 'the welcome screen',
   emojis: 'the starter emojis (creates the missing ones)',
   onboarding: 'Onboarding: default channels, team, languages and pings',
@@ -528,7 +539,7 @@ if (running('messages')) {
   console.log('messages')
   await upsertMessage('welcome', WELCOME)
   await upsertMessage('rules', RULES)
-  await upsertMessage('tiktok-reward', TIKTOK_REWARD, true)
+  for (const r of SOCIAL_REWARDS) await upsertMessage(r.channel, rewardEmbed(r), true)
 }
 
 if (running('welcome')) {

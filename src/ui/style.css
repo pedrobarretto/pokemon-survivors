@@ -2377,6 +2377,13 @@ button {
   align-items: stretch;
 }
 
+.dialog-note {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.15;
+  text-align: center;
+}
+
 .dialog.wide {
   width: min(680px, 94 * var(--vw));
 }
@@ -32166,8 +32173,14 @@ span.arena-hub-face {
   height: 40px;
 }
 
-.corner-art.shadow {
+.corner-art.shadow,
+.corner-art.reshadow {
   background: radial-gradient(circle at 50% 60%, #3a1050 0 55%, #1c0828 56%);
+}
+
+.corner-art.reshadow img {
+  width: 40px;
+  height: 40px;
 }
 
 .corner-kind {
@@ -32184,8 +32197,68 @@ span.arena-hub-face {
   background: #2f7a3a;
 }
 
-.corner-kind.shadow {
+.corner-kind.shadow,
+.corner-kind.reshadow {
   background: #5a1c90;
+}
+
+/* A shiny bought after its family: the full price struck beside what's left to pay. */
+.corner-deal {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.corner-was {
+  opacity: 0.6;
+}
+
+/* A shiny prize: a gold chip and a warm glow behind the family's shiny colors. */
+.corner-kind.shiny {
+  color: #3a2400;
+  background: #f0c040;
+}
+
+.corner-art.shiny {
+  background: radial-gradient(circle at 50% 60%, #fff4c8 0 50%, #f0d070 51%);
+}
+
+/* The Shadow Serum's pick: the save's Purified Pokémon, one chip each, wrapping on a phone. */
+.corner-targets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0;
+}
+
+.corner-targets > .carpentry-detail-meta {
+  flex-basis: 100%;
+}
+
+.corner-target {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  padding: 2px 10px 2px 2px;
+  font: inherit;
+  color: inherit;
+  background: var(--dk-wash-purple, #f0e8f8);
+  border: 2px solid #c8b0d8;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.corner-target img {
+  width: 36px;
+  height: 36px;
+  image-rendering: pixelated;
+}
+
+.corner-target.on {
+  color: #fff;
+  background: #5a1c90;
+  border-color: #2a0848;
 }
 
 .corner-kind.bag {
@@ -32384,12 +32457,6 @@ span.arena-hub-face {
   margin-left: auto;
   color: #fff;
   background: #e888b8;
-}
-
-.shadow-keep {
-  flex-basis: 100%;
-  font-size: 15px;
-  opacity: 0.85;
 }
 
 /* The PC box's and the Pokédex's marks: a Shadow's violet flame, a Purified one's lotus. */

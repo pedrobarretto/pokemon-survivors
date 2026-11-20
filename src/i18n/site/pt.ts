@@ -973,7 +973,7 @@ export const sitePt = {
     suggested: 'Sugerido para você',
     br: {
       title: 'No Brasil',
-      methods: 'Pix ou cartão de crédito, em reais.',
+      methods: 'Pix, cartão de crédito, Apple Pay ou Google Pay, em reais.',
       amount: 'Valor da doação',
       other: 'Outro valor',
       range: (min: number, max: number) => `De R$ ${min} a R$ ${max}, sem centavos.`,
@@ -1059,7 +1059,7 @@ export const sitePt = {
     ],
     privacyAfter: [
       'Para apagar esses dados, limpe os dados do site nas configurações do navegador.',
-      'Sprites, sons e fontes vêm do próprio site, sem chamadas a serviços de terceiros. O site é hospedado na Vercel, que, como qualquer servidor, pode registrar dados técnicos de acesso (como endereço IP) para operar e proteger o serviço.',
+      'Sprites, sons e fontes vêm do próprio site, sem chamadas a serviços de terceiros. O site é hospedado na Cloudflare, que, como qualquer servidor, pode registrar dados técnicos de acesso (como endereço IP) para operar e proteger o serviço.',
       'No jogo, usamos o PostHog (posthog.com, com os dados guardados nos Estados Unidos) para entender como ele é jogado e corrigir erros. Ele recebe o resumo de cada partida (Pokémon, dificuldade, golpes, itens, até que minuto e nível você chegou e como ela terminou), quais telas você abre no menu e, quando o jogo dá erro, a mensagem do erro e o replay da partida em andamento (a semente e os comandos, sem nada pessoal). Tudo isso vai ligado ao identificador aleatório do ph_ps e, se você entrou com uma conta, ao id dela e ao seu nome de usuário, nunca ao seu e-mail ou nome. O PostHog não usa cookies aqui e não segue você entre sites.',
       'Doações são pagas nas páginas da AbacatePay (abacatepay.com: Pix e cartões brasileiros) ou do Stripe (stripe.com: cartões de outros países, Apple Pay e Google Pay). Os dados de pagamento vão direto para eles, e o jogo nunca vê seu cartão. Eles nos mostram o valor e, como a qualquer recebedor, dados de quem pagou (como nome e e-mail), que não usamos para nada além de registrar a doação. Se você der um @ (ou resgatar o código da doação), ela fica ligada a essa conta do jogo para as recompensas chegarem; o valor nunca aparece em público, só o selo de apoiador, que dá para esconder.',
     ],
@@ -1081,7 +1081,7 @@ export const sitePt = {
     play: (title: string) => `Assistir: ${title}`,
     watchOn: (platform: string) => `Ver no ${platform}`,
     videoAbout: (name: string) => `Vídeo de Pokémon Survivors feito por ${name}.`,
-    langs: { pt: 'Em português', en: 'Em inglês', es: 'Em espanhol', fr: 'Em francês', zh: 'Em chinês' } satisfies Record<Locale, string>,
+    langs: { pt: 'Em português', en: 'Em inglês', es: 'Em espanhol', fr: 'Em francês', zh: 'Em chinês', zhHans: 'Em chinês' } satisfies Record<Locale, string>,
     join: {
       title: 'Faz vídeos do jogo?',
       lead: 'Gameplay, live, guia, Short ou TikTok, em qualquer língua: todo vídeo do jogo pode entrar aqui.',

@@ -6,7 +6,7 @@ import { h } from '../../ui/dom'
 import { isFailure } from '../api'
 import { bankSweep, dealSweep, fetchCorner, flipTile } from '../cornerApi'
 import { burst, drawFx, drawText, shakeOffset, stepFx, textWidth, type Particle, type Popup } from './arcadeKit'
-import { CORNER, SWEEP, sweepPay, type Tile } from './corner.rules'
+import { CORNER, SWEEP, sweepCredit, sweepPay, sweepRate, type Tile } from './corner.rules'
 import type { GameInput, GameRun, SoloCtx, SoloGame } from './frame'
 import { callout, gameSheet, sheetTitle } from './gameSheet'
 
@@ -111,14 +111,25 @@ const start = (ctx: SoloCtx): GameRun => {
 
   const face = (at: number): Tile | null => board?.flipped.find((f) => f.at === at)?.tile ?? null
 
-  const tokensLine = () => h('p', { class: 'mg-lead corner-tokens' }, h('img', { src: tokenIcon(), alt: '', width: 14, height: 14 }), ` ${c().balance(formatNumber(state?.tokens ?? 0))} · ${m().roundsLeft(formatNumber(Math.max(0, CORNER.roundsDaily - (state?.rounds ?? 0))))}`)
+  const won = () => state?.won ?? 0
 
-  const payNow = () => (board ? sweepPay(board.pot, board.level, false) : 0)
+  /** Where the day's pay stands: full or half with the tokens left at that rate, or free play. */
+  const dayLine = () => {
+    const rate = sweepRate(won())
+    const { full, half } = CORNER.sweepDay
+    return rate === 1 ? m().payFull(formatNumber(full - won())) : rate === 0.5 ? m().payHalf(formatNumber(half - won())) : m().freePlay
+  }
+
+  const tokensLine = () => h('p', { class: 'mg-lead corner-tokens' }, h('img', { src: tokenIcon(), alt: '', width: 14, height: 14 }), ` ${c().balance(formatNumber(state?.tokens ?? 0))} · ${dayLine()}`)
+
+  /** What banking now would pay, at the day's rate. */
+  const payNow = () => (board ? sweepCredit(sweepPay(board.pot, board.level, false), won()) : 0)
 
   const playing = () => {
     if (!board) return
     // Under the table upright, beside it sideways (the tokens with it).
-    say('dock', [h('p', { class: 'mg-lead' }, `${m().level(board.level)} · ${m().payout(formatNumber(payNow()))}`), !tall() && tokensLine()], [
+    const worth = sweepRate(won()) === 0 ? m().free : m().payout(formatNumber(payNow()))
+    say('dock', [h('p', { class: 'mg-lead' }, `${m().level(board.level)} · ${worth}`), !tall() && tokensLine()], [
       { label: marking ? `✓ ${m().mark}` : m().mark, run: () => ((marking = !marking), playing()) },
       { label: m().bank, run: bank, primary: true },
     ])
@@ -181,9 +192,10 @@ const start = (ctx: SoloCtx): GameRun => {
     } else {
       playSfx(board.over === 'clear' ? 'unlock' : 'item')
       burst(parts, cx, cy, [GOLD, '#ffffff', '#e84040'], board.over === 'clear' ? 50 : 24, 90)
-      pops.push({ x: cx, y: cy, text: `+${paid}`, color: GOLD, age: 0, big: board.over === 'clear' })
+      pops.push({ x: cx, y: cy, text: paid > 0 ? `+${paid}` : '+0', color: GOLD, age: 0, big: board.over === 'clear' })
       if (board.over === 'clear' && board.level >= SWEEP.levels.length) ctx.brag('level5')
-      between(h('p', { class: 'mg-lead hot' }, board.over === 'clear' ? `${m().clear} ${m().banked(formatNumber(paid))}` : m().banked(formatNumber(paid))))
+      const kept = paid > 0 ? m().banked(formatNumber(paid)) : m().freeBanked
+      between(h('p', { class: 'mg-lead hot' }, board.over === 'clear' ? `${m().clear} ${kept}` : kept))
     }
   }
 

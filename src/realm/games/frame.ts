@@ -353,8 +353,10 @@ const endSheet = async (s: Shell, headline: string, claim: Parameters<typeof cla
   if (res.trophies.length > 0) playSfx('select')
   // A family comes as a gift from the API: a sync brings it to the lobby's box.
   const family = HATCHLING_IDS.find((id) => id === res.family)
-  if (family) {
-    paid.after(h('p', { class: 'minigame-trophy' }, t().seasonUnlocks.fishingFamily(HATCHLINGS[family].name)))
+  const shiny = HATCHLING_IDS.find((id) => id === res.shiny)
+  if (family) paid.after(h('p', { class: 'minigame-trophy' }, t().seasonUnlocks.fishingFamily(HATCHLINGS[family].name)))
+  if (shiny) paid.after(h('p', { class: 'minigame-trophy' }, t().seasonUnlocks.fishingShiny(HATCHLINGS[shiny].name)))
+  if (family || shiny) {
     playSfx('unlock')
     void syncSave()
   }

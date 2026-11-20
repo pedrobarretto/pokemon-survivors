@@ -696,20 +696,21 @@ const abilityPanel = (g: Game) => {
 /**
  * Yes/no dialog over a screen (the mart's purchases, co-op's "Sair da partida").
  * Defaults to "no" so a stray Enter is harmless; Esc or Backspace answer no.
- * `opts`: other button labels, a class for the backdrop (`shop-confirm`).
+ * `opts`: other button labels, a class for the backdrop (`shop-confirm`), a
+ * `note` under the question (what answering yes costs).
  */
 export const confirmDialog = (
   root: HTMLElement,
   input: Input,
   text: string,
   onAnswer: (yes: boolean) => void,
-  opts: { yes?: string; no?: string; class?: string } = {},
+  opts: { yes?: string; no?: string; class?: string; note?: string } = {},
 ): Screen => {
   const yes = h('button', { class: 'btn' }, opts.yes ?? t().mart.yes)
   const no = h('button', { class: 'btn' }, opts.no ?? t().mart.no)
   const nav = menu(input, [yes, no], (i) => onAnswer(i === 0), { horizontal: true, initial: 1 })
   const offEsc = input.onKey((k) => (k === 'Escape' || k === 'Backspace') && onAnswer(false))
-  const el = h('div', { class: opts.class ? `screen dim ${opts.class}` : 'screen dim' }, h('div', { class: 'dialog box pop' }, h('div', { class: 'dialog-title' }, text), h('div', { class: 'buttons' }, yes, no)))
+  const el = h('div', { class: opts.class ? `screen dim ${opts.class}` : 'screen dim' }, h('div', { class: 'dialog box pop', role: 'alertdialog', 'aria-label': text }, h('div', { class: 'dialog-title' }, text), opts.note && h('p', { class: 'dialog-note' }, opts.note), h('div', { class: 'buttons' }, yes, no)))
   root.append(el)
   return { el, dispose: () => (nav.off(), offEsc(), el.remove()) }
 }

@@ -915,7 +915,7 @@ export const siteEn: SiteMessages = {
     suggested: 'Suggested for you',
     br: {
       title: 'In Brazil',
-      methods: 'Pix or credit card, in Brazilian reais.',
+      methods: 'Pix, credit card, Apple Pay or Google Pay, in Brazilian reais.',
       amount: 'Donation amount',
       other: 'Other amount',
       range: (min: number, max: number) => `From R$ ${min} to R$ ${max}, whole reais.`,
@@ -1000,7 +1000,7 @@ export const siteEn: SiteMessages = {
     ],
     privacyAfter: [
       'To delete this data, clear the site data in your browser settings.',
-      'Sprites, sounds and fonts are served by this site, with no calls to third-party services. The site is hosted on Vercel which, like any web server, may log technical access data (such as IP addresses) to run and protect the service.',
+      'Sprites, sounds and fonts are served by this site, with no calls to third-party services. The site is hosted on Cloudflare which, like any web server, may log technical access data (such as IP addresses) to run and protect the service.',
       'In the game we use PostHog (posthog.com, with data stored in the United States) to understand how it is played and to fix bugs. It receives a summary of each run (Pokémon, difficulty, moves, items, the minute and level you reached and how it ended), which menu screens you open and, when the game hits an error, the error message and the replay of the run in progress (its seed and your inputs, nothing personal). All of it is tied to the random id in ph_ps and, if you signed in, to your account id and username, never to your email or name. PostHog uses no cookies here and does not follow you across sites.',
       'Donations are paid on AbacatePay\'s pages (abacatepay.com: Pix and Brazilian cards) or Stripe\'s (stripe.com: cards from other countries, Apple Pay and Google Pay). Your payment details go straight to them, and the game never sees your card. They show us the amount and, as they would to anyone receiving a payment, details of who paid (such as name and email), which we use for nothing but recording the donation. If you give an @ (or redeem the donation\'s code), it\'s tied to that game account so the rewards reach it; the amount is never shown publicly, only the supporter badge, which you can hide.',
     ],
@@ -1022,7 +1022,7 @@ export const siteEn: SiteMessages = {
     play: (title: string) => `Watch: ${title}`,
     watchOn: (platform: string) => `Watch on ${platform}`,
     videoAbout: (name: string) => `A Pokémon Survivors video by ${name}.`,
-    langs: { pt: 'In Portuguese', en: 'In English', es: 'In Spanish', fr: 'In French', zh: 'In Chinese' },
+    langs: { pt: 'In Portuguese', en: 'In English', es: 'In Spanish', fr: 'In French', zh: 'In Chinese', zhHans: 'In Chinese' },
     join: {
       title: 'Do you make videos of the game?',
       lead: 'Gameplay, a stream, a guide, a Short or a TikTok, in any language: every video of the game can be here.',

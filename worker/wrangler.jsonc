@@ -1,0 +1,24 @@
+{
+  "$schema": "https://unpkg.com/wrangler@4.154.0/config-schema.json",
+  // The site's Worker: www.pokemonsurvivors.com, all of it from one origin. Its static assets (free requests and
+  // bandwidth) are the whole site build, `dist/`, readied by `worker/site.mjs` (the last step of `npm run build`),
+  // with its `_headers`, `_redirects` and `builds.json`.
+  // The script (`worker.ts`) runs only for `run_worker_first`: PostHog's proxy under /ingest/ (billed as Worker
+  // requests: 100k a day on the Free plan). Files, the 308s to a page's slash and the 404 page (`404.html`, with
+  // its status) are the assets layer's, for free.
+  // Deployed by the Site workflow (.github/workflows/site.yml). `npm run site:dev` serves dist/ locally on :8797.
+  // The custom domain is attached in Cloudflare's dashboard; `workers_dev` keeps
+  // https://ps-site.pedrobarretto.workers.dev up too, where `worker/site.mjs` reads the kept builds from.
+  "name": "ps-site",
+  "account_id": "a55a1ff9d78296b70afe6d06782d6d79",
+  "main": "worker.ts",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": true,
+  "preview_urls": false,
+  "assets": {
+    "directory": "../dist",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page",
+    "run_worker_first": ["/ingest/*"]
+  }
+}

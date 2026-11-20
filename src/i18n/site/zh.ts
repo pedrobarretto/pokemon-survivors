@@ -14,7 +14,7 @@ const REGION: Record<string, string> = {
 
 /** Traditional Chinese copy of the static site pages. Must match `pt.ts` key for key. */
 export const siteZh: SiteMessages = {
-  lang: { tag: 'zh-Hant', og: 'zh_TW', short: '中文', switchTo: '以繁體中文檢視' },
+  lang: { tag: 'zh-Hant', og: 'zh_TW', short: '繁中', switchTo: '以繁體中文檢視' },
   skip: '跳至主要內容',
   nav: {
     label: '主選單',
@@ -922,7 +922,7 @@ export const siteZh: SiteMessages = {
     suggested: '為你推薦',
     br: {
       title: '在巴西',
-      methods: 'Pix 或信用卡，以巴西雷亞爾付款。',
+      methods: 'Pix、信用卡、Apple Pay 或 Google Pay，以巴西雷亞爾付款。',
       amount: '捐款金額',
       other: '其他金額',
       range: (min: number, max: number) => `R$ ${min} 到 R$ ${max}，以整數雷亞爾計。`,
@@ -1007,7 +1007,7 @@ export const siteZh: SiteMessages = {
     ],
     privacyAfter: [
       '若要刪除這些資料，請在瀏覽器設定中清除網站資料。',
-      '圖像、聲音與字型都由本站提供，不會呼叫第三方服務。本站架設在 Vercel 上，和所有網頁伺服器一樣，Vercel 可能會記錄技術性的存取資料（例如 IP 位址），以運作並保護服務。',
+      '圖像、聲音與字型都由本站提供，不會呼叫第三方服務。本站架設在 Cloudflare 上，和所有網頁伺服器一樣，Cloudflare 可能會記錄技術性的存取資料（例如 IP 位址），以運作並保護服務。',
       '遊戲中我們使用 PostHog（posthog.com，資料儲存在美國）來了解遊戲的遊玩方式並修正錯誤。它會收到每場對局的摘要（寶可夢、難度、招式、道具、到達的分鐘數與等級，以及結束方式）、你開啟了哪些選單畫面，以及遊戲發生錯誤時的錯誤訊息與進行中對局的重播（其種子與你的輸入，不含個人資料）。這些全都與 ph_ps 中的隨機 ID 綁定，若你已登入，也會與你的帳號 ID 及使用者名稱綁定，但絕不會與你的電子郵件或姓名綁定。PostHog 在這裡不使用 Cookie，也不會跨網站追蹤你。',
       '捐款是在 AbacatePay（abacatepay.com：Pix 與巴西信用卡）或 Stripe（stripe.com：其他國家的信用卡、Apple Pay 與 Google Pay）的頁面上付款。你的付款資料會直接交給他們，遊戲永遠看不到你的卡片資料。他們會告訴我們金額，以及（就像對任何收款方一樣）付款人的資料（例如姓名與電子郵件），我們只用來記錄這筆捐款。如果你提供了 @（或兌換了捐款的兌換碼），它會與該遊戲帳號綁定，讓獎勵能送達；金額永遠不會公開顯示，只會顯示贊助者徽章，而且你可以隱藏它。',
     ],
@@ -1029,7 +1029,7 @@ export const siteZh: SiteMessages = {
     play: (title: string) => `觀看：${title}`,
     watchOn: (platform: string) => `在 ${platform} 觀看`,
     videoAbout: (name: string) => `${name} 製作的 Pokémon Survivors 影片。`,
-    langs: { pt: '葡萄牙語', en: '英語', es: '西班牙語', fr: '法語', zh: '中文' },
+    langs: { pt: '葡萄牙語', en: '英語', es: '西班牙語', fr: '法語', zh: '中文', zhHans: '中文' },
     join: {
       title: '你有在拍這款遊戲的影片嗎？',
       lead: '實況、直播、攻略、Short 或 TikTok，任何語言都可以：每一部遊戲影片都能出現在這裡。',

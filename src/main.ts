@@ -54,9 +54,8 @@ import type { PlazaStage } from './data/festivals'
 import { festivalAnnounced } from './game/festival'
 import { openFestival } from './ui/festival'
 import type { BoutiqueTab } from './ui/boutiqueSeen'
-import { watchAssetImages } from './assets'
 import { identify, lobbyPress, startAnalytics, takeOpened, track, type ErrorContext, type QueueEnd, type RunPerf } from './analytics'
-import { firstGate, firstRunClock, firstStep, holdRunSteps, startFirstSession } from './firstSession'
+import { firstGate, firstRunClock, firstSheets, firstStep, holdRunSteps, startFirstSession } from './firstSession'
 import { enrolDevice, firstTime, forgetFirstTime, nextFirst, tourDue, updateFirstTime, type Arm, type TutorialOutcome } from './firstTime'
 import { welcomeScreen } from './ui/welcome'
 import { firstPartnerScreen } from './ui/firstPartner'
@@ -240,6 +239,7 @@ import { runShare, sharePreview, trainerShare } from './ui/share'
 import type { ShopPlaza, VisitorShelf } from './ui/shop'
 import { starterSelect } from './ui/starterSelect'
 import { firstRunDue, guestChosenAt, guestGateDue, hostApp, onboardingStep, onOnboarding, rememberGuest, savePromptDue } from './onboarding'
+import { takeHandoff } from './handoff'
 import { firstRunTip, hideInAppHint, saveCard, showInAppHint } from './ui/onboarding'
 import { startLobbyTour, type LobbyTourEnd } from './ui/lobbyTour'
 import { invitesScreen, resultsInvite } from './ui/invites'
@@ -302,9 +302,6 @@ import { formatPlays, rulesOf } from './game/versusRules'
 import { parseLoadout, parseSettings, type CoopPick } from './coop/start'
 import { countFinale, mythicalHunt } from './game/mythicalHunt'
 import { MYTHICAL_PITY } from './data/waves'
-
-// The menus' own <img>s from the asset CDN fall back to the site's copies where the CDN can't be reached.
-watchAssetImages()
 
 /** Fixed simulation step: the replays the ranking re-simulates count on it. */
 const STEP = TICK
@@ -1723,7 +1720,7 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
   // The 1/64 roll unlocks this Pokémon's shiny for good (Normal/Shiny on the select screen).
   if (me.luckyShiny) updateSave((s) => ({ ...s, shinyStarters: unlockShinyStarter(s.shinyStarters, starter) }))
   // A shiny run starts in its own colors (and loads only those).
-  await loadRunSheets(familySheets(starter, me.shiny), openingDex(plan))
+  await loadRunSheets(familySheets(starter, me.shiny), openingDex(plan), firstSheets)
   // The outbreak's shiny can show up in the first minute (in safe mode it loads when one does).
   if (!detail.safe) void preloadShinies([ENEMIES[plan.outbreak].dex])
   loading.remove()
@@ -2808,7 +2805,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
     case 'landmark':
       return landmarkFeedback(ui, e.landmark, e.moment)
     case 'seasonFind':
-      return seasonFindFeedback(ui, e.find, e.moment)
+      return seasonFindFeedback(ui, e.find, e.moment, r.game.terrain.seed)
     case 'path':
       return pathFeedback(ui, e.notice)
     case 'hexNut':
@@ -4947,10 +4944,13 @@ const boot = () => {
   watchSupporterStatus()
   // Coming back to the game syncs again, but not mid-run: a run syncs when it ends.
   startAccount(() => run === null)
-  // A Google sign in held back inside an app's browser (`signIn`): the hint says why and how to leave it.
+  // A tab a portal's frame opened to sign in: the frame's progress lands here first, then the sign in it asked for (`handoff.ts`).
+  void takeHandoff(stageSyncedSave).then((provider) => provider && signIn(provider))
+  // A Google sign in held back inside an app's browser (`signIn`): the hint says why and how to leave it. One moved out of a portal's frame: where it went.
   onOnboarding((step) => {
     const app = hostApp()
     if (step === 'inAppSignInHeld' && app) showInAppHint(ui, app, true)
+    if (step === 'framedSignIn') toast(ui, t().onboarding.framedSignIn, 7000, 'framedSignIn')
   })
   // The Festival da Praça's pot, in the background (its gifts join the gift box).
   startFestival()
@@ -5141,11 +5141,12 @@ const devGifts = {
    * Puts a Mystery Gift in the lobby's gift box as if a sync listed it: `ps.gift('egg', 'friend')`, `ps.gift('coins', '500')`,
    * `ps.gift('title')`, `ps.gift('style', 'ambassador')` (a frame), `ps.gift('shinyHatch', 'munchlax')`,
    * `ps.gift('ribbon', 'gold')` (yesterday's challenge, #12 of 340), `ps.gift('shinyPick')` (a shiny of one's choice),
-   * `ps.gift('companion', 'pumpkaboo')` (a gift-only companion), `ps.gift('bag', 'lure')` (3 of a Bag item), `ps.gift('legend', 'cresselia')` (a festival legend).
+   * `ps.gift('companion', 'pumpkaboo')` (a gift-only companion), `ps.gift('bag', 'lure')` (3 of a Bag item), `ps.gift('legend', 'cresselia')` (a festival legend),
+   * `ps.gift('reshadow', 'mewtwo')` (the Game Corner's Shadow Serum: a Purified Pokémon back to Shadow).
    * `why`: an inviter's handle (welcome), a count of friends brought, or a legend path (`ps.gift('legend', 'solgaleo', 'cosmog')`: Cosmog's evolution scene as it opens).
    */
   gift: (kind: GiftKind = 'egg', arg?: string, why?: string | number) => {
-    const raw = { egg: { tier: arg ?? 'friend' }, coins: { amount: Number(arg ?? 500) }, title: { title: arg ?? 'ambassador' }, style: { style: { slot: 'frame', id: arg ?? 'ambassador' } }, shinyHatch: { family: arg ?? 'munchlax' }, family: { family: arg ?? 'mimikyu' }, shadow: { family: arg ?? 'ditto' }, ribbon: { ribbon: { day: previousDay(brasiliaDay(today())), tier: arg ?? 'gold', rank: 12, total: 340 } }, shinyPick: {}, companion: { id: arg ?? 'pumpkaboo' }, bag: { item: arg ?? 'lure', count: 3 }, legend: { legend: arg ?? 'cresselia' }, evoItem: { item: arg ?? 'fireStone' } }[kind]
+    const raw = { egg: { tier: arg ?? 'friend' }, coins: { amount: Number(arg ?? 500) }, title: { title: arg ?? 'ambassador' }, style: { style: { slot: 'frame', id: arg ?? 'ambassador' } }, shinyHatch: { family: arg ?? 'munchlax' }, family: { family: arg ?? 'mimikyu' }, shadow: { family: arg ?? 'ditto' }, reshadow: { id: arg ?? 'mewtwo' }, ribbon: { ribbon: { day: previousDay(brasiliaDay(today())), tier: arg ?? 'gold', rank: 12, total: 340 } }, shinyPick: {}, companion: { id: arg ?? 'pumpkaboo' }, bag: { item: arg ?? 'lure', count: 3 }, legend: { legend: arg ?? 'cresselia' }, evoItem: { item: arg ?? 'fireStone' } }[kind]
     const content = parseGiftContent({ kind, ...raw })
     if (!content) return 'Kinds: egg (tier), coins (amount), title, style (frame id), shinyHatch (family), ribbon (tier), shinyPick, companion (id), bag (item, 3 of it), legend (id)'
     const path = PATH_IDS.find((id) => id === why)
@@ -5769,14 +5770,15 @@ if (import.meta.env.DEV) {
       },
       /**
        * The Rocket Game Corner (faked API): `ps.corner('prizes')` or `ps.corner('tokens')` opens the counter on that page,
-       * `ps.corner('stage', 5000)` sets the faked tokens (a second number the Koffing Sweep level), `ps.minigame('slots')` and
+       * `ps.corner('stage', 5000)` sets the faked tokens (a second number the Koffing Sweep level, a third the tokens it paid today:
+       * `ps.corner('stage', 5000, 3, 1500)` is its half pay, 2250 its free play), `ps.minigame('slots')` and
        * `ps.minigame('sweep')` its games; `ps.realm('room', 'gameCorner')` walks into the room.
        */
-      corner: async (cmd: string = 'prizes', tokens?: number | string, level?: number) => {
+      corner: async (cmd: string = 'prizes', tokens?: number | string, level?: number, won?: number) => {
         const [{ fakeRealm }, { stageCorner, rigSpin }, { openCornerCounter }] = await Promise.all([realmMode(), import('./realm/cornerApi'), import('./ui/cornerCounter')])
         fakeRealm(true, accountHandle() ?? 'you')
         if (cmd === 'win') return rigSpin(String(tokens ?? 'seven'))
-        if (cmd === 'stage') return stageCorner(typeof tokens === 'number' ? tokens : undefined, level)
+        if (cmd === 'stage') return stageCorner(typeof tokens === 'number' ? tokens : undefined, level, won)
         if (cmd !== 'prizes' && cmd !== 'tokens') return "ps.corner: 'prizes', 'tokens' or 'stage'"
         return setScreen(openCornerCounter(ui, input, { tab: cmd, close: () => showTitle() }))
       },
@@ -5878,9 +5880,11 @@ if (import.meta.env.DEV) {
       /**
        * Fishing's staging (`realm/games/fishing.ts`, open it with `ps.minigame('fishing')`): `ps.fishing('feebas')` makes
        * that the next bite, at once (`shinyGyarados`, `wailmer`, `boot`…); a second `true` turns on the autopilot (casts,
-       * hooks and reels by itself; `ps.fishing(null, false)` off); `ps.fishing()` prints it (its `phase` too).
+       * hooks and reels by itself; `ps.fishing(null, false)` off); `ps.fishing()` prints it (its `phase` too). A third `true`
+       * makes the next faked claim that hooks a Wishiwashi again bring its shiny (`ps.realm('fake')` first).
        */
-      fishing: async (next?: unknown, auto?: boolean) => {
+      fishing: async (next?: unknown, auto?: boolean, shiny?: boolean) => {
+        if (shiny !== undefined) (await import('./realm/api')).fakeClaims.shiny = shiny
         const { fishingDev } = await import('./realm/games/fishing')
         const { CATCH_IDS, isCatchId } = await import('./realm/games/fishing.rules')
         if (next !== undefined && next !== null && !isCatchId(next)) return `ps.fishing: ${CATCH_IDS.join(', ')}`

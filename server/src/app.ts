@@ -1030,7 +1030,7 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     if (!realm.takeGame(c.var.userId)) return c.json({ error: 'too many claims' }, 429)
     const got = await realm.claim(c.var.userId, claim, coins, brasiliaDay(new Date()))
     if (!got.ok) return c.json({ error: got.error }, 403)
-    return c.json({ coins: got.coins, today: got.today, trophies: got.trophies, furniture: got.furniture, family: got.family } satisfies GameClaimed)
+    return c.json({ coins: got.coins, today: got.today, trophies: got.trophies, furniture: got.furniture, family: got.family, shiny: got.shiny } satisfies GameClaimed)
   })
 
   const CLAW_REFUSALS = { profile: 403, banned: 403, cap: 403, funds: 402, nosave: 409, stale: 409 } as const satisfies Record<ClawRefusal, number>
@@ -1058,7 +1058,7 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     return c.json(got.dropped)
   })
 
-  const CORNER_REFUSALS = { profile: 403, banned: 403, cap: 403, funds: 402, nosave: 409, stale: 409, tokens: 403, owned: 403, missing: 404 } as const satisfies Record<CornerRefusal, number>
+  const CORNER_REFUSALS = { profile: 403, banned: 403, cap: 403, funds: 402, nosave: 409, stale: 409, tokens: 403, owned: 403, missing: 404, unpurified: 409 } as const satisfies Record<CornerRefusal, number>
 
   app.get('/realm/corner', auth, async (c) => {
     const state = await corner.state(c.var.userId)
@@ -1110,9 +1110,9 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
 
   app.post('/realm/corner/redeem', auth, smallBody, async (c) => {
     const body = parseCornerRedeem(await json(c))
-    if (!body) return c.json({ error: 'expected { prize }' }, 400)
+    if (!body) return c.json({ error: 'expected { prize, target? }' }, 400)
     if (!corner.take(c.var.userId)) return c.json({ error: 'too many calls' }, 429)
-    const got = await corner.redeem(c.var.userId, body.prize)
+    const got = await corner.redeem(c.var.userId, body.prize, body.target)
     if (!got.ok) return c.json({ error: got.error }, CORNER_REFUSALS[got.error])
     return c.json({ tokens: got.tokens, gift: got.gift } satisfies CornerRedeemed)
   })

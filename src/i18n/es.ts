@@ -1294,6 +1294,7 @@ export const es: Messages = {
     inAppOpen: 'Abrir en Chrome',
     inAppIos: 'Toca *...* y elige *Abrir en el navegador*',
     inAppSignIn: 'Google no deja iniciar sesión dentro de esta app. Abre el juego en el navegador para entrar con tu cuenta.',
+    framedSignIn: 'Abrimos el juego en una pestaña nueva para que inicies sesión, con tu progreso. Sigue jugando allí.',
     close: 'Cerrar',
   },
 
@@ -6343,6 +6344,15 @@ export const es: Messages = {
     },
     captured: 'En tu colección',
     locked: (legend) => `Captura a ${legend}`,
+    earn: {
+      plays: (game, n) => `Juega ${n} partidas de ${game}`,
+      best: (game, n) => `Haz ${n} puntos en ${game}`,
+      wins: (game, n) => `Gana ${n} partidas de ${game}`,
+      feat: (game) => `Una hazaña en ${game}`,
+      stamps: (n) => `Junta ${n} Estampas`,
+      note: 'Este trofeo llega cuando cumples la meta. ¡No está a la venta!',
+      featNote: (feat) => `Este trofeo llega con la hazaña: ${feat} ¡No está a la venta!`,
+    },
     collections: 'Colecciones',
     all: 'Todo',
     pay: { all: 'Todos', coins: '₽', gems: 'Gemas' },

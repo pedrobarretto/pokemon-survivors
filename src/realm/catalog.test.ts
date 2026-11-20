@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { collectionsOn, filterPage, freshOn, isFresh, pageOf } from './catalog'
+import { FURNITURE_IDS } from '../data/furniture'
+import { collectionsOn, earnWayOf, filterPage, freshOn, isFresh, pageOf } from './catalog'
 
 describe('freshOn', () => {
   it('marks a drop NOVO for two weeks from its day, and never before it', () => {
@@ -42,5 +43,16 @@ describe('filterPage', () => {
     expect(filterPage(page, 'all', 'coins')).toEqual(page.filter((id) => id.endsWith('Cover')))
     expect(filterPage(page, 'floor', 'all')).toEqual([])
     expect(filterPage(pageOf('trainer', '2026-11-05'), 'rug', 'gems')).toEqual(['masterBallRug'])
+  })
+})
+
+describe('earnWayOf', () => {
+  it('tells how every earned piece comes, and only the legends\' pieces by capture', () => {
+    expect(earnWayOf('doll:kyogre')).toEqual({ kind: 'legends', legends: ['kyogre'] })
+    expect(earnWayOf('goldenMagikarpPlaque')).toEqual({ kind: 'game', game: 'fishing', after: { stat: 'best', at: 400 } })
+    expect(earnWayOf('stampDesk')).toEqual({ kind: 'stamps', at: 5 })
+    expect(earnWayOf('woodChair')).toBeNull()
+    expect(pageOf('trophies', '2026-11-18').filter((id) => earnWayOf(id) === null)).toEqual([])
+    expect(FURNITURE_IDS.filter((id) => earnWayOf(id)?.kind === 'legends').every((id) => id.startsWith('doll:') || id.endsWith('Painting'))).toBe(true)
   })
 })

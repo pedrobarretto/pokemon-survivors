@@ -49,7 +49,7 @@ import { loadSave, today, ultraToday, updateSave } from './save'
 import { typeBadge, type Screen } from './screens'
 import { actionBar, backButton, gearButton, segmented, shellScreen, topBar, walletChip } from './shell'
 import { detailsSheet, evoLine, shinyPicker, statBars } from './partnerDetails'
-import { shadowRow } from './shadowPick'
+import { purifyDialog, shadowRow } from './shadowPick'
 import { runVariant, SHADOW_SHEETS } from '../game/shadow'
 import { drawShadowAura } from '../render/shadowAura'
 import { isRegion, nationalDex, REGION_IDS, REGIONS as FORM_REGIONS, type RegionId } from '../data/regionalForms'
@@ -397,6 +397,18 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
   )
   /** Hoopa's Rings (`ui/rush.ts`): its level sheet over this screen, which holds its keys while it's open. */
   let rushSheet: Screen | null = null
+  /** The purify dialog, open over the select (`purifyDialog`): the select's keys wait for it. */
+  let purifyAsk: Screen | null = null
+  const askPurify = (run: () => void) => {
+    if (purifyAsk) return
+    playSfx('select')
+    purifyAsk = purifyDialog(root, input, current(), (yes) => {
+      purifyAsk?.dispose()
+      purifyAsk = null
+      if (yes) run()
+      else playSfx('move')
+    })
+  }
   const captured = LEGEND_IDS.filter((id) => isCaptured(save.legends, id))
   const openRush = () => {
     const start = actions.rush
@@ -612,7 +624,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
           // Scatterbug's line names the pattern its Vivillon wears here (the device's region).
           id === 'scatterbug' && h('p', { class: 'partner-blurb' }, h('b', {}, m.gaHook.vivillon.pattern(VIVILLON_PATTERNS[devicePattern()].name)), ' · ', m.gaHook.vivillon.why),
           h('div', { class: 'partner-hero-actions' }, canPick(id) && shinyPicker(shinyOf(id), setShiny), more(true), pathAfter(id)),
-          !opts.coop && shadowRow(id, () => renderHero()),
+          !opts.coop && shadowRow(id, () => renderHero(), askPurify),
         ),
       ),
       ...[skinsRow(id)].filter((row) => row !== null),
@@ -891,6 +903,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
   const off = input.onKey((key) => {
     if (pathOpen) return
     if (rushSheet) return
+    if (purifyAsk) return
     if (key === 'KeyH' && rushRow) return openRush()
     if (sheet?.onKey(key)) return
     if (key === 'KeyX' && !plain) return setDifficulty(DIFFICULTY_IDS[(DIFFICULTY_IDS.indexOf(difficulty) + 1) % DIFFICULTY_IDS.length]!)
@@ -963,5 +976,5 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
     else blitCentered(ctx, PICKUPS.pokeball(), sprite.width / 2, sprite.height / 2 + Math.round(Math.sin(time * 6) * 2))
   }
 
-  return { el, tick, selected: current, dispose: () => (off(), offGems(), pathOpen?.dispose(), clearTimeout(cryTimer), window.removeEventListener('keydown', holdTab), rushSheet?.dispose(), el.remove()) }
+  return { el, tick, selected: current, dispose: () => (off(), offGems(), pathOpen?.dispose(), clearTimeout(cryTimer), window.removeEventListener('keydown', holdTab), rushSheet?.dispose(), purifyAsk?.dispose(), el.remove()) }
 }

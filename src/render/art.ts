@@ -1,4 +1,4 @@
-import { assetImage, assetUrl } from '../assets'
+import { assetUrl } from '../assets'
 import { canvasCache, context2d, createCanvas, fromStrings, lazy, type Palette, type PixelSprite } from '../engine/pixelart'
 import { PENCIL, PENCIL_PALETTE } from './pencilArt'
 import type { Medal } from '../data/achievements'
@@ -893,7 +893,9 @@ let unmadeIcons: (() => unknown)[] | null = null
 export const warmIcon = () => {
   unmadeIcons ??= [
     ...(Object.keys(MOVE_ICON_ART) as MoveId[]).map((id) => () => moveIcon(id)),
-    ...(Object.keys(ITEMS) as ItemId[]).map((id) => () => assetImage(itemIcon(id))),
+    ...(Object.keys(ITEMS) as ItemId[]).map((id) => () => {
+      new Image().src = itemIcon(id)
+    }),
   ]
   const next = unmadeIcons.pop()
   next?.()

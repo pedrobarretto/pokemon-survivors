@@ -14,6 +14,7 @@ import { pokedexPage, regionPage } from './pages/pokedex'
 import { supportPage } from './pages/support'
 import { tierListPage } from './pages/tierList'
 import { dexPages } from './pokedex'
+import { hansGamePage } from './hansPage'
 import { dexPaths, dexRegionPaths, PAGE_IDS, ROUTE_IDS, ROUTES, sitemap as routesSitemap, type PageId, type Paths, type RouteId } from './routes'
 
 const RENDER: Record<PageId, (locale: Locale) => string> = {
@@ -53,7 +54,13 @@ export const SITE_PAGES: readonly SitePage[] = [
 ]
 
 /**
- * The 404 page: `404.html` at the root, which Vercel serves (status 404) for any
+ * The Simplified Chinese game page (`/zh-cn/`): the Traditional one's HTML (`read`, `zh-tw/index.html`) converted
+ * (`hansPage.ts`), so the two never drift. Not in `SITE_PAGES`: like the other game pages, `play` lists it.
+ */
+export const hansPlayPage = (read: () => string) => ({ path: ROUTES.play.zhHans, file: 'zh-cn/index.html', render: () => hansGamePage(read()) })
+
+/**
+ * The 404 page: `404.html` at the root, which the site's Worker serves (status 404) for any
  * path that doesn't exist. Not a route: no hreflang, not in the sitemap, never indexed.
  */
 export const NOT_FOUND_PAGE = { path: '/404.html', file: '404.html', render: notFoundPage } as const

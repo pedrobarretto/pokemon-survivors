@@ -28,6 +28,7 @@ import { gemAmount, itemName } from './gemBits'
 import { today } from './save'
 import { celebrate } from './confetti'
 import { confirmDialog, type Screen } from './screens'
+import { leaveTo } from '../handoff'
 
 /**
  * The gem shop's two pages, which Leavanny's Boutique on the plaza holds
@@ -287,7 +288,7 @@ const checkoutSheet = (root: HTMLElement, input: Input, pack: GemPackId, currenc
         s.close()
         return returned(res.staged)
       }
-      if (res.ok) return location.assign(res.url)
+      if (res.ok) return leaveTo(res.url)
       busy = false
       playSfx('denied')
       status.classList.remove('blink')

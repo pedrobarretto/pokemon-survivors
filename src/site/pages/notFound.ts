@@ -10,7 +10,7 @@ import { ROUTE_IDS, ROUTES } from '../routes'
 /** The horde of the Rota 404 mini game. */
 const FOE_DEX = 41
 
-const byLocale = <T>(of: (l: Locale) => T): Readonly<Record<Locale, T>> => ({ pt: of('pt'), en: of('en'), es: of('es'), fr: of('fr'), zh: of('zh') })
+const byLocale = <T>(of: (l: Locale) => T): Readonly<Record<Locale, T>> => ({ pt: of('pt'), en: of('en'), es: of('es'), fr: of('fr'), zh: of('zh'), zhHans: of('zhHans') })
 
 const walkOf = (entry: DexEntry) => ({ dex: entry.dex, walk: entry.sprites.normal.walk })
 
@@ -105,7 +105,7 @@ const pickLocale = () => {
 }
 
 /**
- * The 404 page (`404.html` at the root, which Vercel serves for any path that
+ * The 404 page (`404.html` at the root, which the site's Worker serves for any path that
  * doesn't exist): every language in one file, never indexed, and the Rota 404
  * mini game (`notFoundClient.ts`) whose signs are the page's links.
  */

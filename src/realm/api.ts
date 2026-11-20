@@ -1,4 +1,4 @@
-import { newFeatFamily } from '../game/seasonOneUnlocks'
+import { newFeatFamily, repeatFeatFamily, repeatShinyHit } from '../game/seasonOneUnlocks'
 import { spendFromSave } from '../account'
 import { apiCall } from '../api'
 import { CITY_IDS, isCityId } from '../net/realm'
@@ -320,6 +320,9 @@ export const reportTrainer = async (report: RealmReport): Promise<boolean> => {
   return status === 200
 }
 
+/** Faking: `shiny` makes the next claim that hooks a family again bring its shiny (`ps.fishing('wishiwashi', true, true)`). */
+export const fakeClaims = { shiny: false }
+
 /**
  * Claims a finished mini game's ₽ and trophies (`POST /realm/game/claim`).
  * Faking, it prices and caps it here the way the API does, from a day kept
@@ -348,7 +351,11 @@ export const claimGame = async (claim: GameClaim): Promise<GameClaimed | Failure
     const before = new Set(trophiesEarned(claim.game, was))
     const trophies = trophiesEarned(claim.game, stats).filter((id): id is FurnitureId => !before.has(id) && isFurnitureId(id))
     if (trophies.length > 0) fake.me = { ...fake.me, furniture: { ...fake.me.furniture, ...Object.fromEntries(trophies.map((id) => [id, (fake?.me.furniture[id] ?? 0) + 1])) } }
-    return { coins: paid, today: Math.min(MINIGAME_DAILY, paidAll + paid), trophies, furniture: trophies.length > 0 ? fake.me.furniture : null, family: newFeatFamily(claim.game, was.feats, stats.feats) }
+    // The API also asks the stored save that the family is owned without its shiny: faking, any repeat counts.
+    const again = repeatFeatFamily(claim.game, was.feats, claim.feats)
+    const shiny = again && (fakeClaims.shiny || repeatShinyHit(again, Math.random())) ? again : null
+    if (shiny) fakeClaims.shiny = false
+    return { coins: paid, today: Math.min(MINIGAME_DAILY, paidAll + paid), trophies, furniture: trophies.length > 0 ? fake.me.furniture : null, family: newFeatFamily(claim.game, was.feats, stats.feats), shiny }
   }
   const { status, body } = await apiCall('/realm/game/claim', { method: 'POST', body: claim, auth: true })
   if (status !== 200 || !isRecord(body)) return failed(status, body)
@@ -361,6 +368,7 @@ export const claimGame = async (claim: GameClaim): Promise<GameClaimed | Failure
     trophies: Array.isArray(body.trophies) ? body.trophies.filter(isFurnitureId) : [],
     furniture: isRecord(body.furniture) ? parseFurnitureCounts(body.furniture) : null,
     family: typeof body.family === 'string' ? body.family : null,
+    shiny: typeof body.shiny === 'string' ? body.shiny : null,
   }
 }
 

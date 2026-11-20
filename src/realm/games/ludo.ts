@@ -1,7 +1,7 @@
 import { playSfx } from '../../engine/audio'
 import type { Dir8 } from '../../engine/math'
 import { canvasCache, context2d, createCanvas, fromStrings, lazy, type PixelSprite } from '../../engine/pixelart'
-import { locale, t } from '../../i18n'
+import { cjk, t } from '../../i18n'
 import type { TableView } from '../../net/realmTables'
 import { drawPokemon, sprites } from '../../render/sprites'
 import { INK, SEAT_COLORS, balls, box, burst, button, centered, clip, drawBits, wrap, fluidSize, inside, label, loadSeated, miniBalls, seatedAt, stepBits, tableTop, type Bit, type Rect, type Seated } from './cafeKit'
@@ -280,7 +280,7 @@ const start = (ctx: TableCtx): TableRun => {
     const gridY = dieY + size + 6
     const bottom = d.y + d.h - 4
     const summary = words().summary.flatMap((l) => wrap(l, d.w - 14))
-    const step = locale() === 'zh' ? 14 : 10
+    const step = cjk() ? 14 : 10
     const summaryH = summary.length * step + 7
     const room = bottom - gridY - 2
     // The short rules (and the gap their "?" tab sits in) when the seats keep 26 px each beside them, else the button.
