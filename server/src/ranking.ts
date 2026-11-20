@@ -138,7 +138,8 @@ const isUniqueViolation = (err: unknown) => typeof err === 'object' && err !== n
  * Ranked runs, boards, profiles and follows. Boards rank each player once, by
  * their best run (ties go to who did it first), and only list players with a
  * handle and never a banned one. A run counts as soon as it's reported: only one whose re-simulation
- * failed (`checks.ts`), or that an admin took off (`moderation.ts`), counts nowhere, and one kept off for its
+ * failed (`checks.ts`), or that an admin took off (`moderation.ts`), counts nowhere, one that can never be checked
+ * stays off the all-time boards' places on show (`ranked`), and one kept off for its
  * stream (`unlisted`, with `streamEnforce`) only counts for its player. Day and week start at midnight and on Monday in `BOARD_TIME_ZONE`,
  * and a run counts for the period it started in.
  */
@@ -149,14 +150,45 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
    * Every player's best run on a board, ranked, with how many players it holds
    * (`total`), as a fragment to select from. `self` ranks that player too before
    * they pick a handle (where their run would stand once they do), for the checks.
+   * On the all-time boards (`all`, `era1`) the places on show (`CHECKED.top`) only
+   * hold runs that were checked or still can be (`checkable`): a run that can never
+   * be (from before replays, or one whose replay was dropped unchecked) only counts
+   * below the time of the board's `top`-th checkable player (`cut`; on a board with
+   * fewer, nowhere), so it never sits among the places a check would have looked at. Day and week boards end
+   * before that matters, and stay as they were.
    */
-  const ranked = ({ mode, difficulty, period, starter, friends, viewer }: BoardQuery, q: Q = sql, self: string | null = null) => q`
-    with best as (
-      select distinct on (r.user_id) r.id, r.user_id, r.starter, r.stage, r.branch, r.difficulty, r.survived, r.outcome, r.started_at, r.bag
+  const ranked = ({ mode, difficulty, period, starter, friends, viewer }: BoardQuery, q: Q = sql, self: string | null = null) => {
+    const since =
+      period === 'all'
+        ? q`r.started_at >= ${SEASON_ONE.start}::timestamptz`
+        : period === 'era1'
+          ? q`r.started_at < ${SEASON_ONE.start}::timestamptz`
+          : q`r.started_at >= (date_trunc(${period}, now() at time zone ${BOARD_TIME_ZONE}) at time zone ${BOARD_TIME_ZONE})`
+    const runs = q`
+      select r.id, r.user_id, r.starter, r.stage, r.branch, r.difficulty, r.survived, r.outcome, r.started_at, r.bag, (r.verified is true or r.replay is not null) as checkable
       from runs r
-      where r.finished_at is not null and r.verified is not false and not r.unlisted and r.mode = ${mode} and r.difficulty = ${difficulty}
-        ${period === 'all' ? q`and r.started_at >= ${SEASON_ONE.start}::timestamptz` : period === 'era1' ? q`and r.started_at < ${SEASON_ONE.start}::timestamptz` : q`and r.started_at >= (date_trunc(${period}, now() at time zone ${BOARD_TIME_ZONE}) at time zone ${BOARD_TIME_ZONE})`}
-        ${starter ? q`and r.starter = ${starter}` : q``}
+      where r.finished_at is not null and r.verified is not false and not r.unlisted and r.mode = ${mode} and r.difficulty = ${difficulty} and ${since}
+        ${starter ? q`and r.starter = ${starter}` : q``}`
+    const top = starter ? CHECKED.top.starter : CHECKED.top.global
+    const allTime = period === 'all' || period === 'era1'
+    return q`
+    with pool as (${runs}),
+    ${
+      allTime
+        ? q`cut as (
+      select coalesce((
+        select c.survived from (select distinct on (p.user_id) p.user_id, p.survived from pool p where p.checkable order by p.user_id, p.survived desc) c
+        join users u on u.id = c.user_id where u.handle is not null and u.banned_at is null
+        order by c.survived desc offset ${top - 1} limit 1
+      ), '-infinity'::float8) as time
+    ),`
+        : q``
+    }
+    best as (
+      select distinct on (r.user_id) r.id, r.user_id, r.starter, r.stage, r.branch, r.difficulty, r.survived, r.outcome, r.started_at, r.bag
+      from pool r
+      where true
+        ${allTime ? q`and (r.checkable or r.survived < (select time from cut))` : q``}
         ${friends && viewer ? q`and (r.user_id = ${viewer} or r.user_id in (select followee_id from follows where follower_id = ${viewer}))` : q``}
       order by r.user_id, r.survived desc, r.started_at
     )
@@ -164,6 +196,7 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
       (count(*) over ())::int as total
     from best b join users u on u.id = b.user_id
     where (u.handle is not null ${self ? q`or u.id = ${self}` : q``}) and u.banned_at is null`
+  }
 
   /**
    * A day's challenge board as a fragment: every player's official attempt

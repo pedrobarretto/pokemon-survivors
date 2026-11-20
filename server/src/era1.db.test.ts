@@ -24,10 +24,11 @@ describe.skipIf(!url)('Era 1 rewards (Postgres)', () => {
   let job: ReturnType<typeof createEra1Rewards>
   let coop: ReturnType<typeof coopBoardStore>
 
-  /** A finished Normal run of `user` that lasted `seconds`, started `at`. */
-  const run = (user: string, seconds: number, at: Date, over: { verified?: boolean | null; unlisted?: boolean; mode?: string } = {}) =>
-    sql`insert into runs (user_id, started_at, finished_at, survived, outcome, difficulty, starter, stage, mode, verified, unlisted)
-      values (${user}, ${at}, ${at}, ${seconds}, 'death', 'normal', 'charmander', 2, ${over.mode ?? 'standard'}, ${over.verified ?? null}, ${over.unlisted ?? false})`
+  /** A finished Normal run of `user` that lasted `seconds`, started `at`: checked, unless `verified` says otherwise (`replay`: one kept for its check). */
+  const run = (user: string, seconds: number, at: Date, over: { verified?: boolean | null; replay?: boolean; unlisted?: boolean; mode?: string } = {}) =>
+    sql`insert into runs (user_id, started_at, finished_at, survived, outcome, difficulty, starter, stage, mode, verified, replay, unlisted)
+      values (${user}, ${at}, ${at}, ${seconds}, 'death', 'normal', 'charmander', 2, ${over.mode ?? 'standard'}, ${over.verified === undefined ? true : over.verified},
+        ${over.replay ? sql.json({}) : null}, ${over.unlisted ?? false})`
 
   /** Players `p1`…`pN` with a handle; each `pK` ran `10000 - K` seconds before the season. */
   const field = async (n: number, mode = 'standard') => {
@@ -86,6 +87,25 @@ describe.skipIf(!url)('Era 1 rewards (Postgres)', () => {
     // 36 players left on the board: a quarter of them, 9 places (p5 to p13).
     expect(await gifts('p13')).toEqual(['era1:hall:0', 'era1:hall:1'])
     expect(await gifts('p14')).toEqual([])
+  })
+
+  it('keeps a run that can never be checked off the places on show, and lists it below them', async () => {
+    await field(70)
+    const board = rankingStore(sql).board
+    for (const [id, seconds, over] of [
+      ['top', 9_999.5, { verified: null }],
+      ['low', 9_935.5, { verified: null }],
+      ['pending', 99_999, { verified: null, replay: true }],
+    ] as const) {
+      await sql`insert into users (id, handle, name) values (${id}, ${id}, ${id})`
+      await run(id, seconds, BEFORE, over)
+    }
+    const at = async (viewer: string) => (await board({ mode: 'standard', difficulty: 'normal', period: 'era1', starter: null, friends: false, viewer })).me?.rank ?? null
+    // The 60th checkable player (`CHECKED.top.global`: `pending`, then p1…p59) ran 9941 s: a run that can't be checked only counts below that.
+    expect(await at('top')).toBeNull()
+    expect(await at('low')).toBe(66)
+    // One whose replay still waits for its check counts as soon as it's reported.
+    expect(await at('pending')).toBe(1)
   })
 
   it('rewards a thin board’s first few, and nobody on a board under the minimum', async () => {
