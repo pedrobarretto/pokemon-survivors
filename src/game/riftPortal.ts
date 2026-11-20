@@ -7,7 +7,7 @@ import { burst } from './effects'
 import { chargePortal, endlessRiftAt, pickLegend, portalReach, riftAt, riftDomain, riftDue } from './rift'
 import { enterArena } from './riftArena'
 import { clearSpot } from './terrain'
-import { teamLegend } from './legend'
+import { teamLegendIds } from './legend'
 import { anchorPlayer, playerWithin } from './players'
 import type { Game } from './types'
 import { setWeather } from './weather'
@@ -37,15 +37,15 @@ export const openPortal = (g: Game, legend: RiftLegend, at?: { x: number; y: num
 
 /**
  * The legendary behind the next rift: one not met yet this run, never the
- * team's own legend (`teamLegend`). In a haunted run (Noite das Bruxas) Darkrai's
+ * team's own legends (`teamLegendIds`). In a haunted run (Noite das Bruxas) Darkrai's
  * nightmare takes its place with `EVENT_RIFT.odds`; that roll is the only
  * draw a haunted run adds, so every other run draws as before.
  */
 export const drawRiftLegend = (g: Game): RiftLegend => {
-  const self = teamLegend(g)?.id
-  const drawn = pickLegend(g.rng, g.rift.met, self)
+  const selves = teamLegendIds(g)
+  const drawn = pickLegend(g.rng, g.rift.met, selves)
   // Playing Darkrai itself (Legend mode), its nightmare never comes.
-  return g.halloween && !(self !== undefined && isEventRift(self)) && g.rng() < EVENT_RIFT.odds ? 'darkrai' : drawn
+  return g.halloween && !selves.some(isEventRift) && g.rng() < EVENT_RIFT.odds ? 'darkrai' : drawn
 }
 
 /**

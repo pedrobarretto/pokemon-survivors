@@ -1,4 +1,5 @@
 import { STARTER_IDS } from '../data/starters'
+import { REGULAR_LEGENDS } from '../data/legends'
 import { NO_RANKS, UPGRADE_IDS, UPGRADES, type Ranks } from '../game/meta'
 import { onScreen, type PickScreen } from '../game/lockstep'
 import { inPlay, localPlayer } from '../game/players'
@@ -31,8 +32,19 @@ export type Bot = {
 /** Half of every Poké Mart rank: a fresh save's bot falls in a few minutes, a maxed one outlives a surrender. */
 const VETERAN: Ranks = UPGRADE_IDS.reduce((r, id) => ({ ...r, [id]: Math.ceil(UPGRADES[id].maxRank / 2) }), NO_RANKS)
 
-/** A bot's Pokémon, by its number (a spread of species and sizes). */
-export const botPick = (n: number): CoopPick => ({ starter: STARTER_IDS[(n * 7 + 3) % STARTER_IDS.length]!, ranks: VETERAN, shiny: n % 5 === 0 })
+/**
+ * A bot's Pokémon, by its number (a spread of species and sizes). In a Legend
+ * room (`legend`) it plays a legend too, its regular one as the `partner`, and
+ * claims that legend as captured: only a relay with guests and no API keeps a
+ * guest's claim (the dev relay); anywhere else the seat plays the partner.
+ */
+export const botPick = (n: number, legend = false): CoopPick => {
+  const partner = STARTER_IDS[(n * 7 + 3) % STARTER_IDS.length]!
+  const pick: CoopPick = { starter: partner, ranks: VETERAN, shiny: n % 5 === 0 }
+  if (!legend) return pick
+  const id = REGULAR_LEGENDS[(n * 5 + 15) % REGULAR_LEGENDS.length]!
+  return { ...pick, starter: id, partner, legends: [id] }
+}
 
 export const createBot = (deps: CoopDeps, opts: { seed: number; vote?: boolean }): Bot => {
   const client = createCoopClient(deps)

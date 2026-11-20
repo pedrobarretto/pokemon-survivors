@@ -3,7 +3,7 @@ import type { RiftLegend } from '../data/rifts'
 import { bossWaveAt, EVENTS, RUN_LENGTH, TRIO_IDS, TRIOS, type TrioId } from '../data/waves'
 import { startEndless } from './endless'
 import { pickLegend } from './rift'
-import { teamLegend } from './legend'
+import { teamLegendIds } from './legend'
 import { domainOf } from '../data/domains'
 import { enterDomain, jumpToAct } from './domain'
 import { enterArena } from './riftArena'
@@ -61,7 +61,7 @@ export const riftDevTools = (game: () => Game | undefined) => {
     /** Steps straight into a rift (a random legendary, or the one given): a domain's crossing, or the old arena. */
     rift: (legend?: RiftLegend) =>
       playing((g) => {
-        const id = legend ?? pickLegend(g.rng, g.rift.met, teamLegend(g)?.id)
+        const id = legend ?? pickLegend(g.rng, g.rift.met, teamLegendIds(g))
         if (domainOf(id)) enterDomain(g, id, g.player.x, g.player.y)
         else enterArena(g, id, g.player.x, g.player.y)
       })(),
@@ -76,7 +76,7 @@ export const riftDevTools = (game: () => Game | undefined) => {
         if (e) e.hp = 1
       })(),
     /** Opens a portal right next to the player. */
-    portal: (legend?: RiftLegend) => playing((g) => openPortal(g, legend ?? pickLegend(g.rng, g.rift.met, teamLegend(g)?.id), { x: g.player.x + 48, y: g.player.y }))(),
+    portal: (legend?: RiftLegend) => playing((g) => openPortal(g, legend ?? pickLegend(g.rng, g.rift.met, teamLegendIds(g)), { x: g.player.x + 48, y: g.player.y }))(),
     /** Ends the run as if Mewtwo just fell: the victory screen with the endless offer. */
     victory: playing((g) => {
       skipTo(g, RUN_LENGTH / 60)

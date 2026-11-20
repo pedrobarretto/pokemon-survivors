@@ -25,8 +25,29 @@ export type ChangelogUpdate = {
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
     date: '2026-11-20',
-    title: { pt: 'Beast Boost e Moxie consertados', en: 'Beast Boost and Moxie fixed', es: 'Beast Boost y Moxie arreglados', fr: 'Beast Boost et Moxie corrigés', zh: '修正異獸提升與自信過度' },
+    title: { pt: 'Lendários no co-op e Beast Boost consertado', en: 'Legendaries in co-op and Beast Boost fixed', es: 'Legendarios en co-op y Beast Boost arreglado', fr: 'Légendaires en coop et Beast Boost corrigé', zh: '合作模式的傳說寶可夢與異獸提升修正' },
     highlights: [
+      {
+        pt: 'Modo Lendário no co-op: o anfitrião liga na sala e cada um joga com um lendário que já capturou, com horda mais forte, Pressão e despertares.',
+        en: 'Legend Mode in co-op: the host turns it on in the room and everyone plays a legend they captured, with a tougher horde, Pressure and awakenings.',
+        es: 'Modo Legendario en co-op: el anfitrión lo activa en la sala y cada uno juega con un legendario que ya capturó, con horda más fuerte, Presión y despertares.',
+        fr: 'Le Mode Légendaire arrive en coop : l’hôte l’active dans le salon et chacun joue un légendaire qu’il a capturé, avec une horde plus forte, la Pression et les éveils.',
+        zh: '合作模式也能玩傳說模式：房主在房間開啟後，每人使用自己捕獲的傳說寶可夢，敵群更強，還有壓迫感與覺醒。',
+      },
+      {
+        pt: 'Rankings novos: Lendários de Duplas, Trios e Squads, no lado Co-op Lendário do Ranking.',
+        en: 'New boards: Legendary Duos, Trios and Squads, on the Ranking’s Legendary Co-op side.',
+        es: 'Tablas nuevas: Dúos, Tríos y Escuadras Legendarios, en el lado Co-op Legendario del Ranking.',
+        fr: 'Nouveaux classements : Duos, Trios et Escouades Légendaires, du côté Coop Légendaire du Classement.',
+        zh: '新排行榜：傳說雙人、三人與四人小隊，位於排行榜的傳說合作頁。',
+      },
+      {
+        pt: 'Só valem lendários capturados na sua conta: quem ainda não capturou nenhum não fica pronto numa sala com o Modo Lendário.',
+        en: 'Only legends captured on your account count: a player who hasn’t captured any can’t get ready in a Legend Mode room.',
+        es: 'Solo valen los legendarios capturados en tu cuenta: quien todavía no capturó ninguno no puede estar listo en una sala con el Modo Legendario.',
+        fr: 'Seuls comptent les légendaires capturés sur ton compte : qui n’en a capturé aucun ne peut pas se déclarer prêt dans un salon en Mode Légendaire.',
+        zh: '只有帳號裡捕獲過的傳說寶可夢才算：還沒捕獲任何一隻的玩家，無法在傳說模式房間準備。',
+      },
       {
         pt: 'Beast Boost (Ultra Beasts) e Moxie: o nível que você acabou de ganhar não some mais na hora.',
         en: 'Beast Boost (Ultra Beasts) and Moxie: the stack you just earned no longer vanishes at once.',
@@ -50,6 +71,26 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
       },
     ],
     changes: [
+      {
+        title: { pt: 'Modo Lendário no co-op', en: 'Legend Mode in co-op', es: 'Modo Legendario en co-op' },
+        notes: [
+          {
+            pt: 'Numa sala de co-op, o anfitrião tem a nova opção Modo Lendário. Ligada, cada jogador escolhe um dos lendários que já capturou, e a partida segue as regras do Modo Lendário: horda mais forte, Pressão e despertares no Lv 12 e 28 (Kyogre e Groudon Primais, Rayquaza Mega).',
+            en: 'In a co-op room, the host has a new Legend Mode option. With it on, each player picks one of the legends they captured, and the run plays by Legend Mode’s rules: a tougher horde, Pressure and awakenings at Lv 12 and 28 (Primal Kyogre and Groudon, Mega Rayquaza).',
+            es: 'En una sala de co-op, el anfitrión tiene la nueva opción Modo Legendario. Activada, cada jugador elige uno de los legendarios que ya capturó, y la partida sigue las reglas del Modo Legendario: horda más fuerte, Presión y despertares en Nv. 12 y 28 (Kyogre y Groudon Primigenios, Rayquaza Mega).',
+          },
+          {
+            pt: 'Só valem lendários capturados na sua conta: o servidor confere na largada. Quem ainda não capturou nenhum não consegue ficar pronto numa sala com o Modo Lendário.',
+            en: 'Only legends captured on your account count: the server checks as the run starts. A player who hasn’t captured any can’t get ready in a Legend Mode room.',
+            es: 'Solo valen los legendarios capturados en tu cuenta: el servidor lo confirma al empezar. Quien todavía no capturó ninguno no puede estar listo en una sala con el Modo Legendario.',
+          },
+          {
+            pt: 'As partidas lendárias têm rankings próprios no Ranking, no lado Co-op Lendário. O Desafio co-op do dia continua no modo normal, e as fendas épicas seguem na arena antiga no co-op.',
+            en: 'Legendary runs have their own boards in the Ranking, on the Legendary Co-op side. The daily co-op Challenge stays in the standard mode, and epic rifts are still fought in the old arena in co-op.',
+            es: 'Las partidas legendarias tienen sus propias tablas en el Ranking, en el lado Co-op Legendario. El Desafío co-op del día sigue en el modo normal, y las fisuras épicas siguen en la arena antigua en co-op.',
+          },
+        ],
+      },
       {
         title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Correctifs', zh: '修正' },
         notes: [

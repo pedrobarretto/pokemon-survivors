@@ -73,13 +73,20 @@ export const COOP = {
  * stable as it gets; each can be switched on once a bot soak goes through it).
  * This is the one list of them.
  *
+ * The Legend mode came in on 2026-11-18: a run room's Modo Lendário
+ * (`CoopSettings.legend`, never with the Desafio co-op do dia) seats each
+ * player's captured legend, the ones the API vouches for through the relay
+ * (`parseLoadout`; a seat whose legend doesn't stand plays its partner). The
+ * run plays the Legend mode's horde and Pressure once for the team
+ * (`teamLegend`, `CoopState.legend`), the world never meets any seat's legend
+ * (`teamLegendIds`), and it banks no captures (`coopPayout`).
+ *
  * Never in co-op, by construction (`createCoopGame` reads no save, day or
- * clock): the Legend mode (`CoopLoadout.starter` is a starter or a hatched
- * family), the Poké Mart's Bag, armed TMs, owned evolution items and Bottle
+ * clock): the Poké Mart's Bag, armed TMs, owned evolution items and Bottle
  * Caps (Kecleon's shop), the day's outbreak, the Noite das Bruxas (ghosts,
  * night bosses, candies, jack-o'-lanterns), the lucky first egg and the legend
  * paths' temple and forms (`ReplayStart.temple`, `.forms`). The run's
- * roster is drawn from its own rng. Zygarde's Cells and Cores and Meltan's Hex
+ * roster is drawn from its own rng (a Legend run's lifted, `LEGEND_HORDE`). Zygarde's Cells and Cores and Meltan's Hex
  * Nuts never turn up while `g.coop !== null` (`updatePathRun`, `faintNuts`). Ranking, the Desafio do dia, companions
  * and the server's replay checks are the shell's to skip.
  *

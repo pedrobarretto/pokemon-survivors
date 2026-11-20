@@ -123,12 +123,12 @@ const CHALLENGE_DAYS = ['today', 'yesterday'] as const
 
 type ChallengeDay = (typeof CHALLENGE_DAYS)[number]
 
-/** The boards' sides: the regular runs, the Legend mode's, and the co-op teams'. */
-type Side = RunMode | 'coop'
+/** The boards' sides: the regular runs, the Legend mode's, the co-op teams' and the co-op teams' Legend runs (a room with the Modo Lendário on). */
+type Side = RunMode | 'coop' | 'coopLegend'
 
-const SIDES: readonly Side[] = [...RUN_MODES, 'coop']
+const SIDES: readonly Side[] = [...RUN_MODES, 'coop', 'coopLegend']
 
-/** The challenge has no Legend mode: its sides are the solo one and the co-op one. */
+/** The challenge has no Legend mode, solo or co-op: its sides are the solo one and the co-op one. */
 const CHALLENGE_SIDES: readonly Side[] = ['standard', 'coop']
 
 /** The Brasília day a challenge tab shows (on the missions' clock, like the challenge screen). */
@@ -147,7 +147,7 @@ type Shown = { kind: 'solo'; board: Board } | { kind: 'coop'; board: CoopBoard |
  * every player once with their official attempt. The Co-op side (the mode
  * toggle's third) has the same tabs for teams, by size (Duplas, Trios,
  * Squads, T): every team once with its best run, and the Desafio co-op do
- * dia's. Filters by Pokémon (not the challenge's: it's one Pokémon, nor
+ * dia's; the fourth, Co-op Lendário, the teams' Legend runs (no challenge). Filters by Pokémon (not the challenge's: it's one Pokémon, nor
  * co-op's) and by friends (who the player follows, plus them). The player's
  * own line stays in sight below the top when they're further down. A row (a
  * team's member) opens that trainer's profile over the board; signed in, the
@@ -155,13 +155,13 @@ type Shown = { kind: 'solo'; board: Board } | { kind: 'coop'; board: CoopBoard |
  *
  * Keys: ↑/↓ rows and buttons, ←/→ period (or day), Q/E board, M mode, T team size, F friends, Enter
  * opens, Esc goes back. `onClose` runs after the key dispatch.
- * `challenge` opens on the challenge's tab, `mode` on that mode's boards, `coop` on the co-op side at that team size.
+ * `challenge` opens on the challenge's tab, `mode` on that mode's boards, `coop` on the co-op side at that team size (its Legend side with `legend`).
  */
 export const rankingScreen = (
   root: HTMLElement,
   input: Input,
   onClose: () => void,
-  opts: { difficulty?: Difficulty; mode?: RunMode; period?: BoardPeriod; challenge?: boolean; coop?: { size: TeamSize } } = {},
+  opts: { difficulty?: Difficulty; mode?: RunMode; period?: BoardPeriod; challenge?: boolean; coop?: { size: TeamSize; legend?: boolean } } = {},
 ): Screen => {
   const signedIn = () => accountState().kind === 'signedIn'
   const filter: BoardFilter = { mode: opts.mode ?? 'standard', difficulty: opts.difficulty ?? 'normal', period: opts.period ?? 'all', starter: null, friends: false }
@@ -169,6 +169,8 @@ export const rankingScreen = (
   let day: ChallengeDay = 'today'
   let coop = opts.coop !== undefined
   let size: TeamSize = opts.coop?.size ?? 2
+  /** On the co-op side: its Legend runs' boards (never on the challenge's tab). */
+  let coopLegend = opts.coop?.legend === true && !opts.challenge
   /** Players (or teams) on the challenge board shown. */
   let total = 0
   const el = h('div', { class: 'screen dim rank-screen' })
@@ -184,7 +186,7 @@ export const rankingScreen = (
   let opening = true
 
   /** The side on screen (the challenge's solo board for the Legend mode's, which has none). */
-  const side = (): Side => (coop ? 'coop' : tab === 'challenge' ? 'standard' : filter.mode)
+  const side = (): Side => (coop ? (coopLegend && tab !== 'challenge' ? 'coopLegend' : 'coop') : tab === 'challenge' ? 'standard' : filter.mode)
 
   const openProfile = (handle: string) => {
     nav?.off()
@@ -257,7 +259,7 @@ export const rankingScreen = (
           return b
         })
     const scope = [button(m.everyone, !filter.friends, () => set({ friends: false })), button(m.friends, filter.friends, () => set({ friends: true }))]
-    const sides = (onChallenge ? CHALLENGE_SIDES : SIDES).map((s) => button(s === 'coop' ? m.coop : m.modes[s], s === side(), () => setSide(s)))
+    const sides = (onChallenge ? CHALLENGE_SIDES : SIDES).map((s) => button(s === 'coop' ? m.coop : s === 'coopLegend' ? m.coopLegend : m.modes[s], s === side(), () => setSide(s)))
     const sizes = TEAM_SIZES.map((n) => button(m.sizes[TEAM_SIZE_KEYS[n]], n === size, () => setSize(n)))
     const solo = onChallenge && !coop ? dailyChallenge(challengeDay(day)) : null
     const team = onChallenge && coop ? dailyCoopChallenge(challengeDay(day)) : null
@@ -352,7 +354,7 @@ export const rankingScreen = (
     if (coop) {
       const b = onChallenge
         ? await fetchCoopChallengeBoard(challengeDay(day), size, filter.friends)
-        : await fetchCoopBoard({ size, difficulty: filter.difficulty, period: filter.period, friends: filter.friends })
+        : await fetchCoopBoard({ size, difficulty: filter.difficulty, period: filter.period, friends: filter.friends, mode: coopLegend ? 'legend' : 'standard' })
       return b && { kind: 'coop', board: b }
     }
     const b = onChallenge ? await fetchChallengeBoard(challengeDay(day), filter.friends) : await fetchBoard(filter)
@@ -362,6 +364,8 @@ export const rankingScreen = (
   const setTab = (next: Tab) => {
     if (next === tab) return
     tab = next
+    // The challenge has no Legend side: Co-op Lendário lands on its Co-op one.
+    if (next === 'challenge') coopLegend = false
     if (next !== 'challenge') filter.difficulty = next
     playSfx('move')
     void load()
@@ -385,9 +389,10 @@ export const rankingScreen = (
   /** The regular boards, the Legend mode's (a Pokémon filter of the other side goes) or co-op's. */
   const setSide = (next: Side) => {
     if (next === side()) return
-    coop = next === 'coop'
-    if (next !== 'coop') {
-      filter.mode = next
+    coop = next === 'coop' || next === 'coopLegend'
+    coopLegend = next === 'coopLegend'
+    if (!coop) {
+      filter.mode = next === 'legend' ? 'legend' : 'standard'
       filter.starter = filter.starter && runMode(filter.starter) === next ? filter.starter : null
     }
     playSfx('move')

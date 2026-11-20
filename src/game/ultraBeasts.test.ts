@@ -51,7 +51,7 @@ describe('the Ultra Wormhole', () => {
 
   it('draws the week’s beast more often, and never the one the team plays', () => {
     const rng = createRng(7)
-    const draws = Array.from({ length: 4000 }, () => drawUltraBeast(rng, 'kartana', 'guzzlord'))
+    const draws = Array.from({ length: 4000 }, () => drawUltraBeast(rng, 'kartana', ['guzzlord']))
     expect(draws).not.toContain('guzzlord')
     const share = draws.filter((b) => b === 'kartana').length / draws.length
     const expected = WORMHOLE.weekly / (WORMHOLE.weekly + ULTRA_BEASTS.length - 2)
