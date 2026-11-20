@@ -219,6 +219,11 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             en: 'Beast Boost (Ultra Beasts) and Moxie: the stack you just earned no longer vanishes at once; a stack only drops after 4 s without KOs (1 s for Moxie).',
             es: 'Beast Boost (Ultraentes) y Moxie: el nivel que acabas de ganar ya no desaparece al instante; un nivel solo se pierde tras 4 s sin derrotas (1 s en Moxie).',
           },
+          {
+            pt: 'Rankings de todos os tempos (da Temporada e da Era 1): o topo agora só mostra corridas conferidas pelo servidor. Corridas de antes dos replays, que nunca podem ser conferidas, continuam contando, mas abaixo do topo.',
+            en: 'All-time boards (the Season’s and Era 1’s): the top now only shows runs the server checked. Runs from before replays, which can never be checked, still count, but below the top.',
+            es: 'Tablas de todos los tiempos (de la Temporada y de la Era 1): la cima ahora solo muestra partidas verificadas por el servidor. Las partidas de antes de las repeticiones, que nunca se pueden verificar, siguen contando, pero debajo de la cima.',
+          },
         ],
       },
     ],
