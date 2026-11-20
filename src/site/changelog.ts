@@ -25,7 +25,7 @@ export type ChangelogUpdate = {
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
     date: '2026-11-20',
-    title: { pt: 'Lendários no co-op', en: 'Legendaries in co-op', es: 'Legendarios en co-op', fr: 'Légendaires en coop', zh: '合作模式的傳說寶可夢' },
+    title: { pt: 'Lendários no co-op e Beast Boost consertado', en: 'Legendaries in co-op and Beast Boost fixed', es: 'Legendarios en co-op y Beast Boost arreglado', fr: 'Légendaires en coop et Beast Boost corrigé', zh: '合作模式的傳說寶可夢與異獸提升修正' },
     highlights: [
       {
         pt: 'Modo Lendário no co-op: o anfitrião liga na sala e cada um joga com um lendário que já capturou, com horda mais forte, Pressão e despertares.',
@@ -48,6 +48,27 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         fr: 'Seuls comptent les légendaires capturés sur ton compte : qui n’en a capturé aucun ne peut pas se déclarer prêt dans un salon en Mode Légendaire.',
         zh: '只有帳號裡捕獲過的傳說寶可夢才算：還沒捕獲任何一隻的玩家，無法在傳說模式房間準備。',
       },
+      {
+        pt: 'Beast Boost (Ultra Beasts) e Moxie: o nível que você acabou de ganhar não some mais na hora.',
+        en: 'Beast Boost (Ultra Beasts) and Moxie: the stack you just earned no longer vanishes at once.',
+        es: 'Beast Boost (Ultraentes) y Moxie: el nivel que acabas de ganar ya no desaparece al instante.',
+        fr: 'Beast Boost (Ultra-Chimères) et Moxie : le niveau que vous venez de gagner ne disparaît plus aussitôt.',
+        zh: '異獸提升（究極異獸）與自信過度：剛獲得的層數不會再立刻消失。',
+      },
+      {
+        pt: 'Um nível só cai depois de 4 s sem nocautes (1 s no Moxie), então uma sequência de nocautes chega ao máximo.',
+        en: 'A stack only drops after 4 s without KOs (1 s for Moxie), so a streak of KOs reaches the cap.',
+        es: 'Un nivel solo se pierde tras 4 s sin derrotas (1 s en Moxie), así que una racha de derrotas llega al máximo.',
+        fr: 'Un niveau ne retombe qu’après 4 s sans K.O. (1 s pour Moxie), donc une série de K.O. atteint le maximum.',
+        zh: '只有連續 4 秒沒有擊倒（自信過度為 1 秒）才會掉一層，連續擊倒就能疊到上限。',
+      },
+      {
+        pt: 'Partidas ranqueadas começam numa versão nova das regras; corridas da versão anterior continuam valendo.',
+        en: 'Ranked runs start on a new rules version; runs from the previous one still count.',
+        es: 'Las partidas clasificatorias empiezan en una nueva versión de las reglas; las de la versión anterior siguen valiendo.',
+        fr: 'Les parties classées passent à une nouvelle version des règles ; celles de la version précédente comptent toujours.',
+        zh: '排名對局改用新版規則，舊版規則的對局仍然有效。',
+      },
     ],
     changes: [
       {
@@ -67,6 +88,16 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             pt: 'As partidas lendárias têm rankings próprios no Ranking, no lado Co-op Lendário. O Desafio co-op do dia continua no modo normal, e as fendas épicas seguem na arena antiga no co-op.',
             en: 'Legendary runs have their own boards in the Ranking, on the Legendary Co-op side. The daily co-op Challenge stays in the standard mode, and epic rifts are still fought in the old arena in co-op.',
             es: 'Las partidas legendarias tienen sus propias tablas en el Ranking, en el lado Co-op Legendario. El Desafío co-op del día sigue en el modo normal, y las fisuras épicas siguen en la arena antigua en co-op.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Correctifs', zh: '修正' },
+        notes: [
+          {
+            pt: 'Beast Boost (Ultra Beasts) e Moxie: o nível que você acabou de ganhar não some mais na hora; um nível só cai depois de 4 s sem nocautes (1 s no Moxie).',
+            en: 'Beast Boost (Ultra Beasts) and Moxie: the stack you just earned no longer vanishes at once; a stack only drops after 4 s without KOs (1 s for Moxie).',
+            es: 'Beast Boost (Ultraentes) y Moxie: el nivel que acabas de ganar ya no desaparece al instante; un nivel solo se pierde tras 4 s sin derrotas (1 s en Moxie).',
           },
         ],
       },
