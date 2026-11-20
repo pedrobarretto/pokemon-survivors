@@ -24,6 +24,55 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-20',
+    title: { pt: 'Lendários no co-op', en: 'Legendaries in co-op', es: 'Legendarios en co-op', fr: 'Légendaires en coop', zh: '合作模式的傳說寶可夢' },
+    highlights: [
+      {
+        pt: 'Modo Lendário no co-op: o anfitrião liga na sala e cada um joga com um lendário que já capturou, com horda mais forte, Pressão e despertares.',
+        en: 'Legend Mode in co-op: the host turns it on in the room and everyone plays a legend they captured, with a tougher horde, Pressure and awakenings.',
+        es: 'Modo Legendario en co-op: el anfitrión lo activa en la sala y cada uno juega con un legendario que ya capturó, con horda más fuerte, Presión y despertares.',
+        fr: 'Le Mode Légendaire arrive en coop : l’hôte l’active dans le salon et chacun joue un légendaire qu’il a capturé, avec une horde plus forte, la Pression et les éveils.',
+        zh: '合作模式也能玩傳說模式：房主在房間開啟後，每人使用自己捕獲的傳說寶可夢，敵群更強，還有壓迫感與覺醒。',
+      },
+      {
+        pt: 'Rankings novos: Lendários de Duplas, Trios e Squads, no lado Co-op Lendário do Ranking.',
+        en: 'New boards: Legendary Duos, Trios and Squads, on the Ranking’s Legendary Co-op side.',
+        es: 'Tablas nuevas: Dúos, Tríos y Escuadras Legendarios, en el lado Co-op Legendario del Ranking.',
+        fr: 'Nouveaux classements : Duos, Trios et Escouades Légendaires, du côté Coop Légendaire du Classement.',
+        zh: '新排行榜：傳說雙人、三人與四人小隊，位於排行榜的傳說合作頁。',
+      },
+      {
+        pt: 'Só valem lendários capturados na sua conta: quem ainda não capturou nenhum não fica pronto numa sala com o Modo Lendário.',
+        en: 'Only legends captured on your account count: a player who hasn’t captured any can’t get ready in a Legend Mode room.',
+        es: 'Solo valen los legendarios capturados en tu cuenta: quien todavía no capturó ninguno no puede estar listo en una sala con el Modo Legendario.',
+        fr: 'Seuls comptent les légendaires capturés sur ton compte : qui n’en a capturé aucun ne peut pas se déclarer prêt dans un salon en Mode Légendaire.',
+        zh: '只有帳號裡捕獲過的傳說寶可夢才算：還沒捕獲任何一隻的玩家，無法在傳說模式房間準備。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Modo Lendário no co-op', en: 'Legend Mode in co-op', es: 'Modo Legendario en co-op' },
+        notes: [
+          {
+            pt: 'Numa sala de co-op, o anfitrião tem a nova opção Modo Lendário. Ligada, cada jogador escolhe um dos lendários que já capturou, e a partida segue as regras do Modo Lendário: horda mais forte, Pressão e despertares no Lv 12 e 28 (Kyogre e Groudon Primais, Rayquaza Mega).',
+            en: 'In a co-op room, the host has a new Legend Mode option. With it on, each player picks one of the legends they captured, and the run plays by Legend Mode’s rules: a tougher horde, Pressure and awakenings at Lv 12 and 28 (Primal Kyogre and Groudon, Mega Rayquaza).',
+            es: 'En una sala de co-op, el anfitrión tiene la nueva opción Modo Legendario. Activada, cada jugador elige uno de los legendarios que ya capturó, y la partida sigue las reglas del Modo Legendario: horda más fuerte, Presión y despertares en Nv. 12 y 28 (Kyogre y Groudon Primigenios, Rayquaza Mega).',
+          },
+          {
+            pt: 'Só valem lendários capturados na sua conta: o servidor confere na largada. Quem ainda não capturou nenhum não consegue ficar pronto numa sala com o Modo Lendário.',
+            en: 'Only legends captured on your account count: the server checks as the run starts. A player who hasn’t captured any can’t get ready in a Legend Mode room.',
+            es: 'Solo valen los legendarios capturados en tu cuenta: el servidor lo confirma al empezar. Quien todavía no capturó ninguno no puede estar listo en una sala con el Modo Legendario.',
+          },
+          {
+            pt: 'As partidas lendárias têm rankings próprios no Ranking, no lado Co-op Lendário. O Desafio co-op do dia continua no modo normal, e as fendas épicas seguem na arena antiga no co-op.',
+            en: 'Legendary runs have their own boards in the Ranking, on the Legendary Co-op side. The daily co-op Challenge stays in the standard mode, and epic rifts are still fought in the old arena in co-op.',
+            es: 'Las partidas legendarias tienen sus propias tablas en el Ranking, en el lado Co-op Legendario. El Desafío co-op del día sigue en el modo normal, y las fisuras épicas siguen en la arena antigua en co-op.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-11-19',
     title: { pt: 'Chinês simplificado', en: 'Simplified Chinese', es: 'Chino simplificado', fr: 'Chinois simplifié', zh: '簡體中文' },
     highlights: [
@@ -73,15 +122,8 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
   },
   {
     date: '2026-11-18',
-    title: { pt: 'Lendários no co-op, Soro Sombrio e Game Corner sem limite', en: 'Legendaries in co-op, Shadow Serum and an unlimited Game Corner', es: 'Legendarios en co-op, Suero Oscuro y un Casino sin límite', fr: 'Légendaires en coop, Sérum Obscur et Salle de jeux sans limite', zh: '合作模式的傳說寶可夢、暗影血清與不設限的遊戲城' },
+    title: { pt: 'Soro Sombrio e Game Corner sem limite', en: 'Shadow Serum and an unlimited Game Corner', es: 'Suero Oscuro y un Casino sin límite', fr: 'Sérum Obscur et Salle de jeux sans limite', zh: '暗影血清與不設限的遊戲城' },
     highlights: [
-      {
-        pt: 'Modo Lendário no co-op: o anfitrião liga na sala e cada um joga com um lendário que já capturou, com rankings Lendários de Duplas, Trios e Squads.',
-        en: 'Legend Mode in co-op: the host turns it on in the room and everyone plays a legend they captured, with Legendary Duos, Trios and Squads boards.',
-        es: 'Modo Legendario en co-op: el anfitrión lo activa en la sala y cada uno juega con un legendario que ya capturó, con tablas Legendarias de Dúos, Tríos y Escuadras.',
-        fr: 'Le Mode Légendaire arrive en coop : l’hôte l’active dans le salon et chacun joue un légendaire qu’il a capturé, avec des classements Légendaires Duos, Trios et Escouades.',
-        zh: '合作模式也能玩傳說模式：房主在房間開啟後，每人使用自己捕獲的傳說寶可夢，並有傳說雙人、三人與四人小隊排行榜。',
-      },
       {
         pt: 'Purificar um Pokémon Sombrio agora pede confirmação, com o nome dele e o aviso de que a forma Sombria vai embora.',
         en: 'Purifying a Shadow Pokémon now asks first, naming it and warning that its Shadow form goes away.',
@@ -95,6 +137,13 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         es: 'Nuevo en el mostrador de Meowth, en el Casino: el Suero Oscuro hace que un Pokémon Purificado (tú eliges cuál) vuelva a ser Oscuro.',
         fr: 'Nouveau au comptoir de Meowth, dans la Salle de jeux : le Sérum Obscur rend sa forme Obscure au Pokémon Purifié de ton choix.',
         zh: '遊戲城喵喵櫃台新上架：暗影血清，可讓你選的一隻淨化寶可夢變回暗影。',
+      },
+      {
+        pt: 'Purificou o Mewtwo Sombrio sem querer? O Soro traz a forma Sombria de volta; para purificar de novo, é só andar o coração inteiro outra vez.',
+        en: 'Purified Shadow Mewtwo by mistake? The Serum brings its Shadow form back; to purify it again, walk its whole heart gauge again.',
+        es: '¿Purificaste a Mewtwo Oscuro sin querer? El Suero devuelve su forma Oscura; para purificarlo otra vez, camina todo su corazón de nuevo.',
+        fr: 'Mewtwo Obscur purifié par erreur ? Le Sérum lui rend sa forme Obscure ; pour le purifier à nouveau, il faut remarcher toute sa jauge.',
+        zh: '不小心淨化了暗影超夢？血清能讓暗影型態回來；想再淨化，就要重新走滿心門量表。',
       },
       {
         pt: 'O Game Corner não fecha mais: jogue o caça-níqueis e o Caça ao Koffing o quanto quiser, e compre até 5.000 fichas por dia (eram 500).',
@@ -119,26 +168,6 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
       },
     ],
     changes: [
-      {
-        title: { pt: 'Modo Lendário no co-op', en: 'Legend Mode in co-op', es: 'Modo Legendario en co-op' },
-        notes: [
-          {
-            pt: 'Numa sala de co-op, o anfitrião tem a nova opção Modo Lendário. Ligada, cada jogador escolhe um dos lendários que já capturou, e a partida segue as regras do Modo Lendário: horda mais forte, Pressão e despertares no Lv 12 e 28 (Kyogre e Groudon Primais, Rayquaza Mega).',
-            en: 'In a co-op room, the host has a new Legend Mode option. With it on, each player picks one of the legends they captured, and the run plays by Legend Mode’s rules: a tougher horde, Pressure and awakenings at Lv 12 and 28 (Primal Kyogre and Groudon, Mega Rayquaza).',
-            es: 'En una sala de co-op, el anfitrión tiene la nueva opción Modo Legendario. Activada, cada jugador elige uno de los legendarios que ya capturó, y la partida sigue las reglas del Modo Legendario: horda más fuerte, Presión y despertares en Nv. 12 y 28 (Kyogre y Groudon Primigenios, Rayquaza Mega).',
-          },
-          {
-            pt: 'Só valem lendários capturados na sua conta: o servidor confere na largada. Quem ainda não capturou nenhum não consegue ficar pronto numa sala com o Modo Lendário.',
-            en: 'Only legends captured on your account count: the server checks as the run starts. A player who hasn’t captured any can’t get ready in a Legend Mode room.',
-            es: 'Solo valen los legendarios capturados en tu cuenta: el servidor lo confirma al empezar. Quien todavía no capturó ninguno no puede estar listo en una sala con el Modo Legendario.',
-          },
-          {
-            pt: 'As partidas lendárias têm rankings próprios no Ranking, no lado Co-op Lendário. O Desafio co-op do dia continua no modo normal, e as fendas épicas seguem na arena antiga no co-op.',
-            en: 'Legendary runs have their own boards in the Ranking, on the Legendary Co-op side. The daily co-op Challenge stays in the standard mode, and epic rifts are still fought in the old arena in co-op.',
-            es: 'Las partidas legendarias tienen sus propias tablas en el Ranking, en el lado Co-op Legendario. El Desafío co-op del día sigue en el modo normal, y las fisuras épicas siguen en la arena antigua en co-op.',
-          },
-        ],
-      },
       {
         title: { pt: 'Shiny em achados repetidos', en: 'Shinies on repeat finds', es: 'Shiny en hallazgos repetidos' },
         notes: [
