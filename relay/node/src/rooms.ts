@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import type { RawData, WebSocket } from 'ws'
-import { CLOSE_CODES, LIMITS, parseClientMessage, type Auth, type CloseReason, type ServerMessage, type VpsHome, type WireLook } from '../../../src/net/protocol'
+import { CLOSE_CODES, LIMITS, parseClientMessage, type Auth, type CloseReason, type ServerMessage, type VpsHome } from '../../../src/net/protocol'
 import { gen, randomCode, randomToken } from '../../src/codes'
 import { gzip } from '../../src/gzip'
 import {
@@ -17,13 +17,14 @@ import {
   reattach,
   running,
   tick,
+  type ClaimPolicy,
   type ConnId,
   type Effect,
   type Identity,
   type Room,
   type State,
 } from '../../src/room'
-import type { Posting } from '../../src/report'
+import type { Posting, Vouched } from '../../src/report'
 import { dumpJson, persist, readBound, syncTexts, type Store } from '../../src/store'
 import { openRoomDb, roomCodes, type RoomDb, type Vault } from './db'
 
@@ -74,8 +75,10 @@ export type RoomsDeps = {
   now: () => number
   /** An Arena match's or a co-op run's agreed result, for the API (`report.ts`'s outbox). */
   report: (posting: Posting) => void
-  /** The looks the API vouches for these identities (`lookUpLooks`): none for a failure, never throws. */
-  looks: (ids: readonly string[]) => Promise<Record<string, WireLook>>
+  /** The looks and legends the API vouches for these identities (`lookUpLooks`): none for a failure, never throws. */
+  looks: (ids: readonly string[]) => Promise<Vouched>
+  /** What clients may claim for themselves here (`ClaimPolicy`: a dev guest's legends, only with guests seated and no API). */
+  claims: ClaimPolicy
 }
 
 /** The storage effects: a batch with none of them writes nothing (most frames). */
@@ -156,9 +159,9 @@ export const createRooms = (deps: RoomsDeps) => {
 
   /** A friends' room's looks as its run starts, back to the room that asked, if it's still here. */
   const lookUp = async (shell: Shell, e: Extract<Effect, { k: 'looks' }>) => {
-    const looks = await deps.looks(e.ids)
-    log('room.looks', { code: shell.code, asked: e.ids.length, vouched: Object.keys(looks).length })
-    if (rooms.get(shell.code) === shell) step(shell, () => looked(shell.state, e.ask, looks, now()))
+    const { looks, legends } = await deps.looks(e.ids)
+    log('room.looks', { code: shell.code, asked: e.ids.length, vouched: Object.keys(looks).length, legends: Object.keys(legends).length })
+    if (rooms.get(shell.code) === shell) step(shell, () => looked(shell.state, e.ask, looks, now(), legends))
   }
 
   /**
@@ -306,7 +309,7 @@ export const createRooms = (deps: RoomsDeps) => {
       if (!shell.sockets.has(id)) return
       return step(shell, () => hello(shell.state, id, msg, identity, now(), { guests: deps.guests }))
     }
-    step(shell, () => message(shell.state, id, msg, now()))
+    step(shell, () => message(shell.state, id, msg, now(), deps.claims))
   }
 
   /** A player's socket for room `code` (a code with no room here gets a shell that only refuses). */

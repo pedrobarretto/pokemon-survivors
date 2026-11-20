@@ -67,6 +67,8 @@ export const HARNESS_SCENARIOS: ReadonlyArray<{ name: string; scenario: AnyScena
   { name: 'versus-human-7min', scenario: { seed: 7002, versus: [{ starter: 'froakie', name: 'p1', team: 1 }], map: 'cove' }, minutes: 7.2 },
   { name: 'versus-quick-3min', scenario: { seed: 7003, versus: [], format: 'quick', map: 'glade' }, minutes: 3.2 },
   { name: 'versus-reef-3min', scenario: { seed: 7004, versus: [], format: 'quick', map: 'reef' }, minutes: 3.2 },
+  // A co-op Legend run (the Modo Lendário): every seat a legend, the lifted horde and Pressure once for the team, no seat's legend among the bosses.
+  { name: 'coop-3-legend-hard-12min', scenario: { seed: 9004, team: ['kyogre', 'raikou', 'mewtwo'], difficulty: 'hard', maxRanks: true }, minutes: 12 },
   { name: 'coop-3-nightmare-10min', scenario: { seed: 9003, team: ['riolu', 'scyther', 'porygon'], difficulty: 'nightmare', maxRanks: false }, minutes: 10 },
   { name: 'squirtle-normal-25min', scenario: { seed: 2, starter: 'squirtle', difficulty: 'normal', maxRanks: true }, minutes: 25 },
   { name: 'charmander-hard-mega-15min', scenario: { seed: 31, starter: 'charmander', difficulty: 'hard', maxRanks: true }, minutes: 15 },

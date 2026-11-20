@@ -19,7 +19,7 @@ const DAY = '2026-11-02'
 const NOON = Date.UTC(2026, 10, 2, 15)
 
 /** A run of `ids` (by slot) that lasted `time` s and ended at `endedAt`, as the relay reports it. */
-const report = (ids: string[], time: number, endedAt = NOON, over: { run?: number; challenge?: string; difficulty?: string } = {}): CoopReport => ({
+const report = (ids: string[], time: number, endedAt = NOON, over: { run?: number; challenge?: string; difficulty?: string; legend?: boolean } = {}): CoopReport => ({
   v: 1,
   room: 'K7QF2',
   run: over.run ?? 1,
@@ -30,10 +30,11 @@ const report = (ids: string[], time: number, endedAt = NOON, over: { run?: numbe
     v: 1,
     difficulty: over.difficulty ?? 'normal',
     challenge: over.challenge ?? null,
+    legend: over.legend ?? false,
     time,
     outcome: 'wipe',
     kills: 0,
-    players: ids.map((_, slot) => ({ slot, starter: 'charmander', stage: 0, branch: null, shiny: false, level: 10, kills: 0 })),
+    players: ids.map((_, slot) => ({ slot, starter: over.legend ? 'kyogre' : 'charmander', stage: 0, branch: null, shiny: false, level: 10, kills: 0 })),
   },
   votes: ids.length,
 })
@@ -84,7 +85,7 @@ describe.skipIf(!url)('co-op boards (Postgres)', () => {
     await put(report(['b', 'a'], 500, NOON + 1000, { run: 2 }))
     await put(report(['c', 'd'], 500, NOON + 500, { run: 3 }))
     await put(report(['a', 'c'], 100, NOON, { run: 4 }))
-    const board = await coop.board({ size: 2, difficulty: 'normal', period: 'era1', friends: false, viewer: 'a' })
+    const board = await coop.board({ mode: 'standard', size: 2, difficulty: 'normal', period: 'era1', friends: false, viewer: 'a' })
     expect(board.entries.map((e) => [e.rank, e.time, e.members.map((m) => m.handle)])).toEqual([
       [1, 500, ['c', 'd']],
       [2, 500, ['b', 'a']],
@@ -92,7 +93,7 @@ describe.skipIf(!url)('co-op boards (Postgres)', () => {
     ])
     expect(board.entries[0]?.members[1]).toMatchObject({ handle: 'd', name: 'd', starter: 'charmander', supporter: null, og: false })
     expect(board.me?.rank).toBe(2)
-    expect((await coop.board({ size: 3, difficulty: 'normal', period: 'era1', friends: false, viewer: 'a' })).entries).toEqual([])
+    expect((await coop.board({ mode: 'standard', size: 3, difficulty: 'normal', period: 'era1', friends: false, viewer: 'a' })).entries).toEqual([])
   })
 
   it('keeps out teams with a banned member or one without a handle, and narrows to friends', async () => {
@@ -101,12 +102,12 @@ describe.skipIf(!url)('co-op boards (Postgres)', () => {
     await put(report(['c', 'd'], 400, NOON, { run: 2 }))
     await put(report(['a', 'e'], 900, NOON, { run: 3 }))
     await sql`update users set banned_at = now() where id = 'c'`
-    expect((await coop.board({ size: 2, difficulty: 'normal', period: 'era1', friends: false, viewer: null })).entries.map((e) => e.time)).toEqual([300])
+    expect((await coop.board({ mode: 'standard', size: 2, difficulty: 'normal', period: 'era1', friends: false, viewer: null })).entries.map((e) => e.time)).toEqual([300])
     await sql`update users set banned_at = null where id = 'c'`
     await sql`insert into follows (follower_id, followee_id) values ('b', 'd')`
-    const friends = await coop.board({ size: 2, difficulty: 'normal', period: 'era1', friends: true, viewer: 'b' })
+    const friends = await coop.board({ mode: 'standard', size: 2, difficulty: 'normal', period: 'era1', friends: true, viewer: 'b' })
     expect(friends.entries.map((e) => e.time)).toEqual([400, 300])
-    expect((await coop.board({ size: 2, difficulty: 'normal', period: 'era1', friends: true, viewer: 'c' })).entries.map((e) => e.time)).toEqual([400])
+    expect((await coop.board({ mode: 'standard', size: 2, difficulty: 'normal', period: 'era1', friends: true, viewer: 'c' })).entries.map((e) => e.time)).toEqual([400])
   })
 
   it('keeps challenge runs on their day’s board only, counting its teams', async () => {
@@ -118,6 +119,17 @@ describe.skipIf(!url)('co-op boards (Postgres)', () => {
     expect(day).toMatchObject({ day: DAY, size: 2, difficulty, total: 2 })
     expect(day.entries.map((e) => e.time)).toEqual([350, 200])
     expect(day.me?.rank).toBe(2)
-    expect((await coop.board({ size: 2, difficulty, period: 'era1', friends: false, viewer: null })).entries).toEqual([])
+    expect((await coop.board({ mode: 'standard', size: 2, difficulty, period: 'era1', friends: false, viewer: null })).entries).toEqual([])
+  })
+
+  it("keeps co-op Legend runs on the Lendário side, each team's best apart from its regular runs", async () => {
+    await put(report(['a', 'b'], 300, NOON, { run: 1 }))
+    await put(report(['a', 'b'], 900, NOON, { run: 2, legend: true }))
+    await put(report(['a', 'b'], 600, NOON, { run: 3, legend: true }))
+    const board = (mode: 'standard' | 'legend') => coop.board({ mode, size: 2, difficulty: 'normal', period: 'era1', friends: false, viewer: 'a' })
+    expect((await board('standard')).entries.map((e) => e.time)).toEqual([300])
+    const legends = await board('legend')
+    expect(legends).toMatchObject({ mode: 'legend', me: { rank: 1 } })
+    expect(legends.entries.map((e) => [e.time, e.members.map((m) => m.starter)])).toEqual([[900, ['kyogre', 'kyogre']]])
   })
 })

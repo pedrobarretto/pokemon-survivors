@@ -18,6 +18,7 @@ import { drawPlateTag, plateOf } from './arenaPlates'
 import { VERSUS } from '../data/versus'
 import { seasonKitForm } from '../game/seasonOneKitRules'
 import { hookForm } from './gaHookLook'
+import { playerSprites } from './legend'
 import { weatherHere } from '../game/weather'
 
 /**
@@ -116,8 +117,17 @@ export const busyWith = (p: Player): TeamIcon | null => {
   }
 }
 
-/** The sheets a player wears: their stage (or branch) in their look's skin for it, if any, and, while it lasts, their Mega form. */
+/**
+ * The sheets a player wears: their stage (or branch) in their look's skin for it, if any, and, while it lasts, their Mega form.
+ * A legend (a co-op Legend run's) wears what the solo player would: its awakened form, fitted to the legends' body size.
+ */
 const mateSprites = (g: Game, p: Player): SpeciesSprites => {
+  if (p.legend) {
+    const before = actAs(g, p)
+    const s = playerSprites(g)
+    actAs(g, before)
+    return s
+  }
   const dex = formAt(p.starter, p.branch, p.stage).dex
   const skin = skinFor(shownLook(g, p.slot), dex)
   const form = seasonKitForm(p.kit, p.stage, weatherHere(g)) ?? hookForm(g, p)

@@ -117,15 +117,23 @@ describe('looks for a friends\' Arena room', () => {
     const fetcher: Fetcher = async (url, init) => {
       const body = typeof init.body === 'string' ? init.body : ''
       posts.push({ url, body, signature: new Headers(init.headers).get(SIGNATURE_HEADER) })
-      return Response.json({ looks: { user_ash: { head: 'strawHat' }, user_brock: { head: 7 } } })
+      return Response.json({ looks: { user_ash: { head: 'strawHat' }, user_brock: { head: 7 } }, legends: { user_ash: ['kyogre', 'mew'], user_brock: [] } })
     }
-    expect(await lookUpLooks(API, ['u:user_ash', 'u:user_brock', 'g:guest'], fetcher)).toEqual({ 'u:user_ash': { head: 'strawHat' } })
+    expect(await lookUpLooks(API, ['u:user_ash', 'u:user_brock', 'g:guest'], fetcher)).toEqual({ looks: { 'u:user_ash': { head: 'strawHat' } }, legends: { 'u:user_ash': ['kyogre', 'mew'] } })
     expect(posts).toEqual([{ url: 'https://api.test/looks', body: '{"userIds":["user_ash","user_brock"]}', signature: await sign('s3cret', '{"userIds":["user_ash","user_brock"]}') }])
   })
 
   it('vouches for nothing when the API fails, is older or is unset', async () => {
-    expect(await lookUpLooks(API, ['u:user_ash'], async () => new Response(null, { status: 404 }))).toEqual({})
-    expect(await lookUpLooks(API, ['u:user_ash'], async () => Promise.reject(new Error('down')))).toEqual({})
-    expect(await lookUpLooks(null, ['u:user_ash'])).toEqual({})
+    const none = { looks: {}, legends: {} }
+    expect(await lookUpLooks(API, ['u:user_ash'], async () => new Response(null, { status: 404 }))).toEqual(none)
+    expect(await lookUpLooks(API, ['u:user_ash'], async () => Promise.reject(new Error('down')))).toEqual(none)
+    expect(await lookUpLooks(null, ['u:user_ash'])).toEqual(none)
+    // An API from before the legends: looks only.
+    expect(await lookUpLooks(API, ['u:user_ash'], async () => Response.json({ looks: { user_ash: { head: 'strawHat' } } }))).toEqual({ looks: { 'u:user_ash': { head: 'strawHat' } }, legends: {} })
+  })
+
+  it('drops a malformed legend list', async () => {
+    const answer = { looks: {}, legends: { user_ash: ['kyogre', 7], user_brock: 'mew', user_misty: ['x'.repeat(33)] } }
+    expect((await lookUpLooks(API, ['u:user_ash', 'u:user_brock', 'u:user_misty'], async () => Response.json(answer))).legends).toEqual({})
   })
 })

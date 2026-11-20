@@ -2,7 +2,8 @@ import { accountHandle, accountsEnabled, sessionToken } from './account'
 import { track, type RunPerf } from './analytics'
 import { bank, bankKey, paysAnything, type BankDelta, type Store } from './coop/bank'
 import { createBot, botPick, type Bot } from './coop/bot'
-import type { CoopPick } from './coop/start'
+import { parseSettings, type CoopPick } from './coop/start'
+import { isLegend } from './data/legends'
 import { COSMETIC_IDS, slotOf, type CosmeticSlot } from './data/cosmetics'
 import { SKIN_LINES } from './data/skinCatalog'
 import { skinsOf } from './arena/gemShop'
@@ -432,7 +433,17 @@ export const tabBotLook = (seat: number): WireLook | null => {
   return null
 }
 
-/** Dev: `n` bots join room `code` (they set a loadout and get ready; the soak's bots in a tab), playing `starter` when given. */
+/**
+ * Dev: a bot's loadout for a room: its own Pokémon (`botPick`, a legend in a
+ * Legend room) or `starter` when given (a legend claimed as captured, for the
+ * dev relay), and its look.
+ */
+const botLoadout = (k: number, legendRoom: boolean, look: WireLook, starter?: CoopPick['starter']): CoopPick => {
+  if (!starter) return { ...botPick(k + 1, legendRoom), look }
+  return isLegend(starter) ? { ...botPick(k + 1, true), starter, legends: [starter], look } : { ...botPick(k + 1), starter, look }
+}
+
+/** Dev: `n` bots join room `code` (they set a loadout and get ready; the soak's bots in a tab), playing `starter` when given; in a Legend room they play legends, following the host's switch. */
 export const addBots = async (code: string, n: number, starter?: CoopPick['starter']) => {
   const url = coopUrl()
   if (!url) return []
@@ -447,12 +458,20 @@ export const addBots = async (code: string, n: number, starter?: CoopPick['start
     // Each bot wears a look of its own (`botLook`), so a room shows every seat's look arriving.
     const look = botLook(k)
     botLooks.set(bot, look)
-    bot.client.setLoadout({ ...botPick(k + 1), ...(starter && { starter }), look })
+    let legendRoom = parseSettings(res.room.settings).legend === true
+    bot.client.setLoadout(botLoadout(k, legendRoom, look, starter))
     setTimeout(() => bot.client.setReady(true), 300)
-    // After a run the relay clears everyone's ready: a bot is ready for "Jogar de novo" a moment later.
     bot.client.on((e) => {
+      if (e.kind !== 'room') return
       const seat = bot.client.state().seat
-      if (e.kind === 'room' && e.room.phase === 'ended' && e.room.members.some((m) => m.seat === seat && !m.ready)) setTimeout(() => bot.client.setReady(true), 800)
+      // The host switched the Modo Lendário: the bot brings a legend, or its regular Pokémon again.
+      const legend = parseSettings(e.room.settings).legend === true
+      if (legend !== legendRoom && e.room.phase !== 'playing') {
+        legendRoom = legend
+        bot.client.setLoadout(botLoadout(k, legendRoom, look, starter))
+      }
+      // After a run the relay clears everyone's ready: a bot is ready for "Jogar de novo" a moment later.
+      if (e.room.phase === 'ended' && e.room.members.some((m) => m.seat === seat && !m.ready)) setTimeout(() => bot.client.setReady(true), 800)
     })
     joined.push(res.seat)
   }

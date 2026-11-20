@@ -4,7 +4,9 @@ import { mergeClears, wonClears } from '../../src/game/clears'
 import { keepGiven, parseGiftContent } from '../../src/game/gifts'
 import { gameGiftsApplied } from '../../src/game/gameGifts'
 import { isFestivalGift } from '../../src/game/festival'
+import { isCaptured } from '../../src/game/capture'
 import { parseSaveData } from '../../src/game/meta'
+import { LEGEND_IDS, type LegendId } from '../../src/data/legends'
 import { applyPush, type Push, type Stored } from '../../src/game/sync'
 import { festivalTotals } from './festival'
 
@@ -44,6 +46,25 @@ const toStored = (row: SaveRow | undefined): Stored | null => (row ? { save: par
 /** Saves of players, by Clerk user id. */
 export const saveStore = (sql: Sql) => ({
   read: async (userId: string) => toStored((await sql<SaveRow[]>`select data, revision from saves where user_id = ${userId}`)[0]),
+
+  /**
+   * Each account's captured legends in its stored save (`isCaptured`, the
+   * solo rules: events, paths and Ultra Beasts included), by user id, for a
+   * co-op room's Legend mode (`POST /looks`). Reads only the save's version
+   * and `legends`, through `parseSaveData` like any stored save; an account
+   * without a save is left out.
+   */
+  capturedLegends: async (userIds: readonly string[]): Promise<Map<string, LegendId[]>> => {
+    if (userIds.length === 0) return new Map()
+    const rows = await sql<{ user_id: string; version: unknown; legends: unknown }[]>`
+      select user_id, data->'version' as version, data->'legends' as legends from saves where user_id = any(${[...userIds]}::text[])`
+    return new Map(
+      rows.map((r) => {
+        const { legends } = parseSaveData({ version: r.version, legends: r.legends })
+        return [r.user_id, LEGEND_IDS.filter((id) => isCaptured(legends, id))] as const
+      }),
+    )
+  },
 
   /**
    * Applies a push (`applyPush`) and returns what was stored. Locking the

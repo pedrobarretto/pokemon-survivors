@@ -1228,13 +1228,24 @@ export const pt = {
       /** Back in the room while the others still play (the endless mode). */
       playing: 'A equipe está numa partida.',
       rejoin: 'Voltar para a partida',
-      rules: 'Co-op é o modo normal: sem Modo Lendário, Surto do dia, Noite das Bruxas, Mochila nem TMs da loja. As partidas entram no ranking de Duplas, Trios e Squads.',
+      rules: 'Co-op é o modo normal (ou o Modo Lendário, se o anfitrião ligar): sem Surto do dia, Noite das Bruxas, Mochila nem TMs da loja. As partidas entram no ranking de Duplas, Trios e Squads.',
       /** The host's switch for the Desafio co-op do dia (run rooms): the day's seed and difficulty, upgrades off. */
       challenge: 'Desafio do dia',
       challengeModes: { off: 'Desligado', on: 'Ligado' },
       challengeBadge: (date: string) => `Desafio co-op do dia · ${date}`,
       challengeRules: 'Semente e dificuldade do dia, sem melhorias da Poké Mart. Vale a melhor partida do time.',
       challengeFixed: 'a do desafio',
+      /** The host's switch for the Modo Lendário (run rooms, never with the Desafio co-op do dia): every seat plays a legend it captured. */
+      legend: 'Modo Lendário',
+      legendBadge: 'Modo Lendário',
+      legendRules: 'Cada um joga um lendário que já capturou: horda mais forte, Pressão e despertares no Lv 12 e 28. Vale nos rankings Lendários de Duplas, Trios e Squads.',
+      legendOff: 'desligado no Desafio do dia',
+      legendPick: 'Trocar lendário',
+      /** This player has no legend captured: they can't get ready in a legend room. */
+      noLegend: 'Você ainda não capturou um lendário. Vença um no modo solo para jogar nesta sala.',
+      noLegendSeat: 'sem lendário',
+      legendFellBack: (name: string, pokemon: string) => `O lendário de ${name} não foi confirmado pela conta: joga com ${pokemon}, e a partida fica fora do placar.`,
+      legendNote: 'Escolha um dos seus lendários capturados. O servidor confere a captura na largada; sem ela, você joga com seu parceiro.',
       hintKeys: '← → escolher · ENTER confirmar · ESC sair',
       hintTouch: 'Toque para escolher',
       /** The partner select, picking for the room. */
@@ -1625,6 +1636,7 @@ export const pt = {
     legendGroup: 'Lendários',
     /** The Co-op side (a third mode): boards of teams by size (Duplas, Trios, Squads), and the Desafio co-op do dia's. */
     coop: 'Co-op',
+    coopLegend: 'Co-op Lendário',
     sizes: { duo: 'Duplas', trio: 'Trios', squad: 'Squads' },
     coopOutcomes: { victory: 'Venceu', wipe: 'Desmaiaram' },
     coopEmpty: 'Nenhum time neste quadro ainda. Chame a galera e seja o primeiro!',
@@ -6982,6 +6994,7 @@ export const pt = {
       evolved: (name: string, from: string, to: string) => `*${name}*: ${from} evoluiu para *${to}*!`,
       mega: (name: string, form: string) => `*${name}* Mega Evoluiu em *${form}*!`,
       duo: (name: string, move: string) => `*${name}* fundiu um golpe duplo: *${move}*!`,
+      awakened: (name: string, form: string) => `*${name}* despertou: *${form}*!`,
     },
     vote: {
       title: 'A equipe venceu Mewtwo!',
@@ -7157,6 +7170,8 @@ export const pt = {
     },
     tags: {
       solo: 'Solo',
+      /** The Legend mode's card: solo, or a co-op room with the Modo Lendário on. */
+      soloCoop: 'Solo e co-op',
       minutes: (n: number) => `${n} min`,
       endless: '+ modo sem fim',
       legends: (n: number) => `${n} lendários`,

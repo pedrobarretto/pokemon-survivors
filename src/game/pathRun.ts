@@ -6,7 +6,7 @@ import { RUINS } from '../data/forces'
 import type { RuinsRegi } from '../data/legends'
 import type { RuinsNotice } from './splitRuins'
 import { burst, shakeScreen } from './effects'
-import { teamLegend } from './legend'
+import { playsLegend } from './legend'
 import { runPieces } from './legendPaths'
 import { DIRECTOR, spawnSpot } from './mapEventRules'
 import type { MapEventDef, MapEventKind } from './mapEvents'
@@ -182,7 +182,7 @@ export const REGI_TEMPLE_EVENT: MapEventDef<'regiTemple'> = {
     if (s.waking < 0) {
       if (playerWithin(g, ev.x, ev.y, REGIGIGAS.wake, true) === null) return
       // Another boss on the field (or a rift, a den, a Sword's duel under way) keeps it asleep: it wakes once that's over.
-      if (g.bossId !== null || teamLegend(g)?.id === 'regigigas' || momentBusy(g, 'temple', ['roam'])) {
+      if (g.bossId !== null || playsLegend(g, 'regigigas') || momentBusy(g, 'temple', ['roam'])) {
         if (!s.told) notify(g, { kind: 'temple', moment: 'silent' })
         s.told = true
         return

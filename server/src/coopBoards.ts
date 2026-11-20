@@ -21,7 +21,7 @@ import {
 } from '../../src/game/coopBoard'
 import { brasiliaDay, type DayKey } from '../../src/game/day'
 import { isRecord } from '../../src/game/parse'
-import { BOARD_SIZE, BOARD_TIME_ZONE, type BoardPeriod } from '../../src/game/ranking'
+import { BOARD_SIZE, BOARD_TIME_ZONE, type BoardPeriod, type RunMode } from '../../src/game/ranking'
 import type { CoopReport, CoopReportResponse } from '../../src/net/coopReport'
 import type { Fragment } from 'postgres'
 import type { Sql } from './db'
@@ -34,7 +34,8 @@ import { badgeOf, type SupporterRow } from './ranking'
  * runs the relay reports (`POST /coop/report`, signed like the Arena's), kept
  * when every seat is an account and the result checks out (`coopListing`),
  * and boards that rank each team (the same set of accounts) once, by its best
- * run. The rules are `game/coopBoard.ts`; this file stores and reads them.
+ * run, a co-op Legend run's (`legend`) on the Lendário side apart. The rules
+ * are `game/coopBoard.ts`; this file stores and reads them.
  */
 
 /* ---------------- Reading a report ---------------- */
@@ -93,13 +94,22 @@ export const coopListing = (r: CoopReport): CoopListing | null => {
   return { result, size, team: teamKey(users), members }
 }
 
+/**
+ * Whether a Legend run's every seat played a legend its account has captured
+ * (`captured`: the stored saves', `store.capturedLegends`): the relay's
+ * stamp is checked again here, so neither an old relay nor clients agreeing
+ * on a made-up result can list one. A regular run always passes.
+ */
+export const legendsVouched = (listing: CoopListing, captured: ReadonlyMap<string, readonly string[]>) =>
+  !listing.result.legend || listing.members.every((m) => captured.get(m.userId)?.includes(m.starter) === true)
+
 /** A team's key: its members' user ids, sorted, joined by commas (ids never hold one). */
 export const teamKey = (userIds: readonly string[]) => [...userIds].sort().join(',')
 
 /* ---------------- The store ---------------- */
 
-/** Which co-op board: a team size, a difficulty and a period, optionally only teams with `viewer` or someone they follow. */
-export type CoopBoardQuery = { size: TeamSize; difficulty: Difficulty; period: BoardPeriod; friends: boolean; viewer: string | null }
+/** Which co-op board: a side (`mode`), a team size, a difficulty and a period, optionally only teams with `viewer` or someone they follow. */
+export type CoopBoardQuery = { mode: RunMode; size: TeamSize; difficulty: Difficulty; period: BoardPeriod; friends: boolean; viewer: string | null }
 
 type RankedRow = { id: string; difficulty: Difficulty; survived: number; outcome: CoopOutcome; ended_at: Date; mine: boolean; rank: number; total: number }
 
@@ -171,8 +181,8 @@ export const coopBoardStore = (sql: Sql) => {
       sql.begin(async (tx) => {
         const at = new Date(r.endedAt)
         const [row] = await tx<{ id: string }[]>`
-          insert into coop_runs (room, run, region, size, difficulty, challenge, survived, outcome, kills, votes, team, ended_at, result)
-          values (${r.room}, ${r.run}, ${r.region}, ${l.size}, ${l.result.difficulty}, ${l.result.challenge}::date, ${l.result.time}, ${l.result.outcome},
+          insert into coop_runs (room, run, region, size, difficulty, challenge, legend, survived, outcome, kills, votes, team, ended_at, result)
+          values (${r.room}, ${r.run}, ${r.region}, ${l.size}, ${l.result.difficulty}, ${l.result.challenge}::date, ${l.result.legend}, ${l.result.time}, ${l.result.outcome},
             ${l.result.kills}, ${r.votes}, ${l.team}, ${at}, ${tx.json(l.result)})
           on conflict (room, run, ended_at) do nothing
           returning id`
@@ -192,11 +202,11 @@ export const coopBoardStore = (sql: Sql) => {
         return { run: row.id, duplicate: false }
       }),
 
-    /** `GET /coop/boards/:difficulty`: a size and difficulty's regular runs (never the challenge's) of the period, by team. */
-    board: async ({ size, difficulty, period, friends, viewer }: CoopBoardQuery): Promise<CoopBoard> => {
+    /** `GET /coop/boards/:difficulty`: a side, size and difficulty's runs (never the challenge's) of the period, by team. */
+    board: async ({ mode, size, difficulty, period, friends, viewer }: CoopBoardQuery): Promise<CoopBoard> => {
       const since = period === 'all' ? sql`and r.ended_at >= ${SEASON_ONE.start}::timestamptz` : period === 'era1' ? sql`and r.ended_at < ${SEASON_ONE.start}::timestamptz` : sql`and r.ended_at >= (date_trunc(${period}, now() at time zone ${BOARD_TIME_ZONE}) at time zone ${BOARD_TIME_ZONE})`
-      const { entries, me, total } = await read(size, sql`r.challenge is null and r.difficulty = ${difficulty} ${since}`, friends, viewer)
-      return { size, difficulty, period, entries, me, total }
+      const { entries, me, total } = await read(size, sql`r.challenge is null and r.legend = ${mode === 'legend'} and r.difficulty = ${difficulty} ${since}`, friends, viewer)
+      return { size, difficulty, period, mode, entries, me, total }
     },
 
     /**
@@ -208,7 +218,7 @@ export const coopBoardStore = (sql: Sql) => {
       Promise.all(
         TEAM_SIZES.flatMap((size) =>
           DIFFICULTY_IDS.map(async (difficulty): Promise<Era1Standing> => {
-            const scope = sql`r.challenge is null and r.difficulty = ${difficulty} and r.ended_at < ${SEASON_ONE.start}::timestamptz`
+            const scope = sql`r.challenge is null and not r.legend and r.difficulty = ${difficulty} and r.ended_at < ${SEASON_ONE.start}::timestamptz`
             const rows = await sql<{ user_id: string; rank: number; total: number }[]>`
               select m.user_id, b.rank, b.total from (${ranked(size, scope, false, null)}) b join coop_run_members m on m.run_id = b.id
               where b.rank <= ${ERA1.coopTop} order by b.rank, m.slot`
@@ -220,7 +230,7 @@ export const coopBoardStore = (sql: Sql) => {
     /** `GET /coop/challenge/:day`: a day's Desafio co-op board for a size, each team's best try. */
     challengeBoard: async (day: DayKey, size: TeamSize, friends: boolean, viewer: string | null): Promise<CoopChallengeBoard> => {
       const { difficulty } = dailyCoopChallenge(day)
-      const { entries, me, total } = await read(size, sql`r.challenge = ${day}::date and r.difficulty = ${difficulty}`, friends, viewer)
+      const { entries, me, total } = await read(size, sql`r.challenge = ${day}::date and not r.legend and r.difficulty = ${difficulty}`, friends, viewer)
       return { day, size, difficulty, total, entries, me }
     },
   }
