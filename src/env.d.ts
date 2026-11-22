@@ -20,5 +20,8 @@ interface ImportMetaEnv {
 /** The build that's playing (the commit, or `dev`): ranked runs report it. Set in `vite.config.ts`. */
 declare const __GAME_VERSION__: string
 
+/** When the build's commit was made, in Unix seconds: orders builds, which commits can't (save pushes send it, `Push.build`). Set in `vite.config.ts`. */
+declare const __GAME_BUILT__: number
+
 /** The co-op build id: a hash of the simulation's source (`src/coop/simBuild.ts`). Rooms only take clients of the same. Set in `vite.config.ts`. */
 declare const __SIM_BUILD__: string

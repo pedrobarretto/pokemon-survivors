@@ -149,9 +149,9 @@ describe('donating', () => {
 
   it('is never refunded by a merge with a device that still had the ₽', () => {
     const before: Save = { ...EMPTY_SAVE, wallet: 100_000, spent: 5_000 }
-    const stored = { save: donateFrom(before, 40_000), revision: 8 }
+    const stored = { save: donateFrom(before, 40_000), revision: 8, build: null }
     // Another device pushes on top of the revision before the donation, having earned 1 000 ₽ since.
-    const other = applyPush(stored, { save: { ...before, wallet: 101_000 }, base: 7 })
+    const other = applyPush(stored, { save: { ...before, wallet: 101_000 }, base: 7, build: null })
     expect(other.merged).toBe(true)
     expect(other.save.wallet).toBe(61_000)
     expect(other.save.spent).toBe(45_000)

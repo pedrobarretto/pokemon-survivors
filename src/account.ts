@@ -274,8 +274,9 @@ const parsePushed = (body: unknown) =>
     : null
 
 /**
- * Sends the local save on top of the revision this device last got and keeps
- * what the account stored. If the save changed locally while the request was
+ * Sends the local save on top of the revision this device last got, with this
+ * build's place in line (`__GAME_BUILT__`, so an older build's push merges),
+ * and keeps what the account stored. If the save changed locally while the request was
  * out (a purchase, a hatch), the local one stays: it already builds on what
  * was sent when the account took it as is, and otherwise the next push merges.
  */
@@ -286,7 +287,7 @@ const push = async (c: Clerk, link: Link) => {
   const res = await fetch(`${API_URL}/save`, {
     method: 'PUT',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ save: JSON.parse(sent), base: link.revision }),
+    body: JSON.stringify({ save: JSON.parse(sent), base: link.revision, build: __GAME_BUILT__ }),
     signal: timeoutSignal(TIMEOUT_MS),
   })
   const pushed = res.ok ? parsePushed(await res.json()) : null

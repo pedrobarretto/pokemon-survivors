@@ -104,6 +104,22 @@ const gameVersion = () => {
   }
 }
 
+/**
+ * When the commit being built was made, in Unix seconds, for `__GAME_BUILT__`:
+ * the build's place in line, which a commit id can't give. Main's commits come
+ * in merge order, so a later deploy has a larger number. The build's own clock
+ * without git.
+ */
+const gameBuilt = () => {
+  try {
+    const at = Number(execSync(`git log -1 --format=%ct ${process.env.GITHUB_SHA ?? 'HEAD'}`, { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim())
+    if (Number.isSafeInteger(at) && at > 0) return at
+  } catch {
+    // No git: the build's clock below.
+  }
+  return Math.floor(Date.now() / 1000)
+}
+
 /** A repo file's text, or null when it isn't a file. */
 const readRepoFile = (path: string) => {
   try {
@@ -199,6 +215,7 @@ export default defineConfig({
   test: { exclude: ['**/node_modules/**', '**/.git/**', 'relay/**'] },
   define: {
     __GAME_VERSION__: JSON.stringify(gameVersion()),
+    __GAME_BUILT__: JSON.stringify(gameBuilt()),
     __SIM_BUILD__: JSON.stringify(SIM_BUILD),
   },
   // PostHog's proxy, as the site's Worker has it (`worker/worker.ts`), to try analytics locally (`ps:analytics` set to `on` in localStorage).
