@@ -22,12 +22,13 @@ import { branchNeeds } from '../../game/evoItems'
 import { EVO_ITEMS } from '../../data/shop'
 import { unlockedAt } from '../../game/learnsets'
 import { starterStats } from '../../game/leveling'
+import { BASE_STATS } from '../../game/stats'
 import { MOVES, type MoveId } from '../../game/moves'
 import { resolveSpecial } from '../../game/special'
 import type { Locale } from '../../i18n'
 import { MESSAGES } from '../../i18n/messages'
 import { SITE_MESSAGES, type SiteMessages } from '../../i18n/site'
-import { STAT_BARS, statRatio } from '../../ui/statBars'
+import { otherBonuses, STAT_BARS, statRatio } from '../../ui/statBars'
 import { html, type Html } from '../html'
 import { layout } from '../layout'
 import { appearances, clock, nightBossOf, pageOf, pokedex, regionCounts, ROLES, slugOf, spritesOf, type Appearance, type DexEntry, type Role, type SpriteSet } from '../pokedex'
@@ -75,6 +76,13 @@ const statBars = (entry: DexEntry & { source: { kind: 'starter' } }, locale: Loc
     (b) =>
       html`<div><dt>${labels[b.label]}</dt><dd><span class="bar"><i style="width:${Math.round(statRatio(b.get(stats), b.min, b.max) * 100)}%"></i></span><b>${b.fmt(b.get(stats))}</b></dd></div>`,
   )}</dl>`
+}
+
+/** What this stage raises outside the bars (`otherBonuses`), as one line; nothing when it raises none. */
+const otherBonusLine = (entry: DexEntry & { source: { kind: 'starter' } }, locale: Locale) => {
+  const words = MESSAGES[locale].title
+  const bonuses = otherBonuses(starterStats(entry.source.id, entry.source.stage, entry.source.branch ?? null), BASE_STATS)
+  return bonuses.length > 0 && html`<p><b>${words.otherBonuses}:</b> ${bonuses.map((b) => words.otherBonus[b.key](b.value)).join(' · ')}</p>`
 }
 
 const moveChip = (id: MoveId, m: SiteMessages) => html`<li style="--type:${TYPE_COLORS[MOVES[id].type]}" title="${m.types[MOVES[id].type]}">${MOVES[id].name}</li>`
@@ -145,6 +153,7 @@ const starterBody = (entry: DexEntry & { source: { kind: 'starter' } }, locale: 
     ${isHatchling(id) && html`<p class="note">${sourceNote(id, m, game)}</p>`}
     <h3>${m.pokedex.stats}</h3>
     ${statBars(entry, locale)}
+    ${otherBonusLine(entry, locale)}
     <h3>${m.pokedex.evolution}</h3>
     <ol class="evo">${line}</ol>
     <h3>${m.pokedex.signature}</h3>

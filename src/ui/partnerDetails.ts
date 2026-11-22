@@ -11,6 +11,7 @@ import { unlockedAt } from '../game/learnsets'
 import { branchNeeds } from '../game/evoItems'
 import { EVO_ITEMS } from '../data/shop'
 import { starterStats } from '../game/leveling'
+import { BASE_STATS } from '../game/stats'
 import { MOVES, type MoveDef, type MoveId } from '../game/moves'
 import { resolveSpecial } from '../game/special'
 import { megaIcon } from '../render/megaFx'
@@ -22,7 +23,7 @@ import { t } from '../i18n'
 import { boundLabel, glyphText, printedKeys } from './inputLabels'
 import { h } from './dom'
 import { tabStrip } from './shell'
-import { STAT_BARS, statRatio } from './statBars'
+import { otherBonuses, STAT_BARS, statRatio } from './statBars'
 import { typeBadge } from './screens'
 
 /**
@@ -188,6 +189,17 @@ export const statBars = (id: PlayableId, count: number = STAT_BARS.length) => {
   )
 }
 
+/** "Outros bônus": chips for what the final stage raises outside the bars (`otherBonuses`); nothing when it raises none. */
+const otherBonusRow = (id: PlayableId) => {
+  const m = t().title
+  const bonuses = otherBonuses(starterStats(id, PLAYABLE[id].line.length - 1), BASE_STATS)
+  if (bonuses.length === 0) return []
+  return [
+    section(m.otherBonuses, m.otherBonusesNote),
+    h('ul', { class: 'other-bonuses' }, ...bonuses.map((b) => h('li', {}, m.otherBonus[b.key](b.value)))),
+  ]
+}
+
 /** The "base / evolved" key of the stat bars. */
 const legend = () => {
   const m = t().title
@@ -325,6 +337,7 @@ export const detailsSheet = (opts: SheetOpts) => {
             h('p', { class: 'partner-sheet-blurb' }, m.blurbs[id]),
             section(m.title.statsSection, legend()),
             statBars(id),
+            ...otherBonusRow(id),
             section(m.title.evolution),
             evoLine(id, stage, (i) => {
               stage = i

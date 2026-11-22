@@ -16,3 +16,34 @@ export const STAT_BARS = [
 
 /** How full a bar is (0.03..1), so even the lowest value shows a sliver. */
 export const statRatio = (v: number, min: number, max: number) => Math.max(0.03, Math.min(1, (v - min) / (max - min)))
+
+/**
+ * The stats the bars leave out that a family's line can still raise, each with
+ * the factor to its display unit, a whole number: a share in % (×100), a count
+ * or px (×1), the special's recharge per KO in tenths of a second (×10).
+ * Typed damage and kinds of moves stay out: no line raises them.
+ */
+export const OTHER_STATS = {
+  amount: 1,
+  projectileSpeed: 100,
+  duration: 100,
+  magnet: 1,
+  growth: 100,
+  greed: 100,
+  statusChance: 100,
+  statusDamage: 100,
+  specialRecharge: 10,
+} as const satisfies Partial<Record<keyof PlayerStats, number>>
+
+export type OtherStat = keyof typeof OTHER_STATS
+
+/**
+ * "Outros bônus": what `stats` has over `base` (a plain Pokémon's, `BASE_STATS`)
+ * in the stats the bars leave out, in display units (`OTHER_STATS`). Empty
+ * when the line raises none of them.
+ */
+export const otherBonuses = (stats: PlayerStats, base: PlayerStats) =>
+  (Object.keys(OTHER_STATS) as OtherStat[]).flatMap((key) => {
+    const value = Math.round((stats[key] - base[key]) * OTHER_STATS[key])
+    return value === 0 ? [] : [{ key, value }]
+  })

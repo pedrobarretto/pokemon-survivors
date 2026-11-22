@@ -2160,6 +2160,25 @@ button {
   gap: 3px;
 }
 
+/* The details sheet's "Outros bônus": what the line raises outside the bars. */
+.other-bonuses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.other-bonuses li {
+  padding: 3px 7px 2px;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--dk-ink-2, #505068);
+  background: var(--dk-wash-green, #e4f4dc);
+  border-radius: 4px;
+}
+
 .stat-bar {
   display: grid;
   grid-template-columns: 92px 1fr 52px;
