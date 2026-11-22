@@ -5,6 +5,7 @@ import { mergeClaimedGifts } from './gifts'
 import { mergeClears } from './clears'
 import { mergeHalloween } from './halloween'
 import { mergeCaptures } from './capture'
+import { LEGEND_IDS } from '../data/legends'
 import { mergeMythicalPity } from './mythicalHunt'
 import { mergeBag } from './bag'
 import { mergeShop, shopInvested } from './shop'
@@ -143,25 +144,69 @@ export const mergeSaves = (base: Save, incoming: Save): Save => {
   }
 }
 
-/** A save as the account stores it. `revision` goes up by one with every push. */
-export type Stored = { save: Save; revision: number }
-
-/** What a device sends: its save and the revision it last got from the account (null if it never synced). */
-export type Push = { save: Save; base: number | null }
+/**
+ * A save as the account stores it. `revision` goes up by one with every push;
+ * `build` is the newest game build that pushed it (`Push.build`), null until
+ * a build that sends one does.
+ */
+export type Stored = { save: Save; revision: number; build: number | null }
 
 /**
- * A save behind `stored` on its lifetime runs, which only ever go up. A device
- * pushing it on top of the latest revision lost its save (storage cleared or
- * unreadable) but kept its account link, so it hasn't seen what's stored.
+ * What a device sends: its save, the revision it last got from the account
+ * (null if it never synced) and its build (`__GAME_BUILT__`, the build's commit
+ * time in seconds; null from a game too old to send it).
  */
-const behind = (save: Save, stored: Save) => save.achievements.lifetime.runs < stored.achievements.lifetime.runs
+export type Push = { save: Save; base: number | null; build: number | null }
+
+/**
+ * A push body's `build` as the API takes it: a whole number of seconds no later
+ * than a day past `now` (ms), else null, as from a game too old to send one. A
+ * build from the future would mark every real build older and merge their pushes.
+ */
+export const pushBuild = (raw: unknown, now: number): number | null =>
+  typeof raw === 'number' && Number.isSafeInteger(raw) && raw > 0 && raw <= now / 1000 + 86_400 ? raw : null
+
+const missing = <T>(have: readonly T[], need: readonly T[]) => need.some((x) => !have.includes(x))
+
+/**
+ * A save behind `stored` on what only ever goes up: its lifetime runs, a
+ * legend's captures, a legend path's progress (Cells, Cores, Hex Nuts, the
+ * Torre's trials, Cosmog's research, the legends it grew into and, while it's
+ * the same Cosmog, its runs). A device pushing it on top of the latest
+ * revision lost its save (storage cleared or unreadable) but kept its account
+ * link, or runs a build too old to read all of it (its parse dropped legends
+ * and paths it doesn't know), so it hasn't seen what's stored.
+ */
+export const behind = (save: Save, stored: Save) => {
+  const [p, q] = [save.paths, stored.paths]
+  return (
+    save.achievements.lifetime.runs < stored.achievements.lifetime.runs ||
+    LEGEND_IDS.some((id) => (save.legends[id] ?? 0) < (stored.legends[id] ?? 0)) ||
+    p.cells < q.cells ||
+    p.cores < q.cores ||
+    p.nuts < q.nuts ||
+    missing(p.trials, q.trials) ||
+    missing(p.cosmog.research, q.cosmog.research) ||
+    missing(p.cosmog.raised, q.cosmog.raised) ||
+    (p.cosmog.raised.length === q.cosmog.raised.length && p.cosmog.runs < q.cosmog.runs)
+  )
+}
+
+/**
+ * Whether a push comes from a build older than the one that last stored the
+ * save, or from one too old to say (no `build`). Such a build can't read
+ * everything a newer one stored, so its save may lack it and must be merged.
+ */
+export const olderBuild = (push: Push, stored: Stored) => stored.build !== null && (push.build === null || push.build < stored.build)
 
 /**
  * What a push stores. A device that pushes on top of the latest revision has
  * seen everything stored, so its save is the newer one and replaces it as is:
  * that keeps ₽ spent, eggs hatched and refunds. Anything else (a first sign
- * in, another device pushed in between, or a save `behind` the stored one,
- * which would wipe the account) merges both with `mergeSaves`.
+ * in, another device pushed in between, a save `behind` the stored one, or a
+ * push from an `olderBuild`, which would wipe what it can't read) merges both
+ * with `mergeSaves`, run by the API's own (current) code, so nothing the old
+ * build dropped is lost. The stored `build` is the newest that pushed.
  *
  * `resetAt` is the revision a reset stored, when the account's save was wiped
  * (an edited save, see `server/README.md`). A device that hasn't seen it (its
@@ -170,9 +215,10 @@ const behind = (save: Save, stored: Save) => save.achievements.lifetime.runs < s
  * takes it over its own.
  */
 export const applyPush = (stored: Stored | null, push: Push, resetAt: number | null = null): Stored & { merged: boolean } => {
-  if (!stored) return { save: push.save, revision: 1, merged: false }
+  if (!stored) return { save: push.save, revision: 1, build: push.build, merged: false }
   if (resetAt !== null && (push.base === null || push.base < resetAt)) return { ...stored, merged: true }
-  const merged = push.base !== stored.revision || behind(push.save, stored.save)
-  return { save: merged ? mergeSaves(stored.save, push.save) : push.save, revision: stored.revision + 1, merged }
+  const merged = push.base !== stored.revision || olderBuild(push, stored) || behind(push.save, stored.save)
+  const build = stored.build === null ? push.build : push.build === null ? stored.build : Math.max(stored.build, push.build)
+  return { save: merged ? mergeSaves(stored.save, push.save) : push.save, revision: stored.revision + 1, build, merged }
 }
 

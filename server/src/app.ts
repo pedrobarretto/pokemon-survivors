@@ -20,6 +20,7 @@ import { isDifficulty } from '../../src/game/difficulty'
 import { halloweenAt } from '../../src/game/halloween'
 import { parseHandlePrefix, parsePresenceUpdate, parseRoomCode } from '../../src/game/friends'
 import { parseSaveData } from '../../src/game/meta'
+import { pushBuild } from '../../src/game/sync'
 import { outbreakAt } from '../../src/game/outbreak'
 import { ultraAt } from '../../src/game/ultraWeek'
 import { isRecord } from '../../src/game/parse'
@@ -197,9 +198,11 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  *
  * - `GET /health`: 200 while the database answers, else 503.
  * - `GET /save` (auth): the stored save and its revision, 404 before the first push.
- * - `PUT /save` (auth) `{ save, base }`: pushes the device's save on top of
- *   revision `base` (null if it never synced). Returns `{ save, revision, merged }`,
- *   what is stored now, for the device to keep (see `applyPush`).
+ * - `PUT /save` (auth) `{ save, base, build? }`: pushes the device's save on top of
+ *   revision `base` (null if it never synced) from game build `build` (its commit's
+ *   time in Unix seconds; older games send none, and a time ahead of the API's clock
+ *   is dropped). Returns `{ save, revision, merged }`, what is stored now, for the
+ *   device to keep (see `applyPush`: a build older than the one that stored the save merges).
  * - `GET /me` (auth): `{ profile }`, the player's handle and name, null before they pick them.
  * - `PUT /me` (auth) `{ handle, name }`: sets them. 409 `{ suggestion }` when the handle is taken.
  * - `POST /runs` (auth) `{ challenge? }`: `{ token, seed, rules }` for the player's next run: the start
@@ -399,7 +402,7 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     const body = await json(c)
     if (!isRecord(body) || !isRecord(body.save)) return c.json({ error: 'expected { save, base }' }, 400)
     const base = typeof body.base === 'number' && Number.isInteger(body.base) ? body.base : null
-    return c.json(await store.push(c.var.userId, { save: parseSaveData(body.save), base }))
+    return c.json(await store.push(c.var.userId, { save: parseSaveData(body.save), base, build: pushBuild(body.build, Date.now()) }))
   })
 
   app.get('/me', auth, async (c) => c.json({ profile: await ranking.profileName(c.var.userId) }))

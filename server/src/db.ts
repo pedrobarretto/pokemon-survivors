@@ -38,14 +38,15 @@ export const migrate = async (sql: Sql, dir: URL) => {
   })
 }
 
-type SaveRow = { data: unknown; revision: number }
+// `build` is a bigint, which the driver hands over as a string.
+type SaveRow = { data: unknown; revision: number; build: string | number | null }
 
 /** Stored rows go through `parseSaveData` too, so an older schema comes back current. */
-const toStored = (row: SaveRow | undefined): Stored | null => (row ? { save: parseSaveData(row.data), revision: row.revision } : null)
+const toStored = (row: SaveRow | undefined): Stored | null => (row ? { save: parseSaveData(row.data), revision: row.revision, build: row.build === null ? null : Number(row.build) } : null)
 
 /** Saves of players, by Clerk user id. */
 export const saveStore = (sql: Sql) => ({
-  read: async (userId: string) => toStored((await sql<SaveRow[]>`select data, revision from saves where user_id = ${userId}`)[0]),
+  read: async (userId: string) => toStored((await sql<SaveRow[]>`select data, revision, build from saves where user_id = ${userId}`)[0]),
 
   /**
    * Each account's captured legends in its stored save (`isCaptured`, the
@@ -82,7 +83,7 @@ export const saveStore = (sql: Sql) => ({
     sql.begin(async (tx) => {
       const [user] = await tx<{ reset: number | null }[]>`
         insert into users (id) values (${userId}) on conflict (id) do update set seen_at = now() returning save_reset_revision as reset`
-      const stored = toStored((await tx<SaveRow[]>`select data, revision from saves where user_id = ${userId} for update`)[0])
+      const stored = toStored((await tx<SaveRow[]>`select data, revision, build from saves where user_id = ${userId} for update`)[0])
       const applied = applyPush(stored, push, user?.reset ?? null)
       const won = await tx<{ starter: string; difficulty: string }[]>`
         select distinct starter, difficulty from runs
@@ -96,10 +97,10 @@ export const saveStore = (sql: Sql) => ({
       const festival = applied.save.gifts.some(isFestivalGift) ? await festivalTotals(tx, userId) : undefined
       const next = { ...applied, save: keepGiven({ ...applied.save, clears: mergeClears(applied.save.clears, wonClears(won)) }, [...given, ...gameGiftsApplied(applied.save, festival)]) }
       await tx`
-        insert into saves (user_id, version, revision, data)
-        values (${userId}, ${next.save.version}, ${next.revision}, ${tx.json(next.save)})
+        insert into saves (user_id, version, revision, data, build)
+        values (${userId}, ${next.save.version}, ${next.revision}, ${tx.json(next.save)}, ${next.build})
         on conflict (user_id) do update
-        set version = excluded.version, revision = excluded.revision, data = excluded.data, updated_at = now()`
+        set version = excluded.version, revision = excluded.revision, data = excluded.data, build = excluded.build, updated_at = now()`
       return next
     }),
 })

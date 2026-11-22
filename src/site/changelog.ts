@@ -24,6 +24,50 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-22',
+    title: { pt: 'Seu progresso a salvo', en: 'Your progress kept safe', es: 'Tu progreso a salvo', fr: 'Ta progression en sécurité', zh: '你的進度安全無虞' },
+    highlights: [
+      {
+        pt: 'Uma cópia desatualizada do jogo (uma aba antiga, um app que não recarregou) não apaga mais o seu progresso ao sincronizar.',
+        en: 'An outdated copy of the game (an old tab, an app that didn’t reload) can no longer erase your progress when it syncs.',
+        es: 'Una copia desactualizada del juego (una pestaña vieja, una app que no se recargó) ya no borra tu progreso al sincronizar.',
+        fr: 'Une copie obsolète du jeu (un vieil onglet, une app qui ne s’est pas rechargée) ne peut plus effacer ta progression en se synchronisant.',
+        zh: '過時的遊戲版本（舊分頁、沒有重新載入的 App）同步時不會再抹掉你的進度。',
+      },
+      {
+        pt: 'Lendários capturados e o progresso dos caminhos lendários (Células e Núcleos de Zygarde, Cosmog, a Torre, as Hex Nuts) ficam na conta mesmo se um aparelho antigo sincronizar.',
+        en: 'Captured legends and legend path progress (Zygarde’s Cells and Cores, Cosmog, the Torre, Hex Nuts) stay on your account even when an old device syncs.',
+        es: 'Los legendarios capturados y el progreso de los caminos legendarios (Células y Núcleos de Zygarde, Cosmog, la Torre, las Hex Nuts) quedan en tu cuenta aunque sincronice un dispositivo viejo.',
+        fr: 'Les légendaires capturés et la progression des chemins légendaires (Cellules et Noyaux de Zygarde, Cosmog, la Torre, les Hex Nuts) restent sur ton compte même quand un vieil appareil se synchronise.',
+        zh: '捕獲的傳說寶可夢與傳說之路的進度（基格爾德的細胞與核心、科斯莫古、高塔、六角螺帽）即使舊裝置同步也會留在帳號上。',
+      },
+      {
+        pt: 'O que uma versão antiga não conhece agora se junta ao que a conta guarda, em vez de ficar no lugar dele.',
+        en: 'Whatever an old version doesn’t know about is now merged with what your account keeps instead of replacing it.',
+        es: 'Lo que una versión vieja no conoce ahora se junta con lo que guarda tu cuenta, en vez de reemplazarlo.',
+        fr: 'Ce qu’une ancienne version ne connaît pas est maintenant fusionné avec ce que garde ton compte au lieu de le remplacer.',
+        zh: '舊版本不認得的內容，現在會與帳號保存的資料合併，而不是取而代之。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Sincronização da conta', en: 'Account sync', es: 'Sincronización de la cuenta', fr: 'Synchronisation du compte', zh: '帳號同步' },
+        notes: [
+          {
+            pt: 'Um aparelho que ainda roda uma versão antiga do jogo não conhecia os lendários e caminhos mais novos e, ao sincronizar, podia deixar a conta sem eles. Agora cada sincronização diz de qual versão do jogo vem, e a de uma versão mais antiga que a última que salvou a conta sempre se junta ao que está guardado, sem tirar nada.',
+            en: 'A device still running an old version of the game didn’t know the newest legends and legend paths and, when it synced, could leave your account without them. Now every sync says which version of the game it comes from, and one from a version older than the last that saved your account is always merged with what’s kept, taking nothing away.',
+            es: 'Un dispositivo que todavía corre una versión vieja del juego no conocía los legendarios y caminos más nuevos y, al sincronizar, podía dejar tu cuenta sin ellos. Ahora cada sincronización dice de qué versión del juego viene, y la de una versión más vieja que la última que guardó tu cuenta siempre se junta con lo guardado, sin quitar nada.',
+          },
+          {
+            pt: 'Uma sincronização sem uma captura de lendário ou com menos progresso num caminho lendário do que a conta tem também se junta ao que está guardado.',
+            en: 'A sync missing a legend capture, or with less legend path progress than your account has, is merged with what’s kept too.',
+            es: 'Una sincronización sin una captura de legendario, o con menos progreso en un camino legendario del que tiene tu cuenta, también se junta con lo guardado.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-11-21',
     title: { pt: 'Gemas na sua moeda', en: 'Gems in your currency', es: 'Gemas en tu moneda', fr: 'Des gemmes dans ta devise', zh: '以你的幣別購買寶石' },
     highlights: [
