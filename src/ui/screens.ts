@@ -19,7 +19,8 @@ import { abilitySet } from '../game/abilities'
 import { heldMega } from '../game/mega'
 import { megaIcon } from '../render/megaFx'
 import { BRANCHES } from '../data/branches'
-import { legendSignature } from '../data/legends'
+import { isLegend, legendSignature } from '../data/legends'
+import { innateText } from './innateText'
 import { abilityIcon } from '../render/abilityArt'
 import type { Difficulty } from '../game/difficulty'
 import { EGGS, refundOf, toSteps } from '../game/eggs'
@@ -673,6 +674,19 @@ const mapPanel = (g: Game) => {
   )
 }
 
+/** A legend's innate for the pause menu: always on, from Lv 1, beside the ability picked at the first awakening. */
+const innatePanel = (g: Game) => {
+  const starter = localPlayer(g).starter
+  if (!isLegend(starter)) return null
+  const innate = innateText(t(), starter)
+  return h(
+    'div',
+    { class: 'pause-ability innate-ability' },
+    h('img', { src: abilityIcon(innate.ability), alt: '' }),
+    h('div', {}, h('b', {}, h('small', {}, t().legend.innate), innate.name), h('span', {}, innate.text)),
+  )
+}
+
 /** The ability in play for the pause menu: the one picked (its Hidden tag too), the Mega's while that lasts, or when it comes. */
 const abilityPanel = (g: Game) => {
   const m = t().ability
@@ -866,6 +880,7 @@ export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: Pau
           'div',
           { class: 'pause-body' },
           // In the body, so they scroll with it: a phone held upright puts the loadout first (style.css), above them.
+          innatePanel(g),
           abilityPanel(g),
           !g.versus && mapPanel(g),
           // A match keeps running behind the menu: your moves and your team's builds, not the run's whole sheet.

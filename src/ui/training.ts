@@ -33,7 +33,8 @@ import {
   type MoveShelf,
   type TrainingForm,
 } from '../game/training'
-import { formAfter, innateAbility } from '../game/legend'
+import { formAfter } from '../game/legend'
+import { innateText } from './innateText'
 import type { PathFormId } from '../data/legendPaths'
 import { MEGAS } from '../data/megas'
 import { atMegaBase, runMegas } from '../game/mega'
@@ -290,7 +291,7 @@ export const trainingPanel = (root: HTMLElement, g: Game, actions: TrainingActio
       )
     })
     const set = abilitySet(p.starter, p.branch)
-    const innate = innateAbility(p.starter)
+    const innate = isLegend(p.starter) ? innateText(t(), p.starter) : null
     const abilities =
       p.legend?.awakened === 0
         ? [h('p', { class: 'dojo-empty' }, m().abilityAwaken)]
@@ -331,7 +332,8 @@ export const trainingPanel = (root: HTMLElement, g: Game, actions: TrainingActio
       h('div', { class: 'dojo-forms' }, ...forms),
       h('h3', { class: 'dojo-label' }, m().ability),
       // A legend's innate is always on, besides the ability picked.
-      innate && h('p', { class: 'dojo-innate' }, h('img', { src: abilityIcon(innate), alt: '' }), `${t().legend.innate}: ${ABILITIES[innate].name}`),
+      innate && h('p', { class: 'dojo-innate' }, h('img', { src: abilityIcon(innate.ability), alt: '' }), `${t().legend.innate}: ${innate.name}`),
+      innate && h('p', { class: 'dojo-row-note' }, innate.text),
       h('div', { class: 'dojo-chips' }, ...abilities),
       ability && h('p', { class: 'dojo-row-note' }, t().abilities[ability]),
       ...mega,

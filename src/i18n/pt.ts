@@ -44,7 +44,7 @@ import type { RiftLegend } from '../data/rifts'
 import type { WaveLegend } from '../data/legendBosses'
 import type { PlayableId } from '../data/hatchlings'
 import type { MegaId } from '../data/megas'
-import type { LegendId } from '../data/legends'
+import type { ExtraInnateLegend } from '../data/legends'
 import type { AbilityId } from '../data/abilities'
 import type { OtherStat } from '../ui/statBars'
 import type { ItemId } from '../data/items'
@@ -6902,7 +6902,16 @@ export const pt = {
     innateExtra: {
       articuno: 'O frio das asas deixa lentos os inimigos por perto.',
       jirachi: 'Cartas raras e brilhantes saem com mais frequência.',
-    } satisfies Partial<Record<LegendId, string>>,
+      uxie: 'Ganha 8% mais experiência.',
+      mesprit: 'Recupera 4% do HP a cada 10 s.',
+      azelf: 'Com menos de metade do HP, +25% de dano.',
+      regieleki: 'Corre mais rápido: +6 de velocidade.',
+      regidrago: 'Com o HP cheio, +15% de dano.',
+      tornadus: 'Na neve: +10 de velocidade e recarga 5% mais rápida; imune ao desgaste do clima.',
+      thundurus: 'Chama a chuva; na chuva, +12% de dano e +8% de área.',
+      landorus: 'Chama a tempestade de areia.',
+      enamorus: 'Quem encosta em você tem 30% de chance de dormir por 2 s.',
+    } satisfies Record<ExtraInnateLegend, string>,
     /** A boss of the player's own species (Mewtwo's finale for a Mewtwo). */
     clone: (name: string) => `${name} Clone`,
     /* Capturing legends (`game/capture.ts`, `ui/capture.ts`): the toasts as one falls, and the partner select's Lendários tab. */
