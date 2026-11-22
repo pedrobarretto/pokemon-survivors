@@ -15294,6 +15294,21 @@ button.hall-tile:hover {
   box-shadow: inset 0 0 0 2px #c89020;
 }
 
+/* A legend's innate: always on, beside the ability picked (the pause menu and the partner details). */
+.pause-ability.innate-ability {
+  background: linear-gradient(90deg, var(--dk-wash-blue, #e0ecff), var(--dk-surface-1, #eeeef4));
+  box-shadow: inset 0 0 0 2px #7890d0;
+}
+
+.ability-row.innate-ability {
+  background: linear-gradient(90deg, var(--dk-wash-blue, #e0ecff), var(--dk-surface-0, #fff));
+  box-shadow: inset 0 0 0 2px #8ca0e0;
+}
+
+.tag-innate {
+  color: color-mix(in srgb, #4058a8 var(--dk-lift, 100%), #fff);
+}
+
 .pause-ability.mega > img {
   background: var(--dk-surface-1, #f8f8f8);
 }

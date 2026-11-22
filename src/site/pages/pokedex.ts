@@ -14,6 +14,7 @@ import { POKE_TYPES, TYPE_COLORS, type PokeType } from '../../data/types'
 import { RUN_LENGTH } from '../../data/waves'
 import { AWAKEN_AT, EVENT_LEGENDS, isLegend, LEGENDS, REGULAR_LEGENDS, type LegendId, type LegendUnlock } from '../../data/legends'
 import { SHINY_BUFF, SHINY_ODDS } from '../../game/shiny'
+import { innateText } from '../../ui/innateText'
 import { BRANCHES, branchesAt, branchStage, familyDex } from '../../data/branches'
 import { ABILITIES, isHidden, type AbilitySet } from '../../data/abilities'
 import { abilitySet } from '../../game/abilities'
@@ -310,12 +311,13 @@ const legendSection = (id: LegendId, m: SiteMessages, locale: Locale) => {
   const def = LEGENDS[id]
   const unlock: LegendUnlock = def.unlock
   const opener = MOVES[def.learnset[0][0]!]
+  const innate = innateText(MESSAGES[locale], id)
   // A path legend comes from its path, never from wins (`dexPage.ts` says it the same way).
   const capture = unlock.path || unlock.after ? pathNote(id, locale) : captureText(unlock, m)
   return html`<h3>${m.pokedex.legendMode}</h3>
     <ul class="list">
       <li>${capture}</li>
-      <li>${m.pokedex.innate(ABILITIES[def.innate.ability].name)}</li>
+      <li>${m.pokedex.innate(innate.name)} — ${innate.text}</li>
       <li>${m.pokedex.opens(opener.name)} ${typeBadge(opener.type, m)}</li>
     </ul>
     <p class="note">★ ${m.pokedex.captureShiny}</p>`

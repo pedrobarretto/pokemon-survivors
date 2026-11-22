@@ -48,6 +48,13 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         fr: 'Ce qu’une ancienne version ne connaît pas est maintenant fusionné avec ce que garde ton compte au lieu de le remplacer.',
         zh: '舊版本不認得的內容，現在會與帳號保存的資料合併，而不是取而代之。',
       },
+      {
+        pt: 'A habilidade inata de cada lendário agora diz o que faz: nos detalhes do Pokémon, no menu de pausa, no Dojo e na Pokédex do site.',
+        en: 'Every legend’s innate ability now says what it does: in the Pokémon’s details, the pause menu, the Dojo and the site’s Pokédex.',
+        es: 'La habilidad innata de cada legendario ahora dice qué hace: en los detalles del Pokémon, el menú de pausa, el Dojo y la Pokédex del sitio.',
+        fr: 'Le talent inné de chaque légendaire dit maintenant ce qu’il fait : dans les détails du Pokémon, le menu pause, le Dojo et le Pokédex du site.',
+        zh: '每隻傳說寶可夢的固有特性現在都會說明效果：在寶可夢詳情、暫停選單、道場和網站圖鑑中。',
+      },
     ],
     changes: [
       {
@@ -62,6 +69,16 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             pt: 'Uma sincronização sem uma captura de lendário ou com menos progresso num caminho lendário do que a conta tem também se junta ao que está guardado.',
             en: 'A sync missing a legend capture, or with less legend path progress than your account has, is merged with what’s kept too.',
             es: 'Una sincronización sin una captura de legendario, o con menos progreso en un camino legendario del que tiene tu cuenta, también se junta con lo guardado.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Lendários', en: 'Legends', es: 'Legendarios', fr: 'Légendaires', zh: '傳說寶可夢' },
+        notes: [
+          {
+            pt: 'A inata (Snow Cloak do Articuno, Serene Grace do Jirachi…) mostra o texto da habilidade e o que o Modo Lendário soma a ela, como o frio das asas do Articuno. No menu de pausa ela aparece desde o Nv 1, ao lado da habilidade escolhida no primeiro despertar.',
+            en: 'The innate (Articuno’s Snow Cloak, Jirachi’s Serene Grace…) shows the ability’s text and what the Legend mode adds to it, like the chill of Articuno’s wings. In the pause menu it shows from Lv 1, beside the ability picked at the first awakening.',
+            es: 'La innata (Snow Cloak de Articuno, Serene Grace de Jirachi…) muestra el texto de la habilidad y lo que el Modo Legendario le suma, como el frío de las alas de Articuno. En el menú de pausa aparece desde el Nv 1, junto a la habilidad elegida en el primer despertar.',
           },
         ],
       },

@@ -21,7 +21,7 @@ import { claimOpen, festivalById, festivalEnd, shownLegends } from '../game/fest
 import { halloweenStanding } from '../game/halloween'
 import { festivalIcon } from './festival'
 import { eventLegendIcon } from '../render/halloweenArt'
-import { ABILITIES } from '../data/abilities'
+import { innateText } from './innateText'
 import { canPlay, capturedCount, isCaptured, legendSource, questSource, stillMissing, winsNeeded } from '../game/capture'
 import { armBlock, armedItems, armItem, BAG_ITEM_IDS, bagCount, type BagItem } from '../game/bag'
 import { SHOP_LEVELS } from '../data/shop'
@@ -621,7 +621,8 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
           h('h3', { class: 'partner-name' }, form.name),
           h('div', { class: 'types' }, ...form.types.map(typeBadge)),
           level && h('p', { class: 'partner-clear' }, h('img', { src: trophyIcon(level), alt: '' }), m.dex.clearedOn(m.difficulty.names[level])),
-          isLegend(id) && h('p', { class: 'partner-legend-mode' }, m.legend.mode, ' · ', `${m.legend.innate}: ${ABILITIES[LEGENDS[id].innate.ability].name}`),
+          // Kept to a line on phones: the details sheet (`more`) spells the innate out; a mouse reads it on hover.
+          isLegend(id) && h('p', { class: 'partner-legend-mode', title: innateText(m, id).text }, m.legend.mode, ' · ', `${m.legend.innate}: ${innateText(m, id).name}`),
           isLegend(id) && eventLine(id, false),
           h('p', { class: 'partner-blurb' }, m.blurbs[id]),
           // Scatterbug's line names the pattern its Vivillon wears here (the device's region).

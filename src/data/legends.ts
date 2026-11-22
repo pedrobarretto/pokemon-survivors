@@ -1014,6 +1014,14 @@ export const LEGENDS = {
   },
 } as const satisfies Record<LegendId, LegendDef>
 
+/**
+ * The legends whose innate does more than its ability's own text says
+ * (`Innate.extra`): each needs its line in i18n `legend.innateExtra`. Beast
+ * Boost's `extra` is all the ability does, and its text says it, so the Ultra
+ * Beasts (typed `Innate`, with `extra` optional) stay out.
+ */
+export type ExtraInnateLegend = { [K in LegendId]: (typeof LEGENDS)[K]['innate'] extends { readonly extra: readonly unknown[] } ? K : never }[LegendId]
+
 export const isLegend = (id: unknown): id is LegendId => LEGEND_IDS.some((l) => l === id)
 
 /** The event a legend is captured in, or null for a regular one. */

@@ -18,6 +18,8 @@ import { moveIcon, sparkleIcon } from '../render/art'
 import { specialIcon } from '../render/specialFx'
 import { formPortraitUrl, portraitUrl } from '../render/sprites'
 import { PATH_FORMS } from '../data/legendPaths'
+import { isLegend } from '../data/legends'
+import { innateText } from './innateText'
 import { t } from '../i18n'
 import { boundLabel, glyphText, printedKeys } from './inputLabels'
 import { h } from './dom'
@@ -146,6 +148,18 @@ const abilityRow = (id: AbilityId, hidden: boolean) =>
       h('div', { class: 'move-desc' }, t().abilities[id]),
     ),
   )
+
+/** A legend's innate, on top of its Abilities: always on, tagged, with what the Legend mode adds to it (`innateText`). */
+const innateRow = (id: PlayableId) => {
+  if (!isLegend(id)) return null
+  const innate = innateText(t(), id)
+  return h(
+    'div',
+    { class: 'move-row ability-row innate-ability' },
+    h('img', { src: abilityIcon(innate.ability), alt: '' }),
+    h('div', { class: 'move-text' }, h('div', { class: 'move-name' }, innate.name, h('span', { class: 'tag tag-innate' }, t().legend.innate)), h('div', { class: 'move-desc' }, innate.text)),
+  )
+}
 
 /**
  * The abilities a family picks from at its first evolution. A family whose
@@ -335,7 +349,7 @@ export const detailsSheet = (opts: SheetOpts) => {
             section(m.title.special, h('span', {}, ...glyphText(boundLabel('special')))),
             specialRow(id),
             section(branchesOf(id).some((b) => b in BRANCH_ABILITIES) ? m.ability.sectionBranch : m.ability.section),
-            h('div', { class: 'move-list' }, ...abilityRows(id)),
+            h('div', { class: 'move-list' }, innateRow(id), ...abilityRows(id)),
             h('p', { class: 'ability-note' }, `${branchNote(id)}${m.ability.note}`),
           ]
         : k === 'moves'
