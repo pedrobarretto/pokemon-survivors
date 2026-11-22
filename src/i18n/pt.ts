@@ -46,6 +46,7 @@ import type { PlayableId } from '../data/hatchlings'
 import type { MegaId } from '../data/megas'
 import type { LegendId } from '../data/legends'
 import type { AbilityId } from '../data/abilities'
+import type { OtherStat } from '../ui/statBars'
 import type { ItemId } from '../data/items'
 import type { CurseId } from '../data/curses'
 import type { TraitId } from '../data/traits'
@@ -239,6 +240,20 @@ export const pt = {
     statsSection: 'Status',
     legendBase: 'início',
     legendFinal: 'evoluído',
+    /** The details sheet's "Outros bônus": stats the bars leave out that the line raises (`otherBonuses` in `ui/statBars.ts`), each given its value in display units. */
+    otherBonuses: 'Outros bônus',
+    otherBonusesNote: 'Além das barras, no último estágio.',
+    otherBonus: {
+      amount: (n: number) => (n === 1 ? '+1 projétil' : `+${n} projéteis`),
+      projectileSpeed: (n: number) => `+${n}% velocidade dos projéteis`,
+      duration: (n: number) => `+${n}% duração`,
+      magnet: (n: number) => `+${n} alcance de coleta`,
+      growth: (n: number) => `+${n}% XP`,
+      greed: (n: number) => `+${n}% ₽`,
+      statusChance: (n: number) => `+${n}% chance de condição`,
+      statusDamage: (n: number) => `+${n}% dano de condição`,
+      specialRecharge: (n: number) => `Especial: -${n / 10} s por nocaute`,
+    } satisfies Record<OtherStat, (n: number) => string>,
     evolution: 'Evolução',
     special: 'Especial',
     moves: 'Golpes',
