@@ -7,6 +7,7 @@ import { LOBBY_TOUR_WORDS } from './lobbyTour'
 import { TUTORIAL_WORDS } from './tutorial'
 import { WELCOME_WORDS } from './welcome'
 import { RADIO_WORDS } from './radio'
+import { CREATOR_WORDS } from './creatorTag'
 import { realmBookFr as realmBook } from './realmStamps/fr'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { TERA_WORDS } from './tera'
@@ -1140,6 +1141,7 @@ export const fr: Messages = {
   tutorial: TUTORIAL_WORDS.fr,
   lobbyTour: LOBBY_TOUR_WORDS.fr,
   radio: RADIO_WORDS.fr,
+  creatorTag: CREATOR_WORDS.fr,
   levelUp: {
     title: (name, level) => `${name} passe au Nv ${level} !`,
     ready: 'PRET!',

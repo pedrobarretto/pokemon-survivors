@@ -1,5 +1,6 @@
 import { accountState, accountsEnabled, onAccountChange, signIn, signOut, syncSave, type AccountState } from '../account'
 import { isAdmin } from '../admin'
+import { fetchMyCreator, ownCreatorLinks } from '../creator'
 import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
 import { MEDALS } from '../data/achievements'
@@ -14,6 +15,7 @@ import { realmIconUrl } from '../render/realmScene'
 import { fetchSupporterStatus, knownOg, knownTier } from '../supporters'
 import { lazyScreen } from './lazy'
 import { boutiqueFresh } from './boutiqueSeen'
+import { creatorLinks, creatorRowLabel, creatorScreen, creatorBadge } from './creatorTag'
 import { slotIconUrl } from '../render/gemArt'
 import { discordScreen } from './discord'
 import { h, later } from './dom'
@@ -96,7 +98,9 @@ type Row = { label: string; run: () => void; icon?: string; wide?: boolean; tone
  * The Trainer Card (from the Trainer chip): avatar, name, @handle, title,
  * runs, wins, Pokédex and shinies, medals and ribbons, the linked Discord,
  * the sync state (a tap syncs), then rows to edit the profile, see it, share
- * the card image, Discord (link it, or the server once linked), Apoiadores
+ * the card image, Discord (link it, or the server once linked), the content
+ * creator's tag (ask for it; once approved, the CREATOR tag and the channels
+ * show on the card, `ui/creatorTag.ts`), Apoiadores
  * (supporters), the Pokémon's look (Leavanny's Boutique on its Visual tab,
  * without the walk), the Livro de Estampas (with a @handle), missions and achievements, the admin's gift desk and sign
  * out. Guests get the same card from the local save, with "Criar conta /
@@ -123,6 +127,8 @@ export const trainerCardScreen = (
   /** When the supporter's first donation came in (asked once, for the Apoiador row). */
   let since: string | null = null
   let askedSince = false
+  /** Whether the account's content creator request was asked for (once per card). */
+  let askedCreator = false
   let closed = false
   /** The row highlighted when a screen opened from the card, highlighted again when it comes back. */
   let resume: number | null = null
@@ -161,6 +167,7 @@ export const trainerCardScreen = (
       ...(handle ? [{ label: m.viewProfile, run: () => openSub((back) => profileScreen(root, input, handle, back)) }] : []),
       share,
       discord,
+      ...(handle ? [{ label: creatorRowLabel(), run: () => openSub((back) => creatorScreen(root, input, back)) }] : []),
       ...(tier ? [{ label: since ? m.supporterSince(tier, monthYear(since)) : t().supporters.badge(tier), icon: supporterBadgeIcon(tier, since), run: () => openSub(opts.supporters) }] : []),
       look,
       ...(handle && opts.book ? [{ label: t().realm.stamps.title, icon: realmIconUrl('book'), run: () => openSub(opts.book!) }] : []),
@@ -178,6 +185,10 @@ export const trainerCardScreen = (
       admin = false
       void isAdmin().then((yes) => yes && !closed && ((admin = true), build(false)))
     }
+    if (s.handle && !askedCreator) {
+      askedCreator = true
+      void fetchMyCreator().then(() => !closed && build(false))
+    }
     if (tier && !askedSince) {
       askedSince = true
       void fetchSupporterStatus().then((status) => status?.since && !closed && ((since = status.since), build(false)))
@@ -192,6 +203,7 @@ export const trainerCardScreen = (
     const name = s.kind === 'signedIn' ? s.name || m.guest : m.guest
     const handle = s.kind === 'signedIn' && s.handle ? `@${s.handle}` : null
     const discord = s.kind === 'signedIn' && s.discord ? s.discord : null
+    const channels = s.kind === 'signedIn' ? ownCreatorLinks() : null
     const stat = (n: number, label: string) => h('span', { class: 'trainer-stat' }, h('b', {}, formatNumber(n)), h('small', {}, label))
     const chips = [
       ...[...MEDALS].reverse().filter((medal) => medals[medal] > 0).map((medal) => [medalIcon(medal), t().achievements.medals[medal], medals[medal]] as const),
@@ -209,12 +221,13 @@ export const trainerCardScreen = (
         h(
           'div',
           { class: 'trainer-id' },
-          h('h3', {}, name),
+          h('h3', {}, name, channels && creatorBadge()),
           handle && h('small', {}, handle),
           discord && h('small', { class: 'trainer-discord' }, h('img', { src: discordIcon(), alt: 'Discord' }), discord),
           titleLine('trainer-title'),
         ),
       ),
+      channels && creatorLinks(channels, 'trainer-channels'),
       h(
         'div',
         { class: 'trainer-stats' },

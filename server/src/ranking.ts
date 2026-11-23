@@ -2,6 +2,7 @@ import { SEASON_ONE } from '../../src/data/seasons'
 import { createHash, randomInt } from 'node:crypto'
 import { challengeProblem, dailyChallenge } from '../../src/game/challenge'
 import { brasiliaDay, type DayKey } from '../../src/game/day'
+import { approvedLinks } from './creators'
 import { dexCounts } from '../../src/game/dex'
 import { parseSaveData } from '../../src/game/meta'
 import { DIFFICULTY_IDS, type Difficulty } from '../../src/game/difficulty'
@@ -646,7 +647,7 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
       const self = viewer === user.id
       // One's own badge shows even when hidden from others, so the profile says what they see.
       const { supporter, og } = badgeOf(user, self)
-      const [records, recent, [counts], [save], ribbons] = await Promise.all([
+      const [records, recent, [counts], [save], ribbons, creators] = await Promise.all([
         sql<RecordRow[]>`
           select distinct on (mode, difficulty) mode, starter, stage, branch, difficulty, survived, outcome, started_at, bag
           from runs where user_id = ${user.id} and finished_at is not null and verified is not false
@@ -665,6 +666,7 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
         // Ribbons as the server sent them: they show before the game claims them.
         sql<{ tier: string; n: number }[]>`
           select payload->'ribbon'->>'tier' as tier, count(*)::int as n from gifts where user_id = ${user.id} and kind = 'ribbon' group by 1`,
+        approvedLinks(sql, [user.id]),
       ])
       const data = parseSaveData(save?.data)
       const dex = dexCounts(data.dex)
@@ -684,6 +686,7 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
         supporter,
         supporterSince: supporter ? (user.supporter_since?.toISOString() ?? null) : null,
         og,
+        creator: creators.get(user.id) ?? null,
         self,
       }
     },

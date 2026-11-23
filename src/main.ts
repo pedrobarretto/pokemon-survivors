@@ -206,6 +206,8 @@ import { realmErrandsCount } from './realm/errandsCount'
 import { lazyScreen, lazyStep } from './ui/lazy'
 import { isCityId, type CityId, type PartyMode } from './net/realm'
 import { trainerCardScreen } from './ui/trainer'
+import { creatorScreen } from './ui/creatorTag'
+import { creatorFaked, devCreator, knownCreator } from './creator'
 import { discordScreen } from './ui/discord'
 import { createHud, type Hud } from './ui/hud'
 import { openGameModes } from './ui/gameModes'
@@ -6231,6 +6233,33 @@ if (import.meta.env.DEV) {
       /** The Caixa do PC over the title; `ps.card()` opens the Trainer Card's share preview. */
       pc: () => (endRun(), setScreen(showPcBox(() => showTitle()))),
       card: (partner: PlayableId = loadSave().partner) => (endRun(), setScreen(sharePreview(ui, input, trainerShare(partner), () => showTitle()))),
+      /**
+       * The content creator's tag (`creator.ts`): `ps.creator('approved')` fakes the account's request in that state
+       * (`none`, `pending`, `rejected`, `revoked`) and the admin desk's queue until a reload (`'off'` asks the API again);
+       * then `('card')` opens the Trainer Card, `('open')` the request sheet, `('desk')` the Painel admin's Criadores tab,
+       * and `ps.realm('local')` walks the in-page Realm wearing the tag (some of its bots are creators too).
+       */
+      creator: (cmd?: string) => {
+        const card = () => trainerCardScreen(ui, input, { supporters: (back) => supportersScreen(ui, input, { play: (id) => void startRun(id), onClose: back }, null), locker: () => showTitle(), book: null }, () => showTitle())
+        switch (cmd) {
+          case 'none':
+          case 'pending':
+          case 'approved':
+          case 'rejected':
+          case 'revoked':
+          case 'off':
+            return devCreator(cmd)
+          case 'card':
+            return (endRun(), setScreen(card()))
+          case 'open':
+            return (endRun(), setScreen(creatorScreen(ui, input, () => showTitle())))
+          case 'desk':
+            if (!creatorFaked()) devCreator('pending')
+            return (endRun(), setScreen(lazyScreen(ui, () => import('./ui/admin'), (m) => m.adminScreen(ui, input, () => showTitle(), 'creators'), () => showTitle())))
+          default:
+            return { request: knownCreator(), usage: "ps.creator('none' | 'pending' | 'approved' | 'rejected' | 'revoked' | 'off' | 'card' | 'open' | 'desk')" }
+        }
+      },
       ...biomeDevTools(() => run?.game),
       /** `ps.terrain('tower', 70, 'desert')` walks you to the nearest tower in a desert cell (any biome without the third argument). */
       terrain: (kind?: SolidKind | 'column' | 'menhir' | 'lake', dy?: number, biome?: BiomeId) => (run ? devTerrain(run.game, kind, dy, biome) : console.warn('ps: start a run first')),

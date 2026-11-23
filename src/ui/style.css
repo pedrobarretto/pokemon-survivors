@@ -33773,3 +33773,146 @@ span.arena-hub-face {
 .result-gems-go {
   margin-left: 4px;
 }
+
+/* ---------------- Content creator's tag (ui/creatorTag.ts) ---------------- */
+
+/* The CREATOR tag beside a verified creator's name: a fill with its own text, the same in either theme. */
+.creator-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 5px 1px;
+  border-radius: 4px;
+  background: #7a3ce0;
+  box-shadow: inset 0 -2px 0 #4e2296;
+  color: #fff;
+  font-family: var(--title);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-shadow: none;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.realm-plate .realm-creator {
+  margin-left: 2px;
+  padding: 1px 3px 0;
+  font-size: 12px;
+}
+
+.creator-links {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.creator-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 6px 10px;
+  border: 2px solid var(--dk-line, #c8d0e0);
+  border-radius: 6px;
+  background: var(--dk-surface-0, #fff);
+  color: var(--dk-ink, #303040);
+  font-size: 18px;
+  text-decoration: none;
+}
+
+.creator-link b {
+  flex: none;
+  font-family: var(--title);
+  font-weight: 400;
+  color: color-mix(in srgb, #6a2cc8 var(--dk-lift, 100%), #fff);
+}
+
+.creator-link.youtube b {
+  color: color-mix(in srgb, #c81e1e var(--dk-lift, 100%), #fff);
+}
+
+.creator-link.kick b {
+  color: color-mix(in srgb, #2a8a10 var(--dk-lift, 100%), #fff);
+}
+
+.creator-link.tiktok b,
+.creator-link.x b,
+.creator-link.site b {
+  color: var(--dk-ink, #181820);
+}
+
+.creator-link.instagram b {
+  color: color-mix(in srgb, #c13584 var(--dk-lift, 100%), #fff);
+}
+
+.creator-link.facebook b,
+.creator-link.bluesky b {
+  color: color-mix(in srgb, #1868d8 var(--dk-lift, 100%), #fff);
+}
+
+.creator-link span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.creator-link i {
+  flex: none;
+  font-style: normal;
+}
+
+.creator-link:hover,
+.creator-link:focus-visible {
+  border-color: #7a3ce0;
+}
+
+.trainer-channels {
+  margin-top: 8px;
+}
+
+.realm-channels .creator-link {
+  font-size: 17px;
+}
+
+.creator-sheet {
+  width: min(440px, calc(100vw - 24px));
+}
+
+.creator-body {
+  display: grid;
+  gap: 8px;
+  margin: 6px 0;
+}
+
+.creator-form {
+  display: grid;
+  gap: 6px;
+}
+
+.creator-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--dk-wash-blue, #e8f0ff);
+  font-size: 18px;
+  line-height: 1.15;
+}
+
+.creator-status .creator-tag {
+  margin-left: 0;
+}
+
+.creator-status.approved {
+  background: var(--dk-wash-purple, #f0e8ff);
+}
+
+.creator-status.rejected,
+.creator-status.revoked {
+  background: var(--dk-wash-red, #ffe8e8);
+}

@@ -7,6 +7,7 @@ import { LOBBY_TOUR_WORDS } from './lobbyTour'
 import { TUTORIAL_WORDS } from './tutorial'
 import { WELCOME_WORDS } from './welcome'
 import { RADIO_WORDS } from './radio'
+import { CREATOR_WORDS } from './creatorTag'
 import type { GameModeId } from '../data/gameModes'
 import { realmBookPt as realmBook } from './realmStamps/pt'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
@@ -1355,6 +1356,7 @@ export const pt = {
   tutorial: TUTORIAL_WORDS.pt,
   lobbyTour: LOBBY_TOUR_WORDS.pt,
   radio: RADIO_WORDS.pt,
+  creatorTag: CREATOR_WORDS.pt,
   levelUp: {
     title: (name: string, level: number) => `${name} subiu para o Nv ${level}!`,
     ready: 'PRONTO!',

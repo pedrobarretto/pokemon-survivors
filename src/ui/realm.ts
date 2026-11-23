@@ -63,6 +63,7 @@ import { openRealmFriends, roomName } from './realmFriends'
 import { dialogue, type Speaker } from './dialogue'
 import { h, later } from './dom'
 import { supporterBadgeIcon } from './profile'
+import { creatorLinks, creatorBadge } from './creatorTag'
 import type { Screen } from './screens'
 import { toast } from './toasts'
 import { uiZoom } from './uiScale'
@@ -690,6 +691,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
         { class: plate ? 'realm-plate plated' : 'realm-plate', style: plate ? `--plate-fill:${plate.fill};--plate-edge:${plate.edge};--plate-light:${plate.light}` : '' },
         ...(tier ? [h('img', { class: 'realm-badge', src: supporterBadgeIcon(tier), alt: '' })] : []),
         h('b', {}, `@${av.handle}`),
+        av.creator ? creatorBadge('realm-creator') : null,
         titleChip(look.title),
       )
       return el
@@ -1051,11 +1053,14 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       const self = tr.av.id === you
       const n = tr.av.stamps ?? 0
       const stampsLine = h('p', { class: 'realm-card-stamps' }, h('img', { src: realmIconUrl('book'), alt: '' }), m().stamps.count(n))
+      // A verified creator's channels, as the API vouched for them: where to go and watch.
+      const channels = tr.av.creator ? creatorLinks(tr.av.creator, 'realm-channels') : null
       card.dataset.id = String(tr.av.id)
       if (self) {
         card.replaceChildren(
           h('div', { class: 'realm-card-head' }, tr.plate.cloneNode(true)),
           stampsLine,
+          ...(channels ? [channels] : []),
           h('button', { class: 'box', type: 'button', onclick: () => openBook() }, m().stamps.title),
           h('button', { class: 'realm-card-close', type: 'button', 'aria-label': m().trainer.close, onclick: () => card.classList.add('hidden') }, '×'),
         )
@@ -1066,6 +1071,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
       card.replaceChildren(
         h('div', { class: 'realm-card-head' }, tr.plate.cloneNode(true)),
         stampsLine,
+        ...(channels ? [channels] : []),
         ...(inParty || !leading
           ? []
           : [

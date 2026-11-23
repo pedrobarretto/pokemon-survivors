@@ -339,6 +339,7 @@ export const avatarOf = (t: Trainer): Avatar => ({
   look: t.identity.look,
   supporter: t.identity.supporter,
   stamps: t.identity.stamps,
+  creator: t.identity.creator,
   x: t.x,
   y: t.y,
   facing: t.facing,
