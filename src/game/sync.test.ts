@@ -7,6 +7,8 @@ import { buyFromVitrine, buyKecleonEgg, buyStyle, claimGift, investInShop, vitri
 import { NO_PATHS } from './legendPaths'
 import { applyPush, behind, mergeSaves, pushBuild } from './sync'
 import { buyQuick, buySlot, useQuick } from './incubator'
+import { hatchEgg } from './eggs'
+import { createRng } from '../engine/rng'
 
 const save = (patch: Partial<Save>): Save => ({ ...EMPTY_SAVE, ...patch })
 
@@ -224,6 +226,20 @@ describe('applyPush', () => {
     const again = applyPush(first, { save: stripped, base: 5, build: 1000 })
     expect(again).toMatchObject({ revision: 6, build: 2000, merged: true })
     expect(again.save.legends).toEqual(current.legends)
+  })
+
+  it('keeps an egg an older build hatched on top of the latest revision hatched, push after push', () => {
+    const incubating = { ...current, eggs: [{ tier: 'rare', steps: 4000 }, { tier: 'common', steps: 2000 }], eggPity: { rare: 5 } } satisfies Save
+    const device = hatchEgg(parseSaveData(JSON.parse(JSON.stringify({ ...incubating, legends: stripped.legends, paths: undefined }))), 0, createRng(1))
+    expect(device).not.toBeNull()
+    const hatched = device?.save ?? stripped
+    const first = applyPush({ save: incubating, revision: 4, build: 2000 }, { save: hatched, base: 4, build: null })
+    expect(first).toMatchObject({ revision: 5, merged: true })
+    expect(first.save.eggs).toEqual([{ tier: 'common', steps: 2000 }])
+    expect(first.save.eggPity).toEqual(hatched.eggPity)
+    expect(first.save.legends).toEqual(current.legends)
+    // The old build takes the stored save back and pushes on top of it again.
+    expect(applyPush(first, { save: { ...first.save, paths: NO_PATHS }, base: 5, build: null }).save.eggs).toEqual([{ tier: 'common', steps: 2000 }])
   })
 
   it('merges a push from a game too old to send its build once a build stored the save', () => {
