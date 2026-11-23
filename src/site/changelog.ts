@@ -56,11 +56,11 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         zh: '對戰結束畫面重新設計：寶可夢、時間、等級、擊倒數與 ₽ 放在最上方，新消息集中在一行，其餘收進「詳細資料」。按鈕永遠看得到，分享卡片也更清晰，你的寶可夢成為主角。',
       },
       {
-        pt: 'O Patreon agora aparece no lobby: em Na Praça, logo abaixo do Hall da Fama, e na janela Comunidade, com as gemas que ele traz todo mês.',
-        en: 'Patreon now shows in the lobby: At the Plaza, right under the Hall of Fame, and in the Community sheet, with the gems it brings every month.',
-        es: 'El Patreon ahora aparece en el lobby: En la Plaza, justo debajo del Salón de la Fama, y en la ventana Comunidad, con las gemas que trae cada mes.',
-        fr: 'Patreon apparaît maintenant dans le lobby : sur la Place, juste sous le Panthéon, et dans la fenêtre Communauté, avec les gemmes qu’il apporte chaque mois.',
-        zh: 'Patreon 現在出現在大廳：在「廣場上」名人堂正下方，以及「社群」視窗裡，並標示每月帶來的寶石。',
+        pt: 'O Patreon agora aparece no lobby: em Na Praça, logo abaixo do Hall da Fama, e na janela Comunidade, com as gemas que ele traz todo mês. As gemas chegam a cada cobrança, no seu dia de cobrança do Patreon, e a Loja mostra a última e a próxima.',
+        en: 'Patreon now shows in the lobby: At the Plaza, right under the Hall of Fame, and in the Community sheet, with the gems it brings every month. They arrive with each charge, on your Patreon billing day, and the Shop shows your last and next one.',
+        es: 'El Patreon ahora aparece en el lobby: En la Plaza, justo debajo del Salón de la Fama, y en la ventana Comunidad, con las gemas que trae cada mes. Llegan con cada cobro, en tu día de cobro de Patreon, y la Tienda muestra el último y el próximo.',
+        fr: 'Patreon apparaît maintenant dans le lobby : sur la Place, juste sous le Panthéon, et dans la fenêtre Communauté, avec les gemmes qu’il apporte chaque mois. Elles arrivent à chaque prélèvement, le jour où Patreon te prélève, et la Boutique montre le dernier et le prochain.',
+        zh: 'Patreon 現在出現在大廳：在「廣場上」名人堂正下方，以及「社群」視窗裡，並標示每月帶來的寶石。寶石會在每次 Patreon 扣款日送達，商店也會顯示上次與下次扣款。',
       },
       {
         pt: 'Faz lives ou vídeos do jogo? Peça a tag CREATOR no Cartão de Treinador: aprovada pela equipe, ela aparece no seu perfil e sobre o seu treinador no Poké Realm, com o link do seu canal.',

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { DIAMOND_POLL, POLL, SUPPORTER } from '../data/supporters'
 import { EMPTY_SAVE, type Save } from './meta'
-import { badgesOf, canWalkWith, donationPoints, effectiveTier, hallOf, hallTier, mayVote, newCode, NO_STANDING, ogTier, parseCode, parseHidden, parseWall, pledgeTier, pollToVote, supporterCount, tiersReached, withVote, type SupporterStatus } from './supporters'
+import { badgesOf, canWalkWith, donationPoints, effectiveTier, hallOf, hallTier, mayVote, newCode, nextCharge, NO_STANDING, ogTier, parseCode, parseHidden, parseWall, pledgeTier, pollToVote, supporterCount, tiersReached, withVote, type SupporterStatus } from './supporters'
 
 describe('supporter tiers', () => {
   it('counts reais and dollars on one scale', () => {
@@ -146,7 +146,7 @@ describe('the wall', () => {
 })
 
 describe('polls', () => {
-  const status = (tier: SupporterStatus['tier']): SupporterStatus => ({ tier, since: null, public: true, og: false, vote: null, diamondVote: null, patreon: null, pledge: null })
+  const status = (tier: SupporterStatus['tier']): SupporterStatus => ({ tier, since: null, public: true, og: false, vote: null, diamondVote: null, patreon: null, pledge: null, charged: null })
   const pick = POLL.options[0].id
   const diamondPick = DIAMOND_POLL.options[0].id
 
@@ -168,5 +168,15 @@ describe('polls', () => {
 
   it('ignores a choice outside the poll', () => {
     expect(withVote(status('diamond'), 'diamond', pick).diamondVote).toBe(null)
+  })
+})
+
+describe('nextCharge', () => {
+  it('charges again on the same day a month later', () => {
+    expect(nextCharge('2026-10-26T18:57:46.000Z')).toBe('2026-11-26')
+    expect(nextCharge('2026-12-05T10:00:00.000Z')).toBe('2027-01-05')
+  })
+  it('holds a late day to the shorter month\'s last', () => {
+    expect(nextCharge('2027-01-31T12:00:00.000Z')).toBe('2027-02-28')
   })
 })

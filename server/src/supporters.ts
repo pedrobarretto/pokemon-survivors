@@ -238,12 +238,13 @@ export const supporterStore = (sql: Sql, hooks: { onTierChange?: (userId: string
       return { ok: true, tier: out.tier }
     },
 
-    /** The player's own standing, with their vote in each poll and whether they linked a Patreon. */
+    /** The player's own standing, with their vote in each poll, whether they linked a Patreon and when its last paid charge landed. */
     mine: async (userId: string): Promise<SupporterStatus> => {
-      const [row] = await sql<(StandingRow & { since: Date | null; public: boolean; vote: string | null; diamond_vote: string | null; patreon: boolean })[]>`
+      const [row] = await sql<(StandingRow & { since: Date | null; public: boolean; vote: string | null; diamond_vote: string | null; patreon: boolean; charged: Date | null })[]>`
         select supporter_points, og_tier, patreon_tier, patreon_best, supporter_since as since, supporter_public as public, patreon_id is not null as patreon,
           (select choice from poll_votes where poll = ${POLLS.supporters.id} and user_id = ${userId}) as vote,
-          (select choice from poll_votes where poll = ${POLLS.diamond.id} and user_id = ${userId}) as diamond_vote
+          (select choice from poll_votes where poll = ${POLLS.diamond.id} and user_id = ${userId}) as diamond_vote,
+          (select max(paid_at) from donations d where d.provider = 'patreon' and d.patreon_id = users.patreon_id) as charged
         from users where id = ${userId}`
       return {
         tier: row ? tierOfRow(row) : null,
@@ -254,6 +255,7 @@ export const supporterStore = (sql: Sql, hooks: { onTierChange?: (userId: string
         diamondVote: pollOptionIds('diamond').find((id) => id === row?.diamond_vote) ?? null,
         patreon: row?.patreon ?? false,
         pledge: parseTier(row?.patreon_tier),
+        charged: row?.charged?.toISOString() ?? null,
       }
     },
 

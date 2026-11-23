@@ -202,7 +202,9 @@ export type DonationStatus = { paid: boolean; handle: string | null; code: strin
  * since when, whether they show it, whether they're an OG, their vote in each
  * poll, whether they linked a Patreon (null when the API has no Patreon,
  * or is older than it) and the tier of the linked Patreon's active pledge
- * (`pledge`, null without one: what brings gems each month, `GEM_PATREON`).
+ * (`pledge`, null without one: what brings gems each month, `GEM_PATREON`)
+ * and when its last paid charge landed (`charged`, null for none): gems come
+ * with each monthly charge, on the patron's own billing day.
  */
 export type SupporterStatus = {
   tier: SupporterTier | null
@@ -213,6 +215,7 @@ export type SupporterStatus = {
   diamondVote: PollOption<'diamond'> | null
   patreon: boolean | null
   pledge: SupporterTier | null
+  charged: string | null
 }
 
 /**
@@ -260,8 +263,22 @@ export const parseSupporterStatus = (v: unknown): SupporterStatus | null =>
         diamondVote: isPollOptionOf('diamond', v.diamondVote) ? v.diamondVote : null,
         patreon: typeof v.patreon === 'boolean' ? v.patreon : null,
         pledge: parseTier(v.pledge),
+        charged: isoOrNull(v.charged),
       }
     : null
+
+/**
+ * When a Patreon pledge charged on `charged` (ISO) should charge next: the
+ * same day a month later, Patreon billing each patron on the day they joined,
+ * held to the month's last day (Jan 31 → Feb 28). Its date, `YYYY-MM-DD` in UTC.
+ */
+export const nextCharge = (charged: string): string => {
+  const d = new Date(charged)
+  const y = d.getUTCFullYear()
+  const m = d.getUTCMonth() + 1
+  const last = new Date(Date.UTC(y, m + 1, 0)).getUTCDate()
+  return new Date(Date.UTC(y, m, Math.min(d.getUTCDate(), last))).toISOString().slice(0, 10)
+}
 
 /** The wall from the API: its valid entries. */
 export const parseWall = (v: unknown): WallEntry[] =>
