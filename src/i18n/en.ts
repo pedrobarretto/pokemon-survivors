@@ -576,6 +576,7 @@ export const en: Messages = {
     scorbunnySuit: 'Suited Scorbunny',
     rayquazaCelestial: 'Celestial Rayquaza',
     groudonObsidian: 'Obsidian Groudon',
+    ponytaPink: 'Pink Ponyta',
     bulbasaurSakura: 'Sakura Bulbasaur',
     bulbasaurAutumn: 'Autumn Bulbasaur',
     bulbasaurWinter: 'Winter Bulbasaur',

@@ -34,6 +34,7 @@ describe('the skins catalog', () => {
     expect(cosmeticPrice('gengarSuit')).toBe(750)
     expect(cosmeticPrice('bulbasaurAutumn')).toBe(550)
     expect(cosmeticPrice('phantumpWinter')).toBe(400)
+    expect(cosmeticPrice('ponytaPink')).toBeNull()
     expect(SKIN_BUNDLES.bulbasaurSeasons.items).toEqual(['bulbasaurSakura', 'bulbasaurAutumn', 'bulbasaurWinter'])
     expect(SKIN_BUNDLES.shroomishSeasons.price).toBe(900)
     expect(SKIN_BUNDLES.winterLaunch.items).toHaveLength(9)

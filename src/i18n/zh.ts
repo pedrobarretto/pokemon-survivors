@@ -576,6 +576,7 @@ export const zh: Messages = {
     scorbunnySuit: 'Scorbunny 西裝',
     rayquazaCelestial: 'Rayquaza 天穹',
     groudonObsidian: 'Groudon 黑曜石',
+    ponytaPink: 'Ponyta 粉紅',
     bulbasaurSakura: 'Bulbasaur 櫻花',
     bulbasaurAutumn: 'Bulbasaur 秋季',
     bulbasaurWinter: 'Bulbasaur 冬季',
