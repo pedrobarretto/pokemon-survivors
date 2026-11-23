@@ -31006,6 +31006,244 @@ span.arena-hub-face {
   color: #2e7a2e;
 }
 
+/* The Safári's guide (`realm/games/safariGuide.ts`): the board's frame, its chapters as a row of chips, clips of the game over short lines. */
+.sz-guide-chip {
+  position: relative;
+}
+
+.sz-guide-chip .arc-tag {
+  position: absolute;
+  top: -10px;
+  right: -8px;
+  padding: 1px 5px 2px;
+  font-size: 14px;
+}
+
+.sz-board.sz-guide .sz-board-frame > .mg-title {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  min-width: 0;
+}
+
+.szg-chapters {
+  display: flex;
+  gap: 5px;
+  margin-top: 6px;
+}
+
+.szg-chapters button {
+  flex: 1 1 0;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  max-width: 48px;
+  min-height: 38px;
+  padding: 0 0 2px;
+  color: var(--kit-ink);
+  font-family: var(--kit-title);
+  font-size: 20px;
+  line-height: 1;
+  background: var(--kit-tag);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 10px;
+}
+
+.szg-chapters button.sz-on {
+  color: #fff;
+  background: var(--mode);
+}
+
+.szg-body {
+  gap: 8px;
+}
+
+.szg-body p {
+  margin: 0;
+}
+
+.szg-body .szg-aside {
+  color: var(--kit-ink-2);
+  font-size: 16px;
+}
+
+.szg-body .szg-now {
+  align-self: flex-start;
+  padding: 3px 9px 4px;
+  background: var(--dk-wash-gold, #fff8d8);
+  border-radius: 8px;
+}
+
+/* The clips are the game's own pixels, blown up without smoothing; side by side when a chapter has more than one. */
+.szg-clips {
+  display: grid;
+  gap: 6px;
+  flex: none;
+}
+
+.szg-clips-2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.szg-clips-3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.szg-clip {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 34vh;
+  object-fit: contain;
+  image-rendering: pixelated;
+  background: var(--kit-tinta);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 10px;
+}
+
+.szg-clips-1 .szg-clip {
+  max-height: 30vh;
+}
+
+.szg-table {
+  flex: none;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 3px;
+  font-size: 17px;
+}
+
+.szg-table.szg-narrow {
+  width: auto;
+  min-width: 60%;
+}
+
+.szg-table th,
+.szg-table td {
+  padding: 4px 8px;
+  text-align: right;
+  white-space: nowrap;
+  background: var(--kit-tag);
+}
+
+.szg-table thead th {
+  padding-top: 0;
+  padding-bottom: 0;
+  white-space: normal;
+  vertical-align: bottom;
+  font-family: var(--kit-title);
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--kit-ink-2);
+  background: none;
+}
+
+.szg-table th:first-child,
+.szg-table td:first-child {
+  text-align: left;
+  border-radius: 8px 0 0 8px;
+}
+
+.szg-table tbody th {
+  font-weight: 400;
+}
+
+.szg-table td:last-child {
+  border-radius: 0 8px 8px 0;
+}
+
+/* The plans' names wrap: their row is the table's longest. */
+.szg-plans tbody th {
+  white-space: normal;
+}
+
+.szg-best {
+  color: #2e7a2e;
+  font-family: var(--kit-title);
+  font-weight: 400;
+}
+
+.szg-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.szg-label img {
+  width: 18px;
+  height: 18px;
+  image-rendering: pixelated;
+}
+
+.szg-body .szg-board {
+  align-self: flex-start;
+}
+
+.szg-steps {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.szg-steps small {
+  color: var(--kit-ink-2);
+  font-size: 16px;
+}
+
+/* A phone held sideways: the title and the steps share a row, the kicker steps aside, the footer slims down. */
+@media (max-height: 520px) {
+  .sz-board.sz-guide {
+    padding-top: 10px;
+    padding-bottom: 6px;
+  }
+  .sz-board.sz-guide .sz-board-frame {
+    gap: 6px;
+    padding: 8px 12px 10px;
+  }
+  .sz-board.sz-guide .sz-board-frame > .mg-title {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 12px;
+  }
+  .sz-board.sz-guide .mg-kicker {
+    display: none;
+  }
+  .sz-board.sz-guide .szg-chapters {
+    flex: 1 1 280px;
+    margin: 0;
+  }
+  .szg-chapters button {
+    min-height: 32px;
+    font-size: 17px;
+  }
+  .szg-steps .arc-btn {
+    min-width: 100px;
+    min-height: 40px;
+    padding: 2px 14px 8px;
+    font-size: 22px;
+  }
+  .szg-clip,
+  .szg-clips-1 .szg-clip {
+    max-height: 42vh;
+  }
+}
+
+@media (max-width: 420px) {
+  .szg-table {
+    font-size: 16px;
+  }
+  .szg-table th,
+  .szg-table td {
+    padding: 3px 4px;
+  }
+  .szg-table thead th {
+    font-size: 14px;
+  }
+}
+
 /* The Exclusivos tab: a habitat's count rides its heading; this week's habitat stands out. */
 .sz-only-count {
   margin-left: 8px;

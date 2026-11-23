@@ -25,6 +25,7 @@ import { CONTEST, SAFARI, bestCatch, sessionPrice, shareOf, type SafariAction, t
 import { ICONS, THEMES, drawGrassWipe, silhouetteUrl } from './safariArt'
 import { bandPx, battleUi, createBattle, layoutBattle, type Battle, type BattleHost } from './safariBattle'
 import { createField, type Field } from './safariField'
+import { GUIDE_CHAPTERS, guideFrame, guideSeen, markGuideSeen, type GuideChapter } from './safariGuide'
 import { buildWorld } from './safariWorld'
 
 /**
@@ -101,6 +102,10 @@ const start = (ctx: SoloCtx): GameRun => {
   // The board covers the whole stage, not just the canvas, and while it's up its ✕ is the only one: the page's steps aside.
   ctx.stage.append(hud, board)
   const screenEl = ctx.stage.closest('.minigame-screen')
+  // The guide's chip rides the page's header, beside the close, wearing NOVO until this device first opens it.
+  const guideTag = guideSeen() ? false : h('em', { class: 'arc-tag new' }, m().fresh)
+  const guideChip = h('button', { class: 'minigame-board arc-chip sz-guide-chip', type: 'button', onclick: () => openGuide() }, m().guide.open, guideTag)
+  screenEl?.querySelector('.minigame-close')?.before(guideChip)
 
   let phase: Phase = 'load'
   let phaseT = 0
@@ -131,6 +136,8 @@ const start = (ctx: SoloCtx): GameRun => {
   let lastActed: SafariActed | null = null
   let sneakOn = false
   let boardTab: BoardTab = 'seen'
+  /** The guide's chapter while the board shows the guide, null while it shows the board's tabs. */
+  let guideAt: GuideChapter | null = null
   let dexHabitat: SafariHabitat = 'meadow'
   /** The time of day the map is lit for: the open session's, else this device's hour. */
   let daypart: SafariDaypart = localDaypart()
@@ -582,6 +589,7 @@ const start = (ctx: SoloCtx): GameRun => {
   }
 
   const renderBoard = () => {
+    if (guideAt) return renderGuide(guideAt)
     if (!view) return
     const w = m()
     const at = session?.habitat ?? view.habitat
@@ -612,9 +620,29 @@ const start = (ctx: SoloCtx): GameRun => {
 
   const openBoard = (tab: BoardTab = boardTab) => {
     if (!view) return
+    guideAt = null
+    board.classList.remove('sz-guide')
     boardTab = tab
     dexHabitat = session?.habitat ?? view.habitat
     renderBoard()
+    board.classList.remove('hidden')
+    screenEl?.classList.add('sz-board-up')
+    playSfx('select')
+  }
+
+  const renderGuide = (chapter: GuideChapter) => {
+    const sureLeft = view ? (view.sure ? 0 : Math.max(0, SAFARI.guarantee - view.dry)) : null
+    const ctx = { habitat: session?.habitat ?? view?.habitat ?? habitat, sureLeft, showBoard: () => openBoard('seen') }
+    board.replaceChildren(guideFrame(chapter, ctx, (next) => ((guideAt = next), playSfx('select'), renderGuide(next)), closeBoard))
+  }
+
+  /** Opens the guide at `chapter`, by default the one for where the player is: the booth, the grass or a battle. */
+  const openGuide = (chapter: GuideChapter = phase === 'battle' ? 'plan' : phase === 'gate' || phase === 'walk' || phase === 'alert' || phase === 'wipeIn' || phase === 'wipeOut' ? 'meet' : 'session') => {
+    guideAt = chapter
+    markGuideSeen()
+    guideChip.querySelector('.arc-tag')?.remove()
+    board.classList.add('sz-guide')
+    renderGuide(chapter)
     board.classList.remove('hidden')
     screenEl?.classList.add('sz-board-up')
     playSfx('select')
@@ -626,6 +654,7 @@ const start = (ctx: SoloCtx): GameRun => {
   }
 
   const closeBoard = () => {
+    guideAt = null
     board.classList.add('hidden')
     screenEl?.classList.remove('sz-board-up')
     playSfx('select')
@@ -815,6 +844,12 @@ const start = (ctx: SoloCtx): GameRun => {
     const k = canvasK
     if (boardOpen()) {
       if (input.pressed('Enter') || input.pressed('Space') || input.pressed('KeyE')) closeBoard()
+      else if (guideAt && (input.pressed('ArrowRight') || input.pressed('ArrowLeft'))) {
+        const at = GUIDE_CHAPTERS.indexOf(guideAt) + (input.pressed('ArrowRight') ? 1 : -1)
+        guideAt = GUIDE_CHAPTERS[(at + GUIDE_CHAPTERS.length) % GUIDE_CHAPTERS.length]!
+        playSfx('move', 80)
+        renderGuide(guideAt)
+      }
       field?.step(dt, input, false, k)
       return
     }
@@ -980,6 +1015,7 @@ const start = (ctx: SoloCtx): GameRun => {
       disposed = true
       hud.remove()
       board.remove()
+      guideChip.remove()
       screenEl?.classList.remove('sz-board-up')
       field?.release()
       battle?.release()
