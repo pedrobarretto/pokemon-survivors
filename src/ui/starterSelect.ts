@@ -11,7 +11,7 @@ import { incubatorSlots, isReady } from '../game/eggs'
 import { eggLegend, giftLegend, isRoamer, isLegend, isUltraLegend, LEGEND_IDS, legendEvent, legendFestival, legendPath, LEGENDS, REGULAR_LEGENDS, SWORDS, type LegendId, type SwordId } from '../data/legends'
 import { ULTRA_BEASTS } from '../data/ultraBeasts'
 import { SWORD_DUELS } from '../data/quests'
-import { ultraCaptured } from '../game/ultraGifts'
+import { ULTRA_SHINY, ultraCaptured, ultraShinies } from '../game/ultraGifts'
 import { beastBallIcon } from '../render/ultraArt'
 import { rushOpen } from '../game/rush'
 import { openRushSheet, rushBanner, rushPool } from './rush'
@@ -566,6 +566,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
             giftLegend(id) && h('p', { class: 'partner-blurb locked-blurb' }, rich(m.legend.where.ultraGift)),
             eggLegend(id) && h('p', { class: 'partner-blurb locked-blurb' }, rich(m.legend.where.egg)),
             giftLegend(id) && h('p', { class: 'partner-legend-wins' }, m.ultra.progress(ultraCaptured(save), ULTRA_BEASTS.length)),
+            giftLegend(id) && h('p', { class: 'partner-legend-wins' }, m.ultra.shiny.progress(Math.min(ultraShinies(save), ULTRA_SHINY.need), ULTRA_SHINY.need)),
             id === weekBeast && h('p', { class: 'partner-legend-event' }, h('img', { class: 'ultra-ball-icon', src: beastBallIcon(), alt: '' }), h('b', {}, m.ultra.week.title)),
             eventLine(id, true),
           ),
@@ -624,6 +625,8 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
           // Kept to a line on phones: the details sheet (`more`) spells the innate out; a mouse reads it on hover.
           isLegend(id) && h('p', { class: 'partner-legend-mode', title: innateText(m, id).text }, m.legend.mode, ' · ', `${m.legend.innate}: ${innateText(m, id).name}`),
           isLegend(id) && eventLine(id, false),
+          // Poipole's shiny comes from the beasts' shinies (`game/ultraGifts.ts`): the count until it's owned.
+          isLegend(id) && giftLegend(id) && !(id in save.shinyStarters) && h('p', { class: 'partner-legend-wins' }, m.ultra.shiny.progress(Math.min(ultraShinies(save), ULTRA_SHINY.need), ULTRA_SHINY.need)),
           h('p', { class: 'partner-blurb' }, m.blurbs[id]),
           // Scatterbug's line names the pattern its Vivillon wears here (the device's region).
           id === 'scatterbug' && h('p', { class: 'partner-blurb' }, h('b', {}, m.gaHook.vivillon.pattern(VIVILLON_PATTERNS[devicePattern()].name)), ' · ', m.gaHook.vivillon.why),

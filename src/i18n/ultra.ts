@@ -34,6 +34,8 @@ type UltraWords = {
     /** A beast caught in its Beast Ball, and the last one (Poipole waits in the gift box). */
     caught: (name: string) => string
     allCaught: string
+    /** Poipole's shiny hunt: its card's line, a shiny beast's step toward it in the capture toast, the toast when it's due, and its gift's line and reason. */
+    shiny: { progress: (n: number, of: number) => string; step: (n: number, of: number) => string; done: string; gift: string; reason: (n: number) => string }
   }
 }
 
@@ -190,6 +192,13 @@ const pt: UltraWords = {
     progress: (n, of) => `Ultracriaturas capturadas: ${n}/${of}`,
     caught: (name) => `*${name}* capturado numa *Beast Ball*! Jogável no _Modo Lendário_.`,
     allCaught: 'Todas as Ultracriaturas capturadas! *Poipole* espera na caixa de presentes.',
+    shiny: {
+      progress: (n, of) => `Ultracriaturas shiny: ${n}/${of} para o Poipole shiny`,
+      step: (n, of) => `+1 rumo ao *Poipole* _shiny_ (${n}/${of})`,
+      done: '*Poipole* _shiny_ espera na caixa de presentes!',
+      gift: 'O *Poipole* _shiny_ chegou para você! Escolha Shiny na seleção do _Modo Lendário_.',
+      reason: (n) => `Por capturar ${n} Ultracriaturas shiny`,
+    },
   },
 }
 
@@ -344,6 +353,13 @@ const en: UltraWords = {
     progress: (n, of) => `Ultra Beasts captured: ${n}/${of}`,
     caught: (name) => `*${name}* caught in a *Beast Ball*! Playable in _Legend mode_.`,
     allCaught: 'Every Ultra Beast captured! *Poipole* is waiting in the gift box.',
+    shiny: {
+      progress: (n, of) => `Shiny Ultra Beasts: ${n}/${of} for a shiny Poipole`,
+      step: (n, of) => `+1 toward a _shiny_ *Poipole* (${n}/${of})`,
+      done: 'A _shiny_ *Poipole* is waiting in the gift box!',
+      gift: 'A _shiny_ *Poipole* came for you! Pick Shiny in the _Legend Mode_ select.',
+      reason: (n) => `For capturing ${n} shiny Ultra Beasts`,
+    },
   },
 }
 
@@ -498,6 +514,13 @@ const es: UltraWords = {
     progress: (n, of) => `Ultraentes capturados: ${n}/${of}`,
     caught: (name) => `¡*${name}* atrapado en una *Beast Ball*! Jugable en el _Modo Legendario_.`,
     allCaught: '¡Todos los Ultraentes capturados! *Poipole* te espera en la caja de regalos.',
+    shiny: {
+      progress: (n, of) => `Ultraentes shiny: ${n}/${of} para el Poipole shiny`,
+      step: (n, of) => `+1 hacia el *Poipole* _shiny_ (${n}/${of})`,
+      done: '¡El *Poipole* _shiny_ te espera en la caja de regalos!',
+      gift: '¡El *Poipole* _shiny_ llegó para ti! Elige Shiny en la selección del _Modo Legendario_.',
+      reason: (n) => `Por capturar ${n} Ultraentes shiny`,
+    },
   },
 }
 
@@ -652,6 +675,13 @@ const fr: UltraWords = {
     progress: (n, of) => `Ultra-Chimères capturées : ${n}/${of}`,
     caught: (name) => `*${name}* capturé dans une *Beast Ball* ! Jouable en _mode Légende_.`,
     allCaught: 'Toutes les Ultra-Chimères capturées ! *Poipole* t’attend dans la boîte à cadeaux.',
+    shiny: {
+      progress: (n, of) => `Ultra-Chimères shiny : ${n}/${of} pour le Poipole shiny`,
+      step: (n, of) => `+1 vers le *Poipole* _shiny_ (${n}/${of})`,
+      done: 'Le *Poipole* _shiny_ t’attend dans la boîte à cadeaux !',
+      gift: 'Le *Poipole* _shiny_ est arrivé pour toi ! Choisis Shiny dans la sélection du _Mode Légendaire_.',
+      reason: (n) => `Pour avoir capturé ${n} Ultra-Chimères shiny`,
+    },
   },
 }
 
@@ -806,6 +836,13 @@ const zh: UltraWords = {
     progress: (n, of) => `已收服的究極異獸：${n}/${of}`,
     caught: (name) => `用*Beast Ball*收服了*${name}*！可在_傳說模式_中使用。`,
     allCaught: '收服了所有究極異獸！*Poipole*正在禮物箱裡等你。',
+    shiny: {
+      progress: (n, of) => `異色究極異獸：${n}/${of}，集滿可得異色 Poipole`,
+      step: (n, of) => `離異色*Poipole*更近一步（${n}/${of}）`,
+      done: '異色*Poipole*正在禮物箱裡等你！',
+      gift: '異色*Poipole*來找你了！在_傳說模式_的選擇畫面選「異色」即可。',
+      reason: (n) => `收服了 ${n} 隻異色究極異獸`,
+    },
   },
 }
 

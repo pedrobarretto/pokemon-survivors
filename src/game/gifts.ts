@@ -22,6 +22,7 @@ import { isRecord, wholeNumber } from './parse'
 import { mergeRibbons, parseRibbon, type Ribbon } from './ribbons'
 import { isSupporterTier, type SupporterTier } from './supporters'
 import { grantShinyPick } from './shinyPicks'
+import { unlockShinyStarter } from './shinyStarters'
 import { equipStyle, grantStyle, parseStyle, type StyleSave } from './style'
 import { grantShadow, reshadow } from './shadow'
 
@@ -54,8 +55,8 @@ export type GiftContent =
   | { kind: 'companion'; id: SpecialCompanionId }
   /** `count` of a Bag item (`data/shop.ts`), straight into the Bag. */
   | { kind: 'bag'; item: BagItem; count: number }
-  /** A legend captured for the Legend mode (a festival's last prize, Cresselia). */
-  | { kind: 'legend'; legend: LegendId }
+  /** A legend captured for the Legend mode (a festival's last prize, Cresselia); `shiny`, its shiny unlocked with it (Poipole's, for three shiny Ultra Beasts). */
+  | { kind: 'legend'; legend: LegendId; shiny?: true }
   /** An evolution item owned for good (`data/shop.ts`), found outside the shop (a stone dug up at the mine). One already owned pays `EVO_ITEM_REPEAT`. */
   | { kind: 'evoItem'; item: EvoItemId }
   /** A Shadow Pokémon (`game/shadow.ts`), from the Rocket Game Corner's counter: a family not owned yet hatches too, with its scene. A Shadow owned already changes nothing. */
@@ -190,7 +191,7 @@ export const parseGiftContent = (v: unknown): GiftContent | null => {
       return isOneOf(v.item, BAG_ITEM_IDS) && count > 0 ? { kind: 'bag', item: v.item, count } : null
     }
     case 'legend':
-      return isLegend(v.legend) ? { kind: 'legend', legend: v.legend } : null
+      return isLegend(v.legend) ? { kind: 'legend', legend: v.legend, ...(v.shiny === true && { shiny: true }) } : null
     case 'evoItem':
       return isOneOf(v.item, EVO_ITEM_IDS) ? { kind: 'evoItem', item: v.item } : null
     case 'shadow':
@@ -316,7 +317,7 @@ const give = (save: Save, content: GiftContent, id: string): { save: Save; hatch
     case 'bag':
       return { save: { ...save, bag: addToBag(save.bag, content.item, content.count) }, hatch: null }
     case 'legend':
-      return { save: { ...save, legends: captureByGift(save.legends, content.legend) }, hatch: null }
+      return { save: { ...save, legends: captureByGift(save.legends, content.legend), shinyStarters: content.shiny ? unlockShinyStarter(save.shinyStarters, content.legend) : save.shinyStarters }, hatch: null }
     case 'evoItem':
       return { save: save.evo.includes(content.item) ? { ...save, wallet: save.wallet + EVO_ITEM_REPEAT } : { ...save, evo: [...save.evo, content.item] }, hatch: null }
     case 'shadow': {

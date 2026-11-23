@@ -92,6 +92,18 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         ],
       },
       {
+        title: { pt: 'Poipole shiny', en: 'Shiny Poipole', es: 'Poipole shiny', fr: 'Poipole chromatique', zh: '異色 Poipole' },
+        notes: [
+          {
+            pt: 'O Poipole não é mais shiny locked: capture 3 Ultracriaturas shiny (quaisquer) e o Poipole shiny chega na caixa de presentes, junto do Poipole ou depois dele. O card do Poipole no Modo Lendário mostra quantas faltam.',
+            en: 'Poipole is no longer shiny locked: capture any 3 shiny Ultra Beasts and a shiny Poipole lands in the gift box, with Poipole or after it. Poipole’s card in Legend Mode shows how many are left.',
+            es: 'Poipole ya no es shiny locked: captura 3 Ultraentes shiny (cualesquiera) y el Poipole shiny llega a la caja de regalos, junto con Poipole o después. La tarjeta de Poipole en el Modo Legendario muestra cuántos faltan.',
+            fr: 'Poipole n’est plus bloqué en chromatique : capture 3 Ultra-Chimères chromatiques (n’importe lesquelles) et un Poipole chromatique arrive dans la boîte à cadeaux, avec Poipole ou après. La carte de Poipole en Mode Légendaire montre combien il en reste.',
+            zh: 'Poipole 不再無法異色：收服任意 3 隻異色究極異獸，異色 Poipole 就會送到禮物箱，與 Poipole 一起或之後送達。傳說模式中的 Poipole 卡片會顯示還差幾隻。',
+          },
+        ],
+      },
+      {
         title: { pt: 'Anéis de Hoopa mais difíceis, e o Hoopa shiny', en: 'Harder Hoopa’s Rings, and shiny Hoopa', es: 'Anillos de Hoopa más difíciles, y Hoopa shiny', fr: 'Des Anneaux de Hoopa plus durs, et Hoopa chromatique', zh: '更難的 Hoopa 的圓環，以及異色 Hoopa' },
         notes: [
           {
