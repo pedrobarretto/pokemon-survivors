@@ -1829,17 +1829,10 @@ export const pt = {
     trainerText: (shinies: number, caught: number, link: string) =>
       `Meu Cartão de Treinador no Pokémon Survivors: ${shinies === 1 ? '1 shiny' : `${shinies} shinies`} e ${caught} Pokémon na Pokédex. Vem jogar: ${link}`,
     card: {
-      shiny: 'SHINY',
       outcomes: { victory: 'VITÓRIA', fainted: 'DESMAIOU', endless: 'SEM FIM' },
       time: 'Tempo',
       level: 'Nível',
       kills: 'Derrotados',
-      shinies: 'SHINIES DA RUN',
-      newShinies: (n: number) => (n === 1 ? '1 novo na Pokédex' : `${n} novos na Pokédex`),
-      newSpecies: 'NOVOS NA POKÉDEX',
-      speciesCount: (n: number) => (n === 1 ? '1 espécie' : `${n} espécies`),
-      moves: 'GOLPES MAIS FORTES',
-      topMove: 'Golpe mais forte',
       more: 'mais',
       /** Header of the Trainer Card, one line each. */
       trainerCard: ['CARTÃO DE', 'TREINADOR'],
@@ -1852,11 +1845,13 @@ export const pt = {
       showcase: 'SHINIES',
       inBox: (n: number) => `${n} na Caixa do PC`,
       noShinies: 'Nenhum shiny ainda',
-      /** An official challenge attempt, in the header: "Desafio de 15/10" over "#12 DE 340". */
-      challenge: (date: string) => `Desafio de ${date}`,
-      challengePlace: (rank: number, total: number) => `#${rank} DE ${total}`,
       ribbons: 'Fitas',
       play: 'Jogue grátis no navegador',
+      /** The run card's highlights (`runBadges` in `render/card.ts`). */
+      record: 'Novo recorde!',
+      shinyCount: (n: number) => (n === 1 ? '1 shiny' : `${n} shinies`),
+      legendCount: (n: number) => (n === 1 ? '1 lendário' : `${n} lendários`),
+      challengeBadge: (rank: number, total: number) => `Desafio: #${rank} de ${total}`,
     },
   },
 
