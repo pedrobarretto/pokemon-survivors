@@ -70,8 +70,6 @@ export const skinsTab = (ctx: GemTabsContext, item: SkinId | null = null): GemTa
   let note: { text: string; bad: boolean } | null = null
   let dialog: Screen | null = null
   let buying = false
-  // The line the previews' wearer belongs to, else the first.
-  let line: SkinLine = item ? lineOf(item) : SKIN_LINES.find((l) => skinsOf(l).some((id) => (SKINS[id].dexes as readonly number[]).includes(ctx.wearer().dex))) ?? SKIN_LINES[0]!
   const cards = new Map<HTMLCanvasElement, SkinId>()
   let raf = 0
 
@@ -80,6 +78,10 @@ export const skinsTab = (ctx: GemTabsContext, item: SkinId | null = null): GemTa
   const worn = (): Look => status?.look ?? {}
   const signedIn = () => gemsSignedIn() && (gemsEnabled || gemsFaked())
   const onSaleNow = (id: SkinId) => shownOn(id, day(), new Set()) && cosmeticPrice(id) !== null
+  // A line shows when it has a skin the shop shows (a gift's only to its owner).
+  const shownLines = () => SKIN_LINES.filter((l) => skinsOf(l).some((id) => shownOn(id, day(), owned()) || day() < SKIN_LAUNCH))
+  // The line the previews' wearer belongs to, else the first.
+  let line: SkinLine = item ? lineOf(item) : shownLines().find((l) => skinsOf(l).some((id) => (SKINS[id].dexes as readonly number[]).includes(ctx.wearer().dex))) ?? shownLines()[0]!
 
   // The stage dresses the wearer when the chosen skin covers it, else the skin's last stage.
   const stage = lookStage(() => dressedBy(ctx.wearer(), chosen), worn, () => chosen, '', () => shiny)
@@ -309,7 +311,7 @@ export const skinsTab = (ctx: GemTabsContext, item: SkinId | null = null): GemTa
             h(
               'div',
               { class: 'gem-browse' },
-              h('div', { class: 'gem-filters gem-lines' }, ...SKIN_LINES.map(lineChip)),
+              h('div', { class: 'gem-filters gem-lines' }, ...shownLines().map(lineChip)),
               h('div', { class: 'gem-items gem-skin-grid' }, ...lineSkins.map(card)),
               bundle ? h('div', { class: 'gem-bundles' }, bundleCard(bundle)) : null,
             ),

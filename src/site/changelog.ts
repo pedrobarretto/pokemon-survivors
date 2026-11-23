@@ -25,31 +25,53 @@ export type ChangelogUpdate = {
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
     date: '2026-11-23',
-    title: { pt: 'Apoie no Patreon', en: 'Support on Patreon', es: 'Apoya en Patreon', fr: 'Soutenir sur Patreon', zh: '在 Patreon 支持' },
+    title: { pt: 'Tornados sem travar e Patreon no lobby', en: 'Lag-free tornadoes and Patreon in the lobby', es: 'Tornados sin trabas y Patreon en el lobby', fr: 'Des tornades fluides et Patreon dans le lobby', zh: '龍捲風不再卡頓，大廳加入 Patreon' },
     highlights: [
       {
-        pt: 'Na Praça, logo abaixo do Hall da Fama, agora tem um botão para apoiar o jogo no Patreon.',
-        en: 'At the Plaza, right under the Hall of Fame, now has a button to support the game on Patreon.',
-        es: 'En la Plaza, justo debajo del Salón de la Fama, ahora hay un botón para apoyar el juego en Patreon.',
-        fr: 'Sur la Place, juste sous le Panthéon, un bouton permet maintenant de soutenir le jeu sur Patreon.',
-        zh: '「廣場上」名人堂正下方，現在有一個在 Patreon 支持遊戲的按鈕。',
+        pt: 'Os tornados do Whirlwind (do Lugia, ou do TM que ele deixa) não travam mais o jogo numa build de área grande, como a do Tornadus com Long Reach.',
+        en: 'Whirlwind’s tornadoes (Lugia’s, or from the TM it leaves) no longer slow the game down on a big-area build, like Tornadus with Long Reach.',
+        es: 'Los tornados de Whirlwind (de Lugia, o del TM que deja) ya no traban el juego con una build de área grande, como Tornadus con Long Reach.',
+        fr: 'Les tornades de Whirlwind (celles de Lugia, ou du TM qu’il laisse) ne ralentissent plus le jeu avec un build de grande zone, comme Tornadus avec Long Reach.',
+        zh: 'Whirlwind 的龍捲風（Lugia 的，或牠留下的招式學習器）在大範圍配置下不再拖慢遊戲，例如帶 Long Reach 的 Tornadus。',
       },
       {
-        pt: 'A janela Comunidade também traz o Patreon, logo depois do Discord.',
-        en: 'The Community sheet has Patreon too, right after Discord.',
-        es: 'La ventana Comunidad también trae el Patreon, justo después de Discord.',
-        fr: 'La fenêtre Communauté propose aussi Patreon, juste après Discord.',
-        zh: '「社群」視窗也加入了 Patreon，就在 Discord 之後。',
+        pt: 'O anel e os raios do Origin Pulse do Kyogre custam uma fração do que custavam para desenhar.',
+        en: 'Kyogre’s Origin Pulse ring and beams take a fraction of what they did to draw.',
+        es: 'El anillo y los rayos del Origin Pulse de Kyogre cuestan una fracción de lo que costaban dibujar.',
+        fr: 'L’anneau et les rayons de l’Origin Pulse de Kyogre ne coûtent plus qu’une fraction de ce qu’ils coûtaient à dessiner.',
+        zh: 'Kyogre 的 Origin Pulse，其光環與光束的繪製成本只剩原本的一小部分。',
       },
       {
-        pt: 'O botão mostra quantas gemas o Patreon traz por mês; quem já apoia vê o seu nível.',
-        en: 'The button shows how many gems Patreon brings each month; patrons see their own tier.',
-        es: 'El botón muestra cuántas gemas trae el Patreon por mes; quien ya apoya ve su nivel.',
-        fr: 'Le bouton indique combien de gemmes Patreon apporte chaque mois ; les mécènes voient leur palier.',
-        zh: '按鈕會顯示 Patreon 每月帶來多少寶石；已支持的玩家會看到自己的等級。',
+        pt: 'Os outros anéis e raios grandes dos golpes lendários ficaram mais leves também, sobretudo em celulares.',
+        en: 'The other big rings and beams of the legendary moves got lighter too, above all on phones.',
+        es: 'Los demás anillos y rayos grandes de los movimientos legendarios también quedaron más livianos, sobre todo en celulares.',
+        fr: 'Les autres grands anneaux et rayons des attaques légendaires sont plus légers aussi, surtout sur téléphone.',
+        zh: '其他傳說招式的大型光環與光束也變得更輕量，手機上尤其明顯。',
+      },
+      {
+        pt: 'O Patreon agora aparece no lobby: em Na Praça, logo abaixo do Hall da Fama, e na janela Comunidade, com as gemas que ele traz todo mês.',
+        en: 'Patreon now shows in the lobby: At the Plaza, right under the Hall of Fame, and in the Community sheet, with the gems it brings every month.',
+        es: 'El Patreon ahora aparece en el lobby: En la Plaza, justo debajo del Salón de la Fama, y en la ventana Comunidad, con las gemas que trae cada mes.',
+        fr: 'Patreon apparaît maintenant dans le lobby : sur la Place, juste sous le Panthéon, et dans la fenêtre Communauté, avec les gemmes qu’il apporte chaque mois.',
+        zh: 'Patreon 現在出現在大廳：在「廣場上」名人堂正下方，以及「社群」視窗裡，並標示每月帶來的寶石。',
       },
     ],
     changes: [
+      {
+        title: { pt: 'Desempenho', en: 'Performance', es: 'Rendimiento', fr: 'Performances', zh: '效能' },
+        notes: [
+          {
+            pt: 'Um tornado maior agora é desenhado com pontos maiores e mais espaçados, então custa o mesmo que um do tamanho normal; os do tamanho normal estão iguais.',
+            en: 'A bigger tornado is now drawn with bigger, more spaced-out dots, so it costs what a normal-sized one does; normal-sized ones look the same.',
+            es: 'Un tornado más grande ahora se dibuja con puntos más grandes y espaciados, así que cuesta lo mismo que uno de tamaño normal; los de tamaño normal se ven igual.',
+          },
+          {
+            pt: 'Anéis e raios são desenhados linha a linha em vez de pixel a pixel: o anel do Origin Pulse cruzando a tela passou de dezenas de milhares de pixels por quadro para poucos milhares.',
+            en: 'Rings and beams are drawn row by row instead of pixel by pixel: Origin Pulse’s ring crossing the screen went from tens of thousands of pixels a frame to a few thousand.',
+            es: 'Los anillos y rayos se dibujan fila por fila en vez de píxel por píxel: el anillo de Origin Pulse cruzando la pantalla pasó de decenas de miles de píxeles por cuadro a unos pocos miles.',
+          },
+        ],
+      },
       {
         title: { pt: 'Patreon no lobby', en: 'Patreon in the lobby', es: 'Patreon en el lobby', fr: 'Patreon dans le lobby', zh: '大廳裡的 Patreon' },
         notes: [

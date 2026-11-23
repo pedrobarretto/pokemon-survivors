@@ -753,6 +753,7 @@ export const pt = {
     scorbunnySuit: 'Scorbunny de Terno',
     rayquazaCelestial: 'Rayquaza Celestial',
     groudonObsidian: 'Groudon Obsidiana',
+    ponytaPink: 'Ponyta Rosa',
     bulbasaurSakura: 'Bulbasaur Sakura',
     bulbasaurAutumn: 'Bulbasaur Outono',
     bulbasaurWinter: 'Bulbasaur Inverno',

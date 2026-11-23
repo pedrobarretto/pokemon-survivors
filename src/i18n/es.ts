@@ -577,6 +577,7 @@ export const es: Messages = {
     scorbunnySuit: 'Scorbunny de Traje',
     rayquazaCelestial: 'Rayquaza Celestial',
     groudonObsidian: 'Groudon Obsidiana',
+    ponytaPink: 'Ponyta Rosa',
     bulbasaurSakura: 'Bulbasaur Sakura',
     bulbasaurAutumn: 'Bulbasaur de Otoño',
     bulbasaurWinter: 'Bulbasaur de Invierno',
