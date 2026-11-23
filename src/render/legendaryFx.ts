@@ -30,15 +30,33 @@ export const clamp01 = (v: number) => Math.max(0, Math.min(1, v))
 /** 1 while it lives, easing to 0 over its last `window` seconds. */
 export const fadeOut = (a: Attack, window: number) => clamp01((a.ttl - a.age) / window)
 
-/** Square-brush line from (x0, y0) to (x1, y1), `w` px thick, as one path. Drawing lean, a brush 2 px or wider stamps every other step: the squares still overlap. */
+/**
+ * Square-brush line from (x0, y0) to (x1, y1), `w` px thick, as one path. The brush steps a pixel
+ * at a time along the longer axis, and the squares of a run on one row (one column, when the line
+ * is steep) fill as one rect: a beam crossing the screen is tens of rects, not hundreds.
+ */
 export const thickLine = (ctx: Ctx, x0: number, y0: number, x1: number, y1: number, w: number, color: string) => {
-  const n = Math.max(1, Math.round(Math.hypot(x1 - x0, y1 - y0)))
+  const dx = x1 - x0
+  const dy = y1 - y0
+  const flat = Math.abs(dx) >= Math.abs(dy)
+  const n = Math.max(1, Math.ceil(Math.max(Math.abs(dx), Math.abs(dy))))
   const half = Math.floor(w / 2)
-  const stride = detail.lean && w >= 2 ? 2 : 1
   beginRects(ctx, color)
-  for (let i = 0; i <= n; i = i < n && i + stride > n ? n : i + stride) {
-    const k = i / n
-    ctx.rect(Math.round(x0 + (x1 - x0) * k) - half, Math.round(y0 + (y1 - y0) * k) - half, w, w)
+  let sx = Math.round(x0)
+  let sy = Math.round(y0)
+  let px = sx
+  let py = sy
+  for (let i = 1; i <= n + 1; i++) {
+    const x = Math.round(x0 + (dx * i) / n)
+    const y = Math.round(y0 + (dy * i) / n)
+    // A new row (column) or the line's end closes the run from (sx, sy) to (px, py).
+    if (i > n || (flat ? y !== py : x !== px)) {
+      ctx.rect(Math.min(sx, px) - half, Math.min(sy, py) - half, Math.abs(px - sx) + w, Math.abs(py - sy) + w)
+      sx = x
+      sy = y
+    }
+    px = x
+    py = y
   }
   ctx.fill()
 }
@@ -50,18 +68,37 @@ export const twinkle = (ctx: Ctx, x: number, y: number, size: number, color: str
 }
 
 /**
- * A solid ring `thick` px wide at radius `r` (squashed by `squash`), in one color, as one path.
- * Drawing lean, a ring 2 px or thicker is plotted in 2 px squares, every other step: a quarter of the rects.
+ * A solid ring `thick` px wide at radius `r` (squashed by `squash`), in one color, as one path:
+ * the pixels between the ellipses of radius `r - thick` and `r`, a row at a time (one rect per
+ * side of each row). Its cost follows the rows, never the thickness: Origin Pulse's ring crossing
+ * the screen at a big area was tens of thousands of single pixels a frame when plotted round it.
  */
 export const band = (ctx: Ctx, x: number, y: number, r: number, thick: number, color: string, squash = 1) => {
-  const steps = Math.max(24, Math.ceil(r * TAU))
-  const size = detail.lean && thick >= 2 ? 2 : 1
+  // Pixel centers within half a pixel of the radii, as the plotted ring had them.
+  const outer = r + 0.5
+  const inner = r - thick + 0.5
+  if (outer <= 0 || squash <= 0) return
+  const cx = Math.round(x)
+  const cy = Math.round(y)
+  const tall = outer * squash
+  const deep = inner * squash
+  const rows = Math.floor(tall)
+  // How far from the middle an ellipse of radius `rad` and half-height `h` reaches on row `d`.
+  const reach = (rad: number, h: number, d: number) => Math.floor(rad * Math.sqrt(Math.max(0, 1 - (d / h) ** 2)))
   beginRects(ctx, color)
-  for (let i = 0; i < steps; i += size) {
-    const a = (i / steps) * TAU
-    const c = Math.cos(a)
-    const s = Math.sin(a) * squash
-    for (let d = 0; d < thick; d += size) ctx.rect(Math.round(x + c * (r - d)), Math.round(y + s * (r - d)), size, size)
+  for (let dy = -rows; dy <= rows; dy++) {
+    const away = Math.abs(dy)
+    const out = reach(outer, tall, dy)
+    // A row reaches in at least to just past the next row out, so a thin ring where it runs flat stays unbroken.
+    const next = away < rows ? reach(outer, tall, away + 1) : -1
+    const from = Math.min(inner > 0 && away <= deep ? reach(inner, deep, dy) + 1 : 0, next + 1)
+    if (from <= 0) {
+      ctx.rect(cx - out, cy + dy, out * 2 + 1, 1)
+      continue
+    }
+    if (out < from) continue
+    ctx.rect(cx - out, cy + dy, out - from + 1, 1)
+    ctx.rect(cx + from, cy + dy, out - from + 1, 1)
   }
   ctx.fill()
 }
@@ -99,12 +136,25 @@ const drawWhirlGround = (ctx: Ctx, a: Attack, t: number) => {
   ctx.globalAlpha = 1
 }
 
+/**
+ * The funnel radius drawn at the finest grain (2 px streak dots, a layer every 2 px). A wider
+ * funnel spaces its layers and dots out by its size over this and draws them that much bigger,
+ * so it costs what this one does: plotted at the fine grain, an area build's funnels came to tens
+ * of thousands of dots a frame.
+ */
+const WHIRL_GRAIN = 24
+
 /** The funnel: stacked swirling bands of wind, narrow at the ground and wide up top, swaying; debris and feathers ride it. */
 const drawWhirlwind = (ctx: Ctx, a: Attack, t: number) => {
   const r = radiusOf(a)
   const k = whirlPresence(a)
   const height = Math.round(r * 3.2 * (0.4 + 0.6 * k))
-  const layers = Math.max(10, Math.round(height / 2))
+  const grain = Math.max(1, r / WHIRL_GRAIN)
+  const layers = Math.max(10, Math.round(height / (2 * grain)))
+  // Front dots fill their layer's height; the back's leave a gap under them, so it reads dimmer.
+  const dot = Math.max(2, Math.round(2 * grain))
+  const backDot = Math.max(1, Math.round(grain))
+  const lift = (dot - 2) >> 1
   ctx.globalAlpha = Math.max(0.15, k)
   // Drawing lean (`render/quality.ts`), the column has half the layers of air and every streak half the dots.
   const thin = detail.lean ? 2 : 1
@@ -123,7 +173,7 @@ const drawWhirlwind = (ctx: Ctx, a: Attack, t: number) => {
       const sway = Math.sin(t * 3 + a.id + f * 3) * 4 * f
       const cy = a.y - f * height
       const spin = t * (13 - f * 5) + i * 0.55
-      const n = Math.max(12, Math.round(w * 2.4))
+      const n = Math.max(12, Math.round((w * 2.4) / grain))
       for (let j = 0; j < n; j += thin) {
         const ang = spin + (j / n) * TAU
         const front = Math.sin(ang) > 0
@@ -131,7 +181,7 @@ const drawWhirlwind = (ctx: Ctx, a: Attack, t: number) => {
         // Long streaks with short gaps; the back half is dimmer.
         if (Math.cos(ang * 3 + f * 7 + t * 2) < -0.55) continue
         const c = front ? (Math.cos(ang) > 0.4 ? '#ffffff' : WHIRL_COLORS[(j + i) % 2]!) : WHIRL_COLORS[2 + ((j + i) % 2)]!
-        plot(c, a.x + sway + Math.cos(ang) * w, cy + Math.sin(ang) * w * 0.3, 2, front ? 2 : 1)
+        plot(c, a.x + sway + Math.cos(ang) * w - lift, cy + Math.sin(ang) * w * 0.3 - lift, dot, front ? dot : backDot)
       }
     }
     fillPlotted(ctx)
