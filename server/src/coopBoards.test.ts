@@ -52,6 +52,15 @@ describe('parseCoopReport', () => {
     expect(parseCoopReport({ ...report(), run: -1 })).toBeNull()
     expect(parseCoopReport({ ...report(), endedAt: 'now' })).toBeNull()
   })
+
+  it('reads what the relay saw of the run when it says, and refuses it malformed', () => {
+    const seen = report(2, { startedAt: NOON - 700_000, ticks: 42_000 })
+    expect(parseCoopReport(JSON.parse(JSON.stringify(seen)))).toEqual(seen)
+    expect(parseCoopReport({ ...report(), ticks: -1 })).toBeNull()
+    expect(parseCoopReport({ ...report(), ticks: 1.5 })).toBeNull()
+    expect(parseCoopReport({ ...report(), startedAt: 'then' })).toBeNull()
+    expect(parseCoopReport({ ...report(), startedAt: NOON + 1 })).toBeNull()
+  })
 })
 
 describe('coopListing', () => {
@@ -75,6 +84,24 @@ describe('coopListing', () => {
     expect(coopListing(report(2, { votes: 1 }))).toBeNull()
     expect(coopListing(report(2, { result: result(3) }))).toBeNull()
     expect(coopListing(report(2, { result: result(2, { outcome: 'victory' }) }))).toBeNull()
+  })
+
+  it('never lists a run longer than its relay played it, or levels its clock can’t reach', () => {
+    // The forged run of 2026-11-17: two accounts' clients agreeing on 8 hours, 41 s after the run started.
+    const forged = result(2, { time: 28_800, kills: 200_000, players: [0, 1].map((slot) => ({ ...player(slot), stage: 0, shiny: true, level: 9999, kills: 100_000 })) })
+    expect(coopListing(report(2, { result: forged, startedAt: NOON - 41_000, ticks: 2460 }))).toBeNull()
+    // Past the ticks sent, or the wall clock from tick 0 to the end, beyond the slack.
+    expect(coopListing(report(2, { ticks: 600 * 60 }))).not.toBeNull()
+    expect(coopListing(report(2, { ticks: 590 * 60 }))).toBeNull()
+    expect(coopListing(report(2, { startedAt: NOON - 600_000 }))).not.toBeNull()
+    expect(coopListing(report(2, { startedAt: NOON - 500_000 }))).toBeNull()
+    // An older relay says neither: the result's own bounds still hold.
+    expect(coopListing(report(2))).not.toBeNull()
+    // At 10:00 a seat may report Lv 400 at most, far past any climb; Lv 1210 at 186 minutes is a real Dupla's.
+    const level = (n: number) => coopListing(report(2, { result: result(2, { players: [player(0), { ...player(1), level: n }] }) }))
+    expect(level(400)).not.toBeNull()
+    expect(level(401)).toBeNull()
+    expect(coopListing(report(2, { result: result(2, { time: 11_169, players: [0, 1].map((slot) => ({ ...player(slot), level: 1210 })) }) }))).not.toBeNull()
   })
 
   it('lists a Desafio co-op run only on its day’s difficulty, started on its day', () => {
