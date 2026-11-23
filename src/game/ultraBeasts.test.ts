@@ -8,7 +8,7 @@ import { captureByGift, isCaptured, winCounts } from './capture'
 import { gameGiftsApplied, isGameGift } from './gameGifts'
 import { applyGift, keepGiven } from './gifts'
 import { EMPTY_SAVE, type Save } from './meta'
-import { POIPOLE_GIFT, ultraGifts } from './ultraGifts'
+import { POIPOLE_GIFT, POIPOLE_SHINY_GIFT, ULTRA_SHINY, ultraGifts } from './ultraGifts'
 import { ultraFits, ultraOfWeek, ultraWeekEnd } from './ultraWeek'
 import { drawUltraBeast, wormholeDue } from './wormhole'
 
@@ -79,5 +79,23 @@ describe('Poipole, the Ultra Beasts’ gift', () => {
   it('isn’t vouched for a save that never captured them all', () => {
     const edited: Save = { ...EMPTY_SAVE, legends: captureByGift(EMPTY_SAVE.legends, 'poipole') }
     expect(isCaptured(keepGiven(edited, gameGiftsApplied(edited)).legends, 'poipole')).toBe(false)
+  })
+
+  it('comes shiny too once enough beasts’ shinies are owned, and never before every beast is captured', () => {
+    const shinies = (save: Save, n: number): Save => ({ ...save, shinyStarters: Object.fromEntries(ULTRA_BEASTS.slice(0, n).map((b) => [b, true])) })
+    const ids = (save: Save) => ultraGifts(save).map((g) => g.id)
+    expect(ids(shinies(caught(ULTRA_BEASTS.length - 1), ULTRA_BEASTS.length - 1))).toEqual([])
+    expect(ids(shinies(caught(ULTRA_BEASTS.length), ULTRA_SHINY.need - 1))).toEqual([POIPOLE_GIFT.id])
+    const save = shinies(caught(ULTRA_BEASTS.length), ULTRA_SHINY.need)
+    expect(ids(save)).toEqual([POIPOLE_GIFT.id, POIPOLE_SHINY_GIFT.id])
+    // A player who opened the plain Poipole long ago still gets its shiny later.
+    const plain = applyGift(save, ultraGifts(save)[0]!)
+    if (plain.status !== 'applied') throw new Error(plain.status)
+    expect('poipole' in plain.save.shinyStarters).toBe(false)
+    const shiny = applyGift(plain.save, ultraGifts(plain.save)[0]!)
+    if (shiny.status !== 'applied') throw new Error(shiny.status)
+    expect(shiny.save.shinyStarters.poipole).toBe(true)
+    expect(ultraGifts(shiny.save)).toEqual([])
+    expect(keepGiven(shiny.save, gameGiftsApplied(shiny.save))).toEqual(shiny.save)
   })
 })

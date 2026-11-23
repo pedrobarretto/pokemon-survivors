@@ -1,6 +1,7 @@
 import { isSafariHabitat } from '../data/safari'
 import { HATCHLINGS, PLAYABLE } from '../data/hatchlings'
 import { eggLegend, LEGENDS, type LegendId } from '../data/legends'
+import { ULTRA_SHINY } from '../game/ultraGifts'
 import type { CosmogLegend } from '../game/legendPaths'
 import { BAG_ITEMS, EVO_ITEMS } from '../data/shop'
 import { giftInbox, nextGift, openGift } from '../account'
@@ -65,7 +66,9 @@ export const contentLine = (gift: Pick<Gift, 'content'>): { src: string; text: s
       return { src: bagIcon(c.item), text: m.bag(c.count, BAG_ITEMS[c.item].name) }
     case 'legend':
       // Manaphy comes as its egg, and hatches when opened (`ui/manaphyEgg.ts`).
-      return eggLegend(c.legend) ? { src: manaphyEggIcon(), text: t().scWave.egg.gift } : { src: portraitUrl(LEGENDS[c.legend].line[0].dex), text: m.legend(LEGENDS[c.legend].name) }
+      if (eggLegend(c.legend)) return { src: manaphyEggIcon(), text: t().scWave.egg.gift }
+      // Poipole's shiny, the shiny Ultra Beasts' gift (`game/ultraGifts.ts`).
+      return c.shiny ? { src: portraitUrl(LEGENDS[c.legend].line[0].dex, true), text: t().ultra.shiny.gift } : { src: portraitUrl(LEGENDS[c.legend].line[0].dex), text: m.legend(LEGENDS[c.legend].name) }
     case 'evoItem':
       return { src: itemArt(c.item), text: EVO_ITEMS[c.item].name }
     case 'shadow':
@@ -108,6 +111,8 @@ export const reasonLine = (gift: Gift) => {
       return t().gifts.patron(t().festival.names[r.festival])
     case 'og':
       return t().gifts.og
+    case 'ultraBeasts':
+      return c.kind === 'legend' && c.shiny ? t().ultra.shiny.reason(ULTRA_SHINY.need) : t().gifts.ultraBeasts
     case 'arenaSeason':
       return t().gifts.arenaSeason(r.season)
     case 'hiddenZone':
@@ -168,7 +173,7 @@ export const giftScreen = (root: HTMLElement, input: Input, actions: GiftScreenA
   let closed = false
 
   /** A legend that came as a gift stands on a lit stage, alive (`tick`), instead of a portrait. */
-  let stage: { canvas: HTMLCanvasElement; dex: number } | null = null
+  let stage: { canvas: HTMLCanvasElement; dex: number; shiny: boolean } | null = null
 
   const show = (gift: Gift, body: readonly (HTMLElement | false)[], buttons: readonly Action[], opening = true) => {
     const m = t().gifts
@@ -246,9 +251,10 @@ export const giftScreen = (root: HTMLElement, input: Input, actions: GiftScreenA
     let shown: HTMLElement = h('img', { src: line.src, alt: '' })
     if (c.kind === 'legend') {
       const dex = LEGENDS[c.legend].line[0].dex
-      stage = { canvas: h('canvas', { class: 'gift-stage', width: STAGE.w, height: STAGE.h, 'aria-hidden': 'true' }), dex }
+      const shiny = c.shiny === true
+      stage = { canvas: h('canvas', { class: 'gift-stage', width: STAGE.w, height: STAGE.h, 'aria-hidden': 'true' }), dex, shiny }
       shown = stage.canvas
-      void loadSpecies(dex)
+      void loadSpecies(dex, shiny)
       playCry(cryUrl(dex), 0.5)
     }
     const prize = h('div', { class: c.kind === 'legend' ? 'gift-prize gift-legend' : 'gift-prize' }, h('span', { class: 'gift-burst', 'aria-hidden': 'true' }), shown)
@@ -293,7 +299,7 @@ export const giftScreen = (root: HTMLElement, input: Input, actions: GiftScreenA
       ctx.fillRect(x, y - 1, 1, 3)
       ctx.fillRect(x - 1, y, 3, 1)
     }
-    const s = loadedSprites(stage.dex)
+    const s = loadedSprites(stage.dex, stage.shiny)
     if (!s) return
     const scale = Math.max(s.bodyW, s.bodyH) * 2 <= height - 16 ? 2 : 1
     drawPokemon(ctx, s, 'Idle', 0, time, w / 2, height - 12, { scale })

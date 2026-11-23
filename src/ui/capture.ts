@@ -1,7 +1,7 @@
 import { playCry, playSfx } from '../engine/audio'
 import { isLegend, isUltraLegend, LEGEND_IDS, LEGENDS, type LegendId } from '../data/legends'
 import { ULTRA_BEASTS } from '../data/ultraBeasts'
-import { ultraCaptured } from '../game/ultraGifts'
+import { ULTRA_SHINY, ultraCaptured, ultraShinies } from '../game/ultraGifts'
 import { recordLegendWin, stillMissing, winsNeeded, type CaptureResult, type LegendWin } from '../game/capture'
 import { cryUrl, portraitUrl } from '../render/sprites'
 import { t } from '../i18n'
@@ -34,12 +34,23 @@ const captureToast = (root: HTMLElement, r: CaptureResult): boolean => {
   if (r.outcome === 'owned' && !r.shiny) return false
   playSfx('unlock')
   playCry(cryUrl(dex), 0.6)
-  if (r.outcome === 'owned') return say(m.shinyUnlocked(name), m.caughtHint, true)
   if (isUltraLegend(r.legend)) {
-    // The last of the Ultra Wormholes' beasts brings Poipole: the gift box holds it now.
-    const hint = ultraCaptured(loadSave()) === ULTRA_BEASTS.length ? t().ultra.allCaught : m.caughtHint
+    // The last of the Ultra Wormholes' beasts brings Poipole, and their shinies count toward Poipole's (`game/ultraGifts.ts`): the gift box holds what came.
+    const save = loadSave()
+    const shinies = ultraShinies(save)
+    const due = ultraCaptured(save) === ULTRA_BEASTS.length
+    const hint =
+      r.shiny && shinies <= ULTRA_SHINY.need
+        ? shinies === ULTRA_SHINY.need && due
+          ? t().ultra.shiny.done
+          : t().ultra.shiny.step(shinies, ULTRA_SHINY.need)
+        : r.outcome === 'caught' && due
+          ? t().ultra.allCaught
+          : m.caughtHint
+    if (r.outcome === 'owned') return say(m.shinyUnlocked(name), hint, true)
     return say(r.shiny ? m.caughtShiny(name) : t().ultra.caught(name), hint, r.shiny)
   }
+  if (r.outcome === 'owned') return say(m.shinyUnlocked(name), m.caughtHint, true)
   return say(r.shiny ? m.caughtShiny(name) : m.caught(name), m.caughtHint, r.shiny)
 }
 
