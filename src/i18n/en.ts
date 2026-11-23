@@ -1525,6 +1525,10 @@ export const en: Messages = {
     lobby: 'Lobby',
     dexSpecies: (n) => (n === 1 ? '+1 new species' : `+${n} new species`),
     dexShinies: (n) => (n === 1 ? '1 shiny caught' : `${n} shinies caught`),
+    details: 'Details',
+    newBest: 'New record!',
+    medals: (n) => (n === 1 ? '1 new medal' : `${n} new medals`),
+    missionsMoved: (n) => (n === 1 ? '1 mission moved forward' : `${n} missions moved forward`),
     support: 'Enjoying it? Support the project',
     cause: {
       title: 'Final blow',

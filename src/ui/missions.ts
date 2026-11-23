@@ -92,20 +92,33 @@ const reportRow = (m: MissionStatus, gained: number, fresh: boolean) =>
     progressBar(m.progress, m.target),
   )
 
+/** The results' side of the missions: a chip for the news line (what they paid, or how many moved) and the rows for Detalhes. */
+export type MissionReport = { chip: HTMLElement; el: HTMLElement }
+
 /**
- * Results-screen section: only the missions this run moved (`before` is the
+ * Results-screen report: only the missions this run moved (`before` is the
  * board when the run started), with the ₽ and reward eggs that missions and
  * medals paid. Null when the run moved none, so the results stay short.
  */
-export const missionReport = (before: readonly MissionStatus[], reward: number, eggs: number, items: readonly BagItem[] = []) => {
+export const missionReport = (before: readonly MissionStatus[], reward: number, eggs: number, items: readonly BagItem[] = []): MissionReport | null => {
   const m = t().missions
+  let fresh = false
   const moved = missionStatus(loadSave().missions, today()).flatMap((s) => {
     const was = before.find((b) => b.id === s.id)
     const gained = was ? s.progress - was.progress : 0
-    return gained > 0 ? [reportRow(s, gained, s.done && was?.done === false)] : []
+    const done = s.done && was?.done === false
+    fresh ||= done
+    return gained > 0 ? [reportRow(s, gained, done)] : []
   })
   if (moved.length === 0 && reward === 0 && eggs === 0 && items.length === 0) return null
-  return h(
+  const paid = [reward > 0 && m.reportReward(formatPokeDollars(reward)), eggs > 0 && m.reportEggs(eggs), items.length > 0 && m.reportItems(items.length)].filter((line) => typeof line === 'string')
+  const chip = h(
+    'span',
+    { class: `news-chip mission-chip${fresh ? ' fresh' : ''}` },
+    h('img', { src: reward > 0 ? coinIcon(1) : eggs > 0 ? eggIcon('rare') : items[0] ? bagIcon(items[0]) : giftIcon(), alt: '' }),
+    paid.length > 0 ? paid.join(' · ') : t().results.missionsMoved(moved.length),
+  )
+  const el = h(
     'div',
     { class: 'mission-report' },
     h(
@@ -118,6 +131,7 @@ export const missionReport = (before: readonly MissionStatus[], reward: number, 
     ),
     ...moved,
   )
+  return { chip, el }
 }
 
 /** The medals a run earned, as chips for the results' news line. */

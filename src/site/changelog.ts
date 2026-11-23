@@ -48,8 +48,35 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         fr: 'Les autres grands anneaux et rayons des attaques légendaires sont plus légers aussi, surtout sur téléphone.',
         zh: '其他傳說招式的大型光環與光束也變得更輕量，手機上尤其明顯。',
       },
+      {
+        pt: 'A tela de fim de partida foi refeita: o Pokémon, o tempo, o nível, os derrotados e os ₽ no topo, as novidades em uma linha e o resto em Detalhes. Os botões ficam sempre à vista, sem cobrir nada.',
+        en: 'The end-of-run screen was redone: your Pokémon, time, level, KOs and ₽ up top, the news in one line and the rest under Details. The buttons always stay in view without covering anything.',
+        es: 'La pantalla de fin de partida se rehízo: tu Pokémon, el tiempo, el nivel, los derrotados y los ₽ arriba, las novedades en una línea y el resto en Detalles. Los botones siempre quedan a la vista, sin tapar nada.',
+        fr: 'L’écran de fin de partie a été refait : ton Pokémon, le temps, le niveau, les K.O. et les ₽ en haut, les nouveautés sur une ligne et le reste dans Détails. Les boutons restent toujours visibles, sans rien cacher.',
+        zh: '對戰結束畫面重新設計：寶可夢、時間、等級、擊倒數與 ₽ 放在最上方，新消息集中在一行，其餘收進「詳細資料」。按鈕永遠看得到，也不會遮住內容。',
+      },
     ],
     changes: [
+      {
+        title: { pt: 'Fim de partida', en: 'End of run', es: 'Fin de partida', fr: 'Fin de partie', zh: '對戰結束' },
+        notes: [
+          {
+            pt: 'Detalhes guarda o dano por golpe, os lugares, os passos, os lendários, os ovos, as missões e os golpes antes do desmaio; o jogo lembra se você deixa aberto.',
+            en: 'Details holds the damage by move, places, steps, legends, eggs, missions and the hits before the faint; the game remembers if you leave it open.',
+            es: 'Detalles guarda el daño por movimiento, los lugares, los pasos, los legendarios, los huevos, las misiones y los golpes antes del desmayo; el juego recuerda si lo dejas abierto.',
+          },
+          {
+            pt: 'Muitas medalhas numa partida viram um só aviso ("15 medalhas novas"), e um recorde novo aparece em destaque.',
+            en: 'Many medals in one run become a single chip ("15 new medals"), and a new record is called out.',
+            es: 'Muchas medallas en una partida se vuelven un solo aviso ("15 medallas nuevas"), y un récord nuevo aparece destacado.',
+          },
+          {
+            pt: 'No celular deitado, o resumo fica à esquerda e o resto rola à direita; o fim de partida do co-op também ganhou os botões fixos.',
+            en: 'On a phone held sideways, the summary stays on the left while the rest scrolls on the right; co-op’s end screen got the fixed buttons too.',
+            es: 'En el celular acostado, el resumen queda a la izquierda y el resto se desplaza a la derecha; el fin de partida del co-op también ganó los botones fijos.',
+          },
+        ],
+      },
       {
         title: { pt: 'Desempenho', en: 'Performance', es: 'Rendimiento', fr: 'Performances', zh: '效能' },
         notes: [

@@ -355,24 +355,28 @@ const resultsView = (input: Input, g: Game, me: Player, actions: EndActions) => 
     setText(status, text)
   }
   const joined = g.coop?.joined ?? g.players.length
+  // As the solo results: the body scrolls above a footer that keeps the ways on in view.
   const el = h(
     'div',
     { class: 'dialog box pop wide team-results' },
-    h('div', { class: 'dialog-title' }, g.endless ? m.endless : victory ? m.victory : m.wipe),
     h(
       'div',
-      { class: 'team-summary' },
-      difficultyTag(g.difficulty),
-      h('span', {}, h('small', {}, m.time), h('b', {}, formatTime(stats.time))),
-      h('span', {}, h('small', {}, m.kills), h('b', {}, formatNumber(stats.total.kills))),
-      h('span', {}, h('small', {}, m.damage), h('b', {}, compact(stats.total.damage))),
-      h('span', {}, h('small', {}, m.revives), h('b', {}, formatNumber(stats.total.revives))),
+      { class: 'results-body' },
+      h('div', { class: 'dialog-title' }, g.endless ? m.endless : victory ? m.victory : m.wipe),
+      h(
+        'div',
+        { class: 'team-summary' },
+        difficultyTag(g.difficulty),
+        h('span', {}, h('small', {}, m.time), h('b', {}, formatTime(stats.time))),
+        h('span', {}, h('small', {}, m.kills), h('b', {}, formatNumber(stats.total.kills))),
+        h('span', {}, h('small', {}, m.damage), h('b', {}, compact(stats.total.damage))),
+        h('span', {}, h('small', {}, m.revives), h('b', {}, formatNumber(stats.total.revives))),
+      ),
+      g.phase === 'gameover' && deathCause(me),
+      h('div', { class: `team-grid n${stats.players.length}` }, ...stats.players.map((s, i) => resultCard(g, s, me, awards[i] ? names[awards[i]!] : null, stats.total.damage))),
+      h('p', { class: 'team-split' }, h('img', { src: coinIcon(2), alt: '' }), m.split(formatPokeDollars(stats.coins), joined, formatPokeDollars(Math.floor(stats.coins / Math.max(1, joined))))),
     ),
-    g.phase === 'gameover' && deathCause(me),
-    h('div', { class: `team-grid n${stats.players.length}` }, ...stats.players.map((s, i) => resultCard(g, s, me, awards[i] ? names[awards[i]!] : null, stats.total.damage))),
-    h('p', { class: 'team-split' }, h('img', { src: coinIcon(2), alt: '' }), m.split(formatPokeDollars(stats.coins), joined, formatPokeDollars(Math.floor(stats.coins / Math.max(1, joined))))),
-    h('div', { class: 'buttons result-buttons' }, ...buttons),
-    status,
+    h('div', { class: 'results-actions' }, h('div', { class: 'results-primary' }, ...buttons), status),
   )
   update()
   return { el, update, dispose: () => (nav.off(), sub?.dispose()) }

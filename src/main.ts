@@ -2365,6 +2365,8 @@ const syncOverlay = (r: Run) => {
             open: (back) => sharePreview(ui, input, runShare(g, r.dexBase, r.challenge && r.rank ? r.rank.then((o) => (o.kind === 'ranked' ? o.challenge : null)) : null), back),
             glow: me.shiny || g.dexLog.shinies.size > 0 || wonRun(g) || g.time > r.bestBefore,
           },
+          // A first run beats nothing: no record to celebrate until there's one to beat.
+          record: r.bestBefore > 0 && g.time > r.bestBefore,
           credits: g.phase === 'victory' && rankingEnabled ? creditsLine() : null,
           save: guestSaveCard(),
           invite: rankingEnabled ? resultsInvite(ui, input, { won: wonRun(g), time: g.time, bestBefore: r.bestBefore }) : null,

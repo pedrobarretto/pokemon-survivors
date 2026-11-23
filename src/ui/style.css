@@ -2657,24 +2657,8 @@ button {
   border-radius: 6px;
 }
 
-.result-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  text-align: center;
-}
 
-.result-stats div {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 20px;
-}
 
-.result-stats b {
-  font-family: var(--title);
-  font-size: 28px;
-}
 
 .damage-list {
   display: flex;
@@ -3794,35 +3778,9 @@ button {
   height: 16px;
 }
 
-.earnings {
-  display: grid;
-  grid-template-columns: auto auto;
-  justify-content: center;
-  align-items: center;
-  column-gap: 10px;
-  row-gap: 2px;
-  padding: 8px 12px;
-  background: var(--dk-wash-gold, #fff8d8);
-  border: 3px solid #e8c050;
-  border-radius: 6px;
-}
 
-.earnings img {
-  grid-row: span 2;
-  width: 32px;
-  height: 32px;
-}
 
-.earnings b {
-  font-family: var(--title);
-  font-size: 28px;
-  color: color-mix(in srgb, #a86000 var(--dk-lift, 100%), #fff);
-}
 
-.earnings span {
-  font-size: 20px;
-  line-height: 1;
-}
 
 /* Sync status: green when saved, yellow while syncing, grey offline, hollow for guests. */
 .sync-dot {
@@ -7642,12 +7600,6 @@ button {
     width: 56px;
     height: 56px;
   }
-  .result-stats div {
-    font-size: 17px;
-  }
-  .result-stats b {
-    font-size: 22px;
-  }
   .damage-row {
     grid-template-columns: 20px 96px 1fr 56px;
     gap: 6px;
@@ -9638,15 +9590,6 @@ button {
   }
 }
 
-.endless-hint {
-  max-width: 34em;
-  margin: 0 auto;
-  font-family: var(--body);
-  font-size: 20px;
-  line-height: 1.1;
-  color: color-mix(in srgb, #8a5a00 var(--dk-lift, 100%), #fff);
-  text-align: center;
-}
 
 /* Field missions (`ui/fieldMissionHud.ts`): the goal and its clock, under the rift pill when both show. */
 .mission-pill {
@@ -9699,9 +9642,6 @@ button {
   }
   .mission-pill.stacked {
     top: 128px;
-  }
-  .endless-hint {
-    font-size: 16px;
   }
 }
 
@@ -10232,12 +10172,550 @@ button {
   color: color-mix(in srgb, #38a038 var(--dk-lift, 100%), #fff);
 }
 
-/* The way on stays in reach while a long result scrolls under it. */
-.result-buttons {
-  position: sticky;
-  bottom: calc(var(--px) * -1);
-  padding: 8px 0 2px;
-  background: linear-gradient(transparent, var(--paper) 35%);
+
+/*
+ * ---------- Results (`results` in ui/screens.ts) ----------
+ * One hero (the partner, how the run ended, time, level, KOs and ₽), a line of chips, Detalhes folded, and the ways on
+ * in a footer the body scrolls above. A phone on its side splits the body in two columns: the hero stays put on the
+ * left while the rest scrolls on the right.
+ */
+/* Over the HUD, as the pause sheet: a map or landmark sign still sliding in would cover the footer. */
+.results-screen {
+  z-index: 4;
+}
+
+.screen > .dialog.results {
+  flex-shrink: 1;
+  min-height: 0;
+}
+
+.dialog.results {
+  width: min(620px, 100%);
+  max-height: 100%;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+}
+
+.results-body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  padding: 16px 16px 14px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  scrollbar-width: thin;
+}
+
+.results-main,
+.results-side {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* The hero: the kit's dark stage, tinted by how the run ended. */
+.results-hero {
+  --hero: var(--kit-survivors);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  background: color-mix(in srgb, var(--hero) 26%, var(--kit-evento));
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 12px;
+  box-shadow: inset 0 -5px 0 color-mix(in srgb, var(--hero) 18%, #0c1028);
+}
+
+.results-hero.won {
+  --hero: #38c060;
+}
+
+.results-hero.endless {
+  --hero: var(--kit-legends);
+}
+
+.results-hero .portrait-wrap {
+  flex: none;
+  align-self: center;
+}
+
+.results-portrait {
+  display: block;
+  width: 72px;
+  height: 72px;
+  background: var(--kit-papel);
+  border: var(--kit-edge) solid var(--kit-tinta);
+  border-radius: 8px;
+  box-shadow: 0 3px 0 var(--kit-tinta);
+}
+
+.results-hero .portrait-wrap.shiny .results-portrait {
+  border-color: var(--kit-ouro);
+}
+
+.results-hero .shiny-badge {
+  width: 26px;
+  height: 26px;
+}
+
+.results-headline {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.results-title {
+  --kit-o: 2px;
+  margin: 0;
+  font-family: var(--title);
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1;
+  color: #fff;
+  overflow-wrap: anywhere;
+  text-shadow:
+    calc(var(--kit-o) * -1) 0 0 var(--kit-tinta),
+    var(--kit-o) 0 0 var(--kit-tinta),
+    0 calc(var(--kit-o) * -1) 0 var(--kit-tinta),
+    0 var(--kit-o) 0 var(--kit-tinta),
+    0 calc(var(--kit-o) * 2) 0 var(--kit-tinta);
+}
+
+.results-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.results-tags .difficulty-tag {
+  align-self: auto;
+}
+
+.results-tag {
+  padding: 3px 8px 2px;
+  font-family: var(--title);
+  font-size: 16px;
+  line-height: 1;
+  border-radius: 4px;
+}
+
+.results-tag.best {
+  color: var(--kit-tinta);
+  background: var(--kit-ouro);
+  animation: results-best 1.2s steps(2, start) 3;
+}
+
+@keyframes results-best {
+  50% {
+    background: #fff4c8;
+  }
+}
+
+.results-tag.reaper {
+  color: #fff;
+  background: var(--kit-legends);
+}
+
+.results-hero .player-title {
+  align-self: flex-start;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--kit-ouro);
+}
+
+/* The last hit, on one line under the hero (the hits before it are under Detalhes). */
+.death-cause.compact {
+  justify-content: flex-start;
+  padding: 4px 10px;
+  font-size: 18px;
+  text-align: left;
+}
+
+.death-cause.compact small {
+  flex-basis: auto;
+}
+
+/* Time, level and KOs: the run's three numbers. */
+.results-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.results-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 6px 4px 7px;
+  text-align: center;
+  background: var(--kit-tag);
+  border: 2px solid var(--dk-line, #d6cfb8);
+  border-radius: 10px;
+}
+
+.results-stat span {
+  font-size: 17px;
+  line-height: 1;
+  color: var(--kit-ink-2);
+}
+
+.results-stat b {
+  font-family: var(--title);
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.results-stat small {
+  font-size: 15px;
+  line-height: 1;
+  color: color-mix(in srgb, #6a3cc8 var(--dk-lift, 100%), #fff);
+}
+
+.results-stat.best {
+  background: var(--dk-wash-gold, #fff8d8);
+  border-color: #e8c050;
+}
+
+.results-stat.best b {
+  color: color-mix(in srgb, #a86000 var(--dk-lift, 100%), #fff);
+}
+
+/* The ₽ the run earned (its split is under Detalhes). */
+.results-earned {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 4px 12px;
+  background: var(--dk-wash-gold, #fff8d8);
+  border: 2px solid #e8c050;
+  border-radius: 10px;
+}
+
+.results-earned img {
+  width: 28px;
+  height: 28px;
+}
+
+.results-earned b {
+  font-family: var(--title);
+  font-size: 30px;
+  font-weight: 400;
+  color: color-mix(in srgb, #a86000 var(--dk-lift, 100%), #fff);
+}
+
+/* A victory's way into endless mode: why, and the button. */
+.results-endless {
+  --mode: var(--kit-legends);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--dk-wash-purple, #efe4fb);
+  border: 2px solid var(--kit-legends);
+  border-radius: 10px;
+}
+
+.results-endless p {
+  flex: 1;
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.1;
+}
+
+.results-endless .btn {
+  flex: none;
+}
+
+.results .rank-panel {
+  justify-content: flex-start;
+  text-align: left;
+  padding: 5px 10px;
+  font-size: 18px;
+  border-radius: 10px;
+}
+
+.results .result-invite,
+.results .save-card {
+  margin: 0;
+  border-radius: 10px;
+}
+
+.results .result-news {
+  gap: 6px;
+}
+
+.news-chip.mission-chip.fresh {
+  border-color: #58b858;
+  background: var(--dk-wash-green, #e0f4d8);
+}
+
+.news-chip.treat-chip {
+  color: color-mix(in srgb, #c04808 var(--dk-lift, 100%), #fff);
+}
+
+/* Detalhes: one switch, folded by default (the device remembers, `ps:resultsDetails`). */
+.btn.results-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 6px 12px 8px;
+  font-size: 20px;
+  background: var(--kit-tag);
+  box-shadow: 0 3px 0 var(--kit-tinta);
+}
+
+.results-chevron {
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 7px solid currentColor;
+}
+
+.results-toggle.open .results-chevron {
+  rotate: 180deg;
+}
+
+.results-details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.results-details[hidden] {
+  display: none;
+}
+
+.results-details .result-news {
+  justify-content: flex-start;
+  gap: 4px;
+}
+
+.results-details .medal-chip {
+  padding: 2px 6px;
+  font-size: 16px;
+  border-width: 1px;
+}
+
+.results-details .medal-chip img {
+  width: 18px;
+  height: 18px;
+}
+
+.results-before {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.1;
+  color: color-mix(in srgb, #8a5048 var(--dk-lift, 100%), #fff);
+}
+
+.results-facts {
+  display: flex;
+  flex-direction: column;
+}
+
+.results-fact,
+.results-split {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 32px;
+  margin: 0;
+  padding: 3px 2px;
+  font-size: 18px;
+  line-height: 1.1;
+  border-bottom: 2px solid var(--dk-line, #e4dfcd);
+}
+
+.results-split {
+  justify-content: flex-start;
+  gap: 6px;
+}
+
+.results-split img {
+  width: 18px;
+  height: 18px;
+}
+
+.results-fact > span {
+  color: var(--kit-ink-2);
+}
+
+.results-fact > b {
+  display: flex;
+  justify-content: flex-end;
+  font-family: var(--title);
+  font-size: 20px;
+  font-weight: 400;
+}
+
+.results-fact .result-legends {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.results-section {
+  display: block;
+  margin-bottom: 6px;
+  font-family: var(--title);
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--kit-ink-2);
+}
+
+.results .damage-row {
+  grid-template-columns: 22px minmax(0, 8em) 1fr auto;
+}
+
+/* The ways on: always in view, the body scrolling above them. */
+.results-actions {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 14px 12px;
+  background: var(--dk-surface-1, #f1ecdc);
+  border-top: var(--kit-edge) solid var(--kit-tinta);
+}
+
+.results-primary,
+.results-more {
+  display: flex;
+  gap: 8px;
+}
+
+.results-primary .btn,
+.results-more .btn {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.results-primary .btn.confirm {
+  flex-grow: 1.4;
+}
+
+.results-primary .share-button {
+  justify-content: center;
+}
+
+.results-more .btn {
+  min-height: 40px;
+  padding: 6px 8px 8px;
+  font-size: 19px;
+}
+
+@media (max-width: 600px) {
+  .results-body {
+    padding: 12px 12px 12px;
+  }
+  .results-hero {
+    gap: 12px;
+    padding: 10px;
+  }
+  .results-portrait {
+    width: 60px;
+    height: 60px;
+  }
+  .results-title {
+    font-size: 25px;
+  }
+  .results-stat b {
+    font-size: 27px;
+  }
+  .results-stat span {
+    font-size: 16px;
+  }
+  .results-earned b {
+    font-size: 26px;
+  }
+  .results-endless {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+  .results-actions {
+    padding: 8px 10px 10px;
+  }
+  .results-more .btn {
+    font-size: 17px;
+  }
+}
+
+/* A phone on its side: the hero on the left stays put, the rest scrolls on the right, the footer one row. */
+@media (max-height: 500px) and (min-width: 601px) {
+  .dialog.results {
+    width: min(900px, 100%);
+  }
+  .results .results-body {
+    display: grid;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    align-items: start;
+    gap: 12px;
+    padding: 10px 12px;
+  }
+  .results-main {
+    position: sticky;
+    top: 0;
+    gap: 8px;
+  }
+  .results-side {
+    gap: 8px;
+  }
+  .results-hero {
+    padding: 8px 10px;
+    gap: 10px;
+  }
+  .results-portrait {
+    width: 52px;
+    height: 52px;
+  }
+  .results-title {
+    font-size: 24px;
+  }
+  .results-stat {
+    padding: 4px 4px 5px;
+  }
+  .results-stat b {
+    font-size: 26px;
+  }
+  .results-earned {
+    padding: 2px 10px;
+  }
+  .results-earned b {
+    font-size: 24px;
+  }
+  .results-actions {
+    flex-direction: row;
+    padding: 8px 12px;
+  }
+  .results-primary {
+    flex: 1.1;
+  }
+  .results-more {
+    flex: 1.6;
+  }
+  .results-actions .btn {
+    min-height: 44px;
+    font-size: 18px;
+    padding: 6px 8px 8px;
+  }
 }
 
 .medal-chip {
@@ -18373,24 +18851,12 @@ button.hall-tile:hover {
   }
 }
 
-/* In a run: the candies beside the ₽, and the results' row. */
+/* In a run: the candies beside the ₽. */
 .treats {
   color: #ffb040;
 }
 
-.result-treats b {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  color: color-mix(in srgb, #c04808 var(--dk-lift, 100%), #fff);
-}
 
-.result-treats b img {
-  width: 16px;
-  height: 16px;
-  image-rendering: pixelated;
-}
 
 .halloween-reward-name {
   font-weight: 400;
@@ -19133,8 +19599,19 @@ button.hall-tile:hover {
 /* The co-op end screen: the team's numbers and a card per player. */
 .dialog.team-results {
   width: min(980px, 96 * var(--vw));
-  padding: 16px;
-  gap: 12px;
+  max-height: 100%;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+}
+
+.team-end {
+  z-index: 4;
+}
+
+.screen > .dialog.team-results {
+  flex-shrink: 1;
+  min-height: 0;
 }
 
 .team-summary {
@@ -19387,8 +19864,20 @@ button.hall-tile:hover {
   margin-top: auto;
 }
 
-.dialog.team-results > * {
+.team-results .results-body {
+  gap: 12px;
+}
+
+.team-results .results-body > * {
   flex-shrink: 0;
+}
+
+.team-results .results-primary {
+  justify-content: center;
+}
+
+.team-results .results-primary .btn {
+  flex: 0 1 240px;
 }
 
 .team-split {
@@ -19412,7 +19901,7 @@ button.hall-tile:hover {
   .team-grid.n2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .dialog.team-results {
+  .team-results .results-body {
     padding: 12px;
     gap: 10px;
   }
@@ -19439,10 +19928,7 @@ button.hall-tile:hover {
   .team-pay small {
     display: none;
   }
-  .team-results .result-buttons {
-    flex-wrap: nowrap;
-  }
-  .team-results .result-buttons .btn {
+  .team-results .results-actions .btn {
     flex: 1 1 0;
     min-width: 0;
     padding: 10px 6px;
@@ -19452,7 +19938,7 @@ button.hall-tile:hover {
 
 /* A phone on its side: the end screen fits without scrolling (stats in two columns, the best move only). */
 @media (max-height: 500px) and (orientation: landscape) {
-  .dialog.team-results {
+  .team-results .results-body {
     padding: 10px 12px;
     gap: 6px;
   }
@@ -19498,7 +19984,7 @@ button.hall-tile:hover {
   .team-split {
     font-size: 16px;
   }
-  .team-results .result-buttons .btn {
+  .team-results .results-actions .btn {
     min-height: 36px;
     padding: 6px 14px;
   }
@@ -19530,7 +20016,7 @@ button.hall-tile:hover {
   text-align: center;
 }
 
-.team-results .result-buttons .btn.picked {
+.team-results .results-actions .btn.picked {
   filter: brightness(0.92);
   box-shadow: inset 0 0 0 2px var(--slot, #58b8f8);
 }
