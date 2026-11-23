@@ -17,7 +17,7 @@ import { missionStatus } from '../game/missions'
 import { pendingPicks, playsShiny } from '../game/shinyPicks'
 import { pollToVote, supporterCount, tierRank, type WallEntry } from '../game/supporters'
 import { formatNumber, LOCALES, locale, t, formatDay } from '../i18n'
-import { arenaIcon, bulbIcon, chevronIcon, coopIcon, discordIcon, eggsIcon, friendEggIcon, gearIcon, giftIcon, gridIcon, heartIcon, helpIcon, itemIcon, medalIcon, moveIcon, newsIcon, pokeballIcon, radioIcon, rankingIcon, ribbonIcon, shopIcon, socialIcon, sparkleIcon, supporterIcon, surveyIcon } from '../render/art'
+import { arenaIcon, bulbIcon, chevronIcon, coopIcon, discordIcon, eggsIcon, friendEggIcon, gearIcon, giftIcon, gridIcon, heartIcon, helpIcon, itemIcon, medalIcon, moveIcon, newsIcon, patreonIcon, pokeballIcon, radioIcon, rankingIcon, ribbonIcon, shopIcon, socialIcon, sparkleIcon, supporterIcon, surveyIcon } from '../render/art'
 import { CAFE_PATRONS, cafeBubbles, cafePose, newCafePose } from '../render/cafeLife'
 import { logoScale, titleLogo } from '../render/logo'
 import { drawPokemon, fitSprites, loadedSprites, loadSpecies, portraitUrl, type Dex } from '../render/sprites'
@@ -34,6 +34,8 @@ import { gemChip, promoLobbyLine } from './gemBits'
 import { gemIconUrl } from '../render/gemArt'
 import { inviterName } from '../ranking'
 import { ROUTES, SOCIAL_IDS, SOCIALS, type SocialId } from '../site/routes'
+import { GEM_PATREON } from '../data/gems'
+import { PATREON_URL } from '../data/supporters'
 import { fetchWall, knownStatus } from '../supporters'
 import { h, later, rich } from './dom'
 import { printedKeys } from './inputLabels'
@@ -103,6 +105,7 @@ export type LobbyFocus =
   | 'arena'
   | 'legends'
   | 'community'
+  | 'patreon'
   | 'modes'
   | 'partner'
   | 'play'
@@ -428,6 +431,16 @@ const surveyButton = (survey: SurveyId, onClick: () => void) => {
 
 /** Opens an official profile in a new tab (or its app). */
 const openSocial = (id: SocialId) => window.open(SOCIALS[id].url, '_blank', 'noopener')
+
+/**
+ * Patreon's call in the lobby (the Comunidade sheet, Na Praça under the Hall):
+ * the least gems a month (`GEM_PATREON`), or a linked patron's own tier.
+ */
+const patreonLine = () => {
+  const w = t().support
+  const pledge = knownStatus()?.pledge ?? null
+  return pledge ? w.card.yours(w.card.names[pledge]) : w.tile(formatNumber(Math.min(...Object.values(GEM_PATREON))))
+}
 
 /* ---------------- Hall da Fama ---------------- */
 
@@ -943,6 +956,7 @@ export const titleScreen = (
     tiktok: () => openSocial('tiktok'),
     youtube: () => openSocial('youtube'),
     instagram: () => openSocial('instagram'),
+    patreon: () => window.open(PATREON_URL, '_blank', 'noopener'),
   }
   /** JOGAR, by the selected mode. */
   const playRuns: Record<GameModeId, () => void> = {
@@ -1023,9 +1037,11 @@ export const titleScreen = (
   }
 
   const socialEntry = (id: SocialId): SheetEntry => ({ icon: iconImg(socialIcon(id), 'lobby-sheet-icon wide'), label: SOCIALS[id].name, sub: SOCIALS[id].handle, run: press(id) })
-  /** The Comunidade sheet's rows: Discord (with its Noibat) first, the official profiles, Ideias, the guide. */
+  const patreonEntry = (): SheetEntry => entry('patreon', patreonIcon(), t().support.card.join, patreonLine(), 'lobby-sheet-icon wide')
+  /** The Comunidade sheet's rows: Discord (with its Noibat) first, Patreon, the official profiles, Ideias, the guide. */
   const communityEntries = (): SheetEntry[] => [
     discordEntry(),
+    patreonEntry(),
     ...SOCIAL_IDS.map(socialEntry),
     ...(ideas ? [entry('ideas', bulbIcon(), m.ideas)] : []),
     entry('help', helpIcon(), t().shell.help, undefined, 'lobby-icon ink-icon'),
@@ -1064,6 +1080,7 @@ export const titleScreen = (
           entry('boutique', assetUrl('shop/boutique.png'), m.boutiqueName, promoLobbyLine() ?? m.boutiqueLine),
           entry('carpentry', assetUrl('shop/carpentry.png'), m.carpentryName, m.carpentryLine),
           hallEntry(),
+          patreonEntry(),
         ],
       },
       social: {
@@ -1159,6 +1176,10 @@ export const titleScreen = (
       shopRow('carpentry', assetUrl('shop/carpentry.png'), m.carpentryName, m.carpentryLine),
     )
     const hall = navigable(hallStrip(openHall), 'hall')
+    const patreon = pressable(
+      h('button', { class: 'arc-card lobby-patreon', type: 'button' }, iconImg(patreonIcon(), 'lobby-patreon-icon'), h('span', { class: 'lobby-day-text' }, h('b', {}, t().support.card.join), h('small', {}, patreonLine()))),
+      'patreon',
+    )
     const plazaEl =
       kind === 'wide'
         ? h(
@@ -1168,6 +1189,7 @@ export const titleScreen = (
             festival,
             shops,
             hall,
+            patreon,
           )
         : null
     // Phones: the invite banner sits with Hoje; wide screens under Na Praça's cards.

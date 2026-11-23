@@ -24,6 +24,61 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-23',
+    title: { pt: 'Apoie no Patreon', en: 'Support on Patreon', es: 'Apoya en Patreon', fr: 'Soutenir sur Patreon', zh: '在 Patreon 支持' },
+    highlights: [
+      {
+        pt: 'Na Praça, logo abaixo do Hall da Fama, agora tem um botão para apoiar o jogo no Patreon.',
+        en: 'At the Plaza, right under the Hall of Fame, now has a button to support the game on Patreon.',
+        es: 'En la Plaza, justo debajo del Salón de la Fama, ahora hay un botón para apoyar el juego en Patreon.',
+        fr: 'Sur la Place, juste sous le Panthéon, un bouton permet maintenant de soutenir le jeu sur Patreon.',
+        zh: '「廣場上」名人堂正下方，現在有一個在 Patreon 支持遊戲的按鈕。',
+      },
+      {
+        pt: 'A janela Comunidade também traz o Patreon, logo depois do Discord.',
+        en: 'The Community sheet has Patreon too, right after Discord.',
+        es: 'La ventana Comunidad también trae el Patreon, justo después de Discord.',
+        fr: 'La fenêtre Communauté propose aussi Patreon, juste après Discord.',
+        zh: '「社群」視窗也加入了 Patreon，就在 Discord 之後。',
+      },
+      {
+        pt: 'O botão mostra quantas gemas o Patreon traz por mês; quem já apoia vê o seu nível.',
+        en: 'The button shows how many gems Patreon brings each month; patrons see their own tier.',
+        es: 'El botón muestra cuántas gemas trae el Patreon por mes; quien ya apoya ve su nivel.',
+        fr: 'Le bouton indique combien de gemmes Patreon apporte chaque mois ; les mécènes voient leur palier.',
+        zh: '按鈕會顯示 Patreon 每月帶來多少寶石；已支持的玩家會看到自己的等級。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Patreon no lobby', en: 'Patreon in the lobby', es: 'Patreon en el lobby', fr: 'Patreon dans le lobby', zh: '大廳裡的 Patreon' },
+        notes: [
+          {
+            pt: 'Na Praça, logo abaixo do Hall da Fama, agora tem um botão para apoiar o jogo no Patreon.',
+            en: 'At the Plaza, right under the Hall of Fame, now has a button to support the game on Patreon.',
+            es: 'En la Plaza, justo debajo del Salón de la Fama, ahora hay un botón para apoyar el juego en Patreon.',
+            fr: 'Sur la Place, juste sous le Panthéon, un bouton permet maintenant de soutenir le jeu sur Patreon.',
+            zh: '「廣場上」名人堂正下方，現在有一個在 Patreon 支持遊戲的按鈕。',
+          },
+          {
+            pt: 'A janela Comunidade também traz o Patreon, logo depois do Discord.',
+            en: 'The Community sheet has Patreon too, right after Discord.',
+            es: 'La ventana Comunidad también trae el Patreon, justo después de Discord.',
+            fr: 'La fenêtre Communauté propose aussi Patreon, juste après Discord.',
+            zh: '「社群」視窗也加入了 Patreon，就在 Discord 之後。',
+          },
+          {
+            pt: 'O botão mostra quantas gemas o Patreon traz por mês; quem já apoia vê o seu nível.',
+            en: 'The button shows how many gems Patreon brings each month; patrons see their own tier.',
+            es: 'El botón muestra cuántas gemas trae el Patreon por mes; quien ya apoya ve su nivel.',
+            fr: 'Le bouton indique combien de gemmes Patreon apporte chaque mois ; les mécènes voient leur palier.',
+            zh: '按鈕會顯示 Patreon 每月帶來多少寶石；已支持的玩家會看到自己的等級。',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-11-22',
     title: { pt: 'Seu progresso a salvo', en: 'Your progress kept safe', es: 'Tu progreso a salvo', fr: 'Ta progression en sécurité', zh: '你的進度安全無虞' },
     highlights: [
