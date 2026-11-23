@@ -20,6 +20,7 @@ import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { GA_MEGAS_WORDS } from './gaMegas'
 import { GA_MEGA_FAMILIES_A_WORDS } from './gaMegaFamiliesA'
 import { SC_WAVE_WORDS } from './scWave'
+import { SAFARI_GUIDE_WORDS } from './safariGuide'
 import { ROCKET_WORDS } from './rocket/words'
 import { ULTRA_WORDS } from './ultra'
 import { LEGEND_PATHS_WORDS } from './legendPaths'
@@ -6651,7 +6652,7 @@ export const es: Messages = {
   paths: LEGEND_PATHS_WORDS.es.paths,
   minigames: {
     claw: SEASON_ONE_CLAW_WORDS.es.words,
-    safari: { ...SEASON_ONE_SAFARI_WORDS.es.words, only: SC_WAVE_WORDS.es.safari },
+    safari: { ...SEASON_ONE_SAFARI_WORDS.es.words, only: SC_WAVE_WORDS.es.safari, guide: SAFARI_GUIDE_WORDS.es },
     dig: SEASON_ONE_DIG_WORDS.es.words,
     close: 'Salir',
     choose: '¿Qué juego?',

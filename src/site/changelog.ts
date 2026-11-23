@@ -28,6 +28,13 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
     title: { pt: 'Tornados sem travar e Patreon no lobby', en: 'Lag-free tornadoes and Patreon in the lobby', es: 'Tornados sin trabas y Patreon en el lobby', fr: 'Des tornades fluides et Patreon dans le lobby', zh: '龍捲風不再卡頓，大廳加入 Patreon' },
     highlights: [
       {
+        pt: 'A Zona Safári tem um Guia: toque em Guia no topo para ver, com cenas do jogo, como encontrar, acalmar e capturar, e as chances de verdade.',
+        en: 'The Safari Zone has a Guide: tap Guide at the top to see, with scenes from the game, how to find, calm and catch Pokémon, and the real odds.',
+        es: 'La Zona Safari tiene una Guía: toca Guía arriba para ver, con escenas del juego, cómo encontrar, calmar y atrapar Pokémon, y las probabilidades reales.',
+        fr: 'Le Parc Safari a un Guide : touchez Guide en haut pour voir, avec des scènes du jeu, comment trouver, calmer et capturer, et les vraies chances.',
+        zh: '狩獵地帶有了指南：點上方的「指南」，用遊戲畫面看怎麼找到、安撫和捕捉寶可夢，以及真正的機率。',
+      },
+      {
         pt: 'Os tornados do Whirlwind (do Lugia, ou do TM que ele deixa) não travam mais o jogo numa build de área grande, como a do Tornadus com Long Reach.',
         en: 'Whirlwind’s tornadoes (Lugia’s, or from the TM it leaves) no longer slow the game down on a big-area build, like Tornadus with Long Reach.',
         es: 'Los tornados de Whirlwind (de Lugia, o del TM que deja) ya no traban el juego con una build de área grande, como Tornadus con Long Reach.',
@@ -57,6 +64,26 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
       },
     ],
     changes: [
+      {
+        title: { pt: 'Guia da Zona Safári', en: 'Safari Zone guide', es: 'Guía de la Zona Safari', fr: 'Guide du Parc Safari', zh: '狩獵地帶指南' },
+        notes: [
+          {
+            pt: 'Nove capítulos curtos: a sessão, os encontros e como chegar de fininho, a Safari Ball, fruta, pedra e isca, a melhor jogada, quem aparece, brilhantes e correntes, a garantia e o Concurso de Insetos.',
+            en: 'Nine short chapters: the session, encounters and sneaking up, the Safari Ball, berry, rock and bait, the best play, who shows up, shinies and chains, the guarantee and the Bug-Catching Contest.',
+            es: 'Nueve capítulos cortos: la sesión, los encuentros y cómo acercarse en silencio, la Safari Ball, baya, roca y cebo, la mejor jugada, quién aparece, brillantes y cadenas, la garantía y el Concurso de Bichos.',
+          },
+          {
+            pt: 'A tabela "Qual a melhor jogada?" mostra a chance de capturar cada raridade com cada jeito de jogar, calculada das regras do jogo. Resumo: isca, duas frutas e depois bolas; pedra quase nunca compensa.',
+            en: 'The "What\'s the best play?" table shows your chance to catch each rarity with each way of playing, worked out from the game\'s rules. In short: bait, two berries, then balls; the rock almost never pays off.',
+            es: 'La tabla "¿Cuál es la mejor jugada?" muestra la probabilidad de atrapar cada rareza con cada forma de jugar, calculada con las reglas del juego. En resumen: cebo, dos bayas y luego bolas; la roca casi nunca vale la pena.',
+          },
+          {
+            pt: 'Ele explica também as sequências da mesma espécie: cada encontro tem 30% de chance de repetir o anterior, o que forma as correntes de brilhantes.',
+            en: 'It also explains streaks of the same species: every encounter has a 30% chance to repeat the one before, which is what builds shiny chains.',
+            es: 'También explica las rachas de la misma especie: cada encuentro tiene un 30% de repetir el anterior, que es lo que forma las cadenas de brillantes.',
+          },
+        ],
+      },
       {
         title: { pt: 'Desempenho', en: 'Performance', es: 'Rendimiento', fr: 'Performances', zh: '效能' },
         notes: [
