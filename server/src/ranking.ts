@@ -34,6 +34,7 @@ import { RIBBON_TIERS, type RibbonTier } from '../../src/game/ribbons'
 import { badgesOf } from '../../src/game/supporters'
 import { RULES_VERSION, TICK, type Replay } from '../../src/game/replay'
 import { parseBagItems } from '../../src/game/bag'
+import type { LoadoutField } from '../../src/game/loadoutBacking'
 import { boardListed, commitLag, sameSegment, settleReport, STREAM, streamedInTime, type ReplayChunk } from '../../src/game/replayStream'
 import type { TransactionSql } from 'postgres'
 import { CHECKED, checkRank, rankOnShow, type BoardLine } from './checkRank'
@@ -458,12 +459,25 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
      * attempts, then the best places, then the samples, then runs from before it, oldest first), for
      * `leaseSeconds`: another verifier skips it until then (`for update skip locked` keeps two from taking
      * the same one), and a claim whose verifier died runs out. Each claim counts an attempt (`check_attempts`).
-     * Returns what it reported, when it started, its replay, whether it's a determinism sample and which
-     * attempt this is; null when nothing waits.
+     * Returns whose it is, what it reported, when it started, how many seconds ago it last reported (`age`),
+     * whether it's a Desafio do dia's, its replay, whether it's a determinism sample and which attempt this is;
+     * null when nothing waits.
      */
     claimCheck: async (leaseSeconds: number) => {
       const [row] = await sql<
-        { id: string; survived: number; kills: number; level: number; started_at: Date; replay: unknown; check_rank: number | null; check_attempts: number }[]
+        {
+          id: string
+          user_id: string
+          survived: number
+          kills: number
+          level: number
+          started_at: Date
+          age: number
+          challenge: boolean
+          replay: unknown
+          check_rank: number | null
+          check_attempts: number
+        }[]
       >`
         update runs set check_claimed_at = now(), check_attempts = check_attempts + 1
         where id = (
@@ -473,9 +487,22 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
           order by check_rank, finished_at
           limit 1 for update skip locked
         )
-        returning id, survived, kills, level, started_at, replay, check_rank, check_attempts`
+        returning id, user_id, survived, kills, level, started_at, extract(epoch from now() - finished_at)::float8 as age, challenge is not null as challenge,
+          replay, check_rank, check_attempts`
       return row
-        ? { id: row.id, time: row.survived, kills: row.kills, level: row.level, startedAt: row.started_at, replay: row.replay, sample: row.check_rank === CHECKED.sampleRank, attempt: row.check_attempts }
+        ? {
+            id: row.id,
+            userId: row.user_id,
+            time: row.survived,
+            kills: row.kills,
+            level: row.level,
+            startedAt: row.started_at,
+            age: row.age,
+            challenge: row.challenge,
+            replay: row.replay,
+            sample: row.check_rank === CHECKED.sampleRank,
+            attempt: row.check_attempts,
+          }
         : null
     },
 
@@ -494,6 +521,17 @@ export const rankingStore = (sql: Sql, { streamEnforce = false }: { streamEnforc
     setVerified: async (id: string, time: number, verdict: { ok: true; branch: BranchId | null } | { ok: false }, ms: number | null) => {
       await sql`
         update runs set verified = ${verdict.ok}, checked_at = now(), check_ms = ${ms}${verdict.ok ? sql`, replay = null, branch = ${verdict.branch}` : sql``}
+        where id = ${id} and abs(survived - ${time}) < ${TIME_EPSILON} and verified is null`
+    },
+
+    /**
+     * Takes a run off the public boards for good (`unlisted`, as a late stream does: it still counts for its
+     * player) because its stored save doesn't back its loadout (`unbackedLoadout`), noting which `fields`,
+     * unless the run grew since (endless mode sent it again: that report gets its own check).
+     */
+    setUnbacked: async (id: string, time: number, fields: readonly LoadoutField[]) => {
+      await sql`
+        update runs set unlisted = true, unbacked = ${sql.array([...fields])}::text[]
         where id = ${id} and abs(survived - ${time}) < ${TIME_EPSILON} and verified is null`
     },
 
