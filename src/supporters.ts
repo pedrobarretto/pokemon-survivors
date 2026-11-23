@@ -58,7 +58,7 @@ export const fetchSupporterStatus = async (): Promise<SupporterStatus | null> =>
 /** Dev: stands the device at `tier` (an OG for `og`) as if the API said so (`ps.supporter`); Gold and Diamond as a linked Patreon's pledge, as they come now. */
 export const stageSupporterStatus = (tier: SupporterTier, og = false) => {
   const pledge = tier === 'supporter' ? null : tier
-  storeStatus({ tier, since: new Date().toISOString(), public: true, og, vote: null, diamondVote: null, patreon: pledge !== null, pledge })
+  storeStatus({ tier, since: new Date().toISOString(), public: true, og, vote: null, diamondVote: null, patreon: pledge !== null, pledge, charged: pledge ? new Date().toISOString() : null })
 }
 
 let asked: string | null = null

@@ -22,6 +22,8 @@ type Words = {
     /** Linked with an active pledge: the player's own tier and what it brings. */
     yours: (tier: string) => string
     yoursGems: (gems: string) => string
+    /** The last paid charge's date and, while it's ahead, the next one's (`nextCharge`). */
+    charges: (last: string, next: string | null) => string
     manage: string
     offline: string
   }
@@ -49,7 +51,8 @@ export const SUPPORT_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Words> = {
       join: 'Apoiar no Patreon',
       link: 'Já apoio: vincular',
       yours: (tier) => `Seu Patreon: ${tier}`,
-      yoursGems: (gems) => `${gems} gemas chegam todo mês. Obrigado! ♥`,
+      yoursGems: (gems) => `${gems} gemas chegam a cada cobrança mensal, no seu dia de cobrança do Patreon. Obrigado! ♥`,
+      charges: (last, next) => `Última cobrança: ${last}${next ? ` · próxima por volta de ${next}` : ''}`,
       manage: 'Ver no Patreon',
       offline: 'Não deu para abrir o Patreon agora.',
     },
@@ -74,7 +77,8 @@ export const SUPPORT_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Words> = {
       join: 'Support on Patreon',
       link: 'Already a patron: link',
       yours: (tier) => `Your Patreon: ${tier}`,
-      yoursGems: (gems) => `${gems} gems arrive every month. Thank you! ♥`,
+      yoursGems: (gems) => `${gems} gems arrive with each monthly charge, on your Patreon billing day. Thank you! ♥`,
+      charges: (last, next) => `Last charge: ${last}${next ? ` · next around ${next}` : ''}`,
       manage: 'View on Patreon',
       offline: "Couldn't open Patreon right now.",
     },
@@ -99,7 +103,8 @@ export const SUPPORT_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Words> = {
       join: 'Apoyar en Patreon',
       link: 'Ya apoyo: vincular',
       yours: (tier) => `Tu Patreon: ${tier}`,
-      yoursGems: (gems) => `${gems} gemas llegan cada mes. ¡Gracias! ♥`,
+      yoursGems: (gems) => `${gems} gemas llegan con cada cobro mensual, en tu día de cobro de Patreon. ¡Gracias! ♥`,
+      charges: (last, next) => `Último cobro: ${last}${next ? ` · el próximo hacia el ${next}` : ''}`,
       manage: 'Ver en Patreon',
       offline: 'No se pudo abrir Patreon ahora.',
     },
@@ -124,7 +129,8 @@ export const SUPPORT_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Words> = {
       join: 'Soutenir sur Patreon',
       link: 'Déjà soutien : lier',
       yours: (tier) => `Ton Patreon : ${tier}`,
-      yoursGems: (gems) => `${gems} gemmes arrivent chaque mois. Merci ! ♥`,
+      yoursGems: (gems) => `${gems} gemmes arrivent à chaque prélèvement mensuel, le jour où Patreon te prélève. Merci ! ♥`,
+      charges: (last, next) => `Dernier prélèvement : ${last}${next ? ` · le prochain vers le ${next}` : ''}`,
       manage: 'Voir sur Patreon',
       offline: 'Impossible d’ouvrir Patreon pour l’instant.',
     },
@@ -149,7 +155,8 @@ export const SUPPORT_WORDS: Record<'pt' | 'en' | 'es' | 'fr' | 'zh', Words> = {
       join: '在 Patreon 贊助',
       link: '已經贊助：連結',
       yours: (tier) => `你的 Patreon：${tier}`,
-      yoursGems: (gems) => `每月送達 ${gems} 顆寶石。謝謝你！♥`,
+      yoursGems: (gems) => `每次 Patreon 月扣款時送達 ${gems} 顆寶石，就在你的扣款日。謝謝你！♥`,
+      charges: (last, next) => `上次扣款：${last}${next ? `・下次約在 ${next}` : ''}`,
       manage: '前往 Patreon',
       offline: '目前無法開啟 Patreon。',
     },
