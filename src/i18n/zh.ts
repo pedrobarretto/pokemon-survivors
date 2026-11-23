@@ -1527,6 +1527,10 @@ export const zh: Messages = {
     lobby: '大廳',
     dexSpecies: (n) => `+${n}種新寶可夢`,
     dexShinies: (n) => `捕捉了${n}隻異色`,
+    details: '詳細資料',
+    newBest: '新紀錄！',
+    medals: (n) => `${n} 枚新獎牌`,
+    missionsMoved: (n) => `${n} 個任務有進展`,
     support: '玩得開心嗎？贊助這個專案',
     cause: {
       title: '致命一擊',

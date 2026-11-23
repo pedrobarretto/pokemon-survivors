@@ -48,10 +48,11 @@ import { crossings } from '../game/terrain'
 import { MAP_ARCHETYPES, type MapArchetypeId } from '../data/mapArchetypes'
 import { surrenderGate, voters } from '../game/versusSocial'
 import { rulesOf } from '../game/versusRules'
-import { deathCause } from './deathCause'
+import { deathCause, hitsBefore } from './deathCause'
 import { abilityMark } from './abilityMark'
 import { teamBuilds } from './teamHud'
 import type { SaveCard } from './onboarding'
+import type { MissionReport } from './missions'
 import { confirmDrop } from './itemSwap'
 import { needsSwap } from '../game/itemDrop'
 import { radioPill } from './radio'
@@ -1011,12 +1012,14 @@ type ResultsShare = { open: (back: () => void) => Screen; glow: boolean }
  */
 type ResultsExtras = {
   badge: HTMLElement | null
-  report: HTMLElement | null
+  report: MissionReport | null
   medals: readonly HTMLElement[]
   eggs: ResultEggs
   news: DexNews
   ranking: ResultsRanking | null
   share: ResultsShare | null
+  /** The run beat the save's best time (`Lifetime.bestTime` before it, once there is one): the hero says so. */
+  record?: boolean
   /** A victory's thanks to the supporters (`creditsLine`), above the support link. */
   credits?: HTMLElement | null
   /** A guest's first runs: the "save your progress" card (`ui/onboarding.ts`), its buttons joining the row's keys. */
@@ -1029,13 +1032,18 @@ type ResultsExtras = {
 
 const NO_EXTRAS: ResultsExtras = { badge: null, report: null, medals: [], eggs: { converted: { full: [], cap: [] }, ready: 0 }, news: { species: 0, shinies: 0 }, ranking: null, share: null }
 
+/** More medals than this fold into one chip ("5 medalhas novas"), their names under Detalhes. */
+const MEDALS_SHOWN = 2
+
 /**
- * Everything new a run brought, as one wrapping line of chips under the stats
- * (Pokédex, eggs, medals), so the results stay short on a phone held upright.
+ * Everything new a run brought, as one wrapping line of chips under the
+ * numbers (Pokédex, eggs ready, missions, medals, candies), so the results
+ * stay short on a phone held upright. Many medals fold into one chip.
  */
-const runNews = ({ eggs, news, medals }: ResultsExtras) => {
+const runNews = (g: Game, { eggs, news, medals, report }: ResultsExtras) => {
   const m = t().results
   const e = t().eggs
+  const medalSum = medals.length > MEDALS_SHOWN ? h('span', { class: 'news-chip medal-chip' }, medals[0]?.querySelector('img')?.cloneNode() ?? null, m.medals(medals.length)) : null
   const chips = [
     (news.species > 0 || news.shinies > 0) &&
       h(
@@ -1046,20 +1054,90 @@ const runNews = ({ eggs, news, medals }: ResultsExtras) => {
         news.shinies > 0 && h('img', { src: sparkleIcon(), alt: '' }),
       ),
     eggs.ready > 0 && h('span', { class: 'news-chip egg-ready' }, h('img', { src: eggIcon('common'), alt: '' }), e.readyBadge(eggs.ready)),
+    report?.chip,
+    g.halloween && h('span', { class: 'news-chip treat-chip' }, h('img', { src: treatIcon(), alt: t().halloween.candies }), `+${formatNumber(g.candies)}`),
     ...convertedEggLines(eggs.converted).map((line) => h('span', { class: 'news-chip' }, h('img', { src: coinIcon(1), alt: '' }), line)),
-    ...medals,
+    ...(medalSum ? [medalSum] : medals),
   ].filter((chip) => chip instanceof HTMLElement)
   return chips.length > 0 ? h('div', { class: 'result-news' }, ...chips) : null
 }
 
+/** Device preference: whether the results open with Detalhes shown (the last choice, `ps:resultsDetails`). */
+const DETAILS_KEY = 'ps:resultsDetails'
+
+const detailsWanted = () => {
+  try {
+    return localStorage.getItem(DETAILS_KEY) === 'open'
+  } catch {
+    return false
+  }
+}
+
+const rememberDetails = (open: boolean) => {
+  try {
+    if (open) localStorage.setItem(DETAILS_KEY, 'open')
+    else localStorage.removeItem(DETAILS_KEY)
+  } catch {}
+}
+
+/** A row of Detalhes: a label and its value (text or icons). */
+const fact = (label: string, ...value: Array<Node | string | false | null>) => h('div', { class: 'results-fact' }, h('span', {}, label), h('b', {}, ...value))
+
+/** A row of small icons with their names as tooltips (legends, places, eggs). */
+const iconRow = (icons: ReadonlyArray<{ src: string; name: string }>) => h('span', { class: 'result-legends' }, ...icons.map((i) => h('img', { src: i.src, alt: i.name, title: i.name })))
+
 /**
- * End of run. On a victory, `onContinue` adds the endless-mode button (first);
- * a run that ends in endless mode shows its overtime, rift legendaries and Arceus.
- * The steps walked and eggs found feed the incubator (`extras.eggs`), and
- * `extras.news` adds a one-line Pokédex summary when the run found something new.
- * A victory also links the support page, under the buttons (only then, so it never nags); a faint
- * says what landed the last hit (`deathCause`). A guest's first runs add the "save your progress" card (`extras.save`) above the buttons.
+ * What the results keep behind Detalhes: the hits before the faint, the ₽
+ * split, steps, the legends, places and eggs of the run, the medals when
+ * they folded into one chip, the missions it moved and the damage by move.
+ */
+const resultDetails = (g: Game, extras: ResultsExtras) => {
+  const m = t().results
+  const e = t().eggs
+  const r = t().rifts
+  const me = localPlayer(g)
+  const earned = runEarnings(g)
+  const before = g.phase === 'gameover' ? hitsBefore(me) : null
+  const legends = g.rift.cleared
+  return h(
+    'div',
+    { class: 'results-details' },
+    before && h('p', { class: 'results-before' }, before),
+    h(
+      'div',
+      { class: 'results-facts' },
+      h('p', { class: 'results-split' }, h('img', { src: coinIcon(1), alt: '' }), m.earnings(formatPokeDollars(earned.coins), formatPokeDollars(earned.bonus))),
+      fact(e.steps, formatNumber(toSteps(me.walked))),
+      legends.length > 0 && fact(r.legends, iconRow(legends.map((id) => ({ src: portraitUrl(ENEMIES[id].dex), name: ENEMIES[id].name })))),
+      g.place.cleared.length > 0 && fact(t().places.results, iconRow(g.place.cleared.map((id) => ({ src: placeIcon(id), name: t().places.names[id] })))),
+      g.eggs.found.length > 0 && fact(e.eggs, iconRow(g.eggs.found.map((egg) => ({ src: eggIcon(egg.tier), name: e.tiers[egg.tier] })))),
+    ),
+    extras.medals.length > MEDALS_SHOWN && h('div', { class: 'result-news' }, ...extras.medals),
+    extras.report?.el,
+    damageEntries(g).length > 0 && h('div', { class: 'results-damage' }, h('b', { class: 'results-section' }, t().pause.damageTitle), damageList(g)),
+  )
+}
+
+/** Scrolls `box` the least it takes to show `el` whole (a button the keys reached, Detalhes as it opens). */
+const reveal = (box: HTMLElement, el: HTMLElement) => {
+  const b = box.getBoundingClientRect()
+  const r = el.getBoundingClientRect()
+  if (r.top < b.top) box.scrollTop -= b.top - r.top + 8
+  else if (r.bottom > b.bottom) box.scrollTop += Math.min(r.bottom - b.bottom + 8, r.top - b.top - 8)
+}
+
+/**
+ * End of run, built around one hero (the partner, how the run ended, the
+ * time, level, KOs and ₽ it earned) with everything else as a line of chips
+ * or behind Detalhes, and the ways on in a footer the body scrolls above.
+ * On a victory, `onContinue` adds the endless-mode card (its button first for
+ * the keys); a run that ends in endless mode shows its overtime and Arceus.
+ * `extras.news` and `extras.eggs` add the Pokédex and incubator chips. A
+ * victory also links the support page at the end of the body (only then, so
+ * it never nags); a faint says what landed the last hit (`deathCause`). A
+ * guest's first runs add the "save your progress" card (`extras.save`).
  * `onLobby` goes straight home (Trocar Pokémon opens the partner select instead).
+ * ← → move between the buttons, ↑ ↓ scroll the body.
  */
 export const results = (
   root: HTMLElement,
@@ -1072,21 +1150,25 @@ export const results = (
   extras: ResultsExtras = NO_EXTRAS,
 ): Screen => {
   const m = t().results
-  const e = t().eggs
   const r = t().rifts
+  const me = localPlayer(g)
   const victory = g.phase === 'victory'
+  const outcome = victory ? 'won' : g.endless ? 'endless' : 'fainted'
   const name = playerForm(g).name
   const earned = runEarnings(g)
   const extra = overtime(g.time)
   const reaperDefeats = g.endless?.reaperDefeats ?? 0
-  const legends = g.rift.cleared
-  const retry = h('button', { class: 'btn' }, m.retry)
+  const record = extras.record ?? false
+  const goOn = victory && onContinue ? h('button', { class: 'btn confirm results-go' }, r.continue) : null
+  const retry = h('button', { class: goOn ? 'btn' : 'btn confirm' }, m.retry)
+  const share = extras.share ? h('button', { class: extras.share.glow ? 'btn share-button glow' : 'btn share-button' }, h('img', { src: sparkleIcon(), alt: '' }), t().share.button) : null
   const back = h('button', { class: 'btn' }, m.change)
   const lobby = h('button', { class: 'btn' }, m.lobby)
-  const goOn = victory && onContinue ? h('button', { class: 'btn' }, r.continue) : null
   const ranking = extras.ranking
   const boards = ranking ? h('button', { class: 'btn' }, t().ranking.open) : null
-  const share = extras.share ? h('button', { class: extras.share.glow ? 'btn share-button glow' : 'btn share-button' }, h('img', { src: sparkleIcon(), alt: '' }), t().share.button) : null
+  const toggle = h('button', { class: 'btn results-toggle', type: 'button', 'aria-expanded': 'false' }, h('span', {}, m.details), h('span', { class: 'results-chevron', 'aria-hidden': 'true' }))
+  const details = resultDetails(g, extras)
+  const invite = extras.invite ?? null
   /** The boards or the share preview, open over the results. */
   let sub: Screen | null = null
   /**
@@ -1106,85 +1188,116 @@ export const results = (
       nav = bindNav(buttons.indexOf(button))
     })
   }
-  const saved = extras.save?.buttons ?? []
-  const invite = extras.invite ?? null
-  const row = [goOn, retry, back, lobby, share, boards].filter((b) => b !== null)
-  // The invite's and the save card's buttons sit in their cards, but the keys reach them after the row.
-  const buttons = [...row, ...(invite ? [invite.button] : []), ...saved.map((b) => b.button)]
-  const actions = [
-    goOn && onContinue,
-    onRetry,
-    onMenu,
-    onLobby,
-    share && (() => openSub(extras.share?.open, share)),
-    boards && (() => openSub(ranking?.open, boards)),
-    invite && (() => invite.press((open) => openSub(open, invite.button))),
-    ...saved.map((b) => b.run),
-  ].filter((a) => typeof a === 'function')
+  let detailsShown = false
+  const showDetails = (open: boolean, remember: boolean) => {
+    detailsShown = open
+    details.hidden = !open
+    toggle.setAttribute('aria-expanded', String(open))
+    toggle.classList.toggle('open', open)
+    if (remember) rememberDetails(open)
+  }
+  showDetails(detailsWanted(), false)
+  const body = h('div', { class: 'results-body' })
+  // Each button with what it does, in the keys' order: Continue (a victory's first pick), Retry, the footer's others, then the body's.
+  const entries: Array<readonly [HTMLButtonElement, () => void] | null> = [
+    goOn && onContinue ? [goOn, onContinue] : null,
+    [retry, onRetry],
+    share && [share, () => openSub(extras.share?.open, share)],
+    [back, onMenu],
+    [lobby, onLobby],
+    boards && [boards, () => openSub(ranking?.open, boards)],
+    [toggle, () => (showDetails(!detailsShown, true), playSfx('select'), detailsShown && reveal(body, toggle))],
+    invite && [invite.button, () => invite.press((open) => openSub(open, invite.button))],
+    ...(extras.save?.buttons ?? []).map((b) => [b.button, b.run] as const),
+  ]
+  const bound = entries.filter((entry) => entry !== null)
+  const buttons = bound.map(([button]) => button)
   // Every button acts after the key dispatch: the screen it opens (Menu's partner select) would take the same press as its own.
   // Space is the special: pressed every second or so while it recharges, it picked Retry (or Continue) the moment the run ended,
   // so the results never showed and the run "restarted". Enter, a tap or pad A pick here.
-  const bindNav = (initial = 0, guard = 0) => menu(input, buttons, (i) => later(() => actions[i]?.()), { horizontal: true, initial, guard, space: false })
+  const bindNav = (initial = 0, guard = 0) => menu(input, buttons, (i) => later(() => bound[i]?.[1]()), { horizontal: true, initial, guard, space: false })
   // The run ends mid-fight: pad A, still being pressed for the special, would pick the focused button (Retry).
   let nav = bindNav(0, RESULTS_GUARD_MS)
+  // ↑ ↓ scroll the body; a button in it that ← → reached comes into view.
+  const offScroll = input.onKey((key) => {
+    if (sub) return
+    if (key === 'ArrowUp' || key === 'KeyW') body.scrollTop -= 80
+    else if (key === 'ArrowDown' || key === 'KeyS') body.scrollTop += 80
+    else {
+      const at = buttons[nav.index]
+      if (at && body.contains(at)) reveal(body, at)
+    }
+  })
+
+  const stat = (label: string, value: string, cls = '', note: HTMLElement | null = null) => h('div', { class: `results-stat${cls}` }, h('span', {}, label), h('b', {}, value), note)
+  body.append(
+    ...[
+      h(
+        'div',
+        { class: 'results-main' },
+        h(
+          'div',
+          { class: `results-hero ${outcome}` },
+          h(
+            'div',
+            { class: me.shiny ? 'portrait-wrap shiny' : 'portrait-wrap' },
+            h('img', { class: 'results-portrait', src: sprites(playerDex(g), me.shiny).portrait, alt: '' }),
+            me.shiny && h('img', { class: 'shiny-badge', src: sparkleIcon(), alt: m.shiny(name), title: m.shiny(name) }),
+          ),
+          h(
+            'div',
+            { class: 'results-headline' },
+            h('h2', { class: 'results-title' }, victory ? m.victory : g.endless ? r.endlessOver(name) : m.fainted(name)),
+            h(
+              'div',
+              { class: 'results-tags' },
+              difficultyTag(g.difficulty),
+              record && h('span', { class: 'results-tag best' }, m.newBest),
+              reaperDefeats > 0 && h('span', { class: 'results-tag reaper' }, r.reaperDefeated(reaperDefeats)),
+            ),
+            extras.badge,
+          ),
+        ),
+        g.phase === 'gameover' && deathCause(me, true),
+        h(
+          'div',
+          { class: 'results-stats' },
+          stat(m.time, formatTime(g.time), record ? ' best' : '', extra > 0 ? h('small', { title: r.overtime }, `+${formatTime(extra)}`) : null),
+          stat(m.level, formatNumber(me.level)),
+          stat(m.kills, formatNumber(g.kills)),
+        ),
+        h('div', { class: 'results-earned' }, h('img', { src: coinIcon(2), alt: '' }), h('b', {}, `+${formatPokeDollars(earned.total)}`)),
+      ),
+      h(
+        'div',
+        { class: 'results-side' },
+        goOn && h('div', { class: 'results-endless' }, h('p', {}, r.continueHint), goOn),
+        ranking?.panel,
+        extras.gems,
+        runNews(g, extras),
+        // Right under the run's news, where a phone held upright sees it before scrolling.
+        invite?.card,
+        extras.save?.el,
+        toggle,
+        details,
+        victory && extras.credits,
+        victory && h('a', { class: 'support-link result-support', href: supportPageUrl('victory'), target: '_blank', rel: 'noopener' }, `♥ ${m.support}`),
+      ),
+    ].filter((node) => node instanceof HTMLElement),
+  )
 
   const el = h(
     'div',
-    { class: 'screen dim' },
+    { class: 'screen dim results-screen' },
     h(
       'div',
-      { class: 'dialog box pop wide' },
-      h(
-        'div',
-        { class: 'portrait-wrap' },
-        h('img', { class: 'result-portrait', src: sprites(playerDex(g), localPlayer(g).shiny).portrait, alt: '' }),
-        localPlayer(g).shiny && h('img', { class: 'shiny-badge', src: sparkleIcon(), alt: 'Shiny' }),
-      ),
-      h('div', { class: 'dialog-title' }, victory ? m.victory : g.endless ? r.endlessOver(name) : m.fainted(name)),
-      extras.badge,
-      localPlayer(g).shiny && h('div', { class: 'tag tag-shiny' }, m.shiny(name)),
-      reaperDefeats > 0 && h('div', { class: 'tag tag-shiny' }, r.reaperDefeated(reaperDefeats)),
-      g.phase === 'gameover' && deathCause(localPlayer(g)),
-      h(
-        'div',
-        { class: 'result-stats' },
-        h('div', {}, h('span', {}, t().difficulty.label), h('b', {}, difficultyTag(g.difficulty))),
-        h('div', {}, h('span', {}, m.time), h('b', {}, formatTime(g.time))),
-        extra > 0 && h('div', {}, h('span', {}, r.overtime), h('b', {}, `+${formatTime(extra)}`)),
-        h('div', {}, h('span', {}, m.level), h('b', {}, localPlayer(g).level)),
-        h('div', {}, h('span', {}, m.kills), h('b', {}, g.kills)),
-        g.halloween && h('div', { class: 'result-treats' }, h('span', {}, t().halloween.candies), h('b', {}, h('img', { src: treatIcon(), alt: '' }), `+${formatNumber(g.candies)}`)),
-        legends.length > 0 &&
-          h('div', {}, h('span', {}, r.legends), h('b', { class: 'result-legends' }, ...legends.map((id) => h('img', { src: portraitUrl(ENEMIES[id].dex), alt: ENEMIES[id].name, title: ENEMIES[id].name })))),
-        g.place.cleared.length > 0 &&
-          h('div', {}, h('span', {}, t().places.results), h('b', { class: 'result-legends' }, ...g.place.cleared.map((id) => h('img', { src: placeIcon(id), alt: t().places.names[id], title: t().places.names[id] })))),
-        h('div', {}, h('span', {}, e.steps), h('b', {}, formatNumber(toSteps(localPlayer(g).walked)))),
-        g.eggs.found.length > 0 &&
-          h('div', {}, h('span', {}, e.eggs), h('b', { class: 'result-legends' }, ...g.eggs.found.map((egg) => h('img', { src: eggIcon(egg.tier), alt: e.tiers[egg.tier], title: e.tiers[egg.tier] })))),
-      ),
-      runNews(extras),
-      // Right under the run's news, where a phone held upright sees it before scrolling.
-      invite?.card,
-      ranking?.panel,
-      extras.gems,
-      goOn && h('p', { class: 'endless-hint' }, r.continueHint),
-      h(
-        'div',
-        { class: 'earnings' },
-        h('img', { src: coinIcon(2), alt: '' }),
-        h('b', {}, `+${formatPokeDollars(earned.total)}`),
-        h('span', {}, m.earnings(formatPokeDollars(earned.coins), formatPokeDollars(earned.bonus))),
-      ),
-      extras.report,
-      damageList(g),
-      extras.save?.el,
-      h('div', { class: 'buttons result-buttons' }, ...row),
-      victory && extras.credits,
-      victory && h('a', { class: 'support-link result-support', href: supportPageUrl('victory'), target: '_blank', rel: 'noopener' }, `♥ ${m.support}`),
+      { class: `dialog box pop results ${outcome}` },
+      body,
+      h('div', { class: 'results-actions' }, h('div', { class: 'results-primary' }, retry, share), h('div', { class: 'results-more' }, back, lobby, boards)),
     ),
   )
   root.append(el)
-  return { el, dispose: () => (sub?.dispose(), nav.off(), el.remove()) }
+  return { el, dispose: () => (sub?.dispose(), nav.off(), offScroll(), el.remove()) }
 }
 
 /* ---------------- Text box & flash (toasts and banners: `toasts.ts`) ---------------- */

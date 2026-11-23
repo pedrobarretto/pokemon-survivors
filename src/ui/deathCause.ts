@@ -18,20 +18,28 @@ export const harmLabel = (hit: Harm, s: CauseText): string => {
   return hit.move !== null ? s.move(who, hit.move) : s.kind(who, kind)
 }
 
+/** The hits before the one that fainted `p`, in words ("Antes: Rattata 12 · Lava 30"), or null when it was the only one. */
+export const hitsBefore = (p: Player) => {
+  const s = t().results.cause
+  const before = p.hits.slice(0, -1).map((x) => `${harmLabel(x, s)} ${formatNumber(x.dmg)}`)
+  return before.length > 0 ? s.before(before.join(' · ')) : null
+}
+
 /**
  * The end screen's cause of `p`'s faint: the hit that fainted them (who, with
  * what, how hard) and, smaller, the ones just before it (`Player.hits`).
+ * `compact` leaves those out (the solo results show them under Detalhes, `hitsBefore`).
  */
-export const deathCause = (p: Player) => {
+export const deathCause = (p: Player, compact = false) => {
   const s = t().results.cause
   const last = p.hits.at(-1)
-  const before = p.hits.slice(0, -1).map((x) => `${harmLabel(x, s)} ${formatNumber(x.dmg)}`)
+  const before = compact ? null : hitsBefore(p)
   return h(
     'div',
-    { class: 'death-cause' },
+    { class: compact ? 'death-cause compact' : 'death-cause' },
     h('small', {}, s.title),
     h('b', {}, last ? harmLabel(last, s) : s.unknown),
     last && h('span', { class: 'death-dmg' }, s.damage(formatNumber(last.dmg))),
-    before.length > 0 && h('small', { class: 'death-before' }, s.before(before.join(' · '))),
+    before && h('small', { class: 'death-before' }, before),
   )
 }

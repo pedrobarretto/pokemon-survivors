@@ -42,25 +42,18 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         zh: '狩獵地帶有了指南：點上方的「指南」，用遊戲畫面看怎麼找到、安撫和捕捉寶可夢，以及真正的機率。',
       },
       {
-        pt: 'Os tornados do Whirlwind (do Lugia, ou do TM que ele deixa) não travam mais o jogo numa build de área grande, como a do Tornadus com Long Reach.',
-        en: 'Whirlwind’s tornadoes (Lugia’s, or from the TM it leaves) no longer slow the game down on a big-area build, like Tornadus with Long Reach.',
-        es: 'Los tornados de Whirlwind (de Lugia, o del TM que deja) ya no traban el juego con una build de área grande, como Tornadus con Long Reach.',
-        fr: 'Les tornades de Whirlwind (celles de Lugia, ou du TM qu’il laisse) ne ralentissent plus le jeu avec un build de grande zone, comme Tornadus avec Long Reach.',
-        zh: 'Whirlwind 的龍捲風（Lugia 的，或牠留下的招式學習器）在大範圍配置下不再拖慢遊戲，例如帶 Long Reach 的 Tornadus。',
+        pt: 'Os tornados do Whirlwind (do Lugia ou do TM) não travam mais numa build de área grande, e o Origin Pulse do Kyogre e os outros anéis e raios lendários ficaram muito mais leves, sobretudo em celulares.',
+        en: 'Whirlwind’s tornadoes (Lugia’s or the TM’s) no longer slow the game on a big-area build, and Kyogre’s Origin Pulse and the other legendary rings and beams are far lighter, above all on phones.',
+        es: 'Los tornados de Whirlwind (de Lugia o del TM) ya no traban el juego con una build de área grande, y el Origin Pulse de Kyogre y los demás anillos y rayos legendarios son mucho más livianos, sobre todo en celulares.',
+        fr: 'Les tornades de Whirlwind (de Lugia ou du TM) ne ralentissent plus le jeu avec un build de grande zone, et l’Origin Pulse de Kyogre et les autres anneaux et rayons légendaires sont bien plus légers, surtout sur téléphone.',
+        zh: 'Whirlwind 的龍捲風（Lugia 的或招式學習器的）在大範圍配置下不再拖慢遊戲，Kyogre 的 Origin Pulse 與其他傳說光環、光束也輕量許多，手機上尤其明顯。',
       },
       {
-        pt: 'O anel e os raios do Origin Pulse do Kyogre custam uma fração do que custavam para desenhar.',
-        en: 'Kyogre’s Origin Pulse ring and beams take a fraction of what they did to draw.',
-        es: 'El anillo y los rayos del Origin Pulse de Kyogre cuestan una fracción de lo que costaban dibujar.',
-        fr: 'L’anneau et les rayons de l’Origin Pulse de Kyogre ne coûtent plus qu’une fraction de ce qu’ils coûtaient à dessiner.',
-        zh: 'Kyogre 的 Origin Pulse，其光環與光束的繪製成本只剩原本的一小部分。',
-      },
-      {
-        pt: 'Os outros anéis e raios grandes dos golpes lendários ficaram mais leves também, sobretudo em celulares.',
-        en: 'The other big rings and beams of the legendary moves got lighter too, above all on phones.',
-        es: 'Los demás anillos y rayos grandes de los movimientos legendarios también quedaron más livianos, sobre todo en celulares.',
-        fr: 'Les autres grands anneaux et rayons des attaques légendaires sont plus légers aussi, surtout sur téléphone.',
-        zh: '其他傳說招式的大型光環與光束也變得更輕量，手機上尤其明顯。',
+        pt: 'A tela de fim de partida foi refeita: o Pokémon, o tempo, o nível, os derrotados e os ₽ no topo, as novidades em uma linha e o resto em Detalhes. Os botões ficam sempre à vista, e o card de compartilhar ficou mais nítido, com o seu Pokémon em destaque.',
+        en: 'The end-of-run screen was redone: your Pokémon, time, level, KOs and ₽ up top, the news in one line and the rest under Details. The buttons always stay in view, and the share card is sharper, with your Pokémon up front.',
+        es: 'La pantalla de fin de partida se rehízo: tu Pokémon, el tiempo, el nivel, los derrotados y los ₽ arriba, las novedades en una línea y el resto en Detalles. Los botones siempre quedan a la vista, y la tarjeta para compartir es más nítida, con tu Pokémon al frente.',
+        fr: 'L’écran de fin de partie a été refait : ton Pokémon, le temps, le niveau, les K.O. et les ₽ en haut, les nouveautés sur une ligne et le reste dans Détails. Les boutons restent toujours visibles, et la carte à partager est plus nette, avec ton Pokémon en vedette.',
+        zh: '對戰結束畫面重新設計：寶可夢、時間、等級、擊倒數與 ₽ 放在最上方，新消息集中在一行，其餘收進「詳細資料」。按鈕永遠看得到，分享卡片也更清晰，你的寶可夢成為主角。',
       },
       {
         pt: 'O Patreon agora aparece no lobby: em Na Praça, logo abaixo do Hall da Fama, e na janela Comunidade, com as gemas que ele traz todo mês.',
@@ -78,6 +71,26 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
       },
     ],
     changes: [
+      {
+        title: { pt: 'Fim de partida', en: 'End of run', es: 'Fin de partida', fr: 'Fin de partie', zh: '對戰結束' },
+        notes: [
+          {
+            pt: 'Detalhes guarda o dano por golpe, os lugares, os passos, os lendários, os ovos, as missões e os golpes antes do desmaio; o jogo lembra se você deixa aberto.',
+            en: 'Details holds the damage by move, places, steps, legends, eggs, missions and the hits before the faint; the game remembers if you leave it open.',
+            es: 'Detalles guarda el daño por movimiento, los lugares, los pasos, los legendarios, los huevos, las misiones y los golpes antes del desmayo; el juego recuerda si lo dejas abierto.',
+          },
+          {
+            pt: 'Muitas medalhas numa partida viram um só aviso ("15 medalhas novas"), e um recorde novo aparece em destaque.',
+            en: 'Many medals in one run become a single chip ("15 new medals"), and a new record is called out.',
+            es: 'Muchas medallas en una partida se vuelven un solo aviso ("15 medallas nuevas"), y un récord nuevo aparece destacado.',
+          },
+          {
+            pt: 'No celular deitado, o resumo fica à esquerda e o resto rola à direita; o fim de partida do co-op também ganhou os botões fixos.',
+            en: 'On a phone held sideways, the summary stays on the left while the rest scrolls on the right; co-op’s end screen got the fixed buttons too.',
+            es: 'En el celular acostado, el resumen queda a la izquierda y el resto se desplaza a la derecha; el fin de partida del co-op también ganó los botones fijos.',
+          },
+        ],
+      },
       {
         title: { pt: 'Anéis de Hoopa mais difíceis, e o Hoopa shiny', en: 'Harder Hoopa’s Rings, and shiny Hoopa', es: 'Anillos de Hoopa más difíciles, y Hoopa shiny', fr: 'Des Anneaux de Hoopa plus durs, et Hoopa chromatique', zh: '更難的 Hoopa 的圓環，以及異色 Hoopa' },
         notes: [

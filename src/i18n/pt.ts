@@ -1784,6 +1784,14 @@ export const pt = {
     /** End-of-run Pokédex news, e.g. "+3 espécies novas · 1 shiny capturado". */
     dexSpecies: (n: number) => (n === 1 ? '+1 espécie nova' : `+${n} espécies novas`),
     dexShinies: (n: number) => (n === 1 ? '1 shiny capturado' : `${n} shinies capturados`),
+    /** The results' Detalhes switch: what the run did beyond the hero (damage by move, places, steps, the hits before a faint). */
+    details: 'Detalhes',
+    /** The run beat the device's best time. */
+    newBest: 'Novo recorde!',
+    /** Many medals in one run, folded into one chip. */
+    medals: (n: number) => (n === 1 ? '1 medalha nova' : `${n} medalhas novas`),
+    /** Missions the run moved without paying anything yet. */
+    missionsMoved: (n: number) => (n === 1 ? '1 missão avançou' : `${n} missões avançaram`),
     /** Victory screen link to the support page. */
     support: 'Curtiu? Apoie o projeto',
     /** A faint's cause on the end screen (`ui/deathCause.ts`): the last hit and the ones before it. Pokémon and move names stay in English. */
