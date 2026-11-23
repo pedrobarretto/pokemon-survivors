@@ -7,7 +7,8 @@ import type { CosmeticBase } from './cosmetics'
  * spreads them into the catalog). One buy dresses every stage of the line it
  * covers (`dexes`, its source's variants): the player's own Pokémon draws in
  * the skin whenever its species is one of them, in every mode; any other form
- * (a Mega, a Primal) draws as it is. A look holds at most one skin per `line`
+ * (a Mega, a Primal) draws as it is. A gift skin (`price: null`) is never
+ * sold: the shop shows it, and its line, only to the accounts that own it. A look holds at most one skin per `line`
  * (`Look.skins`). Only the dex numbers live here, so the game never loads the
  * sources; `skinCatalog.test.ts` checks them against the sources and the
  * baked sheets. Names live in i18n (`skins`).
@@ -47,6 +48,9 @@ export const SKINS = {
   rioluSuit: { ...at, rarity: 'epic', price: 750, line: 'riolu', dexes: [447, 448] },
   rayquazaCelestial: { ...at, rarity: 'epic', line: 'rayquaza', dexes: [384] },
   groudonObsidian: { ...at, rarity: 'epic', line: 'groudon', dexes: [383] },
+
+  /* ---------- Gifts: never sold (`price: null`), granted by hand (`cosmetics_owned`, source `gift`) ---------- */
+  ponytaPink: { slot: 'skin', rarity: 'legendary', price: null, line: 'ponyta', dexes: [77, 78] },
 
   /* ---------- The seasons: 3-stage lines (epic) ---------- */
   bulbasaurSakura: { ...at, rarity: 'epic', line: 'bulbasaur', dexes: [1, 2, 3], season: 'sakura' },
