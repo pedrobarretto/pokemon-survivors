@@ -16,21 +16,26 @@ import { ULTRA_BEASTS } from './ultraBeasts'
  * the rings), and always brings that many. Each legend comes with
  * `hp` × `hpBy[difficulty]` × (1 + `ramp` × its ring) HP whatever its species
  * (so a ring of Arceus is as long as a ring of Latias), Hoopa with `hoopa` ×
- * that. The player fights at `level` with their Dojo build for the Pokémon
- * (or the family's own moves at max level), is healed `heal` of their max HP
- * between rings, `rest` s, and each ring opens `gate` s before its legend
- * steps through. Each ring is fought on an island (`data/rushIslands.ts`);
+ * that, and hits `harm[difficulty]` × (1 + `harmRamp` × its ring) as hard
+ * (`rushHarm`). The player fights at `level` with their Dojo build for the
+ * Pokémon (or the family's own moves at max level), is healed `heal` of their
+ * max HP between rings, `rest` s, and each ring opens `gate` s before its
+ * legend steps through. Hoopa comes shiny one time in `shiny[difficulty]`,
+ * the only way to its shiny. Each ring is fought on an island (`data/rushIslands.ts`);
  * on Hoopa's own, its rings stand round a circle `arena` px out from the
  * middle.
  */
 export const RUSH = {
   rings: { normal: 4, hard: 7, nightmare: 10 },
-  hp: 3000,
-  hpBy: { normal: 0.85, hard: 1.15, nightmare: 1.5 },
-  ramp: 0.12,
-  hoopa: 1.8,
+  hp: 12000,
+  hpBy: { normal: 0.9, hard: 1.2, nightmare: 1.6 },
+  ramp: 0.15,
+  hoopa: 2.4,
+  harm: { normal: 0.9, hard: 1, nightmare: 1.05 },
+  harmRamp: 0.03,
+  shiny: { normal: 1 / 12, hard: 1 / 8, nightmare: 1 / 5 },
   level: { normal: 25, hard: 35, nightmare: 45 },
-  heal: 0.4,
+  heal: 0.3,
   rest: 3.5,
   gate: 1.8,
   arena: 132,
@@ -38,7 +43,7 @@ export const RUSH = {
   enter: 70,
   /** A ring's legend stands this many times as heavy (knockback is divided by mass), so hits can't drive it against the island's rim. */
   grip: 3,
-} as const satisfies { rings: Record<Difficulty, number>; hpBy: Record<Difficulty, number>; level: Record<Difficulty, number> } & Record<string, unknown>
+} as const satisfies { rings: Record<Difficulty, number>; hpBy: Record<Difficulty, number>; harm: Record<Difficulty, number>; shiny: Record<Difficulty, number>; level: Record<Difficulty, number> } & Record<string, unknown>
 
 /**
  * The order the rings bring the captured legends in, from the gentler to the
