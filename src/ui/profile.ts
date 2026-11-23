@@ -16,6 +16,7 @@ import { gameDex } from '../site/pokedex'
 import { LOCALES, locale, t } from '../i18n'
 import { h, later } from './dom'
 import { today } from './save'
+import { creatorLinks, creatorBadge } from './creatorTag'
 import { titleBadge } from './missions'
 import { reportDialog } from './report'
 import { sharePreview, trainerShare } from './share'
@@ -184,7 +185,7 @@ export const profileScreen = (root: HTMLElement, input: Input, handle: string, o
           h(
             'div',
             { class: 'profile-id' },
-            h('b', { class: 'profile-name' }, p.name, ...supporterBadges(p.supporter, p.supporterSince, p.og)),
+            h('b', { class: 'profile-name' }, p.name, ...supporterBadges(p.supporter, p.supporterSince, p.og), p.creator ? creatorBadge() : null),
             h('span', { class: 'profile-handle' }, `@${p.handle}`),
             titleBadge(p.title),
             p.supporter && p.supporterSince ? h('small', { class: 'profile-supporter' }, t().supporters.profileSince(runDay(p.supporterSince, true))) : null,
@@ -192,6 +193,7 @@ export const profileScreen = (root: HTMLElement, input: Input, handle: string, o
         ),
         h('p', { class: 'profile-social' }, [m.followers(p.followers), m.following(p.following), ...(p.brought ? [m.brought(p.brought)] : [])].join(' · ')),
         !p.self && !signedIn ? note(m.followGuest) : null,
+        p.creator ? section(t().creatorTag.channels, creatorLinks(p.creator)) : null,
         section(m.records, h('div', { class: 'profile-records' }, ...DIFFICULTY_IDS.map((d) => recordCell(d, p.records[d])))),
         legendRecords(p),
         ribbonRow(p.ribbons),

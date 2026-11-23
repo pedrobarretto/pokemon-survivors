@@ -7,6 +7,7 @@ import { LOBBY_TOUR_WORDS } from './lobbyTour'
 import { TUTORIAL_WORDS } from './tutorial'
 import { WELCOME_WORDS } from './welcome'
 import { RADIO_WORDS } from './radio'
+import { CREATOR_WORDS } from './creatorTag'
 import { realmBookEn as realmBook } from './realmStamps/en'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { TERA_WORDS } from './tera'
@@ -20,6 +21,7 @@ import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { GA_MEGAS_WORDS } from './gaMegas'
 import { GA_MEGA_FAMILIES_A_WORDS } from './gaMegaFamiliesA'
 import { SC_WAVE_WORDS } from './scWave'
+import { SAFARI_GUIDE_WORDS } from './safariGuide'
 import { ROCKET_WORDS } from './rocket/words'
 import { ULTRA_WORDS } from './ultra'
 import { LEGEND_PATHS_WORDS } from './legendPaths'
@@ -1139,6 +1141,7 @@ export const en: Messages = {
   tutorial: TUTORIAL_WORDS.en,
   lobbyTour: LOBBY_TOUR_WORDS.en,
   radio: RADIO_WORDS.en,
+  creatorTag: CREATOR_WORDS.en,
   levelUp: {
     title: (name, level) => `${name} grew to Lv ${level}!`,
     ready: 'READY!',
@@ -6653,7 +6656,7 @@ export const en: Messages = {
   paths: LEGEND_PATHS_WORDS.en.paths,
   minigames: {
     claw: SEASON_ONE_CLAW_WORDS.en.words,
-    safari: { ...SEASON_ONE_SAFARI_WORDS.en.words, only: SC_WAVE_WORDS.en.safari },
+    safari: { ...SEASON_ONE_SAFARI_WORDS.en.words, only: SC_WAVE_WORDS.en.safari, guide: SAFARI_GUIDE_WORDS.en },
     dig: SEASON_ONE_DIG_WORDS.en.words,
     close: 'Leave',
     choose: 'Which game?',

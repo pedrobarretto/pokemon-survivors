@@ -34,9 +34,11 @@ import { isBoardPeriod, isPlayable, isRunMode, parseDisplayName, parseHandle, pa
 import { parseReplay, RULES_VERSION, rulesStanding } from '../../src/game/replay'
 import { parseChunk } from '../../src/game/replayStream'
 import { banGated, parseModeration, parseReport } from '../../src/game/reports'
+import { CREATOR_REVIEWS, parseCreatorRequest } from '../../src/net/creatorTag'
 import { parseCode } from '../../src/game/supporters'
 import { isSuggestionSort, isSuggestionStatus, isVote, parseSuggestionDraft } from '../../src/game/suggestions'
 import type { AdminStore } from './admin'
+import type { CreatorRefusal, CreatorStore, ReviewRefusal } from './creators'
 import { ARENA_PAGES, parseAbandonedReport, parseArenaReport, shownSeason, verifyArenaSignature, type ArenaStore } from './arena'
 import type { Verify } from './auth'
 import type { BugReports } from './bugReports'
@@ -93,6 +95,8 @@ export type AppDeps = {
   discord: Pick<DiscordLink, 'link' | 'unlink'>
   /** The gift desk: who is admin (asked of Clerk), finding players and sending them gifts. */
   admin: Pick<AdminStore, 'isAdmin' | 'search' | 'send' | 'recent'>
+  /** The content creator's tag: the player's request and the admin's review. */
+  creators: Pick<CreatorStore, 'mine' | 'request' | 'desk' | 'review'>
   /** Reports and bans: the write gate asks who is banned, players report, the admin acts. */
   moderation: Pick<ModerationStore, 'banned' | 'report' | 'open' | 'act'>
   /** The Arena's ranked layer: reports, ratings, history and the season's board. */
@@ -321,6 +325,9 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  *   to the community server and gives them their supporter role. `{ username, joined }`; 404 when
  *   Clerk has no verified Discord account for them, 503 when Clerk can't answer.
  * - `DELETE /discord/link` (auth): forgets it (the player unlinked Discord). `{ unlinked: true }`.
+ * - `GET /creator` (auth): `{ request }` (`CreatorRequest`, null if none), the account's own content creator request.
+ * - `POST /creator` (auth) `{ links }` (strings as typed, `parseCreatorRequest`): sends it, `{ request }`. 400 `empty`,
+ *   `many` or `invalid` (with `index`), 403 `profile` (no @handle) or `banned`, 409 `open` (one waits or is approved).
  * - `/admin…` (admin): the gift desk, 403 for anyone whose verified email isn't in `ADMIN_EMAILS`.
  *   `GET /admin`: `{ admin: true }`. `GET /admin/users?q=`: `{ users }` (`AdminUser[]`) by handle or email.
  *   `POST /admin/gifts` `{ userId, content, request }`: sends a gift (`parseAdminGift`), `{ sent }`
@@ -357,8 +364,10 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  *   account's realm writes get 403 `{ error: 'banned' }`. The desk's `GET /admin/realm`: `RealmDesk` (open realm reports
  *   by trainer, bans in force); `POST /admin/realm/moderation` (`parseRealmModeration`) `{ userId, action, days?, reason? }`:
  *   `ban` (days, or for good), `unban`, `dismiss`, resolving their realm reports. `{ resolved }`, 404 for an unknown player.
+ *   `GET /admin/creators`: `CreatorDesk` (requests waiting, approved creators). `POST /admin/creators/:userId/approve`
+ *   (the tag, and the creator title and frame as gifts), `/reject` or `/revoke`: `{ status }`, 404 `unknown`, 409 `state`.
  */
-export const createApp = ({ store, ranking, friends, gifts, verify, donate, supporters, gems, gemCheckout, festival, candyGoal, suggestions, bugReports, discord, admin, moderation, arena, coop, realm, claw, safari, dig, corner, arenaReportSecret, patreon, webhooks, allowedOrigin, ping, report, revenue = () => {} }: AppDeps) => {
+export const createApp = ({ store, ranking, friends, gifts, verify, donate, supporters, gems, gemCheckout, festival, candyGoal, suggestions, bugReports, discord, admin, creators, moderation, arena, coop, realm, claw, safari, dig, corner, arenaReportSecret, patreon, webhooks, allowedOrigin, ping, report, revenue = () => {} }: AppDeps) => {
   // `userId` is set by `auth` or `maybeAuth` on the routes that ask who's calling; `onError` reports it.
   const app = new Hono<MaybeAuth>()
   const donations = rateLimiter(DONATION_LIMIT.count, DONATION_LIMIT.windowMs)
@@ -503,6 +512,18 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     if (!isDayKey(day) || size === null) return c.json({ error: 'unknown board' }, 400)
     if (friends && !c.var.userId) return c.json({ error: 'unauthorized' }, 401)
     return c.json(await coop.challengeBoard(day, size, friends, c.var.userId))
+  })
+
+  const CREATOR_REFUSALS = { profile: 403, banned: 403, open: 409 } as const satisfies Record<CreatorRefusal, number>
+
+  app.get('/creator', auth, async (c) => c.json({ request: await creators.mine(c.var.userId) }))
+
+  app.post('/creator', auth, smallBody, async (c) => {
+    const body = await json(c)
+    const parsed = parseCreatorRequest(isRecord(body) ? body.links : null)
+    if (!parsed.ok) return c.json(parsed, 400)
+    const sent = await creators.request(c.var.userId, parsed.links)
+    return sent.ok ? c.json({ request: sent.request }) : c.json({ error: sent.error }, CREATOR_REFUSALS[sent.error])
   })
 
   app.get('/profiles/:handle', maybeAuth, async (c) => {
@@ -1333,6 +1354,17 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     const done = await realm.act(c.var.userId, m)
     return done ? c.json(done) : c.json({ error: 'unknown' }, 404)
   })
+
+  const REVIEW_REFUSALS = { unknown: 404, state: 409 } as const satisfies Record<ReviewRefusal, number>
+
+  desk.get('/creators', async (c) => c.json(await creators.desk()))
+
+  for (const action of CREATOR_REVIEWS) {
+    desk.post(`/creators/:userId/${action}`, async (c) => {
+      const done = await creators.review(c.var.userId, c.req.param('userId'), action)
+      return done.ok ? c.json({ status: done.status }) : c.json({ error: done.error }, REVIEW_REFUSALS[done.error])
+    })
+  }
 
   app.route('/admin', desk)
 

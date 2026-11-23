@@ -1183,6 +1183,28 @@ export const rankingIcon = () =>
 /** Each official profile's icon (`SOCIALS` in `site/routes.ts`). */
 export const socialIcon = (id: SocialId) => toIconUrl(`social:${id}`, SOCIAL_ART[id])
 
+/** Patreon's symbol (the rounded P of its brand page, rasterized from it), white on a black tile cut like the profiles' icons (the lobby's ways to support). */
+const PATREON = [
+  '..111111111111..',
+  '.13333333333331.',
+  '.12222444452221.',
+  '.12244444445221.',
+  '.12244444444521.',
+  '.12444444444521.',
+  '.12444444444521.',
+  '.12444444445221.',
+  '.12444445552221.',
+  '.12444452222221.',
+  '.12544452222221.',
+  '.12244522222221.',
+  '.12255522222221.',
+  '.16666666666661.',
+  '..111111111111..',
+  '................',
+]
+
+export const patreonIcon = () => toIconUrl('patreon', () => art(PATREON, { 1: '#0b0b10', 2: '#26262e', 3: '#45454f', 4: '#ffffff', 5: '#c4c4d0', 6: '#15151b' }))
+
 /** iOS's Share: an arrow leaving an open tray, in iOS blue (the install how-to, `ui/install.ts`). 1 outline, 2 blue. */
 const SHARE = [
   '.....1.....',

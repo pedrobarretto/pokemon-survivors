@@ -8,6 +8,7 @@ import { serve } from '@hono/node-server'
 import { adminStore } from './admin'
 import { arenaStore, createArenaRewards } from './arena'
 import { coopBoardStore } from './coopBoards'
+import { creatorStore } from './creators'
 import { createApp } from './app'
 import { bugReportStore, createBugReports, discordBugForum } from './bugReports'
 import { clerkVerifier } from './auth'
@@ -92,7 +93,9 @@ createArenaRewards(arena).start()
 const coop = coopBoardStore(sql)
 createEra1Rewards(sql, [ranking, coop]).start()
 
-const realm = realmStore(sql, { staff: env.discord ? discordStaffChannel(env.discord) : null })
+// Realm reports and creator requests go to the staff's #mod-chat when the bot is set up (stored either way).
+const staffChannel = env.discord ? discordStaffChannel(env.discord) : null
+const realm = realmStore(sql, { staff: staffChannel })
 
 const app = createApp({
   store: saveStore(sql),
@@ -110,10 +113,10 @@ const app = createApp({
   suggestions,
   bugReports,
   admin: adminStore(sql, clerk, env.adminEmails),
+  creators: creatorStore(sql, { staff: staffChannel }),
   moderation: moderationStore(sql),
   arena,
   coop,
-  // Realm reports go to the staff's #mod-chat when the bot is set up (stored either way).
   realm,
   claw: clawStore(sql, { closed: realm.closedIn, earn: realm.earn }),
   safari: safariStore(sql, { closed: realm.closedIn, earn: realm.earn }),

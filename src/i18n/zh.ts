@@ -7,6 +7,7 @@ import { LOBBY_TOUR_WORDS } from './lobbyTour'
 import { TUTORIAL_WORDS } from './tutorial'
 import { WELCOME_WORDS } from './welcome'
 import { RADIO_WORDS } from './radio'
+import { CREATOR_WORDS } from './creatorTag'
 import { realmBookZh as realmBook } from './realmStamps/zh'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { TERA_WORDS } from './tera'
@@ -20,6 +21,7 @@ import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { GA_MEGAS_WORDS } from './gaMegas'
 import { GA_MEGA_FAMILIES_A_WORDS } from './gaMegaFamiliesA'
 import { SC_WAVE_WORDS } from './scWave'
+import { SAFARI_GUIDE_WORDS } from './safariGuide'
 import { ROCKET_WORDS } from './rocket/words'
 import { ULTRA_WORDS } from './ultra'
 import { LEGEND_PATHS_WORDS } from './legendPaths'
@@ -1139,6 +1141,7 @@ export const zh: Messages = {
   tutorial: TUTORIAL_WORDS.zh,
   lobbyTour: LOBBY_TOUR_WORDS.zh,
   radio: RADIO_WORDS.zh,
+  creatorTag: CREATOR_WORDS.zh,
   levelUp: {
     title: (name, level) => `${name} 升到 Lv ${level} 了！`,
     ready: '準備好了！',
@@ -6649,7 +6652,7 @@ export const zh: Messages = {
   paths: LEGEND_PATHS_WORDS.zh.paths,
   minigames: {
     claw: SEASON_ONE_CLAW_WORDS.zh.words,
-    safari: { ...SEASON_ONE_SAFARI_WORDS.zh.words, only: SC_WAVE_WORDS.zh.safari },
+    safari: { ...SEASON_ONE_SAFARI_WORDS.zh.words, only: SC_WAVE_WORDS.zh.safari, guide: SAFARI_GUIDE_WORDS.zh },
     dig: SEASON_ONE_DIG_WORDS.zh.words,
     close: '離開',
     choose: '玩哪個遊戲？',

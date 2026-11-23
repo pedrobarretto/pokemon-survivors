@@ -25,8 +25,15 @@ export type ChangelogUpdate = {
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
     date: '2026-11-23',
-    title: { pt: 'Tornados sem travar', en: 'Tornadoes without the lag', es: 'Tornados sin trabas', fr: 'Des tornades sans ralentissement', zh: '龍捲風不再卡頓' },
+    title: { pt: 'Tornados sem travar e Patreon no lobby', en: 'Lag-free tornadoes and Patreon in the lobby', es: 'Tornados sin trabas y Patreon en el lobby', fr: 'Des tornades fluides et Patreon dans le lobby', zh: '龍捲風不再卡頓，大廳加入 Patreon' },
     highlights: [
+      {
+        pt: 'A Zona Safári tem um Guia: toque em Guia no topo para ver, com cenas do jogo, como encontrar, acalmar e capturar, e as chances de verdade.',
+        en: 'The Safari Zone has a Guide: tap Guide at the top to see, with scenes from the game, how to find, calm and catch Pokémon, and the real odds.',
+        es: 'La Zona Safari tiene una Guía: toca Guía arriba para ver, con escenas del juego, cómo encontrar, calmar y atrapar Pokémon, y las probabilidades reales.',
+        fr: 'Le Parc Safari a un Guide : touchez Guide en haut pour voir, avec des scènes du jeu, comment trouver, calmer et capturer, et les vraies chances.',
+        zh: '狩獵地帶有了指南：點上方的「指南」，用遊戲畫面看怎麼找到、安撫和捕捉寶可夢，以及真正的機率。',
+      },
       {
         pt: 'Os tornados do Whirlwind (do Lugia, ou do TM que ele deixa) não travam mais o jogo numa build de área grande, como a do Tornadus com Long Reach.',
         en: 'Whirlwind’s tornadoes (Lugia’s, or from the TM it leaves) no longer slow the game down on a big-area build, like Tornadus with Long Reach.',
@@ -55,6 +62,20 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         fr: 'L’écran de fin de partie a été refait : ton Pokémon, le temps, le niveau, les K.O. et les ₽ en haut, les nouveautés sur une ligne et le reste dans Détails. Les boutons restent toujours visibles, sans rien cacher.',
         zh: '對戰結束畫面重新設計：寶可夢、時間、等級、擊倒數與 ₽ 放在最上方，新消息集中在一行，其餘收進「詳細資料」。按鈕永遠看得到，也不會遮住內容。',
       },
+      {
+        pt: 'O Patreon agora aparece no lobby: em Na Praça, logo abaixo do Hall da Fama, e na janela Comunidade, com as gemas que ele traz todo mês.',
+        en: 'Patreon now shows in the lobby: At the Plaza, right under the Hall of Fame, and in the Community sheet, with the gems it brings every month.',
+        es: 'El Patreon ahora aparece en el lobby: En la Plaza, justo debajo del Salón de la Fama, y en la ventana Comunidad, con las gemas que trae cada mes.',
+        fr: 'Patreon apparaît maintenant dans le lobby : sur la Place, juste sous le Panthéon, et dans la fenêtre Communauté, avec les gemmes qu’il apporte chaque mois.',
+        zh: 'Patreon 現在出現在大廳：在「廣場上」名人堂正下方，以及「社群」視窗裡，並標示每月帶來的寶石。',
+      },
+      {
+        pt: 'Faz lives ou vídeos do jogo? Peça a tag CREATOR no Cartão de Treinador: aprovada pela equipe, ela aparece no seu perfil e sobre o seu treinador no Poké Realm, com o link do seu canal.',
+        en: 'Do you stream or make videos of the game? Ask for the CREATOR tag on your Trainer Card: once the team approves it, it shows on your profile and over your trainer in the Poké Realm, with your channel link.',
+        es: '¿Haces directos o videos del juego? Pide la etiqueta CREATOR en tu Tarjeta de Entrenador: cuando el equipo la aprueba, aparece en tu perfil y sobre tu entrenador en el Poké Realm, con el enlace de tu canal.',
+        fr: 'Tu fais des lives ou des vidéos du jeu ? Demande le badge CREATOR sur ta Carte de Dresseur : une fois approuvé par l’équipe, il s’affiche sur ton profil et au-dessus de ton dresseur dans le Poké Realm, avec le lien de ta chaîne.',
+        zh: '你有直播或製作遊戲影片嗎？在訓練家卡片申請 CREATOR 標籤：團隊審核通過後，標籤會出現在你的個人檔案和 Poké Realm 的訓練家頭上，並附上頻道連結。',
+      },
     ],
     changes: [
       {
@@ -78,6 +99,26 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         ],
       },
       {
+        title: { pt: 'Guia da Zona Safári', en: 'Safari Zone guide', es: 'Guía de la Zona Safari', fr: 'Guide du Parc Safari', zh: '狩獵地帶指南' },
+        notes: [
+          {
+            pt: 'Nove capítulos curtos: a sessão, os encontros e como chegar de fininho, a Safari Ball, fruta, pedra e isca, a melhor jogada, quem aparece, brilhantes e correntes, a garantia e o Concurso de Insetos.',
+            en: 'Nine short chapters: the session, encounters and sneaking up, the Safari Ball, berry, rock and bait, the best play, who shows up, shinies and chains, the guarantee and the Bug-Catching Contest.',
+            es: 'Nueve capítulos cortos: la sesión, los encuentros y cómo acercarse en silencio, la Safari Ball, baya, roca y cebo, la mejor jugada, quién aparece, brillantes y cadenas, la garantía y el Concurso de Bichos.',
+          },
+          {
+            pt: 'A tabela "Qual a melhor jogada?" mostra a chance de capturar cada raridade com cada jeito de jogar, calculada das regras do jogo. Resumo: isca, duas frutas e depois bolas; pedra quase nunca compensa.',
+            en: 'The "What\'s the best play?" table shows your chance to catch each rarity with each way of playing, worked out from the game\'s rules. In short: bait, two berries, then balls; the rock almost never pays off.',
+            es: 'La tabla "¿Cuál es la mejor jugada?" muestra la probabilidad de atrapar cada rareza con cada forma de jugar, calculada con las reglas del juego. En resumen: cebo, dos bayas y luego bolas; la roca casi nunca vale la pena.',
+          },
+          {
+            pt: 'Ele explica também as sequências da mesma espécie: cada encontro tem 30% de chance de repetir o anterior, o que forma as correntes de brilhantes.',
+            en: 'It also explains streaks of the same species: every encounter has a 30% chance to repeat the one before, which is what builds shiny chains.',
+            es: 'También explica las rachas de la misma especie: cada encuentro tiene un 30% de repetir el anterior, que es lo que forma las cadenas de brillantes.',
+          },
+        ],
+      },
+      {
         title: { pt: 'Desempenho', en: 'Performance', es: 'Rendimiento', fr: 'Performances', zh: '效能' },
         notes: [
           {
@@ -89,6 +130,47 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             pt: 'Anéis e raios são desenhados linha a linha em vez de pixel a pixel: o anel do Origin Pulse cruzando a tela passou de dezenas de milhares de pixels por quadro para poucos milhares.',
             en: 'Rings and beams are drawn row by row instead of pixel by pixel: Origin Pulse’s ring crossing the screen went from tens of thousands of pixels a frame to a few thousand.',
             es: 'Los anillos y rayos se dibujan fila por fila en vez de píxel por píxel: el anillo de Origin Pulse cruzando la pantalla pasó de decenas de miles de píxeles por cuadro a unos pocos miles.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Patreon no lobby', en: 'Patreon in the lobby', es: 'Patreon en el lobby', fr: 'Patreon dans le lobby', zh: '大廳裡的 Patreon' },
+        notes: [
+          {
+            pt: 'Na Praça, logo abaixo do Hall da Fama, agora tem um botão para apoiar o jogo no Patreon.',
+            en: 'At the Plaza, right under the Hall of Fame, now has a button to support the game on Patreon.',
+            es: 'En la Plaza, justo debajo del Salón de la Fama, ahora hay un botón para apoyar el juego en Patreon.',
+            fr: 'Sur la Place, juste sous le Panthéon, un bouton permet maintenant de soutenir le jeu sur Patreon.',
+            zh: '「廣場上」名人堂正下方，現在有一個在 Patreon 支持遊戲的按鈕。',
+          },
+          {
+            pt: 'A janela Comunidade também traz o Patreon, logo depois do Discord.',
+            en: 'The Community sheet has Patreon too, right after Discord.',
+            es: 'La ventana Comunidad también trae el Patreon, justo después de Discord.',
+            fr: 'La fenêtre Communauté propose aussi Patreon, juste après Discord.',
+            zh: '「社群」視窗也加入了 Patreon，就在 Discord 之後。',
+          },
+          {
+            pt: 'O botão mostra quantas gemas o Patreon traz por mês; quem já apoia vê o seu nível.',
+            en: 'The button shows how many gems Patreon brings each month; patrons see their own tier.',
+            es: 'El botón muestra cuántas gemas trae el Patreon por mes; quien ya apoya ve su nivel.',
+            fr: 'Le bouton indique combien de gemmes Patreon apporte chaque mois ; les mécènes voient leur palier.',
+            zh: '按鈕會顯示 Patreon 每月帶來多少寶石；已支持的玩家會看到自己的等級。',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Criadores de conteúdo', en: 'Content creators', es: 'Creadores de contenido', fr: 'Créateurs de contenu', zh: '內容創作者' },
+        notes: [
+          {
+            pt: 'Com conta e @, mande até 3 links dos seus canais (Twitch, YouTube, Kick, TikTok, Instagram ou qualquer outro site) em “Sou criador(a) de conteúdo”, no Cartão de Treinador. Dá para acompanhar o pedido no mesmo lugar e, se ele não for aprovado, corrigir os links e mandar de novo. Junto com a tag vêm o título Criador(a) de Conteúdo e a moldura de criador.',
+            en: 'With an account and an @, send up to 3 links to your channels (Twitch, YouTube, Kick, TikTok, Instagram or any other site) under “I’m a content creator” on your Trainer Card. You can follow the request in the same place and, if it isn’t approved, fix the links and send it again. The tag comes with the Content Creator title and the creator frame.',
+            es: 'Con cuenta y @, envía hasta 3 enlaces de tus canales (Twitch, YouTube, Kick, TikTok, Instagram o cualquier otro sitio) en “Soy creador(a) de contenido”, en tu Tarjeta de Entrenador. Puedes seguir la solicitud en el mismo lugar y, si no se aprueba, corregir los enlaces y enviarla de nuevo. Con la etiqueta vienen el título Creador(a) de Contenido y el marco de creador.',
+          },
+          {
+            pt: 'No Poké Realm, toque em um treinador com a tag para ver os canais dele. Só os links que a equipe aprovou aparecem para os outros jogadores.',
+            en: 'In the Poké Realm, tap a trainer with the tag to see their channels. Only the links the team approved show to other players.',
+            es: 'En el Poké Realm, toca a un entrenador con la etiqueta para ver sus canales. Solo los enlaces que el equipo aprobó se muestran a los demás jugadores.',
           },
         ],
       },

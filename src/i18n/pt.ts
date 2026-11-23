@@ -7,6 +7,7 @@ import { LOBBY_TOUR_WORDS } from './lobbyTour'
 import { TUTORIAL_WORDS } from './tutorial'
 import { WELCOME_WORDS } from './welcome'
 import { RADIO_WORDS } from './radio'
+import { CREATOR_WORDS } from './creatorTag'
 import type { GameModeId } from '../data/gameModes'
 import { realmBookPt as realmBook } from './realmStamps/pt'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
@@ -21,6 +22,7 @@ import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { GA_MEGAS_WORDS } from './gaMegas'
 import { GA_MEGA_FAMILIES_A_WORDS } from './gaMegaFamiliesA'
 import { SC_WAVE_WORDS } from './scWave'
+import { SAFARI_GUIDE_WORDS } from './safariGuide'
 import { ROCKET_WORDS } from './rocket/words'
 import { ULTRA_WORDS } from './ultra'
 import { LEGEND_PATHS_WORDS } from './legendPaths'
@@ -1354,6 +1356,7 @@ export const pt = {
   tutorial: TUTORIAL_WORDS.pt,
   lobbyTour: LOBBY_TOUR_WORDS.pt,
   radio: RADIO_WORDS.pt,
+  creatorTag: CREATOR_WORDS.pt,
   levelUp: {
     title: (name: string, level: number) => `${name} subiu para o Nv ${level}!`,
     ready: 'PRONTO!',
@@ -7112,7 +7115,7 @@ export const pt = {
   paths: LEGEND_PATHS_WORDS.pt.paths,
   minigames: {
     claw: SEASON_ONE_CLAW_WORDS.pt.words,
-    safari: { ...SEASON_ONE_SAFARI_WORDS.pt.words, only: SC_WAVE_WORDS.pt.safari },
+    safari: { ...SEASON_ONE_SAFARI_WORDS.pt.words, only: SC_WAVE_WORDS.pt.safari, guide: SAFARI_GUIDE_WORDS.pt },
     dig: SEASON_ONE_DIG_WORDS.pt.words,
     close: 'Sair',
     choose: 'Qual jogo?',

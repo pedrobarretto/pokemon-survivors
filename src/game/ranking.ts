@@ -7,6 +7,7 @@ import { DAY_TIME_ZONE, isDayKey, type DayKey } from './day'
 import { isDifficulty, type Difficulty } from './difficulty'
 import { wonRun } from './meta'
 import { isRecord } from './parse'
+import type { CreatorLink } from '../net/creatorTag'
 import type { BagItem } from '../data/shop'
 import type { RibbonTier } from './ribbons'
 import type { SupporterTier } from './supporters'
@@ -337,5 +338,7 @@ export type PublicProfile = ProfileName & {
   supporterSince?: string | null
   /** Whether they wear the OG plate beside it (`badgesOf`, like `supporter`). Missing from an older API. */
   og?: boolean
+  /** A verified content creator's approved channel links (`net/creatorTag.ts`), or null. Missing from an older API. */
+  creator?: CreatorLink[] | null
   self: boolean
 }

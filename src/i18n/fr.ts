@@ -7,6 +7,7 @@ import { LOBBY_TOUR_WORDS } from './lobbyTour'
 import { TUTORIAL_WORDS } from './tutorial'
 import { WELCOME_WORDS } from './welcome'
 import { RADIO_WORDS } from './radio'
+import { CREATOR_WORDS } from './creatorTag'
 import { realmBookFr as realmBook } from './realmStamps/fr'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { TERA_WORDS } from './tera'
@@ -20,6 +21,7 @@ import { ROCKET_FAMILY_WORDS } from './rocket/families'
 import { GA_MEGAS_WORDS } from './gaMegas'
 import { GA_MEGA_FAMILIES_A_WORDS } from './gaMegaFamiliesA'
 import { SC_WAVE_WORDS } from './scWave'
+import { SAFARI_GUIDE_WORDS } from './safariGuide'
 import { ROCKET_WORDS } from './rocket/words'
 import { ULTRA_WORDS } from './ultra'
 import { LEGEND_PATHS_WORDS } from './legendPaths'
@@ -1139,6 +1141,7 @@ export const fr: Messages = {
   tutorial: TUTORIAL_WORDS.fr,
   lobbyTour: LOBBY_TOUR_WORDS.fr,
   radio: RADIO_WORDS.fr,
+  creatorTag: CREATOR_WORDS.fr,
   levelUp: {
     title: (name, level) => `${name} passe au Nv ${level} !`,
     ready: 'PRET!',
@@ -6649,7 +6652,7 @@ export const fr: Messages = {
   paths: LEGEND_PATHS_WORDS.fr.paths,
   minigames: {
     claw: SEASON_ONE_CLAW_WORDS.fr.words,
-    safari: { ...SEASON_ONE_SAFARI_WORDS.fr.words, only: SC_WAVE_WORDS.fr.safari },
+    safari: { ...SEASON_ONE_SAFARI_WORDS.fr.words, only: SC_WAVE_WORDS.fr.safari, guide: SAFARI_GUIDE_WORDS.fr },
     dig: SEASON_ONE_DIG_WORDS.fr.words,
     close: 'Quitter',
     choose: 'Quel jeu ?',

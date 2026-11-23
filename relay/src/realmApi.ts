@@ -1,6 +1,7 @@
 import type { RealmIdentity } from '../../src/net/realm'
 import { isStampId } from '../../src/data/realmStamps'
 import { REALM_API_PATHS, type DeedsAnswer, type DeedsReport, type IdentityRequest, type IdentityResponse, type PresenceReport, type VisitRequest, type VisitResponse } from '../../src/net/realmRelay'
+import { parseCreatorLinks } from '../../src/net/creatorTag'
 import { parseWireLook } from '../../src/net/protocol'
 import { postSigned, type ArenaApi, type Fetcher } from './report'
 
@@ -22,7 +23,7 @@ export const parseIdentity = (v: unknown): RealmIdentity | null => {
   if (typeof userId !== 'string' || typeof handle !== 'string' || handle.length === 0 || typeof partner !== 'string' || typeof shiny !== 'boolean') return null
   if (supporter !== null && supporter !== undefined && typeof supporter !== 'string') return null
   const stamps = typeof v.stamps === 'number' && Number.isSafeInteger(v.stamps) && v.stamps >= 0 ? v.stamps : 0
-  return { userId, handle, partner, shiny, look: parseWireLook(v.look) ?? {}, supporter: supporter ?? null, stamps }
+  return { userId, handle, partner, shiny, look: parseWireLook(v.look) ?? {}, supporter: supporter ?? null, stamps, creator: parseCreatorLinks(v.creator) }
 }
 
 /** `POST /realm/identity`'s answer, keeping only the asked accounts whose identity is well formed. */
@@ -109,4 +110,4 @@ export const guestUserId = (token: string): string | null => {
 }
 
 /** A guest's made-up identity on a dev relay: its id for a handle, a starter, bare. */
-export const guestIdentity = (userId: string): RealmIdentity => ({ userId, handle: userId.replace(/^guest-/, ''), partner: 'charmander', shiny: false, look: {}, supporter: null, stamps: 0 })
+export const guestIdentity = (userId: string): RealmIdentity => ({ userId, handle: userId.replace(/^guest-/, ''), partner: 'charmander', shiny: false, look: {}, supporter: null, stamps: 0, creator: null })
