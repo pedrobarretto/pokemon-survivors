@@ -107,8 +107,8 @@ export const parseSafariAct = (v: unknown): { id: string; turn: number; action: 
   return kind ? { id: v.id, turn: v.turn, action: { kind } } : null
 }
 
-/** What's stored of a turn: the answer as given, gift included, so a repeat reads the same. */
-type StoredTurn = { turn: SafariTurn<HatchlingId>; gift: Gift | null }
+/** What's stored of a turn: the answer as given, gift and registration included, so a repeat reads the same. */
+type StoredTurn = { turn: SafariTurn<HatchlingId>; gift: Gift | null; registered?: boolean }
 
 /** A session's jsonb: the run, each turn's answer, and whether a new family came (the guarantee's count). */
 type Stored = { run: SafariRun<HatchlingId>; log: StoredTurn[]; fresh: boolean }
@@ -293,16 +293,21 @@ export const safariStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
     if (SAFARI_HABITAT_IDS.every((h) => habitatDone(h, dex[h], rewarded))) await sendGift(tx, userId, DEX_ALL_GIFT, { kind: 'safariDex', habitat: null }, 'safariDex:all')
   }
 
-  /** Puts a catch in its habitat's Pokédex; a first one that fills the habitat (or every habitat) sends its gifts. */
+  /** Puts a family in its habitat's Pokédex; a first one that fills the habitat (or every habitat) sends its gifts. True when it went in now. */
   const fillDex = async (tx: TransactionSql, userId: string, habitat: SafariHabitat, family: HatchlingId) => {
-    if (!habitatResidents(habitat).some((e) => e.family === family)) return
+    if (!habitatResidents(habitat).some((e) => e.family === family)) return false
     const fresh = await tx`insert into safari_dex (user_id, habitat, family) values (${userId}, ${habitat}, ${family}) on conflict do nothing returning family`
-    if (fresh.length === 0) return
+    if (fresh.length === 0) return false
     const dex = await dexOf(tx, userId)
-    if (!habitatDone(habitat, dex[habitat], await rewardedOf(tx, userId))) return
+    if (!habitatDone(habitat, dex[habitat], await rewardedOf(tx, userId))) return true
     await rewardHabitat(tx, userId, habitat)
     await rewardAll(tx, userId)
+    return true
   }
+
+  /** Whether the account already has `family`: in the stored save, or in a family or shiny gift sent its way. */
+  const owns = async (tx: TransactionSql, userId: string, family: HatchlingId) =>
+    (await saveOf(tx, userId))?.hatched[family] !== undefined || (await giftedFamilies(tx, userId)).includes(family)
 
   /**
    * A habitat completed before a reward joined it (its egg sent, a later gift
@@ -466,7 +471,9 @@ export const safariStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
      * `POST /realm/safari/act`: one action, rolled here. `turn` is how many
      * answers the client has seen: an action already answered reads that
      * answer back (a retry changes nothing), an action from the future is
-     * refused. A regular catch sends its gift and fills the Pokédex; when a
+     * refused. An encounter of a family the account already has registers
+     * it in the habitat's Pokédex on sight (no ball spent on it), and its
+     * answer says so (`registered`). A regular catch sends its gift and fills the Pokédex; when a
      * regular session ends, the guarantee's count moves; when a contest entry
      * ends, its best catch is kept if new and posts its score. Then a catch's
      * deeds, from this action only.
@@ -479,14 +486,19 @@ export const safariStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
         const [row] = await tx<SessionRow[]>`select id, week, habitat, mode, daypart, state, finished_at from safari_sessions where id = ${id}::uuid and user_id = ${userId}`
         if (!row) return { ok: false, error: 'missing' }
         const stored = row.state
-        if (turn < stored.log.length) return { ok: true, acted: { ...stored.log[turn]!, session: viewOf(row) } }
+        if (turn < stored.log.length) {
+          const { registered = false, ...told } = stored.log[turn]!
+          return { ok: true, acted: { ...told, registered, session: viewOf(row) } }
+        }
         if (turn > stored.log.length) return { ok: false, error: 'stale' }
         const got = applyAction(reviveRun(stored.run), action, dice)
         if (!got) return { ok: false, error: 'illegal' }
         const habitat = habitatFor(row)
         const contest = got.run.mode === 'contest'
         let gift: Gift | null = null
+        let registered = false
         let fresh = stored.fresh
+        if (got.turn.kind === 'appear' && (await owns(tx, userId, got.turn.family))) registered = await fillDex(tx, userId, habitat, got.turn.family)
         if (got.turn.kind === 'ball' && got.turn.caught) {
           if (!contest) {
             gift = await giftFor(tx, userId, row.id, stored.log.length, got.turn.family, got.turn.shiny)
@@ -505,7 +517,7 @@ export const safariStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
             if (await keeps(tx, userId, best)) gift = await giftFor(tx, userId, row.id, stored.log.length, best.family, best.shiny)
           }
         }
-        const state: Stored = { run: got.run, log: [...stored.log, { turn: got.turn, gift }], fresh }
+        const state: Stored = { run: got.run, log: [...stored.log, { turn: got.turn, gift, ...(registered ? { registered } : {}) }], fresh }
         const [next] = await tx<SessionRow[]>`
           update safari_sessions set state = ${tx.json(state)}, finished_at = ${finished ? now() : null}
           where id = ${row.id}::uuid
@@ -515,7 +527,7 @@ export const safariStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => 
             insert into safari_progress (user_id, dry) values (${userId}, ${fresh ? 0 : 1})
             on conflict (user_id) do update set dry = ${fresh ? 0 : tx`safari_progress.dry + 1`}`
         }
-        return { ok: true, acted: { turn: got.turn, gift, session: viewOf(next!) } }
+        return { ok: true, acted: { turn: got.turn, gift, registered, session: viewOf(next!) } }
       })
       if (deeds.size > 0) await deps.earn(userId, deeds)
       return acted

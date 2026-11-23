@@ -87,7 +87,7 @@ export const SAFARI_GUIDE_WORDS = {
       sure: (n: number) => `Depois de ${n} sessões seguidas sem família nova, a próxima começa com uma que você não tem (os exclusivos do Safári primeiro). Essa não foge, e a bola não falha.`,
       left: (n: number) => (n === 0 ? 'A sua garantia está pronta: é o primeiro encontro da próxima sessão.' : `Faltam ${n} ${n === 1 ? 'sessão' : 'sessões'} para a sua.`),
       contest: 'O Concurso não conta para a garantia.',
-      dex: (tab: string) => `Cada captura entra na Pokédex do habitat; completa, ela dá prêmios (veja a aba ${tab} do mural).`,
+      dex: (tab: string) => `Cada captura entra na Pokédex do habitat, e um Pokémon que você já tem entra só de aparecer; completa, ela dá prêmios (veja a aba ${tab} do mural).`,
       repeat: 'Pegar quem você já tem vira ₽ na carteira.',
     },
     contest: {
@@ -176,7 +176,7 @@ export const SAFARI_GUIDE_WORDS = {
       sure: (n: number) => `After ${n} sessions in a row without a new family, the next one starts with one you don't have (Safari exclusives first). That one never flees, and the ball never misses.`,
       left: (n: number) => (n === 0 ? "Your guarantee is ready: it's the next session's first encounter." : `${n} more ${n === 1 ? 'session' : 'sessions'} until yours.`),
       contest: "The Contest doesn't count toward the guarantee.",
-      dex: (tab: string) => `Every catch goes in the habitat's Pokédex; completing it brings prizes (see the board's ${tab} tab).`,
+      dex: (tab: string) => `Every catch goes in the habitat's Pokédex, and a Pokémon you already have goes in just by showing up; completing it brings prizes (see the board's ${tab} tab).`,
       repeat: 'Catching one you already have turns into ₽ in your wallet.',
     },
     contest: {
@@ -265,7 +265,7 @@ export const SAFARI_GUIDE_WORDS = {
       sure: (n: number) => `Tras ${n} sesiones seguidas sin familia nueva, la siguiente empieza con una que no tienes (los exclusivos del Safari primero). Esa no huye, y la bola no falla.`,
       left: (n: number) => (n === 0 ? 'Tu garantía está lista: es el primer encuentro de la próxima sesión.' : `Faltan ${n} ${n === 1 ? 'sesión' : 'sesiones'} para la tuya.`),
       contest: 'El Concurso no cuenta para la garantía.',
-      dex: (tab: string) => `Cada captura entra en la Pokédex del hábitat; completa, da premios (mira la pestaña ${tab} del tablón).`,
+      dex: (tab: string) => `Cada captura entra en la Pokédex del hábitat, y un Pokémon que ya tienes entra con solo aparecer; completa, da premios (mira la pestaña ${tab} del tablón).`,
       repeat: 'Atrapar uno que ya tienes se vuelve ₽ en tu cartera.',
     },
     contest: {
@@ -354,7 +354,7 @@ export const SAFARI_GUIDE_WORDS = {
       sure: (n: number) => `Après ${n} sessions d’affilée sans nouvelle famille, la suivante commence par une qui vous manque (les exclusivités du Safari d’abord). Celle-là ne fuit pas, et la Ball ne rate pas.`,
       left: (n: number) => (n === 0 ? 'Votre garantie est prête : c’est la première rencontre de la prochaine session.' : `Encore ${n} ${n === 1 ? 'session' : 'sessions'} avant la vôtre.`),
       contest: 'Le Concours ne compte pas pour la garantie.',
-      dex: (tab: string) => `Chaque capture entre dans le Pokédex de l’habitat ; complet, il donne des prix (voir l’onglet ${tab} du panneau).`,
+      dex: (tab: string) => `Chaque capture entre dans le Pokédex de l’habitat, et un Pokémon que tu as déjà y entre rien qu’en apparaissant ; complet, il donne des prix (voir l’onglet ${tab} du panneau).`,
       repeat: 'Capturer un Pokémon que vous avez déjà rapporte des ₽.',
     },
     contest: {
@@ -443,7 +443,7 @@ export const SAFARI_GUIDE_WORDS = {
       sure: (n: number) => `連續 ${n} 場沒有新家族後，下一場會先出現一個你沒有的家族（優先狩獵地帶限定）。牠不會逃，球也不會失手。`,
       left: (n: number) => (n === 0 ? '你的保底準備好了：就是下一場的第一次相遇。' : `再 ${n} 場就輪到你的保底。`),
       contest: '捕蟲大會不計入保底。',
-      dex: (tab: string) => `每次捕獲都會登錄到棲息地的圖鑑；完成後會有獎勵（看公告欄的「${tab}」分頁）。`,
+      dex: (tab: string) => `每次捕獲都會登錄到棲息地的圖鑑，已經擁有的寶可夢只要出現就會登錄；完成後會有獎勵（看公告欄的「${tab}」分頁）。`,
       repeat: '抓到已經有的寶可夢會換成錢包裡的 ₽。',
     },
     contest: {

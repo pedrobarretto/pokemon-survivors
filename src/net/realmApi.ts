@@ -251,8 +251,12 @@ export type SafariState = {
 
 export type SafariStarted = { session: SafariSession; used: number }
 
-/** What an action came to, the session after it and, for a catch, the gift that brings the Pokémon. */
-export type SafariActed = { turn: SafariTurn<HatchlingId>; gift: Gift | null; session: SafariSession }
+/**
+ * What an action came to, the session after it and, for a catch, the gift
+ * that brings the Pokémon. `registered`: an encounter of a family the account
+ * already has went into the habitat's Pokédex just now, on sight.
+ */
+export type SafariActed = { turn: SafariTurn<HatchlingId>; gift: Gift | null; registered: boolean; session: SafariSession }
 
 /** The Escavação's wall as its owner sees it: the rock's look, what's dug out so far and how cracked it is. Never where anything still buried lies. */
 export type DigWallView = {
