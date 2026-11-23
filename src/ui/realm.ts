@@ -63,7 +63,7 @@ import { openRealmFriends, roomName } from './realmFriends'
 import { dialogue, type Speaker } from './dialogue'
 import { h, later } from './dom'
 import { supporterBadgeIcon } from './profile'
-import { creatorLinks, streamerTag } from './creatorTag'
+import { creatorLinks, creatorBadge } from './creatorTag'
 import type { Screen } from './screens'
 import { toast } from './toasts'
 import { uiZoom } from './uiScale'
@@ -691,7 +691,7 @@ export const openRealm = (root: HTMLElement, input: Input, deps: RealmDeps, city
         { class: plate ? 'realm-plate plated' : 'realm-plate', style: plate ? `--plate-fill:${plate.fill};--plate-edge:${plate.edge};--plate-light:${plate.light}` : '' },
         ...(tier ? [h('img', { class: 'realm-badge', src: supporterBadgeIcon(tier), alt: '' })] : []),
         h('b', {}, `@${av.handle}`),
-        av.creator ? streamerTag('realm-streamer') : null,
+        av.creator ? creatorBadge('realm-creator') : null,
         titleChip(look.title),
       )
       return el

@@ -16,7 +16,7 @@ import { gameDex } from '../site/pokedex'
 import { LOCALES, locale, t } from '../i18n'
 import { h, later } from './dom'
 import { today } from './save'
-import { creatorLinks, streamerTag } from './creatorTag'
+import { creatorLinks, creatorBadge } from './creatorTag'
 import { titleBadge } from './missions'
 import { reportDialog } from './report'
 import { sharePreview, trainerShare } from './share'
@@ -185,7 +185,7 @@ export const profileScreen = (root: HTMLElement, input: Input, handle: string, o
           h(
             'div',
             { class: 'profile-id' },
-            h('b', { class: 'profile-name' }, p.name, ...supporterBadges(p.supporter, p.supporterSince, p.og), p.creator ? streamerTag() : null),
+            h('b', { class: 'profile-name' }, p.name, ...supporterBadges(p.supporter, p.supporterSince, p.og), p.creator ? creatorBadge() : null),
             h('span', { class: 'profile-handle' }, `@${p.handle}`),
             titleBadge(p.title),
             p.supporter && p.supporterSince ? h('small', { class: 'profile-supporter' }, t().supporters.profileSince(runDay(p.supporterSince, true))) : null,

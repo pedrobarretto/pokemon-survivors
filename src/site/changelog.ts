@@ -63,11 +63,11 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         zh: 'Patreon 現在出現在大廳：在「廣場上」名人堂正下方，以及「社群」視窗裡，並標示每月帶來的寶石。',
       },
       {
-        pt: 'Faz lives ou vídeos do jogo? Peça a tag STREAMER no Cartão de Treinador: aprovada pela equipe, ela aparece no seu perfil e sobre o seu treinador no Poké Realm, com o link do seu canal.',
-        en: 'Do you stream or make videos of the game? Ask for the STREAMER tag on your Trainer Card: once the team approves it, it shows on your profile and over your trainer in the Poké Realm, with your channel link.',
-        es: '¿Haces directos o videos del juego? Pide la etiqueta STREAMER en tu Tarjeta de Entrenador: cuando el equipo la aprueba, aparece en tu perfil y sobre tu entrenador en el Poké Realm, con el enlace de tu canal.',
-        fr: 'Tu fais des lives ou des vidéos du jeu ? Demande le badge STREAMER sur ta Carte de Dresseur : une fois approuvé par l’équipe, il s’affiche sur ton profil et au-dessus de ton dresseur dans le Poké Realm, avec le lien de ta chaîne.',
-        zh: '你有直播或製作遊戲影片嗎？在訓練家卡片申請實況主標籤：團隊審核通過後，標籤會出現在你的個人檔案和 Poké Realm 的訓練家頭上，並附上頻道連結。',
+        pt: 'Faz lives ou vídeos do jogo? Peça a tag CREATOR no Cartão de Treinador: aprovada pela equipe, ela aparece no seu perfil e sobre o seu treinador no Poké Realm, com o link do seu canal.',
+        en: 'Do you stream or make videos of the game? Ask for the CREATOR tag on your Trainer Card: once the team approves it, it shows on your profile and over your trainer in the Poké Realm, with your channel link.',
+        es: '¿Haces directos o videos del juego? Pide la etiqueta CREATOR en tu Tarjeta de Entrenador: cuando el equipo la aprueba, aparece en tu perfil y sobre tu entrenador en el Poké Realm, con el enlace de tu canal.',
+        fr: 'Tu fais des lives ou des vidéos du jeu ? Demande le badge CREATOR sur ta Carte de Dresseur : une fois approuvé par l’équipe, il s’affiche sur ton profil et au-dessus de ton dresseur dans le Poké Realm, avec le lien de ta chaîne.',
+        zh: '你有直播或製作遊戲影片嗎？在訓練家卡片申請 CREATOR 標籤：團隊審核通過後，標籤會出現在你的個人檔案和 Poké Realm 的訓練家頭上，並附上頻道連結。',
       },
     ],
     changes: [
@@ -136,9 +136,9 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         title: { pt: 'Criadores de conteúdo', en: 'Content creators', es: 'Creadores de contenido', fr: 'Créateurs de contenu', zh: '內容創作者' },
         notes: [
           {
-            pt: 'Com conta e @, mande até 3 links da Twitch, do YouTube, do Kick ou do TikTok em “Sou criador(a) de conteúdo”, no Cartão de Treinador. Dá para acompanhar o pedido no mesmo lugar e, se ele não for aprovado, corrigir os links e mandar de novo. Junto com a tag vêm o título Criador(a) de Conteúdo e a moldura de criador.',
-            en: 'With an account and an @, send up to 3 Twitch, YouTube, Kick or TikTok links under “I’m a content creator” on your Trainer Card. You can follow the request in the same place and, if it isn’t approved, fix the links and send it again. The tag comes with the Content Creator title and the creator frame.',
-            es: 'Con cuenta y @, envía hasta 3 enlaces de Twitch, YouTube, Kick o TikTok en “Soy creador(a) de contenido”, en tu Tarjeta de Entrenador. Puedes seguir la solicitud en el mismo lugar y, si no se aprueba, corregir los enlaces y enviarla de nuevo. Con la etiqueta vienen el título Creador(a) de Contenido y el marco de creador.',
+            pt: 'Com conta e @, mande até 3 links dos seus canais (Twitch, YouTube, Kick, TikTok, Instagram ou qualquer outro site) em “Sou criador(a) de conteúdo”, no Cartão de Treinador. Dá para acompanhar o pedido no mesmo lugar e, se ele não for aprovado, corrigir os links e mandar de novo. Junto com a tag vêm o título Criador(a) de Conteúdo e a moldura de criador.',
+            en: 'With an account and an @, send up to 3 links to your channels (Twitch, YouTube, Kick, TikTok, Instagram or any other site) under “I’m a content creator” on your Trainer Card. You can follow the request in the same place and, if it isn’t approved, fix the links and send it again. The tag comes with the Content Creator title and the creator frame.',
+            es: 'Con cuenta y @, envía hasta 3 enlaces de tus canales (Twitch, YouTube, Kick, TikTok, Instagram o cualquier otro sitio) en “Soy creador(a) de contenido”, en tu Tarjeta de Entrenador. Puedes seguir la solicitud en el mismo lugar y, si no se aprueba, corregir los enlaces y enviarla de nuevo. Con la etiqueta vienen el título Creador(a) de Contenido y el marco de creador.',
           },
           {
             pt: 'No Poké Realm, toque em um treinador com a tag para ver os canais dele. Só os links que a equipe aprovou aparecem para os outros jogadores.',

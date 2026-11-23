@@ -33776,8 +33776,8 @@ span.arena-hub-face {
 
 /* ---------------- Content creator's tag (ui/creatorTag.ts) ---------------- */
 
-/* The STREAMER tag beside a verified creator's name: a fill with its own text, the same in either theme. */
-.streamer-tag {
+/* The CREATOR tag beside a verified creator's name: a fill with its own text, the same in either theme. */
+.creator-tag {
   display: inline-block;
   margin-left: 6px;
   padding: 2px 5px 1px;
@@ -33795,7 +33795,7 @@ span.arena-hub-face {
   white-space: nowrap;
 }
 
-.realm-plate .realm-streamer {
+.realm-plate .realm-creator {
   margin-left: 2px;
   padding: 1px 3px 0;
   font-size: 12px;
@@ -33836,8 +33836,19 @@ span.arena-hub-face {
   color: color-mix(in srgb, #2a8a10 var(--dk-lift, 100%), #fff);
 }
 
-.creator-link.tiktok b {
+.creator-link.tiktok b,
+.creator-link.x b,
+.creator-link.site b {
   color: var(--dk-ink, #181820);
+}
+
+.creator-link.instagram b {
+  color: color-mix(in srgb, #c13584 var(--dk-lift, 100%), #fff);
+}
+
+.creator-link.facebook b,
+.creator-link.bluesky b {
+  color: color-mix(in srgb, #1868d8 var(--dk-lift, 100%), #fff);
 }
 
 .creator-link span {
@@ -33893,7 +33904,7 @@ span.arena-hub-face {
   line-height: 1.15;
 }
 
-.creator-status .streamer-tag {
+.creator-status .creator-tag {
   margin-left: 0;
 }
 

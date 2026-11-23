@@ -8,14 +8,14 @@ import { h, later } from './dom'
 import type { Screen } from './screens'
 
 /**
- * The content creator's tag on screen (`net/creatorTag.ts`): the STREAMER
+ * The content creator's tag on screen (`net/creatorTag.ts`): the CREATOR
  * tag, a creator's channel links (only approved ones ever reach here from
  * others: the API and the relay vouch for them) and the request sheet the
  * Trainer Card opens.
  */
 
-/** The STREAMER tag beside a name. */
-export const streamerTag = (cls = '') => h('span', { class: `streamer-tag${cls ? ` ${cls}` : ''}` }, t().creatorTag.tag)
+/** The CREATOR tag beside a name. */
+export const creatorBadge = (cls = '') => h('span', { class: `creator-tag${cls ? ` ${cls}` : ''}` }, t().creatorTag.tag)
 
 /** A link as people read it: its host and path, the path's escapes decoded (`twitch.tv/ana`, `youtube.com/@寶可夢`). */
 export const creatorLinkLabel = (link: CreatorLink) => {
@@ -27,7 +27,7 @@ export const creatorLinkLabel = (link: CreatorLink) => {
   }
 }
 
-/** A creator's channels as links out (a new tab, no opener, no referrer), each with its platform's name. */
+/** A creator's channels as links out (a new tab, no opener, no referrer), each with its platform's name (a `site`'s, the word for one). */
 export const creatorLinks = (links: readonly CreatorLink[], cls = '') =>
   h(
     'div',
@@ -36,7 +36,7 @@ export const creatorLinks = (links: readonly CreatorLink[], cls = '') =>
       h(
         'a',
         { class: `creator-link ${l.platform}`, href: l.url, target: '_blank', rel: 'noopener noreferrer' },
-        h('b', {}, CREATOR_PLATFORMS[l.platform].name),
+        h('b', {}, l.platform === 'site' ? t().creatorTag.site : CREATOR_PLATFORMS[l.platform].name),
         h('span', {}, creatorLinkLabel(l)),
         h('i', { 'aria-hidden': 'true' }, '↗'),
       ),
@@ -75,7 +75,7 @@ export const creatorScreen = (root: HTMLElement, input: Input, onClose: () => vo
   const statusLine = (r: CreatorRequest | null) => {
     if (!r) return null
     const text = r.status === 'pending' ? m.status.pending(day(r.at)) : m.status[r.status]
-    return h('p', { class: `creator-status ${r.status}` }, r.status === 'approved' ? streamerTag() : null, h('span', {}, text))
+    return h('p', { class: `creator-status ${r.status}` }, r.status === 'approved' ? creatorBadge() : null, h('span', {}, text))
   }
 
   /** The fields, prefilled with the last request's links (a rejected one gets fixed and sent again). */

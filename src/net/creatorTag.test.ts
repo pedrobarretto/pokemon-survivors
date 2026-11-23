@@ -9,17 +9,26 @@ describe('normalizeCreatorUrl', () => {
     expect(normalizeCreatorUrl('https://youtu.be/dQw4w9WgXcQ')).toEqual({ platform: 'youtube', url: 'https://youtu.be/dQw4w9WgXcQ' })
     expect(normalizeCreatorUrl('KICK.COM/xqc')).toEqual({ platform: 'kick', url: 'https://kick.com/xqc' })
     expect(normalizeCreatorUrl('https://www.tiktok.com/@birdseyegames')).toEqual({ platform: 'tiktok', url: 'https://tiktok.com/@birdseyegames' })
+    expect(normalizeCreatorUrl('instagram.com/sylvette')).toEqual({ platform: 'instagram', url: 'https://instagram.com/sylvette' })
+    expect(normalizeCreatorUrl('https://twitter.com/ana')).toEqual({ platform: 'x', url: 'https://twitter.com/ana' })
   })
 
-  it('refuses anything but an https channel link on a known host', () => {
+  it('takes any other https site as a `site`, its front page too', () => {
+    expect(normalizeCreatorUrl('https://Ana.Example.com.br/videos/?x=1')).toEqual({ platform: 'site', url: 'https://ana.example.com.br/videos' })
+    expect(normalizeCreatorUrl('www.ana.dev')).toEqual({ platform: 'site', url: 'https://www.ana.dev' })
+    expect(normalizeCreatorUrl('https://bücher.de/ana')?.url).toBe('https://xn--bcher-kva.de/ana')
+  })
+
+  it('refuses anything but an https link to a named host (a platform past its front page)', () => {
     for (const bad of [
       'http://twitch.tv/name',
       'javascript:alert(1)',
       'https://twitch.tv',
       'https://twitch.tv/',
-      'https://evil.com/twitch.tv/name',
-      'https://twitch.tv.evil.com/name',
-      'https://eviltwitch.tv/name',
+      'https://192.168.0.1/name',
+      'https://localhost/name',
+      'https://[::1]/name',
+      'data:text/html,hi',
       'https://user:pass@twitch.tv/name',
       'https://twitch.tv:8443/name',
       `https://twitch.tv/${'a'.repeat(200)}`,
@@ -48,14 +57,14 @@ describe('parseCreatorRequest', () => {
   it('needs one link, at most three, every one valid', () => {
     expect(parseCreatorRequest(['', ' '])).toEqual({ ok: false, error: 'empty' })
     expect(parseCreatorRequest(['twitch.tv/a', 'kick.com/a', 'tiktok.com/@a', 'youtube.com/@a'])).toEqual({ ok: false, error: 'many' })
-    expect(parseCreatorRequest(['twitch.tv/a', 'instagram.com/a'])).toEqual({ ok: false, error: 'invalid', index: 1 })
+    expect(parseCreatorRequest(['twitch.tv/a', 'http://instagram.com/a'])).toEqual({ ok: false, error: 'invalid', index: 1 })
     expect(parseCreatorRequest('twitch.tv/a')).toEqual({ ok: false, error: 'many' })
   })
 })
 
 describe('parseCreatorLinks', () => {
   it('keeps only links that come out of normalizing as they are', () => {
-    expect(parseCreatorLinks([{ platform: 'twitch', url: 'https://twitch.tv/a' }, { platform: 'kick', url: 'https://www.kick.com/a' }, { url: 'https://evil.com/a' }])).toEqual([
+    expect(parseCreatorLinks([{ platform: 'twitch', url: 'https://twitch.tv/a' }, { platform: 'kick', url: 'https://www.kick.com/a' }, { url: 'javascript:alert(1)' }])).toEqual([
       { platform: 'twitch', url: 'https://twitch.tv/a' },
     ])
     expect(parseCreatorLinks([{ platform: 'twitch', url: 'http://twitch.tv/a' }])).toBeNull()

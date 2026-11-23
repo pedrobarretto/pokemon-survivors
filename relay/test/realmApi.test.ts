@@ -12,7 +12,7 @@ describe('the realm’s API answers', () => {
     expect(parseIdentityResponse({ identities: { u1: { ...ash, userId: 'u2' } } }, ['u1'])).toEqual({ identities: {}, banned: [], friends: {} })
     expect(parseIdentityResponse('nope', ['u1'])).toBeNull()
     // A creator link off the allowlist never reaches the town, whatever the API sent.
-    expect(parseIdentityResponse({ identities: { u1: { ...ash, creator: [{ platform: 'twitch', url: 'https://evil.example/ash' }] } } }, ['u1'])?.identities.u1?.creator).toBeNull()
+    expect(parseIdentityResponse({ identities: { u1: { ...ash, creator: [{ platform: 'twitch', url: 'http://evil.example/ash' }] } } }, ['u1'])?.identities.u1?.creator).toBeNull()
   })
 
   it('keeps the asked accounts’ friend lists, lower case and well formed', () => {

@@ -227,7 +227,7 @@ export type Avatar = {
   supporter: string | null
   /** How many Estampas the trainer holds (`data/realmStamps.ts`), for its card. */
   stamps: number
-  /** A verified content creator's approved links (the STREAMER tag over them, the links on its card), or null. */
+  /** A verified content creator's approved links (the CREATOR tag over them, the links on its card), or null. */
   creator: CreatorLink[] | null
   x: number
   y: number

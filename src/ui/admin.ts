@@ -127,7 +127,7 @@ const runLine = (run: ReportedRun) =>
  * run off, wipe the save, ban or unban, dismiss), every destructive one
  * asking a second tap. Realm: the Poké Realm's reports and bans. Criadores
  * (with how many wait): content creator requests (`net/creatorTag.ts`) with
- * their links to check, to approve (the STREAMER tag, and the creator title
+ * their links to check, to approve (the CREATOR tag, and the creator title
  * and frame as gifts) or reject, and the verified creators to revoke. `start`
  * opens on a tab. Back or Esc close it and call `onClose`.
  */
@@ -552,7 +552,7 @@ export const adminScreen = (root: HTMLElement, input: Input, onClose: () => void
     h(
       'article',
       { class: 'admin-report box' },
-      h('div', { class: 'admin-report-head' }, h('span', {}, h('b', {}, who(e)), e.name && e.handle ? h('small', {}, e.name) : null), e.status === 'approved' ? h('span', { class: 'streamer-tag' }, 'STREAMER') : null),
+      h('div', { class: 'admin-report-head' }, h('span', {}, h('b', {}, who(e)), e.name && e.handle ? h('small', {}, e.name) : null), e.status === 'approved' ? h('span', { class: 'creator-tag' }, 'CREATOR') : null),
       creatorLinks(e.links),
       h('p', { class: 'admin-report-line' }, e.status === 'pending' ? `Pedido em ${when(e.at)}` : `Aprovado em ${e.reviewedAt ? when(e.reviewedAt) : '?'}${e.reviewedBy ? ` por @${e.reviewedBy}` : ''}`),
       e.handle ? h('a', { class: 'admin-report-link', href: profileHref(e.handle), target: '_blank', rel: 'noopener' }, `Ver perfil de @${e.handle} ↗`) : null,

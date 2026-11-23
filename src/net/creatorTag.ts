@@ -1,5 +1,5 @@
 /**
- * The verified content creator's tag (STREAMER): a player with a @handle asks
+ * The verified content creator's tag (CREATOR): a player with a @handle asks
  * for it from the Trainer Card with their channel links (`POST /creator`),
  * staff approve or reject it from the admin's desk (`server/src/creators.ts`),
  * and an approved account shows the tag and its links on its profile, its
@@ -7,23 +7,31 @@
  * the API's word, never the client's). Approving also sends the Criador(a) de
  * Conteúdo title and the creator frame through the gift path.
  *
- * Links are untrusted input: only https URLs on `CREATOR_PLATFORMS`' hosts,
- * normalized (`normalizeCreatorUrl`), and only approved ones ever reach other
- * players. Pure and import-free: the realm relay bundles it
+ * Links are untrusted input: any https URL is taken (staff check every one
+ * before approving), normalized (`normalizeCreatorUrl`), and only approved
+ * ones ever reach other players. A link on a known platform's host
+ * (`CREATOR_PLATFORMS`) shows that platform's name; any other is a `site`. Pure and import-free: the realm relay bundles it
  * (`relay/node/Dockerfile`).
  */
 
-/** Where a creator streams or posts, and the hosts its links may name (a `www.` or `m.` before them is dropped). */
+/** The platforms a link is named after, by their hosts (a `www.` or `m.` before them is dropped). Any other host is a `site`. */
 export const CREATOR_PLATFORMS = {
   twitch: { name: 'Twitch', hosts: ['twitch.tv'] },
   youtube: { name: 'YouTube', hosts: ['youtube.com', 'youtu.be'] },
   kick: { name: 'Kick', hosts: ['kick.com'] },
   tiktok: { name: 'TikTok', hosts: ['tiktok.com'] },
+  instagram: { name: 'Instagram', hosts: ['instagram.com'] },
+  x: { name: 'X', hosts: ['x.com', 'twitter.com'] },
+  facebook: { name: 'Facebook', hosts: ['facebook.com', 'fb.com'] },
+  bluesky: { name: 'Bluesky', hosts: ['bsky.app'] },
 } as const satisfies Record<string, { name: string; hosts: readonly string[] }>
 
-export type CreatorPlatform = keyof typeof CREATOR_PLATFORMS
+export type NamedPlatform = keyof typeof CREATOR_PLATFORMS
 
-export const CREATOR_PLATFORM_IDS = Object.keys(CREATOR_PLATFORMS) as CreatorPlatform[]
+/** A link's platform: a named one, or `site` for any other host. */
+export type CreatorPlatform = NamedPlatform | 'site'
+
+export const CREATOR_PLATFORM_IDS = Object.keys(CREATOR_PLATFORMS) as NamedPlatform[]
 
 /** A channel link, normalized: `https://<host><path>`, no query, no fragment. */
 export type CreatorLink = { platform: CreatorPlatform; url: string }
@@ -40,18 +48,22 @@ const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'obj
 /** A path's characters: what a channel's URL needs, nothing that could break out of an attribute or a Discord line. */
 const PATH = /^\/[A-Za-z0-9_\-.~@%/]+$/
 
-/** The platform a host belongs to, `www.` and `m.` dropped, or null when it's on none. */
-const platformOf = (host: string): { platform: CreatorPlatform; host: string } | null => {
+/** A host name as links carry them: letters, digits and hyphens in two labels or more (IDNs arrive punycoded). */
+const HOST = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z][a-z0-9-]{0,62}$/
+
+/** The platform a host belongs to, `www.` and `m.` dropped (a named one's host as kept), or a `site` as it is. */
+const platformOf = (host: string): { platform: CreatorPlatform; host: string } => {
   const bare = host.replace(/^(www|m)\./, '')
   const platform = CREATOR_PLATFORM_IDS.find((id) => CREATOR_PLATFORMS[id].hosts.some((h) => h === bare))
-  return platform ? { platform, host: bare } : null
+  return platform ? { platform, host: bare } : { platform: 'site', host }
 }
 
 /**
  * A channel link as typed (`twitch.tv/name`, `https://www.youtube.com/@name/`),
  * normalized, or null: only https (a link without a scheme gets it), no
- * credentials or port, a host on `CREATOR_PLATFORMS`, and a path past the
- * site's front page. The query and the fragment are dropped, so is a trailing `/`.
+ * credentials or port, a host name (not an address), and, on a named
+ * platform, a path past its front page (a `site` may be its front page). The
+ * query and the fragment are dropped, so is a trailing `/`.
  */
 export const normalizeCreatorUrl = (raw: string): CreatorLink | null => {
   const text = raw.trim()
@@ -64,15 +76,16 @@ export const normalizeCreatorUrl = (raw: string): CreatorLink | null => {
     return null
   }
   if (url.protocol !== 'https:' || url.username !== '' || url.password !== '' || url.port !== '') return null
-  const found = platformOf(url.hostname.toLowerCase())
-  if (!found) return null
+  const host = url.hostname.toLowerCase()
+  if (!HOST.test(host)) return null
+  const found = platformOf(host)
   const path = url.pathname.replace(/\/+$/, '')
-  if (!PATH.test(path)) return null
+  if (!(PATH.test(path) || (found.platform === 'site' && path === ''))) return null
   const out = `https://${found.host}${path}`
   return out.length <= CREATOR.urlMax ? { platform: found.platform, url: out } : null
 }
 
-/** Why a request's links don't go: none, too many, or one (`index`, as sent) that isn't a channel link on a known platform. */
+/** Why a request's links don't go: none, too many, or one (`index`, as sent) that isn't an https link. */
 export type CreatorLinksError = { error: 'empty' } | { error: 'many' } | { error: 'invalid'; index: number }
 
 /**

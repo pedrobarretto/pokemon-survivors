@@ -15,7 +15,7 @@ import { realmIconUrl } from '../render/realmScene'
 import { fetchSupporterStatus, knownOg, knownTier } from '../supporters'
 import { lazyScreen } from './lazy'
 import { boutiqueFresh } from './boutiqueSeen'
-import { creatorLinks, creatorRowLabel, creatorScreen, streamerTag } from './creatorTag'
+import { creatorLinks, creatorRowLabel, creatorScreen, creatorBadge } from './creatorTag'
 import { slotIconUrl } from '../render/gemArt'
 import { discordScreen } from './discord'
 import { h, later } from './dom'
@@ -99,7 +99,7 @@ type Row = { label: string; run: () => void; icon?: string; wide?: boolean; tone
  * runs, wins, Pokédex and shinies, medals and ribbons, the linked Discord,
  * the sync state (a tap syncs), then rows to edit the profile, see it, share
  * the card image, Discord (link it, or the server once linked), the content
- * creator's tag (ask for it; once approved, the STREAMER tag and the channels
+ * creator's tag (ask for it; once approved, the CREATOR tag and the channels
  * show on the card, `ui/creatorTag.ts`), Apoiadores
  * (supporters), the Pokémon's look (Leavanny's Boutique on its Visual tab,
  * without the walk), the Livro de Estampas (with a @handle), missions and achievements, the admin's gift desk and sign
@@ -221,7 +221,7 @@ export const trainerCardScreen = (
         h(
           'div',
           { class: 'trainer-id' },
-          h('h3', {}, name, channels && streamerTag()),
+          h('h3', {}, name, channels && creatorBadge()),
           handle && h('small', {}, handle),
           discord && h('small', { class: 'trainer-discord' }, h('img', { src: discordIcon(), alt: 'Discord' }), discord),
           titleLine('trainer-title'),

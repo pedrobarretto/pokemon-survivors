@@ -1,4 +1,4 @@
--- The verified content creator's tag (STREAMER, src/net/creatorTag.ts, server/src/creators.ts): one request per
+-- The verified content creator's tag (CREATOR, src/net/creatorTag.ts, server/src/creators.ts): one request per
 -- account, sent from the Trainer Card with the channel links (normalized `{ platform, url }[]`), reviewed by the admin.
 -- A new request after a rejection or a revocation replaces the row. An approved row is what the Realm's identity,
 -- the public profile and the Trainer Card show. Only adds, so the previous API keeps working during a rollout.
