@@ -25,7 +25,7 @@ export type ChangelogUpdate = {
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
     date: '2026-11-23',
-    title: { pt: 'Tornados sem travar', en: 'Tornadoes without the lag', es: 'Tornados sin trabas', fr: 'Des tornades sans ralentissement', zh: '龍捲風不再卡頓' },
+    title: { pt: 'Tornados sem travar e Patreon no lobby', en: 'Lag-free tornadoes and Patreon in the lobby', es: 'Tornados sin trabas y Patreon en el lobby', fr: 'Des tornades fluides et Patreon dans le lobby', zh: '龍捲風不再卡頓，大廳加入 Patreon' },
     highlights: [
       {
         pt: 'Os tornados do Whirlwind (do Lugia, ou do TM que ele deixa) não travam mais o jogo numa build de área grande, como a do Tornadus com Long Reach.',
@@ -48,6 +48,13 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         fr: 'Les autres grands anneaux et rayons des attaques légendaires sont plus légers aussi, surtout sur téléphone.',
         zh: '其他傳說招式的大型光環與光束也變得更輕量，手機上尤其明顯。',
       },
+      {
+        pt: 'O Patreon agora aparece no lobby: em Na Praça, logo abaixo do Hall da Fama, e na janela Comunidade, com as gemas que ele traz todo mês.',
+        en: 'Patreon now shows in the lobby: At the Plaza, right under the Hall of Fame, and in the Community sheet, with the gems it brings every month.',
+        es: 'El Patreon ahora aparece en el lobby: En la Plaza, justo debajo del Salón de la Fama, y en la ventana Comunidad, con las gemas que trae cada mes.',
+        fr: 'Patreon apparaît maintenant dans le lobby : sur la Place, juste sous le Panthéon, et dans la fenêtre Communauté, avec les gemmes qu’il apporte chaque mois.',
+        zh: 'Patreon 現在出現在大廳：在「廣場上」名人堂正下方，以及「社群」視窗裡，並標示每月帶來的寶石。',
+      },
     ],
     changes: [
       {
@@ -62,6 +69,32 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             pt: 'Anéis e raios são desenhados linha a linha em vez de pixel a pixel: o anel do Origin Pulse cruzando a tela passou de dezenas de milhares de pixels por quadro para poucos milhares.',
             en: 'Rings and beams are drawn row by row instead of pixel by pixel: Origin Pulse’s ring crossing the screen went from tens of thousands of pixels a frame to a few thousand.',
             es: 'Los anillos y rayos se dibujan fila por fila en vez de píxel por píxel: el anillo de Origin Pulse cruzando la pantalla pasó de decenas de miles de píxeles por cuadro a unos pocos miles.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Patreon no lobby', en: 'Patreon in the lobby', es: 'Patreon en el lobby', fr: 'Patreon dans le lobby', zh: '大廳裡的 Patreon' },
+        notes: [
+          {
+            pt: 'Na Praça, logo abaixo do Hall da Fama, agora tem um botão para apoiar o jogo no Patreon.',
+            en: 'At the Plaza, right under the Hall of Fame, now has a button to support the game on Patreon.',
+            es: 'En la Plaza, justo debajo del Salón de la Fama, ahora hay un botón para apoyar el juego en Patreon.',
+            fr: 'Sur la Place, juste sous le Panthéon, un bouton permet maintenant de soutenir le jeu sur Patreon.',
+            zh: '「廣場上」名人堂正下方，現在有一個在 Patreon 支持遊戲的按鈕。',
+          },
+          {
+            pt: 'A janela Comunidade também traz o Patreon, logo depois do Discord.',
+            en: 'The Community sheet has Patreon too, right after Discord.',
+            es: 'La ventana Comunidad también trae el Patreon, justo después de Discord.',
+            fr: 'La fenêtre Communauté propose aussi Patreon, juste après Discord.',
+            zh: '「社群」視窗也加入了 Patreon，就在 Discord 之後。',
+          },
+          {
+            pt: 'O botão mostra quantas gemas o Patreon traz por mês; quem já apoia vê o seu nível.',
+            en: 'The button shows how many gems Patreon brings each month; patrons see their own tier.',
+            es: 'El botón muestra cuántas gemas trae el Patreon por mes; quien ya apoya ve su nivel.',
+            fr: 'Le bouton indique combien de gemmes Patreon apporte chaque mois ; les mécènes voient leur palier.',
+            zh: '按鈕會顯示 Patreon 每月帶來多少寶石；已支持的玩家會看到自己的等級。',
           },
         ],
       },

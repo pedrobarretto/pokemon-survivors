@@ -4754,6 +4754,66 @@ button {
   animation: lobby-wiggle 1.6s steps(1) infinite;
 }
 
+/* Patreon under the Hall: one coral row, the monthly way to support. */
+.arc-card.lobby-patreon {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 40px;
+  padding: 4px 12px 4px 8px;
+  color: #fff;
+  text-align: left;
+  background: #ff424d;
+}
+
+.lobby-patreon-icon {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+}
+
+.lobby-patreon .lobby-day-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.lobby-patreon b {
+  overflow: hidden;
+  font-family: var(--kit-title);
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.05;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.lobby-patreon small {
+  overflow: hidden;
+  font-family: var(--kit-body);
+  font-size: 15px;
+  line-height: 1.1;
+  white-space: nowrap;
+  color: #fff;
+  text-overflow: ellipsis;
+  opacity: 0.92;
+}
+
+@media (max-height: 800px) {
+  .arc-card.lobby-patreon {
+    min-height: 34px;
+    padding-block: 2px;
+  }
+
+  .lobby-patreon-icon {
+    width: 26px;
+    height: 26px;
+  }
+}
+
 .lobby-notice:empty {
   display: none;
 }
