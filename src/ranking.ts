@@ -9,6 +9,7 @@ import { isDayKey, type DayKey } from './game/day'
 import { isOutbreakSpecies } from './game/outbreak'
 import { isUltraBeast, type UltraBeast } from './data/ultraBeasts'
 import { isPlayable, parseChallengePlace, parseRunResult, rankable, type Board, type BoardPeriod, type ChallengeBoard, type ChallengePlace, type ProfileRun, type PublicProfile, type RunMode, type RunRanks, type RunResult } from './game/ranking'
+import { parseCreatorLinks } from './net/creatorTag'
 import { firstTouch, landingRef, parseInvites, REF_PARAM } from './game/referral'
 import { RULES_VERSION, type Recorder, type Replay } from './game/replay'
 import { cutReplay, STREAM, STREAM_START, type ReplayChunk } from './game/replayStream'
@@ -593,6 +594,7 @@ const knownRecords = (records: Partial<Record<Difficulty, ProfileRun>>): Partial
 /** A profile without the runs this build can't draw (`knownRun`). */
 const knownProfile = (p: PublicProfile): PublicProfile => ({
   ...p,
+  creator: parseCreatorLinks(p.creator),
   records: knownRecords(p.records ?? {}),
   ...(p.legendRecords ? { legendRecords: knownRecords(p.legendRecords) } : {}),
   recent: p.recent.filter(knownRun),

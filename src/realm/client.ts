@@ -1,5 +1,6 @@
 import type { SocketHandlers, SocketLike } from '../coop/client'
 import { isTableId, type TableResult, type TableView } from '../net/realmTables'
+import { parseCreatorLinks } from '../net/creatorTag'
 import { parseWireLook } from '../net/protocol'
 import {
   REALM_LIMITS,
@@ -86,7 +87,7 @@ const isFacing = (v: unknown): v is Facing => Number.isInteger(v) && isNum(v) &&
 /** A look from the wire: slot to id strings only (the game's `parseLook` keeps the known ones). */
 export const parseAvatar = (v: unknown): Avatar | null => {
   if (!isRecord(v)) return null
-  const { id, handle, partner, shiny, look, supporter, stamps, x, y, facing, moving, act } = v
+  const { id, handle, partner, shiny, look, supporter, stamps, creator, x, y, facing, moving, act } = v
   if (!isNum(id) || !isStr(handle, 32) || !isStr(partner, 32) || !isNum(x) || !isNum(y) || !isFacing(facing)) return null
   return {
     id,
@@ -96,6 +97,7 @@ export const parseAvatar = (v: unknown): Avatar | null => {
     look: parseWireLook(look) ?? {},
     supporter: isStr(supporter, 32) ? supporter : null,
     stamps: isNum(stamps) ? stamps : 0,
+    creator: parseCreatorLinks(creator),
     x,
     y,
     facing,

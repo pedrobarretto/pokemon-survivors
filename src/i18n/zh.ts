@@ -7,6 +7,7 @@ import { LOBBY_TOUR_WORDS } from './lobbyTour'
 import { TUTORIAL_WORDS } from './tutorial'
 import { WELCOME_WORDS } from './welcome'
 import { RADIO_WORDS } from './radio'
+import { CREATOR_WORDS } from './creatorTag'
 import { realmBookZh as realmBook } from './realmStamps/zh'
 import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
 import { TERA_WORDS } from './tera'
@@ -1140,6 +1141,7 @@ export const zh: Messages = {
   tutorial: TUTORIAL_WORDS.zh,
   lobbyTour: LOBBY_TOUR_WORDS.zh,
   radio: RADIO_WORDS.zh,
+  creatorTag: CREATOR_WORDS.zh,
   levelUp: {
     title: (name, level) => `${name} 升到 Lv ${level} 了！`,
     ready: '準備好了！',

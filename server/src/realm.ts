@@ -35,6 +35,7 @@ import type { RealmBan, RealmDesk, RealmModeration, RealmReportGroup } from '../
 import { addFurniture, trophyFurniture } from '../../src/realm/trophies'
 import { boardKeeps, boardPoints, GAME_BOARD_PERIODS, GAME_BOARD_SIZE, periodStart, type GameBoard, type GameBoardPeriod } from '../../src/realm/boards'
 import type { Sql } from './db'
+import { approvedLinks } from './creators'
 import { bareName, idsByName, NAMES, restClient } from './discord'
 import { moveGems, vouchedLooks } from './gems'
 import { rateLimiter } from './rateLimit'
@@ -401,8 +402,9 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
   return {
     /**
      * `POST /realm/identity`: each account that may walk the realm, by user
-     * id (a @handle, not banned), with its partner, vouched look and
-     * supporter badge (only when it shows it); the banned ones listed apart.
+     * id (a @handle, not banned), with its partner, vouched look,
+     * supporter badge (only when it shows it) and approved creator links;
+     * the banned ones listed apart.
      */
     identity: async (userIds: readonly string[]): Promise<IdentityResponse> => {
       const ids = [...new Set(userIds)]
@@ -413,8 +415,9 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
         where u.id = any(${ids}::text[])`
       const open = rows.flatMap((r) => (!r.closed && r.handle !== null ? [{ ...r, handle: r.handle }] : []))
       const openIds = open.map((r) => r.id)
-      const [looks, stamps, mutuals] = await Promise.all([
+      const [looks, creators, stamps, mutuals] = await Promise.all([
         vouchedLooks(sql, openIds),
+        approvedLinks(sql, openIds),
         sql<{ user_id: string; n: number }[]>`select user_id, count(*)::int as n from realm_stamps where user_id = any(${openIds}::text[]) group by user_id`,
         // Each one's mutual friends (who it may invite to its base), `FRIENDS.list` at most.
         sql<{ id: string; handle: string }[]>`
@@ -426,7 +429,7 @@ export const realmStore = (sql: Sql, deps: { staff?: StaffChannel | null; now?: 
       const identities: Record<string, RealmIdentity> = {}
       const friends: Record<string, string[]> = {}
       for (const r of open) {
-        identities[r.id] = { userId: r.id, handle: r.handle, ...partnerOf(parseSaveData(r.save)), look: looks.get(r.id) ?? {}, supporter: r.supporter_public ? tierOfRow(r) : null, stamps: stamps.find((s) => s.user_id === r.id)?.n ?? 0 }
+        identities[r.id] = { userId: r.id, handle: r.handle, ...partnerOf(parseSaveData(r.save)), look: looks.get(r.id) ?? {}, supporter: r.supporter_public ? tierOfRow(r) : null, stamps: stamps.find((s) => s.user_id === r.id)?.n ?? 0, creator: creators.get(r.id) ?? null }
         friends[r.id] = []
       }
       for (const m of mutuals) {

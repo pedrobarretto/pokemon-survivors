@@ -1,5 +1,6 @@
 import { accountHandle, sessionToken } from './account'
 import { webSocket, type SocketHandlers, type SocketLike } from './coop/client'
+import { ownCreatorLinks } from './creator'
 import { playsShiny } from './game/shinyPicks'
 import { equippedLook } from './gems'
 import { isCityId, type CityId } from './net/realm'
@@ -42,7 +43,7 @@ const localSocket = (url: string, on: SocketHandlers): SocketLike => {
         city,
         bots: LOCAL_BOTS,
         start: LOCAL_START,
-        me: { handle: accountHandle() ?? 'you', partner: save.partner, shiny: playsShiny(save, save.partner), look: equippedLook() },
+        me: { handle: accountHandle() ?? 'you', partner: save.partner, shiny: playsShiny(save, save.partner), look: equippedLook(), creator: ownCreatorLinks() },
       }),
     }
   }

@@ -36,6 +36,7 @@
  */
 
 import type { TableView } from './realmTables'
+import type { CreatorLink } from './creatorTag'
 import type { WireLook } from './protocol'
 
 /** Bumped with any incompatible change; a client and relay of different versions refuse each other. */
@@ -201,7 +202,9 @@ export type PartyMode = 'coop' | 'arena'
  * never what the client says. `look` is the cosmetic look (slot to id plus
  * `skins`, a `WireLook`; the game's `parseLook` reads it), `partner` the save's partner (a `PlayableId`)
  * and whether it's shiny, `supporter` the tier for the badge, if any, `stamps`
- * how many Estampas it earned (`data/realmStamps.ts`; an API from before them: 0).
+ * how many Estampas it earned (`data/realmStamps.ts`; an API from before them: 0),
+ * `creator` the channel links of a verified content creator, approved by staff
+ * (`net/creatorTag.ts`; null for everyone else and from an API before them).
  */
 export type RealmIdentity = {
   userId: string
@@ -211,6 +214,7 @@ export type RealmIdentity = {
   look: WireLook
   supporter: string | null
   stamps: number
+  creator: CreatorLink[] | null
 }
 
 /** A trainer as others see them: `id` is per city and connection (never the user id), the rest their identity. */
@@ -223,6 +227,8 @@ export type Avatar = {
   supporter: string | null
   /** How many Estampas the trainer holds (`data/realmStamps.ts`), for its card. */
   stamps: number
+  /** A verified content creator's approved links (the STREAMER tag over them, the links on its card), or null. */
+  creator: CreatorLink[] | null
   x: number
   y: number
   facing: Facing

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { guestUserId, parseDeedsAnswer, parseIdentityResponse, parseVisitResponse, postDeeds } from '../src/realmApi'
 
-const ash = { userId: 'u1', handle: 'ash', partner: 'pichu', shiny: true, look: { head: 'crown', skins: ['charmanderSuit'] }, supporter: 'gold', stamps: 3 }
+const ash = { userId: 'u1', handle: 'ash', partner: 'pichu', shiny: true, look: { head: 'crown', skins: ['charmanderSuit'] }, supporter: 'gold', stamps: 3, creator: [{ platform: 'twitch', url: 'https://twitch.tv/ash' }] }
 
 describe('the realm’s API answers', () => {
   it('keeps only well-formed identities of the accounts asked', () => {
@@ -11,6 +11,8 @@ describe('the realm’s API answers', () => {
     expect(parseIdentityResponse({ identities: { u1: { ...ash, look: { head: 'crown', bad: 3 } } } }, ['u1'])?.identities.u1?.look).toEqual({})
     expect(parseIdentityResponse({ identities: { u1: { ...ash, userId: 'u2' } } }, ['u1'])).toEqual({ identities: {}, banned: [], friends: {} })
     expect(parseIdentityResponse('nope', ['u1'])).toBeNull()
+    // A creator link off the allowlist never reaches the town, whatever the API sent.
+    expect(parseIdentityResponse({ identities: { u1: { ...ash, creator: [{ platform: 'twitch', url: 'https://evil.example/ash' }] } } }, ['u1'])?.identities.u1?.creator).toBeNull()
   })
 
   it('keeps the asked accounts’ friend lists, lower case and well formed', () => {

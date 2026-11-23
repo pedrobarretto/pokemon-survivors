@@ -237,6 +237,7 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
     look: opts.me?.look ?? {},
     supporter: opts.me?.supporter ?? null,
     stamps: opts.me?.stamps ?? 0,
+    creator: opts.me?.creator ?? null,
   })
 
   /** Dev: each trainer's made-up Estampas count, kept here so the card shows one before the relay sends its own (`Avatar.stamps`). */
@@ -573,7 +574,7 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
   const addBot = (i: number) => {
     const userId = `bot-${i}`
     const handle = `${BOT_NAMES[i % BOT_NAMES.length]}${i >= BOT_NAMES.length ? Math.floor(i / BOT_NAMES.length) : ''}`
-    identities.set(userId, { userId, handle, partner: pick(PLAYABLE_IDS), shiny: random() < 0.1, look: look(), supporter: random() < 0.15 ? pick(['supporter', 'gold', 'diamond']) : null, stamps: 0 })
+    identities.set(userId, { userId, handle, partner: pick(PLAYABLE_IDS), shiny: random() < 0.1, look: look(), supporter: random() < 0.15 ? pick(['supporter', 'gold', 'diamond']) : null, stamps: 0, creator: i % 5 === 1 ? [{ platform: 'twitch', url: `https://twitch.tv/${handle}` }] : null })
     const conn = `bot-${nextConn++}`
     const t = now()
     const room: TownRoomId = opts.start?.[handle] ?? 'plaza'

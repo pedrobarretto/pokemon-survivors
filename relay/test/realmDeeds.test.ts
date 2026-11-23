@@ -14,7 +14,7 @@ const join = (state: RealmState, conn: string, user: string, room = 'plaza', now
   connect(state, conn, 'pallet', now)
   const ask = hello(state, conn, { t: 'hello', v: REALM_PROTOCOL, city: 'pallet', token: 'tok', room }, user, now).find((e) => e.k === 'identify')
   if (ask?.k !== 'identify') throw new Error('no identify ask')
-  const out = identified(state, ask.ask, { identities: { [user]: { userId: user, handle: user, partner: 'charmander', shiny: false, look: {}, supporter: null, stamps: 0, ...over } }, banned: [] }, now)
+  const out = identified(state, ask.ask, { identities: { [user]: { userId: user, handle: user, partner: 'charmander', shiny: false, look: {}, supporter: null, stamps: 0, creator: null, ...over } }, banned: [] }, now)
   const welcome = sent(out, conn).find((m) => m.t === 'welcome')
   if (welcome?.t !== 'welcome') throw new Error('not seated')
   return welcome.you

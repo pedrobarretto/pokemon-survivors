@@ -1,5 +1,8 @@
 import { accountHandle } from '../account'
 import { fetchRealmDesk, fetchReports, findPlayers, moderate, moderateRealm, sendGift, sentGifts } from '../admin'
+import { fetchCreatorDesk, reviewCreator } from '../creator'
+import type { CreatorDeskEntry, CreatorReview } from '../net/creatorTag'
+import { creatorLinks } from './creatorTag'
 import { GIFT_TITLES, type GiftTitleId } from '../data/achievements'
 import { HATCHLING_IDS, HATCHLINGS } from '../data/hatchlings'
 import { styleIds, stylePrice, type FrameId } from '../data/style'
@@ -122,9 +125,13 @@ const runLine = (run: ReportedRun) =>
  * (with how many are open): the open reports grouped by run or player, each
  * with its numbers, notes, a link to the profile and its actions (take the
  * run off, wipe the save, ban or unban, dismiss), every destructive one
- * asking a second tap. Back or Esc close it and call `onClose`.
+ * asking a second tap. Realm: the Poké Realm's reports and bans. Criadores
+ * (with how many wait): content creator requests (`net/creatorTag.ts`) with
+ * their links to check, to approve (the STREAMER tag, and the creator title
+ * and frame as gifts) or reject, and the verified creators to revoke. `start`
+ * opens on a tab. Back or Esc close it and call `onClose`.
  */
-export const adminScreen = (root: HTMLElement, input: Input, onClose: () => void): Screen => {
+export const adminScreen = (root: HTMLElement, input: Input, onClose: () => void, start: 'gifts' | 'reports' | 'realm' | 'creators' = 'gifts'): Screen => {
   let target: AdminUser | null = null
   let request = crypto.randomUUID()
   let searchId = 0
@@ -132,7 +139,7 @@ export const adminScreen = (root: HTMLElement, input: Input, onClose: () => void
   let armed = 0
   let busy = false
   let closed = false
-  let tab: 'gifts' | 'reports' | 'realm' = 'gifts'
+  let tab: 'gifts' | 'reports' | 'realm' | 'creators' = 'gifts'
 
   const query = h('input', { class: 'field-input', type: 'search', maxlength: 100, autocapitalize: 'none', autocorrect: 'off', autocomplete: 'off', spellcheck: 'false', placeholder: '@handle ou e-mail', enterkeyhint: 'search' })
   const results = h('div', { class: 'admin-results' })
@@ -186,6 +193,11 @@ export const adminScreen = (root: HTMLElement, input: Input, onClose: () => void
   const realmStatus = h('p', { class: 'field-message' })
   const realmList = h('div', { class: 'admin-reports' })
   const realmSection = h('div', { class: 'admin-section hidden' }, realmSummary, realmStatus, realmList)
+  const creatorsTab = h('button', { class: 'region-tab rank-tab', type: 'button' }, 'Criadores')
+  const creatorsSummary = h('p', { class: 'field-message' }, 'Carregando…')
+  const creatorsStatus = h('p', { class: 'field-message' })
+  const creatorsList = h('div', { class: 'admin-reports' })
+  const creatorsSection = h('div', { class: 'admin-section hidden' }, creatorsSummary, creatorsStatus, creatorsList)
 
   const setTab = (next: typeof tab) => {
     if (next === tab) return
@@ -197,12 +209,16 @@ export const adminScreen = (root: HTMLElement, input: Input, onClose: () => void
     reportsSection.classList.toggle('hidden', tab !== 'reports')
     realmTab.classList.toggle('selected', tab === 'realm')
     realmSection.classList.toggle('hidden', tab !== 'realm')
+    creatorsTab.classList.toggle('selected', tab === 'creators')
+    creatorsSection.classList.toggle('hidden', tab !== 'creators')
     if (tab === 'reports') void loadReports()
     if (tab === 'realm') void loadRealm()
+    if (tab === 'creators') void loadCreators()
   }
   giftsTab.addEventListener('click', () => setTab('gifts'))
   reportsTab.addEventListener('click', () => setTab('reports'))
   realmTab.addEventListener('click', () => setTab('realm'))
+  creatorsTab.addEventListener('click', () => setTab('creators'))
 
   /* ---------------- Gifts ---------------- */
 
@@ -518,6 +534,50 @@ export const adminScreen = (root: HTMLElement, input: Input, onClose: () => void
     realmList.replaceChildren(...got.groups.map(realmCard), ...got.bans.filter((b) => !reported.has(b.userId)).map(banCard))
   }
 
+  /* ---------------- Content creators ---------------- */
+
+  const REVIEWED = { approve: 'Aprovado: a tag aparece e o título e a moldura foram enviados.', reject: 'Recusado. O jogador pode mandar de novo.', revoke: 'Tag revogada.' } as const satisfies Record<CreatorReview, string>
+
+  const review = async (e: CreatorDeskEntry, action: CreatorReview) => {
+    const out = await reviewCreator(e.userId, action)
+    if (closed) return
+    const ok = out !== null && out !== 'state' && out !== 'unknown'
+    playSfx(ok ? 'unlock' : 'hurt')
+    say(creatorsStatus, ok ? `${who(e)}: ${REVIEWED[action]}` : out === 'state' ? 'Esse pedido já mudou. A lista foi atualizada.' : out === 'unknown' ? 'Esse pedido não existe mais.' : 'Não foi. Tente de novo.', !ok)
+    void loadCreators()
+  }
+
+  /** One request: who, the links to check (they open in a new tab), when, and what to do. */
+  const creatorCard = (e: CreatorDeskEntry) =>
+    h(
+      'article',
+      { class: 'admin-report box' },
+      h('div', { class: 'admin-report-head' }, h('span', {}, h('b', {}, who(e)), e.name && e.handle ? h('small', {}, e.name) : null), e.status === 'approved' ? h('span', { class: 'streamer-tag' }, 'STREAMER') : null),
+      creatorLinks(e.links),
+      h('p', { class: 'admin-report-line' }, e.status === 'pending' ? `Pedido em ${when(e.at)}` : `Aprovado em ${e.reviewedAt ? when(e.reviewedAt) : '?'}${e.reviewedBy ? ` por @${e.reviewedBy}` : ''}`),
+      e.handle ? h('a', { class: 'admin-report-link', href: profileHref(e.handle), target: '_blank', rel: 'noopener' }, `Ver perfil de @${e.handle} ↗`) : null,
+      h(
+        'div',
+        { class: 'buttons' },
+        ...(e.status === 'pending'
+          ? [askingButton('Recusar', 'Confirmar: recusar?', () => review(e, 'reject'), 'danger'), askingButton('Aprovar', 'Confirmar: aprovar?', () => review(e, 'approve'), 'confirm')]
+          : [askingButton('Revogar a tag', 'Confirmar: revogar?', () => review(e, 'revoke'), 'danger')]),
+      ),
+    )
+
+  let creatorsId = 0
+
+  /** Loads the requests waiting and the approved creators into the tab, and the waiting count into its label. */
+  const loadCreators = async () => {
+    const id = ++creatorsId
+    const got = await fetchCreatorDesk()
+    if (id !== creatorsId || closed) return
+    if (!got) return say(creatorsSummary, 'Não deu para carregar os pedidos.', true)
+    creatorsTab.textContent = got.pending.length > 0 ? `Criadores (${got.pending.length})` : 'Criadores'
+    say(creatorsSummary, `${got.pending.length === 0 ? 'Nenhum pedido esperando.' : `${got.pending.length} pedido(s) esperando, os mais antigos primeiro. Confira os links antes de aprovar.`} ${got.approved.length} criador(es) verificado(s).`)
+    creatorsList.replaceChildren(...got.pending.map(creatorCard), ...(got.approved.length ? [h('span', { class: 'field-label' }, 'VERIFICADOS'), ...got.approved.map(creatorCard)] : []))
+  }
+
   /* ---------------- The dialog ---------------- */
 
   const searchForm = h(
@@ -531,10 +591,11 @@ export const adminScreen = (root: HTMLElement, input: Input, onClose: () => void
     'div',
     { class: 'dialog box pop admin' },
     h('div', { class: 'dialog-title' }, 'PAINEL ADMIN'),
-    h('div', { class: 'region-tabs rank-tabs', role: 'tablist' }, giftsTab, reportsTab, realmTab),
+    h('div', { class: 'region-tabs rank-tabs', role: 'tablist' }, giftsTab, reportsTab, realmTab, creatorsTab),
     giftsSection,
     reportsSection,
     realmSection,
+    creatorsSection,
     back,
   )
   const el = h('div', { class: 'screen dim' }, dialog)
@@ -559,6 +620,8 @@ export const adminScreen = (root: HTMLElement, input: Input, onClose: () => void
   refresh()
   void loadRecent()
   void loadReports()
+  void loadCreators()
+  setTab(start)
   root.append(el)
   if (matchMedia('(hover: hover) and (pointer: fine)').matches) query.focus()
   return { el, dispose, dim: 0.5 }
