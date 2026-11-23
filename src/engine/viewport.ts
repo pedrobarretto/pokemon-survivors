@@ -16,8 +16,16 @@ export const deviceScale = (cssW: number, cssH: number, dpr: number) => {
   return Math.max(2, Math.round(Math.max(2, Math.round(short / WORLD_SHORT)) * dpr))
 }
 
-/** A side of the internal canvas: at least 1 px, as webviews can report a 0 (or negative) viewport while they lay out. */
-const side = (px: number) => (px >= 1 ? Math.ceil(px) : 1)
+/**
+ * A side of the internal canvas: at least 1 px, as webviews can report a 0 (or negative) viewport while they lay out.
+ * A real side is rounded up to even: the camera sits at `player - side / 2`, so on an odd side it holds a half pixel the
+ * player doesn't, the two round apart, and a walking Pokémon shakes by a pixel against the screen.
+ */
+const side = (px: number) => {
+  if (!(px >= 1)) return 1
+  const whole = Math.ceil(px)
+  return whole + (whole % 2)
+}
 
 /** Below this (CSS px) a side is no screen the game could be on: even a landscape phone under its keyboard keeps more. */
 const MIN_VIEWPORT = 100

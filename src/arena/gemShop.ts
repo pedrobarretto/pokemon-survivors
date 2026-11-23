@@ -1,14 +1,15 @@
 import { COSMETICS, COSMETIC_IDS, COSMETIC_SLOTS, cosmeticPrice, showsIn, slotOf, withSkins, type Look, type CosmeticBase, type CosmeticId, type CosmeticSlot, type Rarity } from '../data/cosmetics'
 import { PLAYABLE } from '../data/hatchlings'
 import { isSkinId, lineOf, SKIN_IDS, SKIN_LINES, SKINS, type SkinId, type SkinLine } from '../data/skinCatalog'
-import { GEM_PACK_IDS, GEM_PACKS, oncePack, packGems, type GemCurrency, type GemMethod, type GemPackId } from '../data/gems'
+import { GEM_FX, GEM_PACK_IDS, oncePack, packGems, packGemsOn, packPrice, type GemMarket, type GemPackId, type ShownCurrency } from '../data/gems'
 import { createRng, pick, seedFrom } from '../engine/rng'
 import type { DayKey } from '../game/day'
+import { onSale } from '../game/gems'
 
 /**
  * The Arena shop's rules, DOM-free (`ui/gemShop.ts` draws them, `gems.ts`
- * talks to the API): which currency a buyer sees, how each method pays,
- * what the shop shows today and how a look changes as items go on and off.
+ * talks to the API): which price a buyer pays and in what currency the shop
+ * guesses it, what the shop shows today and how a look changes as items go on and off.
  */
 
 /** Brazil's IANA time zones: a buyer there pays in reais even with the game in another language. */
@@ -31,31 +32,100 @@ const BRAZIL_ZONES = new Set([
   'America/Santarem',
 ])
 
-/** The currency a buyer sees first: reais in Brazilian Portuguese or a Brazilian time zone, dollars elsewhere. */
-export const currencyFor = (tag: string, timeZone: string | undefined): GemCurrency => (tag === 'pt-BR' || (timeZone !== undefined && BRAZIL_ZONES.has(timeZone)) ? 'brl' : 'usd')
+/** Which price a buyer gets first: Brazil's in Brazilian Portuguese or a Brazilian time zone, everyone else's elsewhere (the shop lets them switch). */
+export const marketFor = (tag: string, timeZone: string | undefined): GemMarket => (tag === 'pt-BR' || (timeZone !== undefined && BRAZIL_ZONES.has(timeZone)) ? 'br' : 'intl')
 
 /**
- * How a pack can be paid in `currency`, the first one offered first: in
- * reais Pix (almost never charged back, where a card's chargeback costs a fee
- * on top), then card; elsewhere card (Apple Pay and Google Pay ride on it).
+ * Where each currency the shop guesses in (`GEM_FX`) is used: IANA time
+ * zones (`Australia/` a prefix for the whole country) and the regions a
+ * language tag names (`es-MX`). Dollars are the fallback, so the US needs none.
  */
-export const methodsFor = (currency: GemCurrency): readonly GemMethod[] => (currency === 'brl' ? ['pix', 'card'] : ['card'])
+const CURRENCY_PLACES: Record<Exclude<ShownCurrency, 'usd'>, { zones: readonly string[]; regions: readonly string[] }> = {
+  eur: {
+    zones: [
+      ...['Amsterdam', 'Andorra', 'Athens', 'Berlin', 'Bratislava', 'Brussels', 'Busingen', 'Dublin', 'Helsinki', 'Lisbon', 'Ljubljana', 'Luxembourg', 'Madrid', 'Malta', 'Mariehamn', 'Monaco', 'Paris', 'Podgorica', 'Riga', 'Rome', 'San_Marino', 'Sofia', 'Tallinn', 'Vatican', 'Vienna', 'Vilnius', 'Zagreb'].map((c) => `Europe/${c}`),
+      'Atlantic/Azores',
+      'Atlantic/Canary',
+      'Atlantic/Madeira',
+      'Africa/Ceuta',
+    ],
+    regions: ['AT', 'BE', 'BG', 'CY', 'DE', 'EE', 'ES', 'FI', 'FR', 'GR', 'HR', 'IE', 'IT', 'LT', 'LU', 'LV', 'MT', 'NL', 'PT', 'SI', 'SK'],
+  },
+  gbp: { zones: ['Europe/London', 'Europe/Belfast', 'Europe/Guernsey', 'Europe/Isle_of_Man', 'Europe/Jersey'], regions: ['GB'] },
+  chf: { zones: ['Europe/Zurich', 'Europe/Vaduz'], regions: ['CH', 'LI'] },
+  twd: { zones: ['Asia/Taipei'], regions: ['TW'] },
+  hkd: { zones: ['Asia/Hong_Kong', 'Asia/Macau'], regions: ['HK', 'MO'] },
+  cny: { zones: ['Asia/Shanghai', 'Asia/Chongqing', 'Asia/Harbin', 'Asia/Urumqi'], regions: ['CN'] },
+  sgd: { zones: ['Asia/Singapore'], regions: ['SG'] },
+  myr: { zones: ['Asia/Kuala_Lumpur', 'Asia/Kuching'], regions: ['MY'] },
+  mxn: {
+    zones: ['Mexico_City', 'Cancun', 'Merida', 'Monterrey', 'Matamoros', 'Chihuahua', 'Ciudad_Juarez', 'Ojinaga', 'Mazatlan', 'Bahia_Banderas', 'Hermosillo', 'Tijuana'].map((c) => `America/${c}`),
+    regions: ['MX'],
+  },
+  cad: {
+    zones: ['Toronto', 'Montreal', 'Vancouver', 'Edmonton', 'Winnipeg', 'Regina', 'Swift_Current', 'Halifax', 'Moncton', 'Glace_Bay', 'Goose_Bay', 'St_Johns', 'Whitehorse', 'Dawson', 'Dawson_Creek', 'Fort_Nelson', 'Creston', 'Iqaluit', 'Rankin_Inlet', 'Resolute', 'Cambridge_Bay', 'Inuvik', 'Atikokan'].map((c) => `America/${c}`),
+    regions: ['CA'],
+  },
+  aud: { zones: ['Australia/'], regions: ['AU'] },
+  clp: { zones: ['America/Santiago', 'America/Punta_Arenas', 'Pacific/Easter'], regions: ['CL'] },
+  cop: { zones: ['America/Bogota'], regions: ['CO'] },
+  pen: { zones: ['America/Lima'], regions: ['PE'] },
+}
+
+const PLACES = Object.entries(CURRENCY_PLACES) as [Exclude<ShownCurrency, 'usd'>, { zones: readonly string[]; regions: readonly string[] }][]
+
+/** The region a language tag names (`zh-Hant-TW` → `TW`), or null. */
+const regionOf = (tag: string) => /-([A-Z]{2})(?:-|$)/.exec(tag)?.[1] ?? null
+
+/**
+ * The currency the shop guesses prices abroad in (`approxText`): the
+ * device's time zone's, else the first of its languages' regions it knows,
+ * else dollars. Only a guess: Stripe charges in the buyer's own currency
+ * from where they pay, whatever this says.
+ */
+export const shownCurrency = (tags: readonly string[], timeZone: string | undefined): ShownCurrency => {
+  const zone = timeZone ?? ''
+  const byZone = PLACES.find(([, p]) => p.zones.some((z) => (z.endsWith('/') ? zone.startsWith(z) : zone === z)))
+  if (byZone) return byZone[0]
+  for (const tag of tags) {
+    const region = regionOf(tag)
+    const byRegion = region === null ? undefined : PLACES.find(([, p]) => p.regions.includes(region))
+    if (byRegion) return byRegion[0]
+  }
+  return 'usd'
+}
 
 /** The packs the shop offers an account, in order: a `once` pack only while it isn't `taken`. */
 export const shownPacks = (taken: readonly GemPackId[]): GemPackId[] => GEM_PACK_IDS.filter((id) => !oncePack(id) || !taken.includes(id))
 
 /**
- * The pack that covers `missing` gems for the least money in `currency`
- * among the ones offered (`shownPacks`): the welcome pack while it's there,
- * else the smallest that's enough; the biggest when none is.
+ * The pack that covers `missing` gems for the least money in `market` among
+ * the ones offered (`shownPacks`): the welcome pack while it's there, else
+ * the smallest that's enough; the biggest when none is. `day`: the Brasília
+ * day the packs are counted on (`packGemsOn`: a promotion's gems count too).
  */
-export const packFor = (missing: number, taken: readonly GemPackId[], currency: GemCurrency): GemPackId => {
-  const packs = shownPacks(taken).sort((a, b) => GEM_PACKS[a][currency] - GEM_PACKS[b][currency] || packGems(b) - packGems(a))
-  return packs.find((id) => packGems(id) >= missing) ?? packs.reduce((a, b) => (packGems(b) > packGems(a) ? b : a))
+export const packFor = (missing: number, taken: readonly GemPackId[], market: GemMarket, day: DayKey | null = null): GemPackId => {
+  const gems = (id: GemPackId) => (day ? packGemsOn(id, day) : packGems(id))
+  const packs = shownPacks(taken).sort((a, b) => packPrice(a, market) - packPrice(b, market) || gems(b) - gems(a))
+  return packs.find((id) => gems(id) >= missing) ?? packs.reduce((a, b) => (gems(b) > gems(a) ? b : a))
 }
 
-/** A price in cents as the buyer's language writes it (`R$ 24,90`, `$4.99`). */
-export const priceText = (cents: number, currency: GemCurrency, tag: string) => new Intl.NumberFormat(tag, { style: 'currency', currency: currency.toUpperCase() }).format(cents / 100)
+/** A price in cents of `currency` as the buyer's language writes it (`R$ 24,90`, `$4.99`). */
+export const priceText = (cents: number, currency: string, tag: string) => new Intl.NumberFormat(tag, { style: 'currency', currency: currency.toUpperCase() }).format(cents / 100)
+
+/** What `centavos` of reais come to in `currency` by the shop's table (`GEM_FX`), in whole units of it. */
+export const approxPrice = (centavos: number, currency: ShownCurrency) => (centavos / 100 / GEM_FX.brlPerUsd) * GEM_FX.perUsd[currency].rate
+
+/** `centavos` of reais as the shop guesses them in `currency`: `≈ NT$64`, `≈ €1.75` (whole units where they're written so). */
+export const approxText = (centavos: number, currency: ShownCurrency, tag: string) => {
+  const fx: { rate: number; whole?: true } = GEM_FX.perUsd[currency]
+  const digits = fx.whole ? 0 : 2
+  return `≈ ${new Intl.NumberFormat(tag, { style: 'currency', currency: currency.toUpperCase(), minimumFractionDigits: digits, maximumFractionDigits: digits }).format(approxPrice(centavos, currency))}`
+}
+
+/** What pack `id` costs as the shop shows it: exactly in reais in Brazil (`R$ 9,90`), a guess in `currency` elsewhere (`≈ US$ 2,02`). */
+export const packPriceText = (id: GemPackId, market: GemMarket, currency: ShownCurrency, tag: string) =>
+  market === 'br' ? priceText(packPrice(id, 'br'), 'brl', tag) : approxText(packPrice(id, 'intl'), currency, tag)
 
 /** Rarities from the plainest up, the order the shop lists them in. */
 export const RARITIES = ['common', 'rare', 'epic', 'legendary'] as const satisfies readonly Rarity[]
@@ -104,6 +174,30 @@ export const dailyPicks = (day: DayKey, owned: ReadonlySet<CosmeticId> = new Set
   const look = draw(onSale.filter((id) => !isSkinId(id)))
   const skin = draw(onSale.filter(isSkinId)) ?? draw(onSale.filter((id) => !isSkinId(id) && look !== null && slotOf(id) !== slotOf(look)))
   return [look, skin].filter((id): id is CosmeticId => id !== null)
+}
+
+/**
+ * What a balance of free gems can buy now, for the results' gem line and
+ * the lobby's chip: the Vitrine do dia's first pick the account lacks when
+ * the balance covers it (`dailyPicks`), else the cheapest item on sale it
+ * lacks (`onSale`; ties go to what shows in a run, then the catalog's
+ * order), as `covers`; when nothing is in reach, how many gems the cheapest
+ * is `missing` (`first`: the account owns nothing bought yet). Null when
+ * the account owns everything on sale.
+ */
+export type LookNudge = { kind: 'covers'; id: CosmeticId } | { kind: 'short'; missing: number; first: boolean }
+
+export const lookNudge = (day: DayKey, owned: ReadonlySet<CosmeticId>, balance: number): LookNudge | null => {
+  const price = (id: CosmeticId) => cosmeticPrice(id) ?? 0
+  const buyable = (id: CosmeticId) => !owned.has(id) && onSale(id, day)
+  const featured = dailyPicks(day, owned).find((id) => buyable(id) && price(id) <= balance)
+  if (featured) return { kind: 'covers', id: featured }
+  const runs = (id: CosmeticId) => (showsIn(slotOf(id), 'run') ? 0 : 1)
+  const cheapest = COSMETIC_IDS.filter(buyable).sort((a, b) => price(a) - price(b) || runs(a) - runs(b))[0]
+  if (cheapest === undefined) return null
+  if (price(cheapest) <= balance) return { kind: 'covers', id: cheapest }
+  const first = ![...owned].some((id) => price(id) > 0)
+  return { kind: 'short', missing: price(cheapest) - Math.max(0, balance), first }
 }
 
 /**

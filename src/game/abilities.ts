@@ -4,6 +4,7 @@ import { ABILITIES, ABILITY, BRANCH_ABILITIES, FAMILY_ABILITIES, type AbilityEff
 import type { BiomeId } from '../data/biomes'
 import type { BranchId } from '../data/branches'
 import type { PlayableId } from '../data/hatchlings'
+import { MEGAS, type MegaAbilityEffect } from '../data/megas'
 import { POKE_TYPES, type PokeType } from '../data/types'
 import { formOf, playerForm } from './branch'
 import { healPlayer, killEnemy } from './combat'
@@ -32,7 +33,7 @@ export type AbilityState = {
   id: AbilityId | null
   /** `abilityKey` when the stats were last built; a change rebuilds them. */
   key: number
-  /** Stacks of an onKill, timer or onHurt ability (whole stacks count; Moxie's wear off bit by bit). */
+  /** Stacks of an onKill, timer or onHurt ability (whole stacks count). */
   stacks: number
   /** Seconds toward the next timer, heal or Moody tick, or left on onHurt stacks. */
   clock: number
@@ -42,6 +43,8 @@ export type AbilityState = {
   guard: number
   /** Kills toward the next onKill stack. */
   kills: number
+  /** Seconds until a decaying onKill stack wears off (Moxie, Beast Boost); each kill winds it back up. */
+  fade: number
   /** Sturdy already held this run. */
   spent: boolean
   /** Moody's current boost, an index into its options (-1: none yet). */
@@ -51,7 +54,7 @@ export type AbilityState = {
 }
 
 export const createAbilityState = (): AbilityState => ({
-  id: null, key: -1, stacks: 0, clock: 0, pulse: 0, guard: 0, kills: 0, spent: false, mood: -1, biome: null,
+  id: null, key: -1, stacks: 0, clock: 0, pulse: 0, guard: 0, kills: 0, fade: 0, spent: false, mood: -1, biome: null,
 })
 
 /** The abilities a run picks from: the branch's own when the first evolution branched (Eevee), else the family's. */
@@ -66,13 +69,30 @@ export const activeAbility = (g: Game): AbilityId | null => (g.player.mega.activ
 const NONE: readonly AbilityEffect[] = []
 const joined = new Map<string, readonly AbilityEffect[]>()
 
+/** The ability effects a Mega form plays while it lasts (`MegaEffect` `ability`: Mega Absol Z's Sharpness), or null. */
+const megaEffects = (g: Game): readonly MegaAbilityEffect[] | null => {
+  const { stone, active } = g.player.mega
+  if (active <= 0 || !stone) return null
+  const effect = MEGAS[stone].effect
+  return effect.kind === 'ability' ? effect.effects : null
+}
+
 /**
  * The effects in play: a legend's innate (`legend.ts`, always on) and the
- * ability picked. Cached per pair, since the hits and ticks ask all the time.
+ * ability picked, or in its place a Mega form's own (`megaEffects`). Cached
+ * per pair, since the hits and ticks ask all the time.
  */
 const effectsOf = (g: Game): readonly AbilityEffect[] => {
-  const id = activeAbility(g)
   const innate = innateEffects(g.player.starter)
+  const mega = megaEffects(g)
+  if (mega) {
+    if (innate.length === 0) return mega
+    const key = `${g.player.starter}|mega:${g.player.mega.stone}`
+    let effects = joined.get(key)
+    if (!effects) joined.set(key, (effects = [...innate, ...mega]))
+    return effects
+  }
+  const id = activeAbility(g)
   if (innate.length === 0) return id ? ABILITIES[id].effects : NONE
   if (!id) return innate
   const key = `${g.player.starter}|${id}`
@@ -319,6 +339,7 @@ export const abilityKill = (g: Game, e: Enemy) => {
   for (const effect of effectsOf(g)) {
     if (effect.kind === 'onKill') {
       const s = g.player.ability
+      if (effect.decay) s.fade = effect.decay
       if (++s.kills < effect.per) continue
       s.kills = 0
       if (s.stacks >= effect.max) continue
@@ -433,7 +454,11 @@ export const updateAbility = (g: Game, dt: number) => {
         }
         break
       case 'onKill':
-        if (e.decay && s.stacks > 0) s.stacks = Math.max(0, s.stacks - dt / e.decay)
+        // A whole stack wears off every `decay` s without a kill, never a share of one (which floored the newest away at once).
+        if (e.decay && s.stacks > 0 && (s.fade -= dt) <= 0) {
+          s.stacks -= 1
+          s.fade += e.decay
+        }
         break
       case 'moody':
         s.clock -= dt

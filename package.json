@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build && node scripts/sourcemaps.mjs",
+    "build": "tsc --noEmit && vite build && node scripts/sourcemaps.mjs && node worker/site.mjs",
     "preview": "vite preview",
+    "site:dev": "CHOKIDAR_USEPOLLING=true npx --yes wrangler@4.154.0 dev --config worker/wrangler.jsonc --port 8797",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "roster": "node scripts/roster.mjs",
@@ -17,6 +18,8 @@
     "determinism": "node scripts/determinism.mjs",
     "rules:freeze": "npm run rules:freeze --prefix server",
     "soak": "node scripts/coop/soak.mjs",
+    "dig-shapes": "node scripts/dig-shapes.mjs",
+    "fossils": "node scripts/fetch-fossils.mjs",
     "rig": "node scripts/rig.mjs",
     "rig:migrate": "node scripts/rig-migrate.mjs",
     "fit-check": "node scripts/fit-check.mjs",
@@ -33,9 +36,12 @@
   "dependencies": {
     "@clerk/clerk-js": "^6.42.0",
     "@clerk/shared": "^4.40.0",
+    "@fontsource/jersey-10": "^5.3.0",
+    "@fontsource/jersey-15": "^5.3.0",
     "@fontsource/press-start-2p": "^5.3.0",
     "@fontsource/vt323": "^5.3.0",
     "fflate": "^0.8.3",
+    "opencc-js": "^1.4.2",
     "posthog-js": "^1.441.2"
   },
   "license": "MIT",

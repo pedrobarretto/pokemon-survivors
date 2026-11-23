@@ -4,6 +4,8 @@ import { CURSES } from '../data/curses'
 import { evolvedFrom } from '../data/evolutions'
 import { ITEMS } from '../data/items'
 import { formAt } from '../game/branch'
+import { formLocked } from '../game/communityGoal'
+import { lookOf } from '../game/legend'
 import { fainted } from '../game/coop'
 import { isDuo } from '../game/duoRules'
 import { MOVES, maxMoveLevel, type MoveId } from '../game/moves'
@@ -11,7 +13,8 @@ import type { Game, Player } from '../game/types'
 import { t } from '../i18n'
 import { curseIcon, itemIcon, moveIcon, teamAwayIcon, teamBallIcon, sparkleIcon } from '../render/art'
 import { shownLook } from '../render/looks'
-import { portraitUrl } from '../render/sprites'
+import { hookPortrait } from '../render/gaHookLook'
+import { formPortraitUrl, portraitUrl } from '../render/sprites'
 import { busyWith, slotColor } from '../render/team'
 import { TEAM_COLORS } from '../render/vale'
 import { titleChip } from './arenaTitle'
@@ -21,6 +24,19 @@ import { versusName } from './arenaBits'
 
 /** The name the team sees for a seat: the one it joined with, or "Jogador 2" (in Versus, a bot's Pokémon with "CPU"). */
 export const seatName = (g: Game, slot: number) => (g.versus ? versusName(g, slot) : g.coop?.names[slot]?.trim() || t().team.player(slot + 1))
+
+/**
+ * A seat's face and name as the team sees them: a legend's awakened form (a
+ * co-op Legend room's seats; its own portrait when SpriteCollab draws one,
+ * and only once the community goal opened a community form), else its
+ * stage's (a Vivillon in its seat's pattern).
+ */
+export const seatLook = (g: Game, p: Player) => {
+  const look = p.legend ? lookOf(p.legend) : null
+  if (look && !formLocked(look)) return { src: look.key ? formPortraitUrl(look.dex, look.key) : portraitUrl(look.dex, p.shiny), name: look.name }
+  const form = formAt(p.starter, p.branch, p.stage)
+  return { src: hookPortrait(g, p, form.dex), name: form.name }
+}
 
 /** What a teammate's card says they're up to, or null while they just play. */
 type CardState = 'fainted' | 'away' | 'choosing' | 'evolving' | 'left' | null
@@ -79,7 +95,7 @@ export const teamBuilds = (g: Game, me: Player) => {
         h(
           'div',
           { class: 'team-build-head' },
-          h('img', { class: 'team-portrait', src: portraitUrl(formAt(p.starter, p.branch, p.stage).dex, p.shiny), alt: '' }),
+          h('img', { class: 'team-portrait', src: seatLook(g, p).src, alt: '' }),
           h('b', { class: 'team-name' }, seatName(g, p.slot), titleChip(shownLook(g, p.slot).title)),
           h('span', { class: 'team-level' }, t().levelShort(p.level)),
         ),
@@ -166,11 +182,10 @@ export const createTeamHud = (root: HTMLElement) => {
       // Versus: the cards are your team's (the rivals show on the field and the minimap).
       if (p === me || (p.versus && p.versus.team !== me.versus?.team)) continue
       const card = cardFor(g, p)
-      const dex = formAt(p.starter, p.branch, p.stage).dex
-      const key = `${dex}${p.shiny}`
+      const key = seatLook(g, p).src
       if (key !== card.key) {
         card.key = key
-        card.portrait.src = portraitUrl(dex, p.shiny)
+        card.portrait.src = key
       }
       const state = stateOf(p)
       const mode = state ?? ''

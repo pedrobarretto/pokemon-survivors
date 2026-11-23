@@ -36,7 +36,7 @@ describe('effectiveness', () => {
 describe('starter roster', () => {
   it('lists every starter in exactly one region', () => {
     const listed = REGIONS.flatMap((r) => r.starters)
-    expect(listed.toSorted()).toEqual(STARTER_IDS.toSorted())
+    expect(listed.slice().sort()).toEqual(STARTER_IDS.slice().sort())
   })
 
   it('has walk/idle/hurt sheets for every evolution stage', () => {
@@ -73,7 +73,9 @@ describe('level-up offers', () => {
     }))
     expect(full).toHaveLength(MAX_MOVES)
     const items = (Object.keys(ITEMS) as (keyof typeof ITEMS)[]).slice(0, 6).map((id) => ({ id, level: ITEMS[id].levels.length }))
-    expect(rollOffers({ starter: 'charmander', moves: full, items }, createRng(2))).toEqual([{ kind: 'berry' }])
+    // The maxed moves' pair items aren't held: they'd come as swap cards (`swapItems`), unless they rest.
+    const resting = ['charcoal', 'silkScarf', 'neverMeltIce', 'poisonBarb', 'sharpBeak'] as const
+    expect(rollOffers({ starter: 'charmander', moves: full, items, resting }, createRng(2))).toEqual([{ kind: 'berry' }])
   })
 
   it('has nothing to choose only when every card is the berry', () => {

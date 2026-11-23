@@ -15,13 +15,18 @@ import { coopBeta } from './coopBeta'
 import { connect, migrate, saveStore } from './db'
 import { retrying } from './retrying'
 import { createRibbons } from './challenge'
+import { createEra1Rewards } from './era1'
 import { discordStore, startDiscord } from './discord'
 import { discordLink } from './discordLink'
 import { candyGoalStore } from './candyGoal'
+import { clawStore } from './claw'
+import { cornerStore } from './corner'
+import { safariStore } from './safari'
+import { digStore } from './dig'
 import { festivalStore } from './festival'
-import { abacatePay } from './donations'
 import { gemStore } from './gems'
 import { stripeCheckout } from './stripe'
+import { stripeDonate } from './stripeDonations'
 import { friendStore } from './friends'
 import { giftStore } from './gifts'
 import { moderationStore } from './moderation'
@@ -83,7 +88,11 @@ void discord.settleOg().catch((err) => console.error('discord OG roles failed', 
 const arena = arenaStore(sql)
 createArenaRewards(arena).start()
 
-const abacate = env.abacatePayKey ? abacatePay(env.abacatePayKey) : null
+// The Era 1 Hall da Fama: a day after Temporada 1 opens, its boards' top get their titles and frames (keys per tier: safe on every instance).
+const coop = coopBoardStore(sql)
+createEra1Rewards(sql, [ranking, coop]).start()
+
+const realm = realmStore(sql, { staff: env.discord ? discordStaffChannel(env.discord) : null })
 
 const app = createApp({
   store: saveStore(sql),
@@ -91,9 +100,9 @@ const app = createApp({
   friends: friendStore(sql),
   gifts,
   verify: clerkVerifier(env),
-  donate: abacate?.donate ?? null,
+  donate: env.stripeSecretKey ? stripeDonate(env.stripeSecretKey) : null,
   gems: gemStore(sql),
-  gemCheckout: { card: env.stripeSecretKey ? stripeCheckout(env.stripeSecretKey) : null, pix: abacate?.gems ?? null },
+  gemCheckout: env.stripeSecretKey ? stripeCheckout(env.stripeSecretKey) : null,
   supporters,
   festival: festivalStore(sql),
   candyGoal: candyGoalStore(sql),
@@ -103,9 +112,13 @@ const app = createApp({
   admin: adminStore(sql, clerk, env.adminEmails),
   moderation: moderationStore(sql),
   arena,
-  coop: coopBoardStore(sql),
+  coop,
   // Realm reports go to the staff's #mod-chat when the bot is set up (stored either way).
-  realm: realmStore(sql, { staff: env.discord ? discordStaffChannel(env.discord) : null }),
+  realm,
+  claw: clawStore(sql, { closed: realm.closedIn, earn: realm.earn }),
+  safari: safariStore(sql, { closed: realm.closedIn, earn: realm.earn }),
+  dig: digStore(sql, { closed: realm.closedIn, earn: realm.earn }),
+  corner: cornerStore(sql, { closed: realm.closedIn }),
   arenaReportSecret: env.arenaReportSecret,
   patreon: env.patreon ? patreonOAuth(env.patreon) : null,
   webhooks: {

@@ -1,4 +1,6 @@
+import { assetUrl } from '../assets'
 import { canvasCache, context2d, createCanvas, fromStrings, lazy, type Palette, type PixelSprite } from '../engine/pixelart'
+import { PENCIL, PENCIL_PALETTE } from './pencilArt'
 import type { Medal } from '../data/achievements'
 import { ITEMS, type ItemId } from '../data/items'
 import type { BagItem } from '../game/bag'
@@ -13,6 +15,16 @@ import type { UpgradeId } from '../game/meta'
 import type { MoveId } from '../game/moves'
 import { EGG_MOVE_ICONS } from './eggMoveArt'
 import { EGG_MOVE_3_ICONS } from './eggMove3Art'
+import { SEASON_ONE_KIT_ICONS } from './seasonOneKitArt'
+import { KIT_B_ICONS } from './gaKitBArt'
+import { FOSSIL_KIT_ICONS } from './fossilKitArt'
+import { HOOK_ICONS } from './gaHookArt'
+import { GA_KIT_A_ICONS } from './gaKitAArt'
+import { REGIONAL_ICONS } from './regionalArt'
+import { ROCKET_KIT_ICONS } from './rocketKitArt'
+import { GA_KIT_MA_ICONS } from './gaKitMAArt'
+import { MEGA_KIT_B_ICONS } from './megaKitBArt'
+import { GALLOP_ICONS } from './gallopArt'
 import { EGG_MOVE_2_ICONS } from './eggMove2Art'
 import { SIGNATURE_ICONS } from './signatureArt'
 import { TM_ICONS } from './tmArt'
@@ -24,6 +36,13 @@ import type { CurseId } from '../data/curses'
 import type { SocialId } from '../site/routes'
 import { LEGENDARY_ICONS } from './legendaryArt'
 import { LEGENDARY_ICONS_2 } from './legendaryArt2'
+import { ULTRA_ICONS } from './ultraArt'
+import { PATH_LEGEND_ICONS } from './pathLegendArt'
+import { LEGENDARY_ICONS_3 } from './legendaryFx3'
+import { LEGENDARY_ICONS_4 } from './legendaryFx4'
+import { SC_KIT_ICONS } from './scKitArt'
+import { LEGENDARY_ICONS_5 } from './legendaryFx5'
+import { LEGENDARY_ICONS_6 } from './legendaryFx6'
 import * as TE from './typeEvolvedArt'
 
 /**
@@ -369,6 +388,38 @@ const KECLEON_EGG = [
   '.1222222211.',
   '..11111111..',
 ]
+/**
+ * The Ovos de Viagem: the egg's shell in its region's colors, a luggage strap
+ * buckled round its waist and the region's stamp on top (Alola's hibiscus,
+ * Galar's crown, Hisui's red seal with Mt. Coronet, Paldea's sun). 1 shade, 2 shell, 3 shine,
+ * 4 strap, 9 its shade, 5 buckle, 6 and 7 the stamp. `stamp` is five rows of
+ * five pixels, laid on rows 2 to 6, columns 5 to 9.
+ */
+const travelEgg = (stamp: readonly [string, string, string, string, string]) => {
+  const rows = [
+    '....2222....',
+    '...222222...',
+    '..23222222..',
+    '..32222222..',
+    '.2222222222.',
+    '.2222222221.',
+    '.2222222221.',
+    '222555222221',
+    '445454444449',
+    '445554444449',
+    '222222222221',
+    '122222222211',
+    '.1222222211.',
+    '..11111111..',
+  ]
+  return rows.map((row, y) => (y >= 2 && y <= 6 ? [...row].map((c, x) => (x >= 5 && x <= 9 && stamp[y - 2]![x - 5] !== '.' ? stamp[y - 2]![x - 5] : c)).join('') : row))
+}
+const TRAVEL_EGGS = {
+  alola: travelEgg(['..6..', '.666.', '66766', '.666.', '..6..']),
+  galar: travelEgg(['.....', '6.6.6', '66666', '67676', '66666']),
+  hisui: travelEgg(['.666.', '66666', '66766', '67776', '.666.']),
+  paldea: travelEgg(['6.6.6', '.777.', '67776', '.777.', '6.6.6']),
+} as const
 /** The crack that splits the shell, revealed from the middle out as hatching goes on. */
 const EGG_CRACK = ['', '', '', '', '1...1...1...', '.1.1.1.1.1.1', '..1...1...1.']
 
@@ -383,12 +434,22 @@ const EGG_PALETTES = {
   kecleon: { 1: '#2c6a30', 2: '#68c058', 3: '#c8f0a8', 4: '#d83838' },
   /** The loyalty card's Kecleon Egg, sure to hatch shiny: a golden zigzag on a deeper green shell. */
   kecleonShiny: { 1: '#1c4a20', 2: '#3c8a3c', 3: '#a8e890', 4: '#f8d030' },
+  /** The Fossil Egg: old amber with a dark fossil's spots. */
+  fossil: { 1: '#a86820', 2: '#e8a838', 3: '#f8d888', 4: '#583818' },
+  found: { 1: '#c8b890', 2: '#f8f0d8', 3: '#ffffff', 4: '#c8b890' },
+  /** The Escavação's restored fossils (never laid): a shell of sandstone with dark fossil spots. */
+  dig: { 1: '#806850', 2: '#c8b088', 3: '#e8d8b8', 4: '#4a3420' },
+  /** The Ovos de Viagem (`TRAVEL_EGGS`): Alola's sand with a sea-teal strap and a hibiscus, Galar's rose with a navy strap and a gold crown, Hisui's snow with a leather strap and a red seal, Paldea's violet with a scarlet strap and a sun. */
+  alola: { 1: '#c06830', 2: '#f8d090', 3: '#fff4d8', 4: '#28a0a0', 9: '#186868', 5: '#f8e070', 6: '#e84878', 7: '#f8e050' },
+  galar: { 1: '#802838', 2: '#d86070', 3: '#f8c0c8', 4: '#283868', 9: '#141c38', 5: '#f8d048', 6: '#f8d048', 7: '#48a0f0' },
+  hisui: { 1: '#6880a0', 2: '#bcd0e4', 3: '#f0f8ff', 4: '#8a5a30', 9: '#4a2c14', 5: '#c8c8d0', 6: '#d03028', 7: '#f8f0e8' },
+  paldea: { 1: '#583080', 2: '#9868c8', 3: '#d8c0f0', 4: '#d83830', 9: '#781810', 5: '#f8e070', 6: '#f8a020', 7: '#f8e070' },
 } as const satisfies Record<EggTier, Palette>
 
-const CRACK_COLORS = { common: '#584830', rare: '#584830', ultra: '#f8f0c0', friend: '#803048', haunted: '#78f0a8', kecleon: '#1c4020', kecleonShiny: '#1c4020' } as const satisfies Record<EggTier, string>
+const CRACK_COLORS = { common: '#584830', rare: '#584830', ultra: '#f8f0c0', friend: '#803048', haunted: '#78f0a8', kecleon: '#1c4020', kecleonShiny: '#1c4020', fossil: '#583818', found: '#584830', dig: '#4a3420', alola: '#7a3018', galar: '#481028', hisui: '#405068', paldea: '#2c1048' } as const satisfies Record<EggTier, string>
 
 /** The eggs drawn from their own rows instead of `EGG`'s spots. */
-const EGG_ROWS: Partial<Record<EggTier, readonly string[]>> = { kecleon: KECLEON_EGG, kecleonShiny: KECLEON_EGG }
+const EGG_ROWS: Partial<Record<EggTier, readonly string[]>> = { kecleon: KECLEON_EGG, kecleonShiny: KECLEON_EGG, ...TRAVEL_EGGS }
 
 /** Memoized sprite per key (one per tier and crack stage). */
 const eggCache = canvasCache<string, PixelSprite>()
@@ -660,6 +721,12 @@ const MOVE_ICON_ART: Record<MoveId, () => PixelSprite> = {
   ...VERB_EVOLVED_ICONS,
   ...LEGENDARY_ICONS,
   ...LEGENDARY_ICONS_2,
+  ...ULTRA_ICONS,
+  ...PATH_LEGEND_ICONS,
+  ...LEGENDARY_ICONS_3,
+  ...LEGENDARY_ICONS_4,
+  ...LEGENDARY_ICONS_5,
+  ...LEGENDARY_ICONS_6,
   ember: () => FX.ember()[0]!,
   fireSpin: () => FX.flame()[0]!,
   waterGun: () => FX.water(),
@@ -731,6 +798,17 @@ const MOVE_ICON_ART: Record<MoveId, () => PixelSprite> = {
   outrage: () => outlined(FX.dragonFlame()[0]!, '#180840'),
   ...EGG_MOVE_ICONS,
   ...EGG_MOVE_3_ICONS,
+  ...SEASON_ONE_KIT_ICONS,
+  ...KIT_B_ICONS,
+  ...HOOK_ICONS,
+  ...GA_KIT_A_ICONS,
+  ...REGIONAL_ICONS,
+  ...ROCKET_KIT_ICONS,
+  ...GA_KIT_MA_ICONS,
+  ...MEGA_KIT_B_ICONS,
+  ...GALLOP_ICONS,
+  ...FOSSIL_KIT_ICONS,
+  ...SC_KIT_ICONS,
   jawLock: () => art([...TE.MAW_TOP, ...TE.MAW_BOTTOM], TE.MAW, '#d8c0e8'),
   superpower: () => art(TE.BIG_FIST, TE.FIST_PAL, '#281010'),
   fissure: () => art(...TE.FISSURE_ICON, '#181818'),
@@ -753,6 +831,19 @@ const MOVE_ICON_ART: Record<MoveId, () => PixelSprite> = {
   alluringVoice: () => compose(15, 15, [[art(TE.heartRing(15), TE.HEART_PAL, '#401020'), 0, 0], [FX.heart(), 3, 3]]),
   ...EGG_MOVE_2_ICONS,
   ...DUO_ICONS,
+  powderSnow: () => FX.snowflake(),
+  flareBlitz: () => FX.flame()[0]!,
+  dazzlingGleam: () => art(STAR, { 1: '#b878d8', 2: '#f8b8e0', 3: '#ffffff' }, '#402060'),
+  electroweb: () => art(CHAIN, { 2: '#c8e830', 3: '#ffffff' }, '#383810'),
+  corrosiveGas: () => VERB_FX.glob(),
+  magicCoat: () => FX.heart(),
+  appleAcid: () => FX.leaf(),
+  icicleSpear: () => FX.icicle(),
+  headSmash: () => FX.boulder(),
+  ironDefense: () => VERB_FX.gear()[0]!,
+  dualWingbeat: () => VERB_FX.feather(),
+  bite: () => FX.jaws().top,
+  auroraVeil: () => art(FROST_RING, { 1: '#a8f0ff' }, '#3878a8'),
 }
 
 /* ---------------- Item icons ---------------- */
@@ -769,7 +860,7 @@ export type ItemArtId = ItemId | UpgradeId | BagItem | ConsumableId | EvoItemId 
  * (PokeAPI's `sprites/items`), trimmed to square in `public/assets/items/<id>.png`.
  * The few that only exist as HD art were turned into pixel art with PixelLab.
  */
-export const itemArt = (id: ItemArtId) => `${import.meta.env.BASE_URL}assets/items/${id}.png`
+export const itemArt = (id: ItemArtId) => assetUrl(`items/${id}.png`)
 
 /** The TM disc in a move type's color, as the games paint it. */
 export const tmArtId = (type: PokeType) => `tm${type.charAt(0).toUpperCase()}${type.slice(1)}` as TmArtId
@@ -802,7 +893,9 @@ let unmadeIcons: (() => unknown)[] | null = null
 export const warmIcon = () => {
   unmadeIcons ??= [
     ...(Object.keys(MOVE_ICON_ART) as MoveId[]).map((id) => () => moveIcon(id)),
-    ...(Object.keys(ITEMS) as ItemId[]).map((id) => () => (new Image().src = itemIcon(id))),
+    ...(Object.keys(ITEMS) as ItemId[]).map((id) => () => {
+      new Image().src = itemIcon(id)
+    }),
   ]
   const next = unmadeIcons.pop()
   next?.()
@@ -828,7 +921,6 @@ export const bagIcon = (id: BagItem) => itemArt(id)
 export const coinIcon = (tier = 0) => toIconUrl(`coin:${tier}`, () => PICKUPS.coins()[tier]!)
 export const candyIcon = (tier: number) => toIconUrl(`candy:${tier}`, () => PICKUPS.candy()[tier]!)
 export const berryIcon = () => toIconUrl('berry', PICKUPS.berry)
-export const pokeballIcon = () => toIconUrl('pokeball', PICKUPS.pokeball)
 export const heartIcon = () => toIconUrl('heart', FX.heart)
 const ZOOM_LENS = ['..1111......', '.122221.....', '12222221....', '12333321....', '12222221....', '.122221.....', '..11111.....', '......111...', '.......111..', '........111.', '.........11.']
 /** The camera zoom button's lens (`ui/cameraZoom.ts`). */
@@ -875,92 +967,221 @@ const SURVEY = [
 export const surveyIcon = () =>
   toIconUrl('survey', () => art(SURVEY, { 1: '#303040', 2: '#c8d0e0', 3: '#c08850', 4: '#f8f8f8', 5: '#58b858', 6: '#f08030', 7: '#a040c8', 8: '#9098b8' }))
 
-/** Discord's app icon: the white Clyde on a blurple rounded square. 1 outline, 2 blurple, 3 white. */
+/** Discord's Clyde in blurple (the mods' icon pack, 2026-11). */
 const DISCORD = [
-  '..11111111111111..',
-  '.1222222222222221.',
-  '122222222222222221',
-  '122233222222332221',
-  '122333333333333221',
-  '122333333333333221',
-  '123333333333333321',
-  '123332233332233321',
-  '123332233332233321',
-  '123332233332233321',
-  '123333333333333321',
-  '122333322223333221',
-  '122233222222332221',
-  '.1222222222222221.',
-  '..11111111111111..',
+  '................',
+  '................',
+  '..11111..11111..',
+  '.11223111132211.',
+  '.12222222222221.',
+  '1124444444444211',
+  '1344444444444431',
+  '1244255335524421',
+  '5322355335532235',
+  '5333332222333335',
+  '5233366666633325',
+  '5622235555322265',
+  '5566665..5666655',
+  '.555555..555555.',
+  '................',
+  '................',
 ]
 
-export const discordIcon = () => toIconUrl('discord', () => art(DISCORD, { 1: '#283070', 2: '#5865f2', 3: '#ffffff' }))
+export const discordIcon = () =>
+  toIconUrl('discord', () => art(DISCORD, { 1: '#293479', 2: '#8495ff', 3: '#6b80ff', 4: '#9ab1ff', 5: '#202a61', 6: '#4456c4' }))
 
-/** TikTok's app icon: the white note on a black rounded square, with its cyan and red echoes. 1 outline, 2 black, 3 white, 4 cyan, 5 red. */
+/** TikTok's note with its cyan and red echoes (the mods' icon pack). */
 const TIKTOK = [
-  '..111111111111..',
-  '.12222222222221.',
-  '1222222444222221',
-  '1222222433322221',
-  '1222222433332221',
-  '1222222433533221',
-  '1222222433523521',
-  '1222222433522521',
-  '1222444433522221',
-  '1224433333522221',
-  '1224333333522221',
-  '1222333335522221',
-  '1222233355222221',
-  '1222225552222221',
-  '.12222222222221.',
-  '..111111111111..',
+  '......11111.....',
+  '......122211....',
+  '......123321111.',
+  '......123332221.',
+  '......123333345.',
+  '...111123333345.',
+  '..1122223344445.',
+  '.11233323345555.',
+  '.12333326645....',
+  '.12333786675....',
+  '.98667986675....',
+  '.98666866675....',
+  '.98666666675....',
+  '.99866666755....',
+  '..957444755.....',
+  '...5555555......',
 ]
 
-/** YouTube's play button: a white triangle on a red rounded rectangle. 1 outline, 2 red, 3 white. */
+/** YouTube's play button on its red tile (the mods' icon pack). */
 const YOUTUBE = [
   '................',
   '................',
-  '..111111111111..',
-  '.12222222222221.',
-  '1222222222222221',
-  '1222223222222221',
-  '1222223332222221',
-  '1222223333322221',
-  '1222223333322221',
-  '1222223332222221',
-  '1222223222222221',
-  '1222222222222221',
-  '.12222222222221.',
-  '..111111111111..',
+  '.11111111111111.',
+  '1123333333333211',
+  '1233333333333321',
+  '1333333433333331',
+  '1333333443333331',
+  '1233333444333321',
+  '5222222662222225',
+  '5222222622222225',
+  '5232222222222325',
+  '5723333333333275',
+  '5577777777777755',
+  '.55555555555555.',
   '................',
   '................',
 ]
 
-/** Instagram's camera: a white outline, lens and flash on its purple-to-yellow gradient. 1 outline, 2 purple, 3 magenta, 4 pink, 5 orange, 6 yellow, 7 white. */
+/** Instagram's camera on its orange-to-pink gradient (the mods' icon pack, its gradient kept in 12 colors). */
 const INSTAGRAM = [
   '..111111111111..',
-  '.14333332222221.',
-  '1444333332222221',
-  '1444777777772221',
-  '1447443333327221',
-  '1547444333737221',
-  '1557444773337221',
-  '1557447447337321',
-  '1557547447337331',
-  '1557554774437331',
-  '1657555444447331',
-  '1667555544447331',
-  '1666777777774431',
-  '1666655555444441',
-  '.16666555554441.',
+  '.11aabbbccccc11.',
+  '.19933355555cc1.',
+  '.182111111165c1.',
+  '.18111aabb141c1.',
+  '.18119933bb11c1.',
+  '.171182113b11c1.',
+  '.171181111a11c1.',
+  '.161188119a11b1.',
+  '.161128889311b1.',
+  '.161112222111b1.',
+  '.16611111111aa1.',
+  '.14666778889931.',
+  '.11444222222211.',
   '..111111111111..',
+  '................',
 ]
 
 const SOCIAL_ART = {
-  tiktok: () => art(TIKTOK, { 1: '#000000', 2: '#161823', 3: '#ffffff', 4: '#25f4ee', 5: '#fe2c55' }),
-  youtube: () => art(YOUTUBE, { 1: '#7a0012', 2: '#ff0033', 3: '#ffffff' }),
-  instagram: () => art(INSTAGRAM, { 1: '#4a1248', 2: '#833ab4', 3: '#c13584', 4: '#e1306c', 5: '#f77737', 6: '#fcaf45', 7: '#ffffff' }),
+  tiktok: () => art(TIKTOK, { 1: '#16575e', 2: '#67faff', 3: '#252e38', 4: '#ff3e8b', 5: '#21060e', 6: '#181d23', 7: '#e5275f', 8: '#22cad7', 9: '#052023' }),
+  youtube: () => art(YOUTUBE, { 1: '#470a0a', 2: '#dc2727', 3: '#ff3b3b', 4: '#ffffff', 5: '#3b0606', 6: '#ffeded', 7: '#911414' }),
+  instagram: () =>
+    art(INSTAGRAM, {
+      1: '#640000', 2: '#b42d0e', 3: '#b3182c', 4: '#b64500', 5: '#b40548', 6: '#ff8b03',
+      7: '#ff7a19', 8: '#ff6933', 9: '#ff594a', a: '#ff4e5e', b: '#ff4072', c: '#ff2a96',
+    }),
 } as const satisfies Record<SocialId, () => PixelSprite>
+
+/** Pokédex (the lobby's dock, seats with no Pokémon yet, the kill counter): a Poké Ball (the mods' icon pack). */
+const POKEBALL_ICON = [
+  '.....111111.....',
+  '...1122223311...',
+  '..122223422331..',
+  '.12552233225521.',
+  '.12555222255521.',
+  '1265555555555621',
+  '1666655555566661',
+  '1666666116666661',
+  '1116661741666111',
+  '1771118778111771',
+  '1897771881777981',
+  '.18999711799981.',
+  '.18999999999981.',
+  '..189999999881..',
+  '...1188888811...',
+  '.....111111.....',
+]
+
+export const pokeballIcon = () =>
+  toIconUrl('pokeball', () =>
+    art(POKEBALL_ICON, { 1: '#101010', 2: '#e03c3c', 3: '#f27575', 4: '#ffeaea', 5: '#cf1111', 6: '#bd0303', 7: '#b7b7b7', 8: '#6e6e6e', 9: '#9e9e9e' }),
+  )
+
+/** Ovos (the lobby's dock): a spotted egg (the mods' icon pack). The incubator's eggs are `eggIcon`, by tier. */
+const EGGS_DOCK = [
+  '................',
+  '......1111......',
+  '....11222211....',
+  '...1324444231...',
+  '...1564444441...',
+  '..156644444431..',
+  '..166444444421..',
+  '.13444444466231.',
+  '.14444444466521.',
+  '.14444444445521.',
+  '.14446644422221.',
+  '.13226622555231.',
+  '..122222555551..',
+  '..132222555531..',
+  '...1122225511...',
+  '.....111111.....',
+]
+
+export const eggsIcon = () => toIconUrl('eggsDock', () => art(EGGS_DOCK, { 1: '#101010', 2: '#f2e35d', 3: '#65502f', 4: '#ede7b2', 5: '#377b08', 6: '#5fbd20' }))
+
+/** Convites (the lobby's invites card, the invite screen): the friendship egg in pink (the mods' icon pack). */
+const FRIEND_EGG = [
+  '................',
+  '......1111......',
+  '....11222211....',
+  '...1345555231...',
+  '...1675555551...',
+  '..167755555531..',
+  '..177555555521..',
+  '.13555555577231.',
+  '.15555555577621.',
+  '.15555555556621.',
+  '.15557755522221.',
+  '.13227722666231.',
+  '..122222666661..',
+  '..132222666631..',
+  '...1122226611...',
+  '.....111111.....',
+]
+
+export const friendEggIcon = () =>
+  toIconUrl('friendEgg', () => art(FRIEND_EGG, { 1: '#101010', 2: '#de72e5', 3: '#9f51a3', 4: '#e653ed', 5: '#f6a9fb', 6: '#c6c6c6', 7: '#e9e9e9' }))
+
+/** Loja (the lobby's dock): Kecleon's stall, a green awning over a wooden counter (the mods' icon pack). */
+const SHOP = [
+  '..111111111111..',
+  '.12223322332221.',
+  '1222333223332221',
+  '1422332222332241',
+  '1444554444554441',
+  '1661116446111661',
+  '.171..1111..171.',
+  '.171........171.',
+  '1878111111118781',
+  '19999abccbda9991',
+  '.1eeceeeebeeec1.',
+  '.1cbbccbbbccbb1.',
+  '.1ebeeebbeeebb1.',
+  '.1bccbbbcccbbd1.',
+  '1ddbbbbbbbbbddd1',
+  '1111111111111111',
+]
+
+export const shopIcon = () =>
+  toIconUrl('shop', () =>
+    art(SHOP, {
+      1: '#101010', 2: '#6abe30', 3: '#c6c6c6', 4: '#459111', 5: '#888888', 6: '#347706', 7: '#b07e32',
+      8: '#9a6f2e', 9: '#654311', a: '#6e4a16', b: '#775118', c: '#9e702a', d: '#6e4b18', e: '#4b3515',
+    }),
+  )
+
+/** Ranking (the lobby's dock): a gold medal on a red and a blue ribbon (the mods' icon pack). */
+const RANKING = [
+  '1111........1111',
+  '1221........1331',
+  '.1221......1331.',
+  '.1241......1531.',
+  '..1441....1551..',
+  '..1441....1551..',
+  '...1461111751...',
+  '...1618888171...',
+  '....19888891....',
+  '...1988aa8891...',
+  '...19888a8891...',
+  '...19888a8891...',
+  '...19888a8891...',
+  '....19888891....',
+  '.....199991.....',
+  '......1111......',
+]
+
+export const rankingIcon = () =>
+  toIconUrl('ranking', () =>
+    art(RANKING, { 1: '#101010', 2: '#e03c3c', 3: '#5fcde4', 4: '#cf1111', 5: '#25aeca', 6: '#bd0303', 7: '#1a849a', 8: '#f2ba38', 9: '#b97919', a: '#fbda58' }),
+  )
 
 /** Each official profile's icon (`SOCIALS` in `site/routes.ts`). */
 export const socialIcon = (id: SocialId) => toIconUrl(`social:${id}`, SOCIAL_ART[id])
@@ -1024,9 +1245,35 @@ const OG_PLATE = ['.111111111.', '12332223331', '13223232221', '13223232331', '1
 
 /** The OG Supporters' badge (`badgesOf`), worn beside the tier's heart. 11 px wide: shown at 1.5× or 2× its size, like the hearts beside it. */
 export const ogIcon = () => toIconUrl('og', () => art(OG_PLATE, { 1: '#201030', 2: '#6038a8', 3: '#ffe070', 4: '#e8a020' }))
+/** The Pokédex's "art on its way" mark for the species SpriteCollab hasn't drawn yet (`ui/pokedex.ts`), from `render/pencilArt.ts`. */
+export const pencilSprite = lazy(() => art(PENCIL, PENCIL_PALETTE))
+export const pencilIcon = () => toIconUrl('pencil', pencilSprite)
+
 export const sparkleIcon = () => toIconUrl('sparkle', () => outlined(SPARKLE()[2]!, '#584010'))
 
-/** PlayStation's face buttons in their colors, the size of a Press Start 2P letter: the pixel fonts have no ✕ ○ □ △ (see `ui/inputLabels.ts`). */
+/** The joystick's padlock (`ui/stickLock.ts`): the stick's ring and knob with a padlock on its shoulder, gold and shut when the stick is fixed, gray and open when it follows the thumb. */
+const STICK_LOCK = (fixed: boolean) => [
+  '...........ooo..',
+  '..........o...o.',
+  `..........${fixed ? 'o' : '.'}...o.`,
+  '.........ooooooo',
+  '.........obbbbbo',
+  '...ooooo.obbobbo',
+  '.oo.....oobbobbo',
+  '.o.......obbbbbo',
+  'o...nnn..ooooooo',
+  'o..nNNNn..o.....',
+  'o..nNNNn..o.....',
+  'o..nNNNn..o.....',
+  'o...nnn...o.....',
+  '.o.......o......',
+  '.oo.....oo......',
+  '...ooooo........',
+]
+export const stickLockIcon = (fixed: boolean) =>
+  toIconUrl(`stickLock:${fixed}`, () => art(STICK_LOCK(fixed), { o: '#283040', b: fixed ? '#f8c030' : '#a8a8c0', n: '#5868a0', N: '#98a8d8' }))
+
+/** PlayStation's face buttons in their colors, the size of a capital letter: the pixel fonts have no ✕ ○ □ △ (see `ui/inputLabels.ts`). */
 const PAD_GLYPHS = {
   '✕': [['11....11', '111..111', '.111111.', '..1111..', '..1111..', '.111111.', '111..111', '11....11'], '#4a80e0'],
   '○': [['..1111..', '.111111.', '111..111', '11....11', '11....11', '111..111', '.111111.', '..1111..'], '#e04850'],
@@ -1077,24 +1324,28 @@ const DIE = [
 
 export const dieIcon = () => toIconUrl('die', () => art(DIE, { 1: '#283040', 2: '#fff8f0', 3: '#c8c0d8', 4: '#e83850' }))
 
-/** Ideias (the idea board): a lit bulb. 1 outline, 2 glass, 3 shine, 4 shade, 5-6 the screw base. */
+/** Ideias (the idea board): a lit bulb (the mods' icon pack). */
 const BULB = [
-  '...11111...',
-  '..1322221..',
-  '.132222241.',
-  '13222222241',
-  '13222222241',
-  '12222222241',
-  '.122222441.',
-  '..1224441..',
-  '...12241...',
-  '...15551...',
-  '...16661...',
-  '...15551...',
-  '....111....',
+  '................',
+  '......1111......',
+  '....11233311....',
+  '...1223333341...',
+  '..123333333341..',
+  '..123333333341..',
+  '..133333333341..',
+  '..133333333441..',
+  '...1333333441...',
+  '....11334411....',
+  '.....156651.....',
+  '.....178871.....',
+  '.....156651.....',
+  '.....178871.....',
+  '......1551......',
+  '......1111......',
 ]
 
-export const bulbIcon = () => toIconUrl('bulb', () => art(BULB, { 1: '#303040', 2: '#f8d030', 3: '#fff8c0', 4: '#c89000', 5: '#c8d0e0', 6: '#7880a0' }))
+export const bulbIcon = () =>
+  toIconUrl('bulb', () => art(BULB, { 1: '#101010', 2: '#fbe281', 3: '#fbda58', 4: '#f2ba38', 5: '#585858', 6: '#6e6e6e', 7: '#808080', 8: '#9e9e9e' }))
 
 /** Passear (the lobby's free walk): a paw print. 1 outline, 2 pad, 3 shine. */
 const PAW = [
@@ -1114,20 +1365,33 @@ const PAW = [
 
 export const pawIcon = () => toIconUrl('paw', () => art(PAW, { 1: '#402818', 2: '#a86838', 3: '#e0a868' }))
 
-/** Jogar junto (co-op): two Poké Balls side by side, red behind blue. 1 outline, 2 red, 3 white, 4 blue, 5 the button. */
+/** Jogar junto (co-op): a red Poké Ball in front of a blue one (the mods' icon pack). */
 const COOP_BALLS = [
-  '..11111.11111..',
-  '.1222221444441.',
-  '122222144444441',
-  '122111144111441',
-  '111151111151111',
-  '133111133111331',
-  '133333133333331',
-  '.1333331333331.',
-  '..11111.11111..',
+  '........1111....',
+  '......11222211..',
+  '.....1322222231.',
+  '.....1332222331.',
+  '....144433333351',
+  '..11666644133551',
+  '.176666667415111',
+  '.177666677411881',
+  '197777777794aa1.',
+  '199771177994ab1.',
+  '11191c81911411..',
+  '188118811881....',
+  '.1aa8118aa1.....',
+  '.1baaaaaab1.....',
+  '..11baab11......',
+  '....1111........',
 ]
 
-export const coopIcon = () => toIconUrl('coop', () => art(COOP_BALLS, { 1: '#202030', 2: '#e83850', 3: '#f8f8f8', 4: '#4898e8', 5: '#f8f8f8' }))
+export const coopIcon = () =>
+  toIconUrl('coop', () =>
+    art(COOP_BALLS, {
+      1: '#101010', 2: '#5fcde4', 3: '#25aeca', 4: '#232323', 5: '#1a849a', 6: '#e03c3c',
+      7: '#cf1111', 8: '#b7b7b7', 9: '#bd0303', a: '#9e9e9e', b: '#6e6e6e', c: '#ffeaea',
+    }),
+  )
 
 /** Arena (Versus): a shield split Blue and Red with an Energy orb on the seam. 1 outline, 2 blue, 3 red, 4 the orb, 5 its shine. */
 const ARENA_SHIELD = [
@@ -1237,6 +1501,80 @@ export const ribbonSprite = (tier: RibbonTier) => {
 export const ribbonIcon = (tier: RibbonTier) => toIconUrl(`ribbon:${tier}`, () => ribbonSprite(tier))
 
 export const medalIcon = (medal: Medal, locked = false) => toIconUrl(`medal:${locked ? 'locked' : medal}`, () => medalSprite(medal, locked))
+
+/* ---------------- The kit (ui/gameModes.ts) ---------------- */
+
+/** The tick in a selected card's gold disc. Ink on gold in both themes. */
+const KIT_CHECK = ['........11', '.......111', '......111.', '1....111..', '11..111...', '111111....', '.1111.....', '..11......']
+
+/** The kit's close button. One color: `.ink-icon` lights it in the dark theme. */
+const KIT_CLOSE = ['11.....11', '111...111', '.111.111.', '..11111..', '...111...', '..11111..', '.111.111.', '111...111', '11.....11']
+
+/** A mode that needs an account, on its card. White: it sits on the mode's nameplate. */
+const KIT_LOCK = ['.11111.', '11...11', '11...11', '1111111', '1111111', '111.111', '111.111', '1111111']
+
+export const lockIcon = () => toIconUrl('kit:lock', () => art(KIT_LOCK, { 1: '#ffffff' }))
+
+export const checkIcon = () => toIconUrl('kit:check', () => art(KIT_CHECK, { 1: '#1b2040' }))
+
+export const closeIcon = () => toIconUrl('kit:close', () => art(KIT_CLOSE, { 1: '#1b2040' }))
+
+/** A chunky chevron for the lobby's arrows (`dir`: which way it points): its weight sits at its middle, so centering the box centers the glyph. */
+const KIT_ARROW = ['111.....', '1111....', '.1111...', '..1111..', '...1111.', '....1111', '...1111.', '..1111..', '.1111...', '1111....', '111.....']
+
+export const chevronIcon = (dir: 'left' | 'right') =>
+  toIconUrl(`kit:chevron:${dir}`, () => art(dir === 'right' ? KIT_ARROW : KIT_ARROW.map((row) => [...row].reverse().join('')), { 1: '#1b2040' }))
+
+/** Four panels in a square: all the modes. */
+const KIT_GRID = ['111..111', '111..111', '111..111', '........', '........', '111..111', '111..111', '111..111']
+
+export const gridIcon = () => toIconUrl('kit:grid', () => art(KIT_GRID, { 1: '#1b2040' }))
+
+/* ---------------- The Rádio (ui/radio.ts) ---------------- */
+
+/** The lobby's way to the Rádio: a red set with an antenna, a cream speaker and a gold dial. 1 outline, 2 body, 3 its shade, 4 speaker, 5 grille, 6 dial, 7 window. */
+const RADIO_SET = [
+  '.........11..',
+  '........1....',
+  '.......1.....',
+  '1111111111111',
+  '1222222222221',
+  '1244444266721',
+  '1245454277721',
+  '1244444222221',
+  '1245454266621',
+  '1244444222221',
+  '1333333333331',
+  '1111111111111',
+]
+
+export const radioIcon = () => toIconUrl('radio', () => art(RADIO_SET, { 1: '#303040', 2: '#e05848', 3: '#a83838', 4: '#f8e0b0', 5: '#a07850', 6: '#f8d030', 7: '#f8f8f8' }))
+
+/** ⏭, which ⏮ mirrors. */
+const RADIO_NEXT = ['1.....11', '111...11', '11111.11', '11111111', '11111.11', '111...11', '1.....11']
+
+/** The Rádio's controls, one ink color each (`.ink-icon` lights them in the dark theme). */
+const RADIO_KIT = {
+  play: ['11.....', '1111...', '111111.', '1111111', '111111.', '1111...', '11.....'],
+  stop: ['1111111', '1111111', '1111111', '1111111', '1111111', '1111111', '1111111'],
+  next: RADIO_NEXT,
+  prev: RADIO_NEXT.map((row) => [...row].reverse().join('')),
+  shuffle: ['......1..', '11...1111', '..1.1..1.', '...1.....', '..1.1..1.', '11...1111', '......1..'],
+  repeat: ['......1..', '.1111111.', '1.....1..', '1.......1', '..1.....1', '.1111111.', '..1......'],
+  repeatOne: ['......1..', '.1111111.', '1.....1..', '1...1...1', '..1.....1', '.1111111.', '..1......'],
+  up: ['...1...', '..111..', '.11111.', '111.111', '11...11'],
+  down: ['11...11', '111.111', '.11111.', '..111..', '...1...'],
+  add: ['..111..', '..111..', '1111111', '1111111', '1111111', '..111..', '..111..'],
+} as const satisfies Record<string, readonly string[]>
+
+export type RadioKitIcon = keyof typeof RADIO_KIT
+
+export const radioKitIcon = (id: RadioKitIcon) => toIconUrl(`radio:${id}`, () => art(RADIO_KIT[id], { 1: '#1b2040' }))
+
+/** A favorite's star: gold when on, grey when off. */
+const RADIO_STAR = ['....1....', '....1....', '...111...', '111111111', '.1111111.', '..11111..', '..11.11..', '.11...11.', '.1.....1.']
+
+export const radioStarIcon = (on: boolean) => toIconUrl(`radio:star:${on}`, () => (on ? art(RADIO_STAR, { 1: '#f8c030' }, '#a06818') : art(RADIO_STAR, { 1: '#a0a8c0' })))
 
 /* ---------------- Clears ---------------- */
 

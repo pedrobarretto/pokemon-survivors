@@ -1,4 +1,5 @@
 import { TAU } from '../engine/math'
+import { momentBusy } from './legendMoments'
 import { range } from '../engine/rng'
 import { EVENT_RIFT, isEventRift, RIFT, type RiftLegend } from '../data/rifts'
 import { enterDomain } from './domain'
@@ -6,10 +7,11 @@ import { burst } from './effects'
 import { chargePortal, endlessRiftAt, pickLegend, portalReach, riftAt, riftDomain, riftDue } from './rift'
 import { enterArena } from './riftArena'
 import { clearSpot } from './terrain'
-import { teamLegend } from './legend'
+import { teamLegendIds } from './legend'
 import { anchorPlayer, playerWithin } from './players'
 import type { Game } from './types'
 import { setWeather } from './weather'
+import { startWormhole, wormholeDue } from './wormhole'
 import * as dm from '../engine/dmath'
 
 /**
@@ -17,7 +19,8 @@ import * as dm from '../engine/dmath'
  * domain takes the sky with its weather), then a portal opens past the screen
  * edge, waits a while and sends the team in once a player stands in it for
  * `RIFT.enterTime`: into the legendary's domain (`enterDomain`) or its old
- * arena (`enterArena`; always in co-op, `riftDomain`). Any other map system can open the same door.
+ * arena (`enterArena`; always in co-op, `riftDomain`). Any other map system can open the same door:
+ * the Ultra Wormhole does (`wormhole.ts`), on its own schedule.
  */
 
 const PORTAL_COLORS = ['#7850c8', '#c8a8f8', '#ffffff'] as const
@@ -34,15 +37,15 @@ export const openPortal = (g: Game, legend: RiftLegend, at?: { x: number; y: num
 
 /**
  * The legendary behind the next rift: one not met yet this run, never the
- * team's own legend (`teamLegend`). In a haunted run (Noite das Bruxas) Darkrai's
+ * team's own legends (`teamLegendIds`). In a haunted run (Noite das Bruxas) Darkrai's
  * nightmare takes its place with `EVENT_RIFT.odds`; that roll is the only
  * draw a haunted run adds, so every other run draws as before.
  */
 export const drawRiftLegend = (g: Game): RiftLegend => {
-  const self = teamLegend(g)?.id
-  const drawn = pickLegend(g.rng, g.rift.met, self)
+  const selves = teamLegendIds(g)
+  const drawn = pickLegend(g.rng, g.rift.met, selves)
   // Playing Darkrai itself (Legend mode), its nightmare never comes.
-  return g.halloween && !(self !== undefined && isEventRift(self)) && g.rng() < EVENT_RIFT.odds ? 'darkrai' : drawn
+  return g.halloween && !selves.some(isEventRift) && g.rng() < EVENT_RIFT.odds ? 'darkrai' : drawn
 }
 
 /**
@@ -72,7 +75,7 @@ const releaseSky = (g: Game) => {
 /** Starts omens on schedule, opens their portals, ticks the open one and, once a player stands in it long enough, sends the team in. */
 export const updateRiftPortal = (g: Game, dt: number) => {
   // An open portal waits on the map, like the rest of the world, while the team is inside a place.
-  if (g.place.inside) return
+  if (g.place.inside || g.raid.arena) return
   const rift = g.rift
   const omen = rift.omen
   if (omen) {
@@ -86,8 +89,10 @@ export const updateRiftPortal = (g: Game, dt: number) => {
   if (!portal) {
     // The endless mode picks up its own cadence once the run's slots are used.
     if (g.endless && rift.nextAt === Infinity) rift.nextAt = g.time + RIFT.endlessFirst
-    const due = riftDue({ time: g.time, nextAt: rift.nextAt, busy: rift.arena !== null, bossAlive: g.bossId !== null, endless: g.endless !== null })
-    if (due) startOmen(g)
+    // Another legend moment under way (a den, a Sword's duel, the temple waking) holds the omen; a roamer's visit doesn't.
+    const state = { time: g.time, busy: rift.arena !== null || momentBusy(g, 'rift', ['roam']), bossAlive: g.bossId !== null, endless: g.endless !== null }
+    if (riftDue({ ...state, nextAt: rift.nextAt })) startOmen(g)
+    else if (wormholeDue({ ...state, at: rift.wormholeAt })) startWormhole(g)
     return
   }
   portal.left -= dt

@@ -26,6 +26,7 @@ import {
   type TickEntries,
   type WireLook,
 } from '../../src/net/protocol'
+import { parseLegendList } from '../../src/net/looks'
 import { ARENA_REPORT_PATH, type Posting } from './report'
 
 /**
@@ -688,11 +689,22 @@ const admit = (state: State, conn: Conn, msg: ClientMessage | null, now: number)
 }
 
 /**
+ * What a relay lets clients claim for themselves. `guestLegends`: a guest
+ * seat's own `legends` stand in a friends' room (a dev relay that seats
+ * guests and has no API to ask: the dev bots test the Legend mode with it);
+ * production never, so a seat's legends are only ever the API's.
+ */
+export type ClaimPolicy = { guestLegends: boolean }
+
+export const NO_CLAIMS: ClaimPolicy = { guestLegends: false }
+
+/**
  * A message from a socket (`null` when it didn't parse: it only costs the sender tokens). A `batch` is its
  * messages one by one, in order, at the same instant: its inputs land in the same tick, and each pays a token.
+ * `claims`: what this relay lets a client claim (`ClaimPolicy`).
  */
-export const message = (state: State, connId: ConnId, msg: ClientMessage | null, now: number): Effect[] => {
-  if (msg?.t === 'batch') return msg.m.flatMap((m) => message(state, connId, m, now))
+export const message = (state: State, connId: ConnId, msg: ClientMessage | null, now: number, claims: ClaimPolicy = NO_CLAIMS): Effect[] => {
+  if (msg?.t === 'batch') return msg.m.flatMap((m) => message(state, connId, m, now, claims))
   const conn = state.live.conns.get(connId)
   const room = state.room
   if (!conn || !room) return []
@@ -710,9 +722,11 @@ export const message = (state: State, connId: ConnId, msg: ClientMessage | null,
   switch (msg.t) {
     case 'loadout': {
       if (!outside) return out
-      // A matched player plays on the team the matchmaker gave them, whatever the loadout asks, and wears the look the API vouched for (none elsewhere until the run starts).
+      // A matched player plays on the team the matchmaker gave them, whatever the loadout asks, and wears the look the API vouched for (none elsewhere until
+      // the run starts). Legends are never a client's word (the API's as the run starts), but a dev guest's (`ClaimPolicy`) outside a matched room.
       const matched = room.lock?.players.find((p) => p.id === seat.identity)
-      seat.loadout = withLook(matched ? { ...msg.loadout, team: matched.team } : msg.loadout, matched?.look)
+      const claimed = !room.lock && !seat.account && claims.guestLegends ? (parseLegendList(msg.loadout.legends) ?? undefined) : undefined
+      seat.loadout = withLook(matched ? { ...msg.loadout, team: matched.team } : msg.loadout, matched?.look, claimed)
       return [...out, { k: 'save' }, ...broadcastRoom(state, room), ...autoStart(state, room, now)]
     }
     case 'ready':
@@ -804,14 +818,16 @@ const moveRoom = (state: State, room: Room, code: string): Effect[] => {
 }
 
 /**
- * A loadout wearing the look the API `vouched` for, or none: the client's own
- * claim never reaches anyone else (it only previews it on its own screen).
- * Every other field stays as the client sent it.
+ * A loadout wearing the look the API `vouched` for, or none, and carrying the
+ * `legends` it vouched for (a co-op Legend room's: the captured ones a seat may
+ * play), or none: the client's own claims never reach anyone else (it only
+ * previews its look on its own screen). Every other field stays as the client sent it.
  */
-export const withLook = (loadout: Loadout, vouched?: WireLook): Loadout => {
-  const { look: _claimed, ...rest } = loadout
+export const withLook = (loadout: Loadout, vouched?: WireLook, legends?: readonly string[]): Loadout => {
+  const { look: _claimed, legends: _claimedLegends, ...rest } = loadout
   const look = parseWireLook(vouched)
-  return look ? { ...rest, look } : rest
+  const list = legends && legends.length > 0 ? legends : null
+  return { ...rest, ...(look && { look }), ...(list && { legends: list }) }
 }
 
 /** Whether `seat` (the host) may start the run now: it has a loadout, and everyone else online is ready with one. */
@@ -819,11 +835,12 @@ const startable = (state: State, room: Room, seat: Seat) => !!seat.loadout && !r
 
 /**
  * The API's answer to a friends' room's start (`looks` effect, `ask`): the
- * stored looks by identity (`{}` when it failed). The run starts with them,
- * every other seat bare, if the room still may (the host is told otherwise);
- * an answer to an ask that's gone (a restart, a newer one) changes nothing.
+ * stored looks and the captured legends by identity (`{}` when it failed). The
+ * run starts with them, every other seat bare and without legends, if the room
+ * still may (the host is told otherwise); an answer to an ask that's gone (a
+ * restart, a newer one) changes nothing.
  */
-export const looked = (state: State, ask: number, looks: Readonly<Record<string, WireLook>>, now: number): Effect[] => {
+export const looked = (state: State, ask: number, looks: Readonly<Record<string, WireLook>>, now: number, legends: Readonly<Record<string, readonly string[]>> = {}): Effect[] => {
   const room = state.room
   const asked = state.live.starting
   if (!room || asked?.ask !== ask) return []
@@ -833,7 +850,7 @@ export const looked = (state: State, ask: number, looks: Readonly<Record<string,
     const conn = host ? connOf(state, host.seat) : null
     return conn ? [send(conn.id, { t: 'denied', what: 'start', why: 'notReady' })] : []
   }
-  return startRun(state, room, now, looks)
+  return startRun(state, room, now, looks, legends)
 }
 
 /** A socket closed. Its seat is kept; in a run it goes `away` once silent long enough, and the clock stops when nobody in the run is left (`settle`). */
@@ -850,8 +867,11 @@ export const disconnect = (state: State, connId: ConnId, now: number): Effect[] 
 
 /* ---------------- Runs ---------------- */
 
-/** Starts the run. `looks`: a friends' room's looks the API vouched for, by identity (a matched room's are on its loadouts already). */
-const startRun = (state: State, room: Room, now: number, looks: Readonly<Record<string, WireLook>> = {}): Effect[] => {
+/**
+ * Starts the run. `looks` and `legends`: what the API vouched for a friends' room's accounts, by identity (a matched room's
+ * looks are on its loadouts already, and it plays no legends). A guest seat keeps its loadout as taken (`withLook` at `loadout`).
+ */
+const startRun = (state: State, room: Room, now: number, looks: Readonly<Record<string, WireLook>> = {}, legends: Readonly<Record<string, readonly string[]>> = {}): Effect[] => {
   const out: Effect[] = []
   if (room.run) out.push({ k: 'dropRun', run: room.run.start.id })
   // Seats offline without a loadout can't play: they leave the room.
@@ -859,8 +879,8 @@ const startRun = (state: State, room: Room, now: number, looks: Readonly<Record<
   room.runs += 1
   const players = room.seats.flatMap((s) => {
     if (!s.loadout) return []
-    const look = room.lock ? undefined : looks[s.identity]
-    return [{ seat: s.seat, name: s.name, account: s.account, loadout: look ? withLook(s.loadout, look) : s.loadout }]
+    const loadout = room.lock || !s.account ? s.loadout : withLook(s.loadout, looks[s.identity], legends[s.identity])
+    return [{ seat: s.seat, name: s.name, account: s.account, loadout }]
   })
   const start: RunStart = { id: room.runs, seed: state.gen.seed() >>> 0, build: room.build, settings: room.settings, players }
   const who = players.map((p) => room.seats.find((s) => s.seat === p.seat)?.identity ?? '')

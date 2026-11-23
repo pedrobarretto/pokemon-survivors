@@ -1,5 +1,5 @@
 import { INCUBATOR } from '../data/shop'
-import { isReady } from './eggs'
+import { incubatorSlots, isReady, settleEggs } from './eggs'
 import type { Save } from './meta'
 import { isRecord, wholeNumber } from './parse'
 
@@ -40,11 +40,12 @@ export const slotBlock = (save: Save): SlotBlock | null => {
   return save.wallet < next.price ? 'poor' : null
 }
 
-/** Buys the next slot, for good (paid into the slot, not `spent`). Null when blocked (`slotBlock`). */
+/** Buys the next slot, for good (paid into the slot, not `spent`); the first egg waiting in line takes it. Null when blocked (`slotBlock`). */
 export const buySlot = (save: Save): Save | null => {
   const next = nextSlot(save)
   if (!next || slotBlock(save)) return null
-  return { ...save, wallet: save.wallet - next.price, incubator: { ...save.incubator, slots: save.incubator.slots + 1 } }
+  const incubator = { ...save.incubator, slots: save.incubator.slots + 1 }
+  return { ...save, wallet: save.wallet - next.price, incubator, ...settleEggs(save.eggs, save.eggQueue, incubatorSlots({ incubator })) }
 }
 
 /* ---------------- The Quick Incubator ---------------- */

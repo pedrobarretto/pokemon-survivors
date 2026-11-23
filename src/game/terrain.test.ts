@@ -139,14 +139,26 @@ describe('the player’s foot', () => {
     }
   })
 
-  it('crosses every domain from its start to its gate at the widest foot', () => {
+  it('crosses every domain from its start to its gate at the widest foot (through its portals, where the floor has gaps)', () => {
     for (const [legend, def] of Object.entries(DOMAINS)) {
-      const { floor, holes = [], solids, start, gate } = def.crossing
+      const { floor, holes = [], solids, start, gate, portals = [] } = def.crossing
       const feet = solids.map((s) => ({ ...ARENA_FEET[s.piece], x: s.x + ARENA_FEET[s.piece].x, y: s.y + ARENA_FEET[s.piece].y }))
       const box = { x0: -320, y0: gate - 20, x1: 320, y1: start[1] + 40 }
       const free = (x: number, y: number) =>
         floor.some((s) => fits(s, x, y, PLAYER_FOOT)) && holes.every((h) => dm.sq(x - h.x) + dm.sq(y - h.y) >= dm.sq(h.r + PLAYER_FOOT)) && clear(feet, x, y, PLAYER_FOOT)
-      const reached = flood(box, 2, start, free)
+      // Each portal whose mouth is reached opens the floor past it: flood again from where it lets out.
+      const floods = [flood(box, 2, start, free)]
+      const reached = (x: number, y: number) => floods.some((f) => f(x, y))
+      for (let taken = 0, more = true; more; ) {
+        more = false
+        for (const p of portals.slice(taken)) {
+          if (!reached(p.from[0], p.from[1])) break
+          expect(free(p.to[0], p.to[1]), `${legend} portal to ${p.to}`).toBe(true)
+          floods.push(flood(box, 2, p.to, free))
+          taken++
+          more = true
+        }
+      }
       let through = false
       for (let y = box.y0; y < gate && !through; y += 2) for (let x = box.x0; x <= box.x1; x += 2) through ||= reached(x, y)
       expect(through, legend).toBe(true)

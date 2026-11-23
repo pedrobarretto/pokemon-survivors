@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { REFERRAL } from '../../src/game/referral'
 import type { Sql } from './db'
 import { giftStore } from './gifts'
+import { ownTestDatabase } from './testDatabase'
 
 /**
  * Invites against a real Postgres: the same throwaway database as
@@ -32,7 +33,7 @@ describe.skipIf(!url)('invites (Postgres)', () => {
 
   beforeAll(async () => {
     const { connect, migrate } = await import('./db')
-    sql = connect(url!, 4)
+    sql = connect(await ownTestDatabase(url!, 'gifts'), 4)
     await migrate(sql, new URL('../migrations/', import.meta.url))
     gifts = giftStore(sql)
   })

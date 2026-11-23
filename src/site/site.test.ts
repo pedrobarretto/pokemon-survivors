@@ -14,7 +14,8 @@ describe('site pages', () => {
       for (const l of LOCALE_IDS) expect(doc).toContain(`hreflang="${HREFLANG[l]}" href="${absolute(page.paths[l])}"`)
       expect(doc.match(/<h1>/g)).toHaveLength(1)
     }
-  })
+    // Renders every page of the site: over a second alone, past 5 s on a busy CI runner.
+  }, 30_000)
 
   it('are all in the sitemap, along with the game pages', () => {
     const xml = sitemap()
@@ -41,10 +42,10 @@ describe('changelog', () => {
     expect([...new Set(dates)].sort().reverse()).toEqual(dates)
   })
 
-  it('gives every update 3 to 5 highlights and at least one change', () => {
+  it('gives every update 3 to 6 highlights and at least one change', () => {
     for (const u of CHANGELOG) {
       expect(u.highlights.length, u.date).toBeGreaterThanOrEqual(3)
-      expect(u.highlights.length, u.date).toBeLessThanOrEqual(5)
+      expect(u.highlights.length, u.date).toBeLessThanOrEqual(6)
       expect(u.changes.length, u.date).toBeGreaterThan(0)
     }
   })

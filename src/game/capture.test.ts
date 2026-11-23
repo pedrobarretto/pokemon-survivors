@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { REGULAR_LEGENDS } from '../data/legends'
+import { LEGENDS, REGULAR_LEGENDS } from '../data/legends'
 import { canPlay, captureByGift, captureOutcome, isCaptured, legendSource, mergeCaptures, parseCaptures, recordLegendWin, stillMissing, type LegendWin } from './capture'
+import { markCaught } from './dex'
 import { EMPTY_SAVE, parseSaveData, type Save } from './meta'
 import { mergeSaves } from './sync'
 
@@ -60,6 +61,22 @@ describe('recordLegendWin', () => {
     expect(caught.save.shinyStarters.lugia).toBe(true)
     const later = recordLegendWin(beat(EMPTY_SAVE, win('mew')), win('mew', { shiny: true }))
     expect(later.result).toMatchObject({ outcome: 'owned', shiny: true })
+  })
+
+  it('unlocks the shiny on the capturing win when a shiny one was beaten in an earlier run (the Pokédex marks it)', () => {
+    // A shiny Rayquaza beaten on the first win, banked into the Pokédex at the run's end; two plain wins catch it.
+    const seen: Save = { ...EMPTY_SAVE, dex: markCaught(EMPTY_SAVE.dex, LEGENDS.rayquaza.line[0].dex, true) }
+    const one = recordLegendWin(seen, win('rayquaza', { shiny: true }))
+    expect(one.result).toMatchObject({ outcome: 'escaped', shiny: false })
+    const caught = recordLegendWin(beat(one.save, win('rayquaza')), win('rayquaza'))
+    expect(caught.result).toMatchObject({ outcome: 'caught', shiny: true })
+    expect(caught.save.shinyStarters.rayquaza).toBe(true)
+  })
+
+  it('gives a save the shinies of captured legends its Pokédex holds shiny, keeping a shiny switched off', () => {
+    const dex = markCaught(markCaught(EMPTY_SAVE.dex, LEGENDS.rayquaza.line[0].dex, true), LEGENDS.lugia.line[0].dex, true)
+    const save = parseSaveData({ ...EMPTY_SAVE, dex, legends: { rayquaza: 3, lugia: 1, kyogre: 3 }, shinyStarters: { kyogre: false } })
+    expect(save.shinyStarters).toEqual({ kyogre: false, rayquaza: true })
   })
 })
 

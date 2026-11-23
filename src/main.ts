@@ -1,5 +1,7 @@
 import '@fontsource/press-start-2p'
 import '@fontsource/vt323'
+import '@fontsource/jersey-10'
+import '@fontsource/jersey-15'
 import './ui/style.css'
 // First, so its error listeners catch what goes wrong while the rest loads.
 import { bugReportsEnabled, describeWith, deviceMemory, launchStep, runMoment, syncRunWatch, takeCrash, type Away } from './bugReport'
@@ -7,9 +9,10 @@ import type { BugCrash } from './game/bugReport'
 
 import { playCry, playSfx, unlockAudio, type Sfx } from './engine/audio'
 import { castSound } from './ui/castSounds'
-import { createInput, type Stick } from './engine/input'
+import { createInput } from './engine/input'
 import type { Vec } from './engine/math'
 import { currentTheme, duckMusic, playTheme, type ThemeId } from './engine/music'
+import { devLobbyTheme, leaveLobby, lobbyTheme } from './lobbyMusic'
 import { advancePacer, pacer, resetPacer } from './engine/pacing'
 import { canvasLosses, canvasRestored, checkCanvases, context2d, drawThrew, dropLobbyArt, heldCanvases, heldCanvasesBy, onCanvasReset, readPixels, resetCanvases, sweepArt, wipeCanvases } from './engine/pixelart'
 import { frameStats, recentFrameMs, recordFrame, resetRunFrames, runFrames } from './engine/frameStats'
@@ -17,23 +20,33 @@ import { deviceScale, fitView, pickViewport, zoomScales } from './engine/viewpor
 import { createRng } from './engine/rng'
 import { BIOMES, type BiomeId, type WeatherId } from './data/biomes'
 import { bodyOf } from './data/bodies'
-import { MEGA_LINES, MEGAS, megasOf, type MegaId } from './data/megas'
+import { MEGA_LINES, MEGAS, megasOf, type MegaDef, type MegaId } from './data/megas'
 import { isRiftLegend } from './data/rifts'
+import { isUltraBeast } from './data/ultraBeasts'
 import { domainTheme } from './game/domain'
 import { partnerOf } from './data/domains'
 import { captureOutcome, setCaptureOutcome } from './render/capture'
-import { captureOutcome as savedCapture } from './game/capture'
+import { captureByGift, captureOutcome as savedCapture, isCaptured } from './game/capture'
+import { hideoutCleared, holdsPass, usePass } from './game/hideoutPass'
+import { bankRoamer, wildOf } from './game/questSave'
+import { questNews } from './ui/quests'
+import { rushEnd, rushRingLine } from './ui/rush'
+import { rushLineup, startRush } from './game/rush'
+import { recordRush } from './game/questSave'
 import { domainLines } from './ui/riftTitle'
 import { isWaveLegend, LEGEND_THEME } from './data/legendBosses'
+import { maskOf, OGERPON_MASKS } from './data/mythicals'
+import { phaseForm, phasesOf } from './game/bossFight'
+import { playsOgerpon } from './game/ogerpon'
 import { ENEMIES, type EnemyDef, type EnemyId } from './data/enemies'
 import { ITEMS } from './data/items'
 import type { AchievementId } from './data/achievements'
 import type { TraitId } from './data/traits'
-import { REGIONS, STARTERS } from './data/starters'
+import { REGIONS, STARTER_IDS, STARTERS, type StarterId } from './data/starters'
 import { nextIsOfficial } from './game/attempt'
 import { challengeStart, type Challenge } from './game/challenge'
 import { HATCHLING_IDS, HATCHLINGS, PLAYABLE, PLAYABLE_IDS, type HatchlingId, type PlayableId } from './data/hatchlings'
-import { isLegend } from './data/legends'
+import { BEAST_BOOST, isLegend, LEGEND_IDS, type LegendId } from './data/legends'
 import { accountHandle, accountState, accountsEnabled, accountUserId, backFromSignIn, giftInbox, onAccountChange, signIn, stageGifts, stageSyncedSave, startAccount, syncSave } from './account'
 import { devCandyGoal, onCandyGoal, startCandyGoal } from './candyGoal'
 import { devFestival, festivalView, startFestival } from './festival'
@@ -42,7 +55,10 @@ import { festivalAnnounced } from './game/festival'
 import { openFestival } from './ui/festival'
 import type { BoutiqueTab } from './ui/boutiqueSeen'
 import { identify, lobbyPress, startAnalytics, takeOpened, track, type ErrorContext, type QueueEnd, type RunPerf } from './analytics'
-import { firstGate, firstRunClock, firstStep, startFirstSession } from './firstSession'
+import { firstGate, firstRunClock, firstSheets, firstStep, holdRunSteps, startFirstSession } from './firstSession'
+import { enrolDevice, firstTime, forgetFirstTime, nextFirst, tourDue, updateFirstTime, type Arm, type TutorialOutcome } from './firstTime'
+import { welcomeScreen } from './ui/welcome'
+import { firstPartnerScreen } from './ui/firstPartner'
 import { deviceInfo, deviceNow, resetMemoryPeaks, sampleMemory } from './telemetry'
 import type { Crumb, CrumbMoment } from './crumb'
 import { BAG_ITEMS, useArmed, type BagItem } from './game/bag'
@@ -52,19 +68,32 @@ import { runEvoItems } from './game/evoGate'
 import { EVO_ITEM_IDS, EVO_ITEMS, SHOP_LEVEL_IDS, SHOP_LEVELS, type EvoItemId } from './data/shop'
 import { shopIcon, tmPicture } from './ui/shopIcons'
 import { CONSUMABLES } from './game/consumables'
-import { depositEggs, EGG_TIERS, EGGS, freeSlots, grantEgg, hatchEgg, incubatorSlots, isReady, toSteps, type EggTier, type Hatch } from './game/eggs'
+import { depositEggs, EGG_TIERS, eggRoom, EGGS, freeSlots, grantEgg, hatchEgg, incubatorSlots, isReady, toSteps, type EggTier, type Hatch } from './game/eggs'
 import { useQuick } from './game/incubator'
 import { biomeDevTools } from './ui/biomeDev'
 import { addCandies, HAUNT_DEX, recordHunt } from './game/halloween'
 import { HALLOWEEN, isNightBoss, NIGHT_BOSSES } from './data/halloween'
 import { jackIcon, treatIcon } from './render/halloweenArt'
-import { brasiliaDay, previousDay, type DayKey } from './game/day'
+import { brasiliaDay, isDayKey, previousDay, type DayKey } from './game/day'
 import { spawnEnemy } from './game/enemies'
 import { pickAlpha, spawnAlpha } from './game/alphas'
 import { EVENTS, stageIndexAt } from './data/waves'
 import { makeShiny } from './game/shiny'
 import { MAP_EVENT_KINDS, MAP_EVENTS, spawnMapEvent, type MapEventKind } from './game/mapEvents'
 import { MEOWTH_DEX } from './game/mapEventRules'
+import { CASTFORM_FIND } from './data/seasonOneUnlocks'
+import { seasonFindDevTools, seasonFindFeedback } from './ui/seasonFinds'
+import { travelDevTools } from './ui/travelDev'
+import { bankNuts, nutFeedback, pathFeedback } from './ui/pathRun'
+import { pathDevTools } from './ui/pathDev'
+import { pathSheet } from './ui/legendPaths'
+import { trialHud } from './ui/towerTrial'
+import { startTrial } from './game/towerTrial'
+import { jumpTutorial, startTutorial as beginTutorial, TUTORIAL_DEXES, type TutorialStepId } from './game/tutorial'
+import { tutorialCoach, type TutorialCoach } from './ui/tutorialCoach'
+import { NO_RANKS } from './game/meta'
+import { COSMOG_DEX, PATH_FORMS, PATH_IDS, TOWERS, TRIALS, type TrialId } from './data/legendPaths'
+import { clearTrial, cosmogStage, giantAwake, kubfuJoined, openForms, ruinsRun, templeRun } from './game/legendPaths'
 import { FIELD, FIELD_MISSION_KINDS, TOGEPI_DEX, type FieldMissionKind } from './game/fieldMissionRules'
 import { advancePhase, banishOffer, chooseOffer, createGame, offerAbilities, playerDex, rerollOffers, skipLevelUp, step, takeBerryLevelUps } from './game/game'
 import { applyBuild, setDummies, setLens, startTraining } from './game/training'
@@ -76,26 +105,35 @@ import { trainingPanel } from './ui/training'
 import { formAt, playerForm } from './game/branch'
 import { unlockedAt } from './game/learnsets'
 import { ABILITIES, type AbilityEffect, type AbilityId } from './data/abilities'
-import { branchesAt, familyDex, MEGA_BRANCH, type BranchId } from './data/branches'
+import { BRANCHES, branchesAt, familyDex, MEGA_BRANCH, type BranchId } from './data/branches'
 import { abilityStacks, grantAbility } from './game/abilities'
 import { abilityIcon } from './render/abilityArt'
-import { recomputeStats, xpFor } from './game/leveling'
-import { dropMegaStones, grantStone, heldMega, megaBaseName } from './game/mega'
+import { nothingToChoose, recomputeStats, xpFor } from './game/leveling'
+import { atMegaBase, dropMegaStones, grantStone, heldMega, megaBaseName } from './game/mega'
 import { REAPER } from './game/endless'
 import { continueEndless } from './game/endlessSystem'
 import { levelUpDevTools } from './game/levelUpDev'
 import { legendDevTools } from './game/legendDev'
 import { bankCapture, captureDevTools, showCapture } from './ui/capture'
 import { riftDevTools } from './game/riftDev'
+import { ultraDevTools } from './ui/ultraDev'
+import { questDevTools } from './game/questDev'
+import { rushDevTools } from './game/rushDev'
 import { placeDevTools } from './game/placeDev'
 import { placeFeedback } from './ui/places'
 import { landmarkFeedback } from './ui/landmarks'
-import { announceMap } from './ui/mapSign'
+import { afterMapSign, announceMap } from './ui/mapSign'
 import { MAP_ARCHETYPE_IDS, type MapArchetypeId } from './data/mapArchetypes'
 import { PLACES } from './data/places'
 import { kitDevTools } from './game/kitDev'
+import { gaKitADevTools } from './game/gaKitADev'
+import { gaHookDevTools } from './gaHookDev'
+import { fighterNow } from './game/gaHookSystem'
+import { devicePattern } from './vivillonRegion'
+import { parsePattern, setSeatPatterns } from './render/gaHookLook'
 import { eggMoveDevTools } from './game/eggMovesDev'
 import { learnDevTools } from './game/learnDev'
+import { itemDropDevTools } from './game/itemDropDev'
 import { tmDevTools } from './game/tmDev'
 import { evoGateDevTools } from './game/evoGateDev'
 import { duoDevTools } from './game/duoDev'
@@ -111,15 +149,19 @@ import { clearSpot, featureAt, featuresNear, footOf, inSolid, runArchetype, setA
 import { TERRAIN, type SolidKind } from './data/terrain'
 import type { LandmarkId } from './data/landmarks'
 import { dexCounts, dexNews, dexStatus, mergeDex, recordRun, type Pokedex } from './game/dex'
-import { runEarnings, wonRun, type ConvertedEggs } from './game/meta'
+import { dexSee } from './ui/pokedexDev'
+import type { DexRegion } from './data/nationalDex'
+import { runEarnings, wonRun, type ConvertedEggs, type Save } from './game/meta'
+import { equipStyle } from './game/style'
 import { missionStatus, type MissionStatus } from './game/missions'
 import { summarizeRun, type RunSummary } from './game/tally'
-import { parseHandle, rankable, runMode, runResult } from './game/ranking'
+import { isRunMode, parseHandle, rankable, runMode, runResult } from './game/ranking'
 import { rosterSchedule, type Roster } from './game/roster'
 import { parseReplay, recordEvent, recordStep, resimulate, RULES_VERSION, rulesStanding, runRoster, startGame, startRecording, TICK, type Recorder, type ReplayStart } from './game/replay'
 import { gameSpecial } from './game/special'
 import { unlockShinyStarter } from './game/shinyStarters'
 import { playsShiny } from './game/shinyPicks'
+import { grantShadow, pickShadow, purifySteps, runVariant, type ShadowSave } from './game/shadow'
 import { canWalkWith, companionForm, OG_GIFT, SUPPORTER_TIERS, TIER_GIFTS, type CompanionId, type SupporterTier } from './game/supporters'
 import { createCompanion, stepCompanion, type CompanionView } from './render/companion'
 import { MOVES } from './game/moves'
@@ -132,33 +174,47 @@ import { drawJoystick } from './render/joystick'
 import { cryUrl, loadAll, loadSpecies, overlayStats, portraitUrl, preloadShinies, releaseSprites, spriteMemory, streamSprites, sweepSprites, type Dex, type Variant } from './render/sprites'
 import { castNeeds, runSprites, type SpriteNeed } from './render/spriteNeeds'
 import { setMarkerInsets } from './render/mapEvents'
+import { frameRaid, setRaidRoom } from './render/teraFx'
+import { frameRush, setRushRoom } from './render/rush'
 import { consumableIcon } from './render/props'
-import { berryIcon, curseIcon, eggIcon, moveIcon, ribbonIcon, warmIcon } from './render/art'
+import { berryIcon, curseIcon, eggIcon, itemIcon, moveIcon, ribbonIcon, warmIcon } from './render/art'
 import { TYPE_COLORS } from './data/types'
 import { megaStoneIcon } from './render/megaFx'
-import { celebrateShop, createTitleScene, drawTitleScene, exploreMeadow, meetPartner, revealShopkeeper, sceneAt, steerPartner, stepTitleScene, talkSpot, tapsPlaza, visitPlaza } from './render/titleScene'
+import { denToast, dressBanner, raidBanner, shardToast, teraStrip } from './ui/teraNews'
+import { celebrateShop, createTitleScene, drawTitleScene, meetPartner, revealShopkeeper, sceneAt, stepTitleScene, visitPlaza } from './render/titleScene'
 import { festivalSprites, KECLEON_DEX, type PlazaFestival, type ShopLevel } from './render/plaza'
 import { weatherIcon } from './render/weather'
 import { formatDay, formatPokeDollars, loadLocale, locale, LOCALES, t } from './i18n'
 import { h, later, rich } from './ui/dom'
 import { setActivePad } from './ui/inputLabels'
+import { watchCursorMode } from './ui/cursorMode'
 import { detectKeyLayout } from './ui/keyLayout'
-import { captureRef, coopBoardsFaked, fakeCoopBoards, flushRuns, onRulesBehind, prefetchRanked, PROFILE_PARAM, rankingEnabled, stageInvite, startRanked, type RankedRun, type RankOutcome } from './ranking'
-import { DISCORD_GIFT, parseGiftContent, type GiftKind, type GiftReason } from './game/gifts'
+import { captureRef, coopBoardsFaked, fakeCoopBoards, fakeEra1Boards, flushRuns, onRulesBehind, outcomeGems, prefetchRanked, PROFILE_PARAM, rankingEnabled, stageInvite, startRanked, type RankedRun, type RankOutcome } from './ranking'
+import { applyGift, DISCORD_GIFT, parseGiftContent, type GiftKind, type GiftReason } from './game/gifts'
+import { ERA1_GIFTS, era1Gifts, type Era1Tier } from './game/era1'
 import { giftScreen } from './ui/gifts'
 import { arenaGate, coopGate, playGate, realmGate } from './ui/account'
 import { TOWN_ROOMS, isTownRoomId } from './data/realmMap'
 import { isLocalRealm, realmUrl } from './realmUrl'
-import { realmJukebox } from './realmJukebox'
-import { realmFriendsCount } from './realm/friendsCount'
+import { realmGame, realmJukebox, realmTheme } from './realmMusic'
+import { openTracks, radio, radioOver, radioSounding, unlockAllTracks } from './radio'
+import { nowPlaying, type MusicPlace } from './radioRules'
+import { openRadio } from './ui/radio'
+import { realmFriendsCount, realmTrainersCount } from './realm/friendsCount'
+import { forceHour, isHourKind } from './realm/hours'
+import { realmErrandsCount } from './realm/errandsCount'
 import { lazyScreen, lazyStep } from './ui/lazy'
 import { isCityId, type CityId, type PartyMode } from './net/realm'
 import { trainerCardScreen } from './ui/trainer'
 import { discordScreen } from './ui/discord'
 import { createHud, type Hud } from './ui/hud'
-import { bankEggs, challengeToday, depositPokeDollars, halloweenToday, loadAttempt, loadSave, outbreakToday, recordRunProgress, saveAttempt, saveHatch, setToday, today, updateSave, writeSave, type Settings } from './ui/save'
+import { openGameModes } from './ui/gameModes'
+import { loadLobbyMode, saveLobbyMode } from './ui/lobbyMode'
+import { bankEggs, challengeToday, depositPokeDollars, halloweenToday, loadAttempt, loadSave, outbreakToday, recordRunProgress, saveAttempt, saveHatch, setToday, today, ultraToday, updateSave, writeSave, type Settings } from './ui/save'
 import { challengeScreen, challengeShiny, type ChallengeSide } from './ui/challenge'
+import { manaphyEggScene } from './ui/manaphyEgg'
 import { hatchScene, incubator } from './ui/incubator'
+import { cosmogEvolveScene } from './ui/cosmogEvolve'
 import { medalChips, missionReport, missionsScreen, progressToast, titleBadge } from './ui/missions'
 import { martDevTools } from './ui/martDev'
 import { CARAVAN, STALL_IDS, STALLS, TAILOR, type StallId } from './data/visitors'
@@ -167,12 +223,14 @@ import { plazaVisitors, setDevCaravan, setDevStall } from './ui/visitors'
 import { missionDevTools } from './ui/missionsDev'
 import { pcBoxScreen } from './ui/pcBox'
 import { newsScreen } from './ui/news'
-import { forgetSurvey, surveyScreen } from './ui/survey'
+import { designSurveyScreen, forgetDesignSurvey, forgetSurvey, stageDesignSurveyDue, surveyScreen } from './ui/survey'
 import { halloweenScreen } from './ui/halloween'
 import { pokedexScreen } from './ui/pokedex'
 import { profileEditor, profileScreen } from './ui/profile'
 import { rankingScreen, rankPanel } from './ui/ranking'
 import { confirmDialog, flashScreen, levelUp, pauseMenu, results, textBox, type Screen } from './ui/screens'
+import { itemSwap } from './ui/itemSwap'
+import { dropItem, needsSwap } from './game/itemDrop'
 import { abilityPick, branchPick } from './ui/abilityPick'
 import { tmPick } from './ui/tmPick'
 import { COOP } from './data/coop'
@@ -183,22 +241,27 @@ import { runShare, sharePreview, trainerShare } from './ui/share'
 import type { ShopPlaza, VisitorShelf } from './ui/shop'
 import { starterSelect } from './ui/starterSelect'
 import { firstRunDue, guestChosenAt, guestGateDue, hostApp, onboardingStep, onOnboarding, rememberGuest, savePromptDue } from './onboarding'
+import { takeHandoff } from './handoff'
 import { firstRunTip, hideInAppHint, saveCard, showInAppHint } from './ui/onboarding'
+import { startLobbyTour, type LobbyTourEnd } from './ui/lobbyTour'
 import { invitesScreen, resultsInvite } from './ui/invites'
 import { forgetInstallNudge, installNudgeScreen } from './ui/install'
+import { forgetSupportAsk, supportAskScreen, takeSupportAsk } from './ui/supportAsk'
+import { SUPPORT_MILESTONES, type SupportMilestone } from './ui/supportAskRules'
 import { titleScreen, type LobbyFocus, type Meadow, type ShopTrip } from './ui/title'
 import { creditsLine, supportersScreen } from './ui/supporters'
 import type { PollKind } from './data/supporters'
-import { knownTier, linkedPoll, patreonReturn, stageSupporterStatus, watchSupporterStatus } from './supporters'
+import { fakeWall, knownTier, linkedPoll, patreonReturn, stageSupporterStatus, watchSupporterStatus } from './supporters'
 import { suggestionsScreen } from './ui/suggestions'
-import { banner, clearToasts, readRunToasts, runToast, tickToasts, toast, type ToastTone } from './ui/toasts'
+import { banner, clearToasts, focusToasts, readRunToasts, runToast, tickToasts, toast, type ToastTone } from './ui/toasts'
 import { bugReportForm, crashPrompt } from './ui/bugReport'
 import { localPlayer, phaseOf } from './game/players'
 import { activeCoopClient, addBots, arenaClient, botsTalk, tabBotLook, arenaQueueDeps, bankCoopRun, botStates, buildRefusal, closeArenaClient, coopClient, coopEventFor, openArenaClient, coopNetPayload, coopUrl, lastCoopNet, linkedRoom, linkRoom, markBuildReload, removeBots, reportCoopNet, reportHeal, setCoopUrl, setCoopVpsUrl, setBotRelays, surrenderBots, type CoopNetOutcome } from './coopShell'
 import { isQuickChat } from './game/versusSocial'
 import { noteDraw, type NetStats } from './coop/netStats'
 import type { CloseWhy, CoopClient } from './coop/client'
-import { arenaLoadout, arenaSeat, coopAccess, coopStarter, freshInvites } from './coop/lobby'
+import { arenaLoadout, arenaSeat, coopAccess, coopStarter, fitsRoom, freshInvites, roomLegend, seatLoadout } from './coop/lobby'
+import { capturedLegends, loadCoopLegend, saveCoopLegend } from './ui/coopLegend'
 import { FRIEND_MILESTONES, REF_PARAM, type FriendMilestone } from './game/referral'
 import { PROTOCOL, VPS_HOMES, parseRoomCode, type RoomView } from './net/protocol'
 import { isRecord } from './game/parse'
@@ -215,8 +278,9 @@ import { coopOver } from './game/coop'
 import { createTeamLayer, type TeamLayer } from './ui/teamLayer'
 import { teamFeedback, teamMoment } from './ui/teamScreens'
 import { arenaFormat, arenaPick, isArenaHubTab, isVersusEvent, keepArenaPick, preseason, stagePreseason, type ArenaHubTab } from './ui/arenaBits'
-import { equippedLook, fakeGems, fetchGems, gemsFaked, knownGems, onGems, stageCheckout, stageGems, stageRefusal, takeCheckoutReturn } from './gems'
-import { isGemPackId } from './data/gems'
+import { equippedLook, fakeGems, fetchGems, gemsFaked, gemsSignedIn, holdPromoDay, knownGems, onGems, promoDay, stageCheckout, stageGems, stageRefusal, stageRunGems, takeCheckoutReturn, type CheckoutReturn } from './gems'
+import { runGemsLine } from './ui/gemBits'
+import { GEM_PLAY, isGemPackId, promoOf } from './data/gems'
 import { arenaSignedIn, awaitRpChange, fakeArena, keepArenaMatch, postPractice, type RpChange } from './arenaApi'
 import { isFakeScenario } from './arena/fakes'
 import { historyEntry } from './arena/history'
@@ -225,13 +289,13 @@ import { parseHeldVersus, versusReport, type HeldVersus, type VersusLeave } from
 import { ARENA_RANKED, type MatchKind, type QueueKind } from './data/arenaRanked'
 import { arenaResult } from './game/arenaRank'
 import { dailyCoopChallenge, parseTeamSize } from './game/coopBoard'
-import type { Difficulty } from './game/difficulty'
+import { isDifficulty, type Difficulty } from './game/difficulty'
 import type { VersusHud } from './ui/versusHud'
 import { arenaFxEvent, arenaFxStats, playBurst, resetArenaFx } from './render/arenaFx'
 import { lookOf, setLooks, setLooksGame, setLocalLook } from './render/looks'
 import { freeWearables, wearMemory } from './render/wearables'
-import { COSMETIC_IDS, COSMETIC_SLOTS, isCosmeticId, parseLook, slotOf, withSkins, type Look, type CosmeticSlot } from './data/cosmetics'
-import { isSkinId, SKIN_IDS, SKIN_LINES, SKINS, type SkinId } from './data/skinCatalog'
+import { COSMETIC_IDS, COSMETIC_SLOTS, isCosmeticId, parseLook, slotOf, withSkins, type Look, type CosmeticId, type CosmeticSlot } from './data/cosmetics'
+import { isSkinId, SKIN_IDS, SKIN_LINES, SKINS } from './data/skinCatalog'
 import { equip } from './arena/gemShop'
 import { effectIn } from './data/arenaEffects'
 import type { VersusTray } from './ui/versusTray'
@@ -242,6 +306,8 @@ import { MAPS, type MapId } from './data/versusMaps'
 import { ARENA_FORMAT_IDS, ARENA_FORMATS, parseArenaFormat, type ArenaFormat } from './data/arenaFormats'
 import { formatPlays, rulesOf } from './game/versusRules'
 import { parseLoadout, parseSettings, type CoopPick } from './coop/start'
+import { countFinale, mythicalHunt } from './game/mythicalHunt'
+import { MYTHICAL_PITY } from './data/waves'
 
 /** Fixed simulation step: the replays the ranking re-simulates count on it. */
 const STEP = TICK
@@ -269,6 +335,7 @@ const fixedStickCenter = (): Vec | null => {
   return stickCenter
 }
 const input = createInput(canvas, () => settings().controls, fixedStickCenter)
+watchCursorMode(input)
 readRunToasts(() => settings().runToasts)
 /** Internal canvas size in world px. Shared by reference with the running game. */
 const view = { w: 480, h: 270 }
@@ -451,6 +518,8 @@ type Run = {
   paid: number
   /** Noite das Bruxas candies of this run already in the save's jar, banked the same way. */
   candies: number
+  /** Meltan's Hex Nuts of this run already in the save (`bankNuts`). */
+  nuts: number
   /** True once the run's end was reported to analytics. */
   reported: boolean
   /** Missions as the run started, and what the run has recorded so far (see `recordProgress`). */
@@ -480,6 +549,8 @@ type Run = {
    * device keeps (`saveAttempt`). Null for any other run.
    */
   challenge: { day: DayKey; official: boolean; attempt: boolean } | null
+  /** What the finale's mythical slot rolled, for `run_end`: who came, `none`, or null before the finale. */
+  mythical: EnemyId | 'none' | null
   /** The supporter's companion walking along, drawn only (`render/companion.ts`). */
   companion: CompanionView | null
   /** Which sheets the run streams and keeps (`syncSprites`): its cast's windows, and what it keeps in every variant. */
@@ -488,10 +559,50 @@ type Run = {
   coop: CoopRun | null
   /** A Dojo session (`game/training.ts`): never banked, ranked nor reported as a run (null otherwise). */
   training: DojoRun | null
+  /** Hoopa's Rings (`game/rush.ts`): never banked, ranked nor reported as a run either (null otherwise). */
+  rush: RushRun | null
+  /** The first visit's training run (`startTutorial`): its coach and how it ends; never banked, ranked nor reported (absent otherwise). */
+  tutorial?: TutorialShell
 }
 
+/** The shell's side of a training run: Rotom's coach, and the skip the pause menu's quit takes too. */
+type TutorialShell = { coach: TutorialCoach; skip: () => void }
+
+/** How a training run ended: played to its last line, or skipped at the furthest step it reached. */
+type TutorialEnd = { how: 'finished' | 'skipped'; step: TutorialStepId }
+
+/** The shell's side of a rush: its level and Pokémon (for Try again), and whether its end was banked (a record, Hoopa caught). */
+type RushRun = { difficulty: Difficulty; starter: PlayableId; banked: { record: boolean; caught: boolean } | null }
+
 /** The shell's side of a Dojo session: its panel, when it began and whether a build was saved, for its `dojo_end`. */
-type DojoRun = { panel: ReturnType<typeof trainingPanel>; startedAt: number; saved: boolean }
+/** The Dojo's panel, or a Torre trial's screen in its place. */
+type DojoPanel = Screen & { refresh?: (clear: (() => void) | null) => void }
+type DojoRun = { panel: DojoPanel; startedAt: number; saved: boolean }
+
+/** Who trains at the Dojo when no trial plays: the Torre's Voltar comes back to them. */
+let dojoPartner: PlayableId = 'charmander'
+
+/** The Torre's sheet over the Dojo, its trials startable. */
+const openTower = () => {
+  const r = run
+  if (!r?.training) return
+  r.overlay?.dispose()
+  r.overlay = pathSheet(ui, input, 'kubfu', { close: () => r.overlay === sheet && (r.overlay = null), start: (id) => void startDojo(TRIALS[id].starter, id) })
+  const sheet = r.overlay
+}
+
+/** A Torre trial won: into the save; returns a word on what it brought (Kubfu joining, Urshifu's style), or null. */
+const bankTrial = (id: TrialId): string | null => {
+  const before = loadSave().paths.trials
+  // A tower climbed for the first time becomes the style Urshifu wears.
+  const tower = TOWERS.find((tw) => tw === id && !before.includes(tw)) ?? null
+  updateSave((s) => ({ ...s, paths: { ...s.paths, trials: clearTrial(s.paths.trials, id), ...(tower && { style: tower }) } }))
+  void syncSave()
+  const after = loadSave().paths.trials
+  const m = t().paths.tower
+  if (!kubfuJoined(before) && kubfuJoined(after)) return m.kubfu
+  return tower && after.includes(tower) ? m.urshifu(m.styles[tower]) : null
+}
 
 /**
  * The shell's side of a co-op run. `r.game` is the runner's (confirmed) game;
@@ -538,32 +649,23 @@ const shownGame = (r: Run) => (r.coop ? r.coop.view.game : r.game)
 let specialQueued = false
 /** Mega Evolution press (E, the Mega button, gamepad Y), consumed like the special. */
 let megaQueued = false
+/** A TERA press waiting for the next step (`game/tera.ts`). */
+let teraQueued = false
 /** Manual lunge press (Shift, the lunge button, gamepad X) for Quick Attack, consumed like the special. */
 let lungeQueued = false
 /** The meadow with wandering Pokémon behind every menu. Lives across screens, so it never pops. */
 const scene = createTitleScene(Date.now())
-/** The joystick a drag on the lobby's meadow steers the partner with, drawn over it. */
-let meadowStick: Stick | null = null
-
-/** A CSS px point on screen, in the meadow's world px (the canvas sits at the viewport's corner). */
-const meadowAt = (at: Vec): Vec => ({ x: Math.round(scene.cam.x) + at.x / cssScale, y: Math.round(scene.cam.y) + at.y / cssScale })
-
-/** A meadow point (world px) on screen, in CSS px. */
-const meadowToScreen = (at: Vec): Vec => ({ x: (at.x - Math.round(scene.cam.x)) * cssScale, y: (at.y - Math.round(scene.cam.y)) * cssScale })
 
 /** Lobbies that met the partner so far: only the latest one may send it away (the next title is built before the last one goes). */
 let meetings = 0
 
-/** The lobby's handle on the meadow: its partner walks there, with the supporter's companion, and visits the Kecleon plaza. */
+/** The title's handle on its world: the top-down meadow behind the rest screen and the lobby, its partner hopping through it on a trip with the supporter's companion. */
 const meadow: Meadow = {
   meet: (partner) => {
     const id = ++meetings
-    meetPartner(scene, partner, runCompanion({ x: 0, y: 0 }))
+    meetPartner(scene, partner, runCompanion({ x: 0, y: 0 }), lobbyCosmog())
     return () => void (id === meetings && meetPartner(scene, null))
   },
-  steer: (move, tap, home) => steerPartner(scene, move, tap && meadowAt(tap), meadowAt(home)),
-  out: () => scene.partner !== null && scene.partner.state !== 'home',
-  stick: (stick) => (meadowStick = stick),
   visit: (to, instant) => {
     // 1 visit in 20 from afar, the counter looks empty: Kecleon is camouflaged until talked to (`ShopPlaza.reveal`).
     const offView = Math.abs(scene.plaza.x - (scene.cam.x + view.w / 2)) > view.w / 2 + 60
@@ -573,14 +675,11 @@ const meadow: Meadow = {
     visitPlaza(scene, to, view.w, view.h, instant)
   },
   at: () => sceneAt(scene),
-  explore: (on) => exploreMeadow(scene, on, view.w, view.h),
-  talkSpot: () => {
-    const at = talkSpot(scene)
-    return at && { ...meadowToScreen(at), who: at.who }
+  draw: (draw, dt, w, h, covers) => {
+    stepTitleScene(scene, dt, w, h, covers ?? undefined)
+    drawTitleScene(draw, scene, w, h, covers !== null)
   },
-  tapsShop: (at) => tapsPlaza(scene, meadowAt(at)),
-  // The canvas sits at the viewport's corner: CSS px over the scale are view px.
-  stageBox: (box) => (scene.stageBox = box && { left: box.left / cssScale, top: box.top / cssScale, right: box.right / cssScale, bottom: box.bottom / cssScale }),
+  scale: () => cssScale,
 }
 
 /** Dev: the plaza's building level (`ps.plaza(n)`), over the shop's own. */
@@ -652,11 +751,11 @@ const openShop = (close: () => void, shelf?: VisitorShelf, festival?: () => void
   )
 }
 
-/** The ref a gem pack's checkout came back with (`?gems=<ref>`), for the Boutique's Loja to wait on as it opens. */
-let boutiqueCheckout: string | null = null
+/** What a gem pack's checkout came back with (`?gems=<ref>`, and `&cancel=<pack>` when given up), for the Boutique's Loja to open on. */
+let boutiqueCheckout: CheckoutReturn | null = null
 
-/** The skin the Boutique's Skins opens on (the partner select's skins row), once. */
-let boutiqueItem: SkinId | null = null
+/** The item the Boutique opens on, once: a skin on Skins (the partner select's skins row), anything else chosen on the Loja (the results' gem line). */
+let boutiqueItem: CosmeticId | null = null
 
 /** Leavanny's Boutique over the plaza's north-west (`ui/boutique.ts`); closing it leaves `?boutique` behind too. */
 const openBoutiqueSheet = (close: () => void, tab: BoutiqueTab) => {
@@ -683,9 +782,9 @@ const openBoutiqueSheet = (close: () => void, tab: BoutiqueTab) => {
  * Card's look, `?boutique`, a checkout's return): the lobby lands on the
  * plaza's north-west with the sheet open on `tab`; leaving it calls `back`
  * when given (where it came from), else pans home. `checkout`: the
- * `?gems=<ref>` the Loja waits on; `item`, the skin Skins opens on.
+ * `?gems=<ref>` the Loja waits on (or, given up, offers again); `item`, the skin Skins opens on or the item the Loja shows chosen.
  */
-const showBoutique = (tab: BoutiqueTab, back?: () => void, checkout: string | null = null, item: SkinId | null = null) => {
+const showBoutique = (tab: BoutiqueTab, back?: () => void, checkout: CheckoutReturn | null = null, item: CosmeticId | null = null) => {
   boutiqueCheckout = checkout
   boutiqueItem = item
   showTitle({ shop: tab === 'shop' ? 'boutique' : tab, instant: true, ...(back && { back }) })
@@ -694,6 +793,11 @@ const showBoutique = (tab: BoutiqueTab, back?: () => void, checkout: string | nu
 const queueMega = () => {
   unlockAudio()
   if (run?.game.phase === 'playing') megaQueued = true
+}
+
+const queueTera = () => {
+  unlockAudio()
+  if (run?.game.phase === 'playing') teraQueued = true
 }
 
 /** The player's name right now: its stage's, or its Mega form's while that lasts. */
@@ -778,20 +882,26 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
   if (opts.intro) firstStep('intro')
   setScreen(
     titleScreen(ui, input, {
-      play: () => (firstStep('play'), playFromLobby()),
-      // A device that never played: "press start" goes straight into its first run.
-      start: opts.intro && firstRun() ? () => ((pressedStart = true), firstStep('play'), startFirstRun()) : undefined,
+      play: () => playFromLobby(),
+      partner: () => showMenu(),
+      legends: () => showMenu(loadSave().partner, 'legends'),
+      modes: (focus, shown) => openGameModes(ui, input, { current: loadLobbyMode(), shown, onPick: (id) => (saveLobbyMode(id), showTitle({ focus: 'play' })), close: () => showTitle({ focus }) }),
+      // A device that never played: "press start" goes straight into its first run (or, in the onboarding's arm `tour`, Rotom's welcome first).
+      start: opts.intro && firstRun() ? () => ((pressedStart = true), startFirstRun()) : undefined,
       challenge: () => showChallenge(),
       incubator: () => showIncubator(() => showTitle({ focus: 'eggs' })),
       gifts: showGifts,
       missions: () => showMissions(),
-      ready: () => ((pressedStart = true), firstStep('lobby'), hideInAppHint()),
+      // Back home after the first partner pick's run (arm `tour`): the lobby tour, once the lobby is laid out (not on a trip to a shop).
+      ready: () => ((pressedStart = true), firstStep('lobby'), hideInAppHint(), !opts.shop && queueTour()),
       // The language may change inside Settings, so closing them rebuilds the title on the same entry.
-      settings: (focus) => openSettings(ui, input, () => showTitle({ focus })),
+      settings: (focus) => openSettings(ui, input, () => showTitle({ focus }), { tutorial: replayTutorial }),
       news: (focus) => newsScreen(ui, input, () => showTitle({ focus })),
       // Closed unanswered, the lobby highlights the survey's clipboard; answered, it's gone and JOGAR is.
       survey: () => surveyScreen(ui, input, () => showTitle({ focus: 'survey' })),
+      designSurvey: () => designSurveyScreen(ui, input, () => showTitle({ focus: 'survey' })),
       install: (offer, focus) => installNudgeScreen(ui, input, offer, () => showTitle({ focus })),
+      supportAsk: (milestone, focus) => supportAskScreen(ui, input, milestone, () => showTitle({ focus })),
       halloween: (focus) =>
         halloweenScreen(ui, input, {
           gifts: showGifts,
@@ -818,6 +928,7 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
           {
             supporters: (back) => supportersScreen(ui, input, { play: (id) => void startRun(id), onClose: back }, null),
             locker: () => showBoutique('locker', () => showTitle({ focus })),
+            book: realmUrl() ? (back) => lazyScreen(ui, realmMode, (m) => m.openRealmBook(ui, input, { close: back }), back) : null,
           },
           () => showTitle({ focus }),
         ),
@@ -828,8 +939,9 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
       coop: coopUrl() ? () => enterCoop({ room: null, invitedBy: null }) : undefined,
       realm: realmUrl() ? () => enterRealm(null) : undefined,
       realmFriends: realmUrl() ? realmFriendsNow : undefined,
+      realmCrowd: realmUrl() ? realmCrowdNow : undefined,
+      realmErrands: realmUrl() ? realmErrandsNow : undefined,
       arena: () => showArena(),
-      arenaHub: (tab) => showArenaHub(tab),
       dojo: () => showDojo(),
       meadow,
     }, opts),
@@ -839,22 +951,145 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
   if (app && opts.intro && screen) showInAppHint(screen.el, app)
 }
 
-/** No run finished on this device and no account linked to it: the next Play is the first run (`startFirstRun`). */
-const firstRun = () => firstRunDue(loadSave().achievements.lifetime.runs, accountUserId() !== null)
+/**
+ * Dev: `ps.onboarding('reset')` plays the first visit again on a save that has runs: the runs banked so far count as none
+ * (and an account as none) until the page reloads. Null otherwise.
+ */
+let devFirstRuns: number | null = null
 
-/** The first run: the saved partner (Charmander on a new save) on the saved difficulty (Normal), past the gate and the partner select. */
+/** The save's banked runs, as the first visit's rules count them (`devFirstRuns`). */
+const firstRuns = () => loadSave().achievements.lifetime.runs - (devFirstRuns ?? 0)
+
+/** No run finished on this device and no account linked to it: the next Play is the first run (`startFirstRun`). */
+const firstRun = () => firstRunDue(firstRuns(), devFirstRuns === null && accountUserId() !== null)
+
+/**
+ * The first run's Play ("press start", or JOGAR on a device that never played). In the onboarding's arm
+ * `tour` (`firstTime.ts`), Rotom's welcome first, then the first partner pick (where a reload after the
+ * welcome lands too); otherwise the fast lane: the saved partner (Charmander on a new save) on the saved
+ * difficulty (Normal), past the gate and the partner select.
+ */
 const startFirstRun = () => {
+  const s = firstTime()
+  const next = nextFirst(s)
+  if (next === 'welcome') return showWelcome()
+  if (next === 'partner') return showFirstPartner(s.tutorial?.how === 'finished')
+  firstStep('play')
   onboardingStep('fastLane')
   void startRun(loadSave().partner)
 }
 
+/** Rotom's welcome (arm `tour`): "Me mostra!" plays the training run, "Já sei jogar" goes to the partner pick. Answered, a reload goes to the pick. */
+const showWelcome = () => {
+  firstStep('welcome')
+  onboardingStep('welcomeShown')
+  const answered = () => updateFirstTime((s) => ({ ...s, welcome: true }))
+  setScreen(
+    welcomeScreen(ui, input, {
+      show: () =>
+        later(() => {
+          answered()
+          playTutorial((end) => {
+            updateFirstTime((s) => ({ ...s, tutorial: end }))
+            showFirstPartner(end.how === 'finished')
+          })
+        }),
+      knows: () =>
+        later(() => {
+          answered()
+          onboardingStep('welcomeKnows')
+          showFirstPartner(false)
+        }),
+    }),
+  )
+}
+
 /**
- * JOGAR: the first run starts at once; after it, a guest sees the sign-in gate
+ * The training run (`startTutorial`), measured: its loading, frame and clock aren't the first run's
+ * (`holdRunSteps`), and its start and end are first-visit steps and moments. `then` gets how it ended.
+ */
+const playTutorial = (then: (end: TutorialOutcome) => void) => {
+  setScreen(null)
+  holdRunSteps(true)
+  firstStep('tutorial')
+  onboardingStep('tutorialStarted')
+  startTutorial((end) => {
+    holdRunSteps(false)
+    firstStep('tutorialEnd')
+    onboardingStep(end.how === 'finished' ? 'tutorialFinished' : 'tutorialSkipped')
+    then(end)
+  })
+}
+
+/** The first partner pick (arm `tour`): every starter; the pick becomes the partner and plays the first run, as the fast lane would. */
+const showFirstPartner = (afterTutorial: boolean) => {
+  endRun()
+  firstStep('partner')
+  const partner = loadSave().partner
+  const initial: StarterId = STARTER_IDS.find((id) => id === partner) ?? 'charmander'
+  setScreen(
+    firstPartnerScreen(ui, input, {
+      initial,
+      afterTutorial,
+      pick: (id) => {
+        updateFirstTime((s) => ({ ...s, partner: true }))
+        firstStep('play')
+        onboardingStep('partnerPicked')
+        setTimeout(() => void startRun(id), 250)
+      },
+    }),
+  )
+}
+
+/** Set while the lobby tour runs, so a lobby rebuilt under it doesn't start a second one. */
+let touring = false
+
+/**
+ * The lobby tour, once this lobby is laid out, when it's due (`tourDue`: the first lobby after the first partner pick's run).
+ * True when it's coming (or running): the lobby then opens no survey or install offer over it.
+ */
+const queueTour = (): boolean => {
+  if (touring) return true
+  if (!tourDue(firstTime(), firstRuns())) return false
+  requestAnimationFrame(() => {
+    if (touring || run || !screen?.el.classList.contains('title-home')) return
+    playTour(false)
+  })
+  return true
+}
+
+/**
+ * The lobby tour over the lobby on screen, and the `onboarding` event as it ends. `replay`: Settings' "Rever tutorial"
+ * offered it again, which leaves the device's onboarding as it was.
+ */
+const playTour = (replay: boolean) => {
+  touring = true
+  showLobbyTour((end) => {
+    touring = false
+    const how = end?.how ?? 'done'
+    const s = replay ? firstTime() : updateFirstTime((s) => ({ ...s, tour: how }))
+    onboardingStep(how === 'done' ? 'tourDone' : 'tourSkipped')
+    track('onboarding', { arm: s.arm, how, stop: end?.stop ?? null, tutorial: s.tutorial?.how ?? 'none', replay: replay ? 1 : 0 })
+  })
+}
+
+/** Settings' "Rever tutorial" (any device, any arm): the training run again, then the lobby with its tour. */
+const replayTutorial = () =>
+  later(() =>
+    playTutorial(() => {
+      showTitle({ focus: 'play' })
+      playTour(true)
+    }),
+  )
+
+/**
+ * JOGAR: the first run starts at once (`startFirstRun`); after it, a guest sees the sign-in gate
  * now and then (`guestGateDue`: not again for a while after "Jogar como
  * convidado"), never inside an app's browser, where Google won't sign in; then the partner select.
  */
 const playFromLobby = () => {
   if (firstRun()) return startFirstRun()
+  firstStep('play')
   if (!accountsEnabled || accountState().kind !== 'guest') return showMenu()
   if (hostApp()) {
     onboardingStep('gateSkipped')
@@ -877,7 +1112,7 @@ const showPlayGate = () => {
 }
 
 /** The partner select; its top bar leads back to the title, to the Poké Mart (the wallet) and to Settings, which come back to it on the same Pokémon. */
-const showMenu = (initial: PlayableId = loadSave().partner) => {
+const showMenu = (initial: PlayableId = loadSave().partner, tab?: 'legends') => {
   endRun()
   firstStep('select')
   prefetchRun()
@@ -885,11 +1120,12 @@ const showMenu = (initial: PlayableId = loadSave().partner) => {
     pick: (id) => setTimeout(() => void startRun(id), 250),
     back: () => showTitle({ focus: 'play' }),
     mart: () => showShop(),
-    settings: () => setScreen(openSettings(ui, input, () => showMenu(select.selected()))),
+    settings: () => setScreen(openSettings(ui, input, () => showMenu(select.selected()), { tutorial: replayTutorial })),
     incubator: () => showIncubator(() => showMenu(select.selected())),
     // A skin not owned yet: the Boutique's Skins on it, then back here on the same Pokémon.
     boutique: (skin) => showBoutique('skins', () => showMenu(select.selected()), null, skin),
-  }, initial)
+    rush: (id, difficulty) => setTimeout(() => void startRushRun(id, difficulty), 250),
+  }, initial, tab ? { tab } : undefined)
   setScreen(select)
 }
 
@@ -900,6 +1136,7 @@ const showMenu = (initial: PlayableId = loadSave().partner) => {
  */
 const wearOwnLook = () => {
   setLooksGame(null)
+  setSeatPatterns([])
   setLooks([parseLook(equippedLook())])
 }
 
@@ -911,7 +1148,17 @@ onGems(() => {
 const takeOffLooks = () => {
   resetArenaFx()
   setLooks([])
+  setSeatPatterns([])
   setLooksGame(null)
+}
+
+/** Cosmog or Cosmoem while one grows (the legend paths), to float beside the partner on the lobby's trips (its sprites start loading); null when none does. */
+const lobbyCosmog = (): CompanionView | null => {
+  const stage = cosmogStage(loadSave().paths.cosmog)
+  if (!stage) return null
+  const dex = COSMOG_DEX[stage]
+  void loadSpecies(dex).catch(() => {})
+  return createCompanion(dex, false, { x: 0, y: 0 })
 }
 
 /** The save's companion for a run starting now, if the account's tier still allows it (`knownTier`; its sprites start loading). */
@@ -932,6 +1179,15 @@ const showPcBox = (back: () => void) =>
   pcBoxScreen(ui, input, { onClose: back, trainerCard: (close) => sharePreview(ui, input, trainerShare(loadSave().partner), close) }, loadSave().style.equipped.wallpaper)
 
 const showMissions = () => setScreen(missionsScreen(ui, input, () => showTitle({ focus: 'missions' })))
+
+/**
+ * The lobby tour (`ui/lobbyTour.ts`): the lobby comes up (JOGAR highlighted, its pop-ups held back) and Rotom
+ * points at its stops; `done` runs once it ends or is skipped, with how and the stop it ended on.
+ */
+const showLobbyTour = (done: (end: LobbyTourEnd) => void) => {
+  startLobbyTour(ui, input, done)
+  showTitle({ focus: 'play' })
+}
 
 /**
  * The Desafio do dia's screen (from the title), on its solo or co-op side; its boards open over it and come back to it.
@@ -1008,7 +1264,8 @@ const afterRun = (then: () => void) => {
 
 /**
  * The lobby's gift box: opens the waiting Mystery Gifts one by one. A shiny
- * hatch plays its scene (recorded in the missions and medals) and a shiny
+ * hatch plays its scene (recorded in the missions and medals), Cosmog's
+ * legend its evolution (`cosmogEvolveScene`) and a shiny
  * ticket goes to the Hall's picker, each coming back to the next gift, or
  * to the lobby once none waits.
  */
@@ -1022,9 +1279,25 @@ const showGifts = () => {
         showHatch(hatch, back, undefined, () => later(() => progressToast(ui, record)))
       },
       pick: () => setScreen(supportersScreen(ui, input, { play: (id) => void startRun(id), onClose: back }, 'pick')),
+      evolve: (legend) => setScreen(cosmogEvolveScene(ui, input, legend, back)),
+      legendEgg: (legend) => setScreen(manaphyEggScene(ui, input, legend, { play: () => void startRun(legend), done: back })),
       close: () => showTitle({ focus: 'gifts' }),
     }),
   )
+}
+
+/**
+ * What the legend paths bring to a run's start (`ReplayStart`): the forms the
+ * save opened for this legend (`openForms`), and Regigigas's temple or the Ruínas da Decisão, drawn
+ * from the seed for the Regi trio's captor (never in its own run).
+ */
+const pathStart = (save: Save, starter: PlayableId, seed: number): Pick<ReplayStart, 'forms' | 'temple' | 'ruins'> => {
+  const forms = openForms(save.paths, starter)
+  const caught = (id: LegendId) => isCaptured(save.legends, id)
+  // Once Regigigas is captured, the Ruínas da Decisão may come in its temple's place.
+  const ruins = ruinsRun(seed, caught)
+  const temple = ruins.length === 0 && starter !== 'regigigas' && templeRun(seed, giantAwake(caught), caught('regigigas'))
+  return { ...(forms.length > 0 ? { forms } : {}), ...(temple ? { temple } : {}), ...(ruins.length > 0 ? { ruins } : {}) }
 }
 
 /** Moves the run's steps and new eggs into the incubator, once each (a victory banks, then endless banks again). */
@@ -1043,6 +1316,12 @@ const bankHatchery = (r: Run) => {
  * Quitting keeps coins but forfeits the survival bonus, unless Mewtwo already
  * fell (victory or endless). Every species seen or defeated counts either way.
  */
+/** A roaming lake legend's HP taken this run stays taken (`bankRoamer`), whether it fled, fell or is still about as the run ends. */
+const bankRoamerHp = (g: Game) => {
+  const roam = g.quests.roam
+  if (roam && g.coop === null) updateSave((s) => ({ ...s, roamers: bankRoamer(s.roamers, roam.legend, roam.left) }))
+}
+
 const bankRun = (r: Run, withBonus: boolean) => {
   const g = r.game
   const total = withBonus ? runEarnings(g).total : g.coins
@@ -1050,7 +1329,9 @@ const bankRun = (r: Run, withBonus: boolean) => {
   r.paid = Math.max(r.paid, total)
   if (g.candies > r.candies) updateSave((save) => addCandies(save, g.candies - r.candies))
   r.candies = Math.max(r.candies, g.candies)
+  r.nuts = bankNuts(ui, g, r.nuts)
   bankHatchery(r)
+  bankRoamerHp(g)
   // Merged into the stored Pokédex, which an account sync may have grown during the run.
   updateSave((save) => ({ ...save, dex: mergeDex(save.dex, recordRun(r.dexBase, g.dexLog)) }))
 }
@@ -1121,6 +1402,8 @@ const reportRun = (r: Run, faint: Extract<GameEvent, { kind: 'gameover' }> | nul
     moves: p.moves.map((m) => `${m.id}:${m.level}`),
     items: p.items.map((i) => `${i.id}:${i.level}`),
     bosses: g.tally.bossKills,
+    mythical: r.mythical,
+    mythicalDry: g.mythicalHunt?.dry ?? null,
     foe: faint?.foe ?? null,
     hit: faint?.hit ?? null,
     coins: r.paid,
@@ -1172,7 +1455,9 @@ const errorContext = (): ErrorContext => {
 const endRun = () => {
   if (!run) return
   if (run.coop) return endCoopRun(run, run.coop)
+  if (run.tutorial) return endTutorial(run, run.tutorial)
   if (run.training) return endDojo(run, run.training)
+  if (run.rush) return endRushRun(run)
   bankRun(run, wonRun(run.game))
   reportRun(run)
   rankRun(run)
@@ -1225,11 +1510,12 @@ const prefetchRun = (day: DayKey | null = null) =>
 
 /**
  * Species a run may need outside its drawn cast, with when they can first show
- * up: the fleeing Meowth and the escort mission's Togepi. A rift's legendary,
+ * up: the fleeing Meowth, the escort mission's Togepi and the wandering Castform. A rift's legendary,
  * a place's dwellers and the reaper load when the run gets near them (`runSprites`).
  */
 const EXTRAS = [
   { dex: MEOWTH_DEX, at: MAP_EVENTS.meowth.spawn.from },
+  { dex: CASTFORM_FIND.dex, at: CASTFORM_FIND.from },
   { dex: TOGEPI_DEX, at: FIELD.first },
 ]
 
@@ -1335,7 +1621,14 @@ const firstFrameDrawn = () => {
   if (!firstFrameDue) return
   firstFrameDue = false
   launchStep('running')
-  firstStep('firstFrame')
+  // The training run isn't the first run: the flow marks its own steps.
+  if (!run?.tutorial) firstStep('firstFrame')
+}
+
+/** The `ReplayStart` field a run with `starter` takes from the save's Shadows: nothing for the plain one, so its replay stays as it was. */
+const shadowStart = (shadows: ShadowSave, starter: PlayableId) => {
+  const variant = runVariant(shadows, starter)
+  return variant ? { variant } : {}
 }
 
 /** A player's whole family (branches included: the evolution scene can land on any of them) in the colors they play, not the normal ones as well. */
@@ -1412,6 +1705,7 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
   // And the outbreak and haunting it dealt with the ticket (the API checks them by its own clock); without one, the device's day.
   const outbreak = outbreakToday(ranked?.outbreak ?? null)
   const halloween = halloweenToday(ranked?.halloween ?? null)
+  const ultra = ultraToday(ranked?.ultra ?? null)
   const legend = !c && isLegend(starter)
   // A plan from another day (the menus stayed open past midnight) would play yesterday's outbreak (or haunting).
   const plan = c
@@ -1445,16 +1739,28 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
     tms: armedTms(save.tms, tmLimit(save.shop.level)),
     evo: [...save.evo],
     caps: capLevel(save.caps, starter),
+    mythical: mythicalHunt(save),
+    // The raid of the day's den (`raidOfDay`), from the Brasília day like the outbreak.
+    raid: brasiliaDay(today()),
+    // A Shadow (or Purified) Pokémon plays as one unless switched to Normal (`game/shadow.ts`).
+    ...shadowStart(save.shadows, starter),
+    // The Game Corner poster's pass brings the Rocket Hideout's hatch onto this run's map (`game/hideoutPass.ts`).
+    ...(holdsPass(save.hideout) && !isLegend(starter) ? { hideout: true } : {}),
+    ultra,
+    // The legend paths: the forms the save opened for this legend, and Regigigas's temple for the Regi trio's captor.
+    ...pathStart(save, starter, plan.seed),
+    wild: wildOf(save),
     view: { w: view.w, h: view.h },
   }
   // Created like a replay is re-simulated (the roster drawn ahead is the same one).
+  if (start.hideout) updateSave((s) => ({ ...s, hideout: usePass(s.hideout) }))
   const game = startGame(start, view)
   if (devMap) setDevMap(game, devMap)
   const me = localPlayer(game)
   // The 1/64 roll unlocks this Pokémon's shiny for good (Normal/Shiny on the select screen).
   if (me.luckyShiny) updateSave((s) => ({ ...s, shinyStarters: unlockShinyStarter(s.shinyStarters, starter) }))
   // A shiny run starts in its own colors (and loads only those).
-  await loadRunSheets(familySheets(starter, me.shiny), openingDex(plan))
+  await loadRunSheets(familySheets(starter, me.shiny), openingDex(plan), firstSheets)
   // The outbreak's shiny can show up in the first minute (in safe mode it loads when one does).
   if (!detail.safe) void preloadShinies([ENEMIES[plan.outbreak].dex])
   loading.remove()
@@ -1467,6 +1773,8 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
     closeText: null,
     paid: 0,
     candies: 0,
+    nuts: 0,
+    mythical: null,
     reported: false,
     missionsBefore: missionStatus(save.missions, today()),
     recorded: null,
@@ -1487,6 +1795,7 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
     sprites: { needs: castNeeds(game.roster, EXTRAS), always: [...familyDex(starter), playerDex(game), ENEMIES[plan.outbreak].dex] },
     coop: null,
     training: null,
+    rush: null,
   }
   if (run.companion) run.sprites.always.push(run.companion.dex)
   wearOwnLook()
@@ -1502,6 +1811,17 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
 /** A run's news that warns or asks for something (a boss, a rift's omen, a hazard): it shows unless the "Avisos na partida" setting says Nenhum. */
 const news = (content: HTMLElement | string, ms?: number, key: string | null = null) => runToast(ui, 'important', content, ms, key)
 /** A run's minor news (a drop, a berry, a shiny spotted, a milestone the screen already shows): only at Todos. */
+/** A roaming legend's or a duel's moment: its sound and cry, and its line on the news (`questNews`). */
+const showQuest = (e: Extract<GameEvent, { kind: 'roam' | 'duel' }>) => {
+  const q = questNews(e)
+  if (q.sfx) playSfx(q.sfx)
+  if (q.cry !== null) playCry(cryUrl(q.cry), 0.8)
+  if (!q.line) return undefined
+  // A roaming legend's lines wear its portrait, as the other legends' moments do.
+  const dex = e.kind === 'roam' ? ENEMIES[e.legend].dex : null
+  return news(dex === null ? rich(q.line) : h('span', { class: 'item-toast' }, h('img', { src: portraitUrl(dex), alt: '' }), h('span', {}, rich(q.line))), q.ms)
+}
+
 const aside = (content: HTMLElement | string, ms?: number, key: string | null = null, tone: ToastTone | null = null) => runToast(ui, 'minor', content, ms, key, tone)
 
 /** The run's first toasts: safe mode coming on after a crash, the challenge it plays, the day's outbreak, then each bag item it used and each TM it armed. */
@@ -1551,9 +1871,12 @@ const showDojo = (initial: PlayableId = loadSave().partner) => {
  * A Dojo session (`game/training.ts`): a run with the save's upgrades, Bottle
  * Caps and colors but no Bag, TMs or luck of its own, turned into the Dojo, in
  * the family's saved build when it has one, with its panel over it
- * (`ui/training.ts`). Nothing of it is banked, ranked or recorded.
+ * (`ui/training.ts`). Nothing of it is banked, ranked or recorded. With
+ * `trial`, it plays that Torre trial instead (`game/towerTrial.ts`): the
+ * trial's Pokémon and loadout, its screen in the panel's place, and a win
+ * banked into the save (`clearTrial`).
  */
-const startDojo = async (starter: PlayableId) => {
+const startDojo = async (starter: PlayableId, trial: TrialId | null = null) => {
   if (launching) return
   launching = true
   try {
@@ -1563,15 +1886,16 @@ const startDojo = async (starter: PlayableId) => {
     ui.append(loading)
     const save = loadSave()
     const shiny = playsShiny(save, starter)
-    const game = createGame(starter, view, Date.now(), save.ranks, undefined, { shiny, evo: [...save.evo], caps: capLevel(save.caps, starter) })
+    const game = createGame(starter, view, Date.now(), save.ranks, undefined, { shiny, evo: [...save.evo], caps: capLevel(save.caps, starter), forms: openForms(save.paths, starter) })
     // The 1/64 roll is a run's luck: nothing unlocks at the Dojo, and it plays in the colors picked.
     const me = localPlayer(game)
     me.shiny = shiny
     me.luckyShiny = false
     // The dummies stand left of the player, near enough to share the field the panel leaves open (the camera centers the player there: the panel's `lens`).
     startTraining(game, TRAINING.target, TRAINING.counts[0], { x: -1, y: 0, reach: Math.min(TRAINING.reach, Math.round(view.w * 0.28)) })
-    const build = save.builds[starter]
+    const build = trial ? undefined : save.builds[starter]
     if (build) applyBuild(game, build)
+    if (trial) startTrial(game, trial)
     // Opens quietly: no news of the build's ability being picked.
     game.events.length = 0
     await loadRunSheets(familySheets(starter, shiny), [ENEMIES[TRAINING.target].dex])
@@ -1585,6 +1909,8 @@ const startDojo = async (starter: PlayableId) => {
       closeText: null,
       paid: 0,
       candies: 0,
+      nuts: 0,
+      mythical: null,
       reported: true,
       missionsBefore: [],
       recorded: null,
@@ -1604,6 +1930,7 @@ const startDojo = async (starter: PlayableId) => {
       sprites: { needs: [], always: [...familyDex(starter), ENEMIES[TRAINING.target].dex] },
       coop: null,
       training: null,
+      rush: null,
     }
     if (r.companion) r.sprites.always.push(r.companion.dex)
     wearOwnLook()
@@ -1614,10 +1941,16 @@ const startDojo = async (starter: PlayableId) => {
             updateSave((s) => ({ ...s, builds: Object.fromEntries(Object.entries(s.builds).filter(([id]) => id !== starter)) }))
             void syncSave()
             aside(rich(t().training.cleared(name)), 2600, 'dojo')
-            panel.refresh(null)
+            panel.refresh?.(null)
           }
         : null
-    const panel = trainingPanel(ui, game, {
+    if (!trial) dojoPartner = starter
+    const panel: DojoPanel = trial ? trialHud(ui, game, {
+      ended: (won) => (won ? bankTrial(trial) : null),
+      retry: () => void startDojo(starter, trial),
+      back: () => void startDojo(dojoPartner, null).then(() => openTower()),
+    }) : trainingPanel(ui, game, {
+      tower: () => openTower(),
       // A species' sheets load before its dummies stand (and it stays loaded while the session lasts).
       dummies: (target, count) => {
         const dex = ENEMIES[target].dex
@@ -1627,7 +1960,7 @@ const startDojo = async (starter: PlayableId) => {
             if (run !== r) return
             if (!r.sprites.always.includes(dex)) r.sprites.always.push(dex)
             setDummies(game, target, count)
-            panel.refresh(forget())
+            panel.refresh?.(forget())
           })
       },
       save: () => {
@@ -1636,7 +1969,7 @@ const startDojo = async (starter: PlayableId) => {
         dojo.saved = true
         playSfx('buy')
         news(rich(t().training.saved(name)), 3600, 'dojo')
-        panel.refresh(forget())
+        panel.refresh?.(forget())
       },
       clear: forget(),
       leave: () => leaveDojo(),
@@ -1654,6 +1987,203 @@ const startDojo = async (starter: PlayableId) => {
   } finally {
     launching = false
   }
+}
+
+/* ---------------- The training run ---------------- */
+
+/**
+ * The first visit's training run ("Primeiros passos", `game/tutorial.ts`):
+ * the save's partner, with no upgrades, on a run Rotom walks through one
+ * lesson at a time (`ui/tutorialCoach.ts`). Like the Dojo nothing of it is
+ * banked, ranked, recorded or reported, and it can't be lost. Played to its
+ * last line or skipped (the coach's Pular, the pause menu's quit), it ends
+ * (`endRun`) and `done` decides what comes next.
+ */
+const startTutorial = async (done: (end: TutorialEnd) => void) => {
+  if (launching) return
+  launching = true
+  try {
+    setScreen(null)
+    endRun()
+    const loading = loadingScreen()
+    ui.append(loading)
+    const save = loadSave()
+    const starter = save.partner
+    const shiny = playsShiny(save, starter)
+    const game = createGame(starter, view, Date.now(), NO_RANKS, undefined, { shiny, forms: openForms(save.paths, starter) })
+    const me = localPlayer(game)
+    me.shiny = shiny
+    me.luckyShiny = false
+    beginTutorial(game)
+    game.events.length = 0
+    await loadRunSheets(familySheets(starter, shiny), TUTORIAL_DEXES)
+    loading.remove()
+    const start: ReplayStart = { seed: 0, starter, difficulty: 'normal', ranks: NO_RANKS, shiny, luckyEgg: false, outbreak: null, halloween: false, bag: [], view: { ...view } }
+    const r: Run = {
+      game,
+      hud: runHud(game),
+      overlay: null,
+      shown: null,
+      closeText: null,
+      paid: 0,
+      candies: 0,
+      nuts: 0,
+      mythical: null,
+      reported: true,
+      missionsBefore: [],
+      recorded: null,
+      unlocked: [],
+      reward: 0,
+      rewardEggs: 0,
+      rewardItems: [],
+      hatchery: { steps: 0, eggs: 0 },
+      convertedEggs: { full: [], cap: [] },
+      dexBase: save.dex,
+      recorder: startRecording(start),
+      ranked: null,
+      rank: null,
+      bestBefore: 0,
+      challenge: null,
+      companion: runCompanion(me),
+      sprites: { needs: [], always: [...familyDex(starter), ...TUTORIAL_DEXES] },
+      coop: null,
+      training: null,
+      rush: null,
+    }
+    if (r.companion) r.sprites.always.push(r.companion.dex)
+    wearOwnLook()
+    /** Ends the run once, then hands over: the furthest step is where it stands, since lessons only move on. */
+    const end = (how: TutorialEnd['how']) => {
+      if (run !== r) return
+      const step = game.training?.tutorial?.step ?? 'move'
+      endRun()
+      done({ how, step })
+    }
+    r.tutorial = { coach: tutorialCoach(ui, input, game, { skip: () => end('skipped'), finish: () => end('finished') }), skip: () => end('skipped') }
+    // The first visit's lessons keep the resting view: Rotom's coach points at what it frames.
+    setZoomScope(null)
+    run = r
+    syncSprites()
+    resetMemoryPeaks()
+    resetRunFrames(frames)
+    awaitFirstFrame()
+  } finally {
+    launching = false
+  }
+}
+
+/** Ends a training run: the coach goes, then the run, without banking, ranking, missions or a report. */
+const endTutorial = (r: Run, tutorial: TutorialShell) => {
+  tutorial.coach.dispose()
+  r.overlay?.dispose()
+  r.closeText?.()
+  r.hud.dispose()
+  clearToasts(ui)
+  takeOffLooks()
+  run = null
+  syncRunWatch()
+}
+
+/**
+ * Hoopa's Rings (`game/rush.ts`) with `starter` at `difficulty`: a run with no
+ * horde whose rings bring back the save's captured legends. Like the Dojo it's
+ * never banked, ranked nor reported: only its end touches the save (the best
+ * time, `bankRush`, and Hoopa's capture through `legendBeaten`).
+ */
+const startRushRun = async (starter: PlayableId, difficulty: Difficulty) => {
+  if (launching) return
+  const save = loadSave()
+  const lineup = rushLineup(LEGEND_IDS.filter((id) => isCaptured(save.legends, id)), difficulty, Date.now())
+  if (!lineup) return
+  launching = true
+  try {
+    setScreen(null)
+    endRun()
+    const loading = loadingScreen()
+    ui.append(loading)
+    const shiny = playsShiny(save, starter)
+    const game = createGame(starter, view, Date.now(), save.ranks, undefined, { shiny, difficulty, caps: capLevel(save.caps, starter), forms: openForms(save.paths, starter) })
+    const me = localPlayer(game)
+    me.shiny = shiny
+    me.luckyShiny = false
+    startRush(game, difficulty, lineup, save.builds[starter] ?? null)
+    const dexes = lineup.map((id) => ENEMIES[id].dex)
+    await loadRunSheets(familySheets(starter, shiny), dexes)
+    loading.remove()
+    const start: ReplayStart = { seed: 0, starter, difficulty, ranks: save.ranks, shiny, luckyEgg: false, outbreak: null, halloween: false, bag: [], view: { ...view } }
+    const r: Run = {
+      game,
+      hud: runHud(game),
+      overlay: null,
+      shown: null,
+      closeText: null,
+      paid: 0,
+      candies: 0,
+      nuts: 0,
+      mythical: null,
+      reported: true,
+      missionsBefore: [],
+      recorded: null,
+      unlocked: [],
+      reward: 0,
+      rewardEggs: 0,
+      rewardItems: [],
+      hatchery: { steps: 0, eggs: 0 },
+      convertedEggs: { full: [], cap: [] },
+      dexBase: save.dex,
+      recorder: startRecording(start),
+      ranked: null,
+      rank: null,
+      bestBefore: 0,
+      challenge: null,
+      companion: runCompanion(me),
+      sprites: { needs: [], always: [...familyDex(starter), ...dexes] },
+      coop: null,
+      training: null,
+      rush: { difficulty, starter, banked: null },
+    }
+    if (r.companion) r.sprites.always.push(r.companion.dex)
+    wearOwnLook()
+    // Hoopa's islands are framed for the resting view (`frameRush`): no zoom there.
+    setZoomScope(null)
+    run = r
+    syncSprites()
+    resetMemoryPeaks()
+    resetRunFrames(frames)
+    awaitFirstFrame()
+    aside(rich(save.builds[starter] ? t().quests.rush.build(PLAYABLE[starter].name) : t().quests.rush.noBuild), 3200, 'rush')
+  } finally {
+    launching = false
+  }
+}
+
+/** A rush's end into the save, once: a cleared one's time (`recordRush`); Hoopa's capture came through `legendBeaten` already. */
+const bankRush = (g: Game, rush: RushRun) => {
+  if (g.phase !== 'victory') return { record: false, caught: false }
+  const before = loadSave()
+  const { best, record } = recordRush(before.rush, rush.difficulty, Math.round(g.time))
+  updateSave((s) => ({ ...s, rush: best }))
+  void syncSave()
+  // The first clear, at any level, is the one that caught Hoopa.
+  return { record, caught: Object.keys(before.rush).length === 0 }
+}
+
+/** Leaves Hoopa's Rings for the Lendários tab. */
+const leaveRush = () => {
+  const starter = run?.rush?.starter
+  endRun()
+  showMenu(starter ?? loadSave().partner, 'legends')
+}
+
+/** Ends a rush: no banking, ranking or missions; its looks and HUD go. */
+const endRushRun = (r: Run) => {
+  r.overlay?.dispose()
+  r.closeText?.()
+  r.hud.dispose()
+  clearToasts(ui)
+  takeOffLooks()
+  run = null
+  syncRunWatch()
 }
 
 /** Leaves the Dojo for the lobby (the panel's Sair, the pause menu's quit). */
@@ -1684,7 +2214,7 @@ const endDojo = (r: Run, dojo: DojoRun) => {
 
 /** The run's HUD; `menu`: its pause button opens a menu over a run that goes on (co-op). */
 const runHud = (game: Game, onPause: () => void = () => game.phase === 'playing' && (game.phase = 'paused'), menu = false) => {
-  const hud = createHud(ui, queueSpecial, queueMega, queueLunge, onPause, input.isHeld, menu, game.versus ? null : zoomButton(cycleZoom))
+  const hud = createHud(ui, queueSpecial, queueMega, queueTera, queueLunge, onPause, () => requestAnimationFrame(syncMarkerInsets), input.isHeld, menu, game.versus ? null : zoomButton(cycleZoom))
   requestAnimationFrame(syncMarkerInsets)
   return hud
 }
@@ -1705,6 +2235,15 @@ const syncMarkerInsets = () => {
   const top = Math.max(bottomOf('.hud-row'), team && row && team.width > box.width / 2 ? team.bottom : 0) - box.top
   const bottom = box.bottom - Math.min(topOf('.hud .status'), topOf('.special-button'))
   setMarkerInsets({ top: Math.max(0, top) / cssScale + 10, bottom: Math.max(0, bottom) / cssScale + 10, side: 14 })
+  // A raid frames its giant under the boss bar (`frameRaid` in `render/teraFx.ts`); the touch buttons keep to the corners, so the player's feet may come near the bottom.
+  const boss = rect('.hud .boss:not(.hidden)')
+  setRaidRoom({ top: boss ? Math.max(0, boss.bottom - box.top) / cssScale : 0, bottom: 14 })
+  // Hoopa's rings frame their legend under the boss bar or the pill, whichever ends lower (`frameRush` in `render/rush.ts`),
+  // and keep the player's feet over what covers the bottom's middle (the status box on a phone held upright; nothing sideways).
+  const pill = rect('.hud .rift-pill:not(.hidden)')
+  const middle = box.left + box.width / 2
+  const cover = [rect('.hud .status'), rect('.special-button')].reduce((top, r) => (r && r.left < middle && r.right > middle ? Math.min(top, r.top) : top), box.bottom)
+  setRushRoom({ top: Math.max(0, Math.max(boss?.bottom ?? box.top, pill?.bottom ?? box.top) - box.top) / cssScale, bottom: (box.bottom - cover) / cssScale + 8 })
 }
 
 /** Settings from the pause menu. The HUD reads its labels once, so a language switch rebuilds it. */
@@ -1735,16 +2274,35 @@ const syncOverlay = (r: Run) => {
     c?.menu && !coopOver(g) && g.phase !== 'victory' ? 'paused'
     : g.versus ? (g.phase === 'gameover' ? 'gameover' : 'playing')
     : c?.team.holding(me) ? 'playing'
+    // Co-op: a level-up with only the Oran Berry is taken by the simulation on the next tick (`updatePicks`); opening its screen meanwhile flashed it for a frame on every level-up of a maxed build.
+    : c && phaseOf(g, me) === 'levelup' && nothingToChoose(me.offers) ? 'playing'
     : phaseOf(g, me)
   if (r.shown?.phase === phase && (r.shown.offers === me.offers || g.versus)) return
   r.overlay?.dispose()
   r.overlay = null
   r.shown = { phase, offers: me.offers }
   r.hud.setMenuOpen(phase !== 'playing' && phase !== 'evolving')
+  // Largar item: solo it lands on the spot (into the replay; the Dojo's never is); co-op sends it as a tick entry.
+  const drop = (index: number) =>
+    c ? c.team.drop(index) : r.training ? dropItem(g, index) : (recordEvent(r.recorder, ['drop', index]), dropItem(g, index))
   // A pick: solo it plays on the spot (and goes into the replay); co-op sends it with the screen's round (`ui/teamLayer.ts`).
-  const pick = (offer: Offer) => {
+  const take = (offer: Offer) => {
     runMoment('pick')
     return c ? c.team.pick(me, offer) : (recordEvent(r.recorder, ['offer', me.offers.indexOf(offer)]), chooseOffer(g, offer))
+  }
+  // A new item's card on a full build is a swap: which item goes first, then the pick (back reopens the cards).
+  const pick = (offer: Offer) => {
+    if (!needsSwap(me, offer) || offer.kind !== 'item') return take(offer)
+    r.overlay?.dispose()
+    r.overlay = itemSwap(ui, input, g, offer.id, (index) => {
+      if (index === null) {
+        r.shown = null
+        return syncOverlay(r)
+      }
+      drop(index)
+      take(offer)
+    })
+    if (c) c.team.decorate(r.overlay, g, me, phase)
   }
   switch (phase) {
     case 'levelup':
@@ -1788,6 +2346,7 @@ const syncOverlay = (r: Run) => {
           report: bugReportsEnabled ? (back) => bugReportForm(ui, input, back) : null,
           coop: { sound: () => (toggleMute(), !settings().muted), soundOn: !settings().muted },
           surrender: g.versus ? () => c.driver.send({ kind: 'surrender', vote: true }) : undefined,
+          drop: g.versus ? undefined : drop,
         })
         break
       }
@@ -1795,13 +2354,20 @@ const syncOverlay = (r: Run) => {
         // Only from the pause: a late press must never flip a level-up to playing (unrecorded) or end the run under it.
         // A fresh canvas too: the player's way out of a world that stopped drawing behind the pause (`freshCanvas`).
         resume: () => g.phase === 'paused' && ((g.phase = 'playing'), freshCanvas()),
-        quit: () => g.phase === 'paused' && (r.training ? leaveDojo() : afterRun(() => showMenu())),
+        quit: () => g.phase === 'paused' && (r.tutorial ? r.tutorial.skip() : r.training ? leaveDojo() : r.rush ? leaveRush() : afterRun(() => showMenu())),
         settings: (back) => runSettings(r, back),
         report: bugReportsEnabled ? (back) => bugReportForm(ui, input, back) : null,
+        drop,
       })
       break
     case 'gameover':
     case 'victory':
+      if (r.rush) {
+        const rush = r.rush
+        rush.banked ??= bankRush(g, rush)
+        r.overlay = rushEnd(ui, input, g, { ...rush.banked, again: () => void startRushRun(rush.starter, rush.difficulty), leave: () => leaveRush() })
+        break
+      }
       if (c?.versus) {
         // The match's last toasts would sit over the results.
         clearToasts(ui)
@@ -1834,6 +2400,8 @@ const syncOverlay = (r: Run) => {
           ranking: rankingEnabled
             ? { panel: rankPanel(r.rank, r.challenge !== null, runMode(me.starter)), open: (back) => rankingScreen(ui, input, back, { difficulty: g.difficulty, mode: runMode(me.starter), challenge: r.challenge !== null }) }
             : null,
+          // The day's free gems, once the report answers: what they buy now, a tap away in the Boutique (banked by `afterRun` first, as the other ways out).
+          gems: runGems(r.rank),
           share: {
             open: (back) => sharePreview(ui, input, runShare(g, r.dexBase, r.challenge && r.rank ? r.rank.then((o) => (o.kind === 'ranked' ? o.challenge : null)) : null), back),
             glow: me.shiny || g.dexLog.shinies.size > 0 || wonRun(g) || g.time > r.bestBefore,
@@ -1847,6 +2415,18 @@ const syncOverlay = (r: Run) => {
   }
   // Co-op pick screens wear the auto-pick clock (and the level-up who already picked).
   if (c && r.overlay) c.team.decorate(r.overlay, g, me, phase)
+}
+
+/** Dev: the next results' gem line as if the report brought this many gems (`ps.gems('run', n)`, faking), or null. */
+let stagedRunGems: number | null = null
+
+/** The results' gem line (`runGemsLine`) for a signed-in player's ranked run, or null; its button opens the Boutique on the item, banked first (`afterRun`). */
+const runGems = (rank: Promise<RankOutcome> | null) => {
+  const staged = stagedRunGems
+  stagedRunGems = null
+  const gems = staged !== null ? Promise.resolve(stageRunGems(staged)) : rank?.then(outcomeGems)
+  if (!gems || !gemsSignedIn()) return null
+  return runGemsLine(gems, (id) => afterRun(() => showBoutique(isSkinId(id) ? 'skins' : 'shop', undefined, null, id)))
 }
 
 /** A guest's first runs (`savePromptDue`, this one banked): the results' card for what an account keeps, or null. */
@@ -1896,6 +2476,12 @@ const abilityFeedback = (g: Game, id: AbilityId, moment: 'picked' | 'proc') => {
   if (moment === 'picked') {
     playSfx('unlock')
     return aside(icon(m.picked(playerForm(g).name, name)), 3200, 'ability')
+  }
+  // Beast Boost climbs every 12 KOs: its burst plays on the beast (`render/beastBoost.ts`), so only a blip, and a word at the cap.
+  if (id === 'beastBoost') {
+    const stacks = abilityStacks(g)
+    playSfx('stance', 0)
+    return stacks >= BEAST_BOOST.max ? aside(icon(m.stack(name, stacks)), 1800, 'ability') : undefined
   }
   const effects: readonly AbilityEffect[] = ABILITIES[id].effects
   const kind = effects.find((e) => e.kind !== 'immune' && e.kind !== 'stats')?.kind
@@ -1975,6 +2561,14 @@ const CRUMB_EVENTS: Partial<Record<GameEvent['kind'], CrumbMoment>> = {
   place: 'place',
   evolved: 'evolve',
   megaStart: 'mega',
+  teraStart: 'mega',
+  raidEnter: 'rift',
+}
+
+/** A Terastal banner or a raid's title card, its box cut in the type's crystal. */
+const showTeraBanner = (content: HTMLElement, ms: number) => {
+  banner(ui, content, ms)
+  dressBanner(content)
 }
 
 /** The sounds and toasts of a simulation event, read off the game as shown (`shownGame`: this player's cries, form, special and Mega in co-op). */
@@ -2019,9 +2613,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
     case 'megaStone': {
       const def = heldMega(g)
       if (!def) return
-      const me = localPlayer(g)
-      const line = PLAYABLE[me.starter].line
-      const final = me.stage >= line.length - 1
+      const final = atMegaBase(localPlayer(g))
       playSfx('unlock')
       return news(
         h('span', { class: 'item-toast mega-toast' }, h('img', { src: megaStoneIcon(def), alt: '' }), h('span', {}, rich(t().mega.stone(def.stone)), h('small', {}, rich(final ? t().mega.stoneReady : t().mega.stoneLocked(megaBaseName(g)))))),
@@ -2111,6 +2703,9 @@ const handleEvent = (r: Run, e: GameEvent) => {
     case 'branchChoice':
       playCry(playerCry(g), 0.6)
       return
+    case 'plusMinus':
+      playSfx('unlock')
+      return news(rich(t().gaHook.plusMinus.linked), 2800)
     case 'evoItem':
       playSfx('unlock')
       return evoItemToast([e.item], t().branch.found(EVO_ITEMS[e.item].name), t().branch.foundHint, 'evoItem', aside)
@@ -2133,15 +2728,43 @@ const handleEvent = (r: Run, e: GameEvent) => {
       const name = PLAYABLE[localPlayer(g).starter].name
       // A form still behind the community goal keeps the legend's name (`legendStage`): then it just awakened.
       const form = playerForm(g).name
-      return aside(rich(e.form && form !== name ? t().legend.awakenedForm(name, form) : t().legend.awakened(name)), 3500)
+      return aside(rich(e.changed && form !== name ? t().legend.awakenedForm(name, form) : t().legend.awakened(name)), 3500)
     }
     // Banked toward capturing it right away (`ui/capture.ts`), so the capture scene reads it.
     case 'legendBeaten':
       return bankCapture(e.legend, e.shiny, g.endless !== null)
+    case 'roam':
+      if (e.moment === 'fled' || e.moment === 'caught') bankRoamerHp(g)
+      return showQuest(e)
+    case 'duel':
+      return showQuest(e)
+    /* The mythicals (`data/mythicals.ts`): Zeraora's storm gathering or gone, Ogerpon's Embody Aspect. */
+    case 'storm':
+      if (e.moment === 'gathering') {
+        playSfx('legendary')
+        flashScreen(ui)
+        return news(rich(t().mythicals.storm.gathering), 3600)
+      }
+      return aside(rich(t().mythicals.storm.fled), 2800)
+    case 'embodyAspect':
+      return aside(rich(t().mythicals.embody(OGERPON_MASKS[e.mask].name)), 2200, 'tera')
+    case 'rush':
+      if (e.moment === 'down') return
+      playSfx(e.legend === 'hoopa' ? 'legendary' : 'boss')
+      playCry(cryUrl(ENEMIES[e.legend].dex), 0.8)
+      return news(rich(rushRingLine(e.ring, e.rings, e.legend, e.island)), 2600)
+    // The Desafio do dia plays the same for everyone: its finales don't count toward the protection.
+    case 'mythicalRoll':
+      r.mythical = e.enemy ?? 'none'
+      if (!r.challenge) updateSave((s) => ({ ...s, mythicalPity: countFinale(s.mythicalPity) }))
+      return
     case 'evolve': {
       playCry(cryUrl(e.from))
       r.closeText?.()
-      r.closeText = textBox(ui, t().toast.evolving(playerForm(g).name))
+      // Tyrogue reads out the build that decided its branch (`ruledBranch`).
+      const me = localPlayer(g)
+      const build = me.branch ? fighterNow(me) : null
+      r.closeText = textBox(ui, build && me.branch ? t().gaHook.tyrogue.evolving(playerForm(g).name, build.attack, build.defense, BRANCHES[me.branch].name) : t().toast.evolving(playerForm(g).name))
       return
     }
     case 'evolved': {
@@ -2202,6 +2825,8 @@ const handleEvent = (r: Run, e: GameEvent) => {
     case 'banish':
       // The level-up screen plays the toss itself.
       return
+    case 'itemDropped':
+      return aside(h('span', { class: 'item-toast' }, h('img', { src: itemIcon(e.id), alt: '' }), rich(t().itemDrop.dropped(ITEMS[e.id].name))), 2200, 'itemDropped')
     case 'consumable': {
       const def = CONSUMABLES[e.item]
       playSfx(def.sfx)
@@ -2225,8 +2850,26 @@ const handleEvent = (r: Run, e: GameEvent) => {
       return mapEventFeedback(ui, e.notice)
     case 'place':
       return placeFeedback(ui, e.place, e.notice)
+    case 'rocketCleared': {
+      // Giovanni beaten: Shadow Mewtwo joins the Legend mode (captured if it wasn't), the clear counts, the first one gives the title.
+      updateSave((s) => ({
+        ...s,
+        hideout: hideoutCleared(s.hideout),
+        legends: captureByGift(s.legends, 'mewtwo'),
+        shadows: grantShadow(s.shadows, 'mewtwo'),
+        titles: s.titles.includes('rocketBuster') ? s.titles : [...s.titles, 'rocketBuster'],
+      }))
+      playSfx('legendary')
+      return aside(h('span', { class: 'item-toast' }, h('img', { src: portraitUrl(150), alt: '' }), rich(`${t().rocket.hideout.reward} ${t().rocket.hideout.capture}`)), 5200, null, 'shiny')
+    }
     case 'landmark':
       return landmarkFeedback(ui, e.landmark, e.moment)
+    case 'seasonFind':
+      return seasonFindFeedback(ui, e.find, e.moment, r.game.terrain.seed)
+    case 'path':
+      return pathFeedback(ui, e.notice)
+    case 'hexNut':
+      return nutFeedback(ui, g)
     case 'revive':
       playSfx('evolve')
       return news(h('span', { class: 'item-toast' }, h('img', { src: consumableIcon('revive'), alt: '' }), rich(t().toast.revive)), 3000)
@@ -2272,7 +2915,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
       return news(rich(t().hazards.intro), 3400)
     case 'riftOpen':
       playSfx('shiny')
-      return news(rich(t().rifts.open), 3200)
+      return news(rich(g.rift.portal && isUltraBeast(g.rift.portal.legend) ? t().ultra.open : t().rifts.open), 3200)
     case 'riftClosed':
       return aside(t().rifts.closed, 2000)
     case 'riftOmen': {
@@ -2281,7 +2924,13 @@ const handleEvent = (r: Run, e: GameEvent) => {
       // Rayquaza's Air Lock ends what Kyogre or Groudon stirred up earlier in the run.
       const calmed = e.enemy === 'rayquaza' ? g.rift.met.find((l) => l === 'kyogre' || l === 'groudon') : undefined
       const nod = calmed ? ` ${t().rifts.calms(ENEMIES[calmed].name)}` : ''
-      return news(rich(lines ? `${lines.omen}${nod} ${t().rifts.omen(ENEMIES[e.enemy].name)}` : t().rifts.omenFaint), 4200)
+      // An Ultra Wormhole's omen says what's coming through, in co-op (no domain lines' sky) too. Either waits for the map's sign to go.
+      if (isUltraBeast(e.enemy)) {
+        const line = `${lines ? `${lines.omen} ` : ''}${t().ultra.omen(ENEMIES[e.enemy].name)}`
+        return afterMapSign(ui, () => news(rich(line), 4600))
+      }
+      const line = lines ? `${lines.omen}${nod} ${t().rifts.omen(ENEMIES[e.enemy].name)}` : t().rifts.omenFaint
+      return afterMapSign(ui, () => news(rich(line), 4200))
     }
     case 'riftEnter': {
       const def = ENEMIES[e.enemy]
@@ -2299,12 +2948,19 @@ const handleEvent = (r: Run, e: GameEvent) => {
     case 'riftTitle':
       playSfx('legendary')
       playCry(cryUrl(ENEMIES[e.enemy].dex), 0.9)
+      // Palkia knows its twin: a player who captured Dialga hears it once the title card is down.
+      if (e.enemy === 'palkia' && isCaptured(loadSave().legends, 'dialga')) {
+        const line = domainLines('palkia')?.cues?.dialga
+        if (line) window.setTimeout(() => news(rich(line), 3600), 2600)
+      }
       return flashScreen(ui)
     case 'bossPhase': {
       const def = ENEMIES[e.enemy]
       playSfx('quake')
       playCry(cryUrl(def.dex), 0.7)
-      const line = isRiftLegend(e.enemy) ? domainLines(e.enemy)?.phases[e.phase - 1] : isWaveLegend(e.enemy) ? t().legends.phases[e.enemy][e.phase - 1] : undefined
+      // Dialga's last phase turns Primal on Nightmare (`nightmareForm`): its own line.
+      const primal = e.enemy === 'dialga' && g.difficulty === 'nightmare' && phaseForm(phasesOf('dialga')?.[e.phase], 'nightmare') === 'primal'
+      const line = primal ? t().mythicals.primal : isRiftLegend(e.enemy) ? domainLines(e.enemy)?.phases[e.phase - 1] : isWaveLegend(e.enemy) ? t().legends.phases[e.enemy][e.phase - 1] : undefined
       return line ? news(rich(line), 3600) : undefined
     }
     case 'bossUltimate':
@@ -2325,6 +2981,8 @@ const handleEvent = (r: Run, e: GameEvent) => {
       return aside(rich(t().rifts.escaped(name)), 3200)
     }
     case 'domainCue': {
+      // Palkia's portals: a whoosh as a player goes through one.
+      if (e.cue === 'warp' || e.cue === 'thrownBack' || e.cue === 'swap') playSfx('whoosh')
       const line = domainLines(e.enemy)?.cues?.[e.cue]
       return line ? news(rich(line), 1600) : undefined
     }
@@ -2362,6 +3020,78 @@ const handleEvent = (r: Run, e: GameEvent) => {
       const text = partner ? t().rifts.pairCleared(ENEMIES[e.enemy].name, ENEMIES[partner].name) : t().rifts.cleared(ENEMIES[e.enemy].name)
       return aside(rich(text, { class: 'toast-evo' }), 3500)
     }
+    /* Terastal (`game/tera.ts`) and the Tera Raids (`game/teraRaid.ts`). */
+    case 'teraShards':
+      playSfx('unlock')
+      return news(rich(t().tera.shardsChoice), 4200, 'tera')
+    case 'teraShard':
+      playSfx('unlock')
+      // Ogerpon's shard is a mask (`game/ogerpon.ts`).
+      if (playsOgerpon(localPlayer(g))) return news(rich(t().mythicals.mask(OGERPON_MASKS[maskOf(e.tera)].name)), 3200, 'tera')
+      return news(shardToast(e.tera, e.from), 3600, 'tera')
+    case 'teraReady':
+      playSfx('shiny')
+      return news(rich(t().tera.readyNews), 2400, 'tera')
+    case 'teraStart':
+      playSfx('megaCharge', 0)
+      playCry(cryUrl(playerDex(g)), 0.6)
+      return aside(t().tera.start(playerName(g)), 1400, 'tera')
+    case 'tera':
+      playSfx('megaBurst', 0)
+      playSfx('break', 0)
+      playCry(playerCry(g), 0.9)
+      return teraStrip(ui, playerName(g), e.tera)
+    case 'teraEnd':
+      playSfx('stance', 0)
+      return aside(t().tera.ended(playerName(g)), 1800, 'tera')
+    case 'stellarStrike':
+      return playSfx('superHit', 80)
+    case 'stellarPulse':
+      playSfx('shiny')
+      return aside(t().tera.stellarPulse, 1600, 'tera')
+    case 'raidOpen':
+      playSfx('shiny')
+      // Ogerpon's own den (`ogerponRaid`) says whose it is and in which mask.
+      if (e.raid.boss === 'ogerpon') {
+        playCry(cryUrl(ENEMIES.ogerpon.dex), 0.6)
+        return news(rich(t().mythicals.raid(OGERPON_MASKS[maskOf(e.raid.tera)].name)), 4600, 'raid')
+      }
+      return news(denToast(e.raid, e.day), 4200, 'raid')
+    case 'raidClosed':
+      return aside(t().raid.closed, 2000, 'raid')
+    case 'raidEnter': {
+      playSfx('legendary')
+      playCry(cryUrl(ENEMIES[e.raid.boss].dex), 0.7)
+      flashScreen(ui)
+      // The boss bar shows from this frame on: measure it for the raid's framing once it's laid out.
+      setTimeout(syncMarkerInsets, 60)
+      return showTeraBanner(raidBanner(e.raid), 2800)
+    }
+    case 'raidShield':
+      if (e.moment === 'up') {
+        playSfx('megaCharge', 0)
+        return news(rich(t().raid.shieldUp), 3200, 'raidShield')
+      }
+      playSfx('break', 0)
+      playSfx('megaBurst', 0)
+      return news(rich(t().raid.shieldBroken), 2400, 'raidShield')
+    case 'raidStorm':
+      return playSfx('quake', 300)
+    case 'raidCleared':
+      playSfx('evolve')
+      if (e.day) news(rich(t().raid.clearedDay), 3600, 'raidDay')
+      return aside(rich(t().raid.cleared(ENEMIES[e.raid.boss].name), { class: 'toast-evo' }), 3500, 'raid')
+    case 'raidFall':
+      playSfx('riftFall')
+      playCry(playerCry(g))
+      return news(t().raid.fall, 2800, 'raid')
+    case 'raidExit':
+      if (e.outcome === 'timeout') {
+        playSfx('quake')
+        return news(t().raid.timeout, 3000, 'raid')
+      }
+      if (e.outcome === 'fallen') flashScreen(ui)
+      return
     case 'riftFall':
       playSfx('riftFall')
       playCry(playerCry(g))
@@ -2391,10 +3121,15 @@ const handleEvent = (r: Run, e: GameEvent) => {
       return aside(rich(t().alphas.prize), 2600)
     case 'egg': {
       const m = t().eggs
-      // The run's eggs bank when it ends: this one fits if the incubator has a slot for it after the ones found before it.
+      // The run's eggs bank when it ends: this one takes a slot, a place in line or ₽, after the ones found before it.
       const save = loadSave()
-      const fits = g.eggs.found.length - r.hatchery.eggs <= freeSlots(save.eggs, incubatorSlots(save))
-      const text = fits ? m.found(m.tiers[e.tier]) : m.foundFull(m.tiers[e.tier], formatPokeDollars(EGG_TIERS[e.tier].refund))
+      const nth = g.eggs.found.length - r.hatchery.eggs
+      const text =
+        save.eggQueue.length === 0 && nth <= freeSlots(save.eggs, incubatorSlots(save))
+          ? m.found(m.tiers[e.tier])
+          : nth <= eggRoom(save)
+            ? m.foundQueued(m.tiers[e.tier])
+            : m.foundFull(m.tiers[e.tier], formatPokeDollars(EGG_TIERS[e.tier].refund))
       playSfx('unlock')
       return aside(h('span', { class: 'item-toast' }, h('img', { src: eggIcon(e.tier), alt: '' }), rich(text)), 3600)
     }
@@ -2418,17 +3153,45 @@ const weatherToast = (next: WeatherId, prev: WeatherId) => {
 
 /* ---------------- Music ---------------- */
 
-/** Silence until "press start", then menus play the village theme, a run its biome's theme, and a living boss takes over until it falls. */
+/**
+ * Where the music plays, for the Rádio (`radioTheme`): a menu (the results and the
+ * Poké Realm's rooms too), a run, or a fight (a boss, a rift, a legend's domain, a
+ * Tera Raid's den, and a Realm mini game, whose theme is part of the game, like the Safári's battles).
+ */
+const musicPlace = (r: Run | null): MusicPlace => {
+  if (!r) return realmGame() ? 'fight' : 'menu'
+  if (r.game.phase === 'gameover' || r.game.phase === 'victory') return 'menu'
+  return r.game.rift.arena !== null || r.game.raid.arena !== null || r.game.bossId !== null ? 'fight' : 'run'
+}
+
+/**
+ * Silence until "press start". A secret base's music wins; then the Rádio,
+ * where its setting lets it play (`radioOver`); then the game's own (`gameTheme`).
+ */
 const themeFor = (r: Run | null): ThemeId | null => {
   if (!pressedStart) return null
   // A secret base's jukebox (or piano, or DJ booth) plays its track for everyone there (`ui/realm.ts`).
   const base = r ? null : realmJukebox()
   if (base) return base
-  // The Noite das Bruxas swaps the village for Lavender Tower's tune.
-  if (!r || r.game.phase === 'gameover' || r.game.phase === 'victory') return halloweenToday() ? BIOMES.tower.theme : 'menu'
+  const auto = gameTheme(r)
+  return radioOver(auto, musicPlace(r)) ?? auto
+}
+
+/** The game's own music: menus play the lobby's pick (`lobbyTheme`; the Poké Realm its own), a run its biome's theme, a raid's den and the Dojo theirs (`raidDojoMusic.ts`), and a living boss takes over until it falls. */
+const gameTheme = (r: Run | null): ThemeId => {
+  // The Poké Realm plays its own: the mini game open, else the room (`realmMusic.ts`).
+  const realm = r ? null : realmTheme()
+  if (realm) return realm
+  // The lobby's rotation by the hour (the Noite das Bruxas' tower and the Festival da Praça's tune on their days), held until a run starts.
+  if (!r || r.game.phase === 'gameover' || r.game.phase === 'victory') return lobbyTheme()
+  leaveLobby()
   // A legendary's domain plays its crossing's theme, then its own from the moment it shows itself.
   const domain = r.game.rift.arena?.domain
   if (domain) return domainTheme(domain)
+  // A Tera Raid's den plays its own from the way in to the way out, its giant (the run's `bossId`) included.
+  if (r.game.raid.arena) return 'teraRaid'
+  // The Dojo trains to its own, a Torre trial to the Torre's; the training run plays the route's, and the boss theme for its Alpha.
+  if (r.game.training && !r.game.training.tutorial) return r.game.training.trial ? 'kubfuTower' : 'dojo'
   // A rift arena keeps the boss theme until the player is back, loot window included; a place plays its own.
   const inside = r.game.place.inside
   // A wave legendary plays its own theme from its entrance on.
@@ -2453,6 +3216,7 @@ input.onKey((key) => {
   if (g.versus) return
   if (key === 'Space') queueSpecial()
   if (key === 'KeyE') queueMega()
+  if (key === 'KeyR') queueTera()
   if (key === 'ShiftLeft' || key === 'ShiftRight') queueLunge()
 })
 // Touch only counts as a user activation on pointerup/touchend (not pointerdown).
@@ -2553,9 +3317,9 @@ const endCoopRun = (r: Run, c: CoopRun) => {
   syncRunWatch()
 }
 
-/** The co-op end's Ranking: the board of the run's team size and difficulty, the day's co-op board for a Desafio co-op run. */
+/** The co-op end's Ranking: the board of the run's team size and difficulty (its Legend side for a Legend room's run, its seats playing legends), the day's co-op board for a Desafio co-op run. */
 const coopEndBoard = (g: Game, back: () => void) =>
-  rankingScreen(ui, input, back, { difficulty: g.difficulty, challenge: g.coop?.challenge != null, coop: { size: parseTeamSize(g.players.length) ?? 2 } })
+  rankingScreen(ui, input, back, { difficulty: g.difficulty, challenge: g.coop?.challenge != null, coop: { size: parseTeamSize(g.players.length) ?? 2, legend: g.players.some((p) => p.legend !== null) } })
 
 /** This player's `coop_net` for the co-op run (`coopShell.ts`): at its end, or when the page hides or unloads mid-run. */
 const reportNet = (c: CoopRun, outcome: CoopNetOutcome) => !c.versus?.local && reportCoopNet(c.client, c.runner, c.net, outcome, runPerf())
@@ -2709,11 +3473,20 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
         : null,
   }
   const me = localPlayer(live.game)
+  // A co-op Legend room's seat whose legend the account didn't vouch for plays its partner (`parseLoadout`): say so, since the run then lists on no board.
+  if (!live.game.versus && parseSettings(live.start.settings).legend === true)
+    live.start.players.forEach((p, i) => {
+      const asked = p.loadout.starter
+      const played = live.game.players[i]?.starter
+      if (typeof asked === 'string' && isLegend(asked) && played !== undefined && !isLegend(played))
+        later(() => toast(ui, t().coop.lobby.legendFellBack(p.name, PLAYABLE[played].name), 6000, `legendFellBack${i}`))
+    })
   // Each seat's look, in a co-op run as in the Arena, as the relay vouched for it; this player's own previews what it
   // equipped (shell state: the simulation never sees it). Dev: the tab's bots wear their own (`tabBotLook`).
   const seatLook = (p: (typeof live.start.players)[number], i: number) =>
     i === me.slot ? equippedLook() : (p.loadout.look ?? (import.meta.env.DEV ? tabBotLook(p.seat) : null))
   setLooks(live.start.players.map((p, i) => parseLook(seatLook(p, i))))
+  setSeatPatterns(live.start.players.map((p, i) => (i === me.slot ? devicePattern() : parsePattern(p.loadout.pattern))))
   setLooksGame(`${live.room}:${live.start.id}`)
   setZoomScope(live.game.versus ? null : 'coop')
   run = {
@@ -2723,6 +3496,7 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
     shown: null,
     closeText: null,
     paid: 0,
+    mythical: null,
     reported: false,
     missionsBefore: missionStatus(save.missions, today()),
     recorded: null,
@@ -2731,6 +3505,7 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
     rewardEggs: 0,
     rewardItems: [],
     candies: 0,
+    nuts: 0,
     hatchery: { steps: 0, eggs: 0 },
     convertedEggs: { full: [], cap: [] },
     dexBase: save.dex,
@@ -2748,6 +3523,7 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
     },
     coop: c,
     training: null,
+    rush: null,
   }
   syncSprites()
   resetMemoryPeaks()
@@ -2855,6 +3631,7 @@ const watchCoop = (client: CoopClient) => {
         return syncPresence()
       case 'room':
         if (client === coopClient()) syncArenaLoadout(client, e.room)
+        if (client === coopClient()) syncLegendLoadout(client, e.room)
         if (c) playAgain(c)
         return
       case 'status':
@@ -2866,11 +3643,36 @@ const watchCoop = (client: CoopClient) => {
   })
 }
 
-/** A co-op seat's loadout from the save: the partner (`coopStarter`), its ranks and its shiny. */
-const coopLoadout = (): CoopPick => {
+/**
+ * A co-op seat's loadout from the save: the partner (`coopStarter`), its ranks
+ * and its shiny; in a room with the Modo Lendário on (`legend`), the device's
+ * legend (`roomLegend`) with the partner beside it as the fallback. A dev build
+ * also claims its captured legends: only a dev relay without an API keeps the
+ * claim (the relay writes the API's word otherwise).
+ */
+const coopLoadout = (legend = false): CoopPick => {
   const save = loadSave()
-  const starter = coopStarter(save.partner)
-  return { starter, ranks: save.ranks, shiny: playsShiny(save, starter) }
+  const captured = legend ? capturedLegends(save) : []
+  const pick = seatLoadout(save.partner, roomLegend(captured, [loadCoopLegend(), save.partner]), save.ranks, (id) => playsShiny(save, id))
+  return import.meta.env.DEV && captured.length > 0 ? { ...pick, legends: captured } : pick
+}
+
+/** Whether the room plays the Modo Lendário (`CoopSettings.legend`). */
+const legendRoomOf = (room: RoomView | null | undefined) => room !== null && room !== undefined && parseSettings(room.settings).legend === true
+
+/**
+ * In a run room, this player's loadout follows the room's Modo Lendário: the
+ * device's legend while it's on, the partner when it's off. A seat with no
+ * legend captured can't stay ready in a legend room (the room says why).
+ */
+const syncLegendLoadout = (client: CoopClient, room: RoomView) => {
+  if (parseSettings(room.settings).mode === 'versus' || room.phase === 'playing') return
+  const me = room.members.find((m) => m.seat === client.state().seat)
+  if (!me?.loadout) return
+  const legend = legendRoomOf(room)
+  const want = coopLoadout(legend)
+  if (!fitsRoom(me.loadout, legend) && me.loadout.starter !== want.starter) client.setLoadout(want)
+  if (legend && !isLegend(want.starter) && me.ready && !me.host) client.setReady(false)
 }
 
 /**
@@ -2890,7 +3692,7 @@ const joinCoop = async (code: string, via: 'code' | 'link' | 'invite' | null, pi
   if (via) track('coop', { step: 'join', via })
   // The room it landed in: an old link's room may have moved (`moved`).
   linkRoom(res.room.code)
-  client.setLoadout(pick ?? (parseSettings(res.room.settings).mode === 'versus' ? arenaLoadout(arenaStart(), 0, equippedLook()) : coopLoadout()))
+  client.setLoadout(pick ?? (parseSettings(res.room.settings).mode === 'versus' ? arenaLoadout(arenaStart(), 0, equippedLook()) : coopLoadout(legendRoomOf(res.room))))
   const me = res.room.members.find((m) => m.seat === res.seat)
   if (me && !me.host) client.setReady(true)
   return res
@@ -2910,8 +3712,8 @@ const coopFrame = (r: Run, c: CoopRun, dt: number, t: number, realDt: number) =>
   // The stick reads still while a menu or a screen is up (a match's pick cards wait in a tray: the Pokémon keeps moving).
   const still = c.menu || (g.versus ? g.phase !== 'playing' : phaseOf(g, me) !== 'playing')
   // A match casts its kit instead (`ui/arenaControls.ts`): its casts carry their aim.
-  c.driver.advance(g, realDt, { move: still ? { x: 0, y: 0 } : input.readMove(), special: specialQueued, mega: megaQueued, lunge: lungeQueued, casts: c.versus?.controls.take() })
-  specialQueued = megaQueued = lungeQueued = false
+  c.driver.advance(g, realDt, { move: still ? { x: 0, y: 0 } : input.readMove(), special: specialQueued, mega: megaQueued, tera: teraQueued, lunge: lungeQueued, casts: c.versus?.controls.take() })
+  specialQueued = megaQueued = teraQueued = lungeQueued = false
   const runner = c.runner
   const st = client.state()
   const drawn = predict(c.prediction, runner, st, c.driver.frac(), dt)
@@ -2950,6 +3752,7 @@ const coopFrame = (r: Run, c: CoopRun, dt: number, t: number, realDt: number) =>
   settleShake(c.shake, dt, runner.next, Math.random)
   shown.shake = c.shake.amount
   c.versus?.controls.frame(shown, localPlayer(shown))
+  if (shown.raid.arena) frameRaid(shown, t, shown.camera.y)
   const drawAt = performance.now()
   render(ctx, shown, t, { ...settings(), companion: null, mates: c.view.mates, shakeOffset: c.shake, arena: c.versus?.controls.overlay() })
   firstFrameDrawn()
@@ -3117,6 +3920,31 @@ const realmFriendsNow = (): Promise<number> | null => {
   return realmPals.n
 }
 
+/** Trainers in the Realm now, for the lobby's way in: asked a moment after the lobby is up (the boot never waits on it) and at most once a minute. */
+let realmCrowd: { at: number; n: Promise<number | null> } | null = null
+
+const realmCrowdNow = (): Promise<number | null> => {
+  if (!realmCrowd || performance.now() - realmCrowd.at > 60_000) {
+    const faked = realmLoaded?.realmFaked() === true ? realmLoaded : null
+    const asked = new Promise<void>((done) => setTimeout(done, 2500)).then(() => (faked ? faked.fetchCities().then((got) => (got ? Object.values(got.cities).reduce((sum, n) => sum + n, 0) : null)) : realmTrainersCount()))
+    realmCrowd = { at: performance.now(), n: asked }
+  }
+  return realmCrowd.n
+}
+
+/** Today's Recados not collected yet, for the lobby's way in: asked at most once a minute, for an account with a @handle (or faked) only. */
+let realmErrands: { at: number; n: Promise<number> } | null = null
+
+const realmErrandsNow = (): Promise<number> | null => {
+  const faked = realmLoaded?.realmFaked() === true ? realmLoaded : null
+  if (!faked && (accountState().kind !== 'signedIn' || !accountHandle())) return null
+  if (!realmErrands || performance.now() - realmErrands.at > 60_000) {
+    const n = faked ? faked.fetchBook().then((b) => b?.errands.filter((e) => !e.claimed).length ?? null) : realmErrandsCount()
+    realmErrands = { at: performance.now(), n: n.then((k) => k ?? 0) }
+  }
+  return realmErrands.n
+}
+
 /** `?realm` (or `?realm=<city>`): the Poké Realm's own link; it stays on the address while a guest signs in, so the round trip comes back to it. */
 const REALM_PARAM = 'realm'
 
@@ -3129,7 +3957,7 @@ const realmLink = (on: boolean) => {
 }
 
 /**
- * Opens the Poké Realm (`ui/realm.ts`), at `city` or its picker. Like co-op
+ * Opens the Poké Realm (`ui/realm.ts`), at `city` or the first with room. Like co-op
  * it's for accounts with a @handle: a guest signs in first ("Entre para
  * entrar no Poké Realm", `realmGate`) and an account without a handle picks
  * one. The in-page realm (`ps.realm('local')`) skips the door.
@@ -3173,6 +4001,8 @@ const showRealm = (city: CityId | null) => {
           openRoom: (mode) => realmRoom(mode),
           showRoom: () => showRoom(),
           joinRoom: (_mode, code) => void joinCoop(code, 'link').then((res) => (res.ok ? showRoom() : (toast(ui, closedText(res.why), 4000, 'realmParty'), showRealm(null)))),
+          // Down the Game Corner's stairs: the partner select, and the run picked there opens the Hideout's hatch (the pass, `game/hideoutPass.ts`).
+          hideout: () => showMenu(),
         },
         city,
       )),
@@ -3195,6 +4025,17 @@ const realmRoom = async (mode: PartyMode): Promise<string | null> => {
   return made.code
 }
 
+const devMinigame = async (game: unknown, how?: 'auto') => {
+  const { isMinigameId, MINIGAME_IDS } = await import('./data/minigames')
+  if (!isMinigameId(game)) return `ps.minigame: ${MINIGAME_IDS.join(', ')}`
+  const { openGame } = await import('./realm/games/registry')
+  ;(await import('./realm/games/localTable')).localTableDev.autopilot = how === 'auto'
+  const save = loadSave()
+  let screen: { dispose: () => void } | null = null
+  screen = await openGame(document.body, game, { input, partner: save.partner, shiny: false, realm: null, table: null, you: 0, close: () => screen?.dispose() })
+  return screen
+}
+
 /**
  * Dev: `ps.realm('local')` opens the realm on the in-page host with bots and
  * the faked API (`realmShell.ts`), `('off')` back to the relay, `('fake')`
@@ -3205,10 +4046,13 @@ const realmRoom = async (mode: PartyMode): Promise<string | null> => {
  * prints the state; `('room', 'arcade')` walks the open town's trainer into a room; `('friends')` opens
  * Amigos no Realm (the faked friends: the in-page realm's Misty, Brock and Dawn where they walk, May
  * in a full arcade, `realm/api.ts`); `('invite', 'misty')` has that bot invite you to its base;
- * `('visit', 'ash')` goes into a base (`ps.realm('fake')` gives every handle the demo base, `realm/demoBases.ts`).
+ * `('visit', 'ash')` goes into a base (`ps.realm('fake')` gives every handle the demo base, `realm/demoBases.ts`);
+ * `('hour', 'tide')` runs a Hora do Realm on this screen only (`null` back to the clock).
+ * `('book')` opens the Livro de Estampas, `('stamp', id)` earns a stamp (`'bot'`: a bot of the room does) and `('errands')` finishes today's Recados.
+
  */
-const devRealm = async (cmd?: string, arg?: string) => {
-  const { devRealmRoom, fakeRealm, realmDevState, realmInviteFrom, stageRealmTable, useLocalRealm } = await realmMode()
+const devRealm = async (cmd?: string, arg?: string | null) => {
+  const { devErrands, devRealmRoom, devStamp, fakeRealm, openRealmBook, realmDevState, realmInviteFrom, stageRealmTable, useLocalRealm } = await realmMode()
   switch (cmd) {
     case 'local':
       useLocalRealm(true)
@@ -3232,6 +4076,12 @@ const devRealm = async (cmd?: string, arg?: string) => {
       if (!realmShown?.el.isConnected || !Number.isFinite(x) || !Number.isFinite(y)) return 'ps.realm: walk "x,y" in the realm'
       return realmShown.walkTo(x!, y!)
     }
+    case 'hour': {
+      // `ps.realm('hour', 'tide')` runs that Hora do Realm on this screen only, `('hour', 'tide soon')` counts down to one 12 minutes away, `('hour', null)` back to the clock.
+      const [kind = '', soon] = (arg ?? '').split(' ')
+      if (kind !== '' && !isHourKind(kind)) return 'ps.realm: hour (tide, storm, tables, or null)'
+      return forceHour(kind === '' ? null : kind, soon ? 12 * 60_000 : 0)
+    }
     case 'room':
       return isTownRoomId(arg) ? devRealmRoom(arg) : `ps.realm: room (${TOWN_ROOMS.join(', ')})`
     case 'friends':
@@ -3239,6 +4089,17 @@ const devRealm = async (cmd?: string, arg?: string) => {
     case 'invite':
       // `ps.realm('invite', 'misty')`: that bot of the in-page realm invites you to its base.
       return realmInviteFrom(arg ?? 'misty') ? 'invited' : 'ps.realm: no such bot in the in-page realm'
+    case 'book':
+      // `ps.realm('book')`: the Livro de Estampas, over the town or, outside it, on its own with the faked API.
+      if (screen === realmShown && realmShown) return realmShown.book()
+      fakeRealm(true, accountHandle() ?? 'you')
+      return setScreen(openRealmBook(ui, input, { close: () => showTitle() }))
+    case 'stamp':
+      // `ps.realm('stamp', 'wetFeet')`: earns it as the relay would tell it (the next unheld one without an id; `'bot'`: a bot of the room earns one).
+      return devStamp(arg ?? undefined)
+    case 'errands':
+      // `ps.realm('errands')`: today's Recados all finish, and the town's told.
+      return devErrands()
     case 'visit':
       // `ps.realm('visit', 'ash')`: into @ash's base, as the board's Visit would.
       if (screen !== realmShown || !realmShown || !arg) return 'ps.realm: visit "handle" in the realm'
@@ -3325,20 +4186,28 @@ const showRoom = () => {
         leftRun = null
         void startCoopRun(client, runner)
       },
+      hasLegend: () => capturedLegends(loadSave()).length > 0,
     }),
   )
   coopShown = 'room'
 }
 
-/** The partner select for the room: the pick becomes this player's loadout (and the saved partner), then back to the room. */
+/**
+ * The partner select for the room: the pick becomes this player's loadout (and
+ * the saved partner), then back to the room. A room with the Modo Lendário on
+ * picks among the captured legends only, kept as this device's room legend
+ * (`saveCoopLegend`): the saved partner stays the seat's regular fallback.
+ */
 const showCoopPartner = () => {
-  // The co-op select has no Lendários tab; `coopStarter` keeps the type honest.
+  const legendRoom = legendRoomOf(coopClient()?.state().room)
+  // Outside a legend room the select has no Lendários tab; `coopStarter` keeps the type honest.
   const pick = (id: PlayableId) => {
-    const starter = coopStarter(id)
-    updateSave((s) => ({ ...s, partner: starter }))
-    coopClient()?.setLoadout(coopLoadout())
+    if (isLegend(id)) saveCoopLegend(id)
+    else updateSave((s) => ({ ...s, partner: coopStarter(id) }))
+    coopClient()?.setLoadout(coopLoadout(legendRoom))
     setTimeout(showRoom, 250)
   }
+  const save = loadSave()
   const select = starterSelect(
     ui,
     input,
@@ -3349,8 +4218,8 @@ const showCoopPartner = () => {
       // A hatch's "Jogar com" takes the newcomer into the room, never into a solo run.
       incubator: () => showIncubator(() => showCoopPartner(), pick),
     },
-    coopStarter(loadSave().partner),
-    { coop: true },
+    (legendRoom ? roomLegend(capturedLegends(save), [loadCoopLegend(), save.partner]) : null) ?? coopStarter(save.partner),
+    { coop: true, coopLegends: legendRoom },
   )
   setScreen(select)
 }
@@ -3442,8 +4311,7 @@ const showArena = () =>
 
 /**
  * The Arena's hub (`ui/arenaHub.ts`) on `tab`: profile, season, ranking,
- * history, rules or the look worn (Visual). The Arena screen opens it, and so
- * do the lobby's Stadium boards; Voltar goes back to the Arena screen. Its
+ * history, rules or the look worn (Visual). The Arena screen opens it; Voltar goes back to the Arena screen. Its
  * Loja is the Boutique's (`showBoutique`), which comes back to the hub.
  */
 const showArenaHub = (tab: ArenaHubTab = 'profile') => {
@@ -3841,10 +4709,12 @@ const frame = (now: number) => {
         // The simulation gets the stick as the replay stores it (`moveCode`), so a re-simulation sees the same run.
         if (specialQueued) recordEvent(r.recorder, ['special'])
         if (megaQueued) recordEvent(r.recorder, ['mega'])
+        if (teraQueued) recordEvent(r.recorder, ['tera'])
         if (lungeQueued) recordEvent(r.recorder, ['lunge'])
-        step(g, { move: recordStep(r.recorder, view, input.readMove()), special: specialQueued, mega: megaQueued, lunge: lungeQueued }, STEP)
+        step(g, { move: recordStep(r.recorder, view, input.readMove()), special: specialQueued, mega: megaQueued, tera: teraQueued, lunge: lungeQueued }, STEP)
         specialQueued = false
         megaQueued = false
+        teraQueued = false
         lungeQueued = false
         pace.acc -= STEP
         steps++
@@ -3858,6 +4728,7 @@ const frame = (now: number) => {
       resetPacer(pace)
       specialQueued = false
       megaQueued = false
+      teraQueued = false
       lungeQueued = false
     }
     // A level-up with only the Oran Berry to pick takes it without a screen, recorded like a tap.
@@ -3869,7 +4740,8 @@ const frame = (now: number) => {
     if (run === r) {
       syncOverlay(r)
       r.training?.panel.tick?.(t)
-      // Toasts and banners wait out menus, level-ups and evolutions with their clocks stopped.
+      // Toasts and banners wait out menus, level-ups and evolutions with their clocks stopped; a fight that needs its boss in view (a rift's legend, Hoopa's rings, a Sword's duel) takes them one at a time, off the top.
+      focusToasts(ui, g.rush !== null || g.quests.duel?.stage === 'dueling' || g.rift.arena?.domain?.act === 'battle')
       tickToasts(ui, dt, g.phase !== 'playing')
       // Redraw only when the simulation advanced: halves the work on 120 Hz phones and
       // idles the GPU while a menu is open over a frozen frame (but for `HELD_BACK` and `HELD_KEEP`).
@@ -3877,9 +4749,11 @@ const frame = (now: number) => {
       if (steps > 0 || dirty || now - backAt < HELD_BACK || now - runDrawnAt >= HELD_KEEP) {
         dirty = false
         runDrawnAt = now
+        if (g.raid.arena) frameRaid(g, t, localPlayer(g).screen.y)
+        if (g.rush) frameRush(g, t, localPlayer(g).screen.y)
         render(ctx, g, t, { ...settings(), companion: r.companion })
         firstFrameDrawn()
-        firstRunClock(g.time)
+        if (!r.tutorial) firstRunClock(g.time)
         const stick = input.readStick()
         if (stick && g.phase === 'playing') drawJoystick(ctx, stick, cssScale)
         r.hud.update(g)
@@ -3895,13 +4769,13 @@ const frame = (now: number) => {
     menuAcc += dt
   }
   const menuFrame = menuAcc >= STEP * 0.6
-  // Out of a run the camera rests, but in the Poké Realm, which draws in the meadow's place.
-  if (!run) setZoomScope(screen?.scene ? 'realm' : null)
+  // Out of a run the camera rests, but in the Poké Realm (the lobby draws a scene of its own too, and keeps the resting view).
+  if (!run) setZoomScope(screen !== null && screen === realmShown ? 'realm' : null)
   // While a run loads (`loadRunSheets`) the meadow holds its last frame: its sheets are gone, and drawing would ask for them again.
   if (!run && menuFrame && !startingRun) {
     const mdt = Math.min(0.1, menuAcc)
     menuAcc = 0
-    // Attract mode: wild Pokémon stroll through the meadow behind the menus (haunted on the Noite das Bruxas).
+    // The meadow holds the lobby and its trips; the Noite das Bruxas haunts it and the rest screen's stage.
     scene.haunted = halloweenToday()
     scene.plaza.level = plazaLevel()
     refreshVisitors(performance.now())
@@ -3909,11 +4783,11 @@ const frame = (now: number) => {
     try {
       if (screen?.scene) screen.scene(ctx, mdt, view.w, view.h)
       else {
+        // Every menu keeps the meadow behind it, so leaving the lobby is no jump to another world.
         stepTitleScene(scene, mdt, view.w, view.h)
         drawTitleScene(ctx, scene, view.w, view.h)
         ctx.fillStyle = `rgba(16,24,48,${screen?.dim ?? 0.35})`
         ctx.fillRect(0, 0, view.w, view.h)
-        if (meadowStick) drawJoystick(ctx, meadowStick, cssScale)
       }
     } catch (error) {
       // The menus share the run's canvas: what they leave on it would follow the player into the next run.
@@ -4036,13 +4910,21 @@ const inCoopRoom = () => {
   return status === 'room' || status === 'playing' || status === 'connecting'
 }
 
-/** Reloads into a newer build when one is live: right away in the menus (the save is local), or once the run is over (a co-op room: once the player leaves it). */
-const loadNewerBuild = () =>
+/** How often a page may ask the site for its HTML (`newerBuild`): a chunk that fails on every frame (an ad blocker's, say) once asked 60 times a second, each a billed request. */
+const BUILD_CHECK_MS = 60_000
+let lastBuildCheck = -Infinity
+
+/** Reloads into a newer build when one is live: right away in the menus (the save is local), or once the run is over (a co-op room: once the player leaves it). At most once per `BUILD_CHECK_MS`. */
+const loadNewerBuild = () => {
+  const now = performance.now()
+  if (now - lastBuildCheck < BUILD_CHECK_MS) return
+  lastBuildCheck = now
   void newerBuild().then((newer) => {
     if (!newer) return
     if (run || inCoopRoom()) reloadForDeploy = true
     else location.reload()
   })
+}
 
 /**
  * Each deploy renames the chunks loaded on demand (Novidades, Clerk) and drops
@@ -4131,7 +5013,9 @@ const boot = () => {
   loadSafeMode()
   startAnalytics(errorContext)
   // A new device's first visit: where it gets to, sent as one event (`firstSession.ts`).
-  startFirstSession(loadSave().achievements.lifetime.runs)
+  const firstVisit = startFirstSession(loadSave().achievements.lifetime.runs)
+  // The onboarding's A/B arm (`firstTime.ts`), drawn once on a guest's first visit by the same rules.
+  enrolDevice(firstVisit && firstRun(), accountUserId() !== null)
   sendHeldVersus()
   watchDeploys()
   // Events and errors tie to the account on this device, known from its link before Clerk loads.
@@ -4152,7 +5036,7 @@ const boot = () => {
     const city = new URLSearchParams(location.search).get(REALM_PARAM)
     enterRealm(isCityId(city) ? city : null)
   } else if (patreonReturn()) showPatreonReturn(patreonReturn() === 'linked')
-  // Back from a gem pack's checkout (`?gems=<ref>`): the Boutique's Loja, waiting for that pack.
+  // Back from a gem pack's checkout (`?gems=<ref>`): the Boutique's Loja, waiting for that pack (or, given up, offering it again).
   else if (checkoutRef !== null) showBoutique('shop', undefined, checkoutRef)
   else if (poll) showPollLink(poll)
   // Back from signing in, the player already pressed start before leaving: straight to the menu.
@@ -4168,10 +5052,13 @@ const boot = () => {
   watchSupporterStatus()
   // Coming back to the game syncs again, but not mid-run: a run syncs when it ends.
   startAccount(() => run === null)
-  // A Google sign in held back inside an app's browser (`signIn`): the hint says why and how to leave it.
+  // A tab a portal's frame opened to sign in: the frame's progress lands here first, then the sign in it asked for (`handoff.ts`).
+  void takeHandoff(stageSyncedSave).then((provider) => provider && signIn(provider))
+  // A Google sign in held back inside an app's browser (`signIn`): the hint says why and how to leave it. One moved out of a portal's frame: where it went.
   onOnboarding((step) => {
     const app = hostApp()
     if (step === 'inAppSignInHeld' && app) showInAppHint(ui, app, true)
+    if (step === 'framedSignIn') toast(ui, t().onboarding.framedSignIn, 7000, 'framedSignIn')
   })
   // The Festival da Praça's pot, in the background (its gifts join the gift box).
   startFestival()
@@ -4254,6 +5141,9 @@ const devMega = (mode: 'now' | 'ready' | 'stone' = 'now', mega?: MegaId) => {
   const pick = mega ?? ids[0]
   // A branch's Mega (Gallade's) needs its branch.
   localPlayer(g).branch = MEGA_BRANCH[pick] ?? localPlayer(g).branch
+  // A path form's Mega (Zygarde's) needs that form, opened and worn.
+  const def: MegaDef = MEGAS[pick]
+  if (def.from && p.legend) p.legend = { ...p.legend, forms: [...new Set([...p.legend.forms, def.from])], awakened: Math.max(p.legend.awakened, PATH_FORMS[def.from].at) }
   p.stage = PLAYABLE[localPlayer(g).starter].line.length - 1
   p.radius = Math.max(6, Math.round(bodyOf(playerDex(g)).bodyW * 0.3))
   recomputeStats(g)
@@ -4261,6 +5151,19 @@ const devMega = (mode: 'now' | 'ready' | 'stone' = 'now', mega?: MegaId) => {
   grantStone(g, pick)
   localPlayer(g).mega.charge = 0
   if (mode === 'now') queueMega()
+}
+
+/**
+ * Dev: Terastal and the Tera Raids (`game/tera.ts`, `game/teraRaid.ts`). `ps.tera('lab')` opens the art gallery
+ * (every crown, a few Pokémon in crystal); `ps.tera('water')` sets the run's Tera type and fills the orb,
+ * `ps.tera('now', 'fire')` Terastallizes at once, `ps.tera('shards')` drops a boss's choice of shards 40 px to the right,
+ * `ps.tera('orb', 0.9)` sets the orb. `ps.tera('raid')` opens a den next to you with the day's raid
+ * (`ps.tera('raid', 'raidGarchomp', 'ice', 6)` any), `ps.tera('enter')` steps straight in, `ps.tera('shield')` breaks
+ * the shield, `ps.tera('day', '2026-11-15')` prints a day's raid.
+ */
+const devTera = async (cmd?: string, a?: unknown, b?: unknown, c?: unknown) => {
+  const { devTera: run_ } = await import('./teraDev')
+  return run_(run?.game, () => (teraQueued = true), cmd, a, b, c)
 }
 
 /**
@@ -4319,6 +5222,12 @@ const devEggs = {
     writeSave({ ...save, eggPity })
     return eggPity
   },
+  /** Sets the finales since a mythical last fell (one short of the guarantee by default), for the next run. */
+  mythicalPity: (dry = MYTHICAL_PITY.sure - 1) => {
+    const save = loadSave()
+    writeSave({ ...save, mythicalPity: { finales: save.mythicalPity.beaten + dry, beaten: save.mythicalPity.beaten } })
+    return mythicalHunt(loadSave()) ?? 'every mythical captured: the plain odds'
+  },
   /** Unlocks the shiny of a Pokémon (every one without an argument), as if its 1/64 roll hit. */
   unlockShiny: (id?: PlayableId) => {
     const save = loadSave()
@@ -4340,14 +5249,16 @@ const devGifts = {
    * Puts a Mystery Gift in the lobby's gift box as if a sync listed it: `ps.gift('egg', 'friend')`, `ps.gift('coins', '500')`,
    * `ps.gift('title')`, `ps.gift('style', 'ambassador')` (a frame), `ps.gift('shinyHatch', 'munchlax')`,
    * `ps.gift('ribbon', 'gold')` (yesterday's challenge, #12 of 340), `ps.gift('shinyPick')` (a shiny of one's choice),
-   * `ps.gift('companion', 'pumpkaboo')` (a gift-only companion), `ps.gift('bag', 'lure')` (3 of a Bag item), `ps.gift('legend', 'cresselia')` (a festival legend).
-   * `why`: an inviter's handle (welcome) or a count of friends brought.
+   * `ps.gift('companion', 'pumpkaboo')` (a gift-only companion), `ps.gift('bag', 'lure')` (3 of a Bag item), `ps.gift('legend', 'cresselia')` (a festival legend),
+   * `ps.gift('reshadow', 'mewtwo')` (the Game Corner's Shadow Serum: a Purified Pokémon back to Shadow).
+   * `why`: an inviter's handle (welcome), a count of friends brought, or a legend path (`ps.gift('legend', 'solgaleo', 'cosmog')`: Cosmog's evolution scene as it opens).
    */
   gift: (kind: GiftKind = 'egg', arg?: string, why?: string | number) => {
-    const raw = { egg: { tier: arg ?? 'friend' }, coins: { amount: Number(arg ?? 500) }, title: { title: arg ?? 'ambassador' }, style: { style: { slot: 'frame', id: arg ?? 'ambassador' } }, shinyHatch: { family: arg ?? 'munchlax' }, ribbon: { ribbon: { day: previousDay(brasiliaDay(today())), tier: arg ?? 'gold', rank: 12, total: 340 } }, shinyPick: {}, companion: { id: arg ?? 'pumpkaboo' }, bag: { item: arg ?? 'lure', count: 3 }, legend: { legend: arg ?? 'cresselia' } }[kind]
+    const raw = { egg: { tier: arg ?? 'friend' }, coins: { amount: Number(arg ?? 500) }, title: { title: arg ?? 'ambassador' }, style: { style: { slot: 'frame', id: arg ?? 'ambassador' } }, shinyHatch: { family: arg ?? 'munchlax' }, family: { family: arg ?? 'mimikyu' }, shadow: { family: arg ?? 'ditto' }, reshadow: { id: arg ?? 'mewtwo' }, ribbon: { ribbon: { day: previousDay(brasiliaDay(today())), tier: arg ?? 'gold', rank: 12, total: 340 } }, shinyPick: {}, companion: { id: arg ?? 'pumpkaboo' }, bag: { item: arg ?? 'lure', count: 3 }, legend: { legend: arg ?? 'cresselia' }, evoItem: { item: arg ?? 'fireStone' } }[kind]
     const content = parseGiftContent({ kind, ...raw })
     if (!content) return 'Kinds: egg (tier), coins (amount), title, style (frame id), shinyHatch (family), ribbon (tier), shinyPick, companion (id), bag (item, 3 of it), legend (id)'
-    const reason: GiftReason | null = typeof why === 'number' ? { kind: 'friends', count: why } : why ? { kind: 'welcome', from: why } : null
+    const path = PATH_IDS.find((id) => id === why)
+    const reason: GiftReason | null = typeof why === 'number' ? { kind: 'friends', count: why } : path ? { kind: 'path', path } : why ? { kind: 'welcome', from: why } : null
     return stageGifts([{ id: `dev-${Date.now()}`, content, reason }])
   },
   /** Puts one invite milestone's gifts in the gift box as the API sends them (`FRIEND_MILESTONES`): `ps.friendGifts(10)` the shiny Dratini, the Friendship Legend title and background. */
@@ -4398,28 +5309,91 @@ const devChallenge = (mode?: 'play' | 'done' | 'reset', time = 754) => {
 }
 
 /**
+ * Dev: the lobby's Hall card without the API. `ps.hall('fake', 128, 'Marina')`
+ * stages a wall of that many supporters with that name newest, `'pending'`
+ * one that never answers, `'fail'` an API that can't be reached and `'off'`
+ * the API again; the lobby rebuilds with it.
+ */
+const devHall = (cmd?: 'fake' | 'pending' | 'fail' | 'off', count = 128, newest = 'Marina') => {
+  if (!cmd) return "ps.hall('fake', count?, newestName?) · ('pending') · ('fail') · ('off')"
+  const tiers = ['diamond', 'gold', 'supporter', 'supporter'] as const
+  const entries = PLAYABLE_IDS.slice(0, Math.min(count, 12)).map((id, i, ids) => ({ handle: `fan${i}`, name: i === ids.length - 1 ? newest : `Fan ${i + 1}`, tier: tiers[i % tiers.length]!, since: new Date(Date.UTC(2026, 9, i + 1)).toISOString(), og: i === 0, title: null, pokemon: { id, shiny: i % 5 === 0 } }))
+  fakeWall(cmd === 'off' ? null : cmd === 'fake' ? Promise.resolve({ entries, hidden: { supporter: Math.max(0, count - entries.length), gold: 0, diamond: 0 } }) : cmd === 'fail' ? Promise.resolve(null) : new Promise(() => {}))
+  if (screen?.el.classList.contains('title-home')) showTitle()
+  return `Hall: ${cmd}`
+}
+
+/**
  * Dev: the co-op boards. `ps.coopBoard('fake')` makes their reads answer
  * made-up teams (`coopBoardFakes.ts`), `'off'` asks the API again;
  * `ps.coopBoard('open', 3, 'hard')` opens the Ranking's Co-op side at that
  * team size (2 to 4, or `duo`, `trio`, `squad`) and difficulty, `'daily'`
- * its Desafio co-op tab and `'challenge'` the Desafio do dia's Co-op side.
+ * its Desafio co-op tab and `'challenge'` the Desafio do dia's Co-op side;
+ * `'legend'` (`ps.coopBoard('legend', 2, 'hard')`) opens its Co-op Lendário side.
  */
-const devCoopBoard = (cmd?: 'fake' | 'off' | 'open' | 'daily' | 'challenge', size?: number | string, difficulty?: Difficulty) => {
+const devCoopBoard = (cmd?: 'fake' | 'off' | 'open' | 'legend' | 'daily' | 'challenge', size?: number | string, difficulty?: Difficulty) => {
   if (cmd === 'fake' || cmd === 'off') {
     fakeCoopBoards(cmd === 'fake')
     return cmd === 'fake' ? 'Co-op boards: fake teams' : 'Co-op boards: the API again'
   }
   const teams = parseTeamSize(size) ?? 2
-  if (cmd === 'open' || cmd === 'daily') {
+  if (cmd === 'open' || cmd === 'legend' || cmd === 'daily') {
     endRun()
-    setScreen(rankingScreen(ui, input, () => showTitle({ focus: 'ranking' }), { difficulty: difficulty ?? 'normal', challenge: cmd === 'daily', coop: { size: teams } }))
+    setScreen(rankingScreen(ui, input, () => showTitle({ focus: 'ranking' }), { difficulty: difficulty ?? 'normal', challenge: cmd === 'daily', coop: { size: teams, legend: cmd === 'legend' } }))
     return `Co-op boards: ${cmd === 'daily' ? 'Desafio co-op' : difficulty ?? 'normal'}, ${teams} players${coopBoardsFaked() ? ' (fake)' : ''}`
   }
   if (cmd === 'challenge') {
     showChallenge('coop')
     return dailyCoopChallenge(brasiliaDay(new Date()))
   }
-  return "ps.coopBoard('fake' | 'off') · ('open', size?, difficulty?) · ('daily', size?) · ('challenge')"
+  return "ps.coopBoard('fake' | 'off') · ('open' | 'legend', size?, difficulty?) · ('daily', size?) · ('challenge')"
+}
+
+/**
+ * Dev: the Era 1 Hall da Fama (`game/era1.ts`, `ui/era1Hall.ts`). `ps.era1('hall')` makes the Era 1 boards answer made-up ones
+ * (`era1Fakes.ts`) and opens the Ranking on its tab: `ps.era1('hall', 'nightmare', 'legend', 12)` a difficulty, a side (`standard`,
+ * `legend`, or `duo`, `trio`, `squad` for co-op) and how many are on the board (12 shows a thin board's shorter cut); `('off')` asks the
+ * API again. `('gift', 'champion' | 'hall')` puts a tier's gifts in the gift box as the API sends them (`era1Gifts`), and
+ * `('wear', 'champion' | 'hall')` owns and wears its title, frame (and the Champion's sky) and opens the Trainer Card (`ps.card()` then
+ * shows the share card); `('wear', 'off')` takes them off. Whether Era 1 reads as closed follows the missions' clock (`ps.date`).
+ */
+const devEra1 = (cmd?: 'hall' | 'off' | 'gift' | 'wear', a?: string, b?: string, field = 240) => {
+  const tier: Era1Tier = a === 'hall' ? 'hall' : 'champion'
+  if (cmd === 'off') {
+    fakeEra1Boards(null)
+    return 'Era 1 boards: the API again'
+  }
+  if (cmd === 'hall') {
+    endRun()
+    fakeEra1Boards(field)
+    const difficulty = isDifficulty(a) ? a : 'normal'
+    const size = parseTeamSize(b)
+    const mode = isRunMode(b) ? b : 'standard'
+    setScreen(rankingScreen(ui, input, () => showTitle({ focus: 'ranking' }), { difficulty, mode, period: 'era1', ...(size ? { coop: { size } } : {}) }))
+    return `Era 1 Hall: ${difficulty}, ${size ? `${size} players` : mode}, ${field} on the board (fake)`
+  }
+  if (cmd === 'gift') {
+    const award = { tier, rank: tier === 'champion' ? 1 : 7, board: { side: 'standard', difficulty: 'nightmare' } } as const
+    return stageGifts(era1Gifts(award).map((g, i) => ({ id: `dev-era1-${tier}-${i}-${Date.now()}`, content: g.content, reason: g.reason })))
+  }
+  if (cmd === 'wear') {
+    updateSave((save) => {
+      if (a === 'off') return { ...save, title: null, style: { ...save.style, equipped: { ...save.style.equipped, frame: 'classic', background: 'night' } } }
+      const owned = ERA1_GIFTS[tier].reduce<Save>((s, content, i) => {
+        const out = applyGift(s, { id: `dev-era1-wear-${tier}-${i}`, content, reason: null })
+        return out.status === 'applied' ? out.save : s
+      }, save)
+      const frame = tier === 'champion' ? 'era1Champion' : 'era1'
+      const style = equipStyle(equipStyle(owned.style, 'frame', frame), 'background', tier === 'champion' ? 'era1Champion' : owned.style.equipped.background)
+      return { ...owned, title: tier === 'champion' ? 'era1Champion' : 'era1Legend', style }
+    })
+    endRun()
+    setScreen(
+      trainerCardScreen(ui, input, { supporters: (back) => supportersScreen(ui, input, { play: (id) => void startRun(id), onClose: back }, null), locker: () => showTitle(), book: null }, () => showTitle()),
+    )
+    return a === 'off' ? 'Era 1: off' : `Era 1: wearing the ${tier}'s title and frame`
+  }
+  return "ps.era1('hall', difficulty?, side?, field?) · ('off') · ('gift', 'champion' | 'hall') · ('wear', 'champion' | 'hall' | 'off')"
 }
 
 /**
@@ -4530,7 +5504,8 @@ const devCoop = async (cmd?: string, arg?: string | number | boolean | null, ext
     case 'join':
       return joinCoop(String(arg ?? ''), 'code')
     case 'bots':
-      return st.code ? addBots(st.code, Number(arg ?? 1)) : 'ps.coop: join a room first'
+      // ps.coop('bots', 1, 'minun'): the bots play that Pokémon (Plusle and Minun's link).
+      return st.code ? addBots(st.code, Number(arg ?? 1), PLAYABLE_IDS.find((p) => p === extra)) : 'ps.coop: join a room first'
     case 'pick': {
       // Another Pokémon for this room (the lobby picks it in PR 7).
       const id = PLAYABLE_IDS.find((p) => p === arg)
@@ -4543,6 +5518,15 @@ const devCoop = async (cmd?: string, arg?: string | number | boolean | null, ext
     case 'say':
       // An Arena match: the tab's bots say a quick chat line (`help` without one) and ping where they stand.
       return botsTalk(isQuickChat(arg) ? arg : 'help', 'danger')
+    case 'legend': {
+      // ps.coop('legend', true): the room's Modo Lendário, as the host's switch sets it (false: off); the tab's bots follow it.
+      const room = st.room
+      if (!room) return "ps.coop('legend', on): join a room first"
+      const on = arg !== false && arg !== 0 && arg !== 'off'
+      const now = parseSettings(room.settings)
+      client.setSettings({ difficulty: now.difficulty, ...(on && { legend: true }) })
+      return on
+    }
     case 'ready':
       return client.setReady(arg !== 0 && arg !== 'no')
     case 'start':
@@ -4796,11 +5780,14 @@ const devSkin = (id?: string, seat?: number) => {
  * balance negative as after a refund of spent gems (`('lock')` unlocks it all,
  * the balance back to 0); `('return', 'chest')` comes back from a
  * checkout of that pack (`'never'`: the gems never land and the wait runs
- * out); `('refuse', 'cap')` turns every checkout down as the API would
+ * out); `('cancel', 'bag')` comes back from one given up, on the "Não deu
+ * certo?" sheet; `('refuse', 'cap')` turns every checkout down as the API would
  * (`'once'`: the welcome pack taken; no reason: none again); `('shop')`,
- * `('skins')` and `('locker')` open the Boutique's tabs; `('fetch')` asks the API now.
+ * `('skins')` and `('locker')` open the Boutique's tabs; `('fetch')` asks the API now;
+ * `('promo', '2026-11-28')` shows the gem promotions as on that Brasília day until a reload (null: today's);
+ * `('run', 15)` makes the next results' gem line show as if the run's report brought 15 gems (faking).
  */
-const devGems = (cmd?: string, arg?: string | number) => {
+const devGems = (cmd?: string, arg?: string | number | null) => {
   if (cmd === 'fake') {
     fakeGems(arg !== 'off', typeof arg === 'number' ? arg : undefined)
     return arg === 'off' ? 'Gems: the API again' : `Gems: fake (${knownGems()?.balance ?? 0})`
@@ -4813,11 +5800,25 @@ const devGems = (cmd?: string, arg?: string | number) => {
     if (arg !== undefined && !isCosmeticId(arg)) return `Cosmetics: ${COSMETIC_IDS.join(', ')}`
     stageGems({ lock: arg === undefined ? [] : [arg] })
   } else if (cmd === 'return') {
-    showBoutique('shop', undefined, stageCheckout(isGemPackId(arg) ? arg : arg === 'never' ? 'never' : 'bag'))
+    showBoutique('shop', undefined, { ref: stageCheckout(isGemPackId(arg) ? arg : arg === 'never' ? 'never' : 'bag'), cancel: null })
+  } else if (cmd === 'cancel') {
+    if (!gemsFaked()) fakeGems(true)
+    showBoutique('shop', undefined, { ref: 'dev-cancel', cancel: isGemPackId(arg) ? arg : 'bag' })
   } else if (cmd === 'refuse') stageRefusal(arg === 'cap' || arg === 'once' ? arg : null)
   else if (cmd === 'shop' || cmd === 'skins' || cmd === 'locker') showBoutique(cmd)
   else if (cmd === 'fetch') void fetchGems().then((s) => console.info('gems', s))
-  else if (cmd !== undefined) return "ps.gems() · ('fake', balance? | 'off') · ('balance', n) · ('own', id?) · ('lock', id?) · ('return', pack | 'never') · ('refuse', 'cap' | 'once'?) · ('shop') · ('skins') · ('locker') · ('fetch')"
+  else if (cmd === 'promo') {
+    const day = arg === undefined || arg === null ? null : typeof arg === 'string' && isDayKey(arg) ? arg : undefined
+    if (day === undefined) return "ps.gems('promo', 'YYYY-MM-DD' | null)"
+    holdPromoDay(day)
+    showTitle()
+    return { day: promoDay(), promo: promoOf(promoDay()) }
+  } else if (cmd === 'run') {
+    if (!gemsFaked()) fakeGems(true)
+    stagedRunGems = typeof arg === 'number' ? arg : GEM_PLAY.run.gems
+    return `The next results' gem line: +${stagedRunGems}`
+  } else if (cmd !== undefined)
+    return "ps.gems() · ('fake', balance? | 'off') · ('balance', n) · ('own', id?) · ('lock', id?) · ('return', pack | 'never') · ('cancel', pack?) · ('refuse', 'cap' | 'once'?) · ('shop') · ('skins') · ('locker') · ('fetch') · ('promo', day | null) · ('run', n?)"
   // In a run or a match, each seat's look as the shell holds it.
   return { faked: gemsFaked(), gems: knownGems(), look: equippedLook(), seats: run ? run.game.players.map((p) => lookOf(p.slot)) : null }
 }
@@ -4876,16 +5877,128 @@ if (import.meta.env.DEV) {
         import('./ui/realmArtDev').then((m) => m.openRealmArt(view, opts)),
       /**
        * A Poké Realm mini game on its own, over whatever is on screen (`realm/games/registry.ts`): `ps.minigame('fishing')`,
-       * a table game against the bot (`'fourInRow'`, `'typeDuel'`). Its claim goes to the API (or `ps.realm('fake')`'s fakes).
+       * a table game against the bot (`'fourInRow'`, `'typeDuel'`, the café's 4-seat `'ludo'` and `'unown'`; `ps.minigame('ludo', 'auto')`
+       * lets the bot play your seat too). Its claim goes to the API (or `ps.realm('fake')`'s fakes).
        */
-      minigame: async (game: unknown) => {
-        const { isMinigameId, MINIGAME_IDS } = await import('./data/minigames')
-        if (!isMinigameId(game)) return `ps.minigame: ${MINIGAME_IDS.join(', ')}`
+      minigame: devMinigame,
+      /**
+       * Shadow Pokémon (`game/shadow.ts`): `ps.shadow('charmander')` owns it as a Shadow and plays it so from the next run,
+       * `ps.shadow('charmander', 'ready')` fills its heart gauge, `('purified')` purifies it, `('off')` plays it Normal, `('drop')` forgets it.
+       */
+      /** The partner select on `id` (the save's partner by default; its Shadow row, `ui/shadowPick.ts`) and the Pokédex (its Shadow marks, the regional forms), for staging. */
+      select: (id: string = loadSave().partner) => (Object.hasOwn(PLAYABLE, id) ? showMenu(id as PlayableId) : 'ps.select: a Pokémon id'),
+      pokedex: () => (endRun(), setScreen(pokedexScreen(ui, input, () => showTitle(), showPcBox))),
+      shadow: (id: string = loadSave().partner, how: 'own' | 'ready' | 'purified' | 'off' | 'drop' = 'own') => {
+        if (!Object.hasOwn(PLAYABLE, id)) return 'ps.shadow: a Pokémon id'
+        const pid = id as PlayableId
+        updateSave((s) => {
+          const owned = grantShadow(s.shadows, pid)
+          const e = owned[pid]!
+          const next = how === 'drop' ? Object.fromEntries(Object.entries(s.shadows).filter(([k]) => k !== pid))
+            : how === 'ready' ? { ...owned, [pid]: { ...e, steps: purifySteps(pid) } }
+            : how === 'purified' ? { ...owned, [pid]: { ...e, steps: purifySteps(pid), purified: true } }
+            : how === 'off' ? pickShadow(owned, pid, false)
+            : pickShadow(owned, pid, true)
+          return { ...s, shadows: next }
+        })
+        return loadSave().shadows[pid] ?? 'dropped'
+      },
+      /**
+       * The Rocket Game Corner (faked API): `ps.corner('prizes')` or `ps.corner('tokens')` opens the counter on that page,
+       * `ps.corner('stage', 5000)` sets the faked tokens (a second number the Koffing Sweep level, a third the tokens it paid today:
+       * `ps.corner('stage', 5000, 3, 1500)` is its half pay, 2250 its free play), `ps.minigame('slots')` and
+       * `ps.minigame('sweep')` its games; `ps.realm('room', 'gameCorner')` walks into the room.
+       */
+      corner: async (cmd: string = 'prizes', tokens?: number | string, level?: number, won?: number) => {
+        const [{ fakeRealm }, { stageCorner, rigSpin }, { openCornerCounter }] = await Promise.all([realmMode(), import('./realm/cornerApi'), import('./ui/cornerCounter')])
+        fakeRealm(true, accountHandle() ?? 'you')
+        if (cmd === 'win') return rigSpin(String(tokens ?? 'seven'))
+        if (cmd === 'stage') return stageCorner(typeof tokens === 'number' ? tokens : undefined, level, won)
+        if (cmd !== 'prizes' && cmd !== 'tokens') return "ps.corner: 'prizes', 'tokens' or 'stage'"
+        return setScreen(openCornerCounter(ui, input, { tab: cmd, close: () => showTitle() }))
+      },
+      /**
+       * The claw machine's faked state (after `ps.realm('fake')`, open it with `ps.minigame('claw')`): `ps.claw()` puts the week's
+       * first plush one miss short of sure, `ps.claw(2, 4)` 4 misses on the week's third plush, `ps.claw(2, 4, 9)` also 9 credits used today.
+       */
+      claw: async (index?: number, misses?: number, used?: number) => (await import('./realm/clawApi')).stageClaw(index, misses, used),
+      /**
+       * The Zona Safári with the faked API (`ps.realm('fake')` on, then its screen): `ps.safari()`. `ps.safari('sure')` puts the guarantee in the next
+       * session, `ps.safari('catch')` makes every ball hold and `ps.safari('flee')` every ball break and its Pokémon run (`'real'` back to the dice), `ps.safari('dry', 3)` sets the sessions
+       * without a new family and `ps.safari('used', 2)` the sessions used today. `ps.safari('habitat', 'marsh')` holds a preserve, `ps.safari('meet', 'mimikyu')` makes that the next encounter
+       * (`('meet', 'mimikyu', true)` shiny), `ps.safari('grass')` sets the grass off now and `ps.safari('phase')` prints where the game is.
+       * `ps.safari('hour', 'night')` holds a time of day (`dawn`, `day`, `dusk`, `night`; null back to the clock), `ps.safari('contest', true)` holds the
+       * Concurso de Insetos open (false closed, null back to the calendar), `ps.safari('dex', 'marsh')` fills a habitat's Pokédex but for one (`('dex', 'marsh', 'all')`,
+       * `'half'`, `'empty'`), `ps.safari('sneakup')` sets the partner just behind the first wanderer, sneaking (`('sneakup', 'front')` where it looks), and `ps.safari('stalk')` meets it now,
+       * `ps.safari('prize', 1)` puts that contest place's prizes in the gift box (on a field of 40),
+       * `ps.safari('done', 'meadow')` marks a habitat completed before its residents grew, `ps.safari('rewards', 'cove')` puts a completed habitat's gifts
+       * in the gift box (the cove's with the Ovo de Manaphy, whose hatching plays as it opens),
+       * and `ps.safari('say', text)` puts a line in the message box (to check that it fits).
+       */
+      safari: async (
+        what?: 'sure' | 'catch' | 'flee' | 'real' | 'dry' | 'used' | 'habitat' | 'meet' | 'grass' | 'phase' | 'hour' | 'contest' | 'dex' | 'sneakup' | 'stalk' | 'prize' | 'say' | 'done' | 'rewards',
+        arg?: number | string | boolean | null,
+        shiny?: boolean | string,
+      ) => {
+        await devRealm('fake')
+        if (what === undefined) return devMinigame('safari')
+        const { stageSafari } = await import('./realm/safariApi')
+        const { safariDev } = await import('./realm/games/safari')
+        const { isSafariHabitat } = await import('./data/safari')
+        if (what === 'sure') return stageSafari({ sure: true })
+        if (what === 'dry') return stageSafari({ dry: typeof arg === 'number' ? arg : 0 })
+        if (what === 'used') return stageSafari({ used: typeof arg === 'number' ? arg : 0 })
+        if (what === 'habitat') return stageSafari({ habitat: isSafariHabitat(arg) ? arg : null })
+        if (what === 'meet') return stageSafari({ next: typeof arg === 'string' && (HATCHLING_IDS as readonly string[]).includes(arg) ? (arg as HatchlingId) : null, shiny: shiny === true })
+        if (what === 'hour') return stageSafari({ daypart: arg === 'dawn' || arg === 'day' || arg === 'dusk' || arg === 'night' ? arg : null })
+        if (what === 'contest') return stageSafari({ contest: typeof arg === 'boolean' ? arg : null })
+        if (what === 'dex') return isSafariHabitat(arg) ? stageSafari({ dex: { habitat: arg, fill: shiny === 'all' || shiny === 'empty' || shiny === 'half' ? shiny : 'almost' } }) : null
+        if (what === 'sneakup') return safariDev.run?.sneakUp(arg === 'front')
+        if (what === 'done') return isSafariHabitat(arg) ? stageSafari({ done: [arg] }) : null
+        if (what === 'rewards') {
+          const { fakeRewards } = await import('./realm/safariApi')
+          return isSafariHabitat(arg) ? stageGifts(fakeRewards(arg).map((g) => ({ ...g, id: `${g.id}-${Date.now()}` }))) : null
+        }
+        if (what === 'prize') {
+          const { CONTEST_GIFTS } = await import('./data/safari')
+          const { contestPrize } = await import('./realm/games/safari.rules')
+          const rank = typeof arg === 'number' ? arg : 1
+          const prize = contestPrize(rank, 40)
+          return prize ? stageGifts(CONTEST_GIFTS[prize].map((content, i) => ({ id: `dev-contest-${rank}-${i}-${Date.now()}`, content, reason: { kind: 'bugContest', rank } as const }))) : null
+        }
+        if (what === 'stalk') return safariDev.run?.stalk()
+        if (what === 'say') return safariDev.run?.say(String(arg ?? ''))
+        if (what === 'grass') return safariDev.run?.rustle()
+        if (what === 'phase') return { game: safariDev.run?.phase() ?? null, battle: safariDev.run?.battle() ?? null, wanderers: safariDev.run?.wanderers() ?? null }
+        return stageSafari({ catches: what === 'catch', flees: what === 'flee' })
+      },
+      /**
+       * The Escavação on fakes (`realm/digApi.ts`): `ps.dig()` opens it with the faked API. `ps.dig('golden')` forces the next wall golden,
+       * `ps.dig('fossil', 'cranidos')` a fossil of that family (a Galar one's half the lab lacks: `ps.dig('fossil', 'dracozolt')`), `ps.dig('box')` Meltan's Mystery Box in it, `ps.dig('diamond')` Diancie's pink diamond, `ps.dig('dry', 10)` sets the guarantee's streak, `ps.dig('used', 3)` the walls used
+       * today, `ps.dig('lacking', [])` the fossils lacked (all of them by default), `ps.dig('held', ['bird'])` the Galar halves waiting in the lab (none by default), `ps.dig('crack')` the open wall one hit short of collapse, `ps.dig('peek')` where the open wall hides things and the layers left, `ps.dig('partner', 'ralts')` a partner's powers for the next wall, `ps.dig('soft')` a next wall one layer deep with far more crack, to stage a whole dig.
+       */
+      dig: async (what?: 'golden' | 'fossil' | 'box' | 'diamond' | 'dry' | 'used' | 'lacking' | 'held' | 'crack' | 'peek' | 'partner' | 'soft', arg?: unknown) => {
+        const { stageDig, crackFakeWall, peekFakeWall } = await import('./realm/digApi')
+        const { DIG_FOSSIL_FAMILIES, GALAR_HALVES } = await import('./data/digTreasures')
+        if (what === 'golden') return stageDig({ golden: true })
+        if (what === 'box') return stageDig({ box: true })
+        if (what === 'diamond') return stageDig({ diamond: true })
+        if (what === 'fossil') return stageDig({ fossil: arg === null ? null : DIG_FOSSIL_FAMILIES.find((f) => f === arg) ?? DIG_FOSSIL_FAMILIES[0] })
+        if (what === 'dry') return stageDig({ dry: Number(arg ?? 10) })
+        if (what === 'used') return stageDig({ used: Number(arg ?? 0) })
+        if (what === 'lacking') return stageDig({ lacking: Array.isArray(arg) ? DIG_FOSSIL_FAMILIES.filter((f) => (arg as unknown[]).includes(f)) : DIG_FOSSIL_FAMILIES })
+        if (what === 'held') return stageDig({ held: Array.isArray(arg) ? GALAR_HALVES.filter((h) => (arg as unknown[]).includes(h)) : [] })
+        if (what === 'soft') return stageDig({ soft: true })
+        if (what === 'partner') return stageDig({ partner: typeof arg === 'string' ? arg : null })
+        if (what === 'crack') return crackFakeWall()
+        if (what === 'peek') return peekFakeWall()
+        const { fakeRealm } = await import('./realm/api')
+        fakeRealm(true, 'you')
         const { openGame } = await import('./realm/games/registry')
         const save = loadSave()
         let screen: { dispose: () => void } | null = null
-        screen = await openGame(document.body, game, { partner: save.partner, shiny: false, realm: null, table: null, you: 0, close: () => screen?.dispose() })
-        return screen
+        screen = await openGame(document.body, 'dig', { input, partner: save.partner, shiny: false, realm: null, table: null, you: 0, close: () => screen?.dispose() })
+        return 'Escavação: real API off, fakes on'
       },
       /**
        * A mini game's Placar (`realm/games/board.ts`) over whatever is on screen: `ps.realmBoard('fishing')`, `('arcade')`
@@ -4902,9 +6015,11 @@ if (import.meta.env.DEV) {
       /**
        * Fishing's staging (`realm/games/fishing.ts`, open it with `ps.minigame('fishing')`): `ps.fishing('feebas')` makes
        * that the next bite, at once (`shinyGyarados`, `wailmer`, `boot`…); a second `true` turns on the autopilot (casts,
-       * hooks and reels by itself; `ps.fishing(null, false)` off); `ps.fishing()` prints it (its `phase` too).
+       * hooks and reels by itself; `ps.fishing(null, false)` off); `ps.fishing()` prints it (its `phase` too). A third `true`
+       * makes the next faked claim that hooks a Wishiwashi again bring its shiny (`ps.realm('fake')` first).
        */
-      fishing: async (next?: unknown, auto?: boolean) => {
+      fishing: async (next?: unknown, auto?: boolean, shiny?: boolean) => {
+        if (shiny !== undefined) (await import('./realm/api')).fakeClaims.shiny = shiny
         const { fishingDev } = await import('./realm/games/fishing')
         const { CATCH_IDS, isCatchId } = await import('./realm/games/fishing.rules')
         if (next !== undefined && next !== null && !isCatchId(next)) return `ps.fishing: ${CATCH_IDS.join(', ')}`
@@ -4932,6 +6047,20 @@ if (import.meta.env.DEV) {
       showTitle,
       showMenu,
       theme: currentTheme,
+      /**
+       * The Rádio (`src/radio.ts`): `ps.radio()` prints its state, the track playing and the tracks open; `('open')` opens
+       * its sheet (through the lobby's button when it shows); `('unlock')` opens every track for a look, until a reload.
+       */
+      radio: (cmd?: 'open' | 'unlock') => {
+        if (cmd === 'unlock') unlockAllTracks()
+        if (cmd === 'open') {
+          const button = [...ui.querySelectorAll<HTMLElement>('.radio-chip, button.radio-pill')].find((b) => b.offsetParent !== null)
+          if (button) button.click()
+          else openRadio(ui, input, () => {})
+        }
+        return { ...radio(), playing: nowPlaying(radio()), sounding: radioSounding(), theme: currentTheme(), open: openTracks() }
+      },
+      lobbyTheme: devLobbyTheme,
       /** `ps.quality('lean')` pins lean drawing (`'full'` full detail, `'auto'` back to the governor); returns the governor's state. */
       quality: (pin?: 'auto' | 'lean' | 'full') => {
         if (pin) qualityPin = pin
@@ -4956,14 +6085,22 @@ if (import.meta.env.DEV) {
       spawn: devSpawn,
       alpha: devAlpha,
       mega: devMega,
+      tera: devTera,
       evolve: devEvolve,
       ability: devAbility,
       event: devEvent,
       field: devField,
       challenge: devChallenge,
       coopBoard: devCoopBoard,
+      era1: devEra1,
+      hall: devHall,
       otherDevice: devOtherDevice,
       dex: () => loadSave().dex,
+      dexSee: (region?: DexRegion | 'all', missing?: number) => {
+        const out = dexSee(region, missing)
+        if (screen?.el.classList.contains('title-home')) showTitle()
+        return out
+      },
       /** Plays an error report's `replay` (the JSON string from PostHog) again: a simulation error throws here at the same tick. */
       replay: (json: string) => {
         const replay = parseReplay(JSON.parse(json))
@@ -4972,7 +6109,7 @@ if (import.meta.env.DEV) {
         if (rulesStanding(replay.rules) !== 'same') console.warn(`ps: the replay plays by rules ${replay.rules}, this build by ${RULES_VERSION}: it may end elsewhere`)
         return resimulate(replay)
       },
-      /** The lobby's meadow: its wanderers, the partner and the camera, to stage greetings (`ps.meadow().partner`). */
+      /** The top-down meadow the lobby stands on: its wanderers, the partner and the camera. */
       meadow: () => scene,
       /**
        * The Dojo: `ps.dojo('charmander')` starts a training session with that Pokémon at once (its saved build on), and
@@ -4983,9 +6120,20 @@ if (import.meta.env.DEV) {
         showTitle({ shop: 'dojo' })
       },
       /**
-       * The Estádio: `ps.stadium()` walks the lobby there, south of home, Ninjask's hello included (the first visit's long one
-       * after `localStorage.removeItem('ps:stadiumSeen')`), then the Arena's screen. Its boards (Jogar, Ranking, Temporada,
-       * Histórico, Regras) open with E or a tap while the partner strolls by them.
+       * The first visit's training run (`startTutorial`) with the save's partner: `ps.tutorial()` plays it from the
+       * start, `ps.tutorial('boss')` jumps to a lesson once it's up (`move`, `fight`, `xp`, `wave`, `ball`, `boss`, `end`).
+       * It logs how it ended (`{ how, step }`) and goes back to the lobby.
+       */
+      tutorial: (step?: TutorialStepId) =>
+        void startTutorial((end) => {
+          console.info('ps: tutorial', end)
+          showTitle()
+        }).then(() => {
+          if (step && run?.tutorial) jumpTutorial(run.game, step)
+        }),
+      /**
+       * The Estádio: `ps.stadium()` goes there, south of home, Ninjask's hello included (the first visit's long one
+       * after `localStorage.removeItem('ps:stadiumSeen')`), then the Arena's screen.
        */
       stadium: () => showTitle({ shop: 'stadium' }),
       /**
@@ -4993,6 +6141,10 @@ if (import.meta.env.DEV) {
        * visit's long one after `localStorage.removeItem('ps:boutiqueSeen')`, which brings back the NOVO tags too), then its sheet;
        * `ps.boutique('open')` lands there with the sheet open at once (`'skins'` on Skins, `'locker'` on Visual).
        */
+      /** The lobby tour (`ui/lobbyTour.ts`): `ps.tour()` brings the lobby up with Rotom's spotlight on it and prints how it ended. */
+      tour: () => showLobbyTour((end) => console.info('ps.tour', end)),
+      /** Modos de jogo (`ui/gameModes.ts`): a pick lands back on the lobby with that mode. */
+      modes: () => setScreen(openGameModes(ui, input, { current: loadLobbyMode(), onPick: (id) => (saveLobbyMode(id), showTitle()), close: () => showTitle() })),
       /** The secret bases' screens with fakes: `ps.base()` the editor, `ps.base('board')`, `ps.base('carpentry')` (`devBase`). */
       base: devBase,
       boutique: (cmd?: 'open' | 'skins' | 'locker') => (cmd ? showBoutique(cmd === 'open' ? 'shop' : cmd) : showTitle({ shop: 'boutique' })),
@@ -5032,7 +6184,7 @@ if (import.meta.env.DEV) {
       },
       /**
        * Puts a seasonal stall on the plaza (`ps.stall('halloween')`, `'christmas'`; `null` none; no argument: the calendar's) and
-       * goes there; `ps.stall('halloween', true)` opens its shelf in the shop, as a talk with Duskull does.
+       * goes there; `ps.stall('halloween', true)` opens its shelf in the shop.
        */
       stall: (id?: StallId | null, shop = false) => {
         if (id && !STALL_IDS.includes(id)) return `Stalls: ${STALL_IDS.join(', ')}`
@@ -5071,11 +6223,36 @@ if (import.meta.env.DEV) {
         return hunted
       },
       pumpkin: () => withRun((g) => g.props.push({ id: g.nextId++, cell: -1 - g.nextId, kind: 'pumpkin', x: g.player.x + 40, y: g.player.y, hp: 2, hitCooldown: 0, shake: 0 })),
-      /** Opens the difficulty survey over the title, whatever the runs played; `ps.survey('reset')` forgets this device's answer. */
-      survey: (mode?: 'reset') => {
+      /**
+       * Opens the difficulty survey over the title, whatever the runs played; `ps.survey('reset')` forgets this device's answer.
+       * `ps.survey('design')` opens the one on the redesign, `('design', 'reset')` forgets its answer and first sight,
+       * `('design', 'due')` also meets its thresholds, so the next page load asks by itself.
+       */
+      survey: (mode?: 'reset' | 'design', design?: 'reset' | 'due') => {
         endRun()
         if (mode === 'reset') return (forgetSurvey(), showTitle())
+        if (mode === 'design' && design === 'reset') return (forgetDesignSurvey(), showTitle())
+        if (mode === 'design' && design === 'due') return (stageDesignSurveyDue(), showTitle())
+        if (mode === 'design') return setScreen(designSurveyScreen(ui, input, () => showTitle({ focus: 'survey' })))
         setScreen(surveyScreen(ui, input, () => showTitle({ focus: 'survey' })))
+      },
+      /**
+       * The first visit's onboarding (`firstTime.ts`): prints this device's state, whether its next Play is a first run and
+       * where it leads, and whether the lobby gives the tour. `ps.onboarding('tour')` or `('control')` forces the A/B arm;
+       * `('reset')` forgets the onboarding (keeping the arm, `tour` if none) and plays the first visit again from the intro,
+       * the save's runs and the account counting as none until a reload.
+       */
+      onboarding: (cmd?: Arm | 'reset') => {
+        if (cmd === 'reset') {
+          const arm = firstTime().arm ?? 'tour'
+          forgetFirstTime()
+          updateFirstTime((s) => ({ ...s, arm }))
+          devFirstRuns = loadSave().achievements.lifetime.runs
+          endRun()
+          showTitle({ intro: true })
+        } else if (cmd) updateFirstTime((s) => ({ ...s, arm: cmd }))
+        const s = firstTime()
+        return { ...s, firstRun: firstRun(), next: firstRun() ? nextFirst(s) : null, tourDue: tourDue(s, firstRuns()) }
       },
       /**
        * The lobby's install offer now, as Chromium's prompt or the iOS how-to (`'ios'`), whatever the browser
@@ -5085,6 +6262,18 @@ if (import.meta.env.DEV) {
         endRun()
         if (mode === 'reset') return (forgetInstallNudge(), showTitle())
         setScreen(installNudgeScreen(ui, input, mode, () => showTitle()))
+      },
+      /**
+       * The lobby's ask for support at a milestone (`ui/supportAsk.ts`), now, whatever the save (`runs25` without an
+       * argument; `nightmare`, `runs100`); `ps.supportAsk('due')` prints whether the next lobby would ask and marks it
+       * asked if so, and `ps.supportAsk('reset')` forgets the milestones asked about, so the next lobby asks where the save has one.
+       */
+      supportAsk: (milestone: SupportMilestone | 'due' | 'reset' = 'runs25') => {
+        if (milestone === 'reset') return void forgetSupportAsk()
+        if (milestone === 'due') return takeSupportAsk()
+        if (!SUPPORT_MILESTONES.includes(milestone)) return console.warn(`ps: one of ${SUPPORT_MILESTONES.join(', ')}`)
+        endRun()
+        setScreen(supportAskScreen(ui, input, milestone, () => showTitle()))
       },
       /** The Caixa do PC over the title; `ps.card()` opens the Trainer Card's share preview. */
       pc: () => (endRun(), setScreen(showPcBox(() => showTitle()))),
@@ -5111,11 +6300,20 @@ if (import.meta.env.DEV) {
       /** `ps.ball(3)` drops Poké Balls 20 px to the right of the player (inside the magnet), side by side. */
       ball: (n = 1) => withRun((g) => Array.from({ length: n }, (_, i) => dropPickup(g, localPlayer(g).x + 20 + i * 6, localPlayer(g).y, 'pokeball'))),
       ...riftDevTools(() => run?.game),
+      ...ultraDevTools(() => run?.game, () => showMenu(loadSave().partner, 'legends')),
+      ...questDevTools(() => run?.game),
+      ...rushDevTools(() => run?.game, (difficulty) => void startRushRun(loadSave().partner, difficulty), () => showMenu(loadSave().partner, 'legends')),
       ...placeDevTools(() => run?.game),
+      ...seasonFindDevTools(() => run?.game, devLandmark),
+      ...travelDevTools(),
+      ...pathDevTools(() => run?.game, { menu: (id) => showMenu(id, 'legends'), sheet: (path) => void pathSheet(ui, input, path, { close: () => {} }) }),
       ...levelUpDevTools(() => run?.game),
       ...kitDevTools(() => run?.game),
+      ...gaKitADevTools(() => run?.game),
+      ...gaHookDevTools(() => run?.game),
       ...eggMoveDevTools(() => run?.game),
       ...learnDevTools(() => run?.game),
+      ...itemDropDevTools(() => run?.game),
       ...tmDevTools(() => run?.game),
       ...evoGateDevTools(() => run?.game),
       ...duoDevTools(() => run?.game),

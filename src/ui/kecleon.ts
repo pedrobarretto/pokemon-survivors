@@ -12,8 +12,8 @@ const PORTRAIT = 40
 const purplePortrait = (emotion: Emotion) => {
   const canvas = createCanvas(PORTRAIT, PORTRAIT)
   const img = new Image()
-  img.onload = () => context2d(canvas).drawImage(purpleize(img) ?? img, 0, 0)
   img.src = emotionUrl(KECLEON_DEX, emotion)
+  img.onload = () => context2d(canvas).drawImage(purpleize(img) ?? img, 0, 0)
   return canvas
 }
 

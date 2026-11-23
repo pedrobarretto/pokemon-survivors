@@ -96,8 +96,8 @@ export const drawAlphaAir = (ctx: Ctx, g: Game, time: number, visible: Visible) 
 }
 
 const ARROW = ['1......', '121....', '12221..', '1222221', '12221..', '121....', '1......']
-/** A small crimson "α" for the edge marker. */
-const GLYPH = ['.11..1', '1..1.1', '1...1.', '1..1.1', '.11..1']
+/** A capital "A" for the edge marker, white on its crimson badge (a lowercase α read as Ω at this size). */
+const GLYPH = ['..1..', '.1.1.', '.1.1.', '1...1', '11111', '1...1', '1...1']
 const MARKER = lazy(() => ({ arrow: fromStrings(ARROW, { 1: '#181818', 2: CRIMSON }), glyph: fromStrings(GLYPH, { 1: '#ffffff' }) }))
 
 /**

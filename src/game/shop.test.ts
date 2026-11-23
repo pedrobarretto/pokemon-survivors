@@ -139,7 +139,7 @@ describe('buying from the Vitrine', () => {
     const v = dayWith('egg', false)
     const save = buyFromVitrine(rich(10_000), v, 'egg')!
     expect(save.eggs).toEqual([{ tier: v.egg, steps: 0 }])
-    const full = { ...rich(10_000), eggs: Array.from({ length: EGGS.slots }, () => ({ tier: 'common' as const, steps: 0 })) }
+    const full = { ...rich(10_000), eggs: Array.from({ length: EGGS.slots }, () => ({ tier: 'common' as const, steps: 0 })), eggQueue: Array.from({ length: EGGS.queue }, () => ({ tier: 'common' as const, steps: 0 })) }
     expect(vitrineBlock(full, v, 'egg')).toBe('full')
   })
 
@@ -194,7 +194,7 @@ describe('the Kecleon Egg’s fixed card', () => {
 
   it('refuses a full incubator before taking any ₽, and a wallet short of the next rung', () => {
     const v = vitrineOf(DAY)
-    const full = { ...rich(500_000), eggs: Array.from({ length: EGGS.slots }, () => ({ tier: 'common', steps: 0 }) as const) }
+    const full = { ...rich(500_000), eggs: Array.from({ length: EGGS.slots }, () => ({ tier: 'common', steps: 0 }) as const), eggQueue: Array.from({ length: EGGS.queue }, () => ({ tier: 'common' as const, steps: 0 })) }
     expect(kecleonEggBlock(full, v)).toBe('full')
     expect(buyKecleonEgg(full, v)).toBeNull()
     const twice = buyAll(rich(30_000), v).save
@@ -309,7 +309,7 @@ describe('styles', () => {
   })
 
   it("parse and merge: unknown ids dropped, a style not owned isn't worn", () => {
-    expect(parseStyle({ owned: { frame: ['poke', 'rocket', 'poke'] }, equipped: { frame: 'great', background: 'cave' } })).toEqual({
+    expect(parseStyle({ owned: { frame: ['poke', 'teamMagma', 'poke'] }, equipped: { frame: 'great', background: 'cave' } })).toEqual({
       owned: { frame: ['poke'], background: [], wallpaper: [] },
       equipped: { frame: 'classic', background: 'night', wallpaper: 'classic' },
     })

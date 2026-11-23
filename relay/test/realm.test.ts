@@ -7,7 +7,7 @@ import { connect, createRealm, disconnect, hello, identified, message, parseReal
 
 const T0 = 1_000_000
 
-const ident = (userId: string, over: Partial<RealmIdentity> = {}): RealmIdentity => ({ userId, handle: userId, partner: 'charmander', shiny: false, look: {}, supporter: null, ...over })
+const ident = (userId: string, over: Partial<RealmIdentity> = {}): RealmIdentity => ({ userId, handle: userId, partner: 'charmander', shiny: false, look: {}, supporter: null, stamps: 0, ...over })
 
 const sent = (effects: readonly RealmEffect[], to: string): RealmServerMessage[] => effects.flatMap((e) => (e.k === 'send' && e.to === to ? [e.msg] : []))
 
@@ -62,7 +62,7 @@ describe('hello', () => {
     connect(state, 'a', 'pallet', T0)
     expect(sent(hello(state, 'a', helloMsg({ v: 99 }), 'u1', T0), 'a')).toEqual([{ t: 'refused', why: 'version' }])
     connect(state, 'b', 'pallet', T0)
-    expect(sent(hello(state, 'b', helloMsg({ city: 'viridian' }), 'u1', T0), 'b')).toEqual([{ t: 'refused', why: 'city' }])
+    expect(sent(hello(state, 'b', helloMsg({ city: 'cerulean' }), 'u1', T0), 'b')).toEqual([{ t: 'refused', why: 'city' }])
     connect(state, 'c', 'pallet', T0)
     expect(sent(hello(state, 'c', helloMsg(), null, T0), 'c')).toEqual([{ t: 'refused', why: 'signIn' }])
   })

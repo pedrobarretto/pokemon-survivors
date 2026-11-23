@@ -14,6 +14,56 @@ export const STARTERS = [
   810, 811, 812, 813, 814, 815, 816, 817, 818, // Galar
   906, 907, 908, 909, 910, 911, 912, 913, 914, // Paldea
 ]
+/**
+ * A Grande Atualização's second batch of families (src/data/gaFamiliesB.ts), whole lines: Onix, Happiny,
+ * Clauncher, Fletchling, Golett, Nacli, Inkay, Skorupi, Snover, Tynamo, Dewpider, Duraludon, Bounsweet, Sandile and Stufful's.
+ */
+export const GA_FAMILIES_B = [
+  95, 208, 440, 113, 242, 692, 693, 661, 662, 663, 622, 623, 932, 933, 934, 686, 687, 451, 452, 459, 460, 602, 603, 604, 751, 752, 884, 1018, 761, 762, 763,
+  551, 552, 553, 759, 760,
+]
+/**
+ * The big update's first 15 families (src/data/gaFamiliesA.ts), whole lines: Jangmo-o, Axew, Lapras, Sneasel,
+ * Heracross, Sableye, Spiritomb, Croagunk, Sinistea, Impidimp, Pawmi, Rookidee, Elekid, Magby and Nincada
+ * (Ninjask, and Shedinja, its branch and the shell it leaves behind).
+ */
+export const GA_FAMILIES_A = [
+  782, 783, 784, 610, 611, 612, 131, 215, 461, 214, 302, 442, 453, 454, 854, 855, 859, 860, 861,
+  921, 922, 923, 821, 822, 823, 239, 125, 466, 240, 126, 467, 290, 291, 292,
+]
+/** Of those, the Flying forms that take to the sky: Rookidee's line and Ninjask. */
+const GA_FLYERS_A = [821, 822, 823, 291]
+/**
+ * The Grande Atualização's fossil families (src/data/gaFossils.ts), whole lines: Aerodactyl, Omanyte, Lileep and
+ * Anorith's, and Galar's Dracozolt, Arctozolt and Dracovish (Kabuto's line was a hatchling already).
+ */
+export const GA_FOSSILS = [142, 138, 139, 345, 346, 347, 348, 880, 881, 882]
+/**
+ * The Grande Atualização's Mega families (src/data/gaMegaFamiliesA.ts), whole lines, all Safari-only: Kangaskhan,
+ * Pinsir, Skarmory, Drilbur (and Excadrill) and Drampa.
+ */
+export const GA_MEGA_FAMILIES_A = [115, 127, 227, 529, 530, 780]
+/**
+ * The big update's Mega families (src/data/megaFamiliesB.ts), whole lines, Safari-only: Meditite, Numel, Buneary,
+ * Flabébé (the Eternal Flower Floette, `REGIONAL`, and Florges, its branch) and Skrelp.
+ */
+export const MEGA_FAMILIES_B = [307, 308, 322, 323, 427, 428, 669, 10061, 671, 690, 691]
+/**
+ * The regional forms (src/data/regionalFamilies.ts): the Ovo de Viagem's families by region, whole lines, and the
+ * regional evolutions of lines already playable (branches). Regional forms go by PokeAPI's id (`REGIONAL`).
+ */
+export const REGIONAL_LINES = [
+  10103, 10104, 10101, 10102, 10105, 10106, 10109, 10110, 10111, 10112, 10113, // Alola: Vulpix, Sandshrew, Diglett, Geodude, Grimer
+  10161, 863, 10164, 10165, 10172, 10174, 10175, 862, 10166, 10173, 864, 439, 10168, 10176, 10177, // Galar: Meowth, Slowpoke, Zigzagoon, Farfetch'd, Corsola, Mime Jr., Darumaka
+  10229, 10230, 10238, 10239, 10231, 10232, 10234, 904, // Hisui: Growlithe, Zorua, Voltorb, Qwilfish
+  10253, 980, 10250, 10251, 10252, // Paldea: Wooper, Tauros and its breeds
+  10100, 10114, 10115, 10233, 10236, 10244, 10242, // regional evolutions: Raichu, Exeggutor, Marowak, Typhlosion, Samurott, Decidueye, Goodra
+]
+/**
+ * The wave's hook families (src/data/gaFamiliesHook.ts), whole lines: Scatterbug's (Vivillon's patterns are its
+ * `FORMS`), Minior (its Core colors, `FORMS`), Tyrogue and its three branches, Plusle and Minun.
+ */
+export const GA_FAMILIES_HOOK = [664, 665, 666, 774, 236, 106, 107, 237, 311, 312]
 /** Families that hatch from eggs (src/data/hatchlings.ts), whole lines. Some also roam the horde. */
 export const HATCHLINGS = [
   172, 25, 26, 66, 67, 68, 133, 197, 175, 176, 468, 363, 364, 365, 396, 397, 398, 406, 315, 407, 744, 745, 736, 737, 738, // common
@@ -33,6 +83,20 @@ export const HATCHLINGS = [
   137, 233, 474, 102, 103, 559, 560, 235, // Kecleon Egg (the Vitrine's fixed card): Porygon, Exeggcute, Scraggy and Smeargle's lines
   // Branching evolutions (src/data/branches.ts): the eeveelutions, Gallade, Froslass, Politoed, Kleavor and Ceruledge
   134, 135, 136, 196, 470, 471, 700, 475, 478, 186, 900, 937,
+  // Temporada 1's families (src/data/seasonOne*.ts), whole lines; Dondozo is the one Tatsugiri pilots
+  872, 873, 595, 596, 757, 758, 856, 857, 858, 840, 841, 842, 1011, 1019, 996, 997, 998, // eggs
+  408, 409, 410, 411, 566, 567, 696, 697, 698, 699, // fossils
+  56, 57, 979, 624, 625, 983, 704, 705, 706, 746, 924, 925, 963, 964, 877, 479, 351, 554, 555, 767, 768, 778, 978, 977,
+  77, 78, 10162, 10163, // Ponyta's line and its Galarian form's (`REGIONAL`)
+  ...GA_FAMILIES_B,
+  ...GA_FAMILIES_A,
+  ...REGIONAL_LINES,
+  ...GA_FOSSILS,
+  ...GA_MEGA_FAMILIES_A,
+  ...MEGA_FAMILIES_B,
+  // The Safári and Game Corner wave's families (src/data/scFamilies.ts): the Celadon prizes, both Nidoran lines and Cleffa's, and Phione
+  29, 30, 31, 32, 33, 34, 173, 35, 36, 489,
+  ...GA_FAMILIES_HOOK,
 ]
 export const HORDE = Object.values(roster).map((s) => s.dex)
 /** Horde species with a behavior trait (`src/data/enemies.ts`), plus Nidoqueen's summons. */
@@ -65,7 +129,45 @@ export const COMPANIONS = [710]
 export const HALLOWEEN_BOSSES = [778, 354, 302, 426, 429, 229, 94, 609, 711, 709, 430, 477]
 /** The lobby's shopkeepers (render/plaza.ts): Kecleon (and its purple brother, recolored from the same sheets), Leavanny, the Boutique's tailor, and Bibarel, the carpentry's carpenter. */
 export const SHOPKEEPERS = [352, 542, 400]
-export const DEX = [...new Set([...STARTERS, ...HATCHLINGS, ...HORDE, ...TRAITS, ...BOSSES, ...CRITTERS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...CAMEOS, ...FESTIVAL_LEGENDS, ...REAPER, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...COMPANIONS, ...HALLOWEEN_BOSSES, ...SHOPKEEPERS])]
+/**
+ * Team Rocket's Game Corner and Hideout (src/data/rocket*.ts): the prize counter's four families, whole lines
+ * (Gimmighoul in its Roaming Form, `REGIONAL`: SpriteCollab has no Chest Form sheets), and the Hideout's cast
+ * (Giovanni's Persian, the grunts' Ekans, Arbok, Koffing and Weezing).
+ */
+export const ROCKET_FAMILIES = [132, 359, 10263, 1000, 303]
+export const ROCKET_CAST = [53, 23, 24, 109, 110]
+/** Terastal's legend (`LEGENDS.terapagos`, the 7★ Tera Raid's giant): Terapagos, playable in Legend mode, its Terastal Form at the first awakening. */
+export const TERA_LEGENDS = [1024]
+/** The Ultra Beasts (src/data/ultraBeasts.ts): the Ultra Wormholes' ten, fought and captured, and Poipole, the gift for capturing them all. */
+export const ULTRA_BEASTS = [793, 794, 795, 796, 797, 798, 799, 803, 804, 805, 806]
+/**
+ * The legend paths (src/data/legendPaths.ts), each its own long-term goal: Zygarde (its 10%, 50% and Complete
+ * Formes, `FORMS`), Cosmog's line to Solgaleo or Lunala, Kubfu and Urshifu (both styles), Meltan and Melmetal, and
+ * Regigigas, which wakes for the Regi trio's captor. All playable in Legend mode, and all can be shiny.
+ */
+export const LEGEND_PATHS = [718, 789, 790, 791, 792, 891, 892, 808, 809, 486]
+/**
+ * The café's card game (`realm/games/unown.ts`): Unown, whose letters (its `FORMS`) are the number cards' faces.
+ * Never a player, a foe or shiny.
+ */
+export const CAFE_CARDS = [201]
+/**
+ * The legends with a road of their own (`QUEST_LEGENDS` in src/data/legends.ts): Palkia's rift (and its Origin Forme),
+ * the roaming lake trio (Uxie, Mesprit, Azelf), the Swords of Justice (Cobalion, Terrakion, Virizion) and their
+ * Keldeo, and Hoopa of the ring rush (and Hoopa Unbound). All playable in Legend mode, all able to roll shiny.
+ */
+export const QUEST_LEGENDS = [484, 480, 481, 482, 638, 639, 640, 647, 720]
+/** The Safári's legend (`SAFARI_LEGENDS` in src/data/legends.ts): Manaphy, hatched from the cove's egg, playable in Legend mode and able to be shiny. */
+export const SAFARI_LEGENDS = [490]
+/**
+ * The mythicals of the Grande Atualização (src/data/mythicals.ts): Diancie (the Escavação's rarest treasure, Mega
+ * Diancie at its second awakening), Zeraora (the Power Plant's storm, Mega Zeraora) and Ogerpon (its own Tera Raid,
+ * its masks and their Terastallized sheets). All playable in Legend mode, all able to roll shiny.
+ */
+export const MYTHICAL_LEGENDS = [719, 807, 1017]
+/** The Ruínas da Decisão's Regis (Regieleki, Regidrago) and the Forces of Nature (Tornadus, Thundurus, Landorus, Enamorus), src/data/forces.ts. */
+export const RUINS_FORCES = [894, 895, 641, 642, 645, 905]
+export const DEX = [...new Set([...STARTERS, ...HATCHLINGS, ...ROCKET_FAMILIES, ...ROCKET_CAST, ...HORDE, ...TRAITS, ...BOSSES, ...CRITTERS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...CAMEOS, ...FESTIVAL_LEGENDS, ...REAPER, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...COMPANIONS, ...HALLOWEEN_BOSSES, ...SHOPKEEPERS, ...TERA_LEGENDS, ...ULTRA_BEASTS, ...LEGEND_PATHS, ...QUEST_LEGENDS, ...CAFE_CARDS, ...SAFARI_LEGENDS, ...MYTHICAL_LEGENDS, ...RUINS_FORCES])]
 /**
  * The Arena's emotes (`emote` in src/data/arenaEffects.ts, `EMOTE_ANIMS` there too): extra SpriteCollab
  * animations, only for the species the Arena plays (the starters' lines) and only their front row
@@ -79,18 +181,20 @@ export const EMOTE_ANIMS = ['Hop', 'Rotate', 'Sleep', 'Charge', 'Pose']
  */
 export const FLYERS = new Set([
   16, 17, 18, 21, 22, 227, 276, 277, 333, 334, 396, 397, 398, // the sky's flock
-  6, 41, 42, 123, 130, 149, 169, 176, 373, 468, 714, 715, 722, 723, // player forms
+  6, 41, 42, 123, 130, 149, 169, 176, 373, 468, 714, 715, 722, 723, 566, 567, 661, 662, 663, // player forms
+  ...GA_FLYERS_A,
+  142, // Aerodactyl (src/data/gaFossils.ts)
 ])
 /** Species that can roll shiny: the player lines, regular enemies, rift legendaries, places' bosses, the hidden zones' Audino and the companions (Pumpkaboo for Gold supporters). */
 /** Legendaries that can also roll shiny as wave bosses (the trios, Mewtwo, the mythicals) and Arceus, for the Legend mode's captures. */
 export const SHINY_LEGENDS = [144, 145, 146, 150, 151, 243, 244, 245, 251, 377, 378, 379, 385, 493]
 /**
  * Every species a player can be: the starters' and the hatchlings' whole lines (branches included) and the Legend
- * mode's 25 (the rift, event and festival legends, the trios, the mythicals, Mewtwo and Arceus). The species whose
+ * mode's legends (the rift, event, festival and quest legends, the trios, the mythicals, Mewtwo and Arceus). The species whose
  * wearables `npm run rig` fits, with their `FORMS` (`render/wearFit.test.ts` keeps them in sync with `PLAYABLE`).
  */
-export const PLAYERS = [...new Set([...STARTERS, ...HATCHLINGS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...SHINY_LEGENDS])]
-export const SHINY = new Set([...STARTERS, ...HATCHLINGS, ...HORDE, ...TRAITS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...SHINY_LEGENDS, ...COMPANIONS])
+export const PLAYERS = [...new Set([...STARTERS, ...HATCHLINGS, ...ROCKET_FAMILIES, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...SHINY_LEGENDS, ...TERA_LEGENDS, ...ULTRA_BEASTS, ...LEGEND_PATHS, ...QUEST_LEGENDS, ...SAFARI_LEGENDS, ...MYTHICAL_LEGENDS, ...RUINS_FORCES])]
+export const SHINY = new Set([...STARTERS, ...HATCHLINGS, ...ROCKET_FAMILIES, ...HORDE, ...TRAITS, ...RIFT_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...PLACE_BOSSES, ...HIDDEN_DWELLERS, ...SHINY_LEGENDS, ...COMPANIONS, ...ULTRA_BEASTS, ...TERA_LEGENDS, ...LEGEND_PATHS, ...QUEST_LEGENDS, ...SAFARI_LEGENDS, ...MYTHICAL_LEGENDS, ...RUINS_FORCES])
 
 /**
  * Alternate formes the game draws, by key, mapped to their SpriteCollab form id
@@ -98,7 +202,16 @@ export const SHINY = new Set([...STARTERS, ...HATCHLINGS, ...HORDE, ...TRAITS, .
  * `public/assets/pokemon/<dex>/<key>/` and under `forms.<key>` in the manifest.
  */
 export const FORMS = {
+  201: { b: '0001', c: '0002', f: '0005', j: '0009', k: '0010', n: '0013', o: '0014', u: '0020' }, // Unown's letters, the café's Unown cards (A is the species' own)
   681: { blade: '0001' }, // Aegislash's Blade Forme (Stance Change)
+  // Temporada 1's formes (src/data/seasonOneKits.ts)
+  351: { sunny: '0001', rainy: '0002', snowy: '0003' }, // Castform (the weather)
+  479: { heat: '0001', wash: '0002', frost: '0003', fan: '0004', mow: '0005' }, // Rotom's appliances
+  555: { zen: '0001' }, // Darmanitan's Zen Mode
+  746: { school: '0001' }, // Wishiwashi's School Forme
+  778: { busted: '0001' }, // Mimikyu's broken Disguise
+  877: { hangry: '0001' }, // Morpeko's Hunger Switch
+  964: { hero: '0001' }, // Palafin's Hero Forme
   // Mega Evolutions (src/data/megas.ts). Only these Megas have sprites on SpriteCollab so far; the
   // others wear their final stage's sprite until theirs land there (then add the form id here).
   6: { megaX: '0001' },
@@ -114,8 +227,15 @@ export const FORMS = {
   362: { mega: '0001' },
   448: { mega: '0001' },
   475: { mega: '0001' },
+  208: { mega: '0001' }, // Mega Steelix (src/data/gaFamiliesB.ts)
+  604: { mega: '0001' }, // Mega Eelektross
+  302: { mega: '0001' }, // Mega Sableye (src/data/gaFamiliesA.ts)
+  142: { mega: '0001' }, // Mega Aerodactyl (src/data/gaFossils.ts)
   // Legend mode's forms: Primal Reversion, Mega Rayquaza, the Latis', Mewtwo Y's and Darkrai's Megas, Deoxys' formes.
-  150: { megaY: '0002' },
+  150: { megaY: '0002', shadow: '0003' }, // Shadow Mewtwo: the Rocket Hideout's boss and its Legend-mode variant (src/data/shadow.ts)
+  // Team Rocket's prize families' Megas (src/data/megas.ts)
+  359: { mega: '0001' },
+  303: { mega: '0001' },
   380: { mega: '0001' },
   381: { mega: '0001' },
   382: { primal: '0001' },
@@ -123,6 +243,42 @@ export const FORMS = {
   384: { mega: '0001' },
   386: { attack: '0001', defense: '0002', speed: '0003' },
   491: { mega: '0002' }, // 0001 is a cutscene sprite
+  // Terapagos's Terastal Form (its Stellar Form has no sheets: it wears these in Stellar crystal, `render/teraArt.ts`).
+  1024: { terastal: '0001' },
+  // The legend paths' formes (src/data/legendPaths.ts): Zygarde's 10% and Complete (its 50% is the species' own), Urshifu's Rapid Strike Style.
+  718: { ten: '0001', complete: '0002', mega: '0005' }, // and Mega Zygarde, from its Complete Forme (src/data/megas.ts)
+  892: { rapid: '0001' },
+  484: { origin: '0001' }, // Palkia's Origin Forme (its rift's last phase, its second awakening)
+  720: { unbound: '0001' }, // Hoopa Unbound (its second awakening, the ring rush's last ring)
+  978: { mega: '0003' }, // Mega Tatsugiri: the only one of its three Megas with sheets (its Curly form's)
+  // The Mega families' Megas (src/data/gaMegaFamiliesA.ts); Mega Pinsir has no sheets yet (rainbow outline).
+  115: { mega: '0001' },
+  227: { mega: '0001' },
+  530: { mega: '0001' },
+  780: { mega: '0001' },
+  // The big update's Mega families (src/data/megaFamiliesB.ts). Mega Floette sits beside the Eternal Flower in
+  // Floette's folder, not under it: a form id with a slash is the whole folder (`formFolder`).
+  308: { mega: '0001' },
+  323: { mega: '0001' },
+  428: { mega: '0001' },
+  10061: { mega: '0670/0006' },
+  691: { mega: '0001' },
+  // The Grande Atualização's mythicals (src/data/mythicals.ts): Dialga's Origin Forme (its first awakening, its rift's last
+  // phase) and Primal Dialga (its second awakening, its rift's last phase on Nightmare), Mega Diancie and Mega Zeraora (their second awakenings), Ogerpon's masks and each mask Terastallized.
+  483: { origin: '0001', primal: '0002' },
+  719: { mega: '0001' },
+  807: { mega: '0001' },
+  1017: { wellspring: '0001', hearthflame: '0002', cornerstone: '0003', tealTera: '0004', wellspringTera: '0005', hearthflameTera: '0006', cornerstoneTera: '0007' },
+  // The hook families' looks (src/data/vivillon.ts): Vivillon's wing patterns by region (Meadow is the species' own;
+  // Fancy, 0018, and Poké Ball, 0019, are event patterns with no region, left out) and Minior's seven Core colors.
+  666: {
+    icySnow: '0001', polar: '0002', tundra: '0003', continental: '0004', garden: '0005', elegant: '0006', modern: '0007', marine: '0008',
+    archipelago: '0009', highPlains: '0010', sandstorm: '0011', river: '0012', monsoon: '0013', savanna: '0014', sun: '0015', ocean: '0016', jungle: '0017',
+  },
+  774: { red: '0001', orange: '0002', yellow: '0003', green: '0004', blue: '0005', indigo: '0006', violet: '0007' },
+  // The Forces of Nature's Therian Formes (their second awakening): SpriteCollab has them for Landorus and Enamorus only.
+  645: { therian: '0001' },
+  905: { therian: '0001' },
 }
 
 /**
@@ -135,11 +291,35 @@ export const HANDMADE_SHINIES = {
 }
 
 /**
+ * Species shinies SpriteCollab doesn't have yet, made by `scripts/fetch-assets.mjs` from the species' own sheets by
+ * swapping these colors (the palette its line's official shinies use), into `public/assets/pokemon/<dex>/shiny/`
+ * (Walk, Idle and Hurt; the portrait stays the normal one). Credited in CREDITS.md as a recolor of the sheets' artist.
+ * Drop an entry once SpriteCollab publishes that shiny.
+ */
+export const RECOLORED_SHINIES = {
+  // Naclstack: the salt turns orange, as on shiny Nacli and Garganacl; the rock keeps its browns.
+  933: { '#ffffff': '#ffd5a0', '#e8e6e6': '#f9be74', '#cacaca': '#d89f64', '#8b7f79': '#c0753f' },
+}
+
+/**
+ * Regional forms a player can be whose shiny SpriteCollab doesn't have yet: palette swaps of their own sheets
+ * (Walk, Idle, Hurt and the portrait), made by `scripts/regionalShinies.mjs` into `public/assets/pokemon/<dex>/shiny/`.
+ * By dex, the credit for CREDITS.md. Drop an entry once SpriteCollab publishes that shiny.
+ */
+export const HANDMADE_SPECIES_SHINIES = {
+  10161: 'Pokémon Survivors (palette swap of the sprite above, after Perrserker\'s shiny)',
+  10176: 'Pokémon Survivors (palette swap of the sprite above, after Galarian Darmanitan\'s shiny)',
+}
+
+/**
  * Forms that ship their portrait too (`<dex>/<key>/portrait.png`, `portrait` in the manifest's form), for the
  * screens that show one: Mega Darkrai, the Noite das Bruxas' Meta da comunidade (`ui/halloween.ts`).
  */
 export const FORM_PORTRAITS = {
   491: ['mega'],
+  1024: ['terastal'],
+  // Vivillon's regional patterns (`FORMS`): the HUD's portrait shows the wings the sprite wears.
+  666: ['icySnow', 'polar', 'tundra', 'continental', 'garden', 'elegant', 'modern', 'marine', 'archipelago', 'highPlains', 'sandstorm', 'river', 'monsoon', 'savanna', 'sun', 'ocean', 'jungle'],
 }
 
 /**
@@ -148,6 +328,7 @@ export const FORM_PORTRAITS = {
  * the species' `formCries` in the manifest.
  */
 export const FORM_CRIES = {
+  1024: { terastal: 'terapagos-terastal', stellar: 'terapagos-stellar' },
   3: { mega: 'venusaur-mega' },
   6: { megaX: 'charizard-mega-x', megaY: 'charizard-mega-y' },
   9: { mega: 'blastoise-mega' },
@@ -178,7 +359,10 @@ export const FORM_CRIES = {
   445: { mega: 'garchomp-mega', megaZ: 'garchomp-mega-z' },
   448: { mega: 'lucario-mega', megaZ: 'lucario-mega-z' },
   475: { mega: 'gallade-mega' },
-  150: { megaY: 'mewtwo-mega-y' },
+  302: { mega: 'sableye-mega' },
+  150: { megaY: 'mewtwo-mega-y', megaX: 'mewtwo-mega-x' },
+  303: { mega: 'mawile-mega' },
+  359: { mega: 'absol-mega', megaZ: 'absol-mega-z' },
   380: { mega: 'latias-mega' },
   381: { mega: 'latios-mega' },
   382: { primal: 'kyogre-primal' },
@@ -186,10 +370,45 @@ export const FORM_CRIES = {
   384: { mega: 'rayquaza-mega' },
   386: { attack: 'deoxys-attack', defense: 'deoxys-defense', speed: 'deoxys-speed' },
   491: { mega: 'darkrai-mega' },
+  718: { ten: 'zygarde-10', complete: 'zygarde-complete', mega: 'zygarde-mega' },
+  892: { rapid: 'urshifu-rapid-strike' },
+  483: { origin: 'dialga-origin' },
+  484: { origin: 'palkia-origin' },
+  720: { unbound: 'hoopa-unbound' },
+  645: { therian: 'landorus-therian' },
+  905: { therian: 'enamorus-therian' },
   500: { mega: 'emboar-mega' },
   652: { mega: 'chesnaught-mega' },
+  208: { mega: 'steelix-mega' },
+  604: { mega: 'eelektross-mega' },
   655: { mega: 'delphox-mega' },
   658: { mega: 'greninja-mega' },
+  // The Grande Atualização's Megas on lines already playable (src/data/megas.ts)
+  214: { mega: 'heracross-mega' },
+  460: { mega: 'abomasnow-mega' },
+  478: { mega: 'froslass-mega' },
+  560: { mega: 'scrafty-mega' },
+  609: { mega: 'chandelure-mega' },
+  623: { mega: 'golurk-mega' },
+  687: { mega: 'malamar-mega' },
+  768: { mega: 'golisopod-mega' },
+  998: { mega: 'baxcalibur-mega' },
+  978: { mega: 'tatsugiri-curly-mega' },
+  142: { mega: 'aerodactyl-mega' },
+  115: { mega: 'kangaskhan-mega' },
+  127: { mega: 'pinsir-mega' },
+  227: { mega: 'skarmory-mega' },
+  530: { mega: 'excadrill-mega' },
+  780: { mega: 'drampa-mega' },
+  308: { mega: 'medicham-mega' },
+  323: { mega: 'camerupt-mega' },
+  428: { mega: 'lopunny-mega' },
+  10061: { mega: 'floette-mega' },
+  691: { mega: 'dragalge-mega' },
+  36: { mega: 'clefable-mega' }, // Mega Clefable (src/data/scFamilies.ts): no SpriteCollab sheets, Clefable wears the rainbow outline
+  719: { mega: 'diancie-mega' },
+  807: { mega: 'zeraora-mega' },
+  1017: { wellspring: 'ogerpon-wellspring-mask', hearthflame: 'ogerpon-hearthflame-mask', cornerstone: 'ogerpon-cornerstone-mask' },
 }
 
 /**
@@ -212,6 +431,37 @@ export const EMOTIONS = {
   542: ['Normal', 'Happy', 'Joyous', 'Surprised', 'Sigh', 'Inspired', 'Angry'],
   // Bibarel, the carpentry's carpenter (render/plaza.ts): SpriteCollab only has its Normal portrait.
   400: ['Normal'],
+  // The Game Corner's Meowth talks with the 52 row above; Giovanni speaks through his Persian (the Rocket Hideout).
+  53: ['Normal', 'Happy', 'Joyous', 'Surprised', 'Sigh', 'Inspired', 'Angry', 'Determined', 'Shouting'],
+  // Rotom, the first visit's guide (`data/guide.ts`): the welcome, the training run and the lobby tour.
+  479: ['Normal', 'Happy', 'Joyous', 'Surprised', 'Sigh', 'Inspired', 'Angry'],
+  // Sudowoodo, who tells of the Zygarde Cells (the legend paths, src/data/legendPaths.ts).
+  185: ['Normal', 'Happy', 'Joyous', 'Surprised', 'Sigh', 'Inspired', 'Angry'],
 }
 
-export const pad = (n) => String(n).padStart(4, '0')
+/**
+ * Regional forms played as species of their own (keep in sync with `src/data/regionalForms.ts`), by PokeAPI's id
+ * for the form (its cry is there under that id): their SpriteCollab folder. Everything keyed by dex then just works.
+ */
+export const REGIONAL = {
+  10162: '0077/0001', 10163: '0078/0001', 10263: '0999/0001', // Gimmighoul (Roaming Form, Team Rocket)
+  // Alola
+  10100: '0026/0001', 10101: '0027/0001', 10102: '0028/0001', 10103: '0037/0001', 10104: '0038/0001', 10105: '0050/0001', 10106: '0051/0001',
+  10109: '0074/0001', 10110: '0075/0001', 10111: '0076/0001', 10112: '0088/0001', 10113: '0089/0001', 10114: '0103/0001', 10115: '0105/0001',
+  // Galar
+  10161: '0052/0002', 10164: '0079/0001', 10165: '0080/0001', 10166: '0083/0001', 10168: '0122/0001', 10172: '0199/0001', 10173: '0222/0001',
+  10174: '0263/0001', 10175: '0264/0001', 10176: '0554/0001', 10177: '0555/0002',
+  // Hisui
+  10229: '0058/0001', 10230: '0059/0001', 10231: '0100/0001', 10232: '0101/0001', 10233: '0157/0001', 10234: '0211/0001', 10236: '0503/0001',
+  10238: '0570/0001', 10239: '0571/0001', 10242: '0706/0001', 10244: '0724/0001',
+  // Paldea (Tauros' three breeds)
+  10250: '0128/0001', 10251: '0128/0002', 10252: '0128/0003', 10253: '0194/0002',
+  // Floette of the Eternal Flower (src/data/megaFamiliesB.ts): Flabébé's line's final stage, the one with the Mega.
+  10061: '0670/0005',
+}
+/** A species' SpriteCollab folder. */
+export const pad = (n) => REGIONAL[n] ?? String(n).padStart(4, '0')
+/** A form's SpriteCollab folder (`FORMS`): under the species' own, or the whole folder when the id has a slash. */
+export const formFolder = (dex, id) => (id.includes('/') ? id : `${pad(dex)}/${id}`)
+/** Where a species' shiny sits below its folder: a regional form's is directly under the form, like any form's. */
+export const shinyPath = (dex) => (REGIONAL[dex] ? '/0001' : '/0000/0001')

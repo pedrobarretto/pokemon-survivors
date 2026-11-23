@@ -19,7 +19,8 @@ import { abilitySet } from '../game/abilities'
 import { heldMega } from '../game/mega'
 import { megaIcon } from '../render/megaFx'
 import { BRANCHES } from '../data/branches'
-import { legendSignature } from '../data/legends'
+import { isLegend, legendSignature } from '../data/legends'
+import { innateText } from './innateText'
 import { abilityIcon } from '../render/abilityArt'
 import type { Difficulty } from '../game/difficulty'
 import { EGGS, refundOf, toSteps } from '../game/eggs'
@@ -33,8 +34,8 @@ import { modIcon } from '../render/modFx'
 import { specialIcon } from '../render/specialFx'
 import { portraitUrl, sprites } from '../render/sprites'
 import { placeIcon } from '../render/places'
-import { formatNumber, formatPokeDollars, locale, t } from '../i18n'
-import { ROUTES } from '../site/routes'
+import { formatNumber, formatPokeDollars, t } from '../i18n'
+import { supportPageUrl } from './supportLink'
 import { treatIcon } from '../render/halloweenArt'
 import { h, later } from './dom'
 import type { ResultsInvite } from './invites'
@@ -51,6 +52,9 @@ import { deathCause } from './deathCause'
 import { abilityMark } from './abilityMark'
 import { teamBuilds } from './teamHud'
 import type { SaveCard } from './onboarding'
+import { confirmDrop } from './itemSwap'
+import { needsSwap } from '../game/itemDrop'
+import { radioPill } from './radio'
 
 export type Screen = {
   el: HTMLElement
@@ -325,6 +329,8 @@ const fillCard = (g: Game, button: HTMLElement, offer: Offer, i: number) => {
   const recipes = offerRecipes(g, offer)
   const rarity = rarityOf(offer)
   const build = followsBuild(g, offer)
+  // Every slot taken: a new item's card is a swap (`needsSwap`), which asks which item goes.
+  const swap = needsSwap(localPlayer(g), offer)
   // A move the evolution just unlocked, while it still comes up more often: tagged with the form that learns it.
   const fresh =
     offer.kind === 'move' && localPlayer(g).freshMoves > 0 && !localPlayer(g).moves.some((m) => m.id === offer.id) && unlockedAt(localPlayer(g).starter, localPlayer(g).branch, localPlayer(g).stage).includes(offer.id)
@@ -340,6 +346,7 @@ const fillCard = (g: Game, button: HTMLElement, offer: Offer, i: number) => {
     !canBanish(offer) && 'offer-keep',
     fresh && 'offer-fresh',
     build && 'offer-build',
+    swap && 'offer-swap',
   ]
   button.className = classes.filter(Boolean).join(' ')
   button.style.setProperty('--i', String(i))
@@ -378,8 +385,10 @@ const fillCard = (g: Game, button: HTMLElement, offer: Offer, i: number) => {
         fresh && h('span', { class: 'tag tag-fresh' }, m.freshTag(playerForm(g).name)),
         rarity && h('span', { class: `tag tag-${rarity}` }, rarity === 'rare' ? m.rare : m.shiny),
         build && buildTag(),
+        swap && h('span', { class: 'tag tag-swap' }, t().itemDrop.swapTag),
       ),
       h('div', { class: 'offer-desc' }, v.desc),
+      swap && h('div', { class: 'offer-note swap-note' }, t().itemDrop.swapNote),
       rarity === 'shiny' && h('div', { class: 'offer-note' }, m.shinyNote),
       offer.kind === 'duo' && h('div', { class: 'offer-note duo-note' }, t().duo.frees),
       recipes.length > 0 && h('div', { class: 'evo-recipes' }, ...recipes),
@@ -592,13 +601,16 @@ const moveList = (g: Game) =>
     }),
   )
 
-const itemList = (g: Game) =>
+/** The held items; with `drop`, each is a button that asks to let it go (Largar item). */
+const itemList = (g: Game, drop?: (index: number) => void) =>
   h(
     'div',
-    { class: 'loadout-list' },
-    ...localPlayer(g).items.map((i) =>
-      h('div', { class: 'loadout-row' }, h('img', { src: itemIcon(i.id), alt: '' }), ITEMS[i.id].name, levelTag(i.level, ITEMS[i.id].levels.length)),
-    ),
+    { class: drop ? 'loadout-list droppable' : 'loadout-list' },
+    ...localPlayer(g).items.map((i, index) => {
+      const parts = [h('img', { src: itemIcon(i.id), alt: '' }), ITEMS[i.id].name, levelTag(i.level, ITEMS[i.id].levels.length)] as const
+      if (!drop) return h('div', { class: 'loadout-row' }, ...parts)
+      return h('button', { class: 'loadout-row drop-row', type: 'button', title: t().itemDrop.dropTitle, onclick: () => drop(index) }, ...parts, h('span', { class: 'drop-mark', 'aria-hidden': 'true' }, '×'))
+    }),
     ...localPlayer(g).curses.held.map((id) =>
       h('div', { class: 'loadout-row cursed', title: t().curses[id].downside }, h('img', { src: curseIcon(id), alt: '' }), CURSES[id].name, h('span', { class: 'tag tag-curse' }, t().curse.label)),
     ),
@@ -662,6 +674,19 @@ const mapPanel = (g: Game) => {
   )
 }
 
+/** A legend's innate for the pause menu: always on, from Lv 1, beside the ability picked at the first awakening. */
+const innatePanel = (g: Game) => {
+  const starter = localPlayer(g).starter
+  if (!isLegend(starter)) return null
+  const innate = innateText(t(), starter)
+  return h(
+    'div',
+    { class: 'pause-ability innate-ability' },
+    h('img', { src: abilityIcon(innate.ability), alt: '' }),
+    h('div', {}, h('b', {}, h('small', {}, t().legend.innate), innate.name), h('span', {}, innate.text)),
+  )
+}
+
 /** The ability in play for the pause menu: the one picked (its Hidden tag too), the Mega's while that lasts, or when it comes. */
 const abilityPanel = (g: Game) => {
   const m = t().ability
@@ -685,20 +710,21 @@ const abilityPanel = (g: Game) => {
 /**
  * Yes/no dialog over a screen (the mart's purchases, co-op's "Sair da partida").
  * Defaults to "no" so a stray Enter is harmless; Esc or Backspace answer no.
- * `opts`: other button labels, a class for the backdrop (`shop-confirm`).
+ * `opts`: other button labels, a class for the backdrop (`shop-confirm`), a
+ * `note` under the question (what answering yes costs).
  */
 export const confirmDialog = (
   root: HTMLElement,
   input: Input,
   text: string,
   onAnswer: (yes: boolean) => void,
-  opts: { yes?: string; no?: string; class?: string } = {},
+  opts: { yes?: string; no?: string; class?: string; note?: string } = {},
 ): Screen => {
   const yes = h('button', { class: 'btn' }, opts.yes ?? t().mart.yes)
   const no = h('button', { class: 'btn' }, opts.no ?? t().mart.no)
   const nav = menu(input, [yes, no], (i) => onAnswer(i === 0), { horizontal: true, initial: 1 })
   const offEsc = input.onKey((k) => (k === 'Escape' || k === 'Backspace') && onAnswer(false))
-  const el = h('div', { class: opts.class ? `screen dim ${opts.class}` : 'screen dim' }, h('div', { class: 'dialog box pop' }, h('div', { class: 'dialog-title' }, text), h('div', { class: 'buttons' }, yes, no)))
+  const el = h('div', { class: opts.class ? `screen dim ${opts.class}` : 'screen dim' }, h('div', { class: 'dialog box pop', role: 'alertdialog', 'aria-label': text }, h('div', { class: 'dialog-title' }, text), opts.note && h('p', { class: 'dialog-note' }, opts.note), h('div', { class: 'buttons' }, yes, no)))
   root.append(el)
   return { el, dispose: () => (nav.off(), offEsc(), el.remove()) }
 }
@@ -737,6 +763,8 @@ type PauseActions = {
   coop?: { sound: () => boolean; soundOn: boolean }
   /** An Arena match: proposes the team's surrender (or gives up, alone with bots), once confirmed. */
   surrender?: () => void
+  /** Largar item: lets go of the held item at `index`, once confirmed (`dropItem`; recorded, or a tick entry in co-op). */
+  drop?: (index: number) => void
 }
 
 export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: PauseActions): Screen => {
@@ -790,6 +818,25 @@ export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: Pau
     }, focus)
   }
 
+  /** Largar item: "Largar X?" first; yes lets it go and the menu redraws (co-op's once the entry comes back, see the watch below). */
+  const askDrop = (index: number) => {
+    const drop = actions.drop
+    if (!drop || sub) return
+    later(() =>
+      openSub((back) => {
+        const dialog = confirmDrop(root, input, g, index, (yes) => {
+          dialog?.dispose()
+          if (yes) {
+            playSfx('item')
+            drop(index)
+          }
+          back()
+        })
+        return dialog ?? { el: h('div', {}), dispose: () => {} }
+      }, nav?.index ?? 0),
+    )
+  }
+
   /** `opening` plays the pop-in; redraws after closing the settings don't. */
   const render = (focus: number, opening: boolean) => {
     const m = t().pause
@@ -824,14 +871,18 @@ export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: Pau
         'div',
         { class: opening ? 'dialog box pop wide pause' : 'dialog box wide pause' },
         h('div', { class: 'dialog-title' }, coop ? cm.title : m.title),
+        // The Rádio's track, while it plays in the run (`ui/radio.ts`).
+        radioPill(),
         coop && h('p', { class: 'pause-note' }, g.versus ? t().versus.menu.note : cm.note),
         // A match has no difficulty: everyone plays the same.
         !g.versus && difficultyTag(g.difficulty),
-        abilityPanel(g),
-        !g.versus && mapPanel(g),
         h(
           'div',
           { class: 'pause-body' },
+          // In the body, so they scroll with it: a phone held upright puts the loadout first (style.css), above them.
+          innatePanel(g),
+          abilityPanel(g),
+          !g.versus && mapPanel(g),
           // A match keeps running behind the menu: your moves and your team's builds, not the run's whole sheet.
           g.versus
             ? pauseSection(m.movesTitle, moveList(g))
@@ -839,7 +890,7 @@ export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: Pau
                 'div',
                 { class: 'pause-grid' },
                 pauseSection(m.statsTitle, statTable(g)),
-                h('div', { class: 'pause-column' }, pauseSection(m.movesTitle, moveList(g)), pauseSection(m.itemsTitle, itemList(g))),
+                h('div', { class: 'pause-column' }, pauseSection(m.movesTitle, moveList(g)), pauseSection(m.itemsTitle, itemList(g, actions.drop && askDrop)), actions.drop && localPlayer(g).items.length > 0 && h('p', { class: 'drop-hint' }, t().itemDrop.pauseHint)),
               ),
           !g.versus && pauseSection(m.damageTitle, damagePanel(g)),
           builds && pauseSection(cm.builds, builds),
@@ -855,8 +906,20 @@ export const pauseMenu = (root: HTMLElement, input: Input, g: Game, actions: Pau
   render(0, true)
   // Esc inside the settings (or the report) only closes them.
   const offEsc = input.onKey((k) => k === 'Escape' && !sub && actions.resume())
+  // The held items can change under the menu (a co-op drop lands a few ticks after it's sent): it redraws when they do.
+  const itemsKey = () => localPlayer(g).items.map((i) => `${i.id}:${i.level}`).join()
+  let shownItems = itemsKey()
+  const watch = actions.drop
+    ? setInterval(() => {
+        if (!el.isConnected) return clearInterval(watch)
+        const now = itemsKey()
+        if (now === shownItems || sub) return
+        shownItems = now
+        render(nav?.index ?? 0, false)
+      }, 120)
+    : undefined
   root.append(el)
-  return { el, dispose: () => (sub?.dispose(), nav?.off(), offEsc(), el.remove()) }
+  return { el, dispose: () => (sub?.dispose(), nav?.off(), offEsc(), clearInterval(watch), el.remove()) }
 }
 
 /* ---------------- Results ---------------- */
@@ -960,6 +1023,8 @@ type ResultsExtras = {
   save?: SaveCard | null
   /** After a win or a new best, the nudge to invite a friend (`resultsInvite`), under the run's news. */
   invite?: ResultsInvite | null
+  /** A signed-in player's run gems, once the report answers (`runGemsLine`), under the ranking line. */
+  gems?: HTMLElement | null
 }
 
 const NO_EXTRAS: ResultsExtras = { badge: null, report: null, medals: [], eggs: { converted: { full: [], cap: [] }, ready: 0 }, news: { species: 0, shinies: 0 }, ranking: null, share: null }
@@ -1101,6 +1166,7 @@ export const results = (
       // Right under the run's news, where a phone held upright sees it before scrolling.
       invite?.card,
       ranking?.panel,
+      extras.gems,
       goOn && h('p', { class: 'endless-hint' }, r.continueHint),
       h(
         'div',
@@ -1114,7 +1180,7 @@ export const results = (
       extras.save?.el,
       h('div', { class: 'buttons result-buttons' }, ...row),
       victory && extras.credits,
-      victory && h('a', { class: 'support-link result-support', href: ROUTES.support[locale()], target: '_blank', rel: 'noopener' }, `♥ ${m.support}`),
+      victory && h('a', { class: 'support-link result-support', href: supportPageUrl('victory'), target: '_blank', rel: 'noopener' }, `♥ ${m.support}`),
     ),
   )
   root.append(el)

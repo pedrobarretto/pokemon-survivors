@@ -1,11 +1,12 @@
 import { randomUUID } from 'node:crypto'
 import type { RawData, WebSocket } from 'ws'
 import { REALM, type CityId, type RealmHome, type RealmServerMessage } from '../../../src/net/realm'
-import type { IdentityResponse, PresenceReport, VisitRequest, VisitResponse } from '../../../src/net/realmRelay'
+import type { DeedsAnswer, DeedsReport, IdentityResponse, PresenceReport, VisitRequest, VisitResponse } from '../../../src/net/realmRelay'
 import {
   REALM_CLOSE,
   connect,
   createRealm,
+  deedsAnswered,
   disconnect,
   hello,
   identified,
@@ -27,7 +28,7 @@ import type { Log } from './rooms'
  *
  * A socket's first message must be a `hello`; its token is checked here
  * (`verify`, Clerk) before the machine sees it, and the machine's asks
- * (identities, base visits, presence) go to the API through `deps`.
+ * (identities, base visits, presence, deeds) go to the API through `deps`.
  */
 
 /** A socket not seated within this long is closed (no valid `hello`, or its checks still out). */
@@ -48,6 +49,8 @@ export type RealmsDeps = {
   visit: (req: VisitRequest) => Promise<VisitResponse | null>
   /** Posts who walks each city; fire and forget. */
   presence: (report: PresenceReport) => void
+  /** Reports what trainers did; the answer, or null if it failed. Never throws. */
+  deeds: (report: DeedsReport) => Promise<DeedsAnswer | null>
 }
 
 const textOf = (data: RawData) => (Array.isArray(data) ? Buffer.concat(data) : Buffer.isBuffer(data) ? data : Buffer.from(new Uint8Array(data))).toString('utf8')
@@ -73,6 +76,7 @@ export const createRealms = (deps: RealmsDeps) => {
       else if (e.k === 'identify') void deps.identities(e.userIds).then((res) => step(() => identified(state, e.ask, res, now())))
       else if (e.k === 'visit') void deps.visit(e.req).then((res) => step(() => visited(state, e.ask, res, now())))
       else if (e.k === 'presence') deps.presence(e.report)
+      else if (e.k === 'deeds') void deps.deeds(e.report).then((res) => step(() => deedsAnswered(state, e.ask, res)))
       else log(e.ev, e.data)
     }
   }

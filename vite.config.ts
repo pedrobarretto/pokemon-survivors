@@ -18,8 +18,8 @@ const SITE_ENTRY = '/src/site/index.ts'
 const sitePages = (): Plugin => {
   let site: Site | null = null
   let root = process.cwd()
-  /** Every document the site renders: its pages and the 404. */
-  const documents = (of: Site) => [...of.SITE_PAGES, of.NOT_FOUND_PAGE]
+  /** Every document the site renders: its pages, the Simplified Chinese game page (made from `zh-tw/index.html`) and the 404. */
+  const documents = (of: Site) => [...of.SITE_PAGES, of.hansPlayPage(() => readFileSync(resolve(root, 'zh-tw/index.html'), 'utf8')), of.NOT_FOUND_PAGE]
   /** The build's documents by absolute file, looked up on every module Vite resolves. */
   let pages = new Map<string, ReturnType<typeof documents>[number]>()
   const pageFor = (id: string) => pages.get(id)
@@ -29,7 +29,8 @@ const sitePages = (): Plugin => {
     async config(config, { command }) {
       if (command !== 'build') return
       root = resolve(config.root ?? process.cwd())
-      site = (await runnerImport<Site>(SITE_ENTRY, { configFile: false, root })).module
+      // The pages render with the game's build constants.
+      site = (await runnerImport<Site>(SITE_ENTRY, { configFile: false, root, define: config.define })).module
       pages = new Map(documents(site).map((p) => [resolve(root, p.file), p]))
       // Entry names from the output file: `en/guide/index.html` → `en-guide`, `404.html` → `404`.
       const name = (file: string) => file.replace(/(\/?index)?\.html$/, '').replace(/\//g, '-')
@@ -53,11 +54,11 @@ const sitePages = (): Plugin => {
           res.setHeader('Content-Type', 'application/xml')
           return res.end(dev.sitemap())
         }
-        // Like Vercel's `trailingSlash: true`: /guia → /guia/
+        // Like the site's Worker (`worker/siteRules.ts`): /guia → /guia/
         const page = documents(dev).find((p) => p.path === path || p.path === `${path}/`)
         if (!page) {
           if (!missing(path, req.headers.accept)) return next()
-          // Like Vercel: a page that doesn't exist gets the 404 page, with its status.
+          // Like the site's Worker: a page that doesn't exist gets the 404 page, with its status.
           res.statusCode = 404
           res.setHeader('Content-Type', 'text/html')
           return res.end(await server.transformIndexHtml(path, dev.NOT_FOUND_PAGE.render(), req.originalUrl))
@@ -75,7 +76,7 @@ const sitePages = (): Plugin => {
 }
 
 /**
- * Whether a dev request is a page navigation Vercel would answer with the 404:
+ * Whether a dev request is a page navigation the site's Worker would answer with the 404:
  * HTML, not Vite's own paths or a file (an extension), and no game page on disk.
  */
 const missing = (path: string, accept: string | undefined) =>
@@ -92,15 +93,31 @@ const statSafe = (file: string) => {
   }
 }
 
-/** The commit being built (Vercel says which; locally, git), for `__GAME_VERSION__`. */
+/** The commit being built (GitHub Actions says which; locally, git), for `__GAME_VERSION__`. */
 const gameVersion = () => {
-  const sha = process.env.VERCEL_GIT_COMMIT_SHA
+  const sha = process.env.GITHUB_SHA
   if (sha) return sha.slice(0, 7)
   try {
     return execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim() || 'dev'
   } catch {
     return 'dev'
   }
+}
+
+/**
+ * When the commit being built was made, in Unix seconds, for `__GAME_BUILT__`:
+ * the build's place in line, which a commit id can't give. Main's commits come
+ * in merge order, so a later deploy has a larger number. The build's own clock
+ * without git.
+ */
+const gameBuilt = () => {
+  try {
+    const at = Number(execSync(`git log -1 --format=%ct ${process.env.GITHUB_SHA ?? 'HEAD'}`, { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim())
+    if (Number.isSafeInteger(at) && at > 0) return at
+  } catch {
+    // No git: the build's clock below.
+  }
+  return Math.floor(Date.now() / 1000)
 }
 
 /** A repo file's text, or null when it isn't a file. */
@@ -191,13 +208,17 @@ const atelier = (): Plugin => ({
   },
 })
 
-// One page per language for the game (index.html, en/, es/, fr/ and zh-tw/index.html); the site pages are added by `sitePages`.
+// One page per language for the game (index.html, en/, es/, fr/ and zh-tw/index.html; zh-cn/ is made from zh-tw/ by `sitePages`, like the site pages).
 export default defineConfig({
   plugins: [sitePages(), simBuildFile(), atelier()],
   // The co-op relay (`relay/`) is its own package with its own Workers test runner.
   test: { exclude: ['**/node_modules/**', '**/.git/**', 'relay/**'] },
-  define: { __GAME_VERSION__: JSON.stringify(gameVersion()), __SIM_BUILD__: JSON.stringify(SIM_BUILD) },
-  // PostHog's proxy, as vercel.json has it, to try analytics locally (`ps:analytics` set to `on` in localStorage).
+  define: {
+    __GAME_VERSION__: JSON.stringify(gameVersion()),
+    __GAME_BUILT__: JSON.stringify(gameBuilt()),
+    __SIM_BUILD__: JSON.stringify(SIM_BUILD),
+  },
+  // PostHog's proxy, as the site's Worker has it (`worker/worker.ts`), to try analytics locally (`ps:analytics` set to `on` in localStorage).
   server: { proxy: { '/ingest': { target: 'https://us.i.posthog.com', changeOrigin: true, rewrite: (path) => path.replace(/^\/ingest/, '') } } },
   build: {
     // Hidden source maps, for `scripts/sourcemaps.mjs` to upload to PostHog, only where it will.

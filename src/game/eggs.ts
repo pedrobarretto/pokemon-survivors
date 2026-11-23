@@ -44,6 +44,22 @@ export const EGG_TIERS = {
   kecleon: { steps: 4000, refund: 2500, even: true },
   /** The loyalty card's 100-stamp gift (`LOYALTY`): a Kecleon Egg whose hatch is always shiny. */
   kecleonShiny: { steps: 4000, refund: 2500, even: true, families: 'kecleon', shiny: true },
+  /** The Fossil Egg: Old Amber dug up in the Underground, and only Aerodactyl, the amber's own fossil, comes out. */
+  fossil: { steps: 3000, refund: 800, even: true },
+  /**
+   * The Ovo de Viagem, one tier per region: only the Vitrine's travel card
+   * sells it, the week's region's (`game/travel.ts`), and only that region's
+   * families come out (`data/regionalFamilies.ts`), the ones not hatched yet
+   * likelier, as any regular egg.
+   */
+  alola: { steps: 3000, refund: 1500 },
+  galar: { steps: 3000, refund: 1500 },
+  hisui: { steps: 3000, refund: 1500 },
+  paldea: { steps: 3000, refund: 1500 },
+  /** No egg at all: the families whose way in is their own (an encounter, research, the Realm). Never laid; it only names their source. */
+  found: { steps: 2000, refund: 600 },
+  /** No egg either: the fossils the Escavação restores (`data/digTreasures.ts`), each its own family. Never laid; it only names their source. */
+  dig: { steps: 3000, refund: 800 },
 } as const satisfies Record<string, EggTierRule>
 
 export type EggTier = keyof typeof EGG_TIERS
@@ -51,8 +67,10 @@ export type EggTier = keyof typeof EGG_TIERS
 export const EGG_TIER_IDS = Object.keys(EGG_TIERS) as EggTier[]
 
 export const EGGS = {
-  /** Incubator slots every save has (the shop sells more, `INCUBATOR.slots`). An egg that finds them full is paid out in ₽ (its tier's `refund`). */
+  /** Incubator slots every save has (the shop sells more, `INCUBATOR.slots`). An egg that finds them full waits in line (`queue`). */
   slots: 3,
+  /** Eggs that wait in line for a free slot (`Save.eggQueue`), walking no steps meanwhile. One that finds the line full too is paid out in ₽ (its tier's `refund`). */
+  queue: 6,
   /** Eggs a single run can drop. */
   perRun: 2,
   /** World px per step: the base speed (68 px/s) walks about 4 steps a second. */
@@ -75,8 +93,8 @@ export const EGG_SOURCES = {
   place: { chance: 0.25, odds: { common: 55, rare: 40, ultra: 5 } },
   final: { chance: 1, odds: { rare: 70, ultra: 30 } },
   reaper: { chance: 1, odds: { ultra: 1 } },
-  /** Old Amber dug up in the Underground (`DIG_FINDS`): it rolls its own odds first. */
-  fossil: { chance: 1, odds: { common: 35, rare: 50, ultra: 15 } },
+  /** Old Amber dug up in the Underground (`DIG_FINDS`): it rolls its own odds first, and lays the Fossil Egg. */
+  fossil: { chance: 1, odds: { fossil: 1 } },
   /** A defended nest (`fieldMissions.ts`): the mission rolls its own odds per difficulty first. */
   mission: { chance: 1, odds: { common: 60, rare: 35, ultra: 5 } },
 } as const satisfies Record<string, DropRule>
@@ -146,26 +164,36 @@ export const MAX_SLOTS = EGGS.slots + INCUBATOR.slots.length
 /** Incubator slots still free out of `slots` (`incubatorSlots`). */
 export const freeSlots = (eggs: readonly Egg[], slots: number) => Math.max(0, slots - eggs.length)
 
-/** Whether a save's incubator has no slot left for another egg. */
-export const incubatorFull = (save: Pick<Save, 'eggs' | 'incubator'>) => freeSlots(save.eggs, incubatorSlots(save)) === 0
+/** Eggs a save can still take before one is paid out in ₽: its free slots plus the room left in its waiting line. */
+export const eggRoom = (save: Pick<Save, 'eggs' | 'eggQueue' | 'incubator'>) => freeSlots(save.eggs, incubatorSlots(save)) + Math.max(0, EGGS.queue - save.eggQueue.length)
+
+/** Whether a save has no room left for another egg: every slot taken and the waiting line full. */
+export const incubatorFull = (save: Pick<Save, 'eggs' | 'eggQueue' | 'incubator'>) => eggRoom(save) === 0
 
 /** The ₽ eggs of these tiers are paid out for when they don't fit. */
 export const refundOf = (tiers: readonly EggTier[]) => tiers.reduce((sum, tier) => sum + EGG_TIERS[tier].refund, 0)
 
+/** The waiting line moved into the free slots, first in first: what every change that frees or adds a slot ends with. */
+export const settleEggs = (eggs: readonly Egg[], queue: readonly Egg[], slots: number) => {
+  const free = freeSlots(eggs, slots)
+  return { eggs: [...eggs, ...queue.slice(0, free)], eggQueue: queue.slice(free) }
+}
+
 /**
  * Banks a run into the incubator: the eggs already in it walk `steps` (twice
  * over with a Quick Incubator), then the new ones (with the steps they walked
- * since found) take the free slots. Those that don't fit are paid out in ₽.
+ * since found) join the waiting line behind the eggs already in it, and the
+ * line fills the free slots. Those past the line's end are paid out in ₽.
  */
 export const depositEggs = (save: Save, steps: number, found: readonly Egg[]) => {
-  const free = freeSlots(save.eggs, incubatorSlots(save))
-  const converted = found.slice(free).map((e) => e.tier)
+  const walked = save.eggs.map((e) => walk(e, steps))
+  const settled = settleEggs(walked, [...save.eggQueue, ...found.map((e) => walk(e, 0))], incubatorSlots(save))
+  const converted = settled.eggQueue.slice(EGGS.queue).map((e) => e.tier)
   const refund = refundOf(converted)
-  const eggs = [...save.eggs.map((e) => walk(e, steps)), ...found.slice(0, free).map((e) => walk(e, 0))]
-  return { save: { ...save, eggs, wallet: save.wallet + refund }, converted, refund }
+  return { save: { ...save, eggs: settled.eggs, eggQueue: settled.eggQueue.slice(0, EGGS.queue), wallet: save.wallet + refund }, converted, refund }
 }
 
-/** Gives an egg outside a run (mission rewards). It starts with no steps; a full incubator pays its ₽ instead. */
+/** Gives an egg outside a run (mission rewards). It starts with no steps; with no room (`incubatorFull`) it pays its ₽ instead. */
 export const grantEgg = (save: Save, tier: EggTier) => depositEggs(save, 0, [{ tier, steps: 0 }])
 
 /* ---------------- Hatching ---------------- */
@@ -227,8 +255,8 @@ export const hatchOdds = (tier: EggTier, hatched: Hatched, pity: EggPity = {}) =
  * Hatches the ready egg at `index`. A new family, or the shiny form of one
  * owned in normal colors, unlocks it; anything else is a duplicate worth its
  * tier's ₽. Either way the Pokédex catches what came out (`markHatch`), and
- * the egg pity counts it (a shiny of an owned family isn't new). Null when
- * there is no ready egg there.
+ * the egg pity counts it (a shiny of an owned family isn't new). The slot it
+ * frees takes the first egg waiting in line. Null when there is no ready egg there.
  */
 export const hatchEgg = (save: Save, index: number, rng: Rng): { save: Save; hatch: Hatch } | null => {
   const egg = save.eggs[index]
@@ -242,7 +270,7 @@ export const hatchEgg = (save: Save, index: number, rng: Rng): { save: Save; hat
   return {
     save: {
       ...save,
-      eggs: save.eggs.filter((_, i) => i !== index),
+      ...settleEggs(save.eggs.filter((_, i) => i !== index), save.eggQueue, incubatorSlots(save)),
       hatched: duplicate ? save.hatched : { ...save.hatched, [id]: { shiny } },
       eggPity: afterHatch(save.eggPity, egg.tier, save.hatched, owned === undefined),
       wallet: save.wallet + refund,
@@ -280,6 +308,17 @@ export const mergeEggs = (a: readonly Egg[], b: readonly Egg[], slots: number): 
   })
     .sort(byValue)
     .slice(0, slots)
+
+/**
+ * Both incubators and their waiting lines in one. Slots and line merge as one
+ * pool (`mergeEggs`), so an egg one device moved from the line into a slot
+ * isn't counted twice; then the rarest and most walked take the `slots` and
+ * the rest wait in line, up to `EGGS.queue`. Merging the same saves again changes nothing.
+ */
+export const mergeIncubated = (a: Pick<Save, 'eggs' | 'eggQueue'>, b: Pick<Save, 'eggs' | 'eggQueue'>, slots: number) => {
+  const pool = mergeEggs([...a.eggs, ...a.eggQueue], [...b.eggs, ...b.eggQueue], slots + EGGS.queue)
+  return { eggs: pool.slice(0, slots), eggQueue: pool.slice(slots) }
+}
 
 /** Every family hatched on either side, shiny if it is shiny on either. */
 export const mergeHatched = (a: Hatched, b: Hatched): Hatched =>

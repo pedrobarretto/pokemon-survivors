@@ -4,6 +4,7 @@ import type { ClerkUIConstructor } from '@clerk/shared/types'
 import { track } from './analytics'
 import { readToken } from './clerkClock'
 import { applyGift, giftToOpen, parseGift, type Gift, type GiftOutcome } from './game/gifts'
+import type { Hatch } from './game/eggs'
 import { parseSaveData, type Save } from './game/meta'
 import { isRecord } from './game/parse'
 import type { ProfileName } from './game/ranking'
@@ -13,6 +14,7 @@ import { donateFrom } from './game/festival'
 import { loadSave, today, writeSave } from './ui/save'
 import { timeoutSignal } from './net/timeout'
 import { hostApp, onboardingStep } from './onboarding'
+import { continueOnSite, framed, leaveTo, type Provider } from './handoff'
 
 /**
  * Optional player accounts (Google or Discord through Clerk). Playing as a guest stays
@@ -272,8 +274,9 @@ const parsePushed = (body: unknown) =>
     : null
 
 /**
- * Sends the local save on top of the revision this device last got and keeps
- * what the account stored. If the save changed locally while the request was
+ * Sends the local save on top of the revision this device last got, with this
+ * build's place in line (`__GAME_BUILT__`, so an older build's push merges),
+ * and keeps what the account stored. If the save changed locally while the request was
  * out (a purchase, a hatch), the local one stays: it already builds on what
  * was sent when the account took it as is, and otherwise the next push merges.
  */
@@ -284,7 +287,7 @@ const push = async (c: Clerk, link: Link) => {
   const res = await fetch(`${API_URL}/save`, {
     method: 'PUT',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ save: JSON.parse(sent), base: link.revision }),
+    body: JSON.stringify({ save: JSON.parse(sent), base: link.revision, build: __GAME_BUILT__ }),
     signal: timeoutSignal(TIMEOUT_MS),
   })
   const pushed = res.ok ? parsePushed(await res.json()) : null
@@ -467,7 +470,7 @@ export const linkDiscord = async (): Promise<boolean> => {
     if (!account) return true
     const to = account.verification?.externalVerificationRedirectURL
     if (!to) throw new Error('no redirect')
-    location.assign(to.href)
+    leaveTo(to.href)
     return true
   } catch (err) {
     console.warn('discord link failed', err)
@@ -574,6 +577,24 @@ export const openGift = (id: string): GiftOutcome | null => {
   if (!isGameGift(id)) void claimGifts([id])
   if (out.status === 'applied') void syncSave()
   return out
+}
+
+/**
+ * Applies `gifts` at once (a mini game's prizes, on the spot instead of the
+ * box), in order, marking the save's copy; each comes back with its hatch, if
+ * any. A gift that can't land yet (an egg with the incubator full) stays in
+ * the inbox for later. `local`: made up by the dev fakes, never claimed.
+ */
+export const landGifts = (gifts: readonly Gift[], how: 'claim' | 'local'): { gift: Gift; hatch: Hatch | null }[] => {
+  const out = gifts.map((gift) => {
+    const res = applyGift(loadSave(), gift)
+    if (res.status === 'applied') writeSave(res.save)
+    return { gift, res }
+  })
+  setInbox([...inbox.filter((g) => !out.some((o) => o.gift.id === g.id && o.res.status !== 'wait')), ...out.filter((o) => o.res.status === 'wait').map((o) => o.gift)])
+  if (how === 'claim') void claimGifts(out.filter((o) => o.res.status !== 'wait').map((o) => o.gift.id))
+  if (out.some((o) => o.res.status === 'applied')) void syncSave()
+  return out.map(({ gift, res }) => ({ gift, hatch: res.status === 'applied' ? res.hatch : null }))
 }
 
 /** Puts gifts in the inbox as if a sync listed them (the dev helpers stage gifts with it). */
@@ -726,7 +747,9 @@ export const donateToFestival = async (amount: number): Promise<FestivalDonation
  * to this page (`?login`), where `startAccount` finishes it. Already signed
  * in to Clerk (another tab), it just links this device.
  */
-export const signIn = async (provider: 'google' | 'discord' = 'google') => {
+export const signIn = async (provider: Provider = 'google') => {
+  // Inside a portal's frame Google and Discord won't open: the site signs in in a tab of its own, the progress handed over (`handoff.ts`).
+  if (framed()) return onboardingStep(continueOnSite(provider) ? 'framedSignIn' : 'framedLeft')
   // Google refuses to sign in inside an app's WebView (`disallowed_useragent`): the shell shows the way to a real browser instead.
   if (provider === 'google' && hostApp()) return onboardingStep('inAppSignInHeld')
   setState({ kind: 'busy' })

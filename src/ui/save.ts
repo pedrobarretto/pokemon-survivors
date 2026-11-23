@@ -1,3 +1,5 @@
+import { ultraAt } from '../game/ultraWeek'
+import type { UltraBeast } from '../data/ultraBeasts'
 import { AIM_ASSISTS, type AimAssist } from './arenaAim'
 import { PRIORITIES, type Priority } from '../game/versusKit'
 import type { TitleId } from '../data/achievements'
@@ -9,6 +11,7 @@ import { vitrineOf } from '../game/shop'
 import { outbreakAt } from '../game/outbreak'
 import { isHalloweenDay } from '../game/halloween'
 import { depositEggs, type Egg } from '../game/eggs'
+import { walkShadows } from '../game/shadow'
 import { parseSave, recordHatch, recordRun, type Save } from '../game/meta'
 import type { RunSummary } from '../game/tally'
 import { BUTTON_SIDES, STICK_EDGES, STICK_HEIGHTS, STICK_MODES, type ButtonSide, type StickEdge, type StickHeight, type StickMode } from '../engine/input'
@@ -52,11 +55,12 @@ export const depositPokeDollars = (amount: number) => {
 
 /**
  * Banks a run into the incubator: incubating eggs walk `steps`, new eggs take
- * the free slots and the rest are paid in ₽ (see `depositEggs`).
+ * the free slots and the rest are paid in ₽ (see `depositEggs`). The Shadow
+ * Pokémon's heart gauges walk the same steps (`walkShadows`).
  */
 export const bankEggs = (steps: number, found: readonly Egg[]) => {
   const { save, converted, refund } = depositEggs(loadSave(), steps, found)
-  writeSave(save)
+  writeSave({ ...save, shadows: walkShadows(save.shadows, steps) })
   return { converted, refund }
 }
 
@@ -88,6 +92,15 @@ export const outbreakToday = (dealt: EnemyId | null = null): EnemyId => outbreak
 
 export const setOutbreak = (id: EnemyId | null) => {
   outbreakOverride = id
+}
+
+let ultraOverride: UltraBeast | null = null
+
+/** The Ultra Beast of the week (`game/ultraWeek.ts`) on the missions' clock: the one dealt with a ranked run's ticket, else the device's week (the dev console's `ps.ultra` holds one instead). */
+export const ultraToday = (dealt: UltraBeast | null = null): UltraBeast => ultraOverride ?? dealt ?? ultraAt(today())
+
+export const setUltra = (id: UltraBeast | null) => {
+  ultraOverride = id
 }
 
 /**
@@ -175,6 +188,8 @@ export type Settings = {
   musicVolume: number
   sfxVolume: number
   muted: boolean
+  /** iOS: another app's audio (a podcast, music) plays on under the game's (`sessionType` in `engine/audio.ts`). Per device. */
+  mixOthers: boolean
   /** `reduced` keeps the biggest few on a crowded screen (`render/damageNumbers.ts`). */
   damageNumbers: DamageNumbers
   screenShake: boolean
@@ -190,7 +205,7 @@ export type Settings = {
   runToasts: RunToasts
   /** Remapped keys and gamepad buttons. Per device, so they stay out of the synced save. */
   controls: Bindings
-  /** Touch joystick: follows the thumb (the default) or waits in the bottom-left corner. */
+  /** Touch joystick: follows the thumb (the default) or waits in its corner. Settings → Controls, or mid-run the HUD's padlock (`ui/stickLock.ts`). */
   joystick: StickMode
   /** Touch: the side of the action buttons (special, lunge, Mega); the fixed stick and the status box take the other one. */
   buttonSide: ButtonSide
@@ -216,6 +231,7 @@ export const DEFAULT_SETTINGS: Settings = {
   musicVolume: 0.6,
   sfxVolume: 1,
   muted: false,
+  mixOthers: false,
   damageNumbers: 'reduced',
   screenShake: true,
   flashes: 'normal',
@@ -259,6 +275,7 @@ export const parseSettings = (raw: string | null, defaults = DEFAULT_SETTINGS): 
     musicVolume: volume(data.musicVolume, defaults.musicVolume),
     sfxVolume: volume(data.sfxVolume, defaults.sfxVolume),
     muted: flag(data.muted, defaults.muted),
+    mixOthers: flag(data.mixOthers, defaults.mixOthers),
     damageNumbers: damageMode(data.damageNumbers, defaults.damageNumbers),
     screenShake: flag(data.screenShake, defaults.screenShake),
     flashes: FLASH_MODES.find((m) => m === data.flashes) ?? defaults.flashes,

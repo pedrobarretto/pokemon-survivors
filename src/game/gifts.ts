@@ -3,12 +3,17 @@ import { TIER_IDS, type TierId } from '../data/arenaRanked'
 import { isSpecialCompanion, type SpecialCompanionId } from '../data/companions'
 import { FESTIVALS, type FestivalId } from '../data/festivals'
 import { HIDDEN_PLACE_IDS, type HiddenPlaceId } from '../data/places'
-import { isLegend, LEGEND_IDS, legendFestival, type LegendId } from '../data/legends'
+import { DEX_REGIONS, type DexRegion } from '../data/nationalDex'
+import { giftLegend, isLegend, LEGEND_IDS, LEGENDS, legendFestival, legendPath, type LegendId, type LegendUnlock } from '../data/legends'
+import { PATH_IDS, type PathId } from '../data/legendPaths'
+import { isDifficulty, type Difficulty } from './difficulty'
+import { ERA1_TIERS, isEra1Side, type Era1Side, type Era1Tier } from './era1'
 import { parseTitle } from './achievements'
-import { HATCHLING_IDS, HATCHLINGS, type HatchlingId } from '../data/hatchlings'
+import { HATCHLING_IDS, HATCHLINGS, type HatchlingId, type PlayableId } from '../data/hatchlings'
 import { STYLE_SLOTS, styleIds, stylePrice, type StyleId, type StyleSlot } from '../data/style'
-import { parseHandle } from './ranking'
+import { isPlayable, parseHandle } from './ranking'
 import { addToBag, BAG_ITEM_IDS, type BagItem } from './bag'
+import { EVO_ITEM_IDS, type EvoItemId } from '../data/shop'
 import { captureByGift, type Captures } from './capture'
 import { markHatch } from './dex'
 import { EGG_TIER_IDS, EGG_TIERS, grantEgg, incubatorFull, type EggTier, type Hatch } from './eggs'
@@ -18,6 +23,7 @@ import { mergeRibbons, parseRibbon, type Ribbon } from './ribbons'
 import { isSupporterTier, type SupporterTier } from './supporters'
 import { grantShinyPick } from './shinyPicks'
 import { equipStyle, grantStyle, parseStyle, type StyleSave } from './style'
+import { grantShadow, reshadow } from './shadow'
 
 /**
  * Presente Misterioso (Mystery Gift): the API keeps an inbox per player
@@ -38,6 +44,8 @@ export type GiftContent =
   | { kind: 'style'; style: StyleRef }
   /** The family hatches shiny right away, with its scene (a family already shiny pays its egg's ₽). */
   | { kind: 'shinyHatch'; family: HatchlingId }
+  /** The family unlocked right away, with its scene: a family found outside an egg (research, an encounter, a mini game's catch). A family owned already pays its egg's ₽. */
+  | { kind: 'family'; family: HatchlingId }
   /** A Desafio do dia's ribbon (`game/ribbons.ts`), with the day and the place. */
   | { kind: 'ribbon'; ribbon: Ribbon }
   /** A shiny of the player's choice, picked later (`game/shinyPicks.ts`): the supporters' thank-you. */
@@ -48,6 +56,12 @@ export type GiftContent =
   | { kind: 'bag'; item: BagItem; count: number }
   /** A legend captured for the Legend mode (a festival's last prize, Cresselia). */
   | { kind: 'legend'; legend: LegendId }
+  /** An evolution item owned for good (`data/shop.ts`), found outside the shop (a stone dug up at the mine). One already owned pays `EVO_ITEM_REPEAT`. */
+  | { kind: 'evoItem'; item: EvoItemId }
+  /** A Shadow Pokémon (`game/shadow.ts`), from the Rocket Game Corner's counter: a family not owned yet hatches too, with its scene. A Shadow owned already changes nothing. */
+  | { kind: 'shadow'; family: HatchlingId }
+  /** The Shadow Serum, from the same counter: the Purified `id` turns back into a Shadow (`reshadow`); one not Purified by then changes nothing. */
+  | { kind: 'reshadow'; id: PlayableId }
 
 export type GiftKind = GiftContent['kind']
 
@@ -59,7 +73,7 @@ export type GiftKind = GiftContent['kind']
  * candy jar and Caça aos Fantasmas, supporting the game on the Noite das Bruxas,
  * the Kecleon Shop's loyalty card and Department Store, or a Festival da
  * Praça's pot reaching a milestone or making the player a Mecenas,
- * being an OG Supporter, an Arena season's peak tier, or finding a hidden zone.
+ * being an OG Supporter, an Arena season's peak tier, finding a hidden zone, completing a region's Pokédex, or a top place in the Era 1 Hall da Fama.
  */
 export type GiftReason =
   | { kind: 'welcome'; from: string | null }
@@ -87,6 +101,27 @@ export type GiftReason =
   | { kind: 'arenaSeason'; season: number; tier: TierId }
   /** Hidden zone `zone` found for the first time (`game/hiddenGifts.ts`): made by the game too. */
   | { kind: 'hiddenZone'; zone: HiddenPlaceId }
+  /** A family found outside an egg (`game/seasonOneUnlocks.ts`): an encounter or research, made by the game too, or a mini game's catch (fishing, the Safari, the Escavação), sent by the API. */
+  | { kind: 'season'; way: 'find' | 'research' | 'fishing' | 'safari' | 'dig' }
+  /** A region's Pokédex complete, or every region's (`national`): made by the game too (`game/dexRegions.ts`). */
+  | { kind: 'dex'; region: DexRegion | 'national' }
+  /** Every Ultra Wormhole's beast captured: Poipole (`game/ultraGifts.ts`), made by the game too. */
+  | { kind: 'ultraBeasts' }
+  /** The Era 1 Hall da Fama (`game/era1.ts`): the tier, and the board and place that earned it. Sent by the API from its own boards. */
+  | { kind: 'era1'; tier: Era1Tier; rank: number; side: Era1Side; difficulty: Difficulty }
+  /** Team Rocket's Game Corner prize counter (`data/rocketCorner.ts`): sent by the API, which took the tokens. */
+  | { kind: 'rocket' }
+  /** A top place `rank` on a week's Concurso de Insetos board (`data/safari.ts`), sent by the API from its own board. */
+  | { kind: 'bugContest'; rank: number }
+  /**
+   * A Safári habitat's Pokédex filled (`habitat`, a `SafariHabitat` id), or every habitat's (null), sent by the API from its own
+   * catches. Kept a plain id here so the simulation's modules never reach the Safári's (`coop/simBuild.ts`).
+   */
+  | { kind: 'safariDex'; habitat: string | null }
+  /** A legend path's legend (`game/legendPaths.ts`): made by the game, or (Meltan's Mystery Box) sent by the API. */
+  | { kind: 'path'; path: PathId }
+  /** A legend's road (`game/questGifts.ts`): all three Swords of Justice captured (Keldeo), or Dialga and Palkia (the title). Made by the game too. */
+  | { kind: 'quest'; way: 'swords' | 'creation' }
 
 export type Gift = { id: string; content: GiftContent; reason: GiftReason | null }
 
@@ -96,6 +131,9 @@ export type Gift = { id: string; content: GiftContent; reason: GiftReason | null
  * player in the server. The Discord screen shows it before they link.
  */
 export const DISCORD_GIFT = { kind: 'shinyHatch', family: 'noibat' } as const satisfies GiftContent
+
+/** What an evolution item dug up already owned pays instead (a tenth of its shop price). */
+export const EVO_ITEM_REPEAT = 1000
 
 /** Most coins one gift may bring. */
 const MAX_COINS = 100_000
@@ -137,6 +175,8 @@ export const parseGiftContent = (v: unknown): GiftContent | null => {
     }
     case 'shinyHatch':
       return isOneOf(v.family, HATCHLING_IDS) ? { kind: 'shinyHatch', family: v.family } : null
+    case 'family':
+      return isOneOf(v.family, HATCHLING_IDS) ? { kind: 'family', family: v.family } : null
     case 'ribbon': {
       const ribbon = parseRibbon(v.ribbon)
       return ribbon ? { kind: 'ribbon', ribbon } : null
@@ -151,6 +191,12 @@ export const parseGiftContent = (v: unknown): GiftContent | null => {
     }
     case 'legend':
       return isLegend(v.legend) ? { kind: 'legend', legend: v.legend } : null
+    case 'evoItem':
+      return isOneOf(v.item, EVO_ITEM_IDS) ? { kind: 'evoItem', item: v.item } : null
+    case 'shadow':
+      return isOneOf(v.family, HATCHLING_IDS) ? { kind: 'shadow', family: v.family } : null
+    case 'reshadow':
+      return isPlayable(v.id) ? { kind: 'reshadow', id: v.id } : null
     default:
       return null
   }
@@ -173,6 +219,13 @@ const parseReason = (v: unknown): GiftReason | null => {
   if (v.kind === 'og') return { kind: 'og' }
   if (v.kind === 'arenaSeason' && isOneOf(v.tier, TIER_IDS)) return { kind: 'arenaSeason', season: wholeNumber(v.season), tier: v.tier }
   if (v.kind === 'hiddenZone' && isOneOf(v.zone, HIDDEN_PLACE_IDS)) return { kind: 'hiddenZone', zone: v.zone }
+  if (v.kind === 'path' && isOneOf(v.path, PATH_IDS)) return { kind: 'path', path: v.path }
+  if (v.kind === 'season' && (v.way === 'find' || v.way === 'research' || v.way === 'fishing' || v.way === 'safari' || v.way === 'dig')) return { kind: 'season', way: v.way }
+  if (v.kind === 'dex' && (v.region === 'national' || isOneOf(v.region, DEX_REGIONS))) return { kind: 'dex', region: v.region }
+  if (v.kind === 'rocket') return { kind: 'rocket' }
+  if (v.kind === 'bugContest') return { kind: 'bugContest', rank: wholeNumber(v.rank) }
+  if (v.kind === 'safariDex') return { kind: 'safariDex', habitat: typeof v.habitat === 'string' && /^[a-z]{1,16}$/.test(v.habitat) ? v.habitat : null }
+  if (v.kind === 'era1' && isOneOf(v.tier, ERA1_TIERS) && isEra1Side(v.side) && isDifficulty(v.difficulty)) return { kind: 'era1', tier: v.tier, rank: wholeNumber(v.rank), side: v.side, difficulty: v.difficulty }
   return null
 }
 
@@ -209,6 +262,22 @@ const shinyHatch = (save: Save, id: HatchlingId): { save: Save; hatch: Hatch } =
   }
 }
 
+/** The family in normal colors, hatched on the spot (a family owned already pays its egg's ₽). */
+const familyHatch = (save: Save, id: HatchlingId): { save: Save; hatch: Hatch } => {
+  const tier = HATCHLINGS[id].egg
+  const duplicate = save.hatched[id] !== undefined
+  const refund = duplicate ? EGG_TIERS[tier].refund : 0
+  return {
+    save: {
+      ...save,
+      hatched: duplicate ? save.hatched : { ...save.hatched, [id]: { shiny: false } },
+      wallet: save.wallet + refund,
+      dex: markHatch(save.dex, HATCHLINGS[id].line.map((stage) => stage.dex), false),
+    },
+    hatch: { id, tier, shiny: false, duplicate, refund, guaranteed: false },
+  }
+}
+
 /** Owns and wears a style. Narrowing per slot keeps each id with its own slot for the type checker. */
 const wear = (style: StyleSave, ref: StyleRef): StyleSave => {
   const put = <S extends StyleSlot>(slot: S, id: StyleId<S>) => equipStyle(grantStyle(style, slot, id), slot, id)
@@ -233,6 +302,8 @@ const give = (save: Save, content: GiftContent, id: string): { save: Save; hatch
       return { save: { ...save, style: wear(save.style, content.style) }, hatch: null }
     case 'shinyHatch':
       return shinyHatch(save, content.family)
+    case 'family':
+      return familyHatch(save, content.family)
     case 'ribbon':
       return { save: { ...save, ribbons: mergeRibbons(save.ribbons, [content.ribbon]) }, hatch: null }
     case 'shinyPick':
@@ -246,6 +317,15 @@ const give = (save: Save, content: GiftContent, id: string): { save: Save; hatch
       return { save: { ...save, bag: addToBag(save.bag, content.item, content.count) }, hatch: null }
     case 'legend':
       return { save: { ...save, legends: captureByGift(save.legends, content.legend) }, hatch: null }
+    case 'evoItem':
+      return { save: save.evo.includes(content.item) ? { ...save, wallet: save.wallet + EVO_ITEM_REPEAT } : { ...save, evo: [...save.evo, content.item] }, hatch: null }
+    case 'shadow': {
+      // A family not owned yet comes along, hatched (with no ₽ for a duplicate: the Shadow is the prize).
+      const hatched = save.hatched[content.family] === undefined ? familyHatch(save, content.family) : { save, hatch: null }
+      return { save: { ...hatched.save, shadows: grantShadow(hatched.save.shadows, content.family) }, hatch: hatched.hatch }
+    }
+    case 'reshadow':
+      return { save: { ...save, shadows: reshadow(save.shadows, content.id) }, hatch: null }
   }
 }
 
@@ -277,11 +357,17 @@ export const mergeClaimedGifts = (a: readonly string[], b: readonly string[]): s
 
 /* ---------------- What only a gift brings ---------------- */
 
+/** Whether a legend only ever comes as a gift (`keepGiven` keeps it only with one): a festival's, Poipole, the paths', Keldeo and Manaphy. */
+const onlyGiven = (id: LegendId) => {
+  const unlock: LegendUnlock = LEGENDS[id].unlock
+  return legendFestival(id) !== null || giftLegend(id) || legendPath(id) !== null || unlock.swords === true || unlock.egg === true || unlock.dig === true
+}
+
 /**
  * `save` with only the gift-only rewards the API really sent: `given` is
  * every gift of the player (claimed or not). Gift titles, ribbons, shiny
- * tickets, the styles never sold (a `null` price) and the festival legends
- * (Cresselia) can't be earned on the device, so whatever else a save lists
+ * tickets, the styles never sold (a `null` price), the festival legends
+ * (Cresselia), Poipole (the Ultra Beasts' gift), Keldeo (the Swords' gift), Manaphy (the Safári cove's egg), the path legends (Zygarde, Kubfu, Meltan, Solgaleo, Lunala) and Diancie (the Escavação's) can't be earned on the device, so whatever else a save lists
  * came from editing it. The equipped title and styles fall back when they go,
  * and so does the companion with the Supporter title. The API runs it on
  * every push.
@@ -295,7 +381,8 @@ export const keepGiven = (save: Save, given: readonly Pick<Gift, 'id' | 'content
   const kept = <S extends StyleSlot>(slot: S, ids: readonly StyleId<S>[]) =>
     ids.filter((id) => stylePrice(slot, id) !== null || styles.some((s) => s.slot === slot && s.id === id))
   const owned = { frame: kept('frame', save.style.owned.frame), background: kept('background', save.style.owned.background), wallpaper: kept('wallpaper', save.style.owned.wallpaper) }
-  const vouched = (id: LegendId) => !legendFestival(id) || contents.some((c) => c.kind === 'legend' && c.legend === id)
+  // A festival's, a path's or the Swords' legend (Keldeo) comes only as a gift; one won in a fight is the save's own.
+  const vouched = (id: LegendId) => !onlyGiven(id) || contents.some((c) => c.kind === 'legend' && c.legend === id)
   const legends: Captures = Object.fromEntries(LEGEND_IDS.flatMap((id) => (save.legends[id] !== undefined && vouched(id) ? [[id, save.legends[id]]] : [])))
   return {
     ...save,

@@ -1,3 +1,4 @@
+import { assetUrl } from '../../assets'
 import { PLAYABLE } from '../../data/hatchlings'
 import { drawPacked, drawable, fromStrings, lazy, textSprite, type Packed, type Palette } from '../../engine/pixelart'
 
@@ -30,7 +31,7 @@ export const image = (path: string): HTMLImageElement | null => {
   let img = images.get(path)
   if (!img) {
     img = new Image()
-    img.src = `${import.meta.env.BASE_URL}assets/${path}.png`
+    img.src = assetUrl(`${path}.png`)
     images.set(path, img)
   }
   return drawable(img) ? img : null
@@ -92,9 +93,9 @@ export const drawFx = (g: CanvasRenderingContext2D, parts: readonly Particle[], 
 
 /* ---------------- Text and icons ---------------- */
 
-/** Draws in-world text (digits, capitals, `+ - ! ₽`) at `k` times, anchored by `align` at x, its top at y. */
-export const drawText = (g: CanvasRenderingContext2D, text: string, x: number, y: number, color: string, align: 'left' | 'center' | 'right' = 'left', k = 1) => {
-  const p: Packed = textSprite(text, color)
+/** Draws in-world text (digits, capitals, `+ - ! ₽`) at `k` times, anchored by `align` at x, its top at y; `outline` the color round it (dark unless told: dark text on a light card wants the card's own). */
+export const drawText = (g: CanvasRenderingContext2D, text: string, x: number, y: number, color: string, align: 'left' | 'center' | 'right' = 'left', k = 1, outline?: string) => {
+  const p: Packed = textSprite(text, color, outline)
   const w = p.w * k
   const left = Math.round(align === 'left' ? x : align === 'center' ? x - w / 2 : x - w)
   if (k === 1) return drawPacked(g, p, left, Math.round(y))

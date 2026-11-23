@@ -122,6 +122,9 @@ export const createTeamLayer = (root: HTMLElement, input: Input, driver: CoopDri
     banish: (index: number) => (driver.send({ kind: 'banish', round: self.round, index }), (sent = self.round)),
   })
 
+  /** Largar item: the held item at `index` goes, from the menu or before a swap card's pick (it doesn't close a screen). */
+  const drop = (index: number) => driver.send({ kind: 'drop', index })
+
   const dispose = () => {
     offKey()
     hud.dispose()
@@ -131,7 +134,7 @@ export const createTeamLayer = (root: HTMLElement, input: Input, driver: CoopDri
     away?.dispose()
   }
 
-  return { camera, frame, holding, decorate, end: showEnd, pick, levelUp, dispose }
+  return { camera, frame, holding, decorate, end: showEnd, pick, levelUp, drop, dispose }
 }
 
 export type TeamLayer = ReturnType<typeof createTeamLayer>

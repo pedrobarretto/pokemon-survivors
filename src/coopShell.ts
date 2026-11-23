@@ -2,6 +2,8 @@ import { accountHandle, accountsEnabled, sessionToken } from './account'
 import { track, type RunPerf } from './analytics'
 import { bank, bankKey, paysAnything, type BankDelta, type Store } from './coop/bank'
 import { createBot, botPick, type Bot } from './coop/bot'
+import { parseSettings, type CoopPick } from './coop/start'
+import { isLegend } from './data/legends'
 import { COSMETIC_IDS, slotOf, type CosmeticSlot } from './data/cosmetics'
 import { SKIN_LINES } from './data/skinCatalog'
 import { skinsOf } from './arena/gemShop'
@@ -358,8 +360,9 @@ export const reportCoopNet = (client: CoopClient, runner: Runner, net: NetStats,
 /** Events that are one player's own: only their client shows and plays them (the runner notes who pushed each). */
 const PERSONAL: ReadonlySet<GameEvent['kind']> = new Set<GameEvent['kind']>([
   'cast', 'moveSound', 'heal', 'hurt', 'special', 'stance', 'megaChoice', 'megaStone', 'megaStart', 'mega', 'megaEnd', 'megaReady',
+  'teraShard', 'teraReady', 'teraStart', 'tera', 'teraEnd', 'stellarStrike', 'stellarPulse', 'raidFall',
   'shinyPlayer', 'evolve', 'branchChoice', 'ability', 'evolved', 'moveEvolved', 'duoFused', 'curse', 'pokeball', 'shinyOffer',
-  'tm', 'tmLearned', 'tmMastered', 'banish', 'consumable', 'revive', 'riftFall', 'guard',
+  'tm', 'tmLearned', 'tmMastered', 'banish', 'itemDropped', 'consumable', 'revive', 'riftFall', 'guard',
   'evoItem', 'evoHeld', 'maxRevive', 'stolen', 'awaken', 'awakened', 'biome',
 ])
 
@@ -430,8 +433,18 @@ export const tabBotLook = (seat: number): WireLook | null => {
   return null
 }
 
-/** Dev: `n` bots join room `code` (they set a loadout and get ready; the soak's bots in a tab). */
-export const addBots = async (code: string, n: number) => {
+/**
+ * Dev: a bot's loadout for a room: its own Pokémon (`botPick`, a legend in a
+ * Legend room) or `starter` when given (a legend claimed as captured, for the
+ * dev relay), and its look.
+ */
+const botLoadout = (k: number, legendRoom: boolean, look: WireLook, starter?: CoopPick['starter']): CoopPick => {
+  if (!starter) return { ...botPick(k + 1, legendRoom), look }
+  return isLegend(starter) ? { ...botPick(k + 1, true), starter, legends: [starter], look } : { ...botPick(k + 1), starter, look }
+}
+
+/** Dev: `n` bots join room `code` (they set a loadout and get ready; the soak's bots in a tab), playing `starter` when given; in a Legend room they play legends, following the host's switch. */
+export const addBots = async (code: string, n: number, starter?: CoopPick['starter']) => {
   const url = coopUrl()
   if (!url) return []
   const joined: number[] = []
@@ -445,12 +458,20 @@ export const addBots = async (code: string, n: number) => {
     // Each bot wears a look of its own (`botLook`), so a room shows every seat's look arriving.
     const look = botLook(k)
     botLooks.set(bot, look)
-    bot.client.setLoadout({ ...botPick(k + 1), look })
+    let legendRoom = parseSettings(res.room.settings).legend === true
+    bot.client.setLoadout(botLoadout(k, legendRoom, look, starter))
     setTimeout(() => bot.client.setReady(true), 300)
-    // After a run the relay clears everyone's ready: a bot is ready for "Jogar de novo" a moment later.
     bot.client.on((e) => {
+      if (e.kind !== 'room') return
       const seat = bot.client.state().seat
-      if (e.kind === 'room' && e.room.phase === 'ended' && e.room.members.some((m) => m.seat === seat && !m.ready)) setTimeout(() => bot.client.setReady(true), 800)
+      // The host switched the Modo Lendário: the bot brings a legend, or its regular Pokémon again.
+      const legend = parseSettings(e.room.settings).legend === true
+      if (legend !== legendRoom && e.room.phase !== 'playing') {
+        legendRoom = legend
+        bot.client.setLoadout(botLoadout(k, legendRoom, look, starter))
+      }
+      // After a run the relay clears everyone's ready: a bot is ready for "Jogar de novo" a moment later.
+      if (e.room.phase === 'ended' && e.room.members.some((m) => m.seat === seat && !m.ready)) setTimeout(() => bot.client.setReady(true), 800)
     })
     joined.push(res.seat)
   }

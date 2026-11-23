@@ -9,34 +9,46 @@ const commons = (n: number): Egg[] => Array.from({ length: n }, () => ({ tier: '
 const atLevel = (level: Save['shop']['level'], wallet: number, slots = 0) => save({ wallet, shop: { ...EMPTY_SAVE.shop, level }, incubator: { ...EMPTY_SAVE.incubator, slots } })
 
 describe('incubator slots', () => {
-  it('are the base three plus the ones bought, and a bought slot takes an egg a full base incubator pays out', () => {
+  it('are the base three plus the ones bought, and a bought slot takes an egg a full base incubator puts in line', () => {
     expect(incubatorSlots(EMPTY_SAVE)).toBe(EGGS.slots)
     const four = atLevel(2, 0, 1)
     expect(incubatorSlots(four)).toBe(4)
     expect(freeSlots(commons(3), incubatorSlots(four))).toBe(1)
     expect(grantEgg({ ...four, eggs: commons(3) }, 'rare').save.eggs).toHaveLength(4)
-    expect(grantEgg(save({ eggs: commons(3) }), 'rare')).toMatchObject({ converted: ['rare'], refund: 600 })
+    expect(grantEgg(save({ eggs: commons(3) }), 'rare').save.eggQueue).toEqual([{ tier: 'rare', steps: 0 }])
+  })
+
+  it('give a bought slot to the first egg in line', () => {
+    const lined = { ...atLevel(2, 150_000), eggs: commons(3), eggQueue: [{ tier: 'ultra' as const, steps: 0 }, { tier: 'rare' as const, steps: 0 }] }
+    const bought = buySlot(lined)!
+    expect(bought.eggs).toHaveLength(4)
+    expect(bought.eggs[3]).toEqual({ tier: 'ultra', steps: 0 })
+    expect(bought.eggQueue).toEqual([{ tier: 'rare', steps: 0 }])
   })
 
   it("parse the eggs up to the save's own slots", () => {
-    const raw = { version: 1, eggs: commons(6), incubator: { slots: 9, quick: { got: 2, used: 5 } } }
+    const raw = { version: 1, eggs: commons(10), eggQueue: commons(9), incubator: { slots: 9, quick: { got: 2, used: 5 } } }
     const parsed = parseSaveData(raw)
     expect(parsed.incubator).toEqual({ slots: INCUBATOR.slots.length, quick: { got: 2, used: 2 } })
     expect(parsed.eggs).toHaveLength(EGGS.slots + INCUBATOR.slots.length)
+    expect(parsed.eggQueue).toHaveLength(EGGS.queue)
     expect(parseSaveData({ version: 1, eggs: commons(6) }).eggs).toHaveLength(EGGS.slots)
     expect(parseIncubator('nope')).toEqual(EMPTY_SAVE.incubator)
   })
 
-  it('sell the 4th from the Tent and the 5th from the Kecleon Mart, each after the one before, into the slot (not `spent`)', () => {
+  it('sell the 4th from the Tent, the 5th from the Kecleon Mart and the last three at level 5, each after the one before, into the slot (not `spent`)', () => {
     expect(slotBlock(atLevel(1, 1_000_000))).toBe('level')
     expect(slotBlock(atLevel(2, 100_000))).toBe('poor')
     const bought = buySlot(atLevel(2, 150_000))!
     expect(bought).toMatchObject({ wallet: 0, spent: 0, incubator: { slots: 1 } })
     expect(slotBlock(atLevel(3, 1_000_000, 1))).toBe('level')
     expect(buySlot(atLevel(4, 500_000, 1))).toMatchObject({ wallet: 0, incubator: { slots: 2 } })
-    expect(slotBlock(atLevel(5, 1_000_000, 2))).toBe('max')
+    expect(slotBlock(atLevel(4, 5_000_000, 2))).toBe('level')
+    expect(buySlot(atLevel(5, 1_000_000, 2))).toMatchObject({ wallet: 0, incubator: { slots: 3 } })
+    expect(slotBlock(atLevel(5, 10_000_000, 5))).toBe('max')
     expect(buySlot(atLevel(1, 1_000_000))).toBeNull()
     expect(slotsInvested(2)).toBe(650_000)
+    expect(slotsInvested(5)).toBe(7_650_000)
   })
 })
 

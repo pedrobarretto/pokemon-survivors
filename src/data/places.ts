@@ -4,6 +4,7 @@ import type { Drop } from './consumables'
 import type { EnemyId } from './enemies'
 import type { ThemeId } from './music'
 import { SOLID_FOOT, type Ellipse } from './terrain'
+import { HIDEOUT, HIDEOUT_CAST } from './rocketHideout'
 
 /**
  * Places: structures found on the map (a cave mouth, a graveyard gate, an
@@ -19,7 +20,7 @@ import { SOLID_FOOT, type Ellipse } from './terrain'
  * looking like scenery with a tell (rustling leaves, a glint), and only
  * walking up to it finds it.
  */
-export const PLACE_IDS = ['cave', 'graveyard', 'sky', 'grotto', 'underground'] as const
+export const PLACE_IDS = ['cave', 'graveyard', 'sky', 'grotto', 'underground', 'hideout'] as const
 
 export type PlaceId = (typeof PLACE_IDS)[number]
 
@@ -46,6 +47,8 @@ export type PlaceDef = {
   theme: ThemeId
   /** A hidden zone (`game/hidden.ts`): never on the schedule, never announced. */
   hidden?: HiddenDef
+  /** Only a pass opens it (the Rocket Hideout, `data/rocketHideout.ts`): never on the schedule, but announced like any place. */
+  pass?: true
 }
 
 export const PLACES = {
@@ -119,12 +122,22 @@ export const PLACES = {
       ],
     },
   },
+  /** The Rocket Hideout under the Game Corner (`data/rocketHideout.ts`, `game/hideout.ts`): only a run with the poster's pass finds it. */
+  hideout: {
+    time: HIDEOUT.time,
+    species: HIDEOUT_CAST,
+    spawn: { rate: 1, max: 14 },
+    biomes: {},
+    door: 12,
+    theme: 'cave',
+    pass: true,
+  },
 } as const satisfies Record<PlaceId, PlaceDef>
 
 /** The places on the schedule (`placeDue`, `pickPlace`), with an arrow and their news. */
 export const REGULAR_PLACE_IDS = PLACE_IDS.filter((id) => {
   const def: PlaceDef = PLACES[id]
-  return def.hidden === undefined
+  return def.hidden === undefined && def.pass === undefined
 })
 
 /** The hidden zones' ids: the places with a `hidden`. */
@@ -315,7 +328,7 @@ export const PLACE_LOOT = {
  */
 export type PlacePiece =
   | 'caveMouth' | 'graveGate' | 'windStone' | 'caveRock' | 'crystal' | 'chest' | 'tombstone' | 'graveCross' | 'deadTree' | 'keystone'
-  | 'grottoHollow' | 'crackedRock'
+  | 'grottoHollow' | 'crackedRock' | 'rocketHatch'
 
 export const PLACE_FEET: Record<PlacePiece, readonly Ellipse[]> = {
   // The rocky hill around the cave's mouth (anchored at the arch's foot): its flanks and back, open at the arch.
@@ -348,6 +361,12 @@ export const PLACE_FEET: Record<PlacePiece, readonly Ellipse[]> = {
   ],
   // The boulder with the crack in its face (the Underground's way down at its foot).
   crackedRock: [{ x: 0, y: -8, rx: 20, ry: 8 }],
+  // The Hideout's hatch: its slab's back and sides, open at the front where the stairs go down.
+  rocketHatch: [
+    { x: -16, y: -8, rx: 7, ry: 6 },
+    { x: 16, y: -8, rx: 7, ry: 6 },
+    { x: 0, y: -16, rx: 20, ry: 5 },
+  ],
 }
 
 /** What an entrance is built of: its own pieces, or the map's trees, bushes and rocks (a hidden zone's, dressed as scenery). */
@@ -372,6 +391,7 @@ export const ENTRANCE_PIECES: Record<PlaceId, readonly (readonly [EntrancePiece,
     ['bush', -36, -2],
     ['bush', 38, 0],
   ],
+  hideout: [['rocketHatch', 0, -2]],
   // A boulder with a crack, a rock leaning on each side.
   underground: [
     ['crackedRock', 0, -8],

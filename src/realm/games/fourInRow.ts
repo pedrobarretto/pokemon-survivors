@@ -2,7 +2,7 @@ import { PLAYABLE } from '../../data/hatchlings'
 import { playSfx, type Sfx } from '../../engine/audio'
 import type { Dir8 } from '../../engine/math'
 import { blitPacked, context2d, createCanvas, fromStrings, textSprite, type PixelSprite } from '../../engine/pixelart'
-import { locale, t } from '../../i18n'
+import { cjk as chinese, t } from '../../i18n'
 import { TABLE, type TableView } from '../../net/realmTables'
 import { drawPokemon, loadSpecies, sprites } from '../../render/sprites'
 import type { Sitter, TableCtx, TableRun, TableUi } from './frame'
@@ -192,7 +192,7 @@ const texts = new Map<string, PixelSprite>()
  * the font has loaded (drawn with a stand-in before).
  */
 const label = (text: string, color: string): PixelSprite => {
-  const cjk = locale() === 'zh'
+  const cjk = chinese()
   const size = cjk ? 12 : 8
   const font = `${size}px "Press Start 2P", "Cubic 11", monospace`
   const key = `${font}|${color}|${text}`

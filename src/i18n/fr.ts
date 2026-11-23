@@ -1,5 +1,41 @@
+import { CAFE_TABLES_WORDS } from './cafeTables'
+import type { DexRegion } from '../data/nationalDex'
+import { GALLOP_WORDS } from './gallop'
+import { ITEM_DROP_WORDS } from './itemDrop'
+import { SUPPORT_WORDS } from './support'
+import { LOBBY_TOUR_WORDS } from './lobbyTour'
+import { TUTORIAL_WORDS } from './tutorial'
+import { WELCOME_WORDS } from './welcome'
+import { RADIO_WORDS } from './radio'
+import { realmBookFr as realmBook } from './realmStamps/fr'
+import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
+import { TERA_WORDS } from './tera'
+import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
+import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
+import { GA_FOSSILS_WORDS } from './gaFossils'
+import { MEGA_FAMILIES_B_WORDS } from './megaFamiliesB'
+import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
+import { GA_HOOK_WORDS } from './gaHook'
+import { ROCKET_FAMILY_WORDS } from './rocket/families'
+import { GA_MEGAS_WORDS } from './gaMegas'
+import { GA_MEGA_FAMILIES_A_WORDS } from './gaMegaFamiliesA'
+import { SC_WAVE_WORDS } from './scWave'
+import { ROCKET_WORDS } from './rocket/words'
+import { ULTRA_WORDS } from './ultra'
+import { LEGEND_PATHS_WORDS } from './legendPaths'
+import { QUEST_WORDS } from './quests'
+import { MYTHICAL_WORDS } from './mythicals'
+import { REGIS_FORCES_WORDS } from './regisForces'
+import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
+import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
+import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
+import { SEASON_ONE_DIG_WORDS } from './seasonOne/dig'
+import { REGIONAL_WORDS } from './regional'
 import type { Messages } from './pt'
 import type { Activity } from '../game/friends'
+
+/** The regions as the Pokédex names them (`data/nationalDex.ts`). */
+const REGION_NAMES = { kanto: 'Kanto', johto: 'Johto', hoenn: 'Hoenn', sinnoh: 'Sinnoh', unova: 'Unova', kalos: 'Kalos', alola: 'Alola', galar: 'Galar', paldea: 'Paldea' } satisfies Record<DexRegion, string>
 
 const typeBoost = (type: string) => `+10% de dégâts aux capacités de type ${type}.`
 
@@ -30,42 +66,46 @@ export const fr: Messages = {
     pressKeys: 'Appuie sur une touche',
     pressTouch: 'Touche pour commencer',
     play: 'JOUER',
-    today: "AUJOURD'HUI",
-    outbreak: 'APPARITION MASSIVE',
-    challenge: 'DEFI DU JOUR',
+    today: 'AUJOURD’HUI',
+    /** Na Praça's column head and the note beside it. */
+    plaza: 'SUR LA PLACE',
+    plazaNote: 'événement + boutiques',
+    outbreakName: (name: string) => `Épidémie : ${name}`,
+    outbreakLine: 'chromatiques plus fréquents',
+    challengeName: 'Défi du jour',
+    challengeLine: (name: string) => `${name} · ruban d’or`,
     challengeDone: (time) => `Fait : ${time}`,
     challengeOpen: 'Pas encore joué aujourd’hui',
     missions: 'Missions',
     missionsLeft: (n) => (n <= 1 ? `Encore ${n} mission du jour` : `Encore ${n} missions du jour`),
-    hall: 'PANTHEON',
-    hallJoined: (handle, today) => (today ? `@${handle} a rejoint le Panthéon aujourd’hui` : `@${handle} a rejoint le Panthéon`),
+    hallName: 'Panthéon',
+    hallNewest: 'Dernier :',
+    hallCount: (n, shown) => (n === 1 ? `${shown} soutien` : `${shown} soutiens`),
     change: 'Changer',
-    stroll: 'se promener',
-    strollTouch: 'Touche l’herbe pour te promener',
-    explore: 'Se promener',
-    exploreLabel: 'Promène-toi dans la prairie et sur la place',
-    exploreTouch: 'Touche ou glisse pour marcher',
-    exploreKeys: 'marcher',
     pokedex: 'Pokédex',
     eggs: 'Œufs',
     eggsReady: (n) => (n <= 1 ? `${n} œuf prêt à éclore` : `${n} œufs prêts à éclore`),
+    eggsWalking: (n: number) => (n === 1 ? '1 en route' : `${n} en route`),
+    eggsNone: 'Incubateur vide',
+    gifts: 'Cadeaux',
+    giftsToOpen: (n: number) => (n === 1 ? '1 à ouvrir' : `${n} à ouvrir`),
     mart: 'Boutique',
-    dojo: 'Dojo',
-    dojoLabel: 'Dojo : essaie des capacités et monte des builds',
     ranking: 'Classement',
     ideas: 'Idées',
     support: 'Soutenir le projet',
-    rail: {
-      halloween: 'Sorcières',
-      festival: 'Festival',
-      outbreak: 'Essaim',
-      challenge: 'Défi',
-      missions: 'Missions',
-      hall: 'Panthéon',
-      invites: 'Inviter',
-      discord: 'Discord',
-      days: (n) => `${n}j`,
-    },
+    /** Na Praça's shop rows. */
+    shopName: 'Boutique de Kecleon',
+    shopLine: 'Vitrine du jour · Œuf Kecleon',
+    boutiqueName: 'Boutique',
+    boutiqueLine: 'Chapeaux et effets inédits',
+    carpentryName: 'Menuiserie',
+    carpentryLine: 'Des meubles pour votre base',
+    /** Over the partner pill, before its name. */
+    partner: 'Partenaire',
+    community: 'Communauté',
+    friends: 'Amis',
+    /** The bottom tabs on a phone (and the rail on a phone on its side). */
+    tabs: { home: 'Accueil', collection: 'Collection', plaza: 'Place', social: 'Social', profile: 'Profil' },
   },
 
   shell: {
@@ -99,6 +139,19 @@ export const fr: Messages = {
     statsSection: 'Stats',
     legendBase: 'base',
     legendFinal: 'évolué',
+    otherBonuses: 'Autres bonus',
+    otherBonusesNote: 'En plus des barres, au dernier stade.',
+    otherBonus: {
+      amount: (n: number) => (n === 1 ? '+1 projectile' : `+${n} projectiles`),
+      projectileSpeed: (n: number) => `+${n} % vitesse des projectiles`,
+      duration: (n: number) => `+${n} % durée`,
+      magnet: (n: number) => `+${n} portée de ramassage`,
+      growth: (n: number) => `+${n} % d’XP`,
+      greed: (n: number) => `+${n} % de ₽`,
+      statusChance: (n: number) => `+${n} % chance de statut`,
+      statusDamage: (n: number) => `+${n} % dégâts de statut`,
+      specialRecharge: (n: number) => `Spéciale : -${n / 10} s par K.O.`,
+    },
     evolution: 'Évolution',
     special: 'Spéciale',
     moves: 'Capacités',
@@ -134,7 +187,10 @@ export const fr: Messages = {
     specialTitle: (name) => `${name} (Espace)`,
     lunge: 'Ruée',
     lungeTitle: (name) => `${name} (Maj)`,
-    stances: { shield: 'Bouclier', blade: 'Lame', normal: 'Normal', attack: 'Attaque', defense: 'Défense', speed: 'Vitesse' },
+    stickLock: 'Joystick fixe',
+    stickLocked: 'Joystick fixe ! Change sa place dans Réglages → Commandes.',
+    stickFree: 'Joystick libre : il suit ton doigt.',
+    stances: { shield: 'Bouclier', blade: 'Lame', normal: 'Normal', attack: 'Attaque', defense: 'Défense', speed: 'Vitesse', heat: 'Four', wash: 'Laveuse', frost: 'Frigo', fan: 'Ventilo', mow: 'Tondeuse' },
     jumps: (n) => `×${n}`,
   },
 
@@ -579,7 +635,11 @@ export const fr: Messages = {
     shop: {
       pitch: 'Des styles pour ton Pokémon dans tes parties, en coop et dans l’Arène : tout le monde les voit, et aucun ne donne de puissance.',
       balance: 'Ton solde',
-      currency: 'Devise',
+      /** The Brasil / Outro país switch over the packs (which price list, `GemMarket`), and the note under them abroad, where prices are a guess in the buyer's currency. */
+      market: 'Où tu paies',
+      marketBr: 'Brésil',
+      marketIntl: 'Autre pays',
+      approx: 'Prix approximatifs dans ta devise : le montant final s’affiche au paiement.',
       packs: 'Packs de gemmes',
       bonus: (n: string) => `+${n} en bonus`,
       catalog: 'Styles',
@@ -602,6 +662,8 @@ export const fr: Messages = {
       confirm: (name: string, price: string) => `Acheter ${name} pour ${price} gemmes ?`,
       bought: (name: string) => `${name} est à toi, et tu le portes déjà !`,
       short: (n: string) => `Il te manque ${n} gemmes. Un pack, peut-être ?`,
+      /** An item out of reach: its button buys the pack that covers it (gems missing and the pack's name; its price follows). */
+      shortPack: (n: string, pack: string) => `Il manque ${n} · ${pack}`,
       busy: 'Doucement ! Trop d’achats d’affilée. Réessaie dans une minute.',
       offline: 'La boutique est hors de portée pour le moment. Réessaie dans un instant.',
       banned: 'Ce compte ne peut pas utiliser la boutique.',
@@ -619,13 +681,15 @@ export const fr: Messages = {
     checkout: {
       split: (gems: string, bonus: string) => `${gems} + ${bonus} en bonus`,
       pay: 'Payer avec',
-      card: 'Carte, Apple Pay ou Google Pay',
-      pix: 'Pix',
+      /** What Stripe Checkout takes, by price list (Pix only shows in reais), the button to it and the note on a price abroad. */
+      ways: { br: 'Pix, carte, Apple Pay ou Google Pay', intl: 'Carte, Apple Pay, Google Pay et plus, dans ta devise' },
+      go: 'Passer au paiement',
+      approx: 'Montant approximatif : le prix final, dans ta devise, s’affiche au paiement.',
       /** The box the pay buttons need ticked. */
       age: 'J’ai 18 ans ou plus, ou j’ai la permission de mes parents ou de mon tuteur.',
       /** The checkout turned down (`GemCheckoutRefusal`): a once pack taken, the day's limit (`GEM_CHECKOUT.daily`, as a price). */
       once: 'Ce compte a déjà pris le pack de bienvenue.',
-      cap: (limit: string) => `Par sécurité, chaque compte achète jusqu’à ${limit} de gemmes par jour, et un paiement en cours compte pendant une demi-heure. Réessaie demain (le jour change à minuit, heure de Brasília).`,
+      cap: (limit: string) => `Par sécurité, chaque compte achète jusqu’à ${limit} de gemmes par jour, et un paiement en cours compte pendant environ une heure. Réessaie demain (le jour change à minuit, heure de Brasília).`,
       cancel: 'Annuler',
       opening: 'Ouverture du paiement…',
       failed: 'Impossible d’ouvrir le paiement. Réessaie.',
@@ -636,6 +700,19 @@ export const fr: Messages = {
       timeout: 'Paiement en route',
       timeoutNote: 'Nous confirmons encore ton paiement. Les gemmes arrivent sur ton compte d’ici quelques minutes (un Pix peut prendre un peu plus longtemps), et tu peux continuer à jouer.',
       ok: 'Continuer',
+    },
+    /** Back from a checkout given up (`&cancel=`): nothing charged, the same pack again, the other ways to pay (by price list) and Patreon. */
+    cancelled: {
+      title: 'Ça n’a pas marché ?',
+      text: 'Rien n’a été débité. Tu veux réessayer ?',
+      retry: (pack: string, price: string) => `Réessayer : ${pack} · ${price}`,
+      ways: {
+        br: 'Tu peux payer par Pix, Apple Pay ou Google Pay, en plus de la carte.',
+        intl: 'Carte refusée ? Essaie Apple Pay, Google Pay ou une autre carte : certaines banques refusent les boutiques d’un autre pays.',
+      },
+      patreon: 'Tu préfères soutenir chaque mois ? Patreon donne aussi des gemmes.',
+      patreonLink: 'Voir le Patreon',
+      close: 'Pas maintenant',
     },
     skinShop: {
       pitch: 'Votre Pokémon redessiné, à chaque stade de sa lignée. Il apparaît dans vos parties, en coop et dans l’Arène.',
@@ -673,6 +750,20 @@ export const fr: Messages = {
       wear: (name: string) => `Porter ${name}`,
       see: (name: string) => `${name} : voir à la Boutique`,
     },
+    promo: {
+      names: { blackFriday: 'Black Friday' },
+      tag: (pct: string, name: string) => `+${pct} % ${name}`,
+      banner: (name: string, pct: string) => `${name} : +${pct} % de gemmes sur tous les packs`,
+      split: (gems: string, extra: string, name: string) => `${gems} + ${extra} du ${name}`,
+      left: (days: number, hours: number) => (days > 0 ? `Se termine dans ${days} j ${hours} h` : hours > 0 ? `Se termine dans ${hours} h` : 'Se termine dans moins d’1 h'),
+      short: (days: number, hours: number) => (days > 0 ? `${days} j ${hours} h` : `${hours} h`),
+    },
+    run: {
+      earned: (n: string, balance: string) => `+${n} gemmes · solde ${balance}`,
+      covers: (item: string) => `De quoi t’offrir : ${item}`,
+      short: (n: string, first: boolean) => (first ? `Encore ${n} pour ton premier look` : `Encore ${n} pour ton prochain look`),
+      see: 'Voir à la Boutique',
+    },
     chipGuest: 'Boutique : des looks contre des gemmes',
     locker: {
       pick: 'Pokémon de l’aperçu',
@@ -687,6 +778,7 @@ export const fr: Messages = {
     },
   },
   realm: {
+    ...realmBook,
     name: 'Poké Realm',
     entry: 'Realm',
     entryLabel: 'Poké Realm : la ville en ligne',
@@ -697,7 +789,11 @@ export const fr: Messages = {
     off: 'Le Poké Realm n’est pas disponible dans cette version du jeu.',
     cities: {
       title: 'Choisis une ville',
-      hint: 'Chaque ville est une copie du même village, avec jusqu’à 40 dresseurs.',
+      hint: 'Tu arrives dans la première qui a de la place. C’est partout la même ville, avec jusqu’à 40 dresseurs.',
+      switch: 'Changer de ville',
+      here: 'Tu es ici',
+      lobbyLine: 'Promène-toi avec ton partenaire',
+      crowd: (n: number) => `${n} dresseurs en ligne`,
       trainers: (n: number) => (n === 1 ? '1 dresseur' : `${n} dresseurs`),
       full: 'Pleine',
       enter: 'Entrer',
@@ -707,7 +803,7 @@ export const fr: Messages = {
       offline: 'Impossible de charger les villes. Tu peux quand même entrer.',
       back: 'Retour',
     },
-    rooms: { plaza: 'Place', pier: 'Jetée', cafe: 'Café', trail: 'Bosquet des bases', arcade: "Salle d'arcade" },
+    rooms: { plaza: 'Place', pier: 'Jetée', cafe: 'Café', trail: 'Bosquet des bases', arcade: "Salle d'arcade", gameCorner: ROCKET_WORDS.fr.corner.name },
     base: (handle: string) => `Base de @${handle}`,
     status: {
       connecting: 'Connexion…',
@@ -775,6 +871,10 @@ export const fr: Messages = {
       gameTable: 'Table de jeux',
       cabinet: 'Borne d\'arcade',
       prizes: 'Prix',
+      tokens: ROCKET_WORDS.fr.corner.spots.tokens,
+      rocketPrizes: ROCKET_WORDS.fr.corner.spots.prizes,
+      poster: ROCKET_WORDS.fr.corner.spots.poster,
+      hideoutStairs: ROCKET_WORDS.fr.corner.spots.stairs,
     },
     use: 'Utiliser',
     pieces: {
@@ -803,6 +903,15 @@ export const fr: Messages = {
     counter: 'Le café installe encore son comptoir. Reviens bientôt !',
     pool: 'Les Pokémon Eau nageront ici. Bientôt !',
     prizes: 'Battez des records aux bornes et gagnez des trophées pour votre base secrète !',
+    /** The Hora do Realm: the banner, the lobby's tag and the fishing screen's chip. */
+    hours: {
+      names: { tide: 'Marée Haute', storm: 'Pluie de Baies', tables: 'Soirée Jeux' },
+      perks: { tide: 'Pêche doublée, poissons plus rares', storm: 'Arcade doublée', tables: 'Jeux de table doublés' },
+      go: 'Y aller',
+      starts: (c: string) => `dans ${c}`,
+      ends: (c: string) => `reste ${c}`,
+      tideChip: 'Marée haute !',
+    },
     grove: {
       first: [
         'Psst ! Je ne suis qu’un arbre... Bon, d’accord, je suis Sudowoodo. Bienvenue au Bosquet des bases !',
@@ -964,12 +1073,21 @@ export const fr: Messages = {
       choosing: 'Choix du meilleur serveur…',
       playing: 'L’équipe est en partie.',
       rejoin: 'Retour à la partie',
-      rules: 'La coop se joue en mode standard : pas de Mode Légendaire, d’Apparition massive du jour, de Nuit des Sorcières, de Sac ni de CT de la boutique. Les parties entrent dans les classements Duos, Trios et Escouades.',
+      rules: 'La coop se joue en mode standard (ou en Mode Légendaire, si l’hôte l’active) : pas d’Apparition massive du jour, de Nuit des Sorcières, de Sac ni de CT de la boutique. Les parties entrent dans les classements Duos, Trios et Escouades.',
       challenge: 'Défi du jour',
       challengeModes: { off: 'Désactivé', on: 'Activé' },
       challengeBadge: (date) => `Défi coop du jour · ${date}`,
       challengeRules: 'Graine et difficulté du jour, sans les améliorations du Poké Mart. La meilleure partie de l’équipe compte.',
       challengeFixed: 'celle du défi',
+      legend: 'Mode Légendaire',
+      legendBadge: 'Mode Légendaire',
+      legendRules: 'Chacun joue un légendaire qu’il a capturé : horde plus forte, Pression et éveils aux N. 12 et 28. Les parties entrent dans les classements Légendaires Duos, Trios et Escouades.',
+      legendOff: 'désactivé pendant le Défi du jour',
+      legendPick: 'Changer de légendaire',
+      noLegend: 'Vous n’avez encore capturé aucun légendaire. Battez-en un en solo pour jouer dans ce salon.',
+      noLegendSeat: 'sans légendaire',
+      legendFellBack: (name: string, pokemon: string) => `Le légendaire de ${name} n'a pas été confirmé par son compte : il joue ${pokemon}, et la partie reste hors classement.`,
+      legendNote: 'Choisissez un de vos légendaires capturés. Le serveur vérifie la capture au départ ; sans elle, vous jouez votre partenaire.',
       hintKeys: '← → choisir · ENTER confirmer · ESC quitter',
       hintTouch: 'Touche pour choisir',
       pick: 'Choisir',
@@ -1015,6 +1133,12 @@ export const fr: Messages = {
     inviteLater: 'Plus tard',
   },
 
+  itemDrop: ITEM_DROP_WORDS.fr,
+  support: SUPPORT_WORDS.fr,
+  welcome: WELCOME_WORDS.fr,
+  tutorial: TUTORIAL_WORDS.fr,
+  lobbyTour: LOBBY_TOUR_WORDS.fr,
+  radio: RADIO_WORDS.fr,
   levelUp: {
     title: (name, level) => `${name} passe au Nv ${level} !`,
     ready: 'PRET!',
@@ -1039,8 +1163,8 @@ export const fr: Messages = {
     shinyNote: 'Choix gratuit : un autre suit !',
     banish: (n) => `Oublier (${n})`,
     banishCancel: 'Annuler',
-    banishHintKeys: 'Choisis la carte à oublier · ESC annule',
-    banishHintTouch: 'Touche la carte à oublier',
+    banishHintKeys: 'Choisis la carte à oublier : elle ne revient plus de la partie (une capacité que tu as reste à son niveau) · ESC annule',
+    banishHintTouch: 'Touche la carte à oublier : elle ne revient plus de la partie (une capacité que tu as reste à son niveau)',
     prize: { alpha: 'Prix de l’Alpha !', mission: 'Mission accomplie !' },
   },
 
@@ -1112,6 +1236,7 @@ export const fr: Messages = {
     music: 'Musique',
     sfx: 'Effets',
     sound: 'Son',
+    mixOthers: 'Jouer avec d’autres apps',
     damageNumbers: 'Chiffres de dégâts',
     damageModes: { all: 'Tous', reduced: 'Réduits', off: 'NON' },
     screenShake: 'Tremblement d’écran',
@@ -1171,6 +1296,7 @@ export const fr: Messages = {
       right: 'Aller à droite',
       special: 'Attaque spéciale',
       mega: 'Méga-Évolution',
+      tera: TERA_WORDS.fr.action,
       lunge: 'Ruée',
       pause: 'Pause',
       confirm: 'Confirmer',
@@ -1226,6 +1352,7 @@ export const fr: Messages = {
     inAppOpen: 'Ouvrir dans Chrome',
     inAppIos: 'Touche *...* puis *Ouvrir dans le navigateur*',
     inAppSignIn: "Google refuse la connexion depuis cette appli. Ouvre le jeu dans ton navigateur pour te connecter.",
+    framedSignIn: "On a ouvert le jeu dans un nouvel onglet pour que tu te connectes, avec ta progression. Continue d'y jouer.",
     close: 'Fermer',
   },
 
@@ -1267,7 +1394,7 @@ export const fr: Messages = {
   ranking: {
     bag: (items) => `Sac : ${items}`,
     title: 'CLASSEMENT',
-    periods: { day: 'Aujourd’hui', week: 'Semaine', all: 'Tout' },
+    periods: { day: 'Aujourd’hui', week: 'Semaine', all: 'Saison', era1: 'Ère 1' },
     everyone: 'Tout le monde',
     friends: 'Amis',
     allPokemon: 'Tous les Pokémon',
@@ -1312,6 +1439,7 @@ export const fr: Messages = {
     modes: { standard: 'Standard', legend: 'Légendaire' },
     legendGroup: 'Légendaires',
     coop: 'Coop',
+    coopLegend: 'Coop Légendaire',
     sizes: { duo: 'Duos', trio: 'Trios', squad: 'Escouades' },
     coopOutcomes: { victory: 'Gagné', wipe: 'Tombés' },
     coopEmpty: 'Aucune équipe dans ce classement pour l’instant. Appelle tes amis et sois la première !',
@@ -1322,6 +1450,16 @@ export const fr: Messages = {
     coopHint: '↑ ↓ dresseur · ← → période · Q E difficulté · M mode · T équipe · F amis · ENTER profil · ESC retour',
     coopChallengeHint: '↑ ↓ dresseur · ← → jour · Q E classement · M mode · T équipe · F amis · ENTER profil · ESC retour',
     team: (names) => `Équipe : ${names}`,
+    hall: {
+      kicker: 'Panthéon',
+      closed: (date) => `Les records d’avant la Saison 1. Clos le ${date}, ils restent ici pour toujours.`,
+      open: (date) => `L’Ère 1 se termine le ${date}, à l’ouverture de la Saison 1. Les records d’ici là restent ici pour toujours.`,
+      reward: (top) => `Le n° 1 de chaque classement gagne le titre *Champion(ne) de l’Ère 1*, un cadre et un ciel rien qu’à lui. Jusqu’au ${top}e : *Légende de l’Ère 1* et son cadre.`,
+      coopReward: (top) => `Les ${top} premières équipes de chaque classement : *Légende de l’Ère 1* et son cadre.`,
+      thin: (n) => (n === 0 ? 'Moins de 10 dans ce classement : pas de récompense.' : `Peu de joueurs dans ce classement : la récompense va jusqu’au ${n}e.`),
+      tags: { champion: 'Champion(ne)', hall: 'Légende' },
+    },
+    seasonSoon: (date) => `La Saison 1 ouvre le ${date}. D’ici là, les records entrent dans l’Ère 1.`,
   },
 
   profile: {
@@ -1467,6 +1605,8 @@ export const fr: Messages = {
   dex: {
     seen: 'Vu',
     defeated: 'Vaincu',
+    /** The defeated counter's tooltip: why its total is smaller than the seen one's. */
+    defeatedHint: 'Seulement ceux qui viennent se battre : ceux que tu joues, fais éclore ou reçois seulement ne comptent pas',
     caught: 'Capturé',
     cleared: 'Terminé',
     clear: 'Terminé',
@@ -1482,7 +1622,22 @@ export const fr: Messages = {
     back: 'Retour',
     site: 'Où le trouver ↗',
     pc: 'Boîte PC',
-    hintKeys: 'Flèches parcourir · Q E filtre · ESC retour',
+    regions: REGION_NAMES,
+    regionsDone: 'Régions',
+    goal: (left: number, title: string) => `Encore *${left}* pour le titre *${title}*`,
+    goalDone: (title: string) => `Région complète ! Titre *${title}* obtenu`,
+    nationalGoal: (done: number, total: number, frame: string) => `${done}/${total} régions · cadre *${frame}*`,
+    counts: (inGame: number, total: number) => `${inGame} sur ${total} dans le jeu`,
+    forTitle: (goal: number) => `${goal} pour le titre`,
+    notCounted: (names: readonly string[]) => `${new Intl.ListFormat('fr').format(names)} ${names.length > 1 ? 'ne comptent pas' : 'ne compte pas'}`,
+    drawing: 'Dessin en cours',
+    drawingText: 'Les artistes du PMD SpriteCollab, qui ont dessiné tous les Pokémon du jeu, créent encore celui-ci. Merci, les artistes ! ♥',
+    /** `drawingText` for a phone's detail strip. */
+    drawingShort: 'Les artistes du SpriteCollab dessinent encore celui-ci. Merci, les artistes ! ♥',
+    contribute: 'Aider à le dessiner ↗',
+    soon: 'Pas encore dans le jeu. Restez à l’affût des nouveautés !',
+    soonTag: 'Bientôt',
+    hintKeys: 'Flèches parcourir · Q E région · ESC retour',
     hintTouch: 'Touche un Pokémon pour les détails',
   },
 
@@ -1507,8 +1662,8 @@ export const fr: Messages = {
       wallpaper: 'Fond d’écran de la Boîte PC.',
     },
     styles: {
-      frame: { classic: 'Classique', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Ambassadeur', supporter: 'Soutien', pumpkin: 'Citrouille', spectral: 'Spectral', regular: 'Habitué', kecleon: 'Kecleon doré', meowth: 'Meowth', lantern: 'Lanterne', creator: 'Créateur', grotto: 'Grotte Cachée' },
-      background: { night: 'Nuit étoilée', meadow: 'Route 1', forest: 'Forêt de Jade', cave: 'Mont Sélénite', snow: 'Mont Argenté', tower: 'Tour Pokémon de Lavanville', supporter: 'Ciel doré', halloween: 'Nuit des Sorcières', friendship: 'Amitié' },
+      frame: { classic: 'Classique', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Ambassadeur', supporter: 'Soutien', pumpkin: 'Citrouille', spectral: 'Spectral', regular: 'Habitué', kecleon: 'Kecleon doré', meowth: 'Meowth', lantern: 'Lanterne', creator: 'Créateur', grotto: 'Grotte Cachée', stampFrame: 'Estampes', era1: 'Ère 1', era1Champion: 'Couronne de l’Ère 1', bugContest: 'Concours d’Insectes', rocket: ROCKET_WORDS.fr.frame, nationalDex: 'Pokédex National' },
+      background: { night: 'Nuit étoilée', meadow: 'Route 1', forest: 'Forêt de Jade', cave: 'Mont Sélénite', snow: 'Mont Argenté', tower: 'Tour Pokémon de Lavanville', supporter: 'Ciel doré', halloween: 'Nuit des Sorcières', friendship: 'Amitié', era1Champion: 'Trône de l’Ère 1' },
       wallpaper: { classic: 'Classique', forest: 'Feuilles', cave: 'Cailloux', snow: 'Flocons', tower: 'Petits fantômes', supporter: 'Étoiles dorées', haunted: 'Maison hantée', secretBase: 'Base Secrète' },
     },
   },
@@ -1606,7 +1761,7 @@ export const fr: Messages = {
     incubator: {
       intro: (slots, max) => `Ton incubateur : ${slots} emplacements sur ${max} · les emplacements en plus sont à toi pour toujours`,
       slot: (n) => `Emplacement ${n}`,
-      slotText: 'Un œuf de plus en incubation à la fois, pour toujours. Avec l’incubateur plein, un nouvel œuf se transforme en ₽.',
+      slotText: 'Un œuf de plus en incubation à la fois, pour toujours. Avec l’incubateur plein, un nouvel œuf attend dans la file.',
       before: 'Achète d’abord l’emplacement précédent.',
       needs: (level) => `En vente quand la boutique atteint ${level}.`,
       buy: (price) => `Acheter ${price}`,
@@ -1763,6 +1918,9 @@ export const fr: Messages = {
       failed: 'Impossible de changer ça pour le moment. Réessaie.',
     },
     card: 'FESTIVAL',
+    /** Na Praça's card: what a donation does, and the next milestone. */
+    cardLine: 'Donnez des ₽ et illuminez la place',
+    nextPot: (pot: string) => `suivant : ${pot}`,
     daysLeftShort: (days) => (days === 1 ? 'DERNIER JOUR' : `${days} JOURS`),
     shopButton: 'Festival',
   },
@@ -1882,6 +2040,30 @@ export const fr: Messages = {
     hintTouch: 'Touche pour répondre',
   },
 
+  designSurvey: {
+    title: 'NOUVEAU LOOK',
+    open: 'Sondage : que penses-tu du nouveau look ?',
+    question: 'Que penses-tu du nouveau look du jeu ?',
+    ratings: { 1: "Je n'aime pas", 2: 'Bof', 3: 'Correct', 4: "J'aime bien", 5: "J'adore" },
+    pickRating: 'Choisis une Poké Ball',
+    aspectsQuestion: "Qu’est-ce qui ressort le plus ? (2 max)",
+    aspects: {
+      easyToFind: 'Tout se trouve vite',
+      hardToFind: 'Difficile de trouver',
+      niceLook: 'C’est beau',
+      badLook: 'Je n’aime pas le style',
+      readable: 'Facile à lire',
+      hardToRead: 'Difficile à lire',
+    },
+    send: 'Envoyer',
+    later: 'Pas maintenant',
+    never: 'Ne plus demander',
+    close: 'Fermer',
+    thanks: 'Merci ! Ta réponse aide à améliorer le jeu.',
+    hintKeys: '← → ↑ ↓ déplacer · ENTER choisir · ESC fermer',
+    hintTouch: 'Touche pour répondre',
+  },
+
   ribbons: {
     names: { gold: 'Ruban d’Or', silver: 'Ruban d’Argent', bronze: 'Ruban de Bronze' },
     section: 'Rubans des défis',
@@ -1972,7 +2154,13 @@ export const fr: Messages = {
     patron: (festival) => `Pour avoir été Mécène du ${festival} ♥`,
     og: 'Pour avoir soutenu le jeu dès le début ♥',
     arenaSeason: (season) => `Pour ton meilleur rang de la saison ${season} de l’Arène`,
+    era1: (rank, board) => `#${rank} au Panthéon de l’Ère 1 · ${board}`,
+    bugContest: (rank) => `#${rank} au Concours d’Insectes de la semaine`,
+    safariDex: (place) => `Pokédex complet : ${place}`,
+    safariDexAll: 'Pokédex de tous les habitats du Parc Safari complet',
     hiddenZone: { grotto: 'Pour avoir trouvé la Grotte Cachée', underground: 'Pour avoir trouvé le Souterrain' },
+    dex: (region: string | null) => (region ? `Pour avoir complété le Pokédex de ${region}` : 'Pour avoir complété le Pokédex National : toutes les régions !'),
+    ultraBeasts: 'Pour avoir capturé toutes les Ultra-Chimères',
   },
 
   supporters: {
@@ -2200,7 +2388,7 @@ export const fr: Messages = {
     boss: (name) => `Un *${name}* sauvage apparaît !`,
     bossFled: (name) => `Le *${name}* sauvage s’est enfui !`,    shiny: (name) => `Un *${name}* chromatique apparaît !`,
     shinyPlayer: (name) => `Quelle chance ! Ton *${name}* est chromatique ! Il est maintenant _débloqué_ sur l’écran de sélection.`,
-    caught: (name) => `*${name}* chromatique est à toi ! Ajouté au _Pokédex_.`,
+    caught: (name) => `*${name}* chromatique vaincu ! Ajouté au _Pokédex_ et à la _Boîte PC_.`,
     evolving: (name) => `Hein ? ${name} évolue !`,
     evolved: (from, to) => `Félicitations ! ${from} a évolué en ${to} !`,
     moveEvolved: (from, to) => `*${from}* a évolué en *${to}* !`,
@@ -2235,6 +2423,8 @@ export const fr: Messages = {
     how: (stone, seconds, recharge) =>
       `Bats un légendaire de faille pour obtenir la ${stone}. Au stade final, méga-évolue pendant ${seconds} s (recharge de ${recharge} s) :`,
     effects: {
+      ...GA_FAMILIES_B_WORDS.fr.megas,
+      ...MEGA_FAMILIES_B_WORDS.fr.megas,
       venusaur: 'PV +50, armure +3 et régénère 1 PV/s. L’attaque spéciale devient Petal Blizzard.',
       charizardX: 'capacités +30%, vitesse +8 et armure +1. L’attaque spéciale devient Dragon Flare, une ruée dans des flammes de dragon bleues.',
       charizardY: 'rend le soleil intense (hors des failles), donc les capacités Feu frappent ×1,5 ; capacités +25% et zone +15%. L’attaque spéciale devient Heat Wave.',
@@ -2274,8 +2464,14 @@ export const fr: Messages = {
       manectric: 'les ennemis à moins de 80 px perdent 30% de leur vitesse, vitesse +12, capacités +20% et recharges −5%. L’attaque spéciale devient Wild Charge.',
       altaria: 'capacités Normal et Fée +30%, capacités Dragon +20%, PV +30 et régénère 1 PV/s. L’attaque spéciale devient Hyper Voice.',
       banette: 'recharges −20%, +10% de chance d’altération sur chaque capacité et capacités +15%. L’attaque spéciale devient Phantom Force, une ruée en chaîne qui libère un anneau d’ombres à chaque atterrissage.',
+      ...GA_FAMILIES_A_WORDS.fr.megas,
+      ...GA_FOSSILS_WORDS.fr.megas,
       glalie: 'capacités Normal et Glace +30% et capacités +25%. L’attaque spéciale devient Sheer Cold.',
       salamence: 'capacités Normal et Vol +30%, vitesse +12 et capacités +25%. L’attaque spéciale devient Double-Edge.',
+      ...ROCKET_FAMILY_WORDS.fr.megas,
+      ...GA_MEGAS_WORDS.fr.megas,
+      ...GA_MEGA_FAMILIES_A_WORDS.fr.megas,
+      ...SC_WAVE_WORDS.fr.megas,
     },
   },
 
@@ -2355,6 +2551,13 @@ export const fr: Messages = {
   },
 
   abilities: {
+    ...SEASON_ONE_EGGS_WORDS.fr.abilities,
+    ...REGIONAL_WORDS.fr.abilities,
+    ...SEASON_ONE_KITS_WORDS.fr.abilities,
+    ...ULTRA_WORDS.fr.abilities,
+    ...LEGEND_PATHS_WORDS.fr.abilities,
+    ...QUEST_WORDS.fr.abilities,
+    ...REGIS_FORCES_WORDS.fr.abilities,
     overgrow: 'Sous 1/3 des PV, les capacités Plante font +50%.',
     blaze: 'Sous 1/3 des PV, les capacités Feu font +50%.',
     torrent: 'Sous 1/3 des PV, les capacités Eau font +50%.',
@@ -2388,9 +2591,9 @@ export const fr: Messages = {
     waterAbsorb: 'Les attaques Eau te soignent au lieu de te blesser.',
     voltAbsorb: 'Les attaques Électrik te soignent au lieu de te blesser.',
     lightningRod: 'Les attaques Électrik te soignent au lieu de te blesser, et capacités Électrik +15%.',
-    bulletproof: 'Les projectiles et explosions des boss font 60% de dégâts en moins.',
+    bulletproof: 'Les projectiles et explosions des boss font 40% de dégâts en moins.',
     levitate: 'Tu flottes : lave, pièges, flaques et flammes au sol, eau et glace ne t’affectent pas.',
-    magicGuard: 'Seuls les coups directs te blessent : ni lave, ni pièges, ni explosions, ni flaques au sol, ni usure de la météo, ni morsures des objets maudits.',
+    magicGuard: 'Ni lave, ni pièges, ni usure de la météo, ni morsures des objets maudits, et les explosions et flaques au sol font moitié moins de dégâts.',
     magicBounce: 'Toutes les 12 s, bloque un coup et le renvoie, doublé, à celui qui t’a touché.',
     illusion: 'Toutes les 10 s, bloque complètement un coup.',
     damp: 'Les explosions ne te blessent pas, et capacités Eau +10%.',
@@ -2491,12 +2694,15 @@ export const fr: Messages = {
     },
   },
   eggs: {
-    tiers: { common: 'Œuf commun', rare: 'Œuf rare', ultra: 'Œuf ultra rare', friend: 'Œuf de l’Amitié', haunted: 'Œuf Hanté', kecleon: 'Œuf de Kecleon', kecleonShiny: 'Œuf de Kecleon chromatique' },
+    tiers: { common: 'Œuf commun', rare: 'Œuf rare', ultra: 'Œuf ultra rare', friend: 'Œuf de l’Amitié', haunted: 'Œuf Hanté', kecleon: 'Œuf de Kecleon', kecleonShiny: 'Œuf de Kecleon chromatique', fossil: 'Œuf Fossile', found: 'Rencontre', dig: 'Fossile de l’Excavation', ...REGIONAL_WORDS.fr.tiers },
     found: (egg) => `Tu as trouvé un *${egg}* ! Il part à l’incubateur.`,
-    foundFull: (egg, coins) => `Tu as trouvé un *${egg}* ! L’incubateur est plein, il deviendra donc *${coins}*.`,
+    foundFull: (egg, coins) => `Tu as trouvé un *${egg}* ! L’incubateur et la file sont pleins, il deviendra donc *${coins}*.`,
+    foundQueued: (egg) => `Tu as trouvé un *${egg}* ! L’incubateur est plein, il attend donc dans la file.`,
     title: 'INCUBATEUR',
     intro: 'Les œufs éclosent avec les pas que tu fais en partie. Chaque œuf de l’incubateur marche avec toi.',
     sources: 'Les boss, les coffres verrouillés et les failles laissent parfois un œuf.',
+    queue: (n, max) => `File d’attente ${n}/${max}`,
+    queueRule: (max) => `Avec l’incubateur plein, jusqu’à ${max} œufs attendent dans la file et entrent seuls dès qu’une place se libère. Au-delà, ils deviennent des ₽.`,
     empty: 'Vide',
     stepsLeft: (n) => `Encore ${n} pas`,
     ready: 'Prêt !',
@@ -2577,6 +2783,9 @@ export const fr: Messages = {
       hudEscort: (time) => `Ramène Togepi ${time}`,
     },
   },
+  tera: TERA_WORDS.fr.tera,
+  raid: TERA_WORDS.fr.raid,
+
   rifts: {
     open: 'Une *faille légendaire* s’est ouverte ! Suis la flèche.',
     closed: 'La faille s’est refermée.',
@@ -2609,6 +2818,7 @@ export const fr: Messages = {
     caught: (name) => `*${name}* a été capturé !`,
     calms: (name) => `Le vent fait taire ce qui restait de la fureur de *${name}*.`,
     domains: {
+      ...ULTRA_WORDS.fr.domains,
       kyogre: {
         place: 'Grotte Sous-Marine',
         epithet: 'Seigneur des Mers',
@@ -2649,8 +2859,22 @@ export const fr: Messages = {
         epithet: 'Seigneur du Temps',
         omen: 'Le temps commence à trébucher…',
         crossing: 'Le temps se disloque ! Fonce à travers les Colonnes Lances !',
-        phases: ['Le temps se déforme ! Pendant Roar of Time, tes attaques se figent en l’air.', 'Le temps s’accélère ! Dialga va de plus en plus vite.'],
+        phases: ['Le temps se déforme ! Pendant Roar of Time, tes attaques se figent en l’air.', 'Forme Originelle ! Le temps s’accélère et Dialga va de plus en plus vite.'],
         cues: { stop: 'Le temps s’est arrêté !', forward: 'Le temps a fait un bond !', rewind: 'Le temps est revenu en arrière !' },
+      },
+      palkia: {
+        place: 'Espace Replié',
+        epithet: 'Seigneur de l’Espace',
+        omen: 'L’espace commence à se replier…',
+        crossing: 'L’espace se referme ! Franchis les failles par les portails jumeaux !',
+        phases: ['L’espace se courbe ! Les bords de la salle se touchent : sors d’un côté et reviens par l’autre.', 'Forme Originelle ! L’espace se replie et les murs de la salle se resserrent.'],
+        cues: {
+          twist: 'L’espace s’est tordu ! Les portails ramènent en arrière !',
+          thrownBack: 'Renvoyé en arrière !',
+          swap: '*Palkia* a échangé sa place avec toi !',
+          fold: 'Les murs de l’espace se resserrent !',
+          dialga: '*Palkia* sent sur toi le temps de *Dialga*… et rugit plus fort !',
+        },
       },
       latias: {
         place: 'Île du Sud',
@@ -2728,14 +2952,15 @@ export const fr: Messages = {
     noCrossing: 'Patauge dans les lacs et glisse sur la glace.',
   },
   places: {
-    names: { cave: 'Grotte Sombre', graveyard: 'Cimetière Hanté', sky: 'Au-dessus des nuages', grotto: 'Grotte Cachée', underground: 'Souterrain' },
-    hudNames: { cave: 'Grotte', graveyard: 'Cimetière', sky: 'Courant', grotto: 'Grotte', underground: 'Souterrain' },
+    names: { cave: 'Grotte Sombre', graveyard: 'Cimetière Hanté', sky: 'Au-dessus des nuages', grotto: 'Grotte Cachée', underground: 'Souterrain', hideout: 'Repaire Rocket' },
+    hudNames: { cave: 'Grotte', graveyard: 'Cimetière', sky: 'Courant', grotto: 'Grotte', underground: 'Souterrain', hideout: 'Repaire' },
     open: {
       cave: 'L’entrée d’une *grotte* est apparue ! Suis la flèche.',
       graveyard: 'Un *cimetière* surgit du brouillard ! Suis la flèche.',
       sky: 'Un *courant ascendant* monte vers le ciel ! Suis la flèche et envole-toi.',
       grotto: 'Tu as trouvé une *Grotte Cachée* dans les fourrés !',
       underground: 'Une fissure dans la roche mène au *Souterrain* !',
+      hideout: 'La trappe du *Repaire Rocket* est ouverte ! Suivez la flèche.',
     },
     sealed: {
       cave: 'Des rochers ont bouché l’entrée de la grotte.',
@@ -2743,6 +2968,7 @@ export const fr: Messages = {
       sky: 'Le courant ascendant est retombé.',
       grotto: 'Les feuilles ont recouvert l’entrée de la grotte.',
       underground: 'La fissure dans la roche s’est effondrée.',
+      hideout: 'La trappe du Repaire s’est verrouillée.',
     },
     blocked: 'Seul un Pokémon de type *Vol* peut monter sur ce courant ascendant.',
     goal: {
@@ -2751,6 +2977,7 @@ export const fr: Messages = {
       sky: 'Attrape les *plumes* que le vent apporte avant qu’il ne se calme !',
       grotto: 'Bats les *Audino* qui sortent des hautes herbes qui bougent !',
       underground: 'Reste sur les *éclats* des parois pour creuser, et frappe les *Diglett* !',
+      hideout: 'Descendez les étages et affrontez le *boss de la Team Rocket* !',
     },
     floor: (n) => `SS${n}`,
     wind: ['Quelque chose bouge…', 'Ça se rapproche !', 'C’est tout près ! Ça souffle fort !'],
@@ -2795,7 +3022,7 @@ export const fr: Messages = {
       sphere: 'Tu as déterré une *Prism Sphere* ! Elle vaut des ₽.',
       rareCandy: 'Tu as déterré un *Rare Candy* !',
       stone: 'Tu as déterré une *pierre d’évolution* !',
-      fossil: 'Tu as déterré de l’*Old Amber* ! Il y avait un œuf dedans !',
+      fossil: 'Tu as déterré de l’*Old Amber* ! Il y avait un œuf d’*Aerodactyl* dedans !',
     },
     hudGrotto: (n, time) => `Audino ${n} · ${time}`,
     hudDig: (n, time) => `Trouvailles ${n} · parois ${time}`,
@@ -2878,9 +3105,10 @@ export const fr: Messages = {
     noTitle: 'aucun',
     titleTag: 'TITRE',
     equipped: 'AFFICHE',
-    giftTitles: { ambassador: 'A amené 3 amis dans le jeu', supporter: 'A soutenu le projet par un don', pumpkinKing: 'A rempli le bocal de bonbons de la Nuit des Sorcières', exorcist: 'A battu tous les boss de la Chasse aux Fantômes', vipCustomer: 'A réuni 30 tampons sur la carte de fidélité de Kecleon', tycoon: 'A fait de la boutique de Kecleon un Grand Magasin', patron: 'A donné ₽50 000 ou plus à un Festival de la Place', ogSupporter: 'A soutenu le jeu avant Patreon', arenaPoke: 'A fini une saison classée de l’Arène en Poké Ball', arenaGreat: 'A atteint Great Ball lors d’une saison classée de l’Arène', arenaUltra: 'A atteint Ultra Ball lors d’une saison classée de l’Arène', arenaMaster: 'A atteint Master Ball lors d’une saison classée de l’Arène', creator: 'Fait des vidéos et des lives de Pokémon Survivors', friendLegend: 'A amené 10 amis dans le jeu' },
+    giftTitles: { ambassador: 'A amené 3 amis dans le jeu', supporter: 'A soutenu le projet par un don', pumpkinKing: 'A rempli le bocal de bonbons de la Nuit des Sorcières', exorcist: 'A battu tous les boss de la Chasse aux Fantômes', vipCustomer: 'A réuni 30 tampons sur la carte de fidélité de Kecleon', tycoon: 'A fait de la boutique de Kecleon un Grand Magasin', patron: 'A donné ₽50 000 ou plus à un Festival de la Place', ogSupporter: 'A soutenu le jeu avant Patreon', arenaPoke: 'A fini une saison classée de l’Arène en Poké Ball', arenaGreat: 'A atteint Great Ball lors d’une saison classée de l’Arène', arenaUltra: 'A atteint Ultra Ball lors d’une saison classée de l’Arène', arenaMaster: 'A atteint Master Ball lors d’une saison classée de l’Arène', creator: 'Fait des vidéos et des lives de Pokémon Survivors', friendLegend: 'A amené 10 amis dans le jeu', stampCollector: 'A réuni 30 Estampes dans le Poké Realm', era1Legend: 'A fini en haut d’un classement de l’Ère 1', era1Champion: 'A fini n° 1 d’un classement de l’Ère 1', spaceTime: 'A capturé Dialga et Palkia', bugChampion: 'A gagné une semaine du Concours d’Insectes', safariWarden: 'A rempli le Pokédex de tous les habitats du Parc Safari', ...ROCKET_WORDS.fr.giftTitles, ...SC_WAVE_WORDS.fr.giftTitles, kantoDex: 'A vu tous les Pokémon de Kanto dans le Pokédex', johtoDex: 'A vu tous les Pokémon de Johto dans le Pokédex', hoennDex: 'A vu tous les Pokémon de Hoenn dans le Pokédex', sinnohDex: 'A vu tous les Pokémon de Sinnoh dans le Pokédex', unovaDex: 'A vu tous les Pokémon de Unova dans le Pokédex', kalosDex: 'A vu tous les Pokémon de Kalos dans le Pokédex', alolaDex: 'A vu tous les Pokémon de Alola dans le Pokédex', galarDex: 'A vu tous les Pokémon de Galar dans le Pokédex', paldeaDex: 'A vu tous les Pokémon de Paldea dans le Pokédex' },
     newMedals: 'Nouvelles médailles',
     names: {
+      ...TERA_WORDS.fr.achievementNames,
       firstRun: 'Premiers pas',
       regular: 'Habitué',
       veteran: 'Vétéran',
@@ -2947,6 +3175,7 @@ export const fr: Messages = {
       reaperDown: 'Légende vivante',
     },
     titles: {
+      ...TERA_WORDS.fr.titles,
       veteran: 'Vétéran',
       kills100k: 'Inarrêtable',
       coins1m: 'Magnat',
@@ -2977,8 +3206,26 @@ export const fr: Messages = {
       arenaMaster: 'Master Ball de l’Arène',
       creator: 'Créateur de contenu',
       friendLegend: 'Légende de l’Amitié',
+      stampCollector: 'Collectionneur d’Estampes',
+      era1Legend: 'Légende de l’Ère 1',
+      era1Champion: 'Champion(ne) de l’Ère 1',
+      kantoDex: 'Chercheur de Kanto',
+      johtoDex: 'Chercheur de Johto',
+      hoennDex: 'Chercheur de Hoenn',
+      sinnohDex: 'Chercheur de Sinnoh',
+      unovaDex: 'Chercheur de Unova',
+      kalosDex: 'Chercheur de Kalos',
+      alolaDex: 'Chercheur de Alola',
+      galarDex: 'Chercheur de Galar',
+      paldeaDex: 'Chercheur de Paldea',
+      ...ROCKET_WORDS.fr.titles,
+      ...SC_WAVE_WORDS.fr.titles,
+      bugChampion: 'Champion(ne) des Insectes',
+      safariWarden: 'Garde-Parc',
+      spaceTime: 'Maître du Temps et de l’Espace',
     },
     goals: {
+      ...TERA_WORDS.fr.goals,
       runs: (n) => (n === '1' ? 'Joue une partie' : `Joue ${n} parties`),
       kills: (n) => `Vaincs ${n} Pokémon au total`,
       bestMinutes: (n) => `Survis ${n} min en une partie`,
@@ -3016,6 +3263,24 @@ export const fr: Messages = {
     region: (name) => `Vaincs Mewtwo avec un starter de ${name}`,
   },
   moves: {
+    ...SEASON_ONE_EGGS_WORDS.fr.moves,
+    ...REGIONAL_WORDS.fr.moves,
+    teraStarstorm: TERA_WORDS.fr.move,
+    ...SEASON_ONE_KITS_WORDS.fr.moves,
+    ...GA_FAMILIES_B_WORDS.fr.moves,
+    ...MEGA_FAMILIES_B_WORDS.fr.moves,
+    ...GA_FAMILIES_A_WORDS.fr.moves,
+    ...GA_FOSSILS_WORDS.fr.moves,
+    ...ROCKET_FAMILY_WORDS.fr.moves,
+    ...GA_MEGA_FAMILIES_A_WORDS.fr.moves,
+    ...SC_WAVE_WORDS.fr.moves,
+    ...GA_HOOK_WORDS.fr.moves,
+    ...GALLOP_WORDS.fr,
+    ...ULTRA_WORDS.fr.moves,
+    ...LEGEND_PATHS_WORDS.fr.moves,
+    ...QUEST_WORDS.fr.moves,
+    ...MYTHICAL_WORDS.fr.moves,
+    ...REGIS_FORCES_WORDS.fr.moves,
     leechSeed: {
       description: 'Lance des graines sur les ennemis les plus proches. Une graine draine les PV avec le temps et te soigne ; quand l’ennemi est vaincu, elle saute sur deux voisins.',
       upgrades: [
@@ -5485,6 +5750,22 @@ export const fr: Messages = {
   },
 
   blurbs: {
+    ...SEASON_ONE_EGGS_WORDS.fr.blurbs,
+    ...REGIONAL_WORDS.fr.blurbs,
+    ...SEASON_ONE_KITS_WORDS.fr.blurbs,
+    ...GA_FAMILIES_B_WORDS.fr.blurbs,
+    ...MEGA_FAMILIES_B_WORDS.fr.blurbs,
+    ...GA_FAMILIES_A_WORDS.fr.blurbs,
+    ...GA_FOSSILS_WORDS.fr.blurbs,
+    ...ROCKET_FAMILY_WORDS.fr.blurbs,
+    ...GA_MEGA_FAMILIES_A_WORDS.fr.blurbs,
+    ...SC_WAVE_WORDS.fr.blurbs,
+    ...GA_HOOK_WORDS.fr.blurbs,
+    ...ULTRA_WORDS.fr.blurbs,
+    ...LEGEND_PATHS_WORDS.fr.blurbs,
+    ...QUEST_WORDS.fr.blurbs,
+    ...MYTHICAL_WORDS.fr.blurbs,
+    ...REGIS_FORCES_WORDS.fr.blurbs,
     bulbasaur: 'Équilibré. Régénère ses PV.',
     charmander: 'Offensif. Plus de dégâts, moins de PV.',
     squirtle: 'Défensif. Plus de PV et de défense.',
@@ -5600,9 +5881,11 @@ export const fr: Messages = {
     arceus: 'Le dieu. Son type change à chaque biome.',
     darkrai: 'Cauchemar. Endort les foules et les blesse en rêve.',
     cresselia: 'Croissant de lune. Des lames qui reviennent et une pleine lune qui soigne.',
+    terapagos: TERA_WORDS.fr.blurb,
   },
 
   specials: {
+    ...MEGA_FAMILIES_B_WORDS.fr.specials,
     blastBurn: 'Une charge enflammée qui laisse une traînée de feu.',
     hydroCannon: 'Un jet concentré dans la direction où tu vas.',
     frenzyPlant: 'Des anneaux de racines jaillissent du sol et ralentissent les ennemis.',
@@ -5627,6 +5910,7 @@ export const fr: Messages = {
     braveBird: 'Pique sur l’ennemi le plus proche. Appuie de nouveau juste après un coup pour sauter au suivant.',
     ironHead: 'Bondit lame en avant sur l’ennemi le plus proche. Appuie de nouveau juste après un coup pour sauter au suivant.',
     stanceChange: 'Alterne entre Shield Forme (−30% de dégâts subis, capacités ×0,7) et Blade Forme (capacités ×1,3, +10% de dégâts subis).',
+    applianceChange: 'Rotom change d’appareil : Four, Laveuse, Frigo, Ventilo ou Tondeuse. Chacun change le type et la forme de Discharge.',
     formeChange: 'Alterne Forme Normale, Attaque (capacités ×1,35, +25% de dégâts subis), Défense (−40% de dégâts subis, capacités ×0,75) et Vitesse (+35% de vitesse).',
     dragonFlare: 'Une longue ruée dans des flammes de dragon bleues, avec une traînée de feu et une explosion à la fin.',
     psystrike: 'Trois énormes ondes psychiques autour de toi qui repoussent et ralentissent.',
@@ -5665,6 +5949,7 @@ export const fr: Messages = {
     phantomForce: 'Ruée en chaîne de 6 sauts max ; chaque atterrissage libère un anneau d’ombres.',
     sheerCold: 'Trois vagues de froid absolu autour de toi qui ralentissent fortement les ennemis.',
     doubleEdge: 'Douze piqués s’écrasent sur les ennemis les plus proches.',
+    ...GA_MEGAS_WORDS.fr.specials,
   },
 
 
@@ -5705,7 +5990,6 @@ export const fr: Messages = {
     itemHintTouch: 'Touche pour choisir',
   },
   plaza: {
-    talk: 'Parler',
     next: 'Continuer',
     greetings: {
       morning: 'Bonjour, bonjour ! Bienvenue à la Boutique de Kecleon ! Le stock frais vient d’arriver.',
@@ -5756,11 +6040,6 @@ export const fr: Messages = {
       hello: ['Des Œufs Hantés, contre des ₽ ou des bonbons. Qu’est-ce qui en sort ? Des fantômes qu’aucun autre œuf ne donne.', 'Bouh... Ces œufs n’éclosent pas à la chaleur. Ils éclosent de peur. Tu en veux un ?', 'Quatre fantômes, un œuf. Lequel sera-ce ? Même moi, je ne sais pas... héhéhé.'],
       thanks: ['Bouh... Bon choix. Surveille-le à minuit.', 'Héhéhé... Il te regarde déjà.', 'Reviens demain. Si tu l’oses.'],
     },
-    stalls: {
-      halloween: ['Bouh... La Nuit des Sorcières est arrivée sur la place.', 'Les bonbons de tes parties vont dans le bocal, à l’accueil. Ici, je vends autre chose...'],
-      christmas: ['Deli ! Delibird Presents est arrivé sur la place !', 'J’emballe encore tout. Reviens à Noël, la hotte sera pleine !'],
-    },
-    lanturn: ['Lan-turn ! Chaque pièce dans la fontaine allume une lanterne sur la place. Viens voir la cagnotte !'],
 
   },
 
@@ -5821,7 +6100,6 @@ export const fr: Messages = {
     hello: ['Prêt à t’entraîner ? Les cibles ne rendent pas les coups !', 'Un bon dresseur connaît son propre DPS.', 'Wobbuffet encaisse tout. Vas-y à fond !', 'Feu contre Eau ? Change de cible et vois la différence.'],
   },
   stadium: {
-    boards: { play: 'Jouer', ranking: 'Classement', season: 'Saison', history: 'Historique', rules: 'Règles' },
     first: [
       'Bzzz ! Bienvenue au Stade ! Je suis le juge de l’Arène : bien trop rapide pour laisser filer une seule action.',
       'Deux équipes s’affrontent : à quatre dans la Vallée ou la Crique, ou à trois dans la Clairière ou le Récif pour un match rapide. Battez des Pokémon sauvages, ramassez de l’Énergie et portez-la au but adverse.',
@@ -5848,6 +6126,7 @@ export const fr: Messages = {
   },
   furniture: {
     names: {
+      ...CAFE_TABLES_WORDS.fr.furniture,
       woodChair: 'Chaise en bois',
       stool: 'Tabouret',
       woodTable: 'Table en bois',
@@ -6023,12 +6302,17 @@ export const fr: Messages = {
       // The arcade's trophies (data/furnitureSets/games.ts).
       berryBasket: 'Panier de baies',
       goldenMallet: 'Maillet doré',
+      stampDesk: 'Bureau à timbres',
+      stampCabinet: 'Armoire à timbres',
+      goldenStampPress: 'Presse à timbres dorée',
       // The fishing trophies (`MINIGAMES.fishing.trophies`).
       fishingRodRack: 'Râtelier à cannes',
       goldenMagikarpPlaque: 'Plaque du Magikarp doré',
       shinyGyaradosTrophy: 'Trophée Gyarados shiny',
     },
     doll: (legend) => `Poupée ${legend}`,
+    plush: SEASON_ONE_CLAW_WORDS.fr.plush,
+    dig: SEASON_ONE_DIG_WORDS.fr.pieces,
     kinds: { floor: 'Meuble', rug: 'Tapis', top: 'Bibelot', wall: 'Mur', wallpaper: 'Papier peint', flooring: 'Sol' },
     /** The carpentry's collections (`FURNITURE_SETS`). */
     sets: { classic: 'Classique', cozy: 'Cocooning', elegant: 'Élégant', modern: 'Moderne', pop: 'Pop', garden: 'Jardin', aqua: 'Aquatique', arcade: 'Arcade', kitchen: 'Cuisine', trainer: 'Dresseur', center: 'Centre Pokémon', gallery: 'Galerie', trophies: 'Trophées' },
@@ -6115,6 +6399,15 @@ export const fr: Messages = {
     },
     captured: 'Dans ta collection',
     locked: (legend) => `Capture ${legend}`,
+    earn: {
+      plays: (game, n) => `Joue ${n} parties de ${game}`,
+      best: (game, n) => `Fais ${n} points à ${game}`,
+      wins: (game, n) => `Gagne ${n} parties de ${game}`,
+      feat: (game) => `Un exploit à ${game}`,
+      stamps: (n) => `Réunis ${n} Timbres`,
+      note: 'Ce trophée arrive quand tu atteins l’objectif. Pas à vendre !',
+      featNote: (feat) => `Ce trophée arrive avec l’exploit : ${feat} Pas à vendre !`,
+    },
     collections: 'Collections',
     all: 'Tout',
     pay: { all: 'Tous', coins: '₽', gems: 'Gemmes' },
@@ -6163,6 +6456,8 @@ export const fr: Messages = {
     defeated: (name: string) => `Tu as battu le *${name} Alpha* ! Prends la _récompense_.`,
     prize: '*Récompense Alpha* : des cartes _rares_ !',
   },
+  /** The Ultra Wormholes and the Ultra Beasts (`i18n/ultra.ts`). */
+  ultra: ULTRA_WORDS.fr.ui,
   legend: {
     mode: 'Mode Légendaire',
     awakening: (name: string) => `${name} s’éveille !`,
@@ -6172,6 +6467,15 @@ export const fr: Messages = {
     innateExtra: {
       articuno: 'Le froid de ses ailes ralentit les ennemis proches.',
       jirachi: 'Les cartes rares et chromatiques sortent plus souvent.',
+      uxie: 'Gagne 8 % d’expérience en plus.',
+      mesprit: 'Récupère 4 % de PV toutes les 10 s.',
+      azelf: 'Sous la moitié des PV, +25 % de dégâts.',
+      regieleki: 'Court plus vite : +6 de vitesse.',
+      regidrago: 'PV au maximum, +15 % de dégâts.',
+      tornadus: 'Sous la neige : +10 de vitesse et recharge 5 % plus rapide ; insensible à l’usure du climat.',
+      thundurus: 'Appelle la pluie ; sous la pluie, +12 % de dégâts et +8 % de zone.',
+      landorus: 'Appelle une tempête de sable.',
+      enamorus: 'Les ennemis qui vous touchent ont 30 % de chances de s’endormir 2 s.',
     },
     clone: (name: string) => `Clone de ${name}`,
     escaped: (name: string, wins: number, need: number) => `*${name}* s’est libéré… _${wins}/${need}_`,
@@ -6191,14 +6495,22 @@ export const fr: Messages = {
     where: {
       rift: 'Attend dans une _faille légendaire_ : franchis le portail et bats-le là-bas.',
       trio: 'Arrive comme boss avec le _trio légendaire_ de la partie.',
-      mythical: 'Parfois (1 partie sur 10), apparaît aux côtés de *Mewtwo* à la fin.',
+      mythical: 'Apparaît parfois aux côtés de *Mewtwo* à 15:00 : 1 finale sur 10 amène l’un des fabuleux qui te manquent (s’il te manque les trois, chacun vient 1 finale sur 30). Après 5 finales sans fabuleux, la chance monte, jusqu’à être sûre à la 21e.',
       finale: 'C’est le boss final : gagne une partie.',
       endless: 'Le dernier trophée : une fois les 22 autres capturés, bats-le en _mode sans fin_.',
       event: 'Seulement pendant la _Nuit des Sorcières_ : bats-le dans la _faille du Cauchemar_.',
       festival: 'Prix du _Festival de la Place_ : arrive en Cadeau Mystère, jamais affrontée.',
+      ultra: 'Sort d’une _Ultra-Brèche_ (une par partie en solo, vers 8 min) : bats-la à l’intérieur.',
+      ultraGift: 'Arrive en Cadeau Mystère quand tu as capturé les 10 Ultra-Chimères.',
+      path: LEGEND_PATHS_WORDS.fr.paths.where.zygarde,
+      temple: LEGEND_PATHS_WORDS.fr.paths.where.regigigas,
+      ...QUEST_WORDS.fr.where,
+      egg: SC_WAVE_WORDS.fr.legendWhere,
+      ...MYTHICAL_WORDS.fr.where,
+      ...REGIS_FORCES_WORDS.fr.where,
     },
     rule: (need: number) => (need === 1 ? 'Bats-le une fois comme boss en partie solo, quel que soit le mode, pour le capturer. Les victoires en coop ne comptent pas.' : `Bats-le ${need} fois comme boss en partie solo, quel que soit le mode, pour le capturer. Les victoires en coop ne comptent pas.`),
-    shinyRule: 'Battre un chromatique lors de la victoire de capture, ou après, débloque son chromatique.',
+    shinyRule: 'Battre un chromatique lors de n’importe quelle victoire, avant ou après la capture, débloque son chromatique dès qu’il est capturé.',
     selectNote: 'Les légendaires jouent en *Mode Légendaire* : leur propre classement, une horde plus coriace, des éveils au Nv 12 et 28.',
     event: {
       badge: 'Nuit des Sorcières 2026',
@@ -6211,6 +6523,10 @@ export const fr: Messages = {
       gone: (festival) => `Le _${festival}_ est terminé. Qui l’a reçue continue de la jouer.`,
     },
   },
+  quests: QUEST_WORDS.fr.ui,
+  mythicals: MYTHICAL_WORDS.fr.ui,
+  /** The Ruínas da Decisão and the Forces of Nature (`game/splitRuins.ts`, `game/roamers.ts`): the choice on screen, the Forces' visits, their title cards and phase lines. */
+  regisForces: { ...REGIS_FORCES_WORDS.fr.ui, epithets: REGIS_FORCES_WORDS.fr.epithets, phases: REGIS_FORCES_WORDS.fr.phases },
   legends: {
     epithets: {
       articuno: 'Oiseau de la Glace Éternelle',
@@ -6227,6 +6543,10 @@ export const fr: Messages = {
       jirachi: 'Étoile des Vœux',
       mewtwo: 'Fureur Génétique',
       arceus: 'L’Originel',
+      regigigas: LEGEND_PATHS_WORDS.fr.epithet,
+      zeraora: MYTHICAL_WORDS.fr.epithet,
+      regieleki: REGIS_FORCES_WORDS.fr.epithets.regieleki,
+      regidrago: REGIS_FORCES_WORDS.fr.epithets.regidrago,
     },
     phases: {
       articuno: ['*Articuno* prend son envol ! Fuis son _ombre_.', 'Un blizzard ! Va sous un _abri de neige_ avant Snowscape.'],
@@ -6243,6 +6563,10 @@ export const fr: Messages = {
       jirachi: ['*Jirachi* se téléporte sur toi : sors du _cercle_ !', 'Wish ! Une pluie d’étoiles : trouve les _trous_.'],
       mewtwo: ['*Mewtwo* libère son pouvoir psychique ! Sors du _cercle_ de Teleport.', 'Psystrike ! Faufile-toi par les _trous_, puis cours vers un _abri_.'],
       arceus: ['*Arceus* se téléporte pour te juger !', 'Judgment ! Seuls les _abris de lumière_ peuvent te sauver.'],
+      regigigas: LEGEND_PATHS_WORDS.fr.phases,
+      zeraora: MYTHICAL_WORDS.fr.phases,
+      regieleki: REGIS_FORCES_WORDS.fr.phases.regieleki,
+      regidrago: REGIS_FORCES_WORDS.fr.phases.regidrago,
     },
   },
   team: {
@@ -6280,6 +6604,7 @@ export const fr: Messages = {
       evolved: (name, from, to) => `*${name}* : ${from} a évolué en *${to}* !`,
       mega: (name, form) => `*${name}* a méga-évolué en *${form}* !`,
       duo: (name, move) => `*${name}* a fusionné une capacité duo : *${move}* !`,
+      awakened: (name, form) => `*${name}* s’est éveillé : *${form}* !`,
     },
     vote: {
       title: 'L’équipe a battu Mewtwo !',
@@ -6313,17 +6638,32 @@ export const fr: Messages = {
       awards: { damage: 'Plus de dégâts', kills: 'Plus de vaincus', revives: 'Ange gardien', untouched: 'Intouchable', tank: 'Tank', comeback: 'Phénix', survivor: 'Survivant', specialist: 'Spécialiste', collector: 'Collectionneur', loyal: 'Esprit d’équipe' },
     },
   },
+  seasonUnlocks: { ...SEASON_ONE_UNLOCKS_WORDS.fr, where: { ...SEASON_ONE_UNLOCKS_WORDS.fr.where, ...GA_HOOK_WORDS.fr.where } },
+  megaFamiliesWhere: GA_MEGA_FAMILIES_A_WORDS.fr.where,
+  rocket: ROCKET_WORDS.fr,
+  scWave: SC_WAVE_WORDS.fr,
+  paths: LEGEND_PATHS_WORDS.fr.paths,
   minigames: {
+    claw: SEASON_ONE_CLAW_WORDS.fr.words,
+    safari: { ...SEASON_ONE_SAFARI_WORDS.fr.words, only: SC_WAVE_WORDS.fr.safari },
+    dig: SEASON_ONE_DIG_WORDS.fr.words,
     close: 'Quitter',
     choose: 'Quel jeu ?',
+    cafe: CAFE_TABLES_WORDS.fr,
     games: {
+      ...CAFE_TABLES_WORDS.fr.games,
       fishing: { name: 'Pêche au Ponton', blurb: 'Lance ta ligne et attrape ce qui mord.' },
       berryCatch: { name: 'Pluie de Baies', blurb: 'Attrape les baies et évite les Voltorb.' },
       whackDiglett: { name: 'Tape-Diglett', blurb: 'Tape les Diglett avant qu\'ils se cachent.' },
       fourInRow: { name: 'Puissance Quatre', blurb: 'Aligne quatre Poké Balls avant ton rival.' },
       typeDuel: { name: 'Duel de Types', blurb: 'Feu bat Plante, Plante bat Eau, Eau bat Feu.' },
+      claw: SEASON_ONE_CLAW_WORDS.fr.game,
+      safari: SEASON_ONE_SAFARI_WORDS.fr.game,
+      dig: SEASON_ONE_DIG_WORDS.fr.game,
+      slots: { name: ROCKET_WORDS.fr.slots.name, blurb: ROCKET_WORDS.fr.slots.blurb },
+      sweep: { name: ROCKET_WORDS.fr.sweep.name, blurb: ROCKET_WORDS.fr.sweep.blurb },
     },
-    feats: { fishing: { feebas: 'J\'ai pêché un Feebas !', shinyGyarados: 'J\'ai pêché un Gyarados shiny !!', bigHaul: 'Une pêche à 300 points !' }, berryCatch: { flawless: 'Une Pluie de Baies sans perdre une vie !', goldRush: 'Trois baies dorées en une manche !', combo50: 'Un combo de 50 baies !' }, whackDiglett: { combo30: 'Un combo de 30 coups !', dugtrio: '5 Dugtrio tapés en une manche !' }, fourInRow: {}, typeDuel: { perfectDuel: 'Duel parfait, sans perdre une manche !' } },
+    feats: { ...CAFE_TABLES_WORDS.fr.feats, fishing: { feebas: 'J\'ai pêché un Feebas !', shinyGyarados: 'J\'ai pêché un Gyarados shiny !!', wishiwashi: 'J\'ai pêché un Wishiwashi !', bigHaul: 'Une pêche à 300 points !' }, berryCatch: { flawless: 'Une Pluie de Baies sans perdre une vie !', goldRush: 'Trois baies dorées en une manche !', combo50: 'Un combo de 50 baies !' }, whackDiglett: { combo30: 'Un combo de 30 coups !', dugtrio: '5 Dugtrio tapés en une manche !' }, fourInRow: {}, typeDuel: { perfectDuel: 'Duel parfait, sans perdre une manche !' }, claw: SEASON_ONE_CLAW_WORDS.fr.feats, safari: SEASON_ONE_SAFARI_WORDS.fr.feats, dig: SEASON_ONE_DIG_WORDS.fr.feats, slots: ROCKET_WORDS.fr.feats.slots, sweep: ROCKET_WORDS.fr.feats.sweep },
     duel: {
       pick: 'Choisis une carte',
       play: 'Jouer',
@@ -6415,8 +6755,43 @@ export const fr: Messages = {
       junk: { boot: 'Vieille botte', can: 'Canette', seaweed: 'Algue' },
     },
   },
+  gameModes: {
+    title: 'MODES DE JEU',
+    close: 'Fermer',
+    names: { survivors: 'Survivors', legends: 'Légendes', challenge: 'Défi du jour', coop: 'Coop', arena: 'Arène', dojo: 'Dojo', realm: 'Poké Realm' },
+    /** One team format on the Arena's card: its size and minutes. */
+    arenaFormat: (size, minutes) => `${size}v${size} (${minutes} min)`,
+    blurbs: {
+      survivors: 'Survis aux hordes jusqu’au bout',
+      legends: 'Joue un légendaire',
+      challenge: 'Le même Pokémon pour tous',
+      coop: 'Survis avec tes amis',
+      arena: (formats) => `Équipes ${formats.join(' ou ')}`,
+      dojo: 'Entraîne tes builds, vois tes dégâts',
+      realm: 'Ville en ligne : bases et mini-jeux',
+    },
+    tags: {
+      solo: 'Solo',
+      soloCoop: 'Solo et coop',
+      minutes: (n) => `${n} min`,
+      endless: '+ mode sans fin',
+      legends: (n) => `${n} légendaires`,
+      today: (name) => `aujourd’hui : ${name}`,
+      oneTry: '1 essai officiel',
+      players: (min, max) => `${min} à ${max} joueurs`,
+      bots: 'contre des bots',
+      casual: 'casual',
+      ranked: 'classé',
+      training: 'Entraînement libre',
+      builds: 'garde tes builds',
+      needsAccount: 'compte requis',
+      fresh: 'NOUVEAU',
+    },
+  },
   carpenter: {
     first: ['Oh, un nouveau client ! Moi, c\'est Bibarel, le menuisier de la place.', 'Je fabrique des meubles pour les bases secrètes du Poké Realm : chaises, tapis, étagères et quelques pièces très spéciales.', 'Payez en ₽ ou en gemmes. Et qui capture une légende reçoit sa petite poupée pour décorer sa base !'],
     hello: ['Je scie et je ponce, comme toujours. Vous emportez quelque chose ?', 'Du bon bois, des prix honnêtes. Jetez un œil !', 'Une base sans meubles, c\'est juste un trou dans le mur !', 'Je viens de vernir quelques nouvelles pièces.'],
   },
+  travel: REGIONAL_WORDS.fr.travel,
+  gaHook: { tyrogue: GA_HOOK_WORDS.fr.tyrogue, vivillon: GA_HOOK_WORDS.fr.vivillon, plusMinus: GA_HOOK_WORDS.fr.plusMinus },
 }

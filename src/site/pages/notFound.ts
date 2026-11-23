@@ -1,3 +1,4 @@
+import { assetUrl } from '../../assets'
 import { LOCALE_IDS, type Locale } from '../../i18n'
 import { SITE_MESSAGES } from '../../i18n/site'
 import { escape, html, jsonLd } from '../html'
@@ -9,7 +10,7 @@ import { ROUTE_IDS, ROUTES } from '../routes'
 /** The horde of the Rota 404 mini game. */
 const FOE_DEX = 41
 
-const byLocale = <T>(of: (l: Locale) => T): Readonly<Record<Locale, T>> => ({ pt: of('pt'), en: of('en'), es: of('es'), fr: of('fr'), zh: of('zh') })
+const byLocale = <T>(of: (l: Locale) => T): Readonly<Record<Locale, T>> => ({ pt: of('pt'), en: of('en'), es: of('es'), fr: of('fr'), zh: of('zh'), zhHans: of('zhHans') })
 
 const walkOf = (entry: DexEntry) => ({ dex: entry.dex, walk: entry.sprites.normal.walk })
 
@@ -104,7 +105,7 @@ const pickLocale = () => {
 }
 
 /**
- * The 404 page (`404.html` at the root, which Vercel serves for any path that
+ * The 404 page (`404.html` at the root, which the site's Worker serves for any path that
  * doesn't exist): every language in one file, never indexed, and the Rota 404
  * mini game (`notFoundClient.ts`) whose signs are the page's links.
  */
@@ -120,7 +121,7 @@ export const notFoundPage = () => {
     <meta name="color-scheme" content="dark" />
     <meta name="robots" content="noindex" />
     <title>${escape(pt.notFound.title)}</title>
-    <link rel="icon" href="/assets/pokemon/4/portrait.png" />
+    <link rel="icon" href="${assetUrl('pokemon/4/portrait.png')}" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <link rel="stylesheet" href="/src/site/site.css" />
     <script type="module" src="/src/site/client.ts"></script>

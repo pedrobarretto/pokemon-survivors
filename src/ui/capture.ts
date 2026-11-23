@@ -1,5 +1,7 @@
 import { playCry, playSfx } from '../engine/audio'
-import { isLegend, LEGEND_IDS, LEGENDS, type LegendId } from '../data/legends'
+import { isLegend, isUltraLegend, LEGEND_IDS, LEGENDS, type LegendId } from '../data/legends'
+import { ULTRA_BEASTS } from '../data/ultraBeasts'
+import { ultraCaptured } from '../game/ultraGifts'
 import { recordLegendWin, stillMissing, winsNeeded, type CaptureResult, type LegendWin } from '../game/capture'
 import { cryUrl, portraitUrl } from '../render/sprites'
 import { t } from '../i18n'
@@ -22,7 +24,7 @@ const captureToast = (root: HTMLElement, r: CaptureResult): boolean => {
   const name = legendName(r.legend)
   const dex = LEGENDS[r.legend].line[0].dex
   const say = (text: string, hint: string | null, shiny = false) => {
-    toast(root, h('span', { class: 'item-toast' }, h('img', { src: portraitUrl(dex, shiny), alt: '' }), h('span', {}, rich(text), hint && h('small', {}, hint))), 4600, `capture-${r.legend}`, shiny ? 'shiny' : null)
+    toast(root, h('span', { class: 'item-toast' }, h('img', { src: portraitUrl(dex, shiny), alt: '' }), h('span', {}, rich(text), hint && h('small', {}, rich(hint)))), 4600, `capture-${r.legend}`, shiny ? 'shiny' : null)
     return true
   }
   if (r.outcome === 'escaped') {
@@ -33,6 +35,11 @@ const captureToast = (root: HTMLElement, r: CaptureResult): boolean => {
   playSfx('unlock')
   playCry(cryUrl(dex), 0.6)
   if (r.outcome === 'owned') return say(m.shinyUnlocked(name), m.caughtHint, true)
+  if (isUltraLegend(r.legend)) {
+    // The last of the Ultra Wormholes' beasts brings Poipole: the gift box holds it now.
+    const hint = ultraCaptured(loadSave()) === ULTRA_BEASTS.length ? t().ultra.allCaught : m.caughtHint
+    return say(r.shiny ? m.caughtShiny(name) : t().ultra.caught(name), hint, r.shiny)
+  }
   return say(r.shiny ? m.caughtShiny(name) : m.caught(name), m.caughtHint, r.shiny)
 }
 

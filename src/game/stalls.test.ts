@@ -31,11 +31,11 @@ describe('Duskull’s stall', () => {
     expect([twice.wallet, twice.halloween.candies, candiesLeft(twice.halloween)]).toEqual([once.wallet, 5_000, 5_000 - SWEET.price])
     const thrice = buyFromStall(twice, 'hauntedEgg', day)!
     expect(thrice.eggs).toEqual(Array.from({ length: 3 }, () => ({ tier: 'haunted', steps: 0 })))
-    expect(stallBlock(thrice, 'hauntedEgg', day)).toBe('full')
+    expect(stallBlock({ ...thrice, eggQueue: Array.from({ length: EGGS.queue }, () => ({ tier: 'common' as const, steps: 0 })) }, 'hauntedEgg', day)).toBe('full')
   })
 
   it('refuses a full incubator, a short wallet and too few candies left', () => {
-    const full = rich({ eggs: Array.from({ length: EGGS.slots }, () => ({ tier: 'common', steps: 0 }) as const) })
+    const full = rich({ eggs: Array.from({ length: EGGS.slots }, () => ({ tier: 'common', steps: 0 }) as const), eggQueue: Array.from({ length: EGGS.queue }, () => ({ tier: 'common' as const, steps: 0 })) })
     expect(stallBlock(full, 'hauntedEggCandies', HALLOWEEN.from)).toBe('full')
     expect(stallBlock(rich({ wallet: EGG.price - 1 }), 'hauntedEgg', HALLOWEEN.from)).toBe('poor')
     const sweetless = rich({ halloween: { candies: 5_000, spent: 5_001 - SWEET.price, hunted: [] } })

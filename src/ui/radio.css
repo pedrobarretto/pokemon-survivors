@@ -1,0 +1,389 @@
+/* The Rádio (ui/radio.ts): the shop's panel (`.shop-sheet`), its lobby button and the pause menu's pill. */
+
+/* Over the lobby the layer takes presses: a tap beside the sheet closes it. */
+.shop-layer.radio-layer {
+  z-index: 5;
+  pointer-events: auto;
+  background: rgba(16, 24, 48, 0.25);
+}
+
+.radio-sheet [hidden] {
+  display: none !important;
+}
+
+/* The equalizer: 9×7 pixels, drawn twice their size. */
+.radio-eq {
+  flex: none;
+  width: 18px;
+  height: 14px;
+}
+
+/* ---------- The lobby's button: the radio set, then the now-playing pill while it plays ---------- */
+
+.shell-btn.radio-chip > img {
+  width: 26px;
+  height: 26px;
+}
+
+.shell-btn.radio-chip.on {
+  padding-right: 10px;
+}
+
+.radio-chip-now {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 4px 8px 5px 6px;
+  color: #f8d030;
+  background: #283048;
+  border-radius: 8px;
+}
+
+.radio-chip-now[hidden] {
+  display: none;
+}
+
+.radio-chip-name {
+  max-width: 160px;
+  font-size: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- The now-playing pill: the pause menu's, and an upright phone's lobby's (among the mode's pills) ---------- */
+
+.radio-pill {
+  display: flex;
+  align-items: center;
+  align-self: center;
+  gap: 8px;
+  margin: 0;
+  padding: 4px 12px 5px 8px;
+  font-family: var(--title);
+  font-size: 18px;
+  line-height: 1;
+  color: #f8d030;
+  background: #283048;
+  border-radius: 8px;
+}
+
+.radio-pill[hidden] {
+  display: none;
+}
+
+/* ---------- The sheet ---------- */
+
+.radio-deck {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  color: #f8f8f8;
+  background: #283048;
+  border-radius: 8px;
+}
+
+.radio-host {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  background: #3a4468;
+}
+
+.radio-now {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.radio-now-name {
+  font-family: var(--title);
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1;
+  color: #f8d030;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.radio-now-line {
+  font-size: 16px;
+  line-height: 1.1;
+  color: #c8d0e8;
+}
+
+.radio-controls {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn.radio-icon-btn {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 40px;
+  padding: 0;
+}
+
+.btn.radio-icon-btn img {
+  width: 20px;
+  height: 20px;
+}
+
+.btn.radio-icon-btn.on {
+  background: #f8d030;
+}
+
+.btn.radio-icon-btn.on img.ink-icon {
+  filter: none;
+}
+
+.btn.radio-icon-btn.radio-play {
+  min-width: 60px;
+}
+
+.radio-where {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+}
+
+.radio-where-label {
+  font-size: 17px;
+  color: var(--kit-ink-2);
+}
+
+.radio-where .shell-seg {
+  flex: 1 1 220px;
+  box-shadow: none;
+}
+
+.radio-where .shell-seg-option {
+  min-height: 36px;
+  font-size: 18px;
+}
+
+.btn.radio-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 4px 10px 6px;
+  font-size: 18px;
+  box-shadow: none;
+}
+
+.radio-box {
+  width: 14px;
+  height: 14px;
+  border: 3px solid var(--kit-tinta);
+  border-radius: 3px;
+}
+
+.btn.radio-toggle.on .radio-box {
+  background: #58b858;
+}
+
+/* Out-specifies the shop's `.shop-sheet > :not(.shop-items) { flex-shrink: 0 }`: this file ships in a
+   chunk that loads before style.css, so equal specificity would let the list grow past the screen. */
+.shop-sheet.radio-sheet > .radio-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 2px;
+}
+
+.radio-body > * {
+  flex-shrink: 0;
+}
+
+.radio-group {
+  margin: 8px 2px 0;
+  font-family: var(--title);
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--kit-ink-2);
+}
+
+.radio-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 48px;
+  padding: 3px 4px;
+  background: var(--kit-tag);
+  border: 3px solid transparent;
+  border-radius: 8px;
+}
+
+.radio-row.playing {
+  border-color: #f8d030;
+}
+
+.radio-row.locked {
+  opacity: 0.7;
+}
+
+.radio-row-lock {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 0 10px;
+  filter: brightness(0.4);
+}
+
+[data-theme='dark'] .radio-row-lock {
+  filter: none;
+}
+
+.radio-row-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 2px 4px;
+  font: inherit;
+  text-align: left;
+  color: var(--kit-ink);
+  background: none;
+  border: 0;
+}
+
+.radio-row-text b {
+  font-family: var(--title);
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.radio-row-text small {
+  font-size: 15px;
+  line-height: 1.1;
+  color: var(--kit-ink-2);
+}
+
+.btn.radio-icon-btn.radio-star {
+  min-width: 40px;
+  background: none;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.radio-index {
+  flex: none;
+  width: 28px;
+  font-family: var(--title);
+  font-size: 18px;
+  text-align: center;
+  color: var(--kit-ink-2);
+}
+
+.radio-row .btn.radio-icon-btn {
+  min-width: 40px;
+  min-height: 38px;
+  box-shadow: none;
+}
+
+.radio-row .btn.radio-icon-btn[disabled] {
+  opacity: 0.3;
+}
+
+.radio-x {
+  font-family: var(--title);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.radio-queued {
+  flex: none;
+  width: 40px;
+  font-family: var(--title);
+  font-size: 22px;
+  text-align: center;
+  color: #58b858;
+}
+
+.btn.radio-list-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 4px 12px 6px;
+  font-size: 19px;
+  box-shadow: none;
+}
+
+.btn.radio-list-btn img {
+  width: 14px;
+  height: 14px;
+}
+
+.radio-empty {
+  margin: 16px 8px;
+  font-size: 18px;
+  text-align: center;
+  color: var(--kit-ink-2);
+}
+
+/* Portrait phones: the shop's bottom sheet; the controls and the setting tighten. */
+@media (max-width: 759px) and (orientation: portrait) {
+  .radio-host {
+    width: 32px;
+    height: 32px;
+  }
+  .radio-now-name {
+    font-size: 20px;
+  }
+  .radio-where-label {
+    display: none;
+  }
+}
+
+/* Landscape phones: little height, so the host shrinks and the rows get the rest. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .radio-deck {
+    padding: 3px 8px;
+  }
+  .radio-host {
+    width: 28px;
+    height: 28px;
+  }
+  .btn.radio-icon-btn {
+    min-height: 34px;
+  }
+  .radio-now-line {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .radio-where .shell-seg-option,
+  .btn.radio-toggle {
+    min-height: 30px;
+  }
+  .radio-row {
+    min-height: 40px;
+  }
+  .radio-where-label {
+    display: none;
+  }
+}

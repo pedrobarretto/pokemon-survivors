@@ -12,9 +12,10 @@ const MASTER_VOLUME = 0.35
 const MUSIC_HEADROOM = 0.4
 
 /** User-facing mix, 0..1 per slider. Applied to the buses whenever they exist. */
-export type Mix = { musicVolume: number; sfxVolume: number; muted: boolean }
+/** `mixOthers`: let another app's audio (a podcast, the player's music) play on under the game's (iOS). */
+export type Mix = { musicVolume: number; sfxVolume: number; muted: boolean; mixOthers: boolean }
 
-let mix: Mix = { musicVolume: 0.6, sfxVolume: 1, muted: false }
+let mix: Mix = { musicVolume: 0.6, sfxVolume: 1, muted: false, mixOthers: false }
 let graph: { ctx: AudioContext; master: GainNode; sfx: GainNode; music: GainNode } | null = null
 const runningListeners = new Set<() => void>()
 const lastPlayed = new Map<string, number>()
@@ -55,9 +56,14 @@ declare global {
  * ringer switch silences: on a phone left on silent the game made no sound at all, music
  * included. With the game's music on it plays as `playback`, like a music app (the switch no
  * longer mutes it, and another app's music stops); with the music off or the game muted it stays
- * `ambient`, so the player's own music plays on under the effects.
+ * `ambient`, so the player's own music plays on under the effects. The player may ask for
+ * `ambient` with the music on too (`mixOthers`, Settings → Sound): a podcast then plays on under
+ * the game's music, and the ringer switch silences the game again.
  */
-export const sessionType = (m: Mix): AudioSessionType => (!m.muted && m.musicVolume > 0 ? 'playback' : 'ambient')
+export const sessionType = (m: Mix): AudioSessionType => (!m.mixOthers && !m.muted && m.musicVolume > 0 ? 'playback' : 'ambient')
+
+/** Whether this browser lets the page choose how its audio mixes with other apps' (iOS Safari 16.4+). */
+export const hasAudioSession = () => navigator.audioSession !== undefined
 
 /** Sets the audio session where the browser has one (iOS Safari); elsewhere nothing to do. */
 const applySession = () => {
@@ -65,6 +71,19 @@ const applySession = () => {
   if (!session) return
   const type = sessionType(mix)
   if (session.type !== type) session.type = type
+}
+
+/**
+ * Runs a media call that should hand back a promise (`play()`, `resume()`) and drops its failure.
+ * Old Android WebViews (Quark, UU and other in-app browsers) return undefined instead of a promise,
+ * or throw at once: a bare `.catch` on that crashed the page.
+ */
+export const quietly = (call: () => Promise<unknown> | undefined) => {
+  try {
+    void call()?.catch(() => {})
+  } catch {
+    // Nothing to do: the sound just doesn't play.
+  }
 }
 
 /** Set when this browser has no WebAudio (iOS Lockdown Mode turns it off) or refused a context: the game plays silent. */
@@ -102,7 +121,7 @@ const audio = () => {
   }
   const { ctx, sfx } = graph
   // iOS reports 'interrupted' after calls or app switches; anything but running needs a resume.
-  if (ctx.state !== 'running') void ctx.resume().catch(() => {})
+  if (ctx.state !== 'running') quietly(() => ctx.resume?.())
   return healthy(ctx) ? { ctx, sfx } : null
 }
 
@@ -205,6 +224,32 @@ const SFX = {
     tone(55, 40, 1.2, 'sawtooth', 0.2)
     ;[147, 175, 220, 294].forEach((f, i) => tone(f, f, 0.5, 'square', 0.1, 0.35 + i * 0.16))
   },
+  /** The Escavação's pickaxe: a tight tick of stone. */
+  digPick: () => {
+    noise(0.05, 0.14)
+    tone(1400, 500, 0.05, 'square', 0.07)
+  },
+  /** The Escavação's hammer: a heavy thud with a crack on top. */
+  digHammer: () => {
+    noise(0.18, 0.2)
+    tone(170, 60, 0.2, 'triangle', 0.28)
+    tone(900, 200, 0.07, 'square', 0.07)
+  },
+  /** First sight of a buried treasure. */
+  digGlint: () => {
+    tone(1760, 2640, 0.12, 'triangle', 0.14)
+    tone(2640, 3520, 0.1, 'triangle', 0.1, 0.09)
+  },
+  /** The wall groaning, close to its limit. */
+  digRumble: () => tone(70, 50, 0.3, 'sawtooth', 0.1),
+  /** The wall comes down. */
+  digCollapse: () => {
+    noise(1.2, 0.3)
+    tone(120, 35, 1.1, 'sawtooth', 0.32)
+    tone(240, 60, 0.5, 'square', 0.1, 0.05)
+  },
+  /** Walked away with what was dug out. */
+  digFree: () => [523, 659, 784].forEach((f, i) => tone(f, f, 0.14, 'triangle', 0.16, i * 0.08)),
   quake: () => {
     noise(0.22, 0.14)
     tone(90, 40, 0.22, 'triangle', 0.18)
@@ -313,6 +358,12 @@ const SFX = {
   whoosh: () => {
     noise(0.3, 0.07)
     tone(200, 620, 0.3, 'triangle', 0.05)
+  },
+  /** The lobby's trips: a short rush of air and the partner's feet pattering off (about 0.4 s; `TRIP_SOUND_GAP` in `ui/title.ts`). */
+  trip: () => {
+    noise(0.16, 0.035)
+    tone(247, 587, 0.18, 'triangle', 0.07)
+    ;[0.06, 0.15, 0.24, 0.33].forEach((at, i) => tone(196 + i * 28, 131, 0.04, 'square', 0.055, at))
   },
   /** Sand hissing round. */
   sand: () => noise(0.45, 0.06),
@@ -794,6 +845,68 @@ const SFX = {
     ;[523, 659, 784, 1047].forEach((f, i) => tone(f, f, 0.12, 'square', 0.06, 0.1 + i * 0.06))
   },
   leaves: () => [1568, 1976, 2349, 1976, 2637].forEach((f, i) => tone(f, f * 1.05, 0.05, 'triangle', 0.05, i * 0.04)),
+  /* The Zona Safári (`realm/games/safari.ts`). */
+  /** Tall grass parting around a walker. */
+  rustle: () => noise(0.07, 0.035),
+  /** Something moves in the grass: two stabs rising, then the wipe. */
+  safariAlert: () => {
+    tone(880, 880, 0.07, 'square', 0.07)
+    tone(1320, 1320, 0.14, 'square', 0.08, 0.08)
+    noise(0.28, 0.06, 0.05)
+  },
+  safariThrow: () => tone(360, 1100, 0.32, 'triangle', 0.07),
+  /** A ball snapping shut around what it caught. */
+  safariSnap: () => {
+    tone(1200, 500, 0.06, 'square', 0.09)
+    noise(0.05, 0.08)
+  },
+  /** A ball landing: low and short, softer with each bounce. */
+  safariBounce: () => tone(420, 220, 0.07, 'square', 0.05),
+  /** A wobble of the ball, its rattle held back. */
+  safariWobble: () => {
+    tone(240, 170, 0.08, 'triangle', 0.09)
+    tone(180, 140, 0.07, 'triangle', 0.06, 0.13)
+  },
+  /** The ball holding: a latch, then a little rising chime. */
+  safariClick: () => {
+    tone(1700, 1500, 0.04, 'square', 0.08)
+    ;[784, 988, 1319].forEach((f, i) => tone(f, f, 0.14, 'triangle', 0.07, 0.2 + i * 0.08))
+  },
+  /** The ball bursting open. */
+  safariBreak: () => {
+    noise(0.16, 0.12)
+    tone(700, 1500, 0.14, 'square', 0.06)
+  },
+  safariMunch: () => [0, 0.12, 0.24].forEach((d, i) => tone(260 - i * 30, 180, 0.06, 'square', 0.05, d)),
+  safariFlee: () => tone(700, 1800, 0.2, 'triangle', 0.06),
+  /* The Rocket Game Corner (`realm/games/slots.ts`, `sweep.ts`). */
+  /** The slot's lever pulled: a spring's twang and the reels catching. */
+  slotLever: () => {
+    tone(190, 80, 0.14, 'square', 0.1)
+    noise(0.07, 0.08, 0.04)
+  },
+  /** A reel stopping: a clack. */
+  slotStop: () => {
+    noise(0.035, 0.2)
+    tone(260, 140, 0.05, 'square', 0.12)
+  },
+  /** A line paid: a quick jingle and tokens dropping in the tray. */
+  slotWin: () => {
+    ;[784, 988, 1175, 1568].forEach((f, i) => tone(f, f, 0.09, 'square', 0.1, i * 0.07))
+    ;[1319, 1568, 1319, 1760].forEach((f, i) => tone(f, f, 0.04, 'square', 0.06, 0.32 + i * 0.07))
+  },
+  /** Three sevens: a fanfare. */
+  slotJackpot: () => {
+    ;[523, 659, 784, 1047, 784, 1047, 1319, 1568].forEach((f, i) => tone(f, f, 0.12, 'square', 0.12, i * 0.08))
+    ;[1047, 1319, 1568].forEach((f) => tone(f, f, 0.5, 'triangle', 0.08, 0.7))
+  },
+  /** A Koffing turned over: a puff of gas. */
+  sweepPuff: () => {
+    noise(0.3, 0.14)
+    tone(150, 70, 0.28, 'triangle', 0.14)
+  },
+  /** Coins turned over: a clink each. */
+  sweepClink: () => [1568, 2093].forEach((f, i) => tone(f, f * 1.02, 0.06, 'square', 0.07, i * 0.05)),
 } as const
 
 export type Sfx = keyof typeof SFX
@@ -832,7 +945,7 @@ export const playCry = (url: string, volume = 0.35) => {
     if (!buffer) {
       const el = new Audio(url)
       el.volume = volume * loudness(mix.sfxVolume)
-      return void el.play().catch(() => {})
+      return quietly(() => el.play())
     }
     const out = audio()
     if (!out) return

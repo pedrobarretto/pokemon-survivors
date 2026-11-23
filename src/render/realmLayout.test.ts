@@ -1,19 +1,19 @@
 import { describe, expect, it } from 'vitest'
-import { REALM_ROOMS, TOWN_ROOMS, type Point, type Shape, type TownRoomId } from '../data/realmMap'
+import { CORNER_STAIRS, REALM_ROOMS, TOWN_ROOMS, type Point, type Shape, type TownRoomId } from '../data/realmMap'
 import { TOWN_LAYOUT, type TownArt } from './realmLayout'
 
 const inShape = (s: Shape, x: number, y: number) => (s.kind === 'rect' ? x >= s.x && x < s.x + s.w && y >= s.y && y < s.y + s.h : ((x - s.x) / s.rx) ** 2 + ((y - s.y) / s.ry) ** 2 <= 1)
 
-const blocked = (room: TownRoomId, x: number, y: number) => REALM_ROOMS[room].solid.some((s) => inShape(s, x, y))
+const blocked = (room: TownRoomId, x: number, y: number, extra: readonly Shape[] = []) => [...REALM_ROOMS[room].solid, ...extra].some((s) => inShape(s, x, y))
 
-/** Pieces walkers brush past or that lie flat, on the water or on the wall: no solid under them. */
-const OPEN: ReadonlySet<TownArt> = new Set(['flowers', 'boat', 'shelf', 'sandcastle', 'beachball'])
+/** Pieces walkers brush past, sit on or that lie flat, on the water or on the wall: no solid under them. */
+const OPEN: ReadonlySet<TownArt> = new Set(['flowers', 'boat', 'shelf', 'sandcastle', 'beachball', 'cornerStool', 'rocketRug'])
 
 /** The grid step (px) the walk is checked on. */
 const STEP = 4
 
-/** Every grid point a trainer reaches from the room's spawn, walking the open ground. */
-const reachable = (room: TownRoomId) => {
+/** Every grid point a trainer reaches from the room's spawn, walking the open ground (`extra`: more in the way). */
+const reachable = (room: TownRoomId, extra: readonly Shape[] = []) => {
   const { w, h, spawn } = REALM_ROOMS[room]
   const cols = Math.floor(w / STEP)
   const rows = Math.floor(h / STEP)
@@ -26,7 +26,7 @@ const reachable = (room: TownRoomId) => {
     for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
       const nx = cx + dx
       const ny = cy + dy
-      if (nx < 0 || ny < 0 || nx >= cols || ny >= rows || seen[ny * cols + nx] || blocked(room, nx * STEP, ny * STEP)) continue
+      if (nx < 0 || ny < 0 || nx >= cols || ny >= rows || seen[ny * cols + nx] || blocked(room, nx * STEP, ny * STEP, extra)) continue
       seen[ny * cols + nx] = 1
       queue.push([nx, ny])
     }
@@ -86,11 +86,31 @@ describe('the Secret Base Grove', () => {
 
   it('keeps every host standing by its spot, off the walk', () => {
     const hosts = TOWN_LAYOUT.trail.hosts ?? []
+    const talking = hosts.filter((h) => !('keeper' in h))
     const spots = trail.spots.filter((s) => s.kind === 'host')
-    expect(hosts).toHaveLength(spots.length)
-    for (const host of hosts) {
+    expect(talking).toHaveLength(spots.length)
+    for (const host of talking) {
       expect(spots.some((s) => Math.hypot(s.at.x - host.x, s.at.y - host.y) <= s.reach)).toBe(true)
       expect(blocked('trail', host.x, host.y - 2)).toBe(true)
     }
+    for (const host of hosts) expect(blocked('trail', host.x, host.y - 2)).toBe(true)
+  })
+})
+
+describe('the stairs to the Rocket Hideout', () => {
+  const hole: Shape = { kind: 'rect', ...CORNER_STAIRS.hole }
+  const { x, y, w, h } = CORNER_STAIRS.hole
+
+  it('open on bare floor, off every piece, spot and the way in', () => {
+    const r = REALM_ROOMS.gameCorner
+    for (let py = y; py < y + h; py += 2) for (let px = x; px < x + w; px += 2) expect(blocked('gameCorner', px, py), `${px},${py}`).toBe(false)
+    for (const s of r.spots) expect(Math.hypot(Math.max(x - s.at.x, 0, s.at.x - x - w), Math.max(y - s.at.y, 0, s.at.y - y - h)), s.kind).toBeGreaterThan(s.reach)
+    expect(inShape(hole, r.spawn.x, r.spawn.y)).toBe(false)
+  })
+
+  it('are walked up to from the door with the hole open, and so is everything else', () => {
+    const reach = reachable('gameCorner', [hole])
+    expect(blocked('gameCorner', CORNER_STAIRS.spot.at.x, CORNER_STAIRS.spot.at.y, [hole])).toBe(false)
+    for (const s of [...REALM_ROOMS.gameCorner.spots, CORNER_STAIRS.spot]) expect(reach(s.at, s.reach), `${s.kind} at ${s.at.x},${s.at.y}`).toBe(true)
   })
 })

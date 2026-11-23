@@ -11,6 +11,7 @@ import { ENEMIES } from '../data/enemies'
 import { BAG_ITEMS, type BagItem } from '../game/bag'
 import { bagIcon, coinIcon, eggIcon, giftIcon, medalIcon } from '../render/art'
 import { h, later, rich, setText } from './dom'
+import { researchRows } from './research'
 import { equipTitle, loadSave, outbreakToday, today } from './save'
 import { convertedEggLines, hint, type Screen } from './screens'
 import { toast } from './toasts'
@@ -142,10 +143,12 @@ export const progressToast = (root: HTMLElement, record: Pick<RunRecord, 'comple
   toast(root, h('span', { class: 'item-toast' }, h('img', { src: medal ? medalIcon(ACHIEVEMENTS[medal].medal) : coinIcon(1), alt: '' }), rich(lines.join(' · '))), 3600)
 }
 
-type Tab = 'missions' | 'achievements'
+type Tab = 'missions' | 'achievements' | 'research'
+
+const TABS: readonly Tab[] = ['missions', 'achievements', 'research']
 
 /**
- * Missions and achievements, opened from the title menu. Two tabs (← →),
+ * Missions, achievements and research, opened from the title menu. Three tabs (← →),
  * a scrolling list (↑ ↓) and Back. On the achievements tab, Enter or a tap on
  * an unlocked achievement with a title shows that title (again hides it).
  */
@@ -158,7 +161,7 @@ export const missionsScreen = (root: HTMLElement, input: Input, onClose: () => v
   let closed = false
   const resets: Array<[HTMLElement, MissionPeriod]> = []
 
-  const tabs = { missions: h('button', { class: 'tab' }, m.tab), achievements: h('button', { class: 'tab' }, a.tab) } as const
+  const tabs = { missions: h('button', { class: 'tab' }, m.tab), achievements: h('button', { class: 'tab' }, a.tab), research: h('button', { class: 'tab' }, t().seasonUnlocks.research.tab) } as const
   const list = h('div', { class: 'missions-list' })
   const back = h('button', { class: 'btn' }, m.back)
   // Closes on its own: opened over the Trainer Card it isn't the shell's screen, so nothing else disposes it.
@@ -236,7 +239,7 @@ export const missionsScreen = (root: HTMLElement, input: Input, onClose: () => v
   }
 
   const render = (keep = false) => {
-    const items = tab === 'missions' ? missionsTab() : achievementsTab()
+    const items = tab === 'missions' ? missionsTab() : tab === 'achievements' ? achievementsTab() : researchRows()
     list.replaceChildren(...items)
     if (!keep) list.scrollTop = 0
     for (const [id, el] of Object.entries(tabs)) el.classList.toggle('on', id === tab)
@@ -270,11 +273,12 @@ export const missionsScreen = (root: HTMLElement, input: Input, onClose: () => v
 
   tabs.missions.addEventListener('click', () => switchTab('missions'))
   tabs.achievements.addEventListener('click', () => switchTab('achievements'))
+  tabs.research.addEventListener('click', () => switchTab('research'))
   back.addEventListener('click', close)
 
   const off = input.onKey((key) => {
-    if (key === 'ArrowLeft' || key === 'KeyA' || key === 'KeyQ') switchTab('missions')
-    else if (key === 'ArrowRight' || key === 'KeyD' || key === 'KeyE') switchTab('achievements')
+    if (key === 'ArrowLeft' || key === 'KeyA' || key === 'KeyQ') switchTab(TABS[Math.max(0, TABS.indexOf(tab) - 1)]!)
+    else if (key === 'ArrowRight' || key === 'KeyD' || key === 'KeyE') switchTab(TABS[Math.min(TABS.length - 1, TABS.indexOf(tab) + 1)]!)
     else if (key === 'ArrowUp' || key === 'KeyW') focus(index - 1)
     else if (key === 'ArrowDown' || key === 'KeyS') focus(index + 1)
     else if (key === 'Enter' || key === 'Space') activate(index)
@@ -287,7 +291,7 @@ export const missionsScreen = (root: HTMLElement, input: Input, onClose: () => v
     h(
       'div',
       { class: 'dialog box pop mart missions' },
-      h('div', { class: 'tabs', role: 'tablist' }, tabs.missions, tabs.achievements),
+      h('div', { class: 'tabs', role: 'tablist' }, tabs.missions, tabs.achievements, tabs.research),
       list,
       h('div', { class: 'buttons' }, back),
       hint(m.hintKeys, m.hintTouch),

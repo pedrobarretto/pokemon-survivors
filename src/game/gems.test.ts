@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { GEM_CHECKOUT, GEM_PACKS, GEM_PATREON, GEM_PLAY, packGems } from '../data/gems'
+import { GEM_CHECKOUT, GEM_FX, GEM_PACKS, GEM_PATREON, GEM_PLAY, GEM_PROMOS, packGems, packGemsOn, promoOf } from '../data/gems'
+import { addDays } from './day'
 import { PATREON_TIERS } from '../data/supporters'
 import { bundleLastDay, bundleOnSale, bundlePrice, checkoutRefusal, lockedCosmetics, playGems, refundedGems, runEarnsGems, wearableLook, type OwnedCosmetic } from './gems'
 
@@ -21,14 +22,24 @@ describe('playGems', () => {
 
 describe('checkoutRefusal', () => {
   it('sells a once pack once and stops at the day’s limit in each currency', () => {
-    expect(checkoutRefusal('welcome', 'brl', 0, false)).toBeNull()
-    expect(checkoutRefusal('welcome', 'brl', 0, true)).toBe('once')
-    expect(checkoutRefusal('pouch', 'brl', 0, true)).toBeNull()
-    expect(checkoutRefusal('vault', 'brl', 0, false)).toBeNull()
-    expect(checkoutRefusal('pouch', 'brl', GEM_PACKS.vault.brl, false)).toBe('cap')
-    expect(checkoutRefusal('vault', 'usd', 0, false)).toBeNull()
-    expect(checkoutRefusal('pouch', 'usd', GEM_CHECKOUT.daily.usd - GEM_PACKS.pouch.usd, false)).toBeNull()
-    expect(checkoutRefusal('pouch', 'usd', GEM_CHECKOUT.daily.usd - GEM_PACKS.pouch.usd + 1, false)).toBe('cap')
+    expect(checkoutRefusal('welcome', 'br', 0, false)).toBeNull()
+    expect(checkoutRefusal('welcome', 'br', 0, true)).toBe('once')
+    expect(checkoutRefusal('pouch', 'br', 0, true)).toBeNull()
+    expect(checkoutRefusal('vault', 'br', 0, false)).toBeNull()
+    expect(checkoutRefusal('vault', 'intl', 0, false)).toBeNull()
+    expect(checkoutRefusal('pouch', 'intl', GEM_CHECKOUT.daily - GEM_PACKS.pouch.intl, false)).toBeNull()
+    expect(checkoutRefusal('pouch', 'intl', GEM_CHECKOUT.daily - GEM_PACKS.pouch.intl + 1, false)).toBe('cap')
+    expect(checkoutRefusal('pouch', 'br', GEM_CHECKOUT.daily - GEM_PACKS.pouch.brl + 1, false)).toBe('cap')
+  })
+})
+
+describe('GEM_PACKS', () => {
+  it('prices abroad in reais from the dollar reference, ending in ,90', () => {
+    for (const pack of Object.values(GEM_PACKS)) {
+      expect(pack.intl % 100).toBe(90)
+      expect(Math.abs(pack.intl - pack.usd * GEM_FX.brlPerUsd)).toBeLessThanOrEqual(50)
+      expect(pack.intl).toBeGreaterThanOrEqual(pack.brl)
+    }
   })
 })
 
@@ -110,5 +121,26 @@ describe('lockedCosmetics', () => {
     expect(lockedCosmetics(-1, owned, 0)).not.toContain('crown')
     expect(lockedCosmetics(0, owned, 0)).toEqual([])
     expect(lockedCosmetics(-1, owned, null)).toEqual([])
+  })
+})
+
+describe('gem promos', () => {
+  it('adds Black Friday’s half to every paid pack but the welcome pack, from its first day to its last', () => {
+    expect(promoOf('2026-11-26')).toBeNull()
+    expect(promoOf('2026-11-27')?.name).toBe('blackFriday')
+    expect(promoOf('2026-11-30')?.name).toBe('blackFriday')
+    expect(promoOf('2026-12-01')).toBeNull()
+    expect(packGemsOn('pouch', '2026-11-28')).toBe(300)
+    expect(packGemsOn('bag', '2026-11-28')).toBe(825)
+    expect(packGemsOn('welcome', '2026-11-28')).toBe(packGems('welcome'))
+    expect(packGemsOn('pouch', '2026-11-26')).toBe(packGems('pouch'))
+  })
+
+  it('never overlap', () => {
+    GEM_PROMOS.forEach((p, i) => {
+      expect(p.from <= p.to).toBe(true)
+      const next = GEM_PROMOS[i + 1]
+      if (next) expect(addDays(p.to, 1) <= next.from).toBe(true)
+    })
   })
 })

@@ -1,9 +1,11 @@
 name: IndexNow
 
-# After each production deploy (Vercel reports it to GitHub as a deployment), tell Bing and the other
-# IndexNow engines which pages changed (`scripts/indexnow.mjs`). Run it by hand with "all" after adding pages.
+# After each production deploy (the Site workflow's, once SITE_DEPLOY is `on`), tell Bing and the other IndexNow
+# engines which pages changed (`scripts/indexnow.mjs`). Run it by hand with "all" after adding pages.
 on:
-  deployment_status:
+  workflow_run:
+    workflows: [Site]
+    types: [completed]
   workflow_dispatch:
     inputs:
       all:
@@ -16,7 +18,9 @@ permissions:
 
 jobs:
   ping:
-    if: github.event_name == 'workflow_dispatch' || (github.event.deployment_status.state == 'success' && github.event.deployment.environment == 'Production')
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && vars.SITE_DEPLOY == 'on')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

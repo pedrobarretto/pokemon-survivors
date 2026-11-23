@@ -1,3 +1,4 @@
+import { assetUrl } from '../assets'
 import { MAX_CAPS } from '../data/shop'
 import { context2d, createCanvas } from '../engine/pixelart'
 import { MOVES } from '../game/moves'
@@ -19,7 +20,7 @@ export type ShopIconId = ItemArtId | ShopArtId
 
 const isShopArt = (id: ShopIconId): id is ShopArtId => SHOP_ART.some((art) => art === id)
 
-export const shopArtUrl = (id: ShopArtId) => `${import.meta.env.BASE_URL}assets/shop/icons/${id}.png`
+export const shopArtUrl = (id: ShopArtId) => assetUrl(`shop/icons/${id}.png`)
 
 /** Official sprites centered on 32 px squares (data URLs), by file: made once each, as they load. */
 const squared = new Map<string, Promise<string>>()

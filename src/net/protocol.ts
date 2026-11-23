@@ -146,11 +146,30 @@ export type Auth = { kind: 'clerk'; token: string } | { kind: 'guest'; id: strin
 export type Phase = 'lobby' | 'playing' | 'ended'
 
 /**
- * A player's round trips (ms) to the relays, as its client measured them in the room's lobby: each VPS
- * relay of its build by its `/health`, and Cloudflare (`cf`) only as the room it is in now (its socket's
- * pings: a Cloudflare room elsewhere can't be measured). Null: that relay didn't answer.
+ * The Cloudflare regions a lobby with company measures (`GET /probe/<region>/health` reaches the region's
+ * first shard), so a group spread over continents can move its room to the one in between: a Brazilian
+ * and a Singaporean meet in the US (about 130 and 230 ms) rather than in São Paulo (about 350 for the
+ * Singaporean). Each one costs every such lobby a few Durable Object requests.
  */
-export type Rtts = { readonly [H in RelayHome]?: number | null }
+export const CF_PROBES = ['enam', 'wnam', 'weur', 'apac'] as const satisfies readonly Region[]
+export type CfProbe = (typeof CF_PROBES)[number]
+
+/** Cloudflare's relay in a measured region, as a place a room can move to. */
+export type CfSite = `cf:${CfProbe}`
+
+/** Where a room can run: a relay home (`cf`: the Cloudflare room it is in now) or Cloudflare in a region (`CfSite`). */
+export type Site = RelayHome | CfSite
+
+export const CF_SITES: readonly CfSite[] = CF_PROBES.map((r) => `cf:${r}` as const)
+
+export const isSite = (v: string): v is Site => isRelayHome(v) || CF_SITES.some((s) => s === v)
+
+/**
+ * A player's round trips (ms) to the relays, as its client measured them in the room's lobby: each VPS
+ * relay of its build by its `/health`, Cloudflare (`cf`) as the room it is in now (its socket's pings),
+ * and Cloudflare in each of `CF_PROBES` (`cf:enam`…) by its probe. Null: that relay didn't answer.
+ */
+export type Rtts = { readonly [S in Site]?: number | null }
 
 export type Member = {
   seat: number
@@ -482,15 +501,15 @@ const parseSnap = (m: Record<string, unknown>): SnapChunk | null => {
 
 /**
  * Round trips by relay (`Rtts`): each a whole number of ms up to a minute, or
- * null. A home this side doesn't know (a build with a relay since retired, or
+ * null. A site this side doesn't know (a build with a relay since retired, or
  * one added later) is left out, not refused.
  */
 export const parseRtts = (v: unknown): Rtts | null => {
   if (!isRecord(v)) return null
-  const out: { [H in RelayHome]?: number | null } = {}
-  for (const [home, ms] of Object.entries(v)) {
+  const out: { [S in Site]?: number | null } = {}
+  for (const [site, ms] of Object.entries(v)) {
     if (ms !== null && !isWhole(ms, 60_000)) return null
-    if (isRelayHome(home)) out[home] = ms
+    if (isSite(site)) out[site] = ms
   }
   return out
 }

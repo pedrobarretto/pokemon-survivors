@@ -4,6 +4,7 @@ import { PLACE, PLACES, type PlaceId } from '../data/places'
 import { onFloor } from './arenaFloor'
 import { buildCave, updateCave } from './cave'
 import { buildGraveyard, updateGraveyard } from './graveyard'
+import { buildHideout, updateHideout } from './hideout'
 import { buildGrotto, grottoDone, updateGrotto } from './grotto'
 import { buildUnderground, updateUnderground } from './underground'
 import type { PlaceInterior, PlaceInteriorOf, PlaceOutcome, PlaceStates } from './place'
@@ -44,6 +45,8 @@ const PLACE_RULES: { [K in PlaceId]: PlaceRule<K> } = {
   grotto: { build: buildGrotto, update: updateGrotto, walls: true, timeUp: grottoDone },
   // The walls give: the team scrambles out.
   underground: { build: buildUnderground, update: updateUnderground, walls: true, timeUp: thrownOut },
+  // Team Rocket's alarm: the grunts throw the team out.
+  hideout: { build: buildHideout, update: updateHideout, walls: true, timeUp: thrownOut },
 }
 
 /** How far south of the door the team steps back out, clear of the entrance. */
@@ -76,7 +79,7 @@ export const enterPlace = <K extends PlaceId>(g: Game, id: K, x: number, y: numb
   g.place.inside = inside as PlaceInterior
   g.place.visited.push(id)
   notifyPlace(g, id, { kind: 'enter' })
-  if (inside.intro > 0 && id === 'cave') notifyPlace(g, id, { kind: 'floor', floor: 0 })
+  if (inside.intro > 0 && (id === 'cave' || id === 'hideout')) notifyPlace(g, id, { kind: 'floor', floor: 0 })
 }
 
 /** Brings the team back out at the entrance's door. */

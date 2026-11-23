@@ -29,13 +29,14 @@ import { LANDMARK, LANDMARK_IDS, type LandmarkGround, type LandmarkId, type Land
 import { LANDMARK_VARIANTS, landmarkPlan } from './landmarkLayout'
 import { arenaGround, fits } from './arenaFloor'
 import { burst } from './effects'
-import { roomOf } from './room'
+import { keepOnFloor, roomOf } from './room'
 import { isAirborne } from './traits'
 import { actAs, nearestPlayer } from './players'
 import type { Enemy, Game, Pickup, Player } from './types'
 import * as dm from '../engine/dmath'
 import type { BiomeId } from '../data/biomes'
 import { biomeAt } from './biomeMap'
+import { GA_KIT } from './gaKitARules'
 
 /**
  * Terrain on the map: each world cell deterministically holds at most one
@@ -308,9 +309,13 @@ const NEAR: Feature[] = []
 /** How far a place's entrance reaches from its door, for gathering the features near a spot. */
 const ENTRANCE_REACH = 96
 
-/** Features whose cells overlap the box around (x, y). Reuses one array: copy it if you keep it. */
-export const featuresNear = (g: Game, x: number, y: number, rx: number, ry = rx): readonly Feature[] => {
-  // Filled by index and cut to size, never emptied first (that would drop its storage every call).
+/**
+ * Fills `NEAR` with the features whose cells overlap the box around (x, y)
+ * and returns how many: `featuresNear` for the hot loops, which read the
+ * first `n` and spare the array its cut to size.
+ */
+const gatherNear = (g: Game, x: number, y: number, rx: number, ry = rx) => {
+  // Filled by index, never emptied first (that would drop its storage every call).
   let n = 0
   const room = roomOf(g)
   if (room) NEAR[n++] = room.terrain
@@ -325,7 +330,12 @@ export const featuresNear = (g: Game, x: number, y: number, rx: number, ry = rx)
       }
     }
   }
-  NEAR.length = n
+  return n
+}
+
+/** Features whose cells overlap the box around (x, y). Reuses one array: copy it if you keep it. */
+export const featuresNear = (g: Game, x: number, y: number, rx: number, ry = rx): readonly Feature[] => {
+  NEAR.length = gatherNear(g, x, y, rx, ry)
   return NEAR
 }
 
@@ -396,6 +406,24 @@ const standable = (g: Game, x: number, y: number, r: number, thin: boolean) => {
 }
 
 /**
+ * Moves a spot to the nearest place a player's foot stands clear: on a room's
+ * floor and out of its holes, clear of every solid (a blast's shelters on
+ * Hoopa's islands). Left where it is when nothing in reach is clear.
+ */
+export const standingSpot = (g: Game, o: Pos, r: number = PLAYER_FOOT) => {
+  if (standable(g, o.x, o.y, r, false)) return o
+  const room = roomOf(g)
+  if (room) keepOnFloor(o, room, room.layout.floor, room.layout.holes ?? [], r)
+  if (standable(g, o.x, o.y, r, false)) return o
+  const spot = nearestOpen(o.x, o.y, (x, y) => standable(g, x, y, r, false), CLEAR_SEARCH.reach, UNSTICK.step)
+  if (spot) {
+    o.x = spot.x
+    o.y = spot.y
+  }
+  return o
+}
+
+/**
  * Keeps a walking player out of the solids; one the pushes can't free (an
  * evolution grew them into a gap, a dash wedged them between two pieces or
  * a piece and a room's edge, each push putting them back into the other)
@@ -415,16 +443,19 @@ const settlePlayer = (g: Game, p: Player) => {
 
 /**
  * Each feature's solids' boxes (x0, y0, x1, y1 per solid, in its order: the
- * union of its feet), worked out once per feature: features never change once
- * built. A cache beside the state, not in it, like the cells themselves.
+ * union of its feet), then the box of them all, worked out once per feature:
+ * features never change once built. A cache beside the state, not in it,
+ * like the cells themselves.
  */
 const solidBoxes = new WeakMap<Feature, Float64Array>()
 
 const boxesOf = (f: Feature) => {
   let boxes = solidBoxes.get(f)
   if (boxes) return boxes
-  boxes = new Float64Array(f.solids.length * 4)
-  for (let i = 0; i < f.solids.length; i++) {
+  const n = f.solids.length
+  boxes = new Float64Array(n * 4 + 4)
+  boxes.set([Infinity, Infinity, -Infinity, -Infinity], n * 4)
+  for (let i = 0; i < n; i++) {
     let x0 = Infinity
     let y0 = Infinity
     let x1 = -Infinity
@@ -436,6 +467,7 @@ const boxesOf = (f: Feature) => {
       y1 = Math.max(y1, e.y + e.ry)
     }
     boxes.set([x0, y0, x1, y1], i * 4)
+    boxes.set([Math.min(boxes[n * 4]!, x0), Math.min(boxes[n * 4 + 1]!, y0), Math.max(boxes[n * 4 + 2]!, x1), Math.max(boxes[n * 4 + 3]!, y1)], n * 4)
   }
   solidBoxes.set(f, boxes)
   return boxes
@@ -445,7 +477,8 @@ const boxesOf = (f: Feature) => {
  * Pushes a circle out of every solid near it (but the thin ones, `thin`: a
  * Ghost-type player's). Returns the last ellipse it hit, or null. A solid
  * whose box the circle is clear of by a pixel can't push it (no ellipse of it
- * would), so its ellipses go untested: the same pushes, in the same order, for a crowd.
+ * would), so its ellipses go untested, and a feature whose solids' box it is
+ * clear of goes untested whole: the same pushes, in the same order, for a crowd.
  */
 const block = (g: Game, o: Pos, r: number, thin = false) => {
   let hit: Ellipse | null = null
@@ -453,8 +486,12 @@ const block = (g: Game, o: Pos, r: number, thin = false) => {
   // Two passes: leaving one lobe of a mountain can land in the next. A first pass that
   // pushed nothing left the circle where it was, so a second would push nothing either.
   for (let pass = 0; pass < 2 && (pass === 0 || hit !== null); pass++) {
-    for (const f of featuresNear(g, o.x, o.y, r)) {
+    const n = gatherNear(g, o.x, o.y, r)
+    for (let k = 0; k < n; k++) {
+      const f = NEAR[k]!
       const boxes = boxesOf(f)
+      const all = f.solids.length * 4
+      if (o.x < boxes[all]! - reach || o.y < boxes[all + 1]! - reach || o.x > boxes[all + 2]! + reach || o.y > boxes[all + 3]! + reach) continue
       for (let i = 0; i < f.solids.length; i++) {
         const b = i * 4
         if (o.x < boxes[b]! - reach || o.y < boxes[b + 1]! - reach || o.x > boxes[b + 2]! + reach || o.y > boxes[b + 3]! + reach) continue
@@ -499,6 +536,17 @@ export const clearSpot = (g: Game, o: Pos, r: number) => {
   return o
 }
 
+/** How far around its spot a fallen boss's loot spreads, px (a pair of Mega Stones, `STONE_GAP` apart in `mega.ts`, the TM and the evolution item). */
+export const LOOT_REACH = 24
+
+/**
+ * Where a fallen boss's or legendary's loot lands, so a player can walk to all
+ * of it: a boss flies over the terrain and a room's holes (Lugia's whirlpool,
+ * Groudon's lava lake), its loot doesn't. In a room, on its floor and out of
+ * its holes and solids (`standingSpot`); on the map, out of solids and lakes (`clearSpot`).
+ */
+export const lootSpot = (g: Game, x: number, y: number, r: number = LOOT_REACH): Pos => (roomOf(g) ? standingSpot(g, { x, y }, r) : clearSpot(g, { x, y }, r))
+
 /** Whether a circle at (x, y) is clear of solids and lakes (where breakables may stand). */
 export const isOpen = (g: Game, x: number, y: number, r: number) =>
   !featuresNear(g, x, y, r).some((f) => f.solids.some((s) => inside(s.foot, x, y, r)) || (f.lake !== null && inside(f.lake.foot, x, y, r)))
@@ -509,7 +557,11 @@ export type Ground = 'land' | 'water' | 'ice' | 'lava'
 export const groundAt = (g: Game, x: number, y: number): Ground => {
   const room = roomOf(g)
   if (room) return arenaGround(room.layout, x - room.x, y - room.y)
-  for (const f of featuresNear(g, x, y, 0)) if (f.lake && inside(f.lake.foot, x, y, 0)) return f.biome === 'snow' ? 'ice' : 'water'
+  const n = gatherNear(g, x, y, 0)
+  for (let k = 0; k < n; k++) {
+    const f = NEAR[k]!
+    if (f.lake && inside(f.lake.foot, x, y, 0)) return f.biome === 'snow' ? 'ice' : 'water'
+  }
   return 'land'
 }
 
@@ -560,10 +612,17 @@ const hovers = (g: Game) => playerTypes(g).includes('flying') || abilityImmune(g
 /** The acting player's ways across the terrain (the pause menu lists them). */
 export const crossings = (g: Game): Crossing[] => CROSSINGS.filter((c) => (c === 'hover' ? hovers(g) : playerTypes(g).includes(CROSSING_TYPE[c])))
 
+/** Co-op: a Lapras afloat within reach carries the acting player across the water (`GA_KIT.ferry`). */
+const ferried = (g: Game) => {
+  if (g.coop === null) return false
+  const p = g.player
+  return g.players.some((q) => q !== p && q.kitA?.kind === 'ferry' && q.kitA.afloat && dm.sq(q.x - p.x) + dm.sq(q.y - p.y) <= dm.sq(GA_KIT.ferry.carry))
+}
+
 /** The acting player's walking pace on `ground`: slowed wading, faster surfing (Water) or skating (Ice) on the open map. */
 export const groundPace = (g: Game, ground: Ground) => {
   if (ground === 'water') {
-    const water = playerTypes(g).includes('water')
+    const water = playerTypes(g).includes('water') || ferried(g)
     if (!ownWay(g)) return water || abilityImmune(g, 'terrain') ? 1 : TERRAIN.waterPace
     return water ? TERRAIN.surfPace : hovers(g) ? 1 : TERRAIN.waterPace
   }
@@ -634,8 +693,10 @@ export const updateTerrain = (g: Game, dt: number) => {
     const wall = block(g, e, e.radius * 0.8)
     if (wall) slide(g, e, wall, dt)
   }
+  // On Hoopa's islands a boss's phantom streaks over the scenery, as the boss itself does: its lane is marked whole.
+  const ghosts = g.rush !== null
   for (const h of g.hazards) {
-    if (h.kind !== 'shot' || h.age < h.armAt || !inSolid(g, h.x, h.y, h.r * 0.4)) continue
+    if (h.kind !== 'shot' || h.age < h.armAt || (ghosts && h.phantom > 0) || !inSolid(g, h.x, h.y, h.r * 0.4)) continue
     h.age = h.ttl
     burst(g, h.x, h.y, { colors: SHOT_SPARKS, count: 6, speed: 50, ttl: 0.25 })
   }

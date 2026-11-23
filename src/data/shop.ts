@@ -1,6 +1,7 @@
 import type { EggTier } from '../game/eggs'
 import type { StatDelta } from '../game/stats'
 import type { BranchId } from './branches'
+import type { RegionId } from './regionalForms'
 
 /**
  * The Kecleon Shop's catalog, as data: the five shop levels a player invests
@@ -154,12 +155,18 @@ export const VITRINE = {
     /** From this price on, the shop asks before selling one (a click buys on desktop). */
     confirmFrom: 80_000,
   },
-} as const satisfies { eggs: Record<Exclude<EggTier, 'friend' | 'haunted' | 'kecleon' | 'kecleonShiny'>, { price: number; weight: number }> } & Record<string, unknown>
+  /**
+   * The Ovo de Viagem's fixed card, beside the Kecleon Egg's and like it no
+   * card of the rotation: the week's region's egg (`regionOfWeek`,
+   * `game/travel.ts`), `stock` a Brasília day at `price`, at any shop level.
+   */
+  travelEgg: { price: 8000, stock: 1 },
+} as const satisfies { eggs: Record<Exclude<EggTier, 'friend' | 'haunted' | 'kecleon' | 'kecleonShiny' | 'fossil' | 'found' | 'dig' | RegionId>, { price: number; weight: number }> } & Record<string, unknown>
 
 export type VitrineEgg = keyof typeof VITRINE.eggs
 
-/** What the save counts as bought on a day (`ShopSave.bought`): the rotation's cards and the Kecleon Egg's fixed card. */
-export const SHOP_BOUGHT_KEYS = [...VITRINE_POOL, 'kecleonEgg'] as const
+/** What the save counts as bought on a day (`ShopSave.bought`): the rotation's cards and the Kecleon Egg's and Ovo de Viagem's fixed cards. */
+export const SHOP_BOUGHT_KEYS = [...VITRINE_POOL, 'kecleonEgg', 'travelEgg'] as const
 
 export type ShopBoughtKey = (typeof SHOP_BOUGHT_KEYS)[number]
 
@@ -198,7 +205,9 @@ export const TM_SHELF = {
  */
 export const EVO_ITEM_IDS = [
   'waterStone', 'thunderStone', 'fireStone', 'sunStone', 'moonStone', 'leafStone', 'iceStone', 'shinyStone', 'dawnStone',
-  'metalCoat', 'blackAugurite', 'kingsRock', 'auspiciousArmor', 'maliciousArmor', 'upgrade', 'dubiousDisc',
+  'metalCoat', 'blackAugurite', 'kingsRock', 'auspiciousArmor', 'maliciousArmor', 'upgrade', 'dubiousDisc', 'tartApple', 'sweetApple',
+  'shedShell', 'crackedPot', 'chippedPot',
+  'sparklingStone',
 ] as const
 
 export type EvoItemId = (typeof EVO_ITEM_IDS)[number]
@@ -209,17 +218,25 @@ export const EVO_ITEMS = {
   fireStone: { name: 'Fire Stone', branches: ['flareon'] },
   sunStone: { name: 'Sun Stone', branches: ['espeon'] },
   moonStone: { name: 'Moon Stone', branches: ['umbreon'] },
-  leafStone: { name: 'Leaf Stone', branches: ['leafeon'] },
+  leafStone: { name: 'Leaf Stone', branches: ['leafeon', 'exeggutor'] },
   iceStone: { name: 'Ice Stone', branches: ['glaceon'] },
-  shinyStone: { name: 'Shiny Stone', branches: ['sylveon'] },
+  shinyStone: { name: 'Shiny Stone', branches: ['sylveon', 'florges'] },
   dawnStone: { name: 'Dawn Stone', branches: ['gallade', 'froslass'] },
   metalCoat: { name: 'Metal Coat', branches: ['scizor'] },
-  blackAugurite: { name: 'Black Augurite', branches: ['kleavor'] },
+  /** Hisui's stone: Kleavor and every Hisuian evolution of a line already playable. */
+  blackAugurite: { name: 'Black Augurite', branches: ['kleavor', 'typhlosionHisui', 'samurottHisui', 'decidueyeHisui', 'goodraHisui'] },
   kingsRock: { name: "King's Rock", branches: ['politoed'] },
   auspiciousArmor: { name: 'Auspicious Armor', branches: ['armarouge'] },
   maliciousArmor: { name: 'Malicious Armor', branches: ['ceruledge'] },
   upgrade: { name: 'Up-Grade', branches: [] },
   dubiousDisc: { name: 'Dubious Disc', branches: [] },
+  tartApple: { name: 'Tart Apple', branches: ['flapple'] },
+  sweetApple: { name: 'Sweet Apple', branches: ['appletun'] },
+  shedShell: { name: 'Shed Shell', branches: ['shedinja'] },
+  crackedPot: { name: 'Cracked Pot', branches: ['polteageist'] },
+  chippedPot: { name: 'Chipped Pot', branches: ['polteageistAntique'] },
+  /** Alola's guardians' power in a stone: the Alolan evolutions of lines already playable. */
+  sparklingStone: { name: 'Sparkling Stone', branches: ['raichuAlola', 'marowakAlola', 'exeggutorAlola'] },
 } as const satisfies Record<EvoItemId, { name: string; branches: readonly BranchId[] }>
 
 /** What an evolution item costs. */
@@ -255,6 +272,9 @@ export const INCUBATOR = {
   slots: [
     { price: 150_000, minLevel: 2 },
     { price: 500_000, minLevel: 4 },
+    { price: 1_000_000, minLevel: 5 },
+    { price: 2_000_000, minLevel: 5 },
+    { price: 4_000_000, minLevel: 5 },
   ],
   quick: { price: 8000, speed: 2 },
 } as const satisfies { slots: readonly { price: number; minLevel: ShopLevel }[]; quick: { price: number; speed: number } }

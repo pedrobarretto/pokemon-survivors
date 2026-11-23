@@ -1,4 +1,7 @@
 import type { Score } from '../engine/score'
+import { REALM_THEMES } from './realmMusic'
+import { LOBBY_THEMES } from './lobbyMusic'
+import { RAID_DOJO_THEMES } from './raidDojoMusic'
 
 /**
  * Original chiptune themes, written in the tracker notation of `engine/score.ts`
@@ -898,6 +901,55 @@ const dialga: Score = {
   },
 }
 
+/**
+ * Palkia's domain (Folded Space): Dialga's twin in E minor, wide leaps in the
+ * lead as if each phrase jumped across space, a glittering arpeggio in the
+ * harmony and a slow swaying bass under the driving drums.
+ */
+const palkia: Score = {
+  bpm: 138,
+  duty: { lead: 0.25, harmony: 0.125 },
+  tracks: {
+    // | Em | C | D | B | Em | Am | B | B |  then  | C | D | Em | C | Am | B | Em | B |
+    lead: [
+      'E5:4 B5 E6 B5',
+      'C6:6 G5:2 E5:4 G5',
+      'D5:4 A5 D6 F#6',
+      'D#6:8 B5:4 F#5',
+      'G5:2 F#5 E5 B4 E5:8',
+      'A5:4 C6 E6 C6',
+      'B5:6 A5:2 F#5:4 D#5',
+      'B4:12 r:4',
+      'G5:3 F#5:1 G5:4 C6 E6',
+      'F#6:3 E6:1 D6:4 A5 F#5',
+      'B5:2 C6 B5 G5 E5:8',
+      'G6:6 F#6:2 E6:4 C6',
+      'A5:4 C6 E6 A6',
+      'F#6:6 D#6:2 B5:4 A5',
+      'G5:2 F#5 G5 B5 E6:8',
+      'D#6:4 B5 F#5 D#5',
+    ],
+    harmony: [
+      sparkle('E4', 'G4', 'B4', 'E5'), sparkle('C4', 'E4', 'G4', 'C5'), sparkle('D4', 'F#4', 'A4', 'D5'), sparkle('B3', 'D#4', 'F#4', 'B4'),
+      sparkle('E4', 'G4', 'B4', 'E5'), sparkle('A3', 'C4', 'E4', 'A4'), sparkle('B3', 'D#4', 'F#4', 'B4'), sparkle('B3', 'D#4', 'F#4', 'B4'),
+      sparkle('C4', 'E4', 'G4', 'C5'), sparkle('D4', 'F#4', 'A4', 'D5'), sparkle('E4', 'G4', 'B4', 'E5'), sparkle('C4', 'E4', 'G4', 'C5'),
+      sparkle('A3', 'C4', 'E4', 'A4'), sparkle('B3', 'D#4', 'F#4', 'B4'), sparkle('E4', 'G4', 'B4', 'E5'), sparkle('B3', 'D#4', 'F#4', 'B4'),
+    ],
+    bass: [
+      sway('E2', 'B2'), sway('C2', 'G2'), sway('D2', 'A2'), sway('B1', 'F#2'),
+      sway('E2', 'B2'), sway('A1', 'E2'), sway('B1', 'F#2'), sway('B1', 'F#2'),
+      sway('C2', 'G2'), sway('D2', 'A2'), sway('E2', 'B2'), sway('C2', 'G2'),
+      sway('A1', 'E2'), sway('B1', 'F#2'), sway('E2', 'B2'), sway('B1', 'F#2'),
+    ],
+    drums: [
+      ...times(7, 'k:2 h:2 s:2 h:1 h k:2 h:2 s:2 h:2'),
+      'k:2 s:1 s s:2 s:1 s k:2 s:1 s o:4',
+      ...times(7, 'k:2 h:2 s:2 h:1 h k:2 h:2 s:2 h:2'),
+      'k:2 s:1 s s:2 s:1 s k:2 s:1 s o:4',
+    ],
+  },
+}
+
 /** Rayquaza's domain (the Sky Pillar's roof): a fast, soaring G mixolydian anthem over glittering arpeggios. */
 const rayquaza: Score = {
   bpm: 156,
@@ -1032,6 +1084,75 @@ const deoxys: Score = {
       's:1 s s s s s s s k:2 s k o',
       ...times(7, 'k:2 h k h s h k s'),
       's:1 s s s s s s s k:2 s k o',
+    ],
+  },
+}
+
+/** Ultra Space (the Ultra Beasts' domains): a glittering E Lydian, the lead leaning on the raised fourth and augmented chords, as if from another world. */
+const ultraSpace: Score = {
+  bpm: 132,
+  duty: { lead: 0.25, harmony: 0.125 },
+  tracks: {
+    // | E | F# | E | D | C | D | E | B+ |  then  | Am | B | G# | C# | Am | F# | B+ | E |
+    lead: [
+      'E5:2 B5 G#5 D#6 B5:4 A#5',
+      'F#5:6 A#5:2 C#6:4 B5',
+      'G#5:2 B5 E6 D#6 A#5:8',
+      'D6:6 C#6:2 A5:8',
+      'C6:2 E6 G6 E6 D6:4 B5',
+      'A5:4 F#5 D6 C#6',
+      'B5:3 G#5:1 E5:4 G#5 B5',
+      'D#6:12 r:4',
+      'A5:4 C6:2 E6 A6:4 G6',
+      'F#6:6 D#6:2 B5:8',
+      'G#5:2 C6 D#6 G#6 F#6:4 D#6',
+      'F6:6 C#6:2 G#5:8',
+      'A5:2 r C6 E6 A6:4 G#6:2 E6',
+      'F#6:4 E6:2 C#6 A#5:8',
+      'B5:3 D#6:1 G6:4 D#6 B5',
+      'E6:12 r:4',
+    ],
+    harmony: [
+      sparkle('E4', 'G#4', 'B4', 'D#5'),
+      sparkle('F#4', 'A#4', 'C#5', 'E5'),
+      sparkle('E4', 'G#4', 'B4', 'A#4'),
+      sparkle('D4', 'F#4', 'A4', 'C#5'),
+      sparkle('C4', 'E4', 'G4', 'B4'),
+      sparkle('D4', 'F#4', 'A4', 'E5'),
+      sparkle('E4', 'G#4', 'B4', 'E5'),
+      sparkle('B3', 'D#4', 'G4', 'B4'),
+      sparkle('A3', 'C4', 'E4', 'A4'),
+      sparkle('B3', 'D#4', 'F#4', 'B4'),
+      sparkle('G#3', 'C4', 'D#4', 'G#4'),
+      sparkle('C#4', 'F4', 'G#4', 'C#5'),
+      sparkle('A3', 'C4', 'E4', 'G4'),
+      sparkle('F#3', 'A#3', 'C#4', 'E4'),
+      sparkle('B3', 'D#4', 'G4', 'D#5'),
+      sparkle('E4', 'G#4', 'B4', 'D#5'),
+    ],
+    bass: [
+      ostinato('E2', 'B2', 'E3'),
+      ostinato('F#2', 'C#3', 'F#3'),
+      ostinato('E2', 'B2', 'E3'),
+      ostinato('D2', 'A2', 'D3'),
+      ostinato('C2', 'G2', 'C3'),
+      ostinato('D2', 'A2', 'D3'),
+      ostinato('E2', 'B2', 'E3'),
+      ostinato('B1', 'G2', 'B2'),
+      ostinato('A1', 'E2', 'A2'),
+      ostinato('B1', 'F#2', 'B2'),
+      ostinato('G#1', 'D#2', 'G#2'),
+      ostinato('C#2', 'G#2', 'C#3'),
+      ostinato('A1', 'E2', 'A2'),
+      ostinato('F#1', 'C#2', 'F#2'),
+      ostinato('B1', 'G2', 'B2'),
+      ostinato('E2', 'B2', 'E3'),
+    ],
+    drums: [
+      ...times(7, 'k:4 h:2 h s:4 h:2 k'),
+      's:2 h s h k:1 s s s s:2 o',
+      ...times(7, 'k:4 h:2 h s:4 h:2 k'),
+      's:2 h s h k:1 s s s s:2 o',
     ],
   },
 }
@@ -1478,6 +1599,6 @@ const volcano: Score = {
   },
 }
 
-export const THEMES = { menu, run, boss, forest, cave, snow, tower, beach, plant, desert, volcano, kyogre, groudon, rayquaza, lugia, hoOh, dialga, latis, deoxys, birds, beasts, regis, mewtwo, arceus } as const satisfies Record<string, Score>
+export const THEMES = { menu, run, boss, forest, cave, snow, tower, beach, plant, desert, volcano, kyogre, groudon, rayquaza, lugia, hoOh, dialga, palkia, latis, deoxys, ultraSpace, birds, beasts, regis, mewtwo, arceus, ...REALM_THEMES, ...LOBBY_THEMES, ...RAID_DOJO_THEMES } as const satisfies Record<string, Score>
 
 export type ThemeId = keyof typeof THEMES

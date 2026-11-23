@@ -9,6 +9,8 @@ import { trainerAvatar } from '../game/trainer'
 import { formatNumber, LOCALES, locale, t } from '../i18n'
 import { discordIcon, medalIcon, ogIcon, pokeballIcon, ribbonIcon, supporterIcon } from '../render/art'
 import { portraitUrl } from '../render/sprites'
+import { ERA1_MARKS, frameArtUrl, titleMark } from '../render/cosmetics'
+import { realmIconUrl } from '../render/realmScene'
 import { fetchSupporterStatus, knownOg, knownTier } from '../supporters'
 import { lazyScreen } from './lazy'
 import { boutiqueFresh } from './boutiqueSeen'
@@ -36,19 +38,26 @@ const avatar = (s: AccountState, size: 'small' | 'big') => {
   return h('span', { class: `trainer-avatar ${size}${ring}`, 'aria-hidden': 'true' }, signedIn ? h('img', { src: portraitUrl(face.dex, face.shiny), alt: '' }) : h('img', { class: 'ball', src: pokeballIcon(), alt: '' }))
 }
 
-/** The equipped title, with the supporter's heart (and an OG's plate) before it, or null. */
+/** The equipped title, with the supporter's heart (and an OG's plate) before it, or null. An Era 1 title wears its mark too (`titleMark`) and its own look (`era1Champion`, `era1Legend`). */
 const titleLine = (cls: string) => {
   const save = loadSave()
   if (!save.title) return null
   const tier = knownTier(save)
+  const mark = titleMark(save.title)
   return h(
     'span',
-    { class: cls },
+    { class: mark ? `${cls} ${save.title}` : cls },
     tier && h('img', { src: supporterIcon(tier), alt: '' }),
     tier && knownOg() && h('img', { class: 'og', src: ogIcon(), alt: t().supporters.og.badge }),
+    mark && h('img', { class: 'mark', src: frameArtUrl(mark), alt: '' }),
     h('span', {}, t().achievements.titles[save.title]),
   )
 }
+
+/** The Trainer Card dressed in an Era 1 frame the player wears: its seal on top and its colors (`.trainer-card.era1`, `.era1Champion`). */
+const ERA1_FRAMES = ['era1', 'era1Champion'] as const
+
+const wornEra1 = () => ERA1_FRAMES.find((id) => id === loadSave().style.equipped.frame) ?? null
 
 /**
  * The Trainer chip, for the top bar's left slot (title screen): avatar, name
@@ -89,7 +98,7 @@ type Row = { label: string; run: () => void; icon?: string; wide?: boolean; tone
  * the sync state (a tap syncs), then rows to edit the profile, see it, share
  * the card image, Discord (link it, or the server once linked), Apoiadores
  * (supporters), the Pokémon's look (Leavanny's Boutique on its Visual tab,
- * without the walk), missions and achievements, the admin's gift desk and sign
+ * without the walk), the Livro de Estampas (with a @handle), missions and achievements, the admin's gift desk and sign
  * out. Guests get the same card from the local save, with "Criar conta /
  * Entrar" and "Entrar com Discord" when accounts are on. It follows the account state.
  *
@@ -102,7 +111,7 @@ type Row = { label: string; run: () => void; icon?: string; wide?: boolean; tone
 export const trainerCardScreen = (
   root: HTMLElement,
   input: Input,
-  opts: { supporters: (back: () => void) => Screen; locker: () => void },
+  opts: { supporters: (back: () => void) => Screen; locker: () => void; book: ((back: () => void) => Screen) | null },
   onClose: () => void,
 ): Screen => {
   const el = h('div', { class: 'screen shell dim trainer-screen' })
@@ -154,6 +163,7 @@ export const trainerCardScreen = (
       discord,
       ...(tier ? [{ label: since ? m.supporterSince(tier, monthYear(since)) : t().supporters.badge(tier), icon: supporterBadgeIcon(tier, since), run: () => openSub(opts.supporters) }] : []),
       look,
+      ...(handle && opts.book ? [{ label: t().realm.stamps.title, icon: realmIconUrl('book'), run: () => openSub(opts.book!) }] : []),
       missions,
       // Admin only, so not translated (see `ui/admin.ts`).
       ...(admin ? [{ label: 'Painel admin', run: () => openSub((back) => lazyScreen(root, () => import('./admin'), (m) => m.adminScreen(root, input, back), back)) }] : []),
@@ -187,9 +197,11 @@ export const trainerCardScreen = (
       ...[...MEDALS].reverse().filter((medal) => medals[medal] > 0).map((medal) => [medalIcon(medal), t().achievements.medals[medal], medals[medal]] as const),
       ...RIBBON_TIERS.filter((tier) => ribbons[tier] > 0).map((tier) => [ribbonIcon(tier), t().ribbons.names[tier], ribbons[tier]] as const),
     ]
+    const era1 = wornEra1()
     return h(
       'section',
-      { class: 'trainer-card pop' },
+      { class: era1 ? `trainer-card pop ${era1}` : 'trainer-card pop' },
+      era1 && h('img', { class: 'trainer-seal', src: frameArtUrl(era1 === 'era1Champion' ? ERA1_MARKS.champion : ERA1_MARKS.hall), alt: '' }),
       h(
         'div',
         { class: 'trainer-head' },

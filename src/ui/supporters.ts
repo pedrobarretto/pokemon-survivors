@@ -10,12 +10,14 @@ import { canWalkWith, companionForm, hallOf, isSupporter, mayVote, parseCode, po
 import { isSpecialCompanion, SPECIAL_COMPANION_IDS } from '../data/companions'
 import { brasiliaDay } from '../game/day'
 import { pumpkinOfferOpen } from '../game/halloween'
-import { formatDay, LOCALES, locale, t } from '../i18n'
+import { formatDay, formatNumber, LOCALES, locale, t } from '../i18n'
 import { context2d } from '../engine/pixelart'
 import { eggIcon, giftIcon, heartIcon, medalIcon, ogIcon, pokeballIcon, sparkleIcon, supporterIcon } from '../render/art'
 import { pumpkinHeartIcon } from '../render/halloweenArt'
 import { cryUrl, drawPokemon, hasShiny, loadSpecies, portraitUrl, type SpeciesSprites } from '../render/sprites'
-import { ROUTES } from '../site/routes'
+import { GEM_PATREON } from '../data/gems'
+import { gemIconUrl } from '../render/gemArt'
+import { supportPageUrl } from './supportLink'
 import { fetchPoll, fetchSupporterStatus, fetchWall, knownOg, knownStatus, knownTier, linkPatreon, redeemCode, setSupporterPublic, unlinkPatreon, vote } from '../supporters'
 import { h, later, rich } from './dom'
 import { hatchScene } from './incubator'
@@ -40,13 +42,6 @@ export type HallOpen = 'pick' | { poll: PollKind }
 
 /** A date of the account's history, in the current language (`14/10/2026`). */
 const longDay = (iso: string) => new Date(iso).toLocaleDateString(LOCALES[locale()].tag, { day: '2-digit', month: '2-digit', year: 'numeric' })
-
-/** The support page, carrying the player's handle so the donation goes to their account. */
-const supportUrl = () => {
-  const s = accountState()
-  const handle = s.kind === 'signedIn' ? s.handle : null
-  return `${ROUTES.support[locale()]}${handle ? `?u=${encodeURIComponent(handle)}` : ''}`
-}
 
 /* ---------------- Spatial navigation ---------------- */
 
@@ -470,9 +465,9 @@ export const hallPortrait = (face: Face) => {
     const url = urls.shift()
     if (!url) return void img.classList.remove('wobble')
     const probe = new Image()
+    probe.src = url
     probe.onload = () => ((img.src = url), img.classList.remove('ball', 'wobble'))
     probe.onerror = next
-    probe.src = url
   }
   next()
   return img
@@ -705,6 +700,12 @@ export const supportersScreen = (root: HTMLElement, input: Input, actions: Suppo
           { icon: sparkleIcon(), label: m.perks.shiny },
           { icon: eggIcon('friend'), label: m.perks.companion },
           { icon: giftIcon(), label: m.perks.vote },
+          // Patreon's gems a month, read from `GEM_PATREON`: the least on the tile, every tier's on hover.
+          {
+            icon: gemIconUrl(),
+            label: t().support.tile(formatNumber(Math.min(...Object.values(GEM_PATREON)))),
+            title: t().support.tileTitle(SUPPORTER_TIERS.map((tier) => `${t().support.card.names[tier]} ${formatNumber(GEM_PATREON[tier])}`).join(' · ')),
+          },
         ]
     // Only once the API said it has Patreon (`patreon` not null), for the account it answered about.
     const patreon: Action[] =
@@ -750,7 +751,7 @@ export const supportersScreen = (root: HTMLElement, input: Input, actions: Suppo
     const buttons = [
       ...tiles.flatMap((tile, i) => (tile.run ? [{ el: tileEls[i]!, run: tile.run }] : [])),
       ...links.map((a, i) => ({ el: linkEls[i]!, run: a.run })),
-      { el: support, run: () => void window.open(supportUrl(), '_blank', 'noopener') },
+      { el: support, run: () => void window.open(supportPageUrl('hall'), '_blank', 'noopener') },
     ]
     return { el, buttons }
   }

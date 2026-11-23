@@ -95,9 +95,11 @@ const proveRestores = (s: Scenario, ticks: number, every: number, stage?: (g: Ga
     expect(snapshot(copy.g)).toEqual(bytes)
     // The acting player is one of the team, not a copy of it.
     expect(copy.g.player).toBe(copy.g.players[0])
+    // A moment the restored copy plays through counts as covered too (a short one, an Ability pick, can fall inside these ticks).
     for (let i = 0; i < AFTER; i++) {
       tickScenario(at)
       tickScenario(copy)
+      for (const m of moments(copy.g)) covered.add(m)
     }
     expect(stateHash(copy.g), `${s.starter} diverged after a restore at ${at.tick - AFTER}`).toBe(stateHash(at.g))
     // Byte for byte, but for the module tables the original shares (`TABLE_ALIASES`).
@@ -125,8 +127,10 @@ describe('snapshot and restore', () => {
       for (const m of r.covered) covered.add(m)
     }
     expect(checkpoints).toBeGreaterThan(20)
-    // A legend's awakening, a domain, a place and the pick screens come up along the way (`moments`); the graveyard, a tunnel and a capture have cases of their own below.
-    expect([...covered].sort()).toEqual(expect.arrayContaining(['ability', 'awakening', 'boss', 'domain:battle', 'domain:crossing', 'domain:encounter', 'evolving', 'levelup', 'place:cave', 'pokeball', 'tm']))
+    // A legend's awakening, a domain, a place and the pick screens come up along the way (`moments`); every place, a tunnel and a capture have cases of their own below.
+    expect([...covered].sort()).toEqual(expect.arrayContaining(['ability', 'awakening', 'boss', 'domain:battle', 'domain:crossing', 'domain:encounter', 'evolving', 'levelup', 'pokeball', 'tm']))
+    // Which place the runs walk into follows the rules; each one has its own case below.
+    expect([...covered].some((m) => m.startsWith('place:'))).toBe(true)
   }, 120_000)
 
   it.each([

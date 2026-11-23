@@ -1,3 +1,9 @@
+import { SEASON_ONE } from '../data/seasons'
+import { SEASON_ONE_EGGS } from '../data/seasonOneEggs'
+import { SEASON_ONE_KITS } from '../data/seasonOneKits'
+import { GA_FAMILIES_B } from '../data/gaFamiliesB'
+import { MEGA_FAMILIES_B } from '../data/megaFamiliesB'
+import { GA_FAMILIES_A } from '../data/gaFamiliesA'
 import { describe, expect, it } from 'vitest'
 import { createRng } from '../engine/rng'
 import { isExclusiveFamily, PLAYABLE_IDS } from '../data/hatchlings'
@@ -20,7 +26,7 @@ describe('dailyChallenge', () => {
   })
 
   it('gives every playable Pokémon its day once per cycle, egg families included and the exclusive eggs’ families aside', () => {
-    const pool = PLAYABLE_IDS.filter((id) => !isExclusiveFamily(id))
+    const pool = PLAYABLE_IDS.filter((id) => (!isExclusiveFamily(id) || id === 'kabuto') && !(id in SEASON_ONE_EGGS) && !(id in SEASON_ONE_KITS) && !(id in GA_FAMILIES_B) && !(id in GA_FAMILIES_A) && !(id in MEGA_FAMILIES_B))
     let day = '2026-01-01'
     const days: string[] = []
     // A whole cycle starts at a multiple of its length in days since 1970.
@@ -31,9 +37,26 @@ describe('dailyChallenge', () => {
     expect(Math.max(...counts.values())).toBeLessThanOrEqual(3)
   })
 
+  it('draws the new egg families from Temporada 1 on, and only then', () => {
+    const newFamilies = (from: string, days: number) => {
+      let day = from
+      const seen = Array.from({ length: days }, () => dailyChallenge((day = previousDay(day))).starter)
+      return seen.filter((s) => s in SEASON_ONE_EGGS || s in SEASON_ONE_KITS || s in GA_FAMILIES_A)
+    }
+    expect(newFamilies(SEASON_ONE.challengeDay, 300)).toEqual([])
+    expect(newFamilies('2027-11-16', 300).length).toBeGreaterThan(0)
+  })
+
   it('keeps the Pokémon each day had before the exclusive families came', () => {
     // Pinned from before the exclusive eggs (Haunted, Kecleon): leaving their families out of the pool keeps every day's draw.
     expect(['2026-10-21', '2026-10-24', '2026-11-02'].map((d) => dailyChallenge(d).starter)).toEqual(['larvitar', 'roggenrola', 'honedge'])
+  })
+
+  it('keeps the Pokémon each Temporada 1 day had', () => {
+    // Pinned: any change to the pool's size reshuffles every day from the season on, the day being played too.
+    // A family leaving the draw goes in `KEPT_IN`; one joining it needs a pool of its own from a later day.
+    const days = ['2026-11-18', '2026-11-19', '2026-11-20', '2026-11-21', '2026-11-22']
+    expect(days.map((d) => dailyChallenge(d).starter)).toEqual(['finizen', 'chespin', 'wimpod', 'fennekin', 'happiny'])
   })
 
   it('keeps the past Nightmares and draws none after `nightmareUntil`, every other day as it was', () => {

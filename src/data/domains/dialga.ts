@@ -19,9 +19,11 @@ import type { LegendDomain } from '../domains'
  * three beam fans whose gaps and columns are safe; (2) it skips through time
  * (teleports), the marks thicken, and Roar of Time stops the player's shots
  * mid-air while marks bloom everywhere and the roar spares only those behind
- * a column, then lets the shots fly on; (3) time itself speeds up
- * (`BossPhase.haste`): tears open in the floor, it warps onto the player,
- * and Roar of Time spares only those far from it.
+ * a column, then lets the shots fly on; (3) it turns Origin Forme and time
+ * itself speeds up (`BossPhase.haste`): tears open in the floor, it warps onto
+ * the player, and Roar of Time spares only those far from it. On Nightmare that
+ * last phase is Primal Dialga's (`nightmareForm`, the PMD Explorers' last boss):
+ * time collapses, marks of the future fall everywhere and its rings close in.
  */
 
 /** Columns along the nave and in the apse: cover from Flash Cannon and the first Roar of Time. */
@@ -163,6 +165,8 @@ export const DIALGA_DOMAIN: LegendDomain = {
       below: 0.33,
       shift: 2.6,
       haste: 1.3,
+      form: 'origin',
+      nightmareForm: 'primal',
       steer: { kind: 'chase', pace: 0.55 },
       // Space-time tears open in the nave.
       arena: [{ kind: 'crumble', at: 0, warn: 2.6, area: [], spare: [circle(-80, 10, 18), circle(84, 0, 18), circle(-40, 112, 16), circle(60, 104, 16)] }],
@@ -172,6 +176,9 @@ export const DIALGA_DOMAIN: LegendDomain = {
         cannon(6.9, 2, 0.5),
         { kind: 'ring', every: 5.8, count: 18, speed: 52, radius: 5, damage: 14, visual: 'steel' },
         { kind: 'teleport', every: 10.3, to: 'player', windup: 1.25, radius: 30, damage: 22, visual: 'dragon' },
+        // Primal Dialga (Nightmare): time's collapse, the future landing all over the nave and rings of it closing in.
+        { from: 'nightmare', ...marks(7.4, 8, 140, 2.4) },
+        { from: 'nightmare', kind: 'ring', every: 8.2, count: 22, speed: 50, radius: 6, damage: 16, visual: 'dragon', around: 130, windup: 1, gap: 0.8 },
       ],
       ultimate: {
         move: 'Roar of Time',

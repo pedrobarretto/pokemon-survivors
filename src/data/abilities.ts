@@ -4,6 +4,17 @@ import type { StatusSpec } from '../game/status'
 import type { WeatherId } from './biomes'
 import type { BranchId } from './branches'
 import type { PlayableId } from './hatchlings'
+import { SEASON_ONE_EGG_ABILITIES } from './seasonOneEggs'
+import { SEASON_ONE_KIT_ABILITIES } from './seasonOneKits'
+import { GA_FAMILIES_B_ABILITIES } from './gaFamiliesB'
+import { GA_FOSSILS_ABILITIES } from './gaFossils'
+import { GA_BRANCHES_A_ABILITIES, GA_FAMILIES_A_ABILITIES } from './gaFamiliesA'
+import { REGIONAL_BRANCH_ABILITIES, REGIONAL_FAMILY_ABILITIES } from './regionalFamilies'
+import { ROCKET_FAMILY_ABILITIES } from './rocketFamilies'
+import { GA_MEGA_FAMILIES_A_ABILITIES } from './gaMegaFamiliesA'
+import { MEGA_BRANCHES_B_ABILITIES, MEGA_FAMILIES_B_ABILITIES } from './megaFamiliesB'
+import { SC_FAMILY_ABILITIES } from './scFamilies'
+import { GA_BRANCHES_HOOK_ABILITIES, GA_FAMILIES_HOOK_ABILITIES } from './gaFamiliesHook'
 import type { PokeType } from './types'
 
 /**
@@ -75,7 +86,7 @@ export type AbilityEffect =
   | { kind: 'bossHunter'; bonus: number }
   /**
    * Every `per` kills one more stack of `stats`, up to `max`. With `decay`,
-   * a stack wears off every `decay` s (Moxie); without it they stay (Battle Bond).
+   * a stack wears off every `decay` s without a kill (Moxie); without it they stay (Battle Bond).
    */
   | { kind: 'onKill'; per: number; max: number; stats: StatDelta; decay?: number }
   /** A kill may drop something more (Pickup, Magician, Frisk). */
@@ -173,13 +184,14 @@ export const ABILITIES = {
 
   /* ---------- Taking hits ---------- */
   thickFat: { name: 'Thick Fat', effects: [{ kind: 'resist', types: ['fire', 'ice'], factor: 0.5 }] },
+  pastelVeil: { name: 'Pastel Veil', effects: [{ kind: 'resist', types: ['poison'], factor: 0.4 }, stats({ regen: 0.4 })] },
   flashFire: { name: 'Flash Fire', effects: [{ kind: 'resist', types: ['fire'], factor: 0.4 }, stats({ typeDamage: { fire: 0.15 } })] },
   waterAbsorb: { name: 'Water Absorb', effects: [absorb('water')] },
   voltAbsorb: { name: 'Volt Absorb', effects: [absorb('electric')] },
   lightningRod: { name: 'Lightning Rod', effects: [absorb('electric'), stats({ typeDamage: { electric: 0.15 } })] },
-  bulletproof: { name: 'Bulletproof', effects: [{ kind: 'resist', hits: ['shot', 'blast'], factor: 0.4 }] },
+  bulletproof: { name: 'Bulletproof', effects: [{ kind: 'resist', hits: ['shot', 'blast'], factor: 0.6 }] },
   levitate: { name: 'Levitate', effects: [{ kind: 'immune', to: ['lava', 'trap', 'zone', 'terrain'] }] },
-  magicGuard: { name: 'Magic Guard', effects: [{ kind: 'immune', to: ['lava', 'trap', 'blast', 'zone', 'chip', 'drain'] }] },
+  magicGuard: { name: 'Magic Guard', effects: [{ kind: 'immune', to: ['lava', 'trap', 'chip', 'drain'] }, { kind: 'resist', hits: ['blast', 'zone'], factor: 0.5 }] },
   magicBounce: { name: 'Magic Bounce', effects: [{ kind: 'guard', every: 12, reflect: true }] },
   illusion: { name: 'Illusion', effects: [{ kind: 'guard', every: 10 }] },
   damp: { name: 'Damp', effects: [{ kind: 'immune', to: ['blast'] }, stats({ typeDamage: { water: 0.1 } })] },
@@ -225,6 +237,8 @@ export const ABILITIES = {
   speedBoost: { name: 'Speed Boost', effects: [{ kind: 'timer', every: 20, max: 10, stats: { speed: 3 } }] },
   competitive: { name: 'Competitive', effects: [{ kind: 'onHurt', seconds: 4, max: 1, stats: { might: 0.25 } }] },
   steadfast: { name: 'Steadfast', effects: [{ kind: 'onHurt', seconds: 3, max: 1, stats: { speed: 14 } }] },
+  /** The Swords of Justice's and Keldeo's: every hit taken steels their might for a while, up to three times. */
+  justified: { name: 'Justified', effects: [{ kind: 'onHurt', seconds: 5, max: 3, stats: { might: 0.08 } }] },
   weakArmor: { name: 'Weak Armor', effects: [{ kind: 'onHurt', seconds: 3, max: 1, stats: { speed: 12, cooldown: -0.1, damageTaken: 0.05 } }] },
   contrary: { name: 'Contrary', effects: [{ kind: 'onHurt', seconds: Infinity, max: 15, stats: { might: 0.02 } }] },
   moody: {
@@ -258,6 +272,40 @@ export const ABILITIES = {
   multitype: { name: 'Multitype', effects: [{ kind: 'ownType', bonus: 0.2 }] },
   /** Darkrai's: the foes its Dark Void put to sleep (or anything else did) suffer in their dreams. */
   badDreams: { name: 'Bad Dreams', effects: [{ kind: 'nightmare', radius: 120, every: 0.5, damage: 1 }] },
+
+  /* ---------- The regional forms' own (`data/regionalFamilies.ts`) ---------- */
+  /** Alolan Ninetales': it brings the snow its Aurora Veil grows in. */
+  snowWarning: { name: 'Snow Warning', effects: [{ kind: 'summon', weather: 'snow' }, { kind: 'immune', to: ['chip'] }] },
+  /** Alolan Dugtrio's golden hair snares what touches it. */
+  tanglingHair: { name: 'Tangling Hair', effects: [{ kind: 'contact', status: [{ kind: 'slow', chance: 0.6, duration: 2, power: 0.45 }], damage: 0 }] },
+  /** Alolan Golem's magnetism: drops fly to it from farther away. */
+  magnetPull: { name: 'Magnet Pull', effects: [stats({ magnet: 45, typeDamage: { steel: 0.1 } })] },
+  /** Normal moves crackle with electricity, and the electric ones hit harder. */
+  galvanize: { name: 'Galvanize', effects: [stats({ typeDamage: { normal: 0.25, electric: 0.2 } })] },
+  poisonTouch: { name: 'Poison Touch', effects: [stats({ statusChance: 0.06, typeDamage: { poison: 0.1 } }), { kind: 'contact', status: [poison], damage: 0 }] },
+  /** Perrserker's: Steel moves hit much harder. */
+  steelySpirit: { name: 'Steely Spirit', effects: [stats({ typeDamage: { steel: 0.3 } })] },
+  defiant: { name: 'Defiant', effects: [{ kind: 'onHurt', seconds: 4, max: 1, stats: { might: 0.3 } }] },
+  /** Cursola's: whatever touches it is marked to perish, taking more from every hit. */
+  perishBody: { name: 'Perish Body', effects: [{ kind: 'contact', status: [{ kind: 'mark', chance: 0.6, duration: 5, power: 0.2 }], damage: 0.5 }] },
+  /** Galarian Darmanitan's: far stronger, a little slower to strike again. */
+  gorillaTactics: { name: 'Gorilla Tactics', effects: [stats({ might: 0.4, cooldown: 0.06 })] },
+  aftermath: { name: 'Aftermath', effects: [{ kind: 'immune', to: ['blast'] }, { kind: 'contact', status: [], damage: 1 }] },
+  angerPoint: { name: 'Anger Point', effects: [{ kind: 'onHurt', seconds: 3, max: 1, stats: { might: 0.45, speed: 6 } }] },
+  // The Ultra Beasts' innate: what it raises is each beast's own best stat (`beastBoost` in `data/legends.ts`).
+  beastBoost: { name: 'Beast Boost', effects: [] },
+  /* The path legends' (`data/legendPaths.ts`) */
+  /** Zygarde's: under half HP its Cells gather around it, hardening and mending it. */
+  powerConstruct: { name: 'Power Construct', effects: [{ kind: 'lowHp', stats: { damageTaken: -0.25, regen: 0.8 } }] },
+  fullMetalBody: { name: 'Full Metal Body', effects: [{ kind: 'immune', to: ['terrain'] }, stats({ damageTaken: -0.12 })] },
+  shadowShield: { name: 'Shadow Shield', effects: [{ kind: 'fullHp', stats: { damageTaken: -0.45 } }] },
+  /** Regigigas's: it starts slow and weak, and grows into its strength over the first minute or so. */
+  slowStart: { name: 'Slow Start', effects: [stats({ might: -0.3, speed: -8 }), { kind: 'timer', every: 12, max: 6, stats: { might: 0.1, speed: 2 } }] },
+  // The Ruínas da Decisão's Regis and the Forces of Nature (`data/legends.ts`).
+  transistor: { name: 'Transistor', effects: [stats({ typeDamage: { electric: 0.3 } })] },
+  dragonsMaw: { name: "Dragon's Maw", effects: [stats({ typeDamage: { dragon: 0.3 } })] },
+  prankster: { name: 'Prankster', effects: [stats({ cooldown: -0.08 }), { kind: 'tag', tag: 'status', bonus: 0.15 }] },
+  sandForce: { name: 'Sand Force', effects: [{ kind: 'weather', weather: 'sand', stats: { typeDamage: { ground: 0.3, rock: 0.3, steel: 0.3 } } }, { kind: 'immune', to: ['chip'] }] },
 } as const satisfies Record<string, AbilityDef>
 
 export type AbilityId = keyof typeof ABILITIES
@@ -397,6 +445,54 @@ export const FAMILY_ABILITIES = {
   arceus: ['moldBreaker', 'magicGuard', 'sturdy'],
   darkrai: ['insomnia', 'unnerve', 'infiltrator'],
   cresselia: ['naturalCure', 'magicGuard', 'synchronize'],
+  terapagos: ['sturdy', 'clearBody', 'adaptability'],
+  nihilego: ['levitate', 'poisonPoint', 'magicGuard'],
+  buzzwole: ['ironFist', 'guts', 'hustle'],
+  pheromosa: ['speedBoost', 'quickFeet', 'technician'],
+  xurkitree: ['static', 'voltAbsorb', 'adaptability'],
+  celesteela: ['heavyMetal', 'flashFire', 'sturdy'],
+  kartana: ['sharpness', 'technician', 'sniper'],
+  guzzlord: ['strongJaw', 'thickFat', 'regenerator'],
+  stakataka: ['sturdy', 'heavyMetal', 'rockHead'],
+  blacephalon: ['flashFire', 'cursedBody', 'adaptability'],
+  naganadel: ['poisonPoint', 'infiltrator', 'adaptability'],
+  poipole: ['poisonPoint', 'quickFeet', 'adaptability'],
+  zygarde: ['sandVeil', 'moxie', 'unnerve'],
+  solgaleo: ['flashFire', 'solarPower', 'sturdy'],
+  lunala: ['infiltrator', 'cursedBody', 'levitate'],
+  kubfu: ['ironFist', 'steadfast', 'sniper'],
+  meltan: ['heavyMetal', 'pickup', 'lightMetal'],
+  regigigas: ['sturdy', 'guts', 'rockHead'],
+  palkia: ['swiftSwim', 'sniper', 'infiltrator'],
+  uxie: ['synchronize', 'magicGuard', 'innerFocus'],
+  mesprit: ['synchronize', 'naturalCure', 'competitive'],
+  azelf: ['moxie', 'sniper', 'unburden'],
+  cobalion: ['sturdy', 'heavyMetal', 'clearBody'],
+  terrakion: ['rockHead', 'guts', 'sheerForce'],
+  virizion: ['leafGuard', 'quickFeet', 'sharpness'],
+  keldeo: ['swiftSwim', 'sharpness', 'innerFocus'],
+  hoopa: ['infiltrator', 'moldBreaker', 'adaptability'],
+  manaphy: ['swiftSwim', 'rainDish', 'sereneGrace'],
+  diancie: ['magicBounce', 'sturdy', 'pixilate'],
+  zeraora: ['ironFist', 'quickFeet', 'speedBoost'],
+  ogerpon: ['technician', 'sharpness', 'grassySurge'],
+  regieleki: ['static', 'quickFeet', 'voltAbsorb'],
+  regidrago: ['sturdy', 'rockHead', 'sheerForce'],
+  tornadus: ['keenEye', 'defiant', 'longReach'],
+  thundurus: ['static', 'defiant', 'voltAbsorb'],
+  landorus: ['intimidate', 'sturdy', 'sheerForce'],
+  enamorus: ['naturalCure', 'pixilate', 'magicGuard'],
+  ...SEASON_ONE_EGG_ABILITIES,
+  ...SEASON_ONE_KIT_ABILITIES,
+  ...GA_FAMILIES_B_ABILITIES,
+  ...GA_FAMILIES_A_ABILITIES,
+  ...REGIONAL_FAMILY_ABILITIES,
+  ...ROCKET_FAMILY_ABILITIES,
+  ...GA_FOSSILS_ABILITIES,
+  ...GA_MEGA_FAMILIES_A_ABILITIES,
+  ...MEGA_FAMILIES_B_ABILITIES,
+  ...SC_FAMILY_ABILITIES,
+  ...GA_FAMILIES_HOOK_ABILITIES,
 } as const satisfies Record<PlayableId, AbilitySet>
 
 /** The abilities of a branch picked at the family's first evolution (`data/branches.ts`). */
@@ -415,6 +511,12 @@ export const BRANCH_ABILITIES = {
   kleavor: ['swarm', 'sheerForce', 'sharpness'],
   armarouge: ['flashFire', 'magicGuard', 'weakArmor'],
   ceruledge: ['flashFire', 'cursedBody', 'sharpness'],
+  flapple: ['overgrow', 'hustle', 'moxie'],
+  appletun: ['overgrow', 'thickFat', 'regenerator'],
+  ...GA_BRANCHES_A_ABILITIES,
+  ...REGIONAL_BRANCH_ABILITIES,
+  ...MEGA_BRANCHES_B_ABILITIES,
+  ...GA_BRANCHES_HOOK_ABILITIES,
 } as const satisfies Partial<Record<BranchId, AbilitySet>>
 
 /** The Hidden Ability of a set: the last of three (a lone ability is no Hidden one). */

@@ -1,5 +1,6 @@
-import { coinsFor, MINIGAMES, type MinigameId, type SoloGameId, type TableGameId } from '../../data/minigames'
+import { coinsFor, hasBoard, MINIGAMES, type MinigameId, type SoloGameId, type TableGameId } from '../../data/minigames'
 import { playSfx } from '../../engine/audio'
+import type { Input } from '../../engine/input'
 import { t } from '../../i18n'
 import type { BusyAct } from '../../net/realm'
 import type { TableView } from '../../net/realmTables'
@@ -7,8 +8,12 @@ import { h } from '../../ui/dom'
 import { depositPokeDollars } from '../../ui/save'
 import type { Screen } from '../../ui/screens'
 import { claimGame, isFailure } from '../api'
+import { syncSave } from '../../account'
+import { HATCHLING_IDS, HATCHLINGS } from '../../data/hatchlings'
 import { openGameBoard } from './board'
 import { pieceName } from '../furniture'
+import { closeIcon } from '../../render/art'
+import { setRealmGame } from '../../realmMusic'
 
 /**
  * The Poké Realm's mini game frame: an overlay holding the game's canvas at
@@ -46,8 +51,13 @@ export type LogLine = { icon: string | null; label: string; count: number; point
  */
 export type SoloEnd = { score: number; feats: readonly string[]; log?: { title: string; lines: readonly LogLine[] } }
 
-/** What the frame gives a solo game: the player's partner (to draw it), and a way to tell the room about a feat as it happens. */
-export type SoloCtx = { partner: string; shiny: boolean; brag: (feat: string) => void }
+/**
+ * What the frame gives a solo game: the player's partner (to draw it), a way
+ * to tell the room about a feat as it happens, the stage over its canvas (for
+ * words the in-world font can't write) and what a scene of the shell needs
+ * (a root over the game, and the input).
+ */
+export type SoloCtx = { partner: string; shiny: boolean; brag: (feat: string) => void; stage: HTMLElement; root: HTMLElement; input: Input }
 
 /** A solo game in progress. `step`'s `dt` is in seconds (capped, so a hidden tab doesn't jump). */
 export type GameRun = {
@@ -60,17 +70,22 @@ export type GameRun = {
 
 /**
  * A solo game: its canvas size (whole px; pick one that fits a phone held
- * either way, about 240 × 200) and how to start a round.
+ * either way, about 240 × 200) and how to start a round. `fluid` makes the
+ * canvas follow the stage instead: given the stage's CSS size it answers the
+ * size to use, asked again whenever the stage changes (a phone turned), and
+ * the game lays itself out from its canvas every frame.
  */
-export type SoloGame = { size: { w: number; h: number }; start: (ctx: SoloCtx) => GameRun }
+export type SoloGame = { size: { w: number; h: number }; fluid?: (stageW: number, stageH: number) => { w: number; h: number }; start: (ctx: SoloCtx) => GameRun }
 
 /**
  * Where a seat at a relay table stands, for the frame's word over the game
  * (`TableSource.lobby`): waiting for an opponent (it offers the bot
  * meanwhile), playing that bot, an opponent just sat down (back to the
- * table), watching a full table, or watching one with a seat free.
+ * table), watching a full table, or watching one with a seat free. At an
+ * open table with two or more seated: gathering (Começar), or ready and
+ * waiting for the others.
  */
-export type TableLobby = 'opponent' | 'bot' | 'arrived' | 'watching' | 'seatFree'
+export type TableLobby = 'opponent' | 'bot' | 'arrived' | 'watching' | 'seatFree' | 'gather' | 'gathered'
 
 /**
  * Where a table's state comes from: the realm relay's table (sat at with
@@ -120,6 +135,8 @@ export type TableRun = {
  */
 export type TableUi = {
   size: { w: number; h: number }
+  /** Like `SoloGame.fluid`: the canvas follows the stage (a phone turned), the screen lays itself out from its canvas every frame. */
+  fluid?: SoloGame['fluid']
   start: (ctx: TableCtx) => TableRun
   outro?: number
   feats?: (table: TableView, seat: number) => readonly string[]
@@ -131,6 +148,7 @@ export type FrameOpts = {
   shiny: boolean
   /** Sends what the trainer is busy at and its brags to the room; null outside the realm. */
   realm: { act: (act: BusyAct | null) => void; brag: (game: MinigameId, feat: string) => void; who: (avatar: number) => Sitter | null } | null
+  input: Input
   close: () => void
 }
 
@@ -142,6 +160,7 @@ const actOf = (game: MinigameId): BusyAct => (MINIGAMES[game].kind === 'table' ?
 
 type Shell = {
   el: HTMLElement
+  stage: HTMLElement
   canvas: HTMLCanvasElement
   g: CanvasRenderingContext2D
   sheet: HTMLElement
@@ -155,10 +174,11 @@ type Shell = {
 }
 
 /** The overlay, its canvas fitted to the screen by whole device pixels, and the input mapped into the game's pixels. */
-const shell = (root: HTMLElement, game: MinigameId, size: { w: number; h: number }, close: () => void): Shell => {
+const shell = (root: HTMLElement, game: MinigameId, size: { w: number; h: number }, close: () => void, fluid?: SoloGame['fluid']): Shell => {
   const m = t().minigames
   const canvas = h('canvas', { class: 'minigame-canvas', width: size.w, height: size.h })
   const sheet = h('div', { class: 'minigame-sheet box hidden' })
+  const stage = h('div', { class: 'minigame-stage' }, canvas, sheet)
   let boardOpen: Screen | null = null
   const board = (after?: Promise<unknown>) => {
     if (boardOpen) return
@@ -171,15 +191,15 @@ const shell = (root: HTMLElement, game: MinigameId, size: { w: number; h: number
   }
   const el = h(
     'div',
-    { class: 'screen minigame-screen' },
+    { class: 'screen minigame-screen', 'data-game': game },
     h(
       'header',
       { class: 'minigame-head' },
-      h('h2', {}, m.games[game].name),
-      h('button', { class: 'minigame-board box', type: 'button', onclick: () => board() }, m.board.open),
-      h('button', { class: 'minigame-close box', type: 'button', 'aria-label': m.close, onclick: close }, '×'),
+      h('h2', { class: 'arc-outline' }, m.games[game].name),
+      hasBoard(game) && h('button', { class: 'minigame-board arc-chip', type: 'button', onclick: () => board() }, m.board.open),
+      h('button', { class: 'minigame-close arc-icon-btn', type: 'button', 'aria-label': m.close, title: m.close, onclick: close }, h('img', { src: closeIcon(), alt: '' })),
     ),
-    h('div', { class: 'minigame-stage' }, canvas, sheet),
+    stage,
   )
   root.append(el)
   const g = canvas.getContext('2d')
@@ -189,6 +209,12 @@ const shell = (root: HTMLElement, game: MinigameId, size: { w: number; h: number
   const fit = () => {
     const stage = canvas.parentElement
     if (!stage) return
+    const wanted = fluid?.(stage.clientWidth, stage.clientHeight)
+    if (wanted && (wanted.w !== size.w || wanted.h !== size.h)) {
+      size.w = canvas.width = wanted.w
+      size.h = canvas.height = wanted.h
+      g.imageSmoothingEnabled = false
+    }
     // Whole device pixels per game pixel, so a phone's 1.9 is ×5/3 on a 3× screen rather than ×1.
     const s = Math.min(stage.clientWidth / size.w, stage.clientHeight / size.h)
     const dpr = window.devicePixelRatio || 1
@@ -254,7 +280,7 @@ const shell = (root: HTMLElement, game: MinigameId, size: { w: number; h: number
     window.removeEventListener('keyup', onKeyUp)
     el.remove()
   }
-  return { el, canvas, g, sheet, input, endStep, board, covered: () => boardOpen !== null, dispose }
+  return { el, stage, canvas, g, sheet, input, endStep, board, covered: () => boardOpen !== null, dispose }
 }
 
 /** Runs `frame(dt, now)` every animation frame until the returned stop. */
@@ -325,6 +351,15 @@ const endSheet = async (s: Shell, headline: string, claim: Parameters<typeof cla
   paid.textContent = res.coins > 0 ? m.end.paid(res.coins) : m.end.capped
   for (const id of res.trophies) paid.after(h('p', { class: 'minigame-trophy' }, m.end.trophy(pieceName(id))))
   if (res.trophies.length > 0) playSfx('select')
+  // A family comes as a gift from the API: a sync brings it to the lobby's box.
+  const family = HATCHLING_IDS.find((id) => id === res.family)
+  const shiny = HATCHLING_IDS.find((id) => id === res.shiny)
+  if (family) paid.after(h('p', { class: 'minigame-trophy' }, t().seasonUnlocks.fishingFamily(HATCHLINGS[family].name)))
+  if (shiny) paid.after(h('p', { class: 'minigame-trophy' }, t().seasonUnlocks.fishingShiny(HATCHLINGS[shiny].name)))
+  if (family || shiny) {
+    playSfx('unlock')
+    void syncSave()
+  }
 }
 
 /** Opens a solo game in the frame: plays rounds until closed, claiming each finished one. */
@@ -339,11 +374,12 @@ export const openSoloGame = (root: HTMLElement, game: SoloGameId, def: SoloGame,
     stop()
     run?.dispose?.()
     opts.realm?.act(null)
+    setRealmGame(null)
     s.dispose()
     opts.close()
   }
-  const s = shell(root, game, def.size, close)
-  const ctx: SoloCtx = { partner: opts.partner, shiny: opts.shiny, brag: (feat) => opts.realm?.brag(game, feat) }
+  const s = shell(root, game, { ...def.size }, close, def.fluid)
+  const ctx: SoloCtx = { partner: opts.partner, shiny: opts.shiny, brag: (feat) => opts.realm?.brag(game, feat), stage: s.stage, root: s.el, input: opts.input }
   let run: GameRun | null = null
   let startedAt = 0
   let ended = false
@@ -356,6 +392,8 @@ export const openSoloGame = (root: HTMLElement, game: SoloGameId, def: SoloGame,
     s.sheet.classList.add('hidden')
   }
   opts.realm?.act(actOf(game))
+  // Before the game starts, so one that changes its music as it plays (the Safári's battles) has the last word.
+  setRealmGame(MINIGAMES[game].theme)
   start()
   stop = loop((dt) => {
     if (!run) return
@@ -388,13 +426,15 @@ export const openTableGame = (root: HTMLElement, game: TableGameId, ui: TableUi,
     run.dispose?.()
     source.leave()
     opts.realm?.act(null)
+    setRealmGame(null)
     s.dispose()
     opts.close()
   }
-  const s = shell(root, game, ui.size, close)
+  const s = shell(root, game, { ...ui.size }, close, ui.fluid)
   const run = ui.start({ source, partner: opts.partner, shiny: opts.shiny, who: (id) => opts.realm?.who(id) ?? null })
   const lobby = lobbyBar(s, source)
   opts.realm?.act(actOf(game))
+  setRealmGame(MINIGAMES[game].theme)
   let clock = 0
   let phase: TableView['phase'] | null = null
   let startedAt = performance.now()
@@ -437,23 +477,33 @@ export const openTableGame = (root: HTMLElement, game: TableGameId, ui: TableUi,
  * every frame: a card over the game while the seat waits for an opponent
  * (with the bot meanwhile), and a slim tag in the header while the bot plays,
  * a trainer only watches (with a free seat to take) or an opponent just sat.
+ * At an open table with two or more seated, the card gathers them: how many
+ * sit, Começar (`ready`), then a word while the others get ready.
  */
 const lobbyBar = (shell: Shell, source: TableSource) => {
   const m = t().minigames.tables
+  const gather = t().minigames.cafe.gather
   const card = h('div', { class: 'minigame-lobby box hidden' })
   const tag = h('div', { class: 'minigame-tag hidden' })
   shell.sheet.before(card)
   shell.el.querySelector('.minigame-board')?.before(tag)
-  let shown: TableLobby | null = null
+  let shown: string | null = null
   const button = (text: string, act: (() => void) | undefined) => h('button', { class: 'box', type: 'button', onclick: () => (playSfx('select'), act?.()) }, text)
   return () => {
     const now = source.lobby?.() ?? null
-    if (now === shown) return
-    shown = now
+    const seats = source.table()?.seats ?? []
+    const sat = seats.filter((s) => s !== null).length
+    // A gathering redraws as people sit and stand.
+    const key = now === 'gather' || now === 'gathered' ? `${now}:${sat}` : now
+    if (key === shown) return
+    shown = key
     if (now === 'arrived') playSfx('select')
-    card.classList.toggle('hidden', now !== 'opponent')
-    if (now === 'opponent') card.replaceChildren(h('b', {}, m.waiting), h('small', {}, m.waitingHint), button(m.playBot, source.playBot))
-    tag.className = now && now !== 'opponent' ? `minigame-tag minigame-tag-${now} box` : 'minigame-tag hidden'
+    const carded = now === 'opponent' || now === 'gather' || now === 'gathered'
+    card.classList.toggle('hidden', !carded)
+    if (now === 'opponent') card.replaceChildren(h('b', {}, m.waiting), h('small', {}, seats.length > 2 ? gather.hint : m.waitingHint), button(m.playBot, source.playBot))
+    if (now === 'gather') card.replaceChildren(h('b', {}, gather.title(sat, seats.length)), h('small', {}, gather.hint), button(gather.start, source.ready))
+    if (now === 'gathered') card.replaceChildren(h('b', {}, gather.title(sat, seats.length)), h('small', {}, gather.ready))
+    tag.className = now && !carded ? `minigame-tag minigame-tag-${now} box` : 'minigame-tag hidden'
     tag.replaceChildren(
       ...(now === 'bot' ? [m.botMeanwhile] : now === 'arrived' ? [m.arrived] : now === 'watching' ? [m.watching] : now === 'seatFree' ? [m.watching, button(m.takeSeat, source.takeSeat)] : []),
     )

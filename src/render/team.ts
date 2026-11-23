@@ -16,6 +16,10 @@ import { orbGlyph, TEAM_COLORS, TEAM_LIGHT } from './vale'
 import { concealed } from './valeGrass'
 import { drawPlateTag, plateOf } from './arenaPlates'
 import { VERSUS } from '../data/versus'
+import { seasonKitForm } from '../game/seasonOneKitRules'
+import { hookForm } from './gaHookLook'
+import { playerSprites } from './legend'
+import { weatherHere } from '../game/weather'
 
 /**
  * Co-op in the world, draw-only: every teammate's Pokémon with a ring at its
@@ -113,10 +117,21 @@ export const busyWith = (p: Player): TeamIcon | null => {
   }
 }
 
-/** The sheets a player wears: their stage (or branch) in their look's skin for it, if any, and, while it lasts, their Mega form. */
+/**
+ * The sheets a player wears: their stage (or branch) in their look's skin for it, if any, and, while it lasts, their Mega form.
+ * A legend (a co-op Legend run's) wears what the solo player would: its awakened form, fitted to the legends' body size.
+ */
 const mateSprites = (g: Game, p: Player): SpeciesSprites => {
+  if (p.legend) {
+    const before = actAs(g, p)
+    const s = playerSprites(g)
+    actAs(g, before)
+    return s
+  }
   const dex = formAt(p.starter, p.branch, p.stage).dex
   const skin = skinFor(shownLook(g, p.slot), dex)
+  const form = seasonKitForm(p.kit, p.stage, weatherHere(g)) ?? hookForm(g, p)
+  if (form) return sprites(dex, p.shiny, form)
   if (p.mega.active <= 0) return (skin && skinSprites(skin, dex, p.shiny)) || sprites(dex, p.shiny)
   const before = actAs(g, p)
   const def = heldMega(g)

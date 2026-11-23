@@ -2,7 +2,7 @@ import { decodeSnapshot, deflate, restore, snapshot, stateHash } from '../game/s
 import { diffStates } from '../game/stateDiff'
 import { PLAYABLE_IDS } from '../data/hatchlings'
 import { LEGEND_IDS } from '../data/legends'
-import { startScenario, tickScenario, type Scenario } from './scenario'
+import { forkDriver, startScenario, tickScenario, type Driver, type Scenario } from './scenario'
 import { startCoopScenario, tickCoopScenario, type CoopScenario } from './coopScenario'
 import { createVersusGame, type VersusLoadout } from '../game/versus'
 import type { ArenaFormat } from '../data/arenaFormats'
@@ -53,7 +53,8 @@ export { decodeSnapshot, diffStates, restore, snapshot, stateHash }
 /**
  * The runs the harness plays: long, busy ones (bosses, rifts, evolutions, a
  * Mega line, a branching one, endless mode, every difficulty, a haunted
- * Legend-mode run, a run with Bag items, armed shop TMs and Bottle Caps), then
+ * Legend-mode run, a run with Bag items, armed shop TMs and Bottle Caps, one
+ * with a Force of Nature and the Ruínas da Decisão), then
  * every playable (legends too) for a few minutes, so each family's own moves
  * get played too.
  */
@@ -66,6 +67,8 @@ export const HARNESS_SCENARIOS: ReadonlyArray<{ name: string; scenario: AnyScena
   { name: 'versus-human-7min', scenario: { seed: 7002, versus: [{ starter: 'froakie', name: 'p1', team: 1 }], map: 'cove' }, minutes: 7.2 },
   { name: 'versus-quick-3min', scenario: { seed: 7003, versus: [], format: 'quick', map: 'glade' }, minutes: 3.2 },
   { name: 'versus-reef-3min', scenario: { seed: 7004, versus: [], format: 'quick', map: 'reef' }, minutes: 3.2 },
+  // A co-op Legend run (the Modo Lendário): every seat a legend, the lifted horde and Pressure once for the team, no seat's legend among the bosses.
+  { name: 'coop-3-legend-hard-12min', scenario: { seed: 9004, team: ['kyogre', 'raikou', 'mewtwo'], difficulty: 'hard', maxRanks: true }, minutes: 12 },
   { name: 'coop-3-nightmare-10min', scenario: { seed: 9003, team: ['riolu', 'scyther', 'porygon'], difficulty: 'nightmare', maxRanks: false }, minutes: 10 },
   { name: 'squirtle-normal-25min', scenario: { seed: 2, starter: 'squirtle', difficulty: 'normal', maxRanks: true }, minutes: 25 },
   { name: 'charmander-hard-mega-15min', scenario: { seed: 31, starter: 'charmander', difficulty: 'hard', maxRanks: true }, minutes: 15 },
@@ -76,6 +79,12 @@ export const HARNESS_SCENARIOS: ReadonlyArray<{ name: string; scenario: AnyScena
     name: 'bulbasaur-bag-tms-caps-10min',
     scenario: { seed: 777, starter: 'bulbasaur', difficulty: 'hard', maxRanks: true, bag: ['rareCandy', 'luckyEgg', 'xAttack', 'maxRevive'], tms: ['payDay', 'thief', 'rainDance', 'swordsDance'], caps: 3 },
     minutes: 10,
+  },
+  // A Force of Nature roaming with its weather (its visits, entrance and phases) and the Ruínas da Decisão rising.
+  {
+    name: 'charmander-force-ruins-9min',
+    scenario: { seed: 6000, starter: 'charmander', difficulty: 'normal', maxRanks: true, wild: { lake: {}, swords: [], forces: { tornadus: 0.6, thundurus: 1 } }, ruins: ['regieleki', 'regidrago'] },
+    minutes: 9,
   },
   ...[...PLAYABLE_IDS, ...LEGEND_IDS].map((starter, i) => ({
     name: `${starter}-3min`,
@@ -199,6 +208,17 @@ const RIFT_HAND = 180
 /** The late-game run `npm run determinism -- late` plays: one that reaches deep into endless mode without stalling in a rift. */
 export const LATE_SCENARIO: Scenario = { seed: 4242, starter: 'charmander', difficulty: 'normal', maxRanks: true }
 
+/** One more tick of `d` as the late bench plays it: a rift the bot stays in past `RIFT_HAND` collapses. */
+const lateTicker = (d: Driver) => {
+  let riftAt = -1
+  return () => {
+    if (!d.g.rift.arena) riftAt = -1
+    else if (riftAt < 0) riftAt = d.g.now
+    else if (d.g.now - riftAt > RIFT_HAND) exitArena(d.g, 'collapse')
+    return tickScenario(d)
+  }
+}
+
 /**
  * What a long endless run costs to simulate: plays `s` on into endless mode
  * and, at each of `minutes` (run clock), the mean ms per tick over the minute
@@ -211,13 +231,7 @@ export const lateBench = (s: Scenario, minutes: readonly number[]) => {
   // Inside a rift the run clock stops: past `RIFT_HAND`, the cap keeps a bot stuck elsewhere from playing forever.
   const cap = (last * 1.5 + 10) * 60
   const rows = []
-  let riftAt = -1
-  const tick = () => {
-    if (!d.g.rift.arena) riftAt = -1
-    else if (riftAt < 0) riftAt = d.g.now
-    else if (d.g.now - riftAt > RIFT_HAND) exitArena(d.g, 'collapse')
-    return tickScenario(d)
-  }
+  const tick = lateTicker(d)
   for (const m of [...minutes].sort((a, b) => a - b)) {
     while (d.g.time < (m - 1) * 60 && d.g.now < cap && tick());
     let spent = 0
@@ -254,4 +268,33 @@ export const lateBench = (s: Scenario, minutes: readonly number[]) => {
     if (d.over || d.g.now >= cap) break
   }
   return rows
+}
+
+/**
+ * A game restored from a snapshot against the one it came from: plays `s` to
+ * `minute`, restores a copy (the co-op join's path) and steps both on for
+ * `ticks`, one tick each in turn (so a busy host slows both alike), timing
+ * each and counting the ticks where their hashes agree (all of them, or the
+ * restore broke co-op).
+ */
+export const restoreBench = (s: Scenario, minute: number, ticks: number) => {
+  const d = startScenario(s)
+  const tickD = lateTicker(d)
+  // Out of any rift first, so both copies' rift hands start alike.
+  while ((d.g.time < minute * 60 || d.g.rift.arena) && tickD());
+  const r = forkDriver(d, restore(snapshot(d.g)))
+  const tickR = lateTicker(r)
+  let original = 0
+  let restored = 0
+  let same = 0
+  for (let i = 0; i < ticks; i++) {
+    let t = performance.now()
+    tickD()
+    original += performance.now() - t
+    t = performance.now()
+    tickR()
+    restored += performance.now() - t
+    if (stateHash(d.g) === stateHash(r.g)) same++
+  }
+  return { minute, enemies: d.g.enemies.length, originalMs: +(original / ticks).toFixed(3), restoredMs: +(restored / ticks).toFixed(3), sameHash: `${same}/${ticks}` }
 }

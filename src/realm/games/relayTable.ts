@@ -18,6 +18,8 @@ export type RelayTableOpts = {
   initial: TableView | null
   /** A match against the bot on this device, for the wait (`localTable`). */
   bot: () => TableSource
+  /** An open table (`TableGame.open`): two or more people start it when all are ready, bots in the other seats. */
+  open?: boolean
 }
 
 /** How long after an opponent sits during a bot match the screen says so (ms). */
@@ -33,6 +35,10 @@ const ARRIVED_MS = 2200
  * While its seat waits for an opponent it offers a match against the bot
  * (`playBot`): the source then plays a `localTable` (`vs` reads `bot`) until
  * someone sits down, and goes back to the relay's match at once.
+ *
+ * At an open table the seat waits for a second person the same way; with two
+ * or more seated it gathers instead (`gather`: Começar sends `ready`;
+ * `gathered` once sent), and a bot's seat mid-match is a seat to take over.
  */
 export const relayTable = (opts: RelayTableOpts): TableSource => {
   const { link, id, you } = opts
@@ -43,14 +49,16 @@ export const relayTable = (opts: RelayTableOpts): TableSource => {
   let arrivedAt: number | null = null
   let left = false
 
+  const open = opts.open ?? false
   const mine = (v: TableView | null) => (v ? v.seats.indexOf(you) : -1)
   const free = (v: TableView | null) => v === null || v.seats.includes(null)
+  const people = (v: TableView | null) => (v ? v.seats.filter((s) => s !== null).length : 0)
 
   const land = (next: TableView | null) => {
     view = next
     at = now
-    // Someone sat down while the bot played: back to the table.
-    if (bot && next && next.phase === 'playing' && mine(next) >= 0) {
+    // Someone sat down while the bot played: back to the table (an open one gathers before it plays).
+    if (bot && next && mine(next) >= 0 && (next.phase === 'playing' || (open && people(next) >= 2))) {
       bot.leave()
       bot = null
       arrivedAt = now
@@ -77,7 +85,9 @@ export const relayTable = (opts: RelayTableOpts): TableSource => {
     if (arrivedAt !== null && now - arrivedAt < ARRIVED_MS) return 'arrived'
     const seat = mine(view)
     if (seat < 0) return free(view) ? 'seatFree' : 'watching'
-    return view && view.seats.includes(null) && view.phase !== 'playing' ? 'opponent' : null
+    if (!view || view.phase === 'playing') return null
+    if (open && people(view) >= 2) return view.ready.includes(you) ? 'gathered' : view.phase === 'waiting' ? 'gather' : null
+    return view.seats.includes(null) ? 'opponent' : null
   }
 
   return {

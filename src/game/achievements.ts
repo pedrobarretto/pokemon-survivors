@@ -15,9 +15,9 @@ import type { RunSummary } from './tally'
  */
 
 /** Run summary fields that add up over a lifetime as they are. */
-const SUMMED = ['kills', 'shinyKills', 'bossKills', 'shinyLegends', 'chests', 'meowths', 'altars', 'coins', 'moveEvolutions', 'reaperDefeats', 'megas', 'alphaKills', 'placeClears', 'landmarks'] as const satisfies readonly (keyof RunSummary)[]
+const SUMMED = ['kills', 'shinyKills', 'bossKills', 'shinyLegends', 'chests', 'meowths', 'altars', 'coins', 'moveEvolutions', 'reaperDefeats', 'megas', 'alphaKills', 'placeClears', 'landmarks', 'teras', 'raids'] as const satisfies readonly (keyof RunSummary)[]
 
-const COUNTERS = [...SUMMED, 'runs', 'wins', 'rifts', 'finalStages', 'shinyStarters', 'missions', 'bestTime', 'bestLevel', 'bestOvertime', 'hatches', 'shinyHatches'] as const
+const COUNTERS = [...SUMMED, 'runs', 'wins', 'rifts', 'finalStages', 'shinyStarters', 'missions', 'bestTime', 'bestLevel', 'bestOvertime', 'hatches', 'shinyHatches', 'raidBest'] as const
 
 type Counter = (typeof COUNTERS)[number]
 
@@ -69,6 +69,7 @@ export const addRun = (l: Lifetime, s: RunSummary, before: RunSummary | null, mi
     bestTime: Math.max(l.bestTime, s.time),
     bestLevel: Math.max(l.bestLevel, s.level),
     bestOvertime: Math.max(l.bestOvertime, s.victory ? overtime(s.time) : 0),
+    raidBest: Math.max(l.raidBest, s.raidBest),
     legends: union(l.legends, ...s.legends),
     places: union(l.places, ...s.places),
     winGens: starterWon ? union(l.winGens, regionGen(starter)) : l.winGens,

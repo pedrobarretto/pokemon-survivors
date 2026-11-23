@@ -1,3 +1,4 @@
+import { WET_BIOMES, WET_WEATHER } from '../data/seasonOneUnlocks'
 import type { BiomeId, WeatherId } from '../data/biomes'
 import type { EnemyId } from '../data/enemies'
 import { evolvedFrom } from '../data/evolutions'
@@ -127,6 +128,10 @@ export type RunSummary = {
   moveEvolutions: number
   /** Times the player Mega Evolved. */
   megas: number
+  /** Times the player Terastallized, Tera Raids beaten and the most stars of one (`tera.ts`, `teraRaid.ts`). */
+  teras: number
+  raids: number
+  raidBest: number
   /** Alpha Pokémon defeated. */
   alphaKills: number
   /** Steps walked (`toSteps`). */
@@ -142,6 +147,10 @@ export type RunSummary = {
   nightBosses: readonly EnemyId[]
   /** TM moves the run learned (`RunTally.tms`): the shop's TM shelf lists them for good (`learnTms`). */
   tms: readonly MoveId[]
+  /** Hits the player took (`PlayerRecord.hits`), for Temporada 1's research. */
+  hits: number
+  /** Whether the run stands in the wet right now: rain, or a wet biome (`WET_BIOMES`). */
+  wet: boolean
 }
 
 /** Snapshot of a run for missions and achievements. Safe to take again later: recording works on deltas. */
@@ -172,6 +181,9 @@ export const summarizeRun = (g: Game): RunSummary => {
     reaperDefeats: g.endless?.reaperDefeats ?? 0,
     moveEvolutions: g.player.moves.filter((m) => evolvedFrom(m.id)).length,
     megas: g.player.mega.count,
+    teras: g.player.tera.count,
+    raids: g.raid.cleared.length,
+    raidBest: Math.max(0, ...g.raid.cleared.map((r) => r.stars)),
     alphaKills: t.alphaKills,
     steps: toSteps(g.player.walked),
     species: g.dexLog.seen.size,
@@ -181,5 +193,7 @@ export const summarizeRun = (g: Game): RunSummary => {
     legendWins: { ...t.legendWins },
     nightBosses: [...t.nightBosses],
     tms: [...t.tms],
+    hits: g.player.record.hits,
+    wet: g.weather.id === WET_WEATHER || WET_BIOMES.includes(g.player.biome),
   }
 }

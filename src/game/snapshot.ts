@@ -300,6 +300,22 @@ export const snapshot = (g: Game): Uint8Array<ArrayBuffer> => {
 
 /* ---------------- Reading ---------------- */
 
+/** An object shape as read back: its keys in order and an object holding them, to clone. */
+type Shape = { keys: readonly string[]; template: Record<string, unknown> }
+
+/**
+ * A shape's template, in V8's fast mode. An object grown from `{}` by keyed
+ * stores (`o[k] = v`) turns into a hash table past a handful of keys, and a
+ * game restored that way (every enemy, attack and player, the game itself)
+ * simulated 2–3× slower than the one it came from. `JSON.parse` builds fast
+ * objects, and a spread of a fast object copies its hidden class, so every
+ * object of a shape shares one.
+ */
+const shapeOf = (keys: readonly string[]): Shape => ({
+  keys,
+  template: JSON.parse(`{${keys.map((k) => `${JSON.stringify(k)}:0`).join(',')}}`) as Record<string, unknown>,
+})
+
 /** A snapshot's header. */
 export type SnapshotHeader = { format: number; rules: number }
 
@@ -332,7 +348,7 @@ export const decodeSnapshot = (bytes: Uint8Array): SnapshotHeader & { state: Rec
 
   const strings: string[] = []
   const refs: unknown[] = []
-  const shapes: string[][] = []
+  const shapes: Shape[] = []
 
   const str = () => {
     const i = uint()
@@ -379,17 +395,18 @@ export const decodeSnapshot = (bytes: Uint8Array): SnapshotHeader & { state: Rec
       }
       case T.object: {
         const id = uint()
-        let keys = shapes[id - 1]
+        let shape = shapes[id - 1]
         if (id === 0) {
           const count = uint()
-          keys = []
+          const keys: string[] = []
           for (let i = 0; i < count; i++) keys.push(str())
-          shapes.push(keys)
+          shapes.push((shape = shapeOf(keys)))
         }
-        if (!keys) throw new Error('snapshot: bad shape')
-        const o: Record<string, unknown> = {}
+        if (!shape) throw new Error('snapshot: bad shape')
+        // The template's clone has all its keys already, so the stores below only fill them.
+        const o: Record<string, unknown> = { ...shape.template }
         refs.push(o)
-        for (const k of keys) o[k] = value()
+        for (const k of shape.keys) o[k] = value()
         return o
       }
       case T.map: {

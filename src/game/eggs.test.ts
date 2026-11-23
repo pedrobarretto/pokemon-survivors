@@ -75,15 +75,26 @@ describe('incubator', () => {
     expect(save.eggs).toEqual([{ tier: 'common', steps: 2000 }, { tier: 'ultra', steps: 500 }])
   })
 
-  it('fills free slots with new eggs and pays out the rest in ₽', () => {
-    const { save, converted, refund } = depositEggs(withEggs([ready('common'), ready('common')], { wallet: 10 }), 0, [
+  it('fills free slots with new eggs, puts the next ones in line and pays out the ones past it in ₽', () => {
+    const line = Array.from({ length: EGGS.queue - 1 }, (): Egg => ({ tier: 'common', steps: 0 }))
+    const { save, converted, refund } = depositEggs(withEggs([ready('common'), ready('common')], { wallet: 10, eggQueue: [] }), 0, [
       { tier: 'rare', steps: 120 },
+      ...line,
+      { tier: 'fossil', steps: 0 },
       { tier: 'ultra', steps: 0 },
     ])
     expect(save.eggs).toEqual([ready('common'), ready('common'), { tier: 'rare', steps: 120 }])
+    expect(save.eggQueue).toEqual([...line, { tier: 'fossil', steps: 0 }])
     expect(converted).toEqual(['ultra'])
     expect(save.wallet).toBe(10 + EGG_TIERS.ultra.refund)
     expect(refund).toBe(EGG_TIERS.ultra.refund)
+  })
+
+  it('walks only the eggs in a slot, and keeps the eggs already in line ahead of new ones', () => {
+    const full = [{ tier: 'common', steps: 0 }, { tier: 'common', steps: 0 }, { tier: 'common', steps: 0 }] satisfies Egg[]
+    const { save } = depositEggs(withEggs(full, { eggQueue: [{ tier: 'ultra', steps: 0 }] }), 100, [{ tier: 'rare', steps: 30 }])
+    expect(save.eggs.map((e) => e.steps)).toEqual([100, 100, 100])
+    expect(save.eggQueue).toEqual([{ tier: 'ultra', steps: 0 }, { tier: 'rare', steps: 30 }])
   })
 
   it('grants mission eggs with no steps', () => {
@@ -102,6 +113,12 @@ describe('hatching', () => {
     expect(HATCHLINGS[result.hatch.id].egg).toBe('rare')
     expect(result.save.eggs).toEqual([ready('common')])
     expect(isUnlocked(result.save.hatched, result.hatch.id)).toBe(true)
+  })
+
+  it('hands the slot it frees to the first egg in line', () => {
+    const result = hatchEgg(withEggs([ready('rare'), ready('common'), ready('common')], { eggQueue: [{ tier: 'ultra', steps: 0 }, { tier: 'common', steps: 0 }] }), 0, createRng(3))!
+    expect(result.save.eggs).toEqual([ready('common'), ready('common'), { tier: 'ultra', steps: 0 }])
+    expect(result.save.eggQueue).toEqual([{ tier: 'common', steps: 0 }])
   })
 
   it('catches what came out in the Pokédex, shiny if it is, and sees its whole line', () => {
@@ -219,17 +236,23 @@ describe('save fields', () => {
 describe('egg families', () => {
   it('cover every type and every generation', () => {
     const types = new Set(HATCHLING_IDS.flatMap((id) => PLAYABLE[id].line.flatMap((s) => s.types)))
-    expect([...types].toSorted()).toEqual([...POKE_TYPES].toSorted())
+    expect([...types].slice().sort()).toEqual([...POKE_TYPES].slice().sort())
     const gens = new Set(HATCHLING_IDS.flatMap((id) => PLAYABLE[id].line.map((s) => regionOf(s.dex).gen)))
     expect(gens.size).toBe(9)
   })
 
-  it('evolve mid-run and grow stronger (Smeargle aside: one stage, it paints moves instead)', () => {
-    expect(HATCHLING_IDS.filter((id) => PLAYABLE[id].line.length === 1)).toEqual(['smeargle'])
+  it('hatch only Aerodactyl from the Fossil Egg (Old Amber), even one laid before the Escavação restored the rest', () => {
+    expect(hatchPool('fossil', {}).map(([id]) => id)).toEqual(['aerodactyl'])
+    expect(HATCHLING_IDS.filter((id) => HATCHLINGS[id].egg === 'dig')).toEqual(expect.arrayContaining(['kabuto', 'cranidos', 'omanyte', 'dracovish']))
+  })
+
+  it('evolve mid-run and grow stronger (Smeargle aside, and the one-stage Temporada 1, big update, Game Corner, fossil, Mega and hook families and Galarian Farfetch\'d: their mechanics take the place of evolving)', () => {
+    expect(HATCHLING_IDS.filter((id) => PLAYABLE[id].line.length === 1)).toEqual(['smeargle', 'wishiwashi', 'morpeko', 'rotom', 'castform', 'mimikyu', 'tatsugiri', 'lapras', 'heracross', 'sableye', 'spiritomb', 'farfetchdGalar', 'ditto', 'absol', 'mawile', 'aerodactyl', 'dracozolt', 'arctozolt', 'dracovish', 'kangaskhan', 'pinsir', 'skarmory', 'drampa', 'phione', 'minior', 'plusle', 'minun'])
     for (const id of HATCHLING_IDS) {
       const line: readonly EvolutionStage[] = PLAYABLE[id].line
       if (line.length === 1) continue
-      expect(line[0]!.evolveAt).toBeLessThanOrEqual(20)
+      // Gimmighoul evolves on its coins (`rocketEvolves`); its Lv 40 is only a floor.
+      if (id !== 'gimmighoul') expect(line[0]!.evolveAt).toBeLessThanOrEqual(20)
       expect(starterStats(id, line.length - 1).maxHp).toBeGreaterThan(starterStats(id, 0).maxHp)
     }
   })

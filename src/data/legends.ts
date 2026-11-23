@@ -3,9 +3,11 @@ import type { StatDelta } from '../game/stats'
 import type { AbilityEffect, AbilityId } from './abilities'
 import type { EnemyId } from './enemies'
 import type { FestivalId } from './festivals'
+import type { PathId } from './legendPaths'
 import { LEGENDARY_MOVE_OF } from './legendaryMoves'
 import type { EvolutionStage, PlayableDef } from './starters'
 import type { PokeType } from './types'
+import { ULTRA_BEASTS } from './ultraBeasts'
 
 /**
  * Playable legendaries, played only in the Legend mode (Modo Lendário). A
@@ -39,8 +41,98 @@ export const EVENT_LEGENDS = ['darkrai'] as const satisfies readonly EnemyId[]
  */
 export const FESTIVAL_LEGENDS = ['cresselia'] as const
 
-/** Every playable legend: the regular ones, then the event ones, then the festival ones. */
-export const LEGEND_IDS = [...REGULAR_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS] as const
+/**
+ * Terastal's legend: Terapagos, the 7★ Stellar Tera Raid's giant (`data/tera.ts`), captured by beating it there
+ * once. Out of `REGULAR_LEGENDS` too: Arceus never waits for it.
+ */
+export const TERA_LEGENDS = ['terapagos'] as const satisfies readonly EnemyId[]
+
+/**
+ * The Ultra Beasts (`data/ultraBeasts.ts`): the Ultra Wormholes' ten, each
+ * captured with one win (`LegendUnlock.ultra`), and Poipole, never fought:
+ * capturing the ten brings it as a gift (`game/ultraGifts.ts`), and it
+ * evolves into Naganadel at its first awakening (`LegendDef.evolve`). Out of
+ * `REGULAR_LEGENDS` too; they play in the Legend mode like any legend, under
+ * their own heading on the partner select.
+ */
+export const ULTRA_LEGENDS = [...ULTRA_BEASTS, 'poipole'] as const
+
+/**
+ * Path legends (`data/legendPaths.ts`): each the end of a long goal of its
+ * own, like the games' (Zygarde's Cells, Cosmog raised into Solgaleo or
+ * Lunala, Kubfu's towers, Meltan's Mystery Box, Regigigas waking for the
+ * Regi trio's captor). Out of `REGULAR_LEGENDS` too.
+ */
+export const PATH_LEGENDS = ['zygarde', 'solgaleo', 'lunala', 'kubfu', 'meltan', 'regigigas'] as const
+
+/**
+ * Legends with a road of their own, each caught its own way (`LegendUnlock`):
+ * Palkia in its rift, the lake trio roaming the map from run to run, the
+ * Swords of Justice in their duels, Keldeo as the Swords' gift and Hoopa at
+ * the end of its ring rush. Out of `REGULAR_LEGENDS` too: Arceus waits for
+ * the 22 it always has.
+ */
+export const QUEST_LEGENDS = ['palkia', 'uxie', 'mesprit', 'azelf', 'cobalion', 'terrakion', 'virizion', 'keldeo', 'hoopa'] as const
+
+/**
+ * The Safári's legend: Manaphy, never fought. Filling the Zona Safári cove's
+ * Pokédex sends its egg (`SAFARI_EGG` in `data/safari.ts`, vouched by the
+ * API like the Safári's other gifts), which hatches it (`ui/manaphyEgg.ts`).
+ * Out of `REGULAR_LEGENDS` too.
+ */
+export const SAFARI_LEGENDS = ['manaphy'] as const
+/**
+ * The Grande Atualização's mythicals (`data/mythicals.ts`), each caught its
+ * own way: Diancie dug up at the Escavação (the API's, `LegendUnlock.dig`),
+ * Zeraora out of the Power Plant's storm (`storm`) and Ogerpon in its own Tera
+ * Raid (`mask`). Out of `REGULAR_LEGENDS` too.
+ */
+export const MYTHICAL_LEGENDS = ['diancie', 'zeraora', 'ogerpon'] as const
+
+/** The roaming lake trio (`game/roamers.ts`). */
+export const LAKE_TRIO = ['uxie', 'mesprit', 'azelf'] as const satisfies readonly (typeof QUEST_LEGENDS)[number][]
+
+/** The Swords of Justice (`game/duels.ts`). */
+export const SWORDS = ['cobalion', 'terrakion', 'virizion'] as const satisfies readonly (typeof QUEST_LEGENDS)[number][]
+
+export type LakeId = (typeof LAKE_TRIO)[number]
+
+/** Whether a legend is one of the roaming lake trio. */
+export const isLakeLegend = (id: string): id is LakeId => LAKE_TRIO.some((l) => l === id)
+export type SwordId = (typeof SWORDS)[number]
+
+/**
+ * Regieleki and Regidrago, out of the Ruínas da Decisão (Crown Tundra's
+ * Split-Decision Ruins): once Regigigas is captured its temple may bring the
+ * two ruins instead, and the player wakes one of them a run
+ * (`game/splitRuins.ts`, `data/forces.ts`).
+ */
+export const RUINS_LEGENDS = ['regieleki', 'regidrago'] as const
+
+export type RuinsRegi = (typeof RUINS_LEGENDS)[number]
+
+export const isRuinsRegi = (id: string): id is RuinsRegi => RUINS_LEGENDS.some((r) => r === id)
+
+/**
+ * The Forces of Nature, roaming the open map like the lake trio, each with its
+ * weather (`data/forces.ts`, `game/roamers.ts`): Landorus only once Tornadus
+ * and Thundurus are captured, Enamorus once all three are.
+ */
+export const FORCE_LEGENDS = ['tornadus', 'thundurus', 'landorus', 'enamorus'] as const
+
+export type ForceId = (typeof FORCE_LEGENDS)[number]
+
+export const isForceLegend = (id: string): id is ForceId => FORCE_LEGENDS.some((f) => f === id)
+
+/** Every legend that roams the open map, its HP carried from run to run: the lake trio and the Forces of Nature. */
+export type RoamerId = LakeId | ForceId
+
+export const ROAMER_IDS = [...LAKE_TRIO, ...FORCE_LEGENDS] as const satisfies readonly RoamerId[]
+
+export const isRoamer = (id: string): id is RoamerId => ROAMER_IDS.some((r) => r === id)
+
+/** Every playable legend: the regular ones, then the event ones, the festival ones, Terastal's, the Ultra Beasts, the path ones, the ones with a road of their own, the Safári's, the mythicals, the Ruins' Regis and the Forces of Nature. */
+export const LEGEND_IDS = [...REGULAR_LEGENDS, ...EVENT_LEGENDS, ...FESTIVAL_LEGENDS, ...TERA_LEGENDS, ...ULTRA_LEGENDS, ...PATH_LEGENDS, ...QUEST_LEGENDS, ...SAFARI_LEGENDS, ...MYTHICAL_LEGENDS, ...RUINS_LEGENDS, ...FORCE_LEGENDS] as const
 
 export type LegendId = (typeof LEGEND_IDS)[number]
 
@@ -48,7 +140,9 @@ export type LegendId = (typeof LEGEND_IDS)[number]
 export const AWAKEN_AT = [12, 28] as const
 
 /** Asset folder of a legend's alternate form (`<dex>/<form>/`), like the Megas'. Deoxys's formes come with its stance. */
-export type LegendForm = 'primal' | 'mega' | 'attack' | 'defense' | 'speed'
+export type LegendForm = 'primal' | 'mega' | 'attack' | 'defense' | 'speed' | 'terastal' | 'stellar' | 'ten' | 'complete' | 'rapid' | 'origin' | 'unbound' | 'therian'
+  /** Ogerpon's masks and each Terastallized (`OGERPON_MASKS`); the Teal Mask is the species' own sheets. */
+  | 'wellspring' | 'hearthflame' | 'cornerstone' | 'tealTera' | 'wellspringTera' | 'hearthflameTera' | 'cornerstoneTera'
 
 /**
  * The innate: an ability in play from Lv 1, on top of the one picked at the
@@ -66,9 +160,43 @@ export type LegendEvent = 'halloween'
  * regular legend is unlocked (Arceus, the final trophy); `event`: it only
  * shows up while that event runs (Darkrai, the Noite das Bruxas');
  * `festival`: no win ever counts, that festival's milestone gift captures it
- * (Cresselia, the Festival das Lanternas').
+ * (Cresselia, the Festival das Lanternas'); `ultra`: an Ultra Beast, beaten
+ * out of an Ultra Wormhole (`wormhole`), or a gift for capturing them all
+ * (`gift`, Poipole: no win ever counts); `path`: no win counts either, its
+ * path's gift brings it (`game/legendPaths.ts`); `after`: wins count only once
+ * these legends are captured (Regigigas, for the Regi trio's captor); `roam`: it roams the map, its HP
+ * carried from run to run, and falls once (the lake trio, `game/roamers.ts`);
+ * `duel`: won in its duel (the Swords of Justice, `game/duels.ts`); `swords`:
+ * no win counts, the game gives it once every Sword is captured (Keldeo);
+ * `rush`: won by clearing Hoopa's ring rush once (`game/rush.ts`); `egg`: no win
+ * counts, it hatches from the egg the Safári's cove Pokédex sends (Manaphy); `dig`: no
+ * win counts, the Escavação's rarest treasure brings it (Diancie, sent by the
+ * API); `storm`: beaten in the Power Plant's storm (Zeraora, `game/zeraora.ts`);
+ * `mask`: beaten in its own Tera Raid (Ogerpon, `game/teraRaid.ts`); `ruins`: woken in
+ * the Ruínas da Decisão, one a run (`game/splitRuins.ts`, with `after`
+ * Regigigas); `force`: a Force of Nature, roaming with its weather (with
+ * `roam`, and `after` the Forces it waits for).
  */
-export type LegendUnlock = { wins: number; endless?: true; last?: true; event?: LegendEvent; festival?: FestivalId }
+export type LegendUnlock = {
+  wins: number
+  endless?: true
+  last?: true
+  event?: LegendEvent
+  festival?: FestivalId
+  ultra?: 'wormhole' | 'gift'
+  path?: PathId
+  after?: readonly LegendId[]
+  roam?: true
+  duel?: true
+  swords?: true
+  rush?: true
+  egg?: true
+  dig?: true
+  storm?: true
+  mask?: true
+  ruins?: true
+  force?: true
+}
 
 export type LegendDef = Omit<PlayableDef, 'learnset' | 'line'> & {
   /** One list: every move it can learn is there from Lv 1, its legendary move first. */
@@ -83,15 +211,40 @@ export type LegendDef = Omit<PlayableDef, 'learnset' | 'line'> & {
    * the legend keeps its own look and name, so a form behind it must not change the types.
    */
   form?: { key: LegendForm; name: string; types?: readonly PokeType[]; community?: true }
+  /** The form the first awakening lands in, until the second's (Terapagos's Terastal Form). */
+  early?: { key: LegendForm; name: string }
   unlock: LegendUnlock
+  /**
+   * The species it evolves into at awakening `at` (Poipole into Naganadel), for
+   * good: its own sprite, name and types from then on, where a `form` is a look of the same species.
+   */
+  evolve?: { at: 1 | 2; dex: number; name: string; types: readonly PokeType[] }
 }
 
 const stage = (dex: number, name: string, types: readonly PokeType[]) => [{ dex, name, types, bonus: {} }] as const satisfies LegendDef['line']
 
 /** Captured after this many wins: the rift legendaries and the trios. */
 const RIFT_WINS = { wins: 3 } as const satisfies LegendUnlock
-/** The finale's mythicals show up in one run in ten: one win does it. */
+/** The finale's mythicals show up in one run in ten, more after finales without one (`MYTHICAL_PITY`): one win does it. */
 const MYTHICAL_WINS = { wins: 1 } as const satisfies LegendUnlock
+/** A lake legend falls once, worn down across runs: its HP carries over (`game/roamers.ts`). */
+const ROAM_WINS = { wins: 1, roam: true } as const satisfies LegendUnlock
+/** A Sword of Justice joins the player who passes its test once (`game/duels.ts`). */
+const DUEL_WINS = { wins: 1, duel: true } as const satisfies LegendUnlock
+
+/** The Ultra Beasts' wins: one, out of an Ultra Wormhole. */
+const WORMHOLE_WINS = { wins: 1, ultra: 'wormhole' } as const satisfies LegendUnlock
+
+/**
+ * Beast Boost, every Ultra Beast's innate: each KO streak raises its best
+ * stat (`best`, a stack every 12 KOs, up to 5); without KOs a stack wears
+ * off every 4 s.
+ */
+export const BEAST_BOOST = { per: 12, max: 5, decay: 4 } as const
+const beastBoost = (best: StatDelta): Innate => ({
+  ability: 'beastBoost',
+  extra: [{ kind: 'onKill', per: BEAST_BOOST.per, max: BEAST_BOOST.max, stats: best, decay: BEAST_BOOST.decay }],
+})
 
 const chill = { kind: 'aura', radius: 56, every: 1, status: { kind: 'slow', chance: 1, duration: 1.2, power: 0.3 } } as const satisfies AbilityEffect
 
@@ -322,6 +475,10 @@ export const LEGENDS = {
     line: stage(483, 'Dialga', ['steel', 'dragon']),
     awakenings: [{ maxHp: 30, armor: 1, might: 0.12 }, { maxHp: 45, might: 0.22, cooldown: -0.05 }],
     innate: { ability: 'pressure' },
+    // Legends: Arceus's Origin Forme first (its rift's last phase too), then the PMD Explorers' last boss: time itself
+    // come apart (its rift's last phase on Nightmare, `data/domains/dialga.ts`).
+    early: { key: 'origin', name: 'Dialga (Origin Forme)' },
+    form: { key: 'primal', name: 'Primal Dialga' },
     unlock: RIFT_WINS,
   },
   latias: {
@@ -385,6 +542,115 @@ export const LEGENDS = {
     unlock: { wins: 2, event: 'halloween' },
   },
 
+  /* ---------- Palkia, out of its rift (`data/domains/palkia.ts`) ---------- */
+  palkia: {
+    name: 'Palkia',
+    color: '#d888c8',
+    stats: { maxHp: 45, might: 0.22, area: 0.12, speed: -1 },
+    signature: LEGENDARY_MOVE_OF.palkia,
+    learnset: [[LEGENDARY_MOVE_OF.palkia, 'waterGun', 'whirlpool', 'brine', 'dragonBreath', 'dragonTail', 'futureSight', 'waterShuriken']],
+    line: stage(484, 'Palkia', ['water', 'dragon']),
+    awakenings: [{ maxHp: 30, might: 0.12, area: 0.05 }, { maxHp: 40, might: 0.24, area: 0.1, cooldown: -0.04 }],
+    innate: { ability: 'pressure' },
+    form: { key: 'origin', name: 'Palkia (Origin Forme)' },
+    unlock: RIFT_WINS,
+  },
+
+  /* ---------- The lake trio, roaming (`game/roamers.ts`) ---------- */
+  uxie: {
+    name: 'Uxie',
+    color: '#f0d060',
+    stats: { maxHp: 35, might: 0.16, cooldown: -0.05, growth: 0.1 },
+    signature: LEGENDARY_MOVE_OF.uxie,
+    learnset: [[LEGENDARY_MOVE_OF.uxie, 'psyshock', 'futureSight', 'psybeam', 'swift', 'shockWave', 'iceShard', 'disarmingVoice']],
+    line: stage(480, 'Uxie', ['psychic']),
+    awakenings: [{ maxHp: 25, might: 0.12, growth: 0.05 }, { maxHp: 35, might: 0.22, cooldown: -0.05 }],
+    innate: { ability: 'levitate', extra: [{ kind: 'stats', stats: { growth: 0.08 } }] },
+    unlock: ROAM_WINS,
+  },
+  mesprit: {
+    name: 'Mesprit',
+    color: '#f088b0',
+    stats: { maxHp: 40, might: 0.16, regen: 0.4, speed: 3 },
+    signature: LEGENDARY_MOVE_OF.mesprit,
+    learnset: [[LEGENDARY_MOVE_OF.mesprit, 'psyshock', 'futureSight', 'psybeam', 'disarmingVoice', 'swift', 'flameWheel', 'roost']],
+    line: stage(481, 'Mesprit', ['psychic']),
+    awakenings: [{ maxHp: 25, might: 0.12, regen: 0.3 }, { maxHp: 40, might: 0.22, area: 0.1 }],
+    innate: { ability: 'levitate', extra: [{ kind: 'heal', every: 10, heal: 0.04 }] },
+    unlock: ROAM_WINS,
+  },
+  azelf: {
+    name: 'Azelf',
+    color: '#5890e0',
+    stats: { maxHp: 30, might: 0.24, speed: 6 },
+    signature: LEGENDARY_MOVE_OF.azelf,
+    learnset: [[LEGENDARY_MOVE_OF.azelf, 'psyshock', 'futureSight', 'psybeam', 'uTurn', 'suckerPunch', 'flameWheel', 'shockWave']],
+    line: stage(482, 'Azelf', ['psychic']),
+    awakenings: [{ maxHp: 25, might: 0.14, speed: 3 }, { maxHp: 35, might: 0.26, cooldown: -0.05 }],
+    innate: { ability: 'levitate', extra: [{ kind: 'lowHp', stats: { might: 0.25 } }] },
+    unlock: ROAM_WINS,
+  },
+
+  /* ---------- The Swords of Justice, in their duels (`game/duels.ts`), and Keldeo ---------- */
+  cobalion: {
+    name: 'Cobalion',
+    color: '#58a8d0',
+    stats: { maxHp: 55, armor: 2, might: 0.16, speed: -1 },
+    signature: LEGENDARY_MOVE_OF.cobalion,
+    learnset: [[LEGENDARY_MOVE_OF.cobalion, 'flashCannon', 'gyroBall', 'machPunch', 'focusPunch', 'stealthRock', 'heavySlam', 'swift']],
+    line: stage(638, 'Cobalion', ['steel', 'fighting']),
+    awakenings: [{ maxHp: 35, armor: 1, might: 0.1 }, { maxHp: 45, might: 0.22, regen: 0.3 }],
+    innate: { ability: 'justified' },
+    unlock: DUEL_WINS,
+  },
+  terrakion: {
+    name: 'Terrakion',
+    color: '#a87848',
+    stats: { maxHp: 45, might: 0.26, armor: 1, speed: -2 },
+    signature: LEGENDARY_MOVE_OF.terrakion,
+    learnset: [[LEGENDARY_MOVE_OF.terrakion, 'rockTomb', 'stealthRock', 'earthquake', 'machPunch', 'focusPunch', 'rockBlast', 'crunch']],
+    line: stage(639, 'Terrakion', ['rock', 'fighting']),
+    awakenings: [{ maxHp: 30, might: 0.14, armor: 1 }, { maxHp: 40, might: 0.26, area: 0.1 }],
+    innate: { ability: 'justified' },
+    unlock: DUEL_WINS,
+  },
+  virizion: {
+    name: 'Virizion',
+    color: '#58c070',
+    stats: { maxHp: 35, might: 0.18, speed: 9, cooldown: -0.05 },
+    signature: LEGENDARY_MOVE_OF.virizion,
+    learnset: [[LEGENDARY_MOVE_OF.virizion, 'razorLeaf', 'leafBlade', 'machPunch', 'quickAttack', 'solarBeam', 'leechSeed', 'uTurn']],
+    line: stage(640, 'Virizion', ['grass', 'fighting']),
+    awakenings: [{ maxHp: 25, might: 0.12, speed: 3 }, { maxHp: 35, might: 0.24, cooldown: -0.05 }],
+    innate: { ability: 'justified' },
+    unlock: DUEL_WINS,
+  },
+  keldeo: {
+    name: 'Keldeo',
+    color: '#78b8e8',
+    stats: { maxHp: 35, might: 0.22, speed: 7, cooldown: -0.03 },
+    signature: LEGENDARY_MOVE_OF.keldeo,
+    learnset: [[LEGENDARY_MOVE_OF.keldeo, 'waterGun', 'whirlpool', 'brine', 'machPunch', 'focusPunch', 'swift', 'razorShell']],
+    line: stage(647, 'Keldeo', ['water', 'fighting']),
+    awakenings: [{ maxHp: 25, might: 0.14, speed: 3 }, { maxHp: 40, might: 0.26, area: 0.1 }],
+    innate: { ability: 'justified' },
+    unlock: { wins: 1, swords: true },
+  },
+
+  /* ---------- Hoopa, at the end of its ring rush (`game/rush.ts`) ---------- */
+  hoopa: {
+    name: 'Hoopa',
+    color: '#b878d8',
+    stats: { maxHp: 30, might: 0.2, area: 0.1, cooldown: -0.04 },
+    signature: LEGENDARY_MOVE_OF.hoopa,
+    learnset: [[LEGENDARY_MOVE_OF.hoopa, 'psyshock', 'futureSight', 'psybeam', 'suckerPunch', 'crunch', 'hex', 'snarl']],
+    line: stage(720, 'Hoopa', ['psychic', 'ghost']),
+    awakenings: [{ maxHp: 30, might: 0.12, area: 0.05 }, { maxHp: 45, might: 0.28, cooldown: -0.05 }],
+    innate: { ability: 'magician' },
+    form: { key: 'unbound', name: 'Hoopa Unbound', types: ['psychic', 'dark'] },
+    unlock: { wins: 1, rush: true },
+  },
+
   /* ---------- The Festival das Lanternas' moon ---------- */
   cresselia: {
     name: 'Cresselia',
@@ -397,7 +663,364 @@ export const LEGENDS = {
     innate: { ability: 'levitate' },
     unlock: { wins: 1, festival: 'lanternas' },
   },
+
+  /* ---------- Terastal's legend ---------- */
+  /**
+   * Terapagos plays Stellar from the start (`game/tera.ts`): its Tera Orb fills like anyone's and shards never
+   * change it. Its first awakening lands in its Terastal Form, its second in its Stellar Form, Terastallized for
+   * good (`stellarForm`): every move type's first hit of each 20 s lands big. Multiscale stands in for Tera Shell.
+   */
+  terapagos: {
+    name: 'Terapagos',
+    color: '#58b8e8',
+    stats: { maxHp: 45, armor: 1, might: 0.18, area: 0.05 },
+    signature: LEGENDARY_MOVE_OF.terapagos,
+    learnset: [[LEGENDARY_MOVE_OF.terapagos, 'swift', 'ancientPower', 'rockTomb', 'dazzlingGleam', 'iceShard', 'futureSight', 'flashCannon']],
+    line: stage(1024, 'Terapagos', ['normal']),
+    awakenings: [{ maxHp: 30, might: 0.12, armor: 1 }, { maxHp: 40, might: 0.2, area: 0.1 }],
+    innate: { ability: 'multiscale' },
+    early: { key: 'terastal', name: 'Terapagos (Terastal Form)' },
+    form: { key: 'stellar', name: 'Terapagos (Stellar Form)' },
+    unlock: { wins: 1 },
+  },
+  /* ---------- The Ultra Beasts (`data/ultraBeasts.ts`) ---------- */
+  nihilego: {
+    name: 'Nihilego',
+    color: '#a8d8f0',
+    stats: { maxHp: 30, might: 0.18, regen: 0.2, speed: 4 },
+    signature: LEGENDARY_MOVE_OF.nihilego,
+    learnset: [[LEGENDARY_MOVE_OF.nihilego, 'sludgeBomb', 'venoshock', 'rockTomb', 'stealthRock', 'toxicSpikes', 'psyshock', 'hex']],
+    line: stage(793, 'Nihilego', ['rock', 'poison']),
+    awakenings: [{ maxHp: 25, might: 0.12, armor: 1 }, { maxHp: 35, might: 0.22, area: 0.1 }],
+    innate: beastBoost({ armor: 0.4 }),
+    unlock: WORMHOLE_WINS,
+  },
+  buzzwole: {
+    name: 'Buzzwole',
+    color: '#e85848',
+    stats: { maxHp: 45, might: 0.2, armor: 1, speed: 2 },
+    signature: LEGENDARY_MOVE_OF.buzzwole,
+    learnset: [[LEGENDARY_MOVE_OF.buzzwole, 'machPunch', 'leechLife', 'focusPunch', 'earthquake', 'rockTomb', 'uTurn', 'pinMissile']],
+    line: stage(794, 'Buzzwole', ['bug', 'fighting']),
+    awakenings: [{ maxHp: 30, might: 0.12, armor: 1 }, { maxHp: 40, might: 0.24, area: 0.05 }],
+    innate: beastBoost({ might: 0.04 }),
+    unlock: WORMHOLE_WINS,
+  },
+  pheromosa: {
+    name: 'Pheromosa',
+    color: '#f0e8d8',
+    stats: { maxHp: 15, might: 0.2, speed: 10, cooldown: -0.04 },
+    signature: LEGENDARY_MOVE_OF.pheromosa,
+    learnset: [[LEGENDARY_MOVE_OF.pheromosa, 'doubleKick', 'uTurn', 'quickAttack', 'xScissor', 'furyCutter', 'aerialAce', 'pinMissile']],
+    line: stage(795, 'Pheromosa', ['bug', 'fighting']),
+    awakenings: [{ maxHp: 20, might: 0.12, speed: 3 }, { maxHp: 30, might: 0.24, cooldown: -0.05 }],
+    innate: beastBoost({ speed: 2.5 }),
+    unlock: WORMHOLE_WINS,
+  },
+  xurkitree: {
+    name: 'Xurkitree',
+    color: '#f8f060',
+    stats: { maxHp: 25, might: 0.25, area: 0.08 },
+    signature: LEGENDARY_MOVE_OF.xurkitree,
+    learnset: [[LEGENDARY_MOVE_OF.xurkitree, 'shockWave', 'discharge', 'electroweb', 'thunderWave', 'vineWhip', 'thunder', 'electroBall']],
+    line: stage(796, 'Xurkitree', ['electric']),
+    awakenings: [{ maxHp: 25, might: 0.12, area: 0.05 }, { maxHp: 35, might: 0.24, cooldown: -0.05 }],
+    innate: beastBoost({ might: 0.04 }),
+    unlock: WORMHOLE_WINS,
+  },
+  celesteela: {
+    name: 'Celesteela',
+    color: '#68d888',
+    stats: { maxHp: 40, might: 0.18, armor: 1 },
+    signature: LEGENDARY_MOVE_OF.celesteela,
+    learnset: [[LEGENDARY_MOVE_OF.celesteela, 'heavySlam', 'ember', 'leechSeed', 'flashCannon', 'gyroBall', 'ironHead', 'gust']],
+    line: stage(797, 'Celesteela', ['steel', 'flying']),
+    awakenings: [{ maxHp: 30, might: 0.12, armor: 1 }, { maxHp: 40, might: 0.22, area: 0.1 }],
+    innate: beastBoost({ might: 0.035 }),
+    unlock: WORMHOLE_WINS,
+  },
+  kartana: {
+    name: 'Kartana',
+    color: '#f0f0e0',
+    stats: { maxHp: 15, might: 0.3, speed: 6 },
+    signature: LEGENDARY_MOVE_OF.kartana,
+    learnset: [[LEGENDARY_MOVE_OF.kartana, 'leafBlade', 'sacredSword', 'razorLeaf', 'xScissor', 'aerialAce', 'swordsDance', 'nightSlash']],
+    line: stage(798, 'Kartana', ['grass', 'steel']),
+    awakenings: [{ maxHp: 20, might: 0.14, speed: 3 }, { maxHp: 30, might: 0.26, cooldown: -0.05 }],
+    innate: beastBoost({ might: 0.05 }),
+    unlock: WORMHOLE_WINS,
+  },
+  guzzlord: {
+    name: 'Guzzlord',
+    color: '#7048b0',
+    stats: { maxHp: 70, might: 0.15, regen: 0.2, speed: -2 },
+    signature: LEGENDARY_MOVE_OF.guzzlord,
+    learnset: [[LEGENDARY_MOVE_OF.guzzlord, 'crunch', 'dragonTail', 'dragonBreath', 'suckerPunch', 'gigaImpact', 'earthquake', 'snarl']],
+    line: stage(799, 'Guzzlord', ['dark', 'dragon']),
+    awakenings: [{ maxHp: 40, might: 0.1, regen: 0.2 }, { maxHp: 50, might: 0.22, area: 0.1 }],
+    innate: beastBoost({ maxHp: 8 }),
+    unlock: WORMHOLE_WINS,
+  },
+  stakataka: {
+    name: 'Stakataka',
+    color: '#a8b0b8',
+    stats: { maxHp: 40, armor: 2, might: 0.15, speed: -4 },
+    signature: LEGENDARY_MOVE_OF.stakataka,
+    learnset: [[LEGENDARY_MOVE_OF.stakataka, 'rockSlide', 'rockTomb', 'ironDefense', 'ironHead', 'gyroBall', 'stealthRock', 'flashCannon']],
+    line: stage(805, 'Stakataka', ['rock', 'steel']),
+    awakenings: [{ maxHp: 30, armor: 1, might: 0.12 }, { maxHp: 40, might: 0.22, area: 0.1 }],
+    innate: beastBoost({ armor: 0.5 }),
+    unlock: WORMHOLE_WINS,
+  },
+  blacephalon: {
+    name: 'Blacephalon',
+    color: '#f070a0',
+    stats: { maxHp: 20, might: 0.28, area: 0.1, speed: 4 },
+    signature: LEGENDARY_MOVE_OF.blacephalon,
+    learnset: [[LEGENDARY_MOVE_OF.blacephalon, 'ember', 'hex', 'willOWisp', 'fireSpin', 'shadowClaw', 'flameCharge', 'snarl']],
+    line: stage(806, 'Blacephalon', ['fire', 'ghost']),
+    awakenings: [{ maxHp: 20, might: 0.14, area: 0.05 }, { maxHp: 30, might: 0.26, cooldown: -0.05 }],
+    innate: beastBoost({ might: 0.04 }),
+    unlock: WORMHOLE_WINS,
+  },
+  naganadel: {
+    name: 'Naganadel',
+    color: '#a060d8',
+    stats: { maxHp: 30, might: 0.22, speed: 8, projectileSpeed: 0.1 },
+    signature: LEGENDARY_MOVE_OF.naganadel,
+    learnset: [[LEGENDARY_MOVE_OF.naganadel, 'dragonPulse', 'sludgeBomb', 'venoshock', 'dragonBreath', 'crossPoison', 'gust', 'toxicSpikes']],
+    line: stage(804, 'Naganadel', ['poison', 'dragon']),
+    awakenings: [{ maxHp: 25, might: 0.12, speed: 3 }, { maxHp: 35, might: 0.24, cooldown: -0.05 }],
+    innate: beastBoost({ might: 0.035 }),
+    unlock: WORMHOLE_WINS,
+  },
+  /** Poipole: the gift for capturing the ten; it evolves into Naganadel at its first awakening. */
+  poipole: {
+    name: 'Poipole',
+    color: '#c070d0',
+    stats: { maxHp: 20, might: 0.12, speed: 6 },
+    signature: LEGENDARY_MOVE_OF.poipole,
+    learnset: [[LEGENDARY_MOVE_OF.poipole, 'venoshock', 'sludgeBomb', 'toxicSpikes', 'dragonBreath', 'quickAttack', 'gust', 'swift']],
+    line: stage(803, 'Poipole', ['poison']),
+    awakenings: [{ maxHp: 30, might: 0.16, speed: 2 }, { maxHp: 35, might: 0.24, cooldown: -0.05 }],
+    innate: beastBoost({ speed: 2 }),
+    evolve: { at: 1, dex: 804, name: 'Naganadel', types: ['poison', 'dragon'] },
+    unlock: { wins: 1, ultra: 'gift' },
+  },
+
+  /* ---------- The legend paths (`data/legendPaths.ts`) ---------- */
+  zygarde: {
+    name: 'Zygarde',
+    color: '#58c870',
+    stats: { maxHp: 30, might: 0.18, speed: 6, cooldown: -0.03 },
+    signature: LEGENDARY_MOVE_OF.zygarde,
+    learnset: [[LEGENDARY_MOVE_OF.zygarde, 'dragonBreath', 'dragonTail', 'earthquake', 'crunch', 'stealthRock', 'rockTomb', 'thunder']],
+    line: stage(718, 'Zygarde', ['dragon', 'ground']),
+    awakenings: [{ maxHp: 20, might: 0.1, speed: 2 }, { maxHp: 30, might: 0.2, cooldown: -0.04 }],
+    innate: { ability: 'powerConstruct' },
+    unlock: { wins: 1, path: 'zygarde' },
+  },
+  solgaleo: {
+    name: 'Solgaleo',
+    color: '#f8a830',
+    stats: { maxHp: 45, might: 0.22, armor: 1, speed: 4 },
+    signature: LEGENDARY_MOVE_OF.solgaleo,
+    learnset: [[LEGENDARY_MOVE_OF.solgaleo, 'flashCannon', 'psyshock', 'flameWheel', 'crunch', 'gyroBall', 'solarBeam', 'wildCharge']],
+    line: stage(791, 'Solgaleo', ['psychic', 'steel']),
+    awakenings: [{ maxHp: 25, might: 0.12, armor: 1 }, { maxHp: 40, might: 0.24, area: 0.1 }],
+    innate: { ability: 'fullMetalBody' },
+    unlock: { wins: 1, path: 'cosmog' },
+  },
+  lunala: {
+    name: 'Lunala',
+    color: '#8868d8',
+    stats: { maxHp: 40, might: 0.22, area: 0.1, cooldown: -0.03 },
+    signature: LEGENDARY_MOVE_OF.lunala,
+    learnset: [[LEGENDARY_MOVE_OF.lunala, 'psyshock', 'hex', 'futureSight', 'dreamEater', 'moonblast', 'gust', 'roost']],
+    line: stage(792, 'Lunala', ['psychic', 'ghost']),
+    awakenings: [{ maxHp: 25, might: 0.12, area: 0.05 }, { maxHp: 40, might: 0.24, cooldown: -0.05 }],
+    innate: { ability: 'shadowShield' },
+    unlock: { wins: 1, path: 'cosmog' },
+  },
+  kubfu: {
+    name: 'Kubfu',
+    color: '#c8a070',
+    stats: { maxHp: 30, might: 0.2, speed: 6, specialRecharge: 0.1 },
+    signature: LEGENDARY_MOVE_OF.kubfu,
+    learnset: [[LEGENDARY_MOVE_OF.kubfu, 'machPunch', 'focusPunch', 'dynamicPunch', 'suckerPunch', 'uTurn', 'waterShuriken', 'crunch']],
+    line: stage(891, 'Kubfu', ['fighting']),
+    awakenings: [{ maxHp: 25, might: 0.12, speed: 2 }, { maxHp: 35, might: 0.22, cooldown: -0.04 }],
+    innate: { ability: 'innerFocus' },
+    unlock: { wins: 1, path: 'kubfu' },
+  },
+  meltan: {
+    name: 'Meltan',
+    color: '#c8c8d0',
+    stats: { maxHp: 35, armor: 1, might: 0.15, magnet: 20 },
+    signature: LEGENDARY_MOVE_OF.meltan,
+    learnset: [[LEGENDARY_MOVE_OF.meltan, 'flashCannon', 'thunder', 'shockWave', 'gyroBall', 'heavySlam', 'electroBall', 'discharge']],
+    line: stage(808, 'Meltan', ['steel']),
+    awakenings: [{ maxHp: 25, armor: 1, might: 0.12 }, { maxHp: 35, might: 0.24, area: 0.1 }],
+    innate: { ability: 'magnetPull' },
+    unlock: { wins: 1, path: 'meltan' },
+  },
+  regigigas: {
+    name: 'Regigigas',
+    color: '#d8d0b8',
+    stats: { maxHp: 65, armor: 2, might: 0.25, speed: -3 },
+    signature: LEGENDARY_MOVE_OF.regigigas,
+    learnset: [[LEGENDARY_MOVE_OF.regigigas, 'gigaImpact', 'focusPunch', 'earthquake', 'rockTomb', 'iceShard', 'flashCannon', 'heavySlam']],
+    line: stage(486, 'Regigigas', ['normal']),
+    awakenings: [{ maxHp: 35, armor: 1, might: 0.12 }, { maxHp: 50, might: 0.25, area: 0.1 }],
+    innate: { ability: 'slowStart' },
+    unlock: { wins: 1, after: ['regirock', 'regice', 'registeel'] },
+  },
+
+  /* ---------- The Safári's legend ---------- */
+  /** Manaphy, the Prince of the Sea: hatched from the egg the cove's Pokédex brings. Hydration keeps it fresh in the rain. */
+  manaphy: {
+    name: 'Manaphy',
+    color: '#58a8e0',
+    stats: { maxHp: 40, might: 0.18, speed: 6, regen: 0.3 },
+    signature: LEGENDARY_MOVE_OF.manaphy,
+    learnset: [[LEGENDARY_MOVE_OF.manaphy, 'waterPulse', 'bubbleBeam', 'whirlpool', 'brine', 'psyshock', 'iceShard', 'disarmingVoice']],
+    line: stage(490, 'Manaphy', ['water']),
+    awakenings: [{ maxHp: 30, might: 0.12, regen: 0.2 }, { maxHp: 40, might: 0.24, area: 0.1 }],
+    innate: { ability: 'hydration' },
+    unlock: { wins: 1, egg: true },
+  },
+
+  /* ---------- The mythicals (`data/mythicals.ts`) ---------- */
+  /** Diancie: the Escavação's rarest treasure. Its Diamond Storm guards as it hits; Mega Diancie at the second awakening. */
+  diancie: {
+    name: 'Diancie',
+    color: '#f0a0c8',
+    stats: { maxHp: 40, armor: 2, might: 0.16, area: 0.05, speed: -1 },
+    signature: LEGENDARY_MOVE_OF.diancie,
+    learnset: [[LEGENDARY_MOVE_OF.diancie, 'rockTomb', 'stealthRock', 'dazzlingGleam', 'moonblast', 'ancientPower', 'ironDefense', 'rockSlide']],
+    line: stage(719, 'Diancie', ['rock', 'fairy']),
+    awakenings: [{ maxHp: 25, armor: 1, might: 0.12 }, { maxHp: 35, might: 0.24, area: 0.1, cooldown: -0.04 }],
+    innate: { ability: 'clearBody' },
+    form: { key: 'mega', name: 'Mega Diancie' },
+    unlock: { wins: 1, dig: true },
+  },
+  /** Zeraora: the Power Plant's storm. Fast and furious, Plasma Fists on every foe in reach; Mega Zeraora at the second awakening. */
+  zeraora: {
+    name: 'Zeraora',
+    color: '#f8d048',
+    stats: { maxHp: 25, might: 0.22, speed: 10, cooldown: -0.04 },
+    signature: LEGENDARY_MOVE_OF.zeraora,
+    learnset: [[LEGENDARY_MOVE_OF.zeraora, 'thunder', 'shockWave', 'wildCharge', 'discharge', 'electroBall', 'quickAttack', 'uTurn']],
+    line: stage(807, 'Zeraora', ['electric']),
+    awakenings: [{ maxHp: 25, might: 0.12, speed: 3 }, { maxHp: 35, might: 0.25, cooldown: -0.05 }],
+    innate: { ability: 'voltAbsorb' },
+    form: { key: 'mega', name: 'Mega Zeraora' },
+    unlock: { wins: 1, storm: true },
+  },
+  /**
+   * Ogerpon: its own Tera Raid. It plays Terastal like no other: its mask is
+   * the run's Tera type among its four (`OGERPON_MASKS`), Ivy Cudgel takes the
+   * mask's type, and Terastallizing is its Embody Aspect (`game/ogerpon.ts`).
+   * Its types follow the mask (`legendStage`).
+   */
+  ogerpon: {
+    name: 'Ogerpon',
+    color: '#58c058',
+    stats: { maxHp: 30, might: 0.2, speed: 6, specialRecharge: 0.1 },
+    signature: LEGENDARY_MOVE_OF.ogerpon,
+    learnset: [[LEGENDARY_MOVE_OF.ogerpon, 'leafBlade', 'razorLeaf', 'uTurn', 'swordsDance', 'leechSeed', 'quickAttack', 'crunch']],
+    line: stage(1017, 'Ogerpon', ['grass']),
+    awakenings: [{ maxHp: 25, might: 0.12, speed: 2 }, { maxHp: 35, might: 0.24, cooldown: -0.05 }],
+    innate: { ability: 'defiant' },
+    unlock: { wins: 1, mask: true },
+  },
+
+  /* ---------- The Ruínas da Decisão's Regis (`game/splitRuins.ts`) ---------- */
+  /** Regieleki: raw speed. Transistor and the fastest legs of any legend; its Thunder Cage hits harder the faster it runs. */
+  regieleki: {
+    name: 'Regieleki',
+    color: '#f8d838',
+    stats: { maxHp: 25, might: 0.16, speed: 16, cooldown: -0.06 },
+    signature: LEGENDARY_MOVE_OF.regieleki,
+    learnset: [[LEGENDARY_MOVE_OF.regieleki, 'thunder', 'shockWave', 'electroBall', 'discharge', 'quickAttack', 'wildCharge', 'electroweb']],
+    line: stage(894, 'Regieleki', ['electric']),
+    awakenings: [{ maxHp: 25, might: 0.12, speed: 4 }, { maxHp: 35, might: 0.22, speed: 4, cooldown: -0.04 }],
+    innate: { ability: 'transistor', extra: [{ kind: 'stats', stats: { speed: 6 } }] },
+    unlock: { wins: 1, after: ['regigigas'], ruins: true },
+  },
+  /** Regidrago: Dragon's Maw. Slow and huge, all its power in its jaws; its Dragon Energy hits harder the more HP it has. */
+  regidrago: {
+    name: 'Regidrago',
+    color: '#58a858',
+    stats: { maxHp: 70, might: 0.22, armor: 1, speed: -5 },
+    signature: LEGENDARY_MOVE_OF.regidrago,
+    learnset: [[LEGENDARY_MOVE_OF.regidrago, 'dragonBreath', 'dragonTail', 'dragonPulse', 'crunch', 'earthquake', 'focusPunch', 'twister']],
+    line: stage(895, 'Regidrago', ['dragon']),
+    awakenings: [{ maxHp: 35, might: 0.12, armor: 1 }, { maxHp: 50, might: 0.26, area: 0.1 }],
+    innate: { ability: 'dragonsMaw', extra: [{ kind: 'fullHp', stats: { might: 0.15 } }] },
+    unlock: { wins: 1, after: ['regigigas'], ruins: true },
+  },
+
+  /* ---------- The Forces of Nature, roaming with their weather (`data/forces.ts`) ---------- */
+  /** Tornadus: Prankster's tailwind. Its Bleakwind Storm lends it speed each cast, and the snow it brings only quickens it. */
+  tornadus: {
+    name: 'Tornadus',
+    color: '#78c068',
+    stats: { maxHp: 30, might: 0.18, speed: 10, cooldown: -0.05 },
+    signature: LEGENDARY_MOVE_OF.tornadus,
+    learnset: [[LEGENDARY_MOVE_OF.tornadus, 'gust', 'aerialAce', 'twister', 'uTurn', 'crunch', 'iceShard', 'roost']],
+    line: stage(641, 'Tornadus', ['flying']),
+    awakenings: [{ maxHp: 25, might: 0.12, speed: 3 }, { maxHp: 35, might: 0.24, cooldown: -0.05 }],
+    innate: { ability: 'prankster', extra: [{ kind: 'weather', weather: 'snow', stats: { speed: 10, cooldown: -0.05 } }, { kind: 'immune', to: ['chip'] }] },
+    unlock: { wins: 1, roam: true, force: true },
+  },
+  /** Thundurus: storms. It calls the rain wherever it goes, and in the rain its Wildbolt Storm drops twice the bolts. */
+  thundurus: {
+    name: 'Thundurus',
+    color: '#6898d8',
+    stats: { maxHp: 30, might: 0.22, area: 0.08, cooldown: -0.03 },
+    signature: LEGENDARY_MOVE_OF.thundurus,
+    learnset: [[LEGENDARY_MOVE_OF.thundurus, 'thunder', 'shockWave', 'electroBall', 'discharge', 'thunderWave', 'crunch', 'gust']],
+    line: stage(642, 'Thundurus', ['electric', 'flying']),
+    awakenings: [{ maxHp: 25, might: 0.12, area: 0.05 }, { maxHp: 35, might: 0.24, cooldown: -0.05 }],
+    innate: { ability: 'prankster', extra: [{ kind: 'summon', weather: 'rain' }, { kind: 'weather', weather: 'rain', stats: { might: 0.12, area: 0.08 } }] },
+    unlock: { wins: 1, roam: true, force: true },
+  },
+  /** Landorus: Sand Force. It calls sandstorms wherever it goes, unhurt by them, and in them its Ground, Rock and Steel moves hit harder; Therian at its second awakening. */
+  landorus: {
+    name: 'Landorus',
+    color: '#d8a048',
+    stats: { maxHp: 45, might: 0.22, armor: 1 },
+    signature: LEGENDARY_MOVE_OF.landorus,
+    learnset: [[LEGENDARY_MOVE_OF.landorus, 'earthquake', 'rockTomb', 'stealthRock', 'rockSlide', 'gust', 'focusPunch', 'crunch']],
+    line: stage(645, 'Landorus', ['ground', 'flying']),
+    awakenings: [{ maxHp: 30, might: 0.12, armor: 1 }, { maxHp: 40, might: 0.26, area: 0.1 }],
+    innate: { ability: 'sandForce', extra: [{ kind: 'summon', weather: 'sand' }] },
+    form: { key: 'therian', name: 'Landorus (Therian Forme)' },
+    unlock: { wins: 1, roam: true, force: true, after: ['tornadus', 'thundurus'] },
+  },
+  /** Enamorus: Contrary and Cute Charm. Every hit it takes makes it stronger, and foes that touch it fall for it; Therian at its second awakening. */
+  enamorus: {
+    name: 'Enamorus',
+    color: '#f088b8',
+    stats: { maxHp: 35, might: 0.18, regen: 0.3, speed: 4 },
+    signature: LEGENDARY_MOVE_OF.enamorus,
+    learnset: [[LEGENDARY_MOVE_OF.enamorus, 'moonblast', 'disarmingVoice', 'dazzlingGleam', 'psyshock', 'gust', 'swift', 'playRough']],
+    line: stage(905, 'Enamorus', ['fairy', 'flying']),
+    awakenings: [{ maxHp: 25, might: 0.12, regen: 0.2 }, { maxHp: 40, might: 0.22, area: 0.1 }],
+    innate: { ability: 'contrary', extra: [{ kind: 'contact', status: [{ kind: 'sleep', chance: 0.3, duration: 2, power: 0 }], damage: 0 }] },
+    form: { key: 'therian', name: 'Enamorus (Therian Forme)' },
+    unlock: { wins: 1, roam: true, force: true, after: ['tornadus', 'thundurus', 'landorus'] },
+  },
 } as const satisfies Record<LegendId, LegendDef>
+
+/**
+ * The legends whose innate does more than its ability's own text says
+ * (`Innate.extra`): each needs its line in i18n `legend.innateExtra`. Beast
+ * Boost's `extra` is all the ability does, and its text says it, so the Ultra
+ * Beasts (typed `Innate`, with `extra` optional) stay out.
+ */
+export type ExtraInnateLegend = { [K in LegendId]: (typeof LEGENDS)[K]['innate'] extends { readonly extra: readonly unknown[] } ? K : never }[LegendId]
 
 export const isLegend = (id: unknown): id is LegendId => LEGEND_IDS.some((l) => l === id)
 
@@ -407,10 +1030,34 @@ export const legendEvent = (id: LegendId): LegendEvent | null => {
   return unlock.event ?? null
 }
 
+/** Whether a legend is one of the Ultra Beasts (`ULTRA_LEGENDS`). */
+export const isUltraLegend = (id: LegendId) => {
+  const unlock: LegendUnlock = LEGENDS[id].unlock
+  return unlock.ultra !== undefined
+}
+
+/** Whether a legend only ever comes as a gift for capturing the Ultra Beasts (Poipole): no win counts for it. */
+export const giftLegend = (id: LegendId) => {
+  const unlock: LegendUnlock = LEGENDS[id].unlock
+  return unlock.ultra === 'gift'
+}
+
 /** The festival whose milestone gift captures a legend, or null for one caught by winning. */
 export const legendFestival = (id: LegendId): FestivalId | null => {
   const unlock: LegendUnlock = LEGENDS[id].unlock
   return unlock.festival ?? null
+}
+
+/** Whether a legend hatches from an egg the Safári sends (Manaphy): no win counts for it. */
+export const eggLegend = (id: LegendId) => {
+  const unlock: LegendUnlock = LEGENDS[id].unlock
+  return unlock.egg === true
+}
+
+/** The path whose gift brings a legend, or null for one caught otherwise. */
+export const legendPath = (id: LegendId): PathId | null => {
+  const unlock: LegendUnlock = LEGENDS[id].unlock
+  return unlock.path ?? null
 }
 
 /** The legendary move a legend opens with, which stays its own (it never fuses into a duo); null for every other starter. */

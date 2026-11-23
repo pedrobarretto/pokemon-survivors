@@ -1,5 +1,11 @@
 import type { LegendaryMoveId } from '../game/legendaryMoves'
 import type { LegendaryMove2Id } from '../game/legendaryMoves2'
+import type { UltraMoveId } from '../game/ultraMoves'
+import type { PathLegendMoveId } from '../game/pathLegendMoves'
+import type { LegendaryMove3Id } from '../game/legendaryMoves3'
+import type { LegendaryMove4Id } from '../game/legendaryMoves4'
+import type { LegendaryMove5Id } from '../game/legendaryMoves5'
+import type { LegendaryMove6Id } from '../game/legendaryMoves6'
 import type { BiomeId } from './biomes'
 import type { LegendId } from './legends'
 import type { PokeType } from './types'
@@ -40,7 +46,50 @@ export const LEGENDARY_MOVE_OF = {
   arceus: 'judgment',
   darkrai: 'darkVoid',
   cresselia: 'lunarBlessing',
-} as const satisfies Record<LegendId, LegendaryMoveId | LegendaryMove2Id>
+  terapagos: 'teraStarstorm',
+  // The Ultra Beasts' (`game/ultraMoves.ts`): Blacephalon's own Mind Blown, and a move each is known by.
+  nihilego: 'acidSpray',
+  buzzwole: 'powerUpPunch',
+  pheromosa: 'skitterSmack',
+  xurkitree: 'tailGlow',
+  celesteela: 'autotomize',
+  kartana: 'guillotine',
+  guzzlord: 'belch',
+  stakataka: 'wideGuard',
+  blacephalon: 'mindBlown',
+  naganadel: 'fellStinger',
+  poipole: 'poisonTail',
+  zygarde: 'coreEnforcer',
+  solgaleo: 'sunsteelStrike',
+  lunala: 'moongeistBeam',
+  kubfu: 'wickedBlow',
+  meltan: 'doubleIronBash',
+  regigigas: 'crushGrip',
+  // The legends with a road of their own: the trios share their move, as the lake trio and the Swords do in the games.
+  palkia: 'spacialRend',
+  uxie: 'mysticalPower',
+  mesprit: 'mysticalPower',
+  azelf: 'mysticalPower',
+  cobalion: 'retaliate',
+  terrakion: 'retaliate',
+  virizion: 'retaliate',
+  keldeo: 'secretSword',
+  hoopa: 'hyperspaceFury',
+  // The Safári's: Manaphy's own Heart Swap.
+  manaphy: 'heartSwap',
+  // The Grande Atualização's mythicals (`game/legendaryMoves5.ts`): each its own signature.
+  diancie: 'diamondStorm',
+  zeraora: 'plasmaFists',
+  ogerpon: 'ivyCudgel',
+  // The Ruínas da Decisão's Regis and the Forces of Nature (`game/legendaryMoves6.ts`): their own signatures (the Forces' from Legends: Arceus), but
+  // Thundurus's, whose Wildbolt Storm is Thunder's evolution: its Prankster Nasty Plot instead.
+  regieleki: 'thunderCage',
+  regidrago: 'dragonEnergy',
+  tornadus: 'bleakwindStorm',
+  thundurus: 'nastyPlot',
+  landorus: 'sandsearStorm',
+  enamorus: 'springtideStorm',
+} as const satisfies Record<LegendId, LegendaryMoveId | LegendaryMove2Id | UltraMoveId | PathLegendMoveId | LegendaryMove3Id | LegendaryMove4Id | LegendaryMove5Id | LegendaryMove6Id>
 
 export type LegendaryId = keyof typeof LEGENDARY_MOVE_OF
 

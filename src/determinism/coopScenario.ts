@@ -1,6 +1,6 @@
 import { createRng, type SeededRng } from '../engine/rng'
 import * as dm from '../engine/dmath'
-import { PLAYABLE_IDS } from '../data/hatchlings'
+import type { PlayableId } from '../data/hatchlings'
 import { createCoopGame, type CoopLoadout } from '../game/game'
 import { stepTick, onScreen, type TickEntry } from '../game/lockstep'
 import { NO_RANKS, UPGRADE_IDS, UPGRADES, type Ranks } from '../game/meta'
@@ -22,8 +22,8 @@ import type { Game, Player } from '../game/types'
 
 export type CoopScenario = {
   seed: number
-  /** Each slot's Pokémon (a starter or a hatched family). */
-  team: readonly (typeof PLAYABLE_IDS)[number][]
+  /** Each slot's Pokémon (a starter, a hatched family or, as a Legend room seats them, a legend). */
+  team: readonly PlayableId[]
   difficulty: Difficulty
   maxRanks: boolean
 }

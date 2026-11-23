@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { ABILITIES, ABILITY, ABILITY_IDS, BRANCH_ABILITIES, FAMILY_ABILITIES } from '../data/abilities'
 import { PLAYABLE_IDS } from '../data/hatchlings'
-import { abilityBoosting, abilityKey, grantAbility, updateAbility } from './abilities'
+import { BEAST_BOOST } from '../data/legends'
+import { abilityBoosting, abilityKey, abilityKill, abilityStacks, grantAbility, updateAbility } from './abilities'
+import { spawnEnemy } from './enemies'
 import { hazardHit } from './bosses'
 import { hurtPlayer } from './combat'
 import { curseCast, updateCurses } from './curseSystem'
@@ -86,6 +88,44 @@ describe('Speed Boost', () => {
   })
 })
 
+describe('decaying KO stacks', () => {
+  /** `n` knockouts, one per frame. */
+  const ko = (g: Game, n: number) => {
+    const e = spawnEnemy(g, 'rattata', g.player.x + 40, g.player.y)
+    for (let i = 0; i < n; i++) abilityKill(g, e)
+  }
+
+  it('holds a fresh Beast Boost stack, then drops one whole stack every few seconds without KOs', () => {
+    const g = createGame('kartana', { ...VIEW }, 1)
+    ko(g, BEAST_BOOST.per * 2)
+    tick(g, 0.1)
+    expect(abilityStacks(g)).toBe(2)
+    tick(g, BEAST_BOOST.decay - 0.2)
+    expect(abilityStacks(g)).toBe(2)
+    tick(g, 0.2)
+    expect(abilityStacks(g)).toBe(1)
+    tick(g, BEAST_BOOST.decay)
+    expect(abilityStacks(g)).toBe(0)
+  })
+
+  it('keeps Beast Boost while KOs keep coming, even short of the next stack', () => {
+    const g = createGame('kartana', { ...VIEW }, 1)
+    ko(g, BEAST_BOOST.per)
+    for (let i = 0; i < 3; i++) {
+      tick(g, BEAST_BOOST.decay - 1)
+      ko(g, 1)
+    }
+    expect(abilityStacks(g)).toBe(1)
+  })
+
+  it('counts every Moxie knockout', () => {
+    const g = withAbility('moxie')
+    ko(g, 5)
+    tick(g, 0.5)
+    expect(abilityStacks(g)).toBe(5)
+  })
+})
+
 describe('hits taken', () => {
   it('Water Absorb heals from Water attacks instead of hurting', () => {
     const g = withAbility('waterAbsorb', 'eevee')
@@ -110,11 +150,14 @@ describe('hits taken', () => {
     expect(p.hp).toBeLessThan(full)
   })
 
-  it('Magic Guard takes only direct hits: no lingering patch, no cursed item bite', () => {
+  it('Magic Guard halves a lingering patch and spares the cursed items’ bite', () => {
     const g = withAbility('magicGuard', 'abra')
     const p = g.player
     const full = p.hp
-    hurtPlayer(g, 30, undefined, ['poison'], hazardHit({ kind: 'zone' }))
+    hurtPlayer(g, 30, undefined, [], hazardHit({ kind: 'zone' }))
+    expect(p.hp).toBe(full - 15)
+    p.hp = full
+    p.iframes = 0
     g.player.curses.held.push('lifeOrb', 'flameOrb')
     curseCast(g)
     updateCurses(g)

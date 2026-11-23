@@ -1,14 +1,20 @@
+import { assetUrl } from '../../assets'
 import { BOSS_PATTERNS, BOSS_PHASES, bossKit, type BossPattern } from '../../data/bosses'
 import { ENEMIES, type EnemyDef, type EnemyId } from '../../data/enemies'
 import { RIFT, RIFT_LEGENDS } from '../../data/rifts'
 import { TIERS } from '../../data/roster'
 import { isSummoner, SUMMONS, TRAITS, type TraitId } from '../../data/traits'
 import { SPIT_FLAVORS } from '../../game/spitters'
-import { HATCHLINGS, isHatchling, PLAYABLE } from '../../data/hatchlings'
-import { REGIONS, type PlayableDef } from '../../data/starters'
+import { familySource } from '../../data/familySource'
+import { HATCHLING_IDS, isHatchling, PLAYABLE, type HatchlingId } from '../../data/hatchlings'
+import { REGIONS, STARTER_IDS, type PlayableDef } from '../../data/starters'
+import { DEX_REGIONS, dexRegionOf, SHEETLESS, SPRITECOLLAB_URL, type DexRegion } from '../../data/nationalDex'
+import { PENCIL, PENCIL_PALETTE } from '../../render/pencilArt'
 import { POKE_TYPES, TYPE_COLORS, type PokeType } from '../../data/types'
 import { RUN_LENGTH } from '../../data/waves'
-import { EVENT_LEGENDS, isLegend, LEGENDS, type LegendId, type LegendUnlock } from '../../data/legends'
+import { AWAKEN_AT, EVENT_LEGENDS, isLegend, LEGENDS, REGULAR_LEGENDS, type LegendId, type LegendUnlock } from '../../data/legends'
+import { SHINY_BUFF, SHINY_ODDS } from '../../game/shiny'
+import { innateText } from '../../ui/innateText'
 import { BRANCHES, branchesAt, branchStage, familyDex } from '../../data/branches'
 import { ABILITIES, isHidden, type AbilitySet } from '../../data/abilities'
 import { abilitySet } from '../../game/abilities'
@@ -17,23 +23,25 @@ import { branchNeeds } from '../../game/evoItems'
 import { EVO_ITEMS } from '../../data/shop'
 import { unlockedAt } from '../../game/learnsets'
 import { starterStats } from '../../game/leveling'
+import { BASE_STATS } from '../../game/stats'
 import { MOVES, type MoveId } from '../../game/moves'
 import { resolveSpecial } from '../../game/special'
 import type { Locale } from '../../i18n'
 import { MESSAGES } from '../../i18n/messages'
 import { SITE_MESSAGES, type SiteMessages } from '../../i18n/site'
-import { STAT_BARS, statRatio } from '../../ui/statBars'
+import { otherBonuses, STAT_BARS, statRatio } from '../../ui/statBars'
 import { html, type Html } from '../html'
 import { layout } from '../layout'
-import { appearances, clock, nightBossOf, pageOf, pokedex, ROLES, slugOf, spritesOf, type Appearance, type DexEntry, type Role, type SpriteSet } from '../pokedex'
-import { absolute, dexPaths, ROUTES } from '../routes'
+import { appearances, clock, nightBossOf, pageOf, pokedex, regionCounts, ROLES, slugOf, spritesOf, type Appearance, type DexEntry, type Role, type SpriteSet } from '../pokedex'
+import { absolute, dexPaths, dexRegionPaths, ROUTES } from '../routes'
+import { nationalDex } from '../../data/regionalForms'
 import { createSpriteCss, spriteScale } from '../spriteCss'
 
 export type SpriteCss = ReturnType<typeof createSpriteCss>
 
-const asset = (dex: number, file: string, shiny = false) => `/assets/pokemon/${dex}/${shiny ? 'shiny/' : ''}${file}`
+const asset = (dex: number, file: string, shiny = false) => assetUrl(`pokemon/${dex}/${shiny ? 'shiny/' : ''}${file}`)
 
-const dexNo = (dex: number) => `#${String(dex).padStart(3, '0')}`
+const dexNo = (dex: number) => `#${String(nationalDex(dex)).padStart(3, '0')}`
 
 export const typeBadge = (type: PokeType, m: SiteMessages) =>
   html`<span class="type-badge" style="--type:${TYPE_COLORS[type]}">${m.types[type]}</span>`
@@ -69,6 +77,13 @@ const statBars = (entry: DexEntry & { source: { kind: 'starter' } }, locale: Loc
     (b) =>
       html`<div><dt>${labels[b.label]}</dt><dd><span class="bar"><i style="width:${Math.round(statRatio(b.get(stats), b.min, b.max) * 100)}%"></i></span><b>${b.fmt(b.get(stats))}</b></dd></div>`,
   )}</dl>`
+}
+
+/** What this stage raises outside the bars (`otherBonuses`), as one line; nothing when it raises none. */
+const otherBonusLine = (entry: DexEntry & { source: { kind: 'starter' } }, locale: Locale) => {
+  const words = MESSAGES[locale].title
+  const bonuses = otherBonuses(starterStats(entry.source.id, entry.source.stage, entry.source.branch ?? null), BASE_STATS)
+  return bonuses.length > 0 && html`<p><b>${words.otherBonuses}:</b> ${bonuses.map((b) => words.otherBonus[b.key](b.value)).join(' · ')}</p>`
 }
 
 const moveChip = (id: MoveId, m: SiteMessages) => html`<li style="--type:${TYPE_COLORS[MOVES[id].type]}" title="${m.types[MOVES[id].type]}">${MOVES[id].name}</li>`
@@ -108,6 +123,12 @@ const abilityList = (set: AbilitySet, locale: Locale) => {
     <p class="note">${a.ability.note}</p>`
 }
 
+/** A family's line under its blurb: how it's first had, by its source (`familySource`). */
+const sourceNote = (id: HatchlingId, m: SiteMessages, game: (typeof MESSAGES)[Locale]) => {
+  const source = familySource(id)
+  return source === 'safari' ? m.pokedex.safariNote : source === 'corner' ? m.pokedex.cornerNote : m.pokedex.hatchNote(game.eggs.tiers[source])
+}
+
 const starterBody = (entry: DexEntry & { source: { kind: 'starter' } }, locale: Locale) => {
   const m = SITE_MESSAGES[locale]
   const game = MESSAGES[locale]
@@ -130,9 +151,10 @@ const starterBody = (entry: DexEntry & { source: { kind: 'starter' } }, locale: 
   // A 2-stage line's second stage is already the final one.
   const stageName = m.pokedex.stageOf(i > 0 && i === s.line.length - 1 ? 2 : i)
   return html`<p class="blurb">${stageName} · ${game.blurbs[id]}</p>
-    ${isHatchling(id) && html`<p class="note">${m.pokedex.hatchNote(game.eggs.tiers[HATCHLINGS[id].egg])}</p>`}
+    ${isHatchling(id) && html`<p class="note">${sourceNote(id, m, game)}</p>`}
     <h3>${m.pokedex.stats}</h3>
     ${statBars(entry, locale)}
+    ${otherBonusLine(entry, locale)}
     <h3>${m.pokedex.evolution}</h3>
     <ol class="evo">${line}</ol>
     <h3>${m.pokedex.signature}</h3>
@@ -164,16 +186,37 @@ export const appearance = (a: Appearance, m: SiteMessages) => {
       return m.pokedex.rift(clock(a.from))
     case 'eventRift':
       return m.pokedex.eventRift(clock(a.from))
+    case 'raid':
+      return a.stellar ? m.pokedex.stellarRaid(clock(a.from)) : m.pokedex.raid(clock(a.from))
+    case 'wormhole':
+      return m.pokedex.wormhole(clock(a.at))
     case 'reaper':
       return m.pokedex.reaper(clock(a.at))
+    case 'temple':
+      return m.pokedex.temple(clock(a.from), clock(a.until))
     case 'place':
-      return a.boss ? m.pokedex.placeBoss(m.pokedex.places[a.place], clock(a.from)) : m.pokedex.place(m.pokedex.places[a.place], clock(a.from))
+      // Spiritomb wakes from the Odd Keystone; the Hideout's lair bosses just live there.
+      return a.boss && a.place === 'graveyard' ? m.pokedex.placeBoss(m.pokedex.places[a.place], clock(a.from)) : m.pokedex.place(m.pokedex.places[a.place], clock(a.from))
     case 'hidden':
       return m.pokedex.lucky(m.pokedex.places[a.place], clock(a.from))
     case 'summoned':
       return m.pokedex.summoned(ENEMIES[a.by].name)
     case 'retinue':
       return m.pokedex.retinue(ENEMIES[a.by].name)
+    case 'roam':
+      return m.pokedex.roam(clock(a.from))
+    case 'ruins':
+      return m.pokedex.ruins(clock(a.from), clock(a.until))
+    case 'force':
+      return m.pokedex.force(clock(a.from), m.pokedex.forceWeather[a.force])
+    case 'duel':
+      return m.pokedex.duel[a.sword](clock(a.from))
+    case 'rush':
+      return a.last ? m.pokedex.rushLast : m.pokedex.rush
+    case 'storm':
+      return m.pokedex.storm(clock(a.from))
+    case 'maskRaid':
+      return m.pokedex.maskRaid(clock(a.from))
   }
 }
 
@@ -268,21 +311,28 @@ export const patternText = (p: BossPattern, m: SiteMessages) => {
   return p.stance ? `${m.patterns.stance[p.stance]}: ${text}` : text
 }
 
+/** How a legend is captured for the Legend mode, its numbers from `data/legends.ts`. */
+export const captureText = (unlock: LegendUnlock, m: SiteMessages) =>
+  unlock.event ? m.pokedex.captureEvent(unlock.wins) : unlock.last ? m.pokedex.captureLast(REGULAR_LEGENDS.length - 1) : m.pokedex.capture(unlock.wins, AWAKEN_AT)
+
 /** A legendary's card: how it's captured for the Legend mode, its innate and the move it opens with (`data/legends.ts`). */
-const legendSection = (id: LegendId, m: SiteMessages) => {
+const legendSection = (id: LegendId, m: SiteMessages, locale: Locale) => {
   const def = LEGENDS[id]
   const unlock: LegendUnlock = def.unlock
   const opener = MOVES[def.learnset[0][0]!]
+  const innate = innateText(MESSAGES[locale], id)
+  // A path legend comes from its path, never from wins (`dexPage.ts` says it the same way).
+  const capture = unlock.path || unlock.after ? pathNote(id, locale) : captureText(unlock, m)
   return html`<h3>${m.pokedex.legendMode}</h3>
     <ul class="list">
-      <li>${unlock.event ? m.pokedex.captureEvent(unlock.wins) : unlock.last ? m.pokedex.captureLast : m.pokedex.capture(unlock.wins)}</li>
-      <li>${m.pokedex.innate(ABILITIES[def.innate.ability].name)}</li>
+      <li>${capture}</li>
+      <li>${m.pokedex.innate(innate.name)} — ${innate.text}</li>
       <li>${m.pokedex.opens(opener.name)} ${typeBadge(opener.type, m)}</li>
     </ul>
     <p class="note">★ ${m.pokedex.captureShiny}</p>`
 }
 
-const wildBody = (entry: DexEntry & { source: { kind: 'wild' } }, m: SiteMessages) => {
+const wildBody = (entry: DexEntry & { source: { kind: 'wild' } }, m: SiteMessages, locale: Locale) => {
   const e: EnemyDef = ENEMIES[entry.source.id]
   const kit = bossKit(entry.source.id)
   // A species with a night boss (`HALLOWEEN.bosses`) shows that boss's attacks.
@@ -302,13 +352,13 @@ const wildBody = (entry: DexEntry & { source: { kind: 'wild' } }, m: SiteMessage
     <h3>${m.pokedex.appears}</h3>
     <ul class="list">${appearances(entry.source.id).map((a) => html`<li>${appearance(a, m)}</li>`)}</ul>
     ${bossKit(fights).length > 0 && html`<h3>${night ? m.pokedex.nightAttacks : m.pokedex.attacks}</h3>${bossAttacks(fights, m)}`}
-    ${isLegend(entry.source.id) && legendSection(entry.source.id, m)}
+    ${isLegend(entry.source.id) && legendSection(entry.source.id, m, locale)}
     ${shiny && html`<p class="note">★ ${shiny}</p>`}`
 }
 
 /** How a wild card's shiny shows up: a rift legendary by the rift's odds, the map's bosses never, the horde at the wild odds. */
 const shinyNote = (id: EnemyId, boss: boolean, m: SiteMessages) =>
-  ([...RIFT_LEGENDS, ...EVENT_LEGENDS] as readonly EnemyId[]).includes(id) ? m.pokedex.riftShinyNote(Math.round(1 / RIFT.shinyOdds)) : boss ? null : m.pokedex.shinyNote
+  ([...RIFT_LEGENDS, ...EVENT_LEGENDS] as readonly EnemyId[]).includes(id) ? m.pokedex.riftShinyNote(Math.round(1 / RIFT.shinyOdds)) : boss ? null : m.pokedex.shinyNote(1 / SHINY_ODDS.enemy, SHINY_BUFF.hp)
 
 /** Horde tier of a wild card, for the tier filter. */
 const tierOf = (entry: DexEntry) => {
@@ -318,6 +368,21 @@ const tierOf = (entry: DexEntry) => {
 }
 
 /** One species' card. `page` links its name to the Pokémon's own page: the Pokédex's cards do, that page's own cards don't. */
+/**
+ * A path legend's card line: where its path starts (the game's own words,
+ * `paths.where`), then how it turns into another species (Melmetal, Urshifu,
+ * `paths.forms.how`); Cosmog's line how it grows.
+ */
+export const pathNote = (legend: LegendId | null, locale: Locale) => {
+  const words = MESSAGES[locale].paths
+  const where: Partial<Record<LegendId, string>> = words.where
+  const how: Partial<Record<LegendId, string>> = words.forms.how
+  return plainText(legend ? [where[legend], how[legend]].filter(Boolean).join(' ') : words.cosmog.how)
+}
+
+/** The game's light markup (`*bold*`, `_em_`) as plain text. */
+const plainText = (text: string) => text.replace(/[*_]/g, '')
+
 export const card = (entry: DexEntry, locale: Locale, css: SpriteCss, page?: string) => {
   const m = SITE_MESSAGES[locale]
   const { dex, name, slug, sprites, types, role, region } = entry
@@ -336,17 +401,18 @@ export const card = (entry: DexEntry, locale: Locale, css: SpriteCss, page?: str
   </div>
   <h2>${page ? html`<a href="${page}" title="${m.dexPage.page(name)}">${name}</a>` : name}</h2>
   <div class="types">${types.map((t) => typeBadge(t, m))}</div>
-  ${entry.source.kind === 'starter' ? starterBody({ ...entry, source: entry.source }, locale) : entry.source.kind === 'wild' ? wildBody({ ...entry, source: entry.source }, m) : html`<p class="note">${entry.source.kind === 'companion' ? m.pokedex.companionNote : entry.source.kind === 'cameo' ? m.pokedex.cameoNote : entry.source.kind === 'lobby' ? m.pokedex.lobbyNote : m.pokedex.eventNote}</p>`}
+  ${entry.source.kind === 'starter' ? starterBody({ ...entry, source: entry.source }, locale) : entry.source.kind === 'wild' ? wildBody({ ...entry, source: entry.source }, m, locale) : html`<p class="note">${entry.source.kind === 'companion' ? m.pokedex.companionNote : entry.source.kind === 'cameo' ? m.pokedex.cameoNote : entry.source.kind === 'lobby' ? m.pokedex.lobbyNote : entry.source.kind === 'cards' ? m.pokedex.cardsNote : entry.source.kind === 'summon' ? m.pokedex.summonNote : entry.source.kind === 'path' ? pathNote(entry.source.legend, locale) : m.pokedex.eventNote}</p>`}
 </article>`
 }
 
-const filters = (entries: readonly DexEntry[], m: SiteMessages) => {
+/** The filters; a region's page leaves out the region select (`withRegion`). */
+const filters = (entries: readonly DexEntry[], m: SiteMessages, withRegion: boolean) => {
   const types = POKE_TYPES.filter((t) => entries.some((e) => e.types.includes(t)))
   return html`<form class="dex-filters" id="dex-filters" role="search" aria-label="${m.pokedex.filters}">
     <label class="field field-search">${m.pokedex.search}<input type="search" name="q" placeholder="${m.pokedex.searchPlaceholder}" autocomplete="off" /></label>
-    <label class="field">${m.pokedex.region}<select name="region"><option value="">${m.pokedex.allRegions}</option>${REGIONS.map(
+    ${withRegion && html`<label class="field">${m.pokedex.region}<select name="region"><option value="">${m.pokedex.allRegions}</option>${REGIONS.map(
       (r) => html`<option value="${r.name.toLowerCase()}">${r.name}</option>`,
-    )}</select></label>
+    )}</select></label>`}
     <label class="field">${m.pokedex.type}<select name="type"><option value="">${m.pokedex.all}</option>${types.map(
       (t) => html`<option value="${t}">${m.types[t]}</option>`,
     )}</select></label>
@@ -363,38 +429,141 @@ const filters = (entries: readonly DexEntry[], m: SiteMessages) => {
   <p class="dex-empty" hidden>${m.pokedex.empty} <button type="reset" form="dex-filters">${m.pokedex.clear}</button></p>`
 }
 
-/** `/pokedex/`: every Pokémon in the game, generated from `data/*`, with CSS-animated sprites and client-side filters. */
+/** The region of a card: a regional form's own (Galarian Ponyta in Galar), as in the game's Pokédex. */
+const inRegion = (region: DexRegion) => (e: DexEntry) => dexRegionOf(e.dex) === region
+
+/** What a region's title asks, and who doesn't count (`regionCounts`), in the game's own words. */
+const goalLine = (c: ReturnType<typeof regionCounts>, locale: Locale) => {
+  const d = MESSAGES[locale].dex
+  return c.left.length > 0 ? `${d.forTitle(c.goal)} · ${d.notCounted(c.left)}` : d.forTitle(c.goal)
+}
+
+/** The pencil of a species still being drawn (`render/pencilArt.ts`), as pixel-exact SVG. */
+const pencilSvg = (label: string) => {
+  const colors: Readonly<Record<string, string>> = PENCIL_PALETTE
+  const rects = PENCIL.flatMap((row, y) => [...row].flatMap((c, x) => (colors[c] ? [html`<rect x="${x}" y="${y}" width="1" height="1" fill="${colors[c]}" />`] : [])))
+  return html`<svg class="pencil" viewBox="0 0 16 16" width="64" height="64" shape-rendering="crispEdges" role="img" aria-label="${label}">${rects}</svg>`
+}
+
+/** A species SpriteCollab's artists haven't drawn yet: a thank-you card with a link to help them. */
+const drawingCard = (dex: number, name: string, m: SiteMessages) => {
+  const slug = slugOf(name)
+  return html`<article class="dex-card box drawing" id="${slug}" data-search="${slug} ${dex} ${String(dex).padStart(3, '0')}">
+  <div class="card-top">
+    <span class="dex-no">${dexNo(dex)}</span>
+    <span class="role">${m.pokedex.drawingTag}</span>
+    <a class="anchor" href="#${slug}" aria-label="${m.pokedex.link(name)}">#</a>
+  </div>
+  <div class="card-art">${pencilSvg(m.pokedex.drawingTag)}</div>
+  <h2>${name}</h2>
+  <p class="note">${m.pokedex.drawingNote}</p>
+  <p><a class="btn-link" href="${SPRITECOLLAB_URL}" rel="noopener" target="_blank">${m.pokedex.contribute}</a></p>
+</article>`
+}
+
+/** The regions as links, the current one marked. */
+const regionNav = (locale: Locale, current: DexRegion | null) => {
+  const m = SITE_MESSAGES[locale]
+  return html`<nav class="dex-region-nav" aria-label="${m.pokedex.regionNav}">
+    ${current && html`<a href="${ROUTES.pokedex[locale]}">${m.pokedex.backToRegions}</a>`}
+    ${DEX_REGIONS.map((r, i) => html`<a href="${dexRegionPaths(r)[locale]}"${r === current ? html` aria-current="page"` : ''}>${REGIONS[i]!.name}</a>`)}
+  </nav>`
+}
+
+/** Where a species' card lives: its region's page, at its anchor. */
+export const dexHref = (locale: Locale, entry: DexEntry) => `${dexRegionPaths(dexRegionOf(entry.dex))[locale]}#${entry.slug}`
+
+/**
+ * `/pokedex/`: the National Dex's hub, one tile per region (Kanto to Paldea)
+ * with how much of it the game has and how much SpriteCollab is still drawing.
+ * The cards live on the regions' pages (`regionPage`): all of them on one page
+ * weighed 3 MB of HTML once the horde took in the National Dex.
+ */
 export const pokedexPage = (locale: Locale) => {
   const m = SITE_MESSAGES[locale]
   const entries = pokedex()
-  const css = createSpriteCss()
-  const pageUrl = (e: DexEntry) => {
-    const page = pageOf(e)
-    return page && dexPaths(page.slug)[locale]
-  }
-  const cards = entries.map((e) => card(e, locale, css, pageUrl(e)))
   const url = absolute(ROUTES.pokedex[locale])
+  const tiles = DEX_REGIONS.map((region, i) => {
+    const r = REGIONS[i]!
+    const c = regionCounts(region)
+    return html`<a class="dex-region-tile box" href="${dexRegionPaths(region)[locale]}">
+      <span class="faces">${r.starters.map((id) => html`<img src="${asset(PLAYABLE[id].line[0].dex, 'portrait.png')}" width="40" height="40" loading="lazy" alt="" />`)}</span>
+      <h2>${r.name}</h2>
+      <span class="bar"><i style="width:${Math.round((c.inGame / c.total) * 100)}%"></i></span>
+      <span class="count">${MESSAGES[locale].dex.counts(c.inGame, c.total)}</span>
+      <span class="goal-count">${goalLine(c, locale)}</span>
+      ${c.drawing > 0 && html`<span class="drawing-count">${m.pokedex.drawingCount(c.drawing)}</span>`}
+    </a>`
+  })
   const main: Html = html`<div class="page-head">
     <h1>${m.pokedex.h1}</h1>
     <p class="lead">${m.pokedex.intro(entries.length)}</p>
     <p class="lead-link"><a href="${ROUTES.tierList[locale]}">★ ${m.pokedex.tierLink} →</a></p>
   </div>
-  ${filters(entries, m)}
-  <div class="dex-grid">${cards}</div>`
+  <p class="dex-hub-pick">${m.pokedex.hubPick}</p>
+  <div class="dex-regions">${tiles}</div>`
   return layout(
     {
       id: 'pokedex',
       locale,
       title: m.pokedex.title,
-      description: m.pokedex.description,
-      css: css.css(),
+      description: m.pokedex.description(STARTER_IDS.length, HATCHLING_IDS.length),
       schema: [
         {
           '@type': 'ItemList',
           '@id': `${url}#list`,
           name: m.pokedex.h1,
+          numberOfItems: DEX_REGIONS.length,
+          itemListElement: DEX_REGIONS.map((r, i) => ({ '@type': 'ListItem', position: i + 1, name: m.pokedex.regionH1(REGIONS[i]!.name), url: absolute(dexRegionPaths(r)[locale]) })),
+        },
+      ],
+    },
+    main,
+  )
+}
+
+/** `/pokedex/<region>/`: a region's Pokémon in the game, generated from `data/*`, with CSS-animated sprites and client-side filters, and a thank-you card for each one SpriteCollab is still drawing. */
+export const regionPage = (region: DexRegion, locale: Locale) => {
+  const m = SITE_MESSAGES[locale]
+  const name = REGIONS[DEX_REGIONS.indexOf(region)]!.name
+  const all = pokedex()
+  const entries = all.filter(inRegion(region))
+  const c = regionCounts(region)
+  const css = createSpriteCss()
+  const pageUrl = (e: DexEntry) => {
+    const page = pageOf(e)
+    return page && dexPaths(page.slug)[locale]
+  }
+  const drawing = [...SHEETLESS].filter(([dex]) => dexRegionOf(dex) === region)
+  const cards = [
+    ...entries.map((e) => ({ at: nationalDex(e.dex), dex: e.dex, html: card(e, locale, css, pageUrl(e)) })),
+    ...drawing.map(([dex, species]) => ({ at: dex, dex, html: drawingCard(dex, species, m) })),
+  ].sort((a, b) => a.at - b.at || a.dex - b.dex)
+  const path = dexRegionPaths(region)[locale]
+  const main: Html = html`<div class="page-head">
+    <h1>${m.pokedex.regionH1(name)}</h1>
+    <p class="lead">${m.pokedex.regionIntro(name, c.inGame, c.total)}</p>
+    <p class="lead dex-goal-line">${m.pokedex.regionGoal(goalLine(c, locale))}</p>
+    <p class="lead-link"><a href="${ROUTES.tierList[locale]}">★ ${m.pokedex.tierLink} →</a></p>
+  </div>
+  ${regionNav(locale, region)}
+  ${filters(entries, m, false)}
+  <div class="dex-grid">${cards.map((x) => x.html)}</div>`
+  return layout(
+    {
+      id: 'pokedex',
+      locale,
+      title: m.pokedex.regionTitle(name),
+      description: m.pokedex.regionDescription(name, entries.length),
+      css: css.css(),
+      sub: { name, paths: dexRegionPaths(region) },
+      schema: [
+        {
+          '@type': 'ItemList',
+          '@id': `${absolute(path)}#list`,
+          name: m.pokedex.regionH1(name),
           numberOfItems: entries.length,
-          itemListElement: entries.map((e, i) => ({ '@type': 'ListItem', position: i + 1, name: e.name, url: absolute(`${pageUrl(e) ?? ROUTES.pokedex[locale]}#${e.slug}`) })),
+          itemListElement: entries.map((e, i) => ({ '@type': 'ListItem', position: i + 1, name: e.name, url: absolute(`${pageUrl(e) ?? path}#${e.slug}`) })),
         },
       ],
     },

@@ -177,7 +177,7 @@ export const createLocalRelay = (opts: LocalRelayOptions): LocalRelay => {
       } else if (e.k === 'event') log?.(e.ev, e.data)
       else if (e.k === 'dump') log?.('dump', { reason: e.reason, run: e.run, tick: e.tick, minority: e.minority })
       else if (e.k === 'wipe') wiped = true
-      // No API in the tab: nobody else's look is vouched (each client previews its own).
+      // No API in the tab: nobody else's look or legend is vouched (each client previews its own look).
       else if (e.k === 'looks') later(() => rooms.get(shell.code) === shell && step(shell, () => looked(shell.state, e.ask, {}, now())))
     }
     if (wiped) return wipe(shell)
@@ -299,7 +299,8 @@ export const createLocalRelay = (opts: LocalRelayOptions): LocalRelay => {
         const msg = parseClientMessage(text)
         const conn = shell.state.live.conns.get(ws.id)
         if (msg?.t === 'hello' && conn && conn.seat === null) return step(shell, () => hello(shell.state, ws.id, msg, identify(msg.auth), now(), { guests: true }))
-        step(shell, () => message(shell.state, ws.id, msg, now()))
+        // Guests and no API, as a dev relay: a guest seat's own legends stand (`ClaimPolicy`).
+        step(shell, () => message(shell.state, ws.id, msg, now(), { guestLegends: true }))
       },
       close: () => {
         if (!ws.open) return

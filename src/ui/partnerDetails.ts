@@ -11,17 +11,21 @@ import { unlockedAt } from '../game/learnsets'
 import { branchNeeds } from '../game/evoItems'
 import { EVO_ITEMS } from '../data/shop'
 import { starterStats } from '../game/leveling'
+import { BASE_STATS } from '../game/stats'
 import { MOVES, type MoveDef, type MoveId } from '../game/moves'
 import { resolveSpecial } from '../game/special'
 import { megaIcon } from '../render/megaFx'
 import { moveIcon, sparkleIcon } from '../render/art'
 import { specialIcon } from '../render/specialFx'
-import { portraitUrl } from '../render/sprites'
+import { formPortraitUrl, portraitUrl } from '../render/sprites'
+import { PATH_FORMS } from '../data/legendPaths'
+import { isLegend } from '../data/legends'
+import { innateText } from './innateText'
 import { t } from '../i18n'
 import { boundLabel, glyphText, printedKeys } from './inputLabels'
 import { h } from './dom'
 import { tabStrip } from './shell'
-import { STAT_BARS, statRatio } from './statBars'
+import { otherBonuses, STAT_BARS, statRatio } from './statBars'
 import { typeBadge } from './screens'
 
 /**
@@ -146,6 +150,18 @@ const abilityRow = (id: AbilityId, hidden: boolean) =>
     ),
   )
 
+/** A legend's innate, on top of its Abilities: always on, tagged, with what the Legend mode adds to it (`innateText`). */
+const innateRow = (id: PlayableId) => {
+  if (!isLegend(id)) return null
+  const innate = innateText(t(), id)
+  return h(
+    'div',
+    { class: 'move-row ability-row innate-ability' },
+    h('img', { src: abilityIcon(innate.ability), alt: '' }),
+    h('div', { class: 'move-text' }, h('div', { class: 'move-name' }, innate.name, h('span', { class: 'tag tag-innate' }, t().legend.innate)), h('div', { class: 'move-desc' }, innate.text)),
+  )
+}
+
 /**
  * The abilities a family picks from at its first evolution. A family whose
  * first evolution branches (Eevee) gets them from the branch: a line of chips per branch.
@@ -187,13 +203,52 @@ export const statBars = (id: PlayableId, count: number = STAT_BARS.length) => {
   )
 }
 
+/** "Outros bônus": chips for what the final stage raises outside the bars (`otherBonuses`); nothing when it raises none. */
+const otherBonusRow = (id: PlayableId) => {
+  const m = t().title
+  const bonuses = otherBonuses(starterStats(id, PLAYABLE[id].line.length - 1), BASE_STATS)
+  if (bonuses.length === 0) return []
+  return [
+    section(m.otherBonuses, m.otherBonusesNote),
+    h('ul', { class: 'other-bonuses' }, ...bonuses.map((b) => h('li', {}, m.otherBonus[b.key](b.value)))),
+  ]
+}
+
 /** The "base / evolved" key of the stat bars. */
 const legend = () => {
   const m = t().title
   return h('span', { class: 'legend' }, h('i', { class: 'legend-base' }), `${m.legendBase} `, h('i', { class: 'legend-final' }), m.legendFinal)
 }
 
-/** The evolution line: a portrait per stage and the level between them; tapping a stage previews it (`onStage`). */
+/**
+ * A path legend's forms of another species (Melmetal, Urshifu's two styles),
+ * past the legend's own stage: the awakening and what opens it on the arrow,
+ * then the form. Not a stage to preview: the run reaches it only once its path opens it.
+ */
+const pathStep = (id: PlayableId) => {
+  const words = t().paths.forms
+  const steps: Partial<Record<PlayableId, string>> = words.step
+  const forms = Object.values(PATH_FORMS).flatMap((f) =>
+    f.legend === id && 'dex' in f ? [{ at: f.at, name: f.name, types: 'types' in f ? f.types : PLAYABLE[id].line[0].types, src: 'key' in f ? formPortraitUrl(f.dex, f.key) : portraitUrl(f.dex) }] : [],
+  )
+  const first = forms[0]
+  if (!first) return []
+  const portraits = [...new Set(forms.map((f) => f.src))]
+  return [
+    h('span', { class: 'evo-arrow evo-path' }, words.at(first.at), h('br'), steps[id] ?? '', h('br'), '▶'),
+    h(
+      'div',
+      { class: 'evo-stage', title: first.name },
+      // Forms that share a portrait (Urshifu's styles, until one has its own) show it once.
+      portraits.length > 1 ? h('span', { class: 'evo-branch-grid', style: `--n:${portraits.length}` }, ...portraits.map((src) => h('img', { src, alt: first.name }))) : h('img', { src: first.src, alt: first.name }),
+      h('span', { class: 'evo-name' }, first.name),
+      // One form shows its types like any stage; Urshifu's two styles differ, as a branch's do.
+      forms.length === 1 && h('span', { class: 'evo-types' }, ...first.types.map((type) => h('i', { style: `--type:${TYPE_COLORS[type]}`, title: type }))),
+    ),
+  ]
+}
+
+/** The evolution line: a portrait per stage and the level between them; tapping a stage previews it (`onStage`). A path legend's forms of another species close it (`pathStep`). */
 export const evoLine = (id: PlayableId, stage: number, onStage: (stage: number) => void) => {
   const s: PlayableDef = PLAYABLE[id]
   return h(
@@ -221,6 +276,7 @@ export const evoLine = (id: PlayableId, stage: number, onStage: (stage: number) 
             ),
       ]
     }),
+    ...pathStep(id),
   )
 }
 
@@ -291,8 +347,11 @@ export const detailsSheet = (opts: SheetOpts) => {
     body.replaceChildren(
       ...(k === 'status'
         ? [
+            // The whole blurb: the compact panel (phones) cuts it to a line or two.
+            h('p', { class: 'partner-sheet-blurb' }, m.blurbs[id]),
             section(m.title.statsSection, legend()),
             statBars(id),
+            ...otherBonusRow(id),
             section(m.title.evolution),
             evoLine(id, stage, (i) => {
               stage = i
@@ -303,7 +362,7 @@ export const detailsSheet = (opts: SheetOpts) => {
             section(m.title.special, h('span', {}, ...glyphText(boundLabel('special')))),
             specialRow(id),
             section(branchesOf(id).some((b) => b in BRANCH_ABILITIES) ? m.ability.sectionBranch : m.ability.section),
-            h('div', { class: 'move-list' }, ...abilityRows(id)),
+            h('div', { class: 'move-list' }, innateRow(id), ...abilityRows(id)),
             h('p', { class: 'ability-note' }, `${branchNote(id)}${m.ability.note}`),
           ]
         : k === 'moves'

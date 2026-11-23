@@ -17,6 +17,7 @@ import {
   running,
   tick,
   type ArenaLock,
+  type ClaimPolicy,
   type ConnId,
   type Effect,
   type Room,
@@ -153,11 +154,14 @@ export class ShardObject extends DurableObject<Env> {
   private readonly outbox: Outbox
   /** The API the Arena's reports and look lookups go to, or null when unset. */
   private readonly api: ArenaApi | null
+  /** What clients may claim for themselves here (`ClaimPolicy`): a dev guest's legends only with guests seated and no API. */
+  private readonly claims: ClaimPolicy
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env)
     const kept = [...ctx.storage.kv.list<unknown>({ prefix: OUT_KEY })].flatMap(([, v]) => parseOutgoing(v) ?? [])
     this.api = arenaApiOf(env.ARENA_API_URL, env.ARENA_REPORT_SECRET)
+    this.claims = { guestLegends: env.ALLOW_GUESTS === 'on' && this.api === null }
     this.outbox = createOutbox(
       {
         api: this.api,
@@ -238,6 +242,11 @@ export class ShardObject extends DurableObject<Env> {
     return null
   }
 
+  /** A lobby's probe (`GET /probe/<region>/health`): answers at once, touching nothing. */
+  async probe(): Promise<{ ok: true }> {
+    return { ok: true }
+  }
+
   async fetch(request: Request): Promise<Response> {
     if (request.headers.get('Upgrade') !== 'websocket') return new Response('Expected a WebSocket', { status: 426 })
     const code = parseRoomCode(/^\/rooms\/([^/]+)\/ws$/.exec(new URL(request.url).pathname)?.[1])
@@ -289,7 +298,7 @@ export class ShardObject extends DurableObject<Env> {
     this.step(shell, () => {
       // The rate limit drops a message by starting its list of drops over (`admit` in `room.ts`).
       const drops = conn?.drops
-      const effects = message(shell.state, a.id, msg, Date.now())
+      const effects = message(shell.state, a.id, msg, Date.now(), this.claims)
       noteInbound(shell.tele, conn?.seat ?? null, msg, text?.length ?? 0, !!conn && conn.drops !== drops)
       return effects
     })
@@ -448,11 +457,11 @@ export class ShardObject extends DurableObject<Env> {
     this.schedule(shell)
   }
 
-  /** A friends' room's looks as its run starts, from the API (none when it fails), back to the room that asked, if it's still here. */
+  /** A friends' room's looks and legends as its run starts, from the API (none when it fails), back to the room that asked, if it's still here. */
   private async lookUp(shell: Shell, e: Extract<Effect, { k: 'looks' }>) {
-    const looks = await lookUpLooks(this.api, e.ids)
-    this.log({ ev: 'room.looks', code: shell.code, asked: e.ids.length, vouched: Object.keys(looks).length })
-    if (this.rooms.get(shell.code) === shell) this.step(shell, () => looked(shell.state, e.ask, looks, Date.now()))
+    const { looks, legends } = await lookUpLooks(this.api, e.ids)
+    this.log({ ev: 'room.looks', code: shell.code, asked: e.ids.length, vouched: Object.keys(looks).length, legends: Object.keys(legends).length })
+    if (this.rooms.get(shell.code) === shell) this.step(shell, () => looked(shell.state, e.ask, looks, Date.now(), legends))
   }
 
   /** The room's frame timer while its run's clock runs; its deadline, for the shard's alarm. */

@@ -1,6 +1,7 @@
 import { retain } from '../engine/math'
 import { isWaveLegend, WAVE_LEGEND_HP, WAVE_LEGEND_SHINY } from '../data/legendBosses'
-import type { EnemyId } from '../data/enemies'
+import { FORCE_LEGENDS, LAKE_TRIO, SWORDS } from '../data/legends'
+import { ENEMIES, type EnemyDef, type EnemyId } from '../data/enemies'
 import { burst, shakeScreen, updateEffects } from './effects'
 import { despawnEnemy } from './enemies'
 import { centerScreen } from './players'
@@ -78,16 +79,27 @@ export const legendEntrance = (g: Game, boss: Enemy) => {
 }
 
 /**
- * A wave legendary fell on the map (`killEnemy`): its capture plays where it
- * knelt, it leaves play and so do the hazards on the field. True when it did.
+ * A wave legendary fell on the map (`killEnemy`), or a legend met there (a
+ * roaming lake legend, a Sword at the end of its duel), or a Tera Raid's
+ * legendary giant in its hollow (Terapagos, Ogerpon): its capture plays where
+ * it knelt, it leaves play and so do the hazards on the field. True when it did.
  */
 export const legendFell = (g: Game, e: Enemy) => {
-  if (!isWaveLegend(e.kind) || g.rift.arena) return false
+  if (!(isWaveLegend(e.kind) || capturedOnMap(e.kind) || raidLegend(g, e)) || g.rift.arena) return false
   const waiting = g.legendScene?.next ?? []
   g.legendScene = { kind: 'capture', enemy: e.kind, bossId: e.id, t: 0, capture: { kind: e.kind, x: e.x, y: e.y, shiny: e.shiny, settled: false }, next: waiting, then: null }
   despawnEnemy(e)
   retain(g.hazards, (h) => h.world)
   return true
+}
+
+/** The legends caught where they fall on the open map besides the wave legendaries: the lake trio, the Forces of Nature, the Swords and Hoopa at the end of its rings. */
+const capturedOnMap = (id: string) => LAKE_TRIO.some((l) => l === id) || FORCE_LEGENDS.some((f) => f === id) || SWORDS.some((s) => s === id) || id === 'hoopa'
+
+/** A Tera Raid's boss that is a legend (the 7★ raid's Terapagos, Ogerpon's own raid): caught in its hollow, the raid's win waiting for the ball (`updateRaid`). */
+const raidLegend = (g: Game, e: Enemy) => {
+  const def: EnemyDef = ENEMIES[e.kind]
+  return g.raid.arena?.bossId === e.id && def.legendary === true
 }
 
 /** The boss a scene keeps off the field for now (drawn by the scene itself), or -1. */

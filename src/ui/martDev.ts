@@ -97,7 +97,7 @@ export const martDevTools = (refresh: () => void) => ({
     refresh()
     return loadSave().evo
   },
-  /** Sets the incubator's slots, 3 to 5 (`ps.slots(4)`; all of them without an argument), without paying for them; eggs past them are dropped. Returns the incubator. */
+  /** Sets the incubator's slots, 3 to 8 (`ps.slots(4)`; all of them without an argument), without paying for them; eggs past them are dropped. Returns the incubator. */
   slots: (n: number = MAX_SLOTS) => {
     const save = loadSave()
     writeSave({ ...save, incubator: { ...save.incubator, slots: Math.max(0, Math.min(MAX_SLOTS, Math.floor(n)) - EGGS.slots) } })

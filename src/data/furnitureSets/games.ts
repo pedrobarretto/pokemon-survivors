@@ -32,10 +32,23 @@ const DUEL = {
   perfectDuelPennant: { kind: 'wall', set: 'trophies', size: [2, 1], rarity: 'legendary', price: null, source: 'trophy', turn: 'still' },
 } as const satisfies Record<string, FurnitureDef>
 
+/** The café's open tables': Ludo's golden die after 10 wins, Unown's plaque (its letters spelling UNOWN) after 10. */
+const CAFE_TABLES = {
+  goldenDie: { kind: 'top', set: 'trophies', size: [1, 1], rarity: 'epic', price: null, source: 'trophy', turn: 'still' },
+  unownPlaque: { kind: 'wall', set: 'trophies', size: [2, 1], rarity: 'epic', price: null, source: 'trophy', turn: 'still' },
+} as const satisfies Record<string, FurnitureDef>
+
 /** The arcade's: a basket of berries for a 2500 at Berry Rain, a golden mallet for a 2500 at Whack-a-Diglett. */
 const ARCADE = {
   berryBasket: { kind: 'floor', set: 'trophies', size: [1, 1], rarity: 'epic', price: null, source: 'trophy', blocks: true },
   goldenMallet: { kind: 'floor', set: 'trophies', size: [1, 1], rarity: 'legendary', price: null, source: 'trophy', blocks: true },
 } as const satisfies Record<string, FurnitureDef>
 
-export const GAME_FURNITURE = { ...FISHING, ...TABLES, ...DUEL, ...ARCADE } as const satisfies Record<string, FurnitureDef>
+/** The Estampas' milestones (`STAMP_MILESTONES` in `data/realmStamps.ts`): the desk for 5, the cabinet for 20, the golden press for 38. */
+const STAMPS = {
+  stampDesk: { kind: 'floor', set: 'trophies', size: [2, 1], rarity: 'rare', price: null, source: 'trophy', blocks: true },
+  stampCabinet: { kind: 'floor', set: 'trophies', size: [2, 1], rarity: 'epic', price: null, source: 'trophy', blocks: true },
+  goldenStampPress: { kind: 'floor', set: 'trophies', size: [2, 1], rarity: 'legendary', price: null, source: 'trophy', blocks: true },
+} as const satisfies Record<string, FurnitureDef>
+
+export const GAME_FURNITURE = { ...FISHING, ...TABLES, ...DUEL, ...CAFE_TABLES, ...ARCADE, ...STAMPS } as const satisfies Record<string, FurnitureDef>

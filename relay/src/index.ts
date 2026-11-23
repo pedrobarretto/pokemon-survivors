@@ -1,4 +1,4 @@
-import { PROTOCOL, parseRoomCode, type CreateResponse, type Region } from '../../src/net/protocol'
+import { CF_PROBES, PROTOCOL, parseRoomCode, type CreateResponse, type Region } from '../../src/net/protocol'
 import { parseCreate } from './codes'
 import type { Env } from './env'
 import { allowedOrigin } from './origins'
@@ -19,6 +19,8 @@ export { Vault } from './vault'
  * - `GET /rooms/<code>/ws` → WebSocket (first message: `hello`)
  * - `GET /arena/queue` → WebSocket to the Arena's matchmaker (`matchmakerObject.ts`; first message: `queue`)
  * - `GET /health`
+ * - `GET /probe/<region>/health` → `{ ok }` from the region's first shard (`CF_PROBES`): a lobby's round trip to
+ *   Cloudflare in that region, so a group spread over continents can move its room there
  * - `GET /admin/dumps`, `GET /admin/dumps/<id>` (gzipped JSON), `GET /admin/shards/<region>:<index>` (its rooms and
  *   frame timer lateness), `Authorization: Bearer <ADMIN_TOKEN>`
  */
@@ -118,6 +120,14 @@ export default {
     // The Worker answering is the check: no Durable Object is touched, so a flood of these costs nothing past the edge.
     if (path === '/health' && request.method === 'GET') return json({ ok: true, protocol: PROTOCOL }, 200, headers)
     if (path === '/rooms' && request.method === 'POST') return createRoom(request, env, headers)
+    const probe = path.match(/^\/probe\/(\w+)\/health$/)
+    if (probe && request.method === 'GET') {
+      const region = CF_PROBES.find((r) => r === probe[1])
+      if (!region) return new Response('Not found', { status: 404, headers })
+      if (!(await env.CONNECT_LIMIT.limit({ key: ipOf(request) })).success) return new Response('Too many requests', { status: 429, headers })
+      // Through the shard a room there is made in first, so the measure holds the same hop a room's socket takes.
+      return json(await shardStub(env, { region, index: 0 }).probe(), 200, headers)
+    }
     const ws = path.match(/^\/rooms\/([^/]+)\/ws$/)
     if (ws && request.method === 'GET') {
       if (request.headers.get('Upgrade') !== 'websocket') return new Response('Expected a WebSocket', { status: 426 })

@@ -10,6 +10,7 @@ import type { StatusKind } from '../../game/status'
 import type { Difficulty } from '../../game/difficulty'
 import type { Locale } from '..'
 import type { OurFacts } from '../../site/rivals'
+import type { SupporterTier } from '../../game/supporters'
 
 /** Number in Brazilian format (`1.250`, `0,75`). */
 const n = (v: number) => v.toLocaleString('pt-BR', { maximumFractionDigits: 2 })
@@ -83,8 +84,8 @@ export const sitePt = {
 
   pokedex: {
     title: 'Pokédex do Pokémon Survivors: iniciais, inimigos, chefes e lendários',
-    description:
-      'Todos os Pokémon do Pokémon Survivors com sprite animado e shiny: os 27 iniciais e as 63 famílias dos ovos com suas evoluções, inimigos selvagens, chefes e lendários. Tipos, status no jogo, golpes, especiais e quando cada um aparece.',
+    description: (starters: number, families: number) =>
+      `Todos os Pokémon do Pokémon Survivors com sprite animado e shiny: os ${starters} iniciais e as ${families} famílias dos ovos com suas evoluções, inimigos selvagens, chefes e lendários. Tipos, status no jogo, golpes, especiais e quando cada um aparece.`,
     h1: 'Pokédex',
     intro: (count: number) =>
       `Os ${count} Pokémon que existem no Pokémon Survivors, com os números do jogo: iniciais de todas as regiões, as famílias que saem dos ovos e suas evoluções, a horda selvagem, os chefes e os lendários. Passe o mouse (ou toque) para ver o sprite andando e use ★ para ver o shiny.`,
@@ -102,6 +103,18 @@ export const sitePt = {
     empty: 'Nenhum Pokémon com esses filtros.',
     clear: 'Limpar filtros',
     tierLink: 'Qual é o melhor Pokémon? Veja a tier list, feita com as partidas dos jogadores',
+    regionTitle: (region: string) => `Pokédex de ${region} no Pokémon Survivors`,
+    regionDescription: (region: string, count: number) => `Os ${count} Pokémon de ${region} no Pokémon Survivors, com sprite animado e shiny: tipos, status, golpes e quando cada um aparece na horda.`,
+    regionH1: (region: string) => `Pokédex de ${region}`,
+    regionIntro: (region: string, count: number, total: number) => `${count} dos ${total} Pokémon de ${region} já estão no Pokémon Survivors. Passe o mouse (ou toque) para ver o sprite andando e use ★ para ver o shiny.`,
+    hubPick: 'Escolha uma região:',
+    regionNav: 'Regiões',
+    regionGoal: (line: string) => `Na Pokédex do jogo: ${line}.`,
+    drawingCount: (count: number) => `${count} com arte a caminho`,
+    drawingTag: 'Arte a caminho',
+    drawingNote: 'Os artistas do PMD SpriteCollab, que desenharam todos os Pokémon do jogo, ainda estão criando este. Obrigado, artistas!',
+    contribute: 'Ajude a desenhar ↗',
+    backToRegions: 'Todas as regiões',
     roles: { starter: 'Inicial', egg: 'Ovo', enemy: 'Selvagem', boss: 'Chefe', legendary: 'Lendário', event: 'Evento' },
     roleFilter: { starter: 'Iniciais', egg: 'Ovos', enemy: 'Selvagens', boss: 'Chefes', legendary: 'Lendários', event: 'Eventos' },
     link: (name: string) => `Link para ${name}`,
@@ -112,6 +125,8 @@ export const sitePt = {
     evolution: 'Linha evolutiva',
     evolvesAt: (level: number) => `Nv ${level}`,
     hatchNote: (egg: string) => `Jogável depois de chocar de um ${egg}.`,
+    safariNote: 'Jogável depois de capturado na Zona Safári do Poké Realm.',
+    cornerNote: 'Jogável depois de trocado por fichas no balcão do Game Corner da Equipe Rocket, no Poké Realm.',
     stageOf: (stage: number) => ['Estágio inicial', 'Primeira evolução', 'Evolução final'][stage] ?? '',
     signature: 'Golpe inicial',
     special: 'Ataque especial',
@@ -123,7 +138,9 @@ export const sitePt = {
     eventNote: 'Aparece nos eventos do mapa: foge de você e solta moedas a cada golpe. Derrube ele antes que escape para ganhar o Pay Day.',
     companionNote: 'Companheiro de presente: chega na caixa de presentes dos apoiadores durante a Noite das Bruxas e anda ao seu lado na partida, deixando um rastro de doces.',
     cameoNote: 'Não é um inimigo: aparece por um instante na fenda do Darkrai, durante a Noite das Bruxas, e quebra o pesadelo com a Lunar Wing.',
+    summonNote: 'Não é um inimigo: é o Dondozo que o Tatsugiri chama com o Comando, para alguns segundos de ataques pesados.',
     lobbyNote: 'A costureira da Boutique, na praça do lobby: costura com folhas os visuais que a loja de gemas vende.',
+    cardsNote: 'Vive nas cartas do Unown, o jogo de cartas do café do Poké Realm: cada letra é uma forma dele.',
     wildNote: 'Valores base. Inimigos comuns ficam mais fortes a cada minuto; chefes, não.',
     appears: 'Quando aparece',
     horde: (from: string, until: string) => `Pode entrar na horda, de ${from} a ${until}`,
@@ -137,15 +154,32 @@ export const sitePt = {
     night: (at: string, percent: number) => `Chefe da Noite das Bruxas em ${at}, nas partidas assombradas do evento (${n(percent)}% de chance)`,
     rift: (from: string) => `No seu domínio, atrás de uma fenda lendária, a partir de ${from} (opcional)`,
     eventRift: (from: string) => `Só na Noite das Bruxas 2026: numa partida assombrada, a fenda do Pesadelo pode tomar o lugar de uma fenda, a partir de ${from} (opcional)`,
+    raid: (from: string) => `Gigante de uma Raide Tera: num Covil Tera a partir de ${from}, de qualquer tipo Tera (opcional)`,
+    stellarRaid: (from: string) => `Raide Tera Astral 7★ do fim de semana: no covil da Raide do dia, perto de ${from}. Vença uma vez para capturá-lo`,
+    wormhole: (at: string) => `Sai de uma Ultrafenda, uma por partida solo, por volta de ${at} (opcional); a Ultracriatura da semana aparece mais`,
+    temple: (from: string, until: string) => `Desperta no templo que surge entre ${from} e ${until}, só nas partidas de quem capturou Regirock, Regice e Registeel`,
     /** `name` comes with its preposition (`places`). */
     place: (name: string, from: string) => `Vive ${name}, a partir de ${from} (lugar opcional)`,
     placeBoss: (name: string, from: string) => `Desperta da Pedra Peculiar ${name}, a partir de ${from}`,
     lucky: (name: string, from: string) => `Sai da grama ou da toca ${name}, a partir de ${from}: tímido, foge rápido e vale muita EXP`,
-    places: { cave: 'na Caverna Escura', graveyard: 'no Cemitério Assombrado', sky: 'no céu, acima das nuvens (só para quem voa)', grotto: 'na Gruta Oculta, uma zona oculta rara', underground: 'no Subterrâneo, uma zona oculta rara' } satisfies Record<PlaceId, string>,
+    places: { cave: 'na Caverna Escura', graveyard: 'no Cemitério Assombrado', sky: 'no céu, acima das nuvens (só para quem voa)', grotto: 'na Gruta Oculta, uma zona oculta rara', underground: 'no Subterrâneo, uma zona oculta rara', hideout: 'no Esconderijo Rocket, com a passagem do cartaz do Game Corner' } satisfies Record<PlaceId, string>,
+    roam: (from: string) => `Vaga pelo mapa em algumas partidas, a partir de ${from}: foge quando você chega perto, e o HP que você tira fica guardado entre partidas`,
+    ruins: (from: string, until: string) => `Desperta numa das Ruínas da Decisão, que surgem entre ${from} e ${until} nas partidas de quem capturou Regigigas: só uma ruína desperta por partida`,
+    force: (from: string, weather: string) => `Uma Força da Natureza: vaga pelo mapa em algumas partidas, a partir de ${from}, trazendo ${weather}; o HP que você tira fica guardado entre partidas`,
+    forceWeather: { tornadus: 'a neve', thundurus: 'a chuva', landorus: 'a tempestade de areia', enamorus: 'o sol' },
+    duel: {
+      cobalion: (from: string) => `Espera por um duelo nas cavernas e montanhas (Monte Moon, Monte Prateado) em algumas partidas, a partir de ${from}: teste de defesa`,
+      terrakion: (from: string) => `Espera por um duelo no deserto e no vulcão em algumas partidas, a partir de ${from}: teste de força`,
+      virizion: (from: string) => `Espera por um duelo na floresta e na Rota 1 em algumas partidas, a partir de ${from}: teste de velocidade`,
+    },
+    rush: 'Volta nos Anéis de Hoopa (Modo Lendário) depois de capturado',
+    rushLast: 'O último dos Anéis de Hoopa (Modo Lendário): vencê-lo o captura',
+    storm: (from: string) => `Salta de uma tempestade na Usina, em algumas partidas, a partir de ${from}, quando chove por lá`,
+    maskRaid: (from: string) => `Seu próprio Covil Tera em algumas partidas, a partir de ${from}, na máscara do seu tipo Tera. Vença uma vez para capturá-lo`,
     reaper: (at: string) => `Ceifador do modo sem fim, a partir de ${at}`,
     attacks: 'Ataques',
     nightAttacks: 'Ataques como chefe da Noite das Bruxas',
-    shinyNote: 'Pode aparecer shiny (1 em 450): elite com 8x HP.',
+    shinyNote: (odds: number, hp: number) => `Pode aparecer shiny (1 em ${n(odds)}): elite com ${hp}x HP.`,
     /** A rift legendary's shiny odds (`RIFT.shinyOdds`); the map's bosses are never shiny. */
     riftShinyNote: (odds: number) => `Pode aparecer shiny em 1 de ${n(odds)} fendas: paga o dobro de ₽ e mais uma Poké Ball.`,
     summoned: (by: string) => `Chamado por ${by}`,
@@ -153,10 +187,10 @@ export const sitePt = {
     behavior: 'Comportamento',
     /** A legendary's card: how to capture it for the Legend mode (`game/capture.ts`). */
     legendMode: 'Modo Lendário',
-    capture: (need: number) => (need === 1 ? 'Vença-o 1 vez como chefe, em qualquer modo, e ele fica jogável no Modo Lendário (ranking próprio, horda mais forte, despertares no Nv 12 e 28).' : `Vença-o ${need} vezes como chefe, em qualquer modo, e ele fica jogável no Modo Lendário (ranking próprio, horda mais forte, despertares no Nv 12 e 28).`),
-    captureLast: 'O último troféu: só se deixa capturar no modo sem fim, depois que os outros 22 lendários forem capturados.',
+    capture: (need: number, awaken: readonly number[]) => (need === 1 ? `Vença-o 1 vez como chefe, em qualquer modo, e ele fica jogável no Modo Lendário (ranking próprio, horda mais forte, despertares no Nv ${awaken[0]} e ${awaken[1]}).` : `Vença-o ${need} vezes como chefe, em qualquer modo, e ele fica jogável no Modo Lendário (ranking próprio, horda mais forte, despertares no Nv ${awaken[0]} e ${awaken[1]}).`),
+    captureLast: (others: number) => `O último troféu: só se deixa capturar no modo sem fim, depois que os outros ${others} lendários forem capturados.`,
     captureEvent: (need: number) => `Lenda de evento: vença-o ${need} vezes na fenda do Pesadelo durante a Noite das Bruxas 2026 (24/10 a 2/11) e ele fica jogável no Modo Lendário para sempre. Ele não conta para o Arceus.`,
-    captureShiny: 'Vencer um shiny na vitória da captura, ou depois, libera a forma shiny.',
+    captureShiny: 'Vencer um shiny em qualquer vitória, antes ou depois da captura, libera a forma shiny assim que ele é capturado.',
     innate: (name: string) => `Inata (sempre ativa): ${name}`,
     opens: (move: string) => `Começa com ${move}`,
   },
@@ -175,13 +209,17 @@ export const sitePt = {
     starter: (name: string, types: readonly string[], region: string, count: number) =>
       `${name} é um dos ${count} iniciais do Pokémon Survivors, do tipo ${list(types)}, da região de ${region}.`,
     egg: (name: string, types: readonly string[]) => `${name} é uma das famílias que saem dos ovos no Pokémon Survivors, do tipo ${list(types)}.`,
-    legend: (name: string, types: readonly string[], count: number) => `${name} é um dos ${count} lendários do Pokémon Survivors, do tipo ${list(types)}.`,
+    legend: (name: string, types: readonly string[], count: number) => `${name} é uma das ${count} lendas jogáveis do Pokémon Survivors (lendários, míticos e Ultracriaturas), do tipo ${list(types)}.`,
     eventLegend: (name: string, types: readonly string[]) => `${name} é a lenda de evento da Noite das Bruxas 2026 no Pokémon Survivors, do tipo ${list(types)}.`,
     faq: 'Perguntas frequentes',
     unlockQ: (name: string) => `Como liberar ${name} no Pokémon Survivors?`,
     starterA: (name: string) => `${name} é um inicial: está liberado desde a primeira partida, sem precisar de nada.`,
     eggA: (name: string, egg: string) =>
       `Chocando um ${egg}. Chefes, baús trancados e fendas às vezes deixam ovos, que chocam na incubadora com os passos dados nas partidas; quando ${name} sai do ovo, fica jogável para sempre.`,
+    safariA: (name: string) =>
+      `Capturando na Zona Safári do Poké Realm: nenhum ovo traz ${name}. Ele vive num dos habitats, que mudam toda semana; capturado uma vez, fica jogável para sempre.`,
+    cornerA: (name: string) =>
+      `Trocando fichas no balcão do Game Corner da Equipe Rocket, no Poké Realm: nenhum ovo traz ${name}. Levou uma vez, fica jogável para sempre.`,
     evolveQ: (name: string) => `Como ${name} evolui?`,
     evolveA: (steps: readonly string[]) => `No meio da partida, ao subir de nível: ${list(steps)}.`,
     /** One evolution step: the forms it can go to (a branching one names all of them) and the level. */
@@ -405,7 +443,8 @@ export const sitePt = {
         ['Navegar nos menus', 'Setas, Enter confirma, Esc volta', 'D-pad ou analógico esquerdo, A confirma, B volta', 'Toque'],
         ['Escolher upgrade', '1 a 3, ou ↑ ↓ e Enter', 'D-pad e A', 'Toque na opção'],
         ['Escolher o parceiro', 'Setas na grade, Tab Iniciais/Ovos, 1 a 9 região, I detalhes, Enter começa', 'D-pad (↓ na última linha leva aos Ovos) e A', 'Toque para ver, toque de novo (ou Começar) para jogar'],
-        ['Ir à Loja do Kecleon', 'L no lobby (ou na escolha de parceiro), ou ande até a praça e aperte E', 'D-pad até Loja e A', 'Toque em Loja, no Kecleon ou na plaquinha que aponta para a praça'],
+        ['Trocar de modo no lobby', 'Q e E, ou 1 a 7', 'D-pad até a barra de modos e A', 'Setas redondas ou barra de modos'],
+        ['Ir à Loja do Kecleon', 'L no lobby (ou na escolha de parceiro)', 'D-pad até Loja e A', 'Toque em Loja, no lobby ou na aba Praça'],
         ['Som liga/desliga', 'M', 'Ajustes', 'Ajustes'],
         ['Idioma', 'I na tela de título, ou Ajustes', 'Ajustes', 'PT | EN | ES na tela de título, ou Ajustes'],
       ],
@@ -552,7 +591,7 @@ export const sitePt = {
     /** The Poké Realm: the online town, its secret bases and mini games (`REALM` in `net/realm.ts`, `data/secretBases.ts`, `data/furniture.ts`, `data/minigames.ts`). */
     realm: {
       paragraphs: (m: { cities: readonly string[]; cap: number; party: number; items: number; cols: number; rows: number; sold: number; coins: number; gems: number }) => [
-        `No lobby, o botão Realm (tecla K) abre o Poké Realm, a cidade online do jogo. Escolha uma das ${m.cities.length} cidades (${list(m.cities)}): cada uma é uma cópia da mesma vila, com até ${m.cap} treinadores. Você anda como o seu parceiro, com o visual que usa (chapéus, rastro, título, skin e emote), e vê os outros treinadores andando ao seu lado. Precisa de uma conta com @nome.`,
+        `No lobby, o botão Realm (tecla K) abre o Poké Realm, a cidade online do jogo. Você entra direto na primeira das ${m.cities.length} cidades com vaga (${list(m.cities)}) e pode trocar lá dentro, ou ir até um amigo: cada uma é uma cópia da mesma vila, com até ${m.cap} treinadores. Você anda como o seu parceiro, com o visual que usa (chapéus, rastro, título, skin e emote), e vê os outros treinadores andando ao seu lado. Precisa de uma conta com @nome.`,
         `Todos chegam na Praça, com o portal do Co-op, o da Arena, o mural e a porta do Café, que tem duas mesas de jogos. A leste fica o Píer, com o fliperama e a plataforma de pesca, e a oeste o Bosque das Bases. A conversa é só por frases rápidas e emotes, nunca texto livre, e cada um lê no próprio idioma. Toque num treinador para chamá-lo para o grupo (até ${m.party}), silenciar ou denunciar; quando o líder entra num portal, o grupo inteiro vai junto para uma sala de Co-op ou da Arena.`,
         `Toda conta com @nome tem uma base secreta, com a entrada no alto do Bosque das Bases, onde o Sudowoodo explica tudo. Lá dentro, toque em ✎ para arrumar até ${m.items} peças numa sala de ${m.cols}×${m.rows} quadrados, escolher a entrada (caverna, árvore, arbusto ou areia) e quem pode entrar: todo mundo, só amigos ou ninguém. No Mural de bases você vê as bases públicas mais curtidas, as mais novas e as dos amigos, entra para visitar e deixa uma curtida.`,
         `Os móveis vêm da Carpintaria do Bibarel, na praça do Kecleon (no lobby) e no Bosque: ${m.sold} peças à venda, ${m.coins} por ₽ e ${m.gems} por gemas. Outras só se ganham: o boneco de cada lendário capturado, os quadros dos lendários e os troféus dos mini games. Como os visuais, os móveis não mudam nada nas partidas.`,
@@ -571,18 +610,23 @@ export const sitePt = {
     },
     legends: {
       paragraphs: (m: { count: number; awaken: readonly number[] }) => [
-        `Os ${m.count} lendários do jogo podem ser capturados e jogados no Modo Lendário. Para capturar um, vença-o como chefe, em qualquer modo: a cada vitória antes da captura ele escapa da Poké Ball e o jogo conta (Kyogre escapou… 2/3); na vitória que fecha a conta, ele é capturado e aparece na aba Lendários da seleção de parceiro. Vencer um shiny na vitória da captura, ou em qualquer vitória depois, libera a forma shiny.`,
+        `As ${m.count} lendas do jogo (lendários, míticos e Ultracriaturas) podem ser capturadas e jogadas no Modo Lendário. A tabela abaixo diz como capturar cada uma; a maioria se captura vencendo-a como chefe, em qualquer modo: a cada vitória antes da captura ele escapa da Poké Ball e o jogo conta (Kyogre escapou… 2/3); na vitória que fecha a conta, ele é capturado e aparece na aba Lendários da seleção de parceiro. Vencer um shiny em qualquer vitória, antes ou depois da captura, libera a forma shiny assim que ele é capturado.`,
         `No Modo Lendário o lendário não evolui: ele desperta no Nv ${m.awaken[0]} e no Nv ${m.awaken[1]} (Habilidade, força e uma carga de Esquecer; Kyogre e Groudon viram Primal, Rayquaza vira Mega), começa com o golpe lendário e uma habilidade inata sempre ativa, e a horda vem mais forte (Pressão), só de Pokémon evoluídos, sem formas básicas nem o surto do dia. Latias, Latios e Mewtwo Mega Evoluem com a Mega Stone e o botão MEGA, como os outros, e o especial do Deoxys troca de Forma (Normal, Ataque, Defesa, Velocidade). A partida tem o mesmo tempo de sempre, as três dificuldades continuam valendo e o modo tem um ranking só dele, separado por dificuldade: no ranking, a linha Padrão | Lendário troca de quadro.`,
         'Os lendários do mapa (o trio sorteado da partida, o mítico raro junto do Mewtwo, o Mewtwo no final e o Arceus no modo sem fim) chegam com uma entrada e um card de título e lutam em três fases, até um golpe supremo com um lugar seguro marcado. Quando caem, a captura acontece ali mesmo, numa cena rápida; os das fendas, no fim do domínio. Um lendário nunca enfrenta a si mesmo: as fendas, o trio e o mítico pulam quem você joga, e um Mewtwo enfrenta o Mewtwo Clone no final.',
       ],
       legendHead: 'Lendário',
       whereHead: 'Onde vencer',
-      winsHead: 'Vitórias',
+      winsHead: 'Para capturar',
+      /** A legend's capture in the guide's table: its wins, or a path legend's own way (`unlock.path`, `unlock.after`). */
+      wins: (n: number) => (n === 1 ? '1 vitória' : `${n} vitórias`),
+      /** Where a path legend's own path runs (the table's second column). */
+      pathWhere: { cobalion: 'Duelo no Monte Moon ou no Monte Prateado, nas partidas solo (teste de defesa)', terrakion: 'Duelo no deserto ou no Monte Chaminé, nas partidas solo (teste de força)', virizion: 'Duelo na Floresta de Viridian ou na Rota 1, nas partidas solo (teste de velocidade)', zygarde: 'Zygarde Cells e Cores nas partidas solo', solgaleo: 'A Pesquisa estelar da Lanturn, de dia', lunala: 'A Pesquisa estelar da Lanturn, de noite', kubfu: 'A Torre do Dojo do Machoke', meltan: 'A Escavação do Poké Realm' },
+      need: { zygarde: '10 Zygarde Cells no Cube', solgaleo: 'Criar um Cosmog (24 partidas, de dia)', lunala: 'Criar um Cosmog (24 partidas, de noite)', kubfu: 'Os 3 andares da Torre do Dojo', meltan: 'Abrir a Mystery Box da Escavação', regigigas: '1 vitória no templo, com o trio Regi', diancie: 'Desenterrar o Pink Diamond da Escavação' },
       innateHead: 'Inata',
       opensHead: 'Golpe lendário',
       pressureTitle: 'Dificuldades no Modo Lendário',
       pressure: 'A Pressão soma-se a cada dificuldade: os multiplicadores do Modo Lendário ficam assim.',
-      where: { rift: 'Fenda lendária', trio: 'Trio lendário', mythical: 'Junto do Mewtwo (1 em 10)', finale: 'Chefe final', endless: 'Modo sem fim, por último', event: 'Noite das Bruxas 2026 (evento)', festival: 'Festival das Lanternas 2026 (prêmio)' },
+      where: { rift: 'Fenda lendária', trio: 'Trio lendário', mythical: 'Junto do Mewtwo aos 15:00 (1 final em 10 traz um dos três, cada um 1 em 30; sobe a cada final sem mítico)', finale: 'Chefe final', endless: 'Modo sem fim, por último', event: 'Noite das Bruxas 2026 (evento)', festival: 'Festival das Lanternas 2026 (prêmio)', roam: 'Vaga pelo mapa (HP guardado entre partidas)', duel: 'Duelo num bioma que combina', swords: 'Presente das três Espadas da Justiça', rush: 'Vencer os Anéis de Hoopa', ultra: 'Ultrafenda (uma por partida solo)', ultraGift: 'Presente por capturar as 10 Ultracriaturas', path: 'Caminho próprio (Zygarde Cells, Cosmog, Torre do Dojo, Mystery Box)', temple: 'Templo nas partidas, depois de capturar o trio Regi', egg: 'Ovo de Manaphy (Pokédex da Baía Gelada, na Zona Safári)', dig: 'O tesouro mais raro da Escavação do Poké Realm (Pink Diamond)', storm: 'A tempestade da Usina, quando chove', mask: 'A Reide Tera de Ogerpon', ruins: 'Ruínas da Decisão, depois de capturar Regigigas (uma por partida)', force: 'Vaga pelo mapa com o seu clima (HP guardado entre partidas)' },
       /** The event legends (`EVENT_LEGENDS`), after the table. */
       eventNote: 'Na Noite das Bruxas de 2026 (24 de outubro a 2 de novembro), o Darkrai chega como lenda de evento: ele só aparece na fenda do Pesadelo, que pode tomar o lugar de uma fenda numa partida assombrada, e é capturado com 2 vitórias. Joga com o Dark Void, que faz as multidões dormirem, e a inata Bad Dreams, que fere quem dorme perto dele. Depois do evento ele volta para as sombras, mas quem o capturou segue jogando com ele. Ele não conta para o Arceus.',
     },
@@ -647,7 +691,7 @@ export const sitePt = {
         `A partir de ${p.first}, mais ou menos a cada ${n(p.every)} minutos, a entrada de um lugar aparece fora da tela, com uma seta na borda apontando para ela: a boca de uma caverna num morro, o portão de um cemitério ou uma corrente de ar entre pedras. Ela fica aberta por ${p.open}s e, se um chefe estiver vivo, espera ele cair por até ${p.bossWait}s. A partida mostra lugares diferentes antes de repetir algum.`,
         `Entrar é opcional: fique ${p.enter}s na porta. Lá dentro o mundo espera, como numa fenda: a horda fica congelada e nada novo nasce, mas o relógio da partida continua. Cada lugar tem seus próprios Pokémon, que ficam mais fortes conforme a partida avança, e um limite de tempo; quando ele acaba, você sai pela porta por onde entrou. Se desmaiar lá dentro, a partida não acaba: uma equipe de resgate leva você de volta à porta com ${p.rescue}% do HP, sem a recompensa e com o Revive guardado.`,
       ],
-      names: { cave: 'Caverna Escura', graveyard: 'Cemitério Assombrado', sky: 'Acima das Nuvens', grotto: 'Gruta Oculta', underground: 'Subterrâneo' } satisfies Record<PlaceId, string>,
+      names: { cave: 'Caverna Escura', graveyard: 'Cemitério Assombrado', sky: 'Acima das Nuvens', grotto: 'Gruta Oculta', underground: 'Subterrâneo', hideout: 'Esconderijo Rocket' } satisfies Record<PlaceId, string>,
       placeHead: 'Lugar',
       timeHead: 'Tempo',
       speciesHead: 'Quem vive lá',
@@ -691,7 +735,7 @@ export const sitePt = {
       ],
       trios: (times: readonly string[], trios: readonly string[], mythicals: string, percent: number) => [
         `Às ${list(times)} chegam os três membros de um trio lendário, sorteado no começo de cada partida: ${list(trios)}. HP, dano de contato e velocidade são do horário, não do Pokémon, então nenhum sorteio é mais fácil que outro; o que muda são os ataques.`,
-        `No fim, com ${n(percent)}% de chance, um Pokémon mítico chega junto com o Mewtwo: ${mythicals}, também sorteado por partida.`,
+        `No fim, com ${n(percent)}% de chance, um Pokémon mítico chega junto com o Mewtwo: ${mythicals}, também sorteado por partida. Depois de 5 finais sem derrotar um mítico a chance sobe a cada final, até ser garantida na 21ª, e vem um que você ainda não tem.`,
       ],
       timeHead: 'Tempo',
       bossHead: 'Chefe',
@@ -877,7 +921,7 @@ export const sitePt = {
   support: {
     title: 'Apoie o Pokémon Survivors | Doe por Pix ou cartão',
     description:
-      'O Pokémon Survivors é grátis e sem anúncios, e nada que dê poder é vendido. Se quiser ajudar a pagar os servidores, doe por Pix ou cartão brasileiro (AbacatePay) ou, de outros países, com cartão, Apple Pay ou Google Pay (Stripe). Com uma conta, quem doa ganha um agradecimento cosmético no jogo: título, moldura, selo, um shiny à escolha e um companheiro.',
+      'O Pokémon Survivors é grátis e sem anúncios, e nada que dê poder é vendido. Se quiser ajudar a pagar os servidores, doe por Pix, cartão, Apple Pay ou Google Pay, de qualquer país (Stripe), ou apoie todo mês no Patreon, que também dá gemas. Com uma conta, quem doa ganha um agradecimento cosmético no jogo: título, moldura, selo, um shiny à escolha e um companheiro.',
     h1: 'Apoie o projeto',
     lead: 'O jogo é grátis e vai continuar assim, sem anúncios e sem nada que dê poder à venda. Se ele te divertiu e você quiser ajudar a pagar os servidores (contas, ranking e o Desafio do dia), qualquer valor ajuda. Como agradecimento, quem doa com uma conta ganha recompensas cosméticas no jogo, nada que mude uma partida.',
     thanks: 'Obrigado pelo apoio! ♥',
@@ -909,41 +953,34 @@ export const sitePt = {
         'Um companheiro que te segue nas partidas.',
         'O nome no mural abaixo e nos agradecimentos da vitória.',
         'Voto no próximo Pokémon dos ovos.',
-        'Ouro e Diamante agora são mensais, no Patreon (veja abaixo): doações avulsas não somam para Ouro.',
+        'Ouro e Diamante agora são mensais, no Patreon (veja acima): doações avulsas não somam para Ouro.',
       ],
       note: 'Tudo cosmético: nada muda uma partida nem o ranking. As recompensas precisam de uma conta no jogo (entrar com Google é grátis).',
     },
     /** The Patreon tiers, by the pledge kept active (`PATREON_TIERS`). */
     monthly: {
       title: 'Apoio mensal no Patreon',
-      lead: 'Quer apoiar todo mês? No Patreon, seu nível segue o valor que você mantém ativo. Depois, vincule o Patreon à sua conta no Hall da Fama do jogo.',
-      tiers: [
-        '<b>Apoiador(a), US$ 5/mês:</b> tudo o que quem doa ganha, o cargo Supporter e o canal exclusivo no Discord, e o Hall da Fama enquanto o apoio durar.',
-        '<b>Ouro, US$ 10/mês:</b> tudo de Apoiador(a), selo e cargo Ouro, fundo e papel de parede dourados, e o Hall da Fama para sempre.',
-        '<b>Diamante, US$ 20/mês:</b> tudo de Ouro, selo e cargo Diamante, um lendário que você capturou como companheiro (shiny se capturado shiny), voto mensal num novo Pokémon ultrarraro e decoração de diamante no Hall da Fama.',
+      lead: 'Quer apoiar todo mês? No Patreon, seu nível segue o valor que você mantém ativo, e cada mês pago traz gemas para a Boutique. Depois, vincule o Patreon à sua conta no Hall da Fama do jogo.',
+      tiers: (g: Readonly<Record<SupporterTier, number>>): string[] => [
+        `<b>Apoiador(a), US$ 5/mês:</b> ${n(g.supporter)} gemas por mês, tudo o que quem doa ganha, o cargo Supporter e o canal exclusivo no Discord, e o Hall da Fama enquanto o apoio durar.`,
+        `<b>Ouro, US$ 10/mês:</b> ${n(g.gold)} gemas por mês, tudo de Apoiador(a), selo e cargo Ouro, fundo e papel de parede dourados, e o Hall da Fama para sempre.`,
+        `<b>Diamante, US$ 20/mês:</b> ${n(g.diamond)} gemas por mês, tudo de Ouro, selo e cargo Diamante, um lendário que você capturou como companheiro (shiny se capturado shiny), voto mensal num novo Pokémon ultrarraro e decoração de diamante no Hall da Fama.`,
       ],
       cta: 'Apoiar no Patreon',
       note: 'Quem doou antes do Patreon é Apoiador(a) OG: mantém tudo o que tem, para sempre, com uma seção só sua no Hall da Fama.',
     },
     wall: { title: 'Mural de apoiadores', empty: 'Ainda ninguém por aqui. Seu nome pode ser o primeiro!' },
-    pick: 'Escolha como pagar',
-    suggested: 'Sugerido para você',
-    br: {
-      title: 'No Brasil',
-      methods: 'Pix ou cartão de crédito, em reais.',
+    once: {
+      title: 'Doação avulsa',
+      methods: 'Pix, cartão, Apple Pay ou Google Pay. O valor é em reais; de outro país, o Stripe mostra quanto dá na sua moeda.',
       amount: 'Valor da doação',
       other: 'Outro valor',
       range: (min: number, max: number) => `De R$ ${min} a R$ ${max}, sem centavos.`,
       cta: (amount: number) => `Doar R$ ${amount}`,
       loading: 'Abrindo o pagamento…',
       error: 'Não deu para abrir o pagamento agora. Tente de novo em instantes.',
-      via: 'O pagamento abre na AbacatePay. Seus dados de pagamento vão direto para eles.',
-    },
-    intl: {
-      title: 'Outros países',
-      methods: 'Cartão, Apple Pay ou Google Pay, em dólares.',
-      cta: 'Doar pelo Stripe',
-      via: 'Você escolhe o valor na próxima página, que abre no Stripe. Seus dados de pagamento vão direto para eles.',
+      via: 'O pagamento abre no Stripe. Seus dados de pagamento vão direto para eles.',
+      noJs: 'Para doar, ative o JavaScript nesta página.',
     },
   },
 
@@ -966,13 +1003,13 @@ export const sitePt = {
       'Pokémon e os nomes dos personagens são marcas registradas da Nintendo. Pokémon © Nintendo, Creatures Inc. e GAME FREAK inc. As demais marcas pertencem aos seus donos.',
     ],
     free: [
-      'O jogo é gratuito e vai continuar assim: não tem anúncios, e nada que mude uma partida ou o ranking custa dinheiro. A única compra possível são gemas, opcionais, para visuais (veja abaixo).',
+      'O jogo é gratuito e vai continuar assim: não tem anúncios, e nada que mude uma partida ou o ranking custa dinheiro. A única compra possível são gemas, opcionais, para visuais (veja acima).',
       'Poké Dollars (₽) existem só dentro do jogo e não podem ser comprados com dinheiro de verdade.',
       'Quem quiser pode doar na página Apoie o projeto. Doações são voluntárias e, com uma conta, dão só um agradecimento cosmético (título, moldura, selo, um shiny à escolha, um companheiro), nada que mude uma partida ou o ranking.',
     ],
     gems: [
       'Gemas são um item virtual do jogo: compram só itens cosméticos (como chapéus, rastros, títulos e móveis para a base secreta), que aparecem nas partidas, no co-op, na Arena e no Poké Realm, nunca nada que mude uma partida ou o ranking. Elas não têm valor em dinheiro, não podem ser trocadas por dinheiro nem passadas para outra conta e ficam ligadas à sua conta do jogo.',
-      'Você ganha gemas jogando (na primeira partida do dia de 5 minutos ou mais, ao jogar cinco dias na mesma semana e na Arena, com um limite por dia), apoiando no Patreon ou comprando um pacote. Cada conta compra até R$ 250 ou US$ 50 em pacotes por dia, e quem tem menos de 18 anos precisa da permissão dos pais ou responsáveis para comprar. Pacotes são pagos no Stripe (cartão, Apple Pay e Google Pay) ou na AbacatePay (Pix), e os dados de pagamento vão direto para eles: o jogo nunca vê seu cartão.',
+      'Você ganha gemas jogando (na primeira partida do dia de 5 minutos ou mais, ao jogar cinco dias na mesma semana e na Arena, com um limite por dia), apoiando no Patreon ou comprando um pacote. Cada conta compra até R$ 300 em pacotes por dia, e quem tem menos de 18 anos precisa da permissão dos pais ou responsáveis para comprar. Pacotes são cobrados em reais e pagos no Stripe (cartão, Pix, Apple Pay, Google Pay e outros), que mostra o valor na moeda de quem compra fora do Brasil, e os dados de pagamento vão direto para eles: o jogo nunca vê seu cartão.',
       'Direito de arrependimento: até 7 dias depois da compra de um pacote, você pode pedir o reembolso das gemas dele que ainda não gastou (Código de Defesa do Consumidor, art. 49). Peça pelo e-mail pedro@wavyia.com.br, com a referência da compra. Gemas já gastas e os itens cosméticos comprados com elas não são reembolsáveis.',
       'Um estorno ou uma contestação do pagamento (chargeback) tira da conta as gemas daquele pacote, mesmo as já gastas. O saldo pode ficar negativo e, enquanto estiver, não dá para comprar nada com gemas.',
     ],
@@ -1016,9 +1053,9 @@ export const sitePt = {
     ],
     privacyAfter: [
       'Para apagar esses dados, limpe os dados do site nas configurações do navegador.',
-      'Sprites, sons e fontes vêm do próprio site, sem chamadas a serviços de terceiros. O site é hospedado na Vercel, que, como qualquer servidor, pode registrar dados técnicos de acesso (como endereço IP) para operar e proteger o serviço.',
+      'Sprites, sons e fontes vêm do próprio site, sem chamadas a serviços de terceiros. O site é hospedado na Cloudflare, que, como qualquer servidor, pode registrar dados técnicos de acesso (como endereço IP) para operar e proteger o serviço.',
       'No jogo, usamos o PostHog (posthog.com, com os dados guardados nos Estados Unidos) para entender como ele é jogado e corrigir erros. Ele recebe o resumo de cada partida (Pokémon, dificuldade, golpes, itens, até que minuto e nível você chegou e como ela terminou), quais telas você abre no menu e, quando o jogo dá erro, a mensagem do erro e o replay da partida em andamento (a semente e os comandos, sem nada pessoal). Tudo isso vai ligado ao identificador aleatório do ph_ps e, se você entrou com uma conta, ao id dela e ao seu nome de usuário, nunca ao seu e-mail ou nome. O PostHog não usa cookies aqui e não segue você entre sites.',
-      'Doações são pagas nas páginas da AbacatePay (abacatepay.com: Pix e cartões brasileiros) ou do Stripe (stripe.com: cartões de outros países, Apple Pay e Google Pay). Os dados de pagamento vão direto para eles, e o jogo nunca vê seu cartão. Eles nos mostram o valor e, como a qualquer recebedor, dados de quem pagou (como nome e e-mail), que não usamos para nada além de registrar a doação. Se você der um @ (ou resgatar o código da doação), ela fica ligada a essa conta do jogo para as recompensas chegarem; o valor nunca aparece em público, só o selo de apoiador, que dá para esconder.',
+      'Doações são pagas nas páginas do Stripe (stripe.com: Pix, cartões, Apple Pay e Google Pay; as mais antigas, também nas da AbacatePay, abacatepay.com). Os dados de pagamento vão direto para eles, e o jogo nunca vê seu cartão. Eles nos mostram o valor e, como a qualquer recebedor, dados de quem pagou (como nome e e-mail), que não usamos para nada além de registrar a doação. Se você der um @ (ou resgatar o código da doação), ela fica ligada a essa conta do jogo para as recompensas chegarem; o valor nunca aparece em público, só o selo de apoiador, que dá para esconder.',
     ],
     contact: [
       'Se você tem direitos sobre algum material usado aqui e quer que ele seja removido ou ajustado, abra uma issue no GitHub. O pedido vai ser atendido rapidamente.',
@@ -1038,7 +1075,7 @@ export const sitePt = {
     play: (title: string) => `Assistir: ${title}`,
     watchOn: (platform: string) => `Ver no ${platform}`,
     videoAbout: (name: string) => `Vídeo de Pokémon Survivors feito por ${name}.`,
-    langs: { pt: 'Em português', en: 'Em inglês', es: 'Em espanhol', fr: 'Em francês', zh: 'Em chinês' } satisfies Record<Locale, string>,
+    langs: { pt: 'Em português', en: 'Em inglês', es: 'Em espanhol', fr: 'Em francês', zh: 'Em chinês', zhHans: 'Em chinês' } satisfies Record<Locale, string>,
     join: {
       title: 'Faz vídeos do jogo?',
       lead: 'Gameplay, live, guia, Short ou TikTok, em qualquer língua: todo vídeo do jogo pode entrar aqui.',
@@ -1066,8 +1103,8 @@ export const sitePt = {
       ['Onde joga', 'Navegador no PC e no celular, em pé ou deitado. Instala como app.', 'Navegador no PC e no celular, deitado. Instala como app.'],
       ['Conta', 'Opcional: o solo não pede cadastro. Com conta, salva na nuvem, entra no ranking, joga co-op e entra no Poké Realm.', 'Opcional: convidado ou conta (nome e senha ou Google). Com conta, salva na nuvem, entra no ranking e joga co-op.'],
       ['Como ataca', `Todos os golpes atacam sozinhos, até ${f.moves} ao mesmo tempo.`, 'Você escolhe o golpe ativo (teclas 1 a 4). Cada lendário vencido deixa unir golpes num só espaço.'],
-      ['Pokémon jogáveis', `${f.starters} iniciais com a linha evolutiva completa, mais ${f.eggs} famílias que saem de ovos e ${f.legends} lendários no Modo Lendário.`, '966 Pokémon das 9 gerações.'],
-      ['Como libera Pokémon', 'Ovos que chocam com os passos dados nas partidas. Lendários são capturados vencendo-os como chefes.', 'Gacha por região, com tickets ganhos jogando.'],
+      ['Pokémon jogáveis', `${f.starters} iniciais com a linha evolutiva completa, mais ${f.eggs} famílias (de ovos, da Zona Safári e de prêmios) e ${f.legends} lendas no Modo Lendário, Ultracriaturas incluídas.`, '966 Pokémon das 9 gerações.'],
+      ['Como libera Pokémon', 'Ovos que chocam com os passos dados nas partidas, a Zona Safári (com ₽ ganhos jogando) e prêmios. Lendários são capturados vencendo-os como chefes ou por caminhos próprios.', 'Gacha por região, com tickets ganhos jogando.'],
       ['Partida', `${f.minutes} minutos até Mewtwo, com chefes lendários e fendas épicas no caminho. Depois, modo sem fim até Arceus.`, 'Hordas por tempo, com fendas que levam a uma arena contra um lendário.'],
       ['Co-op', `Online, até ${f.players} jogadores. Sala por link, código ou lista de amigos.`, 'Online, até 4 jogadores. Sala com convite aos amigos.'],
       ['Outros modos', 'A Arena, um MOBA 4v4 e 3v3 estilo Pokémon Unite, e o Poké Realm, uma cidade online com bases secretas para decorar e mini games.', 'Não: as partidas, sozinho ou em co-op.'],
@@ -1090,8 +1127,8 @@ export const sitePt = {
       title: 'Jogue o Pokémon Survivors se você…',
       items: (f: OurFacts) => [
         `quer uma partida com começo, meio e fim: ${f.minutes} minutos até Mewtwo, depois o modo sem fim contra Arceus;`,
-        'gosta de montar build: golpes que se dividem em dois caminhos no Nv 4 e no Nv 7, Habilidades, itens, golpes em dupla e Mega Evolução;',
-        `quer jogar com os lendários: capture os ${f.legends} vencendo-os como chefes e jogue com eles no Modo Lendário;`,
+        'gosta de montar build: golpes que se dividem em dois caminhos no Nv 4 e no Nv 7, Habilidades, itens, golpes em dupla, Mega Evolução e Terastal;',
+        `quer jogar com os lendários: capture as ${f.legends} lendas, vencendo-as como chefes ou pelos seus caminhos, e jogue com elas no Modo Lendário;`,
         'quer encontrar outros treinadores numa cidade online, decorar a sua base secreta e jogar mini games;',
         'quer jogar no celular em pé, com uma mão;',
         'quer um ranking em que as partidas do topo são conferidas pelo servidor;',
@@ -1120,7 +1157,7 @@ export const sitePt = {
         },
         {
           q: 'Qual é melhor?',
-          a: `Depende do que você procura. O PokéSurvivor tem mais Pokémon (966) e um gacha para colecionar. O Pokémon Survivors tem partidas de ${f.minutes} minutos com chefes lendários, lendários jogáveis, Mega Evolução, golpes que se dividem em caminhos e um ranking conferido no servidor. Os dois são grátis: dá para jogar os dois.`,
+          a: `Depende do que você procura. O PokéSurvivor tem mais Pokémon (966) e um gacha para colecionar. O Pokémon Survivors tem partidas de ${f.minutes} minutos com chefes lendários, lendários jogáveis, Mega Evolução, Terastal, golpes que se dividem em caminhos e um ranking conferido no servidor. Os dois são grátis: dá para jogar os dois.`,
         },
         {
           q: 'Os dois são grátis e oficiais?',
@@ -1154,10 +1191,10 @@ export const sitePt = {
         plays: 'Navegador, PC e celular',
         style: 'Survivors-like',
         coop: 'Até 4 online',
-        roster: (f: OurFacts) => `${f.starters} iniciais, ${f.eggs} famílias de ovos, ${f.legends} lendários`,
+        roster: (f: OurFacts) => `${f.starters} iniciais, ${f.eggs} famílias, ${f.legends} lendas`,
         about: (f: OurFacts) => [
-          `Escolha um dos ${f.starters} iniciais de Kanto a Paldea e sobreviva ${f.minutes} minutos de hordas: todos os seus golpes atacam sozinhos, você aprende golpes e itens a cada nível e evolui no meio da partida, até enfrentar Mewtwo. Chefes lendários, fendas épicas com o domínio de cada lendário, Mega Evolução e um modo sem fim contra Arceus.`,
-          `Ovos chocam mais ${f.eggs} famílias, os lendários vencidos ficam jogáveis no Modo Lendário, o co-op online junta até ${f.players} jogadores, a Arena é um MOBA estilo Pokémon Unite e o Poké Realm é uma cidade online com bases secretas e mini games. Em ${f.languages} idiomas, com código aberto (MIT).`,
+          `Escolha um dos ${f.starters} iniciais de Kanto a Paldea e sobreviva ${f.minutes} minutos de hordas: todos os seus golpes atacam sozinhos, você aprende golpes e itens a cada nível e evolui no meio da partida, até enfrentar Mewtwo. Chefes lendários, fendas épicas com o domínio de cada lendário, Mega Evolução, Terastal com Raides Tera e um modo sem fim contra Arceus.`,
+          `Ovos, a Zona Safári e prêmios liberam mais ${f.eggs} famílias, as lendas capturadas ficam jogáveis no Modo Lendário, o co-op online junta até ${f.players} jogadores, a Arena é um MOBA estilo Pokémon Unite e o Poké Realm é uma cidade online com bases secretas e mini games. Em ${f.languages} idiomas, com código aberto (MIT).`,
         ],
         bestFor: 'quem quer partidas curtas com chefes, builds variadas e lendários jogáveis, no PC ou no celular em pé.',
       },

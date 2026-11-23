@@ -27,6 +27,7 @@ export type AchievementStat =
   | 'bossKills' | 'chests' | 'meowths' | 'altars' | 'coins' | 'moveEvolutions' | 'missions'
   | 'dexSeen' | 'starterLines' | 'hatches' | 'shinyHatches' | 'megas' | 'alphaKills'
   | 'placeClears' | 'places' | 'hiddenZones' | 'landmarks'
+  | 'teras' | 'raids' | 'raidBest'
 
 export type AchievementDef = {
   medal: Medal
@@ -82,6 +83,13 @@ export const ACHIEVEMENTS = {
   landmark50: { medal: 'silver', stat: 'landmarks', target: 50 },
   mega1: { medal: 'bronze', stat: 'megas', target: 1 },
   mega25: { medal: 'silver', stat: 'megas', target: 25 },
+  /** Terastal and the Tera Raids (`game/tera.ts`, `game/teraRaid.ts`): `raidBest` is the most stars of a raid won. */
+  tera1: { medal: 'bronze', stat: 'teras', target: 1 },
+  tera50: { medal: 'silver', stat: 'teras', target: 50 },
+  raid1: { medal: 'bronze', stat: 'raids', target: 1 },
+  raid25: { medal: 'silver', stat: 'raids', target: 25 },
+  raidStar6: { medal: 'silver', stat: 'raidBest', target: 6, title: true },
+  raidStellar: { medal: 'gold', stat: 'raidBest', target: 7, title: true },
   alpha1: { medal: 'bronze', stat: 'alphaKills', target: 1 },
   alpha25: { medal: 'silver', stat: 'alphaKills', target: 25 },
   alpha100: { medal: 'gold', stat: 'alphaKills', target: 100, title: true },
@@ -125,9 +133,13 @@ export type MedalTitleId = { [K in AchievementId]: (typeof ACHIEVEMENTS)[K] exte
  * the Patron's (Mecenas) for donating to a Festival da Praça (`game/festival.ts`),
  * the OG Supporter's for supporting the game before Patreon (`OG_GIFT` in `game/supporters.ts`),
  * the Arena's four for a ranked season's peak tier (`ARENA_REWARDS` in `game/arenaRewards.ts`),
- * the Creator's for making videos of the game (sent from the admin desk, `data/creators.ts`).
+ * the Creator's for making videos of the game (sent from the admin desk, `data/creators.ts`),
+ * the Stamp Collector's for 30 Estampas in the Poké Realm (`STAMP_MILESTONES` in `data/realmStamps.ts`),
+ * the Era 1 Legend's for a top place on an Era 1 board and the Era 1 Champion's for a #1 (`game/era1.ts`),
+ * the Rocket Recruit's from the Rocket Game Corner's counter (`data/rocketCorner.ts`) and the Rocket Buster's for beating Giovanni in the Rocket Hideout (`data/rocketHideout.ts`),
+ * the Bug Champion's for winning a week's Concurso de Insetos and the Guarda-Parque's for every Safári habitat's Pokédex (`data/safari.ts`).
  */
-export const GIFT_TITLES = ['ambassador', 'supporter', 'pumpkinKing', 'exorcist', 'vipCustomer', 'tycoon', 'patron', 'ogSupporter', 'arenaPoke', 'arenaGreat', 'arenaUltra', 'arenaMaster', 'creator', 'friendLegend'] as const
+export const GIFT_TITLES = ['ambassador', 'supporter', 'pumpkinKing', 'exorcist', 'vipCustomer', 'tycoon', 'patron', 'ogSupporter', 'arenaPoke', 'arenaGreat', 'arenaUltra', 'arenaMaster', 'creator', 'friendLegend', 'stampCollector', 'era1Legend', 'era1Champion', 'spaceTime', 'bugChampion', 'safariWarden', 'rocketRecruit', 'rocketBuster', 'kantoDex', 'johtoDex', 'hoennDex', 'sinnohDex', 'unovaDex', 'kalosDex', 'alolaDex', 'galarDex', 'paldeaDex', 'safariMeadow', 'safariMarsh', 'safariRidge', 'safariCove'] as const
 
 export type GiftTitleId = (typeof GIFT_TITLES)[number]
 

@@ -1,4 +1,4 @@
-import { playSfx, setMix } from '../engine/audio'
+import { hasAudioSession, playSfx, quietly, setMix } from '../engine/audio'
 import { BUTTON_SIDES, STICK_EDGES, STICK_HEIGHTS, STICK_MODES, type Input } from '../engine/input'
 import { clamp } from '../engine/math'
 import { locale, LOCALE_IDS, LOCALES, setLocale, t, type Locale } from '../i18n'
@@ -6,6 +6,7 @@ import { TRANSLATORS } from '../data/translators'
 import { bugReportsEnabled } from '../bugReport'
 import { bugReportForm } from './bugReport'
 import { openControls } from './controls'
+import { openRadio } from './radio'
 import { AIM_ASSISTS } from './arenaAim'
 import { PRIORITIES } from '../game/versusKit'
 import { h, later } from './dom'
@@ -134,7 +135,7 @@ const switchRow = (label: string, read: () => boolean, set: (on: boolean) => voi
 const canFullscreen = () => document.fullscreenEnabled && typeof document.documentElement.requestFullscreen === 'function'
 const isFullscreen = () => document.fullscreenElement !== null
 /** Fullscreen on or off; the browser may refuse (no gesture, a policy), and the switch then stays as it was (`fullscreenchange` syncs it). */
-const setFullscreen = (on: boolean) => void (on ? document.documentElement.requestFullscreen({ navigationUI: 'hide' }) : document.exitFullscreen()).catch(() => {})
+const setFullscreen = (on: boolean) => quietly(() => (on ? document.documentElement.requestFullscreen({ navigationUI: 'hide' }) : document.exitFullscreen()))
 
 /** A switch over one of the settings. */
 const toggle = (label: string, read: (s: Settings) => boolean, write: (on: boolean) => Partial<Settings>): Row =>
@@ -229,8 +230,8 @@ type Tab = (typeof TABS)[number]
 let lastTab: Tab = 'sound'
 
 /**
- * Settings in four tabs: Som (music and effects volume, mute), Jogo
- * (language, theme, damage numbers, screen shake, flashes, fog, run alerts, the mini map, move opacity, UI size, safe mode), Controles
+ * Settings in four tabs: Som (music and effects volume, mute, the Rádio's sheet), Jogo
+ * (language, Rever tutorial where `opts.tutorial` is given, theme, damage numbers, screen shake, flashes, fog, run alerts, the mini map, move opacity, UI size, safe mode), Controles
  * (touch joystick, the buttons' side and the fixed stick's place on touchscreens, and the remap screen) and Sobre
  * (installing the app, what the game is, legal and
  * credits, GitHub, the official profiles, and the bug report form when there's an API to send it to).
@@ -244,7 +245,7 @@ let lastTab: Tab = 'sound'
  * owns. `dispose` closes it without calling `onClose` (e.g. when the caller's
  * own screen goes away).
  */
-export const openSettings = (root: HTMLElement, input: Input, onClose: () => void): Screen => {
+export const openSettings = (root: HTMLElement, input: Input, onClose: () => void, opts: { tutorial?: () => void } = {}): Screen => {
   const el = h('div', { class: 'screen shell dim settings-screen' })
   let rows: Row[] = []
   let nav: ReturnType<typeof menu> | null = null
@@ -282,10 +283,15 @@ export const openSettings = (root: HTMLElement, input: Input, onClose: () => voi
           slider(m.music, 'musicVolume'),
           slider(m.sfx, 'sfxVolume', () => playSfx('pickup', 90)),
           toggle(m.sound, (s) => !s.muted, (on) => ({ muted: !on })),
+          // Only iOS Safari lets a page mix with other apps' audio (`navigator.audioSession`).
+          ...(hasAudioSession() ? [toggle(m.mixOthers, (s) => s.mixOthers, (on) => ({ mixOthers: on }))] : []),
+          openRow(t().radio.open, () => showSub(openRadio)),
         ]
       case 'game':
         return [
           languageRow(pickLanguage),
+          // Away from a run (the lobby, the partner select): the training run again, then the lobby tour.
+          ...(opts.tutorial ? [openRow(t().welcome.replay, opts.tutorial)] : []),
           choiceRow(m.theme, 'theme', THEMES, (mode) => m.themes[mode]),
           choiceRow(m.damageNumbers, 'damageNumbers', DAMAGE_NUMBERS, (mode) => m.damageModes[mode]),
           toggle(m.screenShake, (s) => s.screenShake, (on) => ({ screenShake: on })),

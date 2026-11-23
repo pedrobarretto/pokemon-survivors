@@ -28,7 +28,7 @@ export const trainerAvatar = (save: Save, tier: SupporterTier | null) => {
  * their companion, else their partner, shiny when they play it so.
  */
 export const hallPokemon = (save: Save, tier: SupporterTier): Companion => {
-  const picked = save.shinyPicks.findLast((p) => p.pick !== null)?.pick
+  const picked = [...save.shinyPicks].reverse().find((p) => p.pick !== null)?.pick
   if (picked) return { id: picked, shiny: save.shinyStarters[picked] !== false }
   if (save.companion && canWalkWith(save, save.companion, tier)) return save.companion
   return { id: save.partner, shiny: playsShiny(save, save.partner) }

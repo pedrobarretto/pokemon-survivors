@@ -11,3 +11,13 @@ export const realmFriendsCount = async (): Promise<number | null> => {
   if (status !== 200 || !isRecord(body) || !Array.isArray(body.friends)) return null
   return body.friends.filter((f) => isRecord(f) && (f.state === 'realm' || f.state === 'hidden')).length
 }
+
+/**
+ * Trainers in the whole Realm now, for the lobby's way in: `GET /realm/cities`
+ * (public, cached by the API) read without the realm's chunk. Null offline.
+ */
+export const realmTrainersCount = async (): Promise<number | null> => {
+  const { status, body } = await apiCall('/realm/cities')
+  if (status !== 200 || !isRecord(body) || !isRecord(body.cities)) return null
+  return Object.values(body.cities).reduce<number>((sum, n) => sum + (typeof n === 'number' ? n : 0), 0)
+}

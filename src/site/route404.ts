@@ -147,9 +147,9 @@ const readBest = () => {
 const load = (src: string) =>
   new Promise<HTMLImageElement>((done, fail) => {
     const img = new Image()
+    img.src = src
     img.onload = () => done(img)
     img.onerror = fail
-    img.src = src
   })
 
 /** Starts the mini game in `box` (`.nf-game`, with its canvas, start hint, sign link and game-over card). */

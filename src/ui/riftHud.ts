@@ -1,3 +1,4 @@
+import { isUltraBeast } from '../data/ultraBeasts'
 import { formatTime } from '../engine/math'
 import { GRAVEYARD } from '../data/places'
 import { overtime } from '../game/endless'
@@ -5,8 +6,10 @@ import { entranceShown } from '../game/place'
 import type { Game } from '../game/types'
 import { t } from '../i18n'
 import { h, setText } from './dom'
+import { questPill } from './quests'
+import { rushPill } from './rush'
 
-type Pill = { text: string; kind: 'portal' | 'arena' | 'endless' | 'reaper' | 'place'; urgent: boolean } | null
+type Pill = { text: string; kind: 'portal' | 'arena' | 'endless' | 'reaper' | 'place' | 'quest' | 'rush'; urgent: boolean } | null
 
 /** A place the player is in: the dungeon's floor and wind, the keystone's spirits or the dawn, the wings and the calm, the Audino caught, the glints dug. */
 const insidePill = (g: Game): Pill => {
@@ -28,6 +31,8 @@ const insidePill = (g: Game): Pill => {
       return { text: m.hudGrotto(inside.state.dwellers.caught, time), kind: 'place', urgent }
     case 'underground':
       return { text: m.hudDig(inside.state.dug, time), kind: 'place', urgent }
+    case 'hideout':
+      return { text: t().rocket.hideout.hud(inside.state.stairs ? m.floor(inside.state.floor + 1) : t().rocket.hideout.lair, time), kind: 'place', urgent }
   }
 }
 
@@ -36,6 +41,10 @@ const pillFor = (g: Game): Pill => {
   const m = t().rifts
   const { portal, arena } = g.rift
   if (g.place.inside) return insidePill(g)
+  // A Tera Raid: the hollow's clock rides the boss bar (`ui/hud.ts`); a den's shows here (`game/teraRaid.ts`).
+  if (g.raid.arena) return null
+  const den = g.raid.den
+  if (den && !portal) return { text: t().raid.hudDen(formatTime(Math.ceil(den.left))), kind: 'portal', urgent: den.left < 8 }
   if (arena?.domain) {
     const d = arena.domain
     if (arena.fall !== null) return null
@@ -47,13 +56,17 @@ const pillFor = (g: Game): Pill => {
     if (arena.loot !== null || arena.fall !== null) return null
     return { text: m.hudArena(formatTime(Math.ceil(arena.left))), kind: 'arena', urgent: arena.left < 10 }
   }
-  if (portal) return { text: m.hudPortal(formatTime(Math.ceil(portal.left))), kind: 'portal', urgent: portal.left < 8 }
+  if (portal) return { text: (isUltraBeast(portal.legend) ? t().ultra.hudPortal : m.hudPortal)(formatTime(Math.ceil(portal.left))), kind: 'portal', urgent: portal.left < 8 }
   const ent = g.place.entrance
   // A hidden zone's entrance says nothing until found.
   if (ent?.open && entranceShown(ent)) {
     const p = t().places
     return { text: p.hudOpen(p.hudNames[ent.id], formatTime(Math.ceil(ent.left))), kind: 'place', urgent: ent.left < 8 }
   }
+  const rush = rushPill(g)
+  if (rush) return { text: rush, kind: 'rush', urgent: false }
+  const quest = questPill(g)
+  if (quest) return { text: quest.text, kind: 'quest', urgent: quest.urgent }
   const s = g.endless
   if (!s) return null
   if (s.reaperId !== null) return { text: m.hudHunting, kind: 'reaper', urgent: true }

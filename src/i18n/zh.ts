@@ -1,5 +1,41 @@
+import { CAFE_TABLES_WORDS } from './cafeTables'
+import type { DexRegion } from '../data/nationalDex'
+import { GALLOP_WORDS } from './gallop'
+import { ITEM_DROP_WORDS } from './itemDrop'
+import { SUPPORT_WORDS } from './support'
+import { LOBBY_TOUR_WORDS } from './lobbyTour'
+import { TUTORIAL_WORDS } from './tutorial'
+import { WELCOME_WORDS } from './welcome'
+import { RADIO_WORDS } from './radio'
+import { realmBookZh as realmBook } from './realmStamps/zh'
+import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
+import { TERA_WORDS } from './tera'
+import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
+import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
+import { GA_FOSSILS_WORDS } from './gaFossils'
+import { MEGA_FAMILIES_B_WORDS } from './megaFamiliesB'
+import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
+import { GA_HOOK_WORDS } from './gaHook'
+import { ROCKET_FAMILY_WORDS } from './rocket/families'
+import { GA_MEGAS_WORDS } from './gaMegas'
+import { GA_MEGA_FAMILIES_A_WORDS } from './gaMegaFamiliesA'
+import { SC_WAVE_WORDS } from './scWave'
+import { ROCKET_WORDS } from './rocket/words'
+import { ULTRA_WORDS } from './ultra'
+import { LEGEND_PATHS_WORDS } from './legendPaths'
+import { QUEST_WORDS } from './quests'
+import { MYTHICAL_WORDS } from './mythicals'
+import { REGIS_FORCES_WORDS } from './regisForces'
+import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
+import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
+import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
+import { SEASON_ONE_DIG_WORDS } from './seasonOne/dig'
+import { REGIONAL_WORDS } from './regional'
 import type { Messages } from './pt'
 import type { Activity } from '../game/friends'
+
+/** The regions as the Pokédex names them (`data/nationalDex.ts`). */
+const REGION_NAMES = { kanto: '關都', johto: '城都', hoenn: '豐緣', sinnoh: '神奧', unova: '合眾', kalos: '卡洛斯', alola: '阿羅拉', galar: '伽勒爾', paldea: '帕底亞' } satisfies Record<DexRegion, string>
 
 const typeBoost = (type: string) => `${type}屬性招式傷害+10%。`
 
@@ -31,41 +67,45 @@ export const zh: Messages = {
     pressTouch: '點擊開始',
     play: '開始遊戲',
     today: '今日',
-    outbreak: '大量出現',
-    challenge: '每日挑戰',
+    /** Na Praça's column head and the note beside it. */
+    plaza: '廣場',
+    plazaNote: '活動＋商店',
+    outbreakName: (name: string) => `大量出現：${name}`,
+    outbreakLine: '今日較易遇到色違',
+    challengeName: '每日挑戰',
+    challengeLine: (name: string) => `${name}・金緞帶`,
     challengeDone: (time) => `完成：${time}`,
     challengeOpen: '今天還沒挑戰',
     missions: '任務',
     missionsLeft: (n) => `今日任務還剩${n}個`,
-    hall: '名人堂',
-    hallJoined: (handle, today) => (today ? `@${handle} 今天加入了` : `@${handle} 加入了名人堂`),
+    hallName: '名人堂',
+    hallNewest: '最新：',
+    hallCount: (_n, shown) => `${shown} 位贊助者`,
     change: '更換',
-    stroll: '散步',
-    strollTouch: '點擊草地來散步',
-    explore: '散步',
-    exploreLabel: '在草原和廣場上走走',
-    exploreTouch: '點擊或拖曳來移動',
-    exploreKeys: '移動',
     pokedex: '寶可夢圖鑑',
     eggs: '蛋',
     eggsReady: (n) => `${n}顆蛋可以孵化了`,
+    eggsWalking: (n: number) => `${n} 個孵化中`,
+    eggsNone: '孵蛋器是空的',
+    gifts: '禮物',
+    giftsToOpen: (n: number) => `${n} 個待開`,
     mart: '商店',
-    dojo: '道場',
-    dojoLabel: '道場：試招式、組配置',
     ranking: '排行榜',
     ideas: '點子',
     support: '贊助這個專案',
-    rail: {
-      halloween: '女巫',
-      festival: '祭典',
-      outbreak: '大量出現',
-      challenge: '挑戰',
-      missions: '任務',
-      hall: '名人堂',
-      invites: '邀請',
-      discord: 'Discord',
-      days: (n) => `${n}天`,
-    },
+    /** Na Praça's shop rows. */
+    shopName: '變隱龍商店',
+    shopLine: '每日櫥窗・變隱龍蛋',
+    boutiqueName: '精品店',
+    boutiqueLine: '新帽子和特效',
+    carpentryName: '木工坊',
+    carpentryLine: '基地的家具',
+    /** Over the partner pill, before its name. */
+    partner: '夥伴',
+    community: '社群',
+    friends: '好友',
+    /** The bottom tabs on a phone (and the rail on a phone on its side). */
+    tabs: { home: '首頁', collection: '收藏', plaza: '廣場', social: '社交', profile: '個人' },
   },
 
   shell: {
@@ -99,6 +139,19 @@ export const zh: Messages = {
     statsSection: '能力',
     legendBase: '基礎',
     legendFinal: '進化後',
+    otherBonuses: '其他加成',
+    otherBonusesNote: '能力條以外的加成，以最終階段計。',
+    otherBonus: {
+      amount: (n: number) => `投射物 +${n}`,
+      projectileSpeed: (n: number) => `投射物速度 +${n}%`,
+      duration: (n: number) => `持續時間 +${n}%`,
+      magnet: (n: number) => `拾取範圍 +${n}`,
+      growth: (n: number) => `經驗值 +${n}%`,
+      greed: (n: number) => `₽ +${n}%`,
+      statusChance: (n: number) => `異常狀態機率 +${n}%`,
+      statusDamage: (n: number) => `異常狀態傷害 +${n}%`,
+      specialRecharge: (n: number) => `特殊招式：每次擊倒 -${n / 10} 秒`,
+    },
     evolution: '進化',
     special: '必殺技',
     moves: '招式',
@@ -134,7 +187,10 @@ export const zh: Messages = {
     specialTitle: (name) => `${name}（空白鍵）`,
     lunge: '突進',
     lungeTitle: (name) => `${name}（Shift）`,
-    stances: { shield: '盾', blade: '劍', normal: '一般', attack: '攻擊', defense: '防禦', speed: '速度' },
+    stickLock: '固定搖桿',
+    stickLocked: '搖桿已固定！可在「設定 → 操作」調整位置。',
+    stickFree: '搖桿已解除固定：會跟隨手指。',
+    stances: { shield: '盾', blade: '劍', normal: '一般', attack: '攻擊', defense: '防禦', speed: '速度', heat: '微波爐', wash: '洗衣機', frost: '冰箱', fan: '電風扇', mow: '割草機' },
     jumps: (n) => `×${n}`,
   },
 
@@ -579,7 +635,11 @@ export const zh: Messages = {
     shop: {
       pitch: '寶可夢的造型，在對局、合作模式和競技場都會出現：所有人都看得到，而且都不會增加能力。',
       balance: '你的餘額',
-      currency: '幣別',
+      /** The Brasil / Outro país switch over the packs (which price list, `GemMarket`), and the note under them abroad, where prices are a guess in the buyer's currency. */
+      market: '付款地區',
+      marketBr: '巴西',
+      marketIntl: '其他國家',
+      approx: '以你的幣別顯示的約略價格：最終金額會在付款頁面顯示。',
       packs: '寶石組合',
       bonus: (n: string) => `+${n} 加贈`,
       catalog: '造型',
@@ -602,6 +662,8 @@ export const zh: Messages = {
       confirm: (name: string, price: string) => `要用 ${price} 顆寶石購買 ${name} 嗎？`,
       bought: (name: string) => `${name} 是你的了，而且已經在使用中！`,
       short: (n: string) => `還差 ${n} 顆寶石。來一份寶石組合吧？`,
+      /** An item out of reach: its button buys the pack that covers it (gems missing and the pack's name; its price follows). */
+      shortPack: (n: string, pack: string) => `還差 ${n} · ${pack}`,
       busy: '慢一點！連續購買太多次了，請一分鐘後再試。',
       offline: '目前無法連線到商店，請稍後再試。',
       banned: '此帳號無法使用商店。',
@@ -619,13 +681,15 @@ export const zh: Messages = {
     checkout: {
       split: (gems: string, bonus: string) => `${gems} + ${bonus} 加贈`,
       pay: '付款方式',
-      card: '信用卡、Apple Pay 或 Google Pay',
-      pix: 'Pix',
+      /** What Stripe Checkout takes, by price list (Pix only shows in reais), the button to it and the note on a price abroad. */
+      ways: { br: 'Pix、信用卡、Apple Pay 或 Google Pay', intl: '信用卡、Apple Pay、Google Pay 等，以你的幣別付款' },
+      go: '前往付款',
+      approx: '約略金額：最終價格會以你的幣別在付款頁面顯示。',
       /** The box the pay buttons need ticked. */
       age: '我已年滿 18 歲，或已取得父母或監護人的同意。',
       /** The checkout turned down (`GemCheckoutRefusal`): a once pack taken, the day's limit (`GEM_CHECKOUT.daily`, as a price). */
       once: '這個帳號已經領過新手禮包。',
-      cap: (limit: string) => `為了安全，每個帳號每天最多購買 ${limit} 的寶石，未完成的付款會保留半小時。請明天再試（以巴西利亞時間午夜換日）。`,
+      cap: (limit: string) => `為了安全，每個帳號每天最多購買 ${limit} 的寶石，未完成的付款會保留約一小時。請明天再試（以巴西利亞時間午夜換日）。`,
       cancel: '取消',
       opening: '正在開啟付款頁面…',
       failed: '無法開啟付款頁面，請再試一次。',
@@ -636,6 +700,19 @@ export const zh: Messages = {
       timeout: '付款處理中',
       timeoutNote: '我們還在確認你的付款。寶石會在幾分鐘內送到你的帳號（Pix 可能會久一點），你可以繼續遊玩。',
       ok: '繼續',
+    },
+    /** Back from a checkout given up (`&cancel=`): nothing charged, the same pack again, the other ways to pay (by price list) and Patreon. */
+    cancelled: {
+      title: '沒有成功嗎？',
+      text: '沒有任何扣款。要再試一次嗎？',
+      retry: (pack: string, price: string) => `再試一次：${pack} · ${price}`,
+      ways: {
+        br: '除了信用卡，也可以用 Pix、Apple Pay 或 Google Pay 付款。',
+        intl: '信用卡被拒絕了嗎？試試 Apple Pay、Google Pay 或其他卡片：有些銀行會拒絕國外商店的交易。',
+      },
+      patreon: '想每個月支持我們嗎？Patreon 也會送寶石。',
+      patreonLink: '前往 Patreon',
+      close: '先不用',
     },
     skinShop: {
       pitch: '重新繪製的寶可夢，整條進化線的每個階段都適用。會出現在你的對局、合作模式和競技場中。',
@@ -673,6 +750,20 @@ export const zh: Messages = {
       wear: (name: string) => `穿上${name}`,
       see: (name: string) => `${name}：到服飾店看看`,
     },
+    promo: {
+      names: { blackFriday: '黑色星期五' },
+      tag: (pct: string, name: string) => `${name} +${pct}%`,
+      banner: (name: string, pct: string) => `${name}：所有寶石包多送 ${pct}%`,
+      split: (gems: string, extra: string, name: string) => `${gems} + ${name}加贈 ${extra}`,
+      left: (days: number, hours: number) => (days > 0 ? `剩 ${days} 天 ${hours} 小時` : hours > 0 ? `剩 ${hours} 小時` : '剩不到 1 小時'),
+      short: (days: number, hours: number) => (days > 0 ? `${days} 天 ${hours} 小時` : `${hours} 小時`),
+    },
+    run: {
+      earned: (n: string, balance: string) => `+${n} 顆寶石 · 餘額 ${balance}`,
+      covers: (item: string) => `已經可以買「${item}」了`,
+      short: (n: string, first: boolean) => (first ? `再 ${n} 顆就能買第一個外觀` : `再 ${n} 顆就能買下一個外觀`),
+      see: '去服飾店看看',
+    },
     chipGuest: '服飾店：用寶石換外觀',
     locker: {
       pick: '預覽寶可夢',
@@ -687,6 +778,7 @@ export const zh: Messages = {
     },
   },
   realm: {
+    ...realmBook,
     name: 'Poké Realm',
     entry: 'Realm',
     entryLabel: 'Poké Realm：線上城鎮',
@@ -697,7 +789,11 @@ export const zh: Messages = {
     off: '這個版本的遊戲無法使用 Poké Realm。',
     cities: {
       title: '選擇城市',
-      hint: '每座城市都是同一個城鎮的分身，最多 40 位訓練家。',
+      hint: '你會進入第一座還有空位的城市。每座都是同一個城鎮，最多 40 位訓練家。',
+      switch: '更換城市',
+      here: '你在這裡',
+      lobbyLine: '和夥伴一起散步',
+      crowd: (n: number) => `${n} 位訓練家在線上`,
       trainers: (n: number) => `${n} 位訓練家`,
       full: '已滿',
       enter: '進入',
@@ -707,7 +803,7 @@ export const zh: Messages = {
       offline: '目前無法載入城市。你仍然可以進入。',
       back: '返回',
     },
-    rooms: { plaza: '廣場', pier: '碼頭', cafe: '咖啡館', trail: '秘密基地樹林', arcade: '遊樂場' },
+    rooms: { plaza: '廣場', pier: '碼頭', cafe: '咖啡館', trail: '秘密基地樹林', arcade: '遊樂場', gameCorner: ROCKET_WORDS.zh.corner.name },
     base: (handle: string) => `@${handle} 的基地`,
     status: {
       connecting: '連線中…',
@@ -775,6 +871,10 @@ export const zh: Messages = {
       gameTable: '遊戲桌',
       cabinet: '街機',
       prizes: '獎品',
+      tokens: ROCKET_WORDS.zh.corner.spots.tokens,
+      rocketPrizes: ROCKET_WORDS.zh.corner.spots.prizes,
+      poster: ROCKET_WORDS.zh.corner.spots.poster,
+      hideoutStairs: ROCKET_WORDS.zh.corner.spots.stairs,
     },
     use: '使用',
     pieces: {
@@ -803,6 +903,15 @@ export const zh: Messages = {
     counter: '咖啡館還在布置櫃檯，敬請期待！',
     pool: '水屬性寶可夢之後會在這裡游泳，敬請期待！',
     prizes: '在遊戲機刷新紀錄，贏得獎盃來布置你的秘密基地！',
+    /** The Hora do Realm: the banner, the lobby's tag and the fishing screen's chip. */
+    hours: {
+      names: { tide: '大滿潮', storm: '樹果雨', tables: '桌遊之夜' },
+      perks: { tide: '釣魚雙倍、稀有魚變多', storm: '街機雙倍', tables: '桌遊雙倍' },
+      go: '前往',
+      starts: (c: string) => `${c} 後`,
+      ends: (c: string) => `剩 ${c}`,
+      tideChip: '大滿潮！',
+    },
     grove: {
       first: [
         '噓！我只是一棵樹……好啦，我是 Sudowoodo。歡迎來到秘密基地樹林！',
@@ -964,12 +1073,21 @@ export const zh: Messages = {
       choosing: '正在選擇最佳伺服器…',
       playing: '隊伍正在對局中。',
       rejoin: '回到對局',
-      rules: '合作模式為標準模式：沒有傳說模式、今日大量出現、女巫之夜、背包或商店的招式學習器。成績會列入雙人、三人與四人小隊排行榜。',
+      rules: '合作模式為標準模式（房主也可開啟傳說模式）：沒有今日大量出現、女巫之夜、背包或商店的招式學習器。成績會列入雙人、三人與四人小隊排行榜。',
       challenge: '每日挑戰',
       challengeModes: { off: '關閉', on: '開啟' },
       challengeBadge: (date) => `合作每日挑戰 · ${date}`,
       challengeRules: '使用當日的種子與難度，不使用寶可夢商店的強化。以隊伍最佳成績計算。',
       challengeFixed: '挑戰指定',
+      legend: '傳說模式',
+      legendBadge: '傳說模式',
+      legendRules: '每人使用一隻已捕獲的傳說寶可夢：更強的敵群、壓迫感，並在 Lv 12 與 28 覺醒。成績列入傳說雙人、三人與四人小隊排行榜。',
+      legendOff: '每日挑戰時關閉',
+      legendPick: '更換傳說寶可夢',
+      noLegend: '你還沒有捕獲傳說寶可夢。先在單人模式擊敗一隻，才能在這個房間遊玩。',
+      noLegendSeat: '沒有傳說',
+      legendFellBack: (name: string, pokemon: string) => `${name} 的傳說未經帳號確認：改用 ${pokemon} 出戰，這場不列入排行榜。`,
+      legendNote: '從已捕獲的傳說寶可夢中選一隻。開局時伺服器會確認捕獲紀錄；若無法確認，將改用你的夥伴。',
       hintKeys: '← → 選擇 · ENTER 確認 · ESC 離開',
       hintTouch: '點擊選擇',
       pick: '選擇',
@@ -1015,6 +1133,12 @@ export const zh: Messages = {
     inviteLater: '稍後',
   },
 
+  itemDrop: ITEM_DROP_WORDS.zh,
+  support: SUPPORT_WORDS.zh,
+  welcome: WELCOME_WORDS.zh,
+  tutorial: TUTORIAL_WORDS.zh,
+  lobbyTour: LOBBY_TOUR_WORDS.zh,
+  radio: RADIO_WORDS.zh,
   levelUp: {
     title: (name, level) => `${name} 升到 Lv ${level} 了！`,
     ready: '準備好了！',
@@ -1039,8 +1163,8 @@ export const zh: Messages = {
     shinyNote: '免費選擇：還有一張！',
     banish: (n) => `遺忘（${n}）`,
     banishCancel: '取消',
-    banishHintKeys: '選擇要遺忘的卡片 · ESC 取消',
-    banishHintTouch: '點擊要遺忘的卡片',
+    banishHintKeys: '選擇要遺忘的卡片：本局不會再出現（已學會的招式停在目前等級）· ESC 取消',
+    banishHintTouch: '點擊要遺忘的卡片：本局不會再出現（已學會的招式停在目前等級）',
     prize: { alpha: '頭目獎勵！', mission: '任務完成！' },
   },
 
@@ -1112,6 +1236,7 @@ export const zh: Messages = {
     music: '音樂',
     sfx: '音效',
     sound: '聲音',
+    mixOthers: '與其他 App 同時播放',
     damageNumbers: '傷害數字',
     damageModes: { all: '全部', reduced: '減少', off: '關' },
     screenShake: '畫面震動',
@@ -1171,6 +1296,7 @@ export const zh: Messages = {
       right: '向右移動',
       special: '必殺技',
       mega: '超級進化',
+      tera: TERA_WORDS.zh.action,
       lunge: '突進',
       pause: '暫停',
       confirm: '確認',
@@ -1226,6 +1352,7 @@ export const zh: Messages = {
     inAppOpen: '用 Chrome 開啟',
     inAppIos: '點 *...*，再選 *在瀏覽器中開啟*',
     inAppSignIn: 'Google 不允許在這個 App 內登入。請在瀏覽器中開啟遊戲再登入。',
+    framedSignIn: '已在新分頁開啟遊戲讓你登入，進度也一起帶過去了。請在那裡繼續玩。',
     close: '關閉',
   },
 
@@ -1267,7 +1394,7 @@ export const zh: Messages = {
   ranking: {
     bag: (items) => `背包：${items}`,
     title: '排行榜',
-    periods: { day: '今日', week: '本週', all: '總排行' },
+    periods: { day: '今日', week: '本週', all: '本賽季', era1: '第一紀元' },
     everyone: '所有人',
     friends: '好友',
     allPokemon: '所有寶可夢',
@@ -1312,6 +1439,7 @@ export const zh: Messages = {
     modes: { standard: '標準', legend: '傳說' },
     legendGroup: '傳說寶可夢',
     coop: '合作',
+    coopLegend: '傳說合作',
     sizes: { duo: '雙人', trio: '三人', squad: '四人小隊' },
     coopOutcomes: { victory: '勝利', wipe: '全滅' },
     coopEmpty: '這個排行榜還沒有隊伍。找朋友一起來，搶下第一名！',
@@ -1322,6 +1450,16 @@ export const zh: Messages = {
     coopHint: '↑ ↓ 訓練家 · ← → 期間 · Q E 難度 · M 模式 · T 隊伍 · F 好友 · ENTER 檔案 · ESC 返回',
     coopChallengeHint: '↑ ↓ 訓練家 · ← → 日期 · Q E 排行榜 · M 模式 · T 隊伍 · F 好友 · ENTER 檔案 · ESC 返回',
     team: (names) => `隊伍：${names}`,
+    hall: {
+      kicker: '名人堂',
+      closed: (date) => `第一賽季開始前的紀錄。已於 ${date} 封存，永遠留在這裡。`,
+      open: (date) => `第一紀元將於 ${date} 結束，第一賽季同時開始。在那之前的紀錄都會永遠留在這裡。`,
+      reward: (top) => `每個排行榜的第 1 名獲得稱號「*第一紀元冠軍*」、專屬相框與天空。前 ${top} 名：「*第一紀元傳奇*」與其相框。`,
+      coopReward: (top) => `每個排行榜的前 ${top} 支隊伍：「*第一紀元傳奇*」與其相框。`,
+      thin: (n) => (n === 0 ? '這個排行榜不到 10 人：沒有獎勵。' : `這個排行榜人數不多：獎勵只到第 ${n} 名。`),
+      tags: { champion: '冠軍', hall: '傳奇' },
+    },
+    seasonSoon: (date) => `第一賽季將於 ${date} 開始。在那之前，紀錄都算入第一紀元。`,
   },
 
   profile: {
@@ -1467,6 +1605,8 @@ export const zh: Messages = {
   dex: {
     seen: '見過',
     defeated: '擊倒',
+    /** The defeated counter's tooltip: why its total is smaller than the seen one's. */
+    defeatedHint: '只計算會出來戰鬥的寶可夢：只能使用、孵化或獲贈的不計入',
     caught: '捕捉',
     cleared: '通關',
     clear: '通關',
@@ -1482,7 +1622,22 @@ export const zh: Messages = {
     back: '返回',
     site: '在哪裡找到 ↗',
     pc: '電腦箱',
-    hintKeys: '方向鍵 瀏覽 · Q E 篩選 · ESC 返回',
+    regions: REGION_NAMES,
+    regionsDone: '地區',
+    goal: (left: number, title: string) => `再看 *${left}* 隻即可獲得稱號「*${title}*」`,
+    goalDone: (title: string) => `地區完成！已獲得稱號「*${title}*」`,
+    nationalGoal: (done: number, total: number, frame: string) => `${done}/${total} 個地區 · 外框「*${frame}*」`,
+    counts: (inGame: number, total: number) => `遊戲中 ${inGame}/${total}`,
+    forTitle: (goal: number) => `稱號需 ${goal} 隻`,
+    notCounted: (names: readonly string[]) => `${new Intl.ListFormat('zh-TW').format(names)} 不計入`,
+    drawing: '繪製中',
+    drawingText: 'PMD SpriteCollab 的畫師們畫出了遊戲裡所有的寶可夢，這一隻還在創作中。謝謝畫師們！♥',
+    /** `drawingText` for a phone's detail strip. */
+    drawingShort: 'SpriteCollab 的畫師們還在畫這一隻。謝謝畫師們！♥',
+    contribute: '協助繪製 ↗',
+    soon: '尚未登場，敬請關注最新消息！',
+    soonTag: '即將登場',
+    hintKeys: '方向鍵 瀏覽 · Q E 地區 · ESC 返回',
     hintTouch: '點擊寶可夢查看詳情',
   },
 
@@ -1507,8 +1662,8 @@ export const zh: Messages = {
       wallpaper: '電腦箱的桌布。',
     },
     styles: {
-      frame: { classic: '經典', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: '大使', supporter: '贊助者', pumpkin: '南瓜', spectral: '幽靈', regular: '常客', kecleon: '黃金Kecleon', meowth: 'Meowth', lantern: '燈籠', creator: '創作者', grotto: '隱藏洞穴' },
-      background: { night: '星空', meadow: '1號道路', forest: '常青森林', cave: '月見山', snow: '白銀山', tower: '紫苑鎮寶可夢塔', supporter: '黃金天空', halloween: '女巫之夜', friendship: '友情' },
+      frame: { classic: '經典', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: '大使', supporter: '贊助者', pumpkin: '南瓜', spectral: '幽靈', regular: '常客', kecleon: '黃金Kecleon', meowth: 'Meowth', lantern: '燈籠', creator: '創作者', grotto: '隱藏洞穴', stampFrame: '印章冊', era1: '第一紀元', era1Champion: '第一紀元王冠', bugContest: '捕蟲大會', rocket: ROCKET_WORDS.zh.frame, nationalDex: '全國圖鑑' },
+      background: { night: '星空', meadow: '1號道路', forest: '常青森林', cave: '月見山', snow: '白銀山', tower: '紫苑鎮寶可夢塔', supporter: '黃金天空', halloween: '女巫之夜', friendship: '友情', era1Champion: '第一紀元王座' },
       wallpaper: { classic: '經典', forest: '樹葉', cave: '碎石', snow: '雪花', tower: '小幽靈', supporter: '金色星星', haunted: '鬼屋', secretBase: '秘密基地' },
     },
   },
@@ -1606,7 +1761,7 @@ export const zh: Messages = {
     incubator: {
       intro: (slots, max) => `你的孵化器：${slots}/${max}格 · 額外的格子永久屬於你`,
       slot: (n) => `第${n}格`,
-      slotText: '永久多一顆蛋能同時孵化。孵化器滿了時，新的蛋會變成₽。',
+      slotText: '永久多一顆蛋能同時孵化。孵化器滿了時，新的蛋會排隊等候。',
       before: '請先購買前一格。',
       needs: (level) => `商店達到${level}時開賣。`,
       buy: (price) => `購買 ${price}`,
@@ -1763,6 +1918,9 @@ export const zh: Messages = {
       failed: '現在無法更改。請再試一次。',
     },
     card: '祭典',
+    /** Na Praça's card: what a donation does, and the next milestone. */
+    cardLine: '捐出 ₽ 點亮廣場',
+    nextPot: (pot: string) => `下一階：${pot}`,
     daysLeftShort: (days) => (days === 1 ? '最後一天' : `剩${days}天`),
     shopButton: '祭典',
   },
@@ -1882,6 +2040,30 @@ export const zh: Messages = {
     hintTouch: '點擊作答',
   },
 
+  designSurvey: {
+    title: '全新外觀',
+    open: '問卷：你覺得全新外觀如何？',
+    question: '你覺得遊戲的全新外觀如何？',
+    ratings: { 1: '不喜歡', 2: '普通偏差', 3: '還可以', 4: '喜歡', 5: '超喜歡' },
+    pickRating: '選一顆寶可夢球',
+    aspectsQuestion: '最讓你印象深刻的是？（最多 2 項）',
+    aspects: {
+      easyToFind: '東西很好找',
+      hardToFind: '東西很難找',
+      niceLook: '畫面好看',
+      badLook: '不喜歡這個風格',
+      readable: '文字好讀',
+      hardToRead: '文字難讀',
+    },
+    send: '送出',
+    later: '現在不要',
+    never: '不要再問',
+    close: '關閉',
+    thanks: '謝謝！你的回答能幫助遊戲變得更好。',
+    hintKeys: '← → ↑ ↓ 移動 · ENTER 選擇 · ESC 關閉',
+    hintTouch: '點選即可回答',
+  },
+
   ribbons: {
     names: { gold: '金緞帶', silver: '銀緞帶', bronze: '銅緞帶' },
     section: '挑戰緞帶',
@@ -1972,7 +2154,13 @@ export const zh: Messages = {
     patron: (festival) => `感謝你成為${festival}的贊助人 ♥`,
     og: '感謝你從一開始就支持遊戲 ♥',
     arenaSeason: (season) => `獎勵你在競技場第 ${season} 賽季的最高段位`,
+    era1: (rank, board) => `第一紀元名人堂第 ${rank} 名 · ${board}`,
+    bugContest: (rank) => `本週捕蟲大會第 ${rank} 名`,
+    safariDex: (place) => `圖鑑完成:${place}`,
+    safariDexAll: '狩獵地帶所有棲地的圖鑑完成',
     hiddenZone: { grotto: '獎勵你找到隱藏洞穴', underground: '獎勵你找到地下通道' },
+    dex: (region: string | null) => (region ? `獎勵你完成${region}圖鑑` : '獎勵你完成全國圖鑑：所有地區！'),
+    ultraBeasts: '獎勵你收服所有究極異獸',
   },
 
   supporters: {
@@ -2200,7 +2388,7 @@ export const zh: Messages = {
     boss: (name) => `野生的*${name}*出現了！`,
     bossFled: (name) => `野生的*${name}*逃走了！`,    shiny: (name) => `異色的*${name}*出現了！`,
     shinyPlayer: (name) => `好運！你的*${name}*是異色！現在已在選擇畫面_解鎖_。`,
-    caught: (name) => `異色*${name}*是你的了！已登錄到_寶可夢圖鑑_。`,
+    caught: (name) => `擊敗了異色*${name}*！已登錄到_寶可夢圖鑑_和_電腦箱_。`,
     evolving: (name) => `咦？${name} 要進化了！`,
     evolved: (from, to) => `恭喜！${from} 進化成了 ${to}！`,
     moveEvolved: (from, to) => `*${from}* 進化成了 *${to}*！`,
@@ -2235,6 +2423,8 @@ export const zh: Messages = {
     how: (stone, seconds, recharge) =>
       `擊敗裂縫中的傳說寶可夢即可獲得 ${stone}。在最終進化型態時，可超級進化 ${seconds} 秒（充能 ${recharge} 秒）：`,
     effects: {
+      ...GA_FAMILIES_B_WORDS.zh.megas,
+      ...MEGA_FAMILIES_B_WORDS.zh.megas,
       venusaur: 'HP+50、護甲+3、每秒回復1 HP。必殺技變為 Petal Blizzard。',
       charizardX: '招式+30%、速度+8、護甲+1。必殺技變為 Dragon Flare，在藍色龍焰中衝刺。',
       charizardY: '讓陽光變成大晴天（裂縫外），火屬性招式×1.5；招式+25%、範圍+15%。必殺技變為 Heat Wave。',
@@ -2274,8 +2464,14 @@ export const zh: Messages = {
       manectric: '80 px 內的敵人速度降低30%、速度+12、招式+20%、冷卻−5%。必殺技變為 Wild Charge。',
       altaria: '一般與妖精屬性招式+30%、龍屬性招式+20%、HP+30、每秒回復1 HP。必殺技變為 Hyper Voice。',
       banette: '冷卻−20%、每個招式的異常狀態機率+10%、招式+15%。必殺技變為 Phantom Force，連鎖衝刺，每次落地都會爆發一圈暗影。',
+      ...GA_FAMILIES_A_WORDS.zh.megas,
+      ...GA_FOSSILS_WORDS.zh.megas,
       glalie: '一般與冰屬性招式+30%、招式+25%。必殺技變為 Sheer Cold。',
       salamence: '一般與飛行屬性招式+30%、速度+12、招式+25%。必殺技變為 Double-Edge。',
+      ...ROCKET_FAMILY_WORDS.zh.megas,
+      ...GA_MEGAS_WORDS.zh.megas,
+      ...GA_MEGA_FAMILIES_A_WORDS.zh.megas,
+      ...SC_WAVE_WORDS.zh.megas,
     },
   },
 
@@ -2355,6 +2551,13 @@ export const zh: Messages = {
   },
 
   abilities: {
+    ...SEASON_ONE_EGGS_WORDS.zh.abilities,
+    ...REGIONAL_WORDS.zh.abilities,
+    ...SEASON_ONE_KITS_WORDS.zh.abilities,
+    ...ULTRA_WORDS.zh.abilities,
+    ...LEGEND_PATHS_WORDS.zh.abilities,
+    ...QUEST_WORDS.zh.abilities,
+    ...REGIS_FORCES_WORDS.zh.abilities,
     overgrow: 'HP低於1/3時，草屬性招式傷害+50%。',
     blaze: 'HP低於1/3時，火屬性招式傷害+50%。',
     torrent: 'HP低於1/3時，水屬性招式傷害+50%。',
@@ -2388,9 +2591,9 @@ export const zh: Messages = {
     waterAbsorb: '水屬性攻擊會回復你的HP，而不是造成傷害。',
     voltAbsorb: '電屬性攻擊會回復你的HP，而不是造成傷害。',
     lightningRod: '電屬性攻擊會回復你的HP，而不是造成傷害，且電屬性招式+15%。',
-    bulletproof: '首領的投射物與爆炸造成的傷害減少60%。',
+    bulletproof: '首領的投射物與爆炸造成的傷害減少40%。',
     levitate: '你漂浮在空中：岩漿、陷阱、地上的水窪與火焰、水與冰都不會影響你。',
-    magicGuard: '只有直接攻擊能傷害你：岩漿、陷阱、爆炸、地上的水窪、天氣與詛咒道具都不會削弱你。',
+    magicGuard: '岩漿、陷阱、天氣與詛咒道具都不會削弱你，爆炸與地上的水窪只造成一半傷害。',
     magicBounce: '每12秒擋下一次攻擊，並以兩倍威力反彈給接觸你的敵人。',
     illusion: '每10秒完全擋下一次攻擊。',
     damp: '爆炸不會傷害你，且水屬性招式+10%。',
@@ -2491,12 +2694,15 @@ export const zh: Messages = {
     },
   },
   eggs: {
-    tiers: { common: '普通蛋', rare: '稀有蛋', ultra: '超稀有蛋', friend: '友情蛋', haunted: '鬧鬼蛋', kecleon: 'Kecleon蛋', kecleonShiny: '異色Kecleon蛋' },
+    tiers: { common: '普通蛋', rare: '稀有蛋', ultra: '超稀有蛋', friend: '友情蛋', haunted: '鬧鬼蛋', kecleon: 'Kecleon蛋', kecleonShiny: '異色Kecleon蛋', fossil: '化石蛋', found: '邂逅', dig: '礦坑挖掘化石', ...REGIONAL_WORDS.zh.tiers },
     found: (egg) => `你找到了一顆*${egg}*！已放進孵化器。`,
-    foundFull: (egg, coins) => `你找到了一顆*${egg}*！孵化器已滿，所以會變成*${coins}*。`,
+    foundFull: (egg, coins) => `你找到了一顆*${egg}*！孵化器和等候隊列都滿了，所以會變成*${coins}*。`,
+    foundQueued: (egg) => `你找到了一顆*${egg}*！孵化器已滿，所以它會排隊等候。`,
     title: '孵化器',
     intro: '蛋會隨著你在對局中走的步數孵化。孵化器裡的每顆蛋都會一起走。',
     sources: '首領、上鎖的寶箱與裂縫有時會留下蛋。',
+    queue: (n, max) => `等候隊列 ${n}/${max}`,
+    queueRule: (max) => `孵化器滿了時，最多${max}顆蛋會排隊等候，有空位時自動放入。超過的蛋會變成₽。`,
     empty: '空',
     stepsLeft: (n) => `還差 ${n} 步`,
     ready: '準備好了！',
@@ -2577,6 +2783,9 @@ export const zh: Messages = {
       hudEscort: (time) => `帶 Togepi 回家 ${time}`,
     },
   },
+  tera: TERA_WORDS.zh.tera,
+  raid: TERA_WORDS.zh.raid,
+
   rifts: {
     open: '*傳說裂縫*開啟了！跟著箭頭走。',
     closed: '裂縫關閉了。',
@@ -2609,6 +2818,7 @@ export const zh: Messages = {
     caught: (name) => `收服了*${name}*！`,
     calms: (name) => `風平息了*${name}*殘存的怒火。`,
     domains: {
+      ...ULTRA_WORDS.zh.domains,
       kyogre: {
         place: '海底洞窟',
         epithet: '海洋之主',
@@ -2649,8 +2859,22 @@ export const zh: Messages = {
         epithet: '時間之主',
         omen: '時間開始錯亂…',
         crossing: '時間正在崩解！快穿過槍之柱！',
-        phases: ['時間扭曲了！Roar of Time 期間，你的攻擊會凍結在半空中。', '時間加速了！Dialga 越來越快。'],
+        phases: ['時間扭曲了！Roar of Time 期間，你的攻擊會凍結在半空中。', '起源形態！時間加速了，Dialga 越來越快。'],
         cues: { stop: '時間停止了！', forward: '時間快轉了！', rewind: '時間倒流了！' },
+      },
+      palkia: {
+        place: '摺疊空間',
+        epithet: '空間之主',
+        omen: '空間開始摺疊…',
+        crossing: '空間正在閉合！穿過雙生傳送門越過裂縫！',
+        phases: ['空間彎曲了！大廳的兩側相連：從一邊走出，就會從另一邊回來。', '起源形態！空間摺疊，大廳的牆壁向內收攏。'],
+        cues: {
+          twist: '空間扭轉了！傳送門會把你送回去！',
+          thrownBack: '被送回去了！',
+          swap: '*Palkia* 和你交換了位置！',
+          fold: '空間之牆正在收攏！',
+          dialga: '*Palkia* 在你身上感受到 *Dialga* 的時間…咆哮得更響了！',
+        },
       },
       latias: {
         place: '南方孤島',
@@ -2728,14 +2952,15 @@ export const zh: Messages = {
     noCrossing: '在湖裡走得慢，在冰上會打滑。',
   },
   places: {
-    names: { cave: '黑暗洞窟', graveyard: '鬧鬼墓地', sky: '雲端之上', grotto: '隱藏洞穴', underground: '地下通道' },
-    hudNames: { cave: '洞窟', graveyard: '墓地', sky: '上升氣流', grotto: '洞穴', underground: '地下通道' },
+    names: { cave: '黑暗洞窟', graveyard: '鬧鬼墓地', sky: '雲端之上', grotto: '隱藏洞穴', underground: '地下通道', hideout: '火箭隊秘密基地' },
+    hudNames: { cave: '洞窟', graveyard: '墓地', sky: '上升氣流', grotto: '洞穴', underground: '地下通道', hideout: '秘密基地' },
     open: {
       cave: '出現了一個*洞窟*的入口！跟著箭頭走。',
       graveyard: '一座*墓地*從霧中浮現！跟著箭頭走。',
       sky: '一道*上升氣流*衝上天空！跟著箭頭去飛翔吧。',
       grotto: '你在草叢裡發現了*隱藏洞穴*！',
       underground: '岩石的裂縫通往*地下通道*！',
+      hideout: '*火箭隊秘密基地*的艙門打開了！跟著箭頭走。',
     },
     sealed: {
       cave: '落石堵住了洞窟的入口。',
@@ -2743,6 +2968,7 @@ export const zh: Messages = {
       sky: '上升氣流消失了。',
       grotto: '樹葉蓋住了洞穴的入口。',
       underground: '岩石的裂縫崩塌了。',
+      hideout: '秘密基地的艙門鎖上了。',
     },
     blocked: '只有*飛行*屬性的寶可夢能乘上這道上升氣流。',
     goal: {
@@ -2751,6 +2977,7 @@ export const zh: Messages = {
       sky: '在風平息之前，抓住風帶來的*羽毛*！',
       grotto: '打倒從晃動的草叢裡跑出來的 *Audino*！',
       underground: '站在牆上的*閃光*處挖掘，並敲打 *Diglett*！',
+      hideout: '往下走到底，面對*火箭隊的首領*！',
     },
     floor: (n) => `B${n}F`,
     wind: ['有什麼東西在騷動…', '越來越近了！', '就在附近！風越颳越強！'],
@@ -2795,7 +3022,7 @@ export const zh: Messages = {
       sphere: '你挖到了 *Prism Sphere*！可以換成₽。',
       rareCandy: '你挖到了 *Rare Candy*！',
       stone: '你挖到了*進化石*！',
-      fossil: '你挖到了 *Old Amber*！裡面有一顆蛋！',
+      fossil: '你挖到了 *Old Amber*！裡面有一顆 *Aerodactyl* 的蛋！',
     },
     hudGrotto: (n, time) => `Audino ${n} · ${time}`,
     hudDig: (n, time) => `收穫 ${n} · 牆壁 ${time}`,
@@ -2878,9 +3105,10 @@ export const zh: Messages = {
     noTitle: '無',
     titleTag: '稱號',
     equipped: '展示中',
-    giftTitles: { ambassador: '邀請了3位好友加入遊戲', supporter: '透過贊助支持本專案', pumpkinKing: '裝滿了女巫之夜的糖果罐', exorcist: '擊敗了所有捉鬼行動的首領', vipCustomer: '在 Kecleon 集點卡上集滿30個印章', tycoon: '把 Kecleon 的商店經營成百貨公司', patron: '在廣場祭典中捐出 ₽50,000 以上', ogSupporter: '在 Patreon 之前就贊助了遊戲', arenaPoke: '以 Poké Ball 段位結束一個競技場排位賽季', arenaGreat: '在競技場排位賽季中達到 Great Ball', arenaUltra: '在競技場排位賽季中達到 Ultra Ball', arenaMaster: '在競技場排位賽季中達到 Master Ball', creator: '製作 Pokémon Survivors 的影片和直播', friendLegend: '邀請了10位好友加入遊戲' },
+    giftTitles: { ambassador: '邀請了3位好友加入遊戲', supporter: '透過贊助支持本專案', pumpkinKing: '裝滿了女巫之夜的糖果罐', exorcist: '擊敗了所有捉鬼行動的首領', vipCustomer: '在 Kecleon 集點卡上集滿30個印章', tycoon: '把 Kecleon 的商店經營成百貨公司', patron: '在廣場祭典中捐出 ₽50,000 以上', ogSupporter: '在 Patreon 之前就贊助了遊戲', arenaPoke: '以 Poké Ball 段位結束一個競技場排位賽季', arenaGreat: '在競技場排位賽季中達到 Great Ball', arenaUltra: '在競技場排位賽季中達到 Ultra Ball', arenaMaster: '在競技場排位賽季中達到 Master Ball', creator: '製作 Pokémon Survivors 的影片和直播', friendLegend: '邀請了10位好友加入遊戲', stampCollector: '在 Poké Realm 收集了30枚印章', era1Legend: '在第一紀元排行榜名列前茅', era1Champion: '在第一紀元排行榜奪得第一', spaceTime: '捕捉了 Dialga 與 Palkia', bugChampion: '贏得一週的捕蟲大會', safariWarden: '完成狩獵地帶所有棲地的圖鑑', ...ROCKET_WORDS.zh.giftTitles, ...SC_WAVE_WORDS.zh.giftTitles, kantoDex: '在圖鑑中看過關都的所有寶可夢', johtoDex: '在圖鑑中看過城都的所有寶可夢', hoennDex: '在圖鑑中看過豐緣的所有寶可夢', sinnohDex: '在圖鑑中看過神奧的所有寶可夢', unovaDex: '在圖鑑中看過合眾的所有寶可夢', kalosDex: '在圖鑑中看過卡洛斯的所有寶可夢', alolaDex: '在圖鑑中看過阿羅拉的所有寶可夢', galarDex: '在圖鑑中看過伽勒爾的所有寶可夢', paldeaDex: '在圖鑑中看過帕底亞的所有寶可夢' },
     newMedals: '新獎牌',
     names: {
+      ...TERA_WORDS.zh.achievementNames,
       firstRun: '第一步',
       regular: '常客',
       veteran: '老手',
@@ -2947,6 +3175,7 @@ export const zh: Messages = {
       reaperDown: '活傳說',
     },
     titles: {
+      ...TERA_WORDS.zh.titles,
       veteran: '老手',
       kills100k: '勢不可擋',
       coins1m: '大富翁',
@@ -2977,8 +3206,26 @@ export const zh: Messages = {
       arenaMaster: '競技場 Master Ball',
       creator: '內容創作者',
       friendLegend: '友情傳奇',
+      stampCollector: '印章收藏家',
+      era1Legend: '第一紀元傳奇',
+      era1Champion: '第一紀元冠軍',
+      kantoDex: '關都研究員',
+      johtoDex: '城都研究員',
+      hoennDex: '豐緣研究員',
+      sinnohDex: '神奧研究員',
+      unovaDex: '合眾研究員',
+      kalosDex: '卡洛斯研究員',
+      alolaDex: '阿羅拉研究員',
+      galarDex: '伽勒爾研究員',
+      paldeaDex: '帕底亞研究員',
+      ...ROCKET_WORDS.zh.titles,
+      ...SC_WAVE_WORDS.zh.titles,
+      bugChampion: '捕蟲冠軍',
+      safariWarden: '園區巡守員',
+      spaceTime: '時間與空間之主',
     },
     goals: {
+      ...TERA_WORDS.zh.goals,
       runs: (n) => `玩 ${n} 局`,
       kills: (n) => `累計擊倒 ${n} 隻寶可夢`,
       bestMinutes: (n) => `在一局中存活 ${n} 分鐘`,
@@ -3016,6 +3263,24 @@ export const zh: Messages = {
     region: (name) => `用${name}的初始寶可夢擊敗 Mewtwo`,
   },
   moves: {
+    ...SEASON_ONE_EGGS_WORDS.zh.moves,
+    ...REGIONAL_WORDS.zh.moves,
+    teraStarstorm: TERA_WORDS.zh.move,
+    ...SEASON_ONE_KITS_WORDS.zh.moves,
+    ...GA_FAMILIES_B_WORDS.zh.moves,
+    ...MEGA_FAMILIES_B_WORDS.zh.moves,
+    ...GA_FAMILIES_A_WORDS.zh.moves,
+    ...GA_FOSSILS_WORDS.zh.moves,
+    ...ROCKET_FAMILY_WORDS.zh.moves,
+    ...GA_MEGA_FAMILIES_A_WORDS.zh.moves,
+    ...SC_WAVE_WORDS.zh.moves,
+    ...GA_HOOK_WORDS.zh.moves,
+    ...GALLOP_WORDS.zh,
+    ...ULTRA_WORDS.zh.moves,
+    ...LEGEND_PATHS_WORDS.zh.moves,
+    ...QUEST_WORDS.zh.moves,
+    ...MYTHICAL_WORDS.zh.moves,
+    ...REGIS_FORCES_WORDS.zh.moves,
     leechSeed: {
       description: '向最近的敵人拋出種子。種子會隨時間吸取HP並回復你；敵人倒下時，種子會跳到附近的兩個敵人身上。',
       upgrades: [
@@ -5485,6 +5750,22 @@ export const zh: Messages = {
   },
 
   blurbs: {
+    ...SEASON_ONE_EGGS_WORDS.zh.blurbs,
+    ...REGIONAL_WORDS.zh.blurbs,
+    ...SEASON_ONE_KITS_WORDS.zh.blurbs,
+    ...GA_FAMILIES_B_WORDS.zh.blurbs,
+    ...MEGA_FAMILIES_B_WORDS.zh.blurbs,
+    ...GA_FAMILIES_A_WORDS.zh.blurbs,
+    ...GA_FOSSILS_WORDS.zh.blurbs,
+    ...ROCKET_FAMILY_WORDS.zh.blurbs,
+    ...GA_MEGA_FAMILIES_A_WORDS.zh.blurbs,
+    ...SC_WAVE_WORDS.zh.blurbs,
+    ...GA_HOOK_WORDS.zh.blurbs,
+    ...ULTRA_WORDS.zh.blurbs,
+    ...LEGEND_PATHS_WORDS.zh.blurbs,
+    ...QUEST_WORDS.zh.blurbs,
+    ...MYTHICAL_WORDS.zh.blurbs,
+    ...REGIS_FORCES_WORDS.zh.blurbs,
     bulbasaur: '平衡型。會回復HP。',
     charmander: '進攻型。傷害較高，HP較低。',
     squirtle: '防禦型。HP與防禦較高。',
@@ -5600,9 +5881,11 @@ export const zh: Messages = {
     arceus: '神。屬性隨每個區域而改變。',
     darkrai: '惡夢。讓敵群沉睡，並在夢中傷害它們。',
     cresselia: '新月。會飛回的月刃與治癒的滿月。',
+    terapagos: TERA_WORDS.zh.blurb,
   },
 
   specials: {
+    ...MEGA_FAMILIES_B_WORDS.zh.specials,
     blastBurn: '帶著火焰衝鋒，留下一道火焰軌跡。',
     hydroCannon: '朝你移動的方向發射集中的強力水砲。',
     frenzyPlant: '一圈圈樹根從地面竄出，減緩敵人。',
@@ -5627,6 +5910,7 @@ export const zh: Messages = {
     braveBird: '俯衝撞向最近的敵人。命中後立刻再按一次，可跳向下一個敵人。',
     ironHead: '以刀刃為先撲向最近的敵人。命中後立刻再按一次，可跳向下一個敵人。',
     stanceChange: '在盾牌形態（受到傷害−30%，招式×0.7）與刀劍形態（招式×1.3，受到傷害+10%）之間切換。',
+    applianceChange: 'Rotom 切換家電：微波爐、洗衣機、冰箱、電風扇或割草機，每種都會改變 Discharge 的屬性與形態。',
     formeChange: '輪流切換普通形態、攻擊形態（招式×1.35，受到傷害+25%）、防禦形態（受到傷害−40%，招式×0.75）與速度形態（速度+35%）。',
     dragonFlare: '在藍色龍焰中長距離衝刺，留下火焰軌跡，終點還會爆炸。',
     psystrike: '在你周圍放出三道巨大的超能力波動，推開並減緩敵人。',
@@ -5665,6 +5949,7 @@ export const zh: Messages = {
     phantomForce: '最多6跳的連鎖衝刺；每次落地都會爆出一圈暗影。',
     sheerCold: '在你周圍放出三波絕對零度，大幅減緩敵人。',
     doubleEdge: '十二次俯衝轟炸砸向最近的敵人。',
+    ...GA_MEGAS_WORDS.zh.specials,
   },
 
 
@@ -5705,7 +5990,6 @@ export const zh: Messages = {
     itemHintTouch: '點擊以選擇',
   },
   plaza: {
-    talk: '交談',
     next: '繼續',
     greetings: {
       morning: '早安、早安！歡迎光臨 Kecleon商店！新貨剛剛到！',
@@ -5756,11 +6040,6 @@ export const zh: Messages = {
       hello: ['鬧鬼蛋，用₽或糖果都能買。會孵出什麼？其他蛋裡都不會出現的幽靈。', '噗……這些蛋不是靠溫暖孵化的，是靠恐懼。要來一顆嗎？', '四隻幽靈，一顆蛋。會是哪一隻呢？連我都不知道……嘿嘿嘿。'],
       thanks: ['噗……好選擇。午夜時好好看著它。', '嘿嘿嘿……它已經在看著你了。', '明天再來吧。如果你敢的話。'],
     },
-    stalls: {
-      halloween: ['噗……女巫之夜降臨廣場了。', '對局中的糖果要放進大廳的糖果罐。我這裡賣的是別的東西……'],
-      christmas: ['Deli！Delibird Presents 來到廣場了！', '我還在包裝所有東西。聖誕節再來吧，袋子會裝得滿滿的！'],
-    },
-    lanturn: ['Lan-turn！每丟一枚硬幣到泉水裡，廣場上就會點亮一盞燈籠。來看看獎池吧！'],
 
   },
 
@@ -5821,7 +6100,6 @@ export const zh: Messages = {
     hello: ['準備好修行了嗎？靶子不會還手！', '好的訓練家都知道自己的 DPS。', 'Wobbuffet 什麼都扛得住。全力以赴吧！', '火打水？換個靶子看看差別。'],
   },
   stadium: {
-    boards: { play: '對戰', ranking: '排行榜', season: '賽季', history: '戰績', rules: '規則' },
     first: [
       '嗡嗡！歡迎來到競技場！我是競技場的裁判，動作快到任何一個細節都逃不過我的眼睛。',
       '兩隊對戰：在山谷或海灣各派四隻，或在林間空地或珊瑚礁各派三隻快速對決。擊倒野生寶可夢、收集能量，再送進對手的得分區。',
@@ -5848,6 +6126,7 @@ export const zh: Messages = {
   },
   furniture: {
     names: {
+      ...CAFE_TABLES_WORDS.zh.furniture,
       woodChair: '木椅',
       stool: '小圓凳',
       woodTable: '木桌',
@@ -6023,12 +6302,17 @@ export const zh: Messages = {
       // The arcade's trophies (data/furnitureSets/games.ts).
       berryBasket: '樹果籃',
       goldenMallet: '黃金木槌',
+      stampDesk: '印章書桌',
+      stampCabinet: '印章櫃',
+      goldenStampPress: '黃金印章機',
       // The fishing trophies (`MINIGAMES.fishing.trophies`).
       fishingRodRack: '釣竿架',
       goldenMagikarpPlaque: '黃金 Magikarp 獎牌',
       shinyGyaradosTrophy: '異色 Gyarados 獎盃',
     },
     doll: (legend) => `${legend}玩偶`,
+    plush: SEASON_ONE_CLAW_WORDS.zh.plush,
+    dig: SEASON_ONE_DIG_WORDS.zh.pieces,
     kinds: { floor: '家具', rug: '地毯', top: '擺飾', wall: '牆面', wallpaper: '壁紙', flooring: '地板' },
     /** The carpentry's collections (`FURNITURE_SETS`). */
     sets: { classic: '經典', cozy: '溫馨', elegant: '典雅', modern: '現代', pop: '繽紛', garden: '花園', aqua: '水族', arcade: '遊樂場', kitchen: '廚房', trainer: '訓練家', center: '寶可夢中心', gallery: '畫廊', trophies: '獎盃' },
@@ -6115,6 +6399,15 @@ export const zh: Messages = {
     },
     captured: '已收藏',
     locked: (legend) => `捕捉${legend}`,
+    earn: {
+      plays: (game, n) => `玩${n}場${game}`,
+      best: (game, n) => `在${game}拿到${n}分`,
+      wins: (game, n) => `贏得${n}場${game}`,
+      feat: (game) => `${game}的特殊成就`,
+      stamps: (n) => `收集${n}枚郵票`,
+      note: '達成目標就會獲得這個獎盃。非賣品！',
+      featNote: (feat) => `達成這項成就即可獲得：${feat} 非賣品！`,
+    },
     collections: '系列',
     all: '全部',
     pay: { all: '全部', coins: '₽', gems: '寶石' },
@@ -6163,6 +6456,8 @@ export const zh: Messages = {
     defeated: (name: string) => `你打倒了 *頭目 ${name}*！快拿走_獎勵_。`,
     prize: '*頭目獎勵*：_稀有_卡！',
   },
+  /** The Ultra Wormholes and the Ultra Beasts (`i18n/ultra.ts`). */
+  ultra: ULTRA_WORDS.zh.ui,
   legend: {
     mode: '傳說模式',
     awakening: (name: string) => `${name} 正在覺醒！`,
@@ -6172,6 +6467,15 @@ export const zh: Messages = {
     innateExtra: {
       articuno: '翅膀的寒氣會減緩附近的敵人。',
       jirachi: '稀有卡與異色卡更常出現。',
+      uxie: '獲得的經驗值多 8%。',
+      mesprit: '每 10 秒回復 4% HP。',
+      azelf: 'HP 低於一半時，傷害 +25%。',
+      regieleki: '跑得更快：速度 +6。',
+      regidrago: 'HP 全滿時，傷害 +15%。',
+      tornadus: '下雪時：速度 +10、冷卻快 5%；不受天氣損耗。',
+      thundurus: '招來下雨；雨中傷害 +12%、範圍 +8%。',
+      landorus: '招來沙暴。',
+      enamorus: '碰到你的敵人有 30% 機率睡著 2 秒。',
     },
     clone: (name: string) => `${name} 複製體`,
     escaped: (name: string, wins: number, need: number) => `*${name}* 掙脫了……_${wins}/${need}_`,
@@ -6191,14 +6495,22 @@ export const zh: Messages = {
     where: {
       rift: '在_傳說裂縫_中等待：穿過傳送門，在那裡擊敗它。',
       trio: '會以首領身分和這局的_傳說三神_一同出現。',
-      mythical: '偶爾（每10局1次）會在最後與 *Mewtwo* 一同出現。',
+      mythical: '偶爾會在 15:00 與 *Mewtwo* 一同出現：每 10 場決戰有 1 場會帶來一隻你還沒有的幻之寶可夢（三隻都沒有時，每一隻約 30 場決戰 1 次）。連續 5 場決戰沒有出現後機率提高，第 21 場必定出現。',
       finale: '它是最終首領：贏下一局。',
       endless: '最後的戰利品：收服其他22隻後，在_無盡模式_中擊敗它。',
       event: '只在_女巫之夜_：在_夢魘裂縫_中擊敗它。',
       festival: '_廣場祭典_的獎勵：以神秘禮物送達，從不需要對戰。',
+      ultra: '從_究極之洞_出現（單人遊戲每局一個，約8分鐘時）：進去擊敗它。',
+      ultraGift: '收服全部10隻究極異獸後，以神秘禮物送達。',
+      path: LEGEND_PATHS_WORDS.zh.paths.where.zygarde,
+      temple: LEGEND_PATHS_WORDS.zh.paths.where.regigigas,
+      ...QUEST_WORDS.zh.where,
+      egg: SC_WAVE_WORDS.zh.legendWhere,
+      ...MYTHICAL_WORDS.zh.where,
+      ...REGIS_FORCES_WORDS.zh.where,
     },
     rule: (need: number) => (need === 1 ? '在任何模式的單人遊戲中以首領身分擊敗它1次，即可收服。合作模式的勝利不計。' : `在任何模式的單人遊戲中以首領身分擊敗它${need}次，即可收服。合作模式的勝利不計。`),
-    shinyRule: '在收服的那場勝利或之後擊敗異色個體，即可解鎖它的異色。',
+    shinyRule: '在任何一場勝利中擊敗異色個體（收服前或收服後皆可），收服後即可解鎖它的異色。',
     selectNote: '傳說寶可夢使用*傳說模式*：獨立的排行榜、更強的獸群，並在 Lv 12 與 28 覺醒。',
     event: {
       badge: '女巫之夜 2026',
@@ -6211,6 +6523,10 @@ export const zh: Messages = {
       gone: (festival) => `_${festival}_已經結束。已收到的玩家仍可繼續使用牠。`,
     },
   },
+  quests: QUEST_WORDS.zh.ui,
+  mythicals: MYTHICAL_WORDS.zh.ui,
+  /** The Ruínas da Decisão and the Forces of Nature (`game/splitRuins.ts`, `game/roamers.ts`): the choice on screen, the Forces' visits, their title cards and phase lines. */
+  regisForces: { ...REGIS_FORCES_WORDS.zh.ui, epithets: REGIS_FORCES_WORDS.zh.epithets, phases: REGIS_FORCES_WORDS.zh.phases },
   legends: {
     epithets: {
       articuno: '永恆寒冰之鳥',
@@ -6227,6 +6543,10 @@ export const zh: Messages = {
       jirachi: '許願之星',
       mewtwo: '基因之怒',
       arceus: '創始之神',
+      regigigas: LEGEND_PATHS_WORDS.zh.epithet,
+      zeraora: MYTHICAL_WORDS.zh.epithet,
+      regieleki: REGIS_FORCES_WORDS.zh.epithets.regieleki,
+      regidrago: REGIS_FORCES_WORDS.zh.epithets.regidrago,
     },
     phases: {
       articuno: ['*Articuno* 起飛了！快逃離它的_影子_。', '暴風雪！在 Snowscape 之前躲進_雪之避難所_。'],
@@ -6243,6 +6563,10 @@ export const zh: Messages = {
       jirachi: ['*Jirachi* 瞬間移動到你身上：快離開_圓圈_！', 'Wish！星星如雨落下：找出_空隙_。'],
       mewtwo: ['*Mewtwo* 釋放超能力！快離開 Teleport 的_圓圈_。', 'Psystrike！從_空隙_鑽過去，再跑向_避難所_。'],
       arceus: ['*Arceus* 瞬間移動來審判你！', 'Judgment！只有_光之避難所_能救你。'],
+      regigigas: LEGEND_PATHS_WORDS.zh.phases,
+      zeraora: MYTHICAL_WORDS.zh.phases,
+      regieleki: REGIS_FORCES_WORDS.zh.phases.regieleki,
+      regidrago: REGIS_FORCES_WORDS.zh.phases.regidrago,
     },
   },
   team: {
@@ -6280,6 +6604,7 @@ export const zh: Messages = {
       evolved: (name, from, to) => `*${name}*：${from} 進化成了 *${to}*！`,
       mega: (name, form) => `*${name}* 超級進化成了 *${form}*！`,
       duo: (name, move) => `*${name}* 融合出合體招式：*${move}*！`,
+      awakened: (name, form) => `*${name}* 覺醒了：*${form}*！`,
     },
     vote: {
       title: '隊伍打倒了 Mewtwo！',
@@ -6313,17 +6638,32 @@ export const zh: Messages = {
       awards: { damage: '最高傷害', kills: '最多擊倒', revives: '守護天使', untouched: '毫髮無傷', tank: '坦克', comeback: '不死鳥', survivor: '倖存者', specialist: '專家', collector: '收藏家', loyal: '團隊精神' },
     },
   },
+  seasonUnlocks: { ...SEASON_ONE_UNLOCKS_WORDS.zh, where: { ...SEASON_ONE_UNLOCKS_WORDS.zh.where, ...GA_HOOK_WORDS.zh.where } },
+  megaFamiliesWhere: GA_MEGA_FAMILIES_A_WORDS.zh.where,
+  rocket: ROCKET_WORDS.zh,
+  scWave: SC_WAVE_WORDS.zh,
+  paths: LEGEND_PATHS_WORDS.zh.paths,
   minigames: {
+    claw: SEASON_ONE_CLAW_WORDS.zh.words,
+    safari: { ...SEASON_ONE_SAFARI_WORDS.zh.words, only: SC_WAVE_WORDS.zh.safari },
+    dig: SEASON_ONE_DIG_WORDS.zh.words,
     close: '離開',
     choose: '玩哪個遊戲？',
+    cafe: CAFE_TABLES_WORDS.zh,
     games: {
+      ...CAFE_TABLES_WORDS.zh.games,
       fishing: { name: '碼頭釣魚', blurb: '拋出釣線，釣起上鉤的寶可夢。' },
       berryCatch: { name: '樹果雨', blurb: '接住樹果，躲開 Voltorb。' },
       whackDiglett: { name: '敲敲 Diglett', blurb: '趁 Diglett 躲起來前敲下去。' },
       fourInRow: { name: '四子連線', blurb: '比對手先連成四顆精靈球。' },
       typeDuel: { name: '屬性對決', blurb: '火剋草，草剋水，水剋火。' },
+      claw: SEASON_ONE_CLAW_WORDS.zh.game,
+      safari: SEASON_ONE_SAFARI_WORDS.zh.game,
+      dig: SEASON_ONE_DIG_WORDS.zh.game,
+      slots: { name: ROCKET_WORDS.zh.slots.name, blurb: ROCKET_WORDS.zh.slots.blurb },
+      sweep: { name: ROCKET_WORDS.zh.sweep.name, blurb: ROCKET_WORDS.zh.sweep.blurb },
     },
-    feats: { fishing: { feebas: '我釣到了 Feebas！', shinyGyarados: '我釣到了異色 Gyarados！！', bigHaul: '一輪釣到 300 分！' }, berryCatch: { flawless: '樹果雨零失誤！', goldRush: '一局接到三顆金色樹果！', combo50: '樹果 50 連擊！' }, whackDiglett: { combo30: '30 連敲！', dugtrio: '一局敲中 5 隻 Dugtrio！' }, fourInRow: {}, typeDuel: { perfectDuel: '完美對決,一回合都沒輸!' } },
+    feats: { ...CAFE_TABLES_WORDS.zh.feats, fishing: { feebas: '我釣到了 Feebas！', shinyGyarados: '我釣到了異色 Gyarados！！', wishiwashi: '我釣到了 Wishiwashi！', bigHaul: '一輪釣到 300 分！' }, berryCatch: { flawless: '樹果雨零失誤！', goldRush: '一局接到三顆金色樹果！', combo50: '樹果 50 連擊！' }, whackDiglett: { combo30: '30 連敲！', dugtrio: '一局敲中 5 隻 Dugtrio！' }, fourInRow: {}, typeDuel: { perfectDuel: '完美對決,一回合都沒輸!' }, claw: SEASON_ONE_CLAW_WORDS.zh.feats, safari: SEASON_ONE_SAFARI_WORDS.zh.feats, dig: SEASON_ONE_DIG_WORDS.zh.feats, slots: ROCKET_WORDS.zh.feats.slots, sweep: ROCKET_WORDS.zh.feats.sweep },
     duel: {
       pick: '選一張牌',
       play: '出牌',
@@ -6415,8 +6755,43 @@ export const zh: Messages = {
       junk: { boot: '舊靴子', can: '空罐', seaweed: '海藻' },
     },
   },
+  gameModes: {
+    title: '遊戲模式',
+    close: '關閉',
+    names: { survivors: 'Survivors', legends: '傳說', challenge: '每日挑戰', coop: '合作', arena: '競技場', dojo: '道場', realm: 'Poké Realm' },
+    /** One team format on the Arena's card: its size and minutes. */
+    arenaFormat: (size, minutes) => `${size}v${size} (${minutes} 分鐘)`,
+    blurbs: {
+      survivors: '在怪群中存活到最後',
+      legends: '使用傳說寶可夢遊玩',
+      challenge: '所有人使用同一隻寶可夢',
+      coop: '和朋友一起存活',
+      arena: (formats) => `隊伍 ${formats.join(' 或 ')}`,
+      dojo: '訓練配置並查看傷害',
+      realm: '線上城鎮：基地與小遊戲',
+    },
+    tags: {
+      solo: '單人',
+      soloCoop: '單人與合作',
+      minutes: (n) => `${n} 分鐘`,
+      endless: '+ 無盡模式',
+      legends: (n) => `${n} 隻傳說`,
+      today: (name) => `今日：${name}`,
+      oneTry: '1 次正式挑戰',
+      players: (min, max) => `${min} 至 ${max} 名玩家`,
+      bots: '對戰機器人',
+      casual: '一般對戰',
+      ranked: '排位賽',
+      training: '自由訓練',
+      builds: '可儲存配置',
+      needsAccount: '需要帳號',
+      fresh: '新',
+    },
+  },
   carpenter: {
     first: ['哦，新客人！我是 Bibarel，廣場的木匠。', '我替 Poké Realm 的秘密基地做家具：椅子、地毯、書櫃，還有一些很特別的作品。', '可以用 ₽ 或寶石付款。捕捉到傳說寶可夢的人，還能得到它的小玩偶來裝飾基地！'],
     hello: ['一如往常，鋸木頭、磨木頭。要帶點什麼回去嗎？', '好木頭，價格公道。看看吧！', '沒有家具的基地，只是牆上的一個洞！', '我剛替幾件新作品上好亮光漆。'],
   },
+  travel: REGIONAL_WORDS.zh.travel,
+  gaHook: { tyrogue: GA_HOOK_WORDS.zh.tyrogue, vivillon: GA_HOOK_WORDS.zh.vivillon, plusMinus: GA_HOOK_WORDS.zh.plusMinus },
 }

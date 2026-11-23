@@ -50,7 +50,7 @@ describe('the in-page realm', () => {
     vi.useFakeTimers()
     const realm = startLocalRealm({ city: 'pallet', bots: 0 })
     const got: string[] = []
-    realm.socket(`${LOCAL_REALM_URL}${realmPath('pewter')}`, { open: () => undefined, message: (d) => got.push(String(d)), close: () => undefined })
+    realm.socket(`${LOCAL_REALM_URL}${realmPath('cerulean')}`, { open: () => undefined, message: (d) => got.push(String(d)), close: () => undefined })
     vi.advanceTimersByTime(10)
     expect(got).toEqual([JSON.stringify({ t: 'refused', why: 'city' })])
     realm.dispose()

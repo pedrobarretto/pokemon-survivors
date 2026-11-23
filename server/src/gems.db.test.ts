@@ -1,10 +1,11 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { GEM_PATREON, GEM_PLAY, packGems } from '../../src/data/gems'
+import { GEM_PACKS, GEM_PATREON, GEM_PLAY, packGems } from '../../src/data/gems'
 import { seasonById, type ArenaResult } from '../../src/game/arenaRank'
 import { arenaStore, parseArenaReport } from './arena'
 import type { Sql } from './db'
 import { creditRun, gemStore, moveGems } from './gems'
 import { supporterStore } from './supporters'
+import { ownTestDatabase } from './testDatabase'
 
 /**
  * The gem ledger against a real Postgres: set `GEMS_TEST_DATABASE_URL` to a
@@ -41,7 +42,7 @@ describe.skipIf(!url)('gem ledger (Postgres)', () => {
 
   beforeAll(async () => {
     const { connect, migrate } = await import('./db')
-    sql = connect(url!, 4)
+    sql = connect(await ownTestDatabase(url!, 'gems'), 4)
     await migrate(sql, new URL('../migrations/', import.meta.url))
     gems = gemStore(sql)
   })
@@ -59,7 +60,7 @@ describe.skipIf(!url)('gem ledger (Postgres)', () => {
 
   const paid = { kind: 'paid', provider: 'stripe', ref: REF, session: 'cs_test_1', payment: 'pi_test_1', amount: 2490, currency: 'brl' } as const
 
-  const opened = () => gems.open({ ref: REF, userId: 'u_a', pack: 'bag', gems: packGems('bag'), provider: 'stripe', currency: 'brl', amount: 2490 })
+  const opened = () => gems.open({ ref: REF, userId: 'u_a', pack: 'bag', gems: packGems('bag'), provider: 'stripe', market: 'br', amount: 2490 })
 
   const bought = async () => {
     await opened()
@@ -228,8 +229,12 @@ describe.skipIf(!url)('gem ledger (Postgres)', () => {
     for (const day of ['2026-11-02', '2026-11-03', '2026-11-05', '2026-11-06', '2026-11-06']) await run(['u_a', 'u_a'], day)
     expect(await balance('u_a')).toBe(4 * GEM_PLAY.run.gems)
     // The fifth day (a Sunday) brings the week's; another run that day, nothing more.
-    await run(['u_a', 'u_b'], '2026-11-08')
-    await run(['u_a'], '2026-11-08')
+    const fifth = await run(['u_a', 'u_b'], '2026-11-08')
+    expect(Object.fromEntries(fifth)).toEqual({
+      u_a: { earned: GEM_PLAY.run.gems + GEM_PLAY.week.gems, balance: 5 * GEM_PLAY.run.gems + GEM_PLAY.week.gems },
+      u_b: { earned: GEM_PLAY.run.gems, balance: GEM_PLAY.run.gems },
+    })
+    expect((await run(['u_a'], '2026-11-08')).size).toBe(0)
     expect(await balance('u_a')).toBe(5 * GEM_PLAY.run.gems + GEM_PLAY.week.gems)
     expect(await balance('u_b')).toBe(GEM_PLAY.run.gems)
     // Days of the next week count for that week alone.
@@ -239,31 +244,30 @@ describe.skipIf(!url)('gem ledger (Postgres)', () => {
   })
 
   it('sells the welcome pack once per account, a refunded one too; a checkout given up stops holding it', async () => {
-    const welcome = (ref: string) => gems.open({ ref, userId: 'u_a', pack: 'welcome', gems: packGems('welcome'), provider: 'abacatepay', currency: 'brl', amount: 990 })
+    const welcome = (ref: string) => gems.open({ ref, userId: 'u_a', pack: 'welcome', gems: packGems('welcome'), provider: 'abacatepay', market: 'br', amount: 990 })
     expect(await welcome(REF)).toBeNull()
     expect((await gems.status('u_a')).taken).toEqual(['welcome'])
     // Pending, it holds the pack.
     expect(await welcome('8f14e45f-ceea-467f-a0e6-1b7a2c1c9a02')).toBe('once')
     // Given up past the hold, it doesn't.
-    await sql`update gem_purchases set created_at = now() - interval '1 hour'`
+    await sql`update gem_purchases set created_at = now() - interval '2 hours'`
     expect((await gems.status('u_a')).taken).toEqual([])
     expect(await welcome('8f14e45f-ceea-467f-a0e6-1b7a2c1c9a03')).toBeNull()
     await gems.event({ kind: 'paid', provider: 'abacatepay', ref: '8f14e45f-ceea-467f-a0e6-1b7a2c1c9a03', session: null, payment: 'bill_w', amount: 990, currency: 'brl' })
     await gems.event({ kind: 'refund', provider: 'abacatepay', purchase: { payment: 'bill_w' }, share: 'all', key: 'refund:abacatepay:bill_w' })
-    await sql`update gem_purchases set created_at = now() - interval '1 hour'`
+    await sql`update gem_purchases set created_at = now() - interval '2 hours'`
     expect(await welcome('8f14e45f-ceea-467f-a0e6-1b7a2c1c9a04')).toBe('once')
     // Other packs still sell.
-    expect(await gems.open({ ref: '8f14e45f-ceea-467f-a0e6-1b7a2c1c9a05', userId: 'u_a', pack: 'pouch', gems: packGems('pouch'), provider: 'stripe', currency: 'brl', amount: 990 })).toBeNull()
+    expect(await gems.open({ ref: '8f14e45f-ceea-467f-a0e6-1b7a2c1c9a05', userId: 'u_a', pack: 'pouch', gems: packGems('pouch'), provider: 'stripe', market: 'br', amount: 990 })).toBeNull()
   })
 
   it("stops checkouts past the day's limit, counting paid and pending packs but not refunded ones", async () => {
-    const vault = (ref: string, currency: 'brl' | 'usd' = 'brl') =>
-      gems.open({ ref, userId: 'u_a', pack: 'vault', gems: packGems('vault'), provider: 'stripe', currency, amount: currency === 'brl' ? 24990 : 4999 })
+    const vault = (ref: string) => gems.open({ ref, userId: 'u_a', pack: 'vault', gems: packGems('vault'), provider: 'stripe', market: 'br', amount: GEM_PACKS.vault.brl })
     expect(await vault(REF)).toBeNull()
-    // Pending: a second one is past R$ 250.
+    // Pending: a second one is past R$ 300.
     expect(await vault('8f14e45f-ceea-467f-a0e6-1b7a2c1c9a02')).toBe('cap')
-    // Dollars have their own limit.
-    expect(await vault('8f14e45f-ceea-467f-a0e6-1b7a2c1c9a03', 'usd')).toBeNull()
+    // A pouch abroad still fits beside it: one limit in reais for both prices.
+    expect(await gems.open({ ref: '8f14e45f-ceea-467f-a0e6-1b7a2c1c9a03', userId: 'u_a', pack: 'pouch', gems: packGems('pouch'), provider: 'stripe', market: 'intl', amount: GEM_PACKS.pouch.intl })).toBeNull()
     // Refunded, it no longer counts; yesterday's never did.
     await sql`update gem_purchases set state = 'refunded' where ref = ${REF}::uuid`
     expect(await vault('8f14e45f-ceea-467f-a0e6-1b7a2c1c9a04')).toBeNull()

@@ -8,10 +8,12 @@
  * - `solo`: runs on the player's device alone (`realm/games/frame.ts` hosts
  *   it), opened from a spot in a town room or a piece of furniture in a base.
  *   Others only see the trainer busy at it (`RealmAct`) and its brags.
- * - `table`: turn-based, 2 seats, played at a table through the realm relay,
- *   which holds the board and checks every move with the game's pure rules
+ * - `table`: turn-based, played at a table through the realm relay, which
+ *   holds the board and checks every move with the game's pure rules
  *   (`net/realmTables.ts`, `realm/games/tables.ts`), so anyone in the room can
- *   watch. Sitting alone, the same rules play a bot on the device.
+ *   watch. Sitting alone, the same rules play bots on the device. A 2-seat
+ *   game needs both seats taken; a 4-seat one (Ludo, Unown) is an open table:
+ *   2 to 4 people, the relay's bots in the empty seats.
  *
  * Mini games never touch `src/game`: no `RULES_VERSION`, replays or hashes.
  *
@@ -43,11 +45,15 @@ export type TablePay = { win: number; draw: number; loss: number; daily: number 
 export type Trophy = { furniture: string; after: { stat: 'plays' | 'wins' | 'best'; at: number } | { feat: string } }
 
 /** The town rooms a game can stand in (a `TownRoomId`, `data/realmMap.ts`, kept as a string so this file imports nothing); `null`: only in bases. */
-type Where = 'plaza' | 'pier' | 'cafe' | 'trail' | 'arcade' | null
+type Where = 'plaza' | 'pier' | 'cafe' | 'trail' | 'arcade' | 'gameCorner' | null
+
+/** The music its screen plays: a `ThemeId` (`data/music.ts`), kept as a string so this file imports nothing; `realm/games/frame.ts` hands it to the shell, which type-checks it. */
+type Theme = string
 
 type SoloDef = {
   kind: 'solo'
   where: Where
+  theme: Theme
   pay: SoloPay
   /** A score past this is refused as made up; a game shorter than `minMs` pays nothing. */
   maxScore: number
@@ -55,12 +61,17 @@ type SoloDef = {
   /** The moments a trainer can brag about (the relay broadcasts them, the game names them in i18n) and claim for trophies. */
   feats: readonly string[]
   trophies: readonly Trophy[]
+  /** `false`: a game with no score, so no Placar (the claw machine). */
+  board?: false
+  /** `false`: the API runs it on its own routes and reports its deeds itself, so `POST /realm/game/claim` refuses it. */
+  claim?: false
 }
 
 type TableDef = {
   kind: 'table'
   where: Where
-  seats: 2
+  theme: Theme
+  seats: 2 | 4
   pay: TablePay
   minMs: number
   feats: readonly string[]
@@ -77,17 +88,18 @@ export type MinigameDef = SoloDef | TableDef
 export const MINIGAMES = {
   /**
    * Fishing off the pier (`realm/games/fishing.ts`): cast, wait for the bite,
-   * reel. Feats: a Feebas, the shiny Gyarados, a round of 300 points
-   * (`BIG_HAUL`). Trophies: the rod rack after 20 rounds, the golden Magikarp
+   * reel. Feats: a Feebas, the shiny Gyarados, a Wishiwashi (`FEAT_FAMILIES`
+   * in `data/seasonOneUnlocks.ts`), a round of 300 points (`BIG_HAUL`). Trophies: the rod rack after 20 rounds, the golden Magikarp
    * plaque for a round of 400, the shiny Gyarados trophy for hooking it.
    */
   fishing: {
     kind: 'solo',
     where: 'pier',
+    theme: 'fishing',
     pay: { perPoint: 1, perPlay: 250, daily: 800 },
     maxScore: 2000,
     minMs: 30_000,
-    feats: ['feebas', 'shinyGyarados', 'bigHaul'],
+    feats: ['feebas', 'shinyGyarados', 'wishiwashi', 'bigHaul'],
     trophies: [
       { furniture: 'fishingRodRack', after: { stat: 'plays', at: 20 } },
       { furniture: 'goldenMagikarpPlaque', after: { stat: 'best', at: 400 } },
@@ -102,6 +114,7 @@ export const MINIGAMES = {
   berryCatch: {
     kind: 'solo',
     where: 'arcade',
+    theme: 'arcade',
     pay: { perPoint: 0.1, perPlay: 200, daily: 600 },
     maxScore: 9000,
     minMs: 20_000,
@@ -116,16 +129,105 @@ export const MINIGAMES = {
   whackDiglett: {
     kind: 'solo',
     where: 'arcade',
+    theme: 'arcade',
     pay: { perPoint: 0.1, perPlay: 200, daily: 600 },
     maxScore: 9000,
     minMs: 20_000,
     feats: ['combo30', 'dugtrio'],
     trophies: [{ furniture: 'goldenMallet', after: { stat: 'best', at: 2500 } }],
   },
+  /**
+   * The Máquina de Pelúcias at the arcade's claw machines (`realm/games/claw.ts`,
+   * rules in `claw.rules.ts`): credits, not points. It pays no ₽, never claims
+   * and has no Placar: the API charges each credit and decides each drop
+   * (`POST /realm/claw/insert`, `/drop`) and the prize is only ever a plush
+   * for the base.
+   */
+  claw: {
+    kind: 'solo',
+    where: 'arcade',
+    theme: 'arcade',
+    pay: { perPoint: 0, perPlay: 0, daily: 0 },
+    maxScore: 0,
+    minMs: 0,
+    feats: ['plush'],
+    trophies: [],
+    board: false,
+    claim: false,
+  },
+  /**
+   * The Zona Safári at the Trail's gate (`realm/games/safari.ts`, rules in
+   * `safari.rules.ts`): like the claw, the API runs it (`POST
+   * /realm/safari/start`, `/act`), and it pays no ₽ of its own. A catch
+   * unlocks a family through a gift; ₽ only ever goes in. Feats: a new family
+   * caught and a shiny caught.
+   */
+  safari: {
+    kind: 'solo',
+    where: 'trail',
+    theme: 'safariField',
+    pay: { perPoint: 0, perPlay: 0, daily: 0 },
+    maxScore: 0,
+    minMs: 0,
+    feats: ['caught', 'shiny'],
+    trophies: [],
+    board: false,
+    claim: false,
+  },
+  /**
+   * The Escavação (`realm/games/dig.ts`, `dig.rules.ts`): a wall a Brasília
+   * day free, then ₽, its treasures dug out before the crack meter fills.
+   * Like the claw it pays only through its own routes (`server/src/dig.ts`),
+   * never `/realm/game/claim`. Feats only brag; no score, so no Placar.
+   */
+  dig: {
+    kind: 'solo',
+    where: 'trail',
+    theme: 'dig',
+    pay: { perPoint: 0, perPlay: 0, daily: 0 },
+    maxScore: 0,
+    minMs: 0,
+    feats: ['golden', 'fossilOrStone'],
+    trophies: [],
+    board: false,
+    claim: false,
+  },
+  /**
+   * The Rocket Game Corner's slots (`realm/games/slots.ts`, rules in
+   * `corner.rules.ts`): tokens, not ₽. The API rolls every spin and pays
+   * tokens (`POST /realm/corner/spin`), never ₽, so it never claims and has no
+   * Placar. Its jackpot is a feat to brag about.
+   */
+  slots: {
+    kind: 'solo',
+    where: 'gameCorner',
+    theme: 'gameCorner',
+    pay: { perPoint: 0, perPlay: 0, daily: 0 },
+    maxScore: 0,
+    minMs: 0,
+    feats: ['jackpot'],
+    trophies: [],
+    board: false,
+    claim: false,
+  },
+  /** Koffing Sweep at the Game Corner's tables (`realm/games/sweep.ts`): a hidden-grid puzzle the API deals and pays in tokens. */
+  sweep: {
+    kind: 'solo',
+    where: 'gameCorner',
+    theme: 'gameCorner',
+    pay: { perPoint: 0, perPlay: 0, daily: 0 },
+    maxScore: 0,
+    minMs: 0,
+    feats: ['level5'],
+    trophies: [],
+    board: false,
+    claim: false,
+  },
   /** Four in a row with Poké Balls and Great Balls (agent B), at the café's tables and a base's game table. */
   fourInRow: {
     kind: 'table',
     where: 'cafe',
+    theme: 'cafe',
     seats: 2,
     pay: { win: 150, draw: 60, loss: 30, daily: 600 },
     minMs: 20_000,
@@ -139,6 +241,7 @@ export const MINIGAMES = {
   typeDuel: {
     kind: 'table',
     where: 'cafe',
+    theme: 'cafe',
     seats: 2,
     pay: { win: 150, draw: 60, loss: 30, daily: 600 },
     /**
@@ -153,6 +256,39 @@ export const MINIGAMES = {
       { furniture: 'duelCup', after: { stat: 'wins', at: 10 } },
       { furniture: 'perfectDuelPennant', after: { feat: 'perfectDuel' } },
     ],
+  },
+  /**
+   * Ludo at the café's round tables (`realm/games/ludo.ts`, rules in
+   * `ludo.rules.ts`): 4 seats, 2 pieces each, bots in the empty seats. A
+   * match runs 5–8 minutes, so it pays a little more than the 2-seat games.
+   * `untouchable`: won without losing a piece to a capture.
+   */
+  ludo: {
+    kind: 'table',
+    where: 'cafe',
+    theme: 'cafe',
+    seats: 4,
+    pay: { win: 200, draw: 60, loss: 40, daily: 600 },
+    /** Bots alone play a match in 3½ minutes at the quickest (10th percentile of 200 bot matches, at their think). */
+    minMs: 90_000,
+    feats: ['untouchable'],
+    trophies: [{ furniture: 'goldenDie', after: { stat: 'wins', at: 10 } }],
+  },
+  /**
+   * Unown at the café's round tables (`realm/games/unown.ts`, rules in
+   * `unown.rules.ts`): a shedding card game for 4 seats, bots in the empty
+   * ones; a round runs 2–4 minutes. `mewFinish`: the last card down a Mew.
+   */
+  unown: {
+    kind: 'table',
+    where: 'cafe',
+    theme: 'cafe',
+    seats: 4,
+    pay: { win: 150, draw: 60, loss: 30, daily: 600 },
+    /** A round of 24 moves (the 10th percentile of 200 bot rounds) takes over 25 s at the bots' think. */
+    minMs: 20_000,
+    feats: ['mewFinish'],
+    trophies: [{ furniture: 'unownPlaque', after: { stat: 'wins', at: 10 } }],
   },
 } as const satisfies Record<string, MinigameDef>
 
@@ -174,11 +310,20 @@ export const isTableGame = (id: MinigameId): id is TableGameId => MINIGAMES[id].
 export const isFeat = (game: unknown, feat: unknown): boolean =>
   isMinigameId(game) && typeof feat === 'string' && (MINIGAMES[game].feats as readonly string[]).includes(feat)
 
+/** Whether a game has a Placar (`board.ts`). */
+export const hasBoard = (id: MinigameId): boolean => !('board' in MINIGAMES[id])
+
+/** Whether a game pays through `POST /realm/game/claim` (the claw, the Safári and the Escavação run on their own routes). */
+export const claimable = (id: MinigameId): boolean => !('claim' in MINIGAMES[id])
+
 /** ₽ all mini games together pay an account in a Brasília day. */
 export const MINIGAME_DAILY = 2000
 
 /** A table game against the bot pays this share of the same result against a person. */
 export const BOT_PAY = 0.5
+
+/** A game played with another trainer in the room pays this much more, before the caps. The API reads the room from the relays' presence reports, never the client. */
+export const COMPANY_PAY = 1.25
 
 /** How a finished game ended, as the client claims it: a solo score, or a table result and against whom. */
 export type GameOutcome = { score: number } | { result: 'win' | 'draw' | 'loss'; vs: 'human' | 'bot' }
@@ -220,5 +365,5 @@ export const trophiesEarned = (game: MinigameId, stats: GameStats): string[] =>
 export const FURNITURE_GAMES: Readonly<Record<string, readonly MinigameId[]>> = {
   arcadeCabinet: ['berryCatch', 'whackDiglett'],
   arcadeCabinetTeal: ['berryCatch', 'whackDiglett'],
-  gameTable: ['fourInRow', 'typeDuel'],
+  gameTable: ['fourInRow', 'typeDuel', 'ludo', 'unown'],
 }

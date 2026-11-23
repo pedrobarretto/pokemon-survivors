@@ -1,11 +1,21 @@
+import { RAID, RAID_BOSSES } from '../data/tera'
 import manifest from '../data/sprites.generated.json'
+import { isForceLegend, isLakeLegend, isRuinsRegi, SWORDS, type ForceId, type SwordId } from '../data/legends'
+import { FORCE_ROAM, RUINS } from '../data/forces'
+import { DUEL, ROAM } from '../data/quests'
+import { RUSH_ORDER } from '../data/rush'
+
+const isSword = (id: string): id is SwordId => SWORDS.some((s) => s === id)
 import { ENEMIES, type EnemyDef, type EnemyId } from '../data/enemies'
 import { BRANCHES, branchesOf, branchStage, type BranchId } from '../data/branches'
 import { HATCHLING_IDS, PLAYABLE, type HatchlingId, type PlayableId } from '../data/hatchlings'
-import { REGIONS, STARTER_IDS, type Region, type StarterId } from '../data/starters'
+import { STARTER_IDS, type Region, type StarterId } from '../data/starters'
+import { dexRegionOf, NATIONAL_LAST, regionOf, SHEETLESS, type DexRegion } from '../data/nationalDex'
+import { inDexGoal } from '../game/dexRegions'
 import type { PokeType } from '../data/types'
 import { isRiftLegend, RIFT, type RiftLegend } from '../data/rifts'
 import { DOMAINS } from '../data/domains'
+import { HIDEOUT, HIDEOUT_BOSSES } from '../data/rocketHideout'
 import { GRAVEYARD, HIDDEN, hiddenOf, PLACE, PLACE_IDS, PLACES, type PlaceId } from '../data/places'
 import { SUMMONS } from '../data/traits'
 import { bossCandidates, EVENTS, nightCandidates, RUN_LENGTH, STAGES, TRIO_IDS, TRIOS, type TrioId } from '../data/waves'
@@ -14,7 +24,11 @@ import { ENDLESS, REAPER } from '../game/endless'
 import { MEOWTH_DEX } from '../game/mapEventRules'
 import { SPECIAL_COMPANION_IDS, SPECIAL_COMPANIONS, type SpecialCompanionId } from '../data/companions'
 import { TAILOR } from '../data/visitors'
-import { EVENT_LEGENDS, LEGEND_IDS, legendFestival, type LegendId } from '../data/legends'
+import { isUltraBeast, WORMHOLE } from '../data/ultraBeasts'
+import { EVENT_LEGENDS, eggLegend, giftLegend, LEGEND_IDS, LEGENDS, legendFestival, PATH_LEGENDS, type LegendId, type LegendUnlock } from '../data/legends'
+import { ZERAORA } from '../data/mythicals'
+import { COSMOG_DEX, PATH_FORMS, REGIGIGAS } from '../data/legendPaths'
+import { nationalDex } from '../data/regionalForms'
 
 /**
  * The site's Pokédex model: every species the game uses, derived from
@@ -61,13 +75,21 @@ export type DexEntry = {
     | { kind: 'cameo'; by: RiftLegend }
     /** `lobby`: lives only in the lobby (Leavanny, the Boutique's tailor, `TAILOR`). */
     | { kind: 'lobby' }
+    /** `cards`: seen only on the cards of the Poké Realm café's card game (Unown's letters, `realm/games/unown.ts`). */
+    | { kind: 'cards' }
+    /** `summon`: called in by a playable family's mechanic, never fought (Tatsugiri's Dondozo, `data/seasonOneKits.ts`). */
+    | { kind: 'summon' }
+    /** `gift`: a legend that's never fought, only given (Poipole, for capturing the Ultra Beasts, `game/ultraGifts.ts`). */
+    | { kind: 'gift'; id: LegendId }
+    /**
+     * `path`: a path legend (`data/legendPaths.ts`) or its form of another species (Urshifu, Melmetal), never
+     * fought; `legend` null for Cosmog's line, which lives in the lobby and grows into Solgaleo or Lunala.
+     */
+    | { kind: 'path'; legend: LegendId | null }
 }
 
-/** Last national dex number of each generation, in `REGIONS` order. */
-const LAST_DEX = [151, 251, 386, 493, 649, 721, 809, 905, 1025] as const
-
-/** Main-series region a species debuted in, from its national dex number. */
-export const regionOf = (dex: number): Region => REGIONS.find((r) => dex <= (LAST_DEX[r.gen - 1] ?? Infinity)) ?? REGIONS[REGIONS.length - 1]!
+/** Main-series region a species debuted in, from its national dex number (`data/nationalDex.ts`). */
+export { regionOf } from '../data/nationalDex'
 
 export const slugOf = (name: string) =>
   name
@@ -148,7 +170,42 @@ const cameoEntries = (): DexEntry[] =>
 /** Who lives only in the lobby (Leavanny at the Boutique), as event Pokémon. */
 const lobbyEntries = (): DexEntry[] => [{ ...base(TAILOR.dex, TAILOR.name, TAILOR.types), role: 'event', source: { kind: 'lobby' } }]
 
-const byDex = (a: DexEntry, b: DexEntry) => a.dex - b.dex
+/** Who's only on the café's Unown cards, as an event Pokémon. */
+const cardEntries = (): DexEntry[] => [{ ...base(201, 'Unown', ['psychic']), role: 'event', source: { kind: 'cards' } }]
+
+/** The path legends that are never fought, and their forms of other species (Urshifu, Melmetal), as legendaries. */
+const pathEntries = (): DexEntry[] =>
+  PATH_LEGENDS.filter((id) => !wildByDex.has(LEGENDS[id].line[0].dex)).flatMap((id): DexEntry[] => {
+    const own = LEGENDS[id].line[0]
+    const forms = Object.values(PATH_FORMS).flatMap((f): DexEntry[] => (f.legend === id && 'dex' in f && f.dex !== own.dex ? [{ ...base(f.dex, f.name, 'types' in f ? f.types : own.types), role: 'legendary', source: { kind: 'path', legend: id } }] : []))
+    const unique = forms.filter((f, i) => forms.findIndex((o) => o.dex === f.dex) === i)
+    return [{ ...base(own.dex, own.name, own.types), role: 'legendary', source: { kind: 'path', legend: id } }, ...unique]
+  })
+
+/** Cosmog's line, which lives in the lobby (`COSMOG_DEX`), as legendaries of a path. */
+const cosmogEntries = (): DexEntry[] => [
+  { ...base(COSMOG_DEX.cosmog, 'Cosmog', ['psychic']), role: 'legendary', source: { kind: 'path', legend: null } },
+  { ...base(COSMOG_DEX.cosmoem, 'Cosmoem', ['psychic']), role: 'legendary', source: { kind: 'path', legend: null } },
+]
+
+/** Who a family's mechanic calls in (Tatsugiri's Dondozo), as event Pokémon. */
+const summonEntries = (): DexEntry[] => [{ ...base(977, 'Dondozo', ['water']), role: 'event', source: { kind: 'summon' } }]
+
+/** Whether a legend only ever comes out of the Escavação (Diancie). */
+const dugUp = (id: LegendId) => {
+  const unlock: LegendUnlock = LEGENDS[id].unlock
+  return unlock.dig === true
+}
+
+/** The legends only ever given, never fought (Poipole, Manaphy from its egg, Diancie out of the Escavação): no wild entry stands for them. */
+const giftEntries = (): DexEntry[] =>
+  LEGEND_IDS.filter((id) => giftLegend(id) || eggLegend(id) || dugUp(id)).map((id) => {
+    const own = LEGENDS[id].line[0]
+    return { ...base(own.dex, own.name, own.types), role: 'legendary', source: { kind: 'gift', id } }
+  })
+
+/** National order, a regional form right after its species. */
+const byDex = (a: DexEntry, b: DexEntry) => nationalDex(a.dex) - nationalDex(b.dex) || a.dex - b.dex
 
 /**
  * The in-game Pokédex, in national dex order: every species a run can bring,
@@ -161,16 +218,58 @@ export const gameDex = (): DexEntry[] => {
   const playable = [...STARTER_IDS.flatMap((id) => playableEntries(id, 'starter')), ...HATCHLING_IDS.flatMap((id) => playableEntries(id, 'egg'))]
   const listed = new Set(playable.map((e) => e.dex))
   const wild = [...wildByDex].filter(([dex]) => !listed.has(dex)).map(([, id]) => wildEntry(id))
-  return [...playable, ...wild, eventEntry()].sort(byDex)
+  return [...playable, ...wild, ...giftEntries(), ...pathEntries(), eventEntry()].sort(byDex)
+}
+
+/**
+ * Whether a run can knock the species out, so the Pokédex counts its defeats:
+ * the horde's (wild, or a playable family that also roams it) and the fleeing
+ * Meowth. The families only played or hatched and the legends only given or
+ * walked (`gift`, `path`) are seen but never fought.
+ */
+export const defeatable = (e: DexEntry) => e.source.kind === 'wild' || e.source.kind === 'event' || (e.source.kind === 'starter' && e.source.wild !== undefined)
+
+/**
+ * What the in-game Pokédex's counters count, the numbers its copy states
+ * (the changelog, the static pages, `llms.txt`): its `entries` (seen ones'
+ * total), the National Dex `species` among them and the `forms` on top (a
+ * regional form or another form with its own card, Eternal Floette), and how
+ * many are `defeatable`. `entries` is `gameDex()`, passed in when it's at hand.
+ */
+export const dexTotals = (entries: readonly DexEntry[] = gameDex()) => {
+  const species = new Set(entries.map((e) => nationalDex(e.dex))).size
+  return { entries: entries.length, species, forms: entries.length - species, defeatable: entries.filter(defeatable).length }
+}
+
+/**
+ * A region's numbers as the game's Pokédex and the site both show them,
+ * counted the same way as the in-game grid's cells (a regional form is its
+ * own, in its form's region): the species the game has (`inGame`) of all the
+ * region's (`total`, adding each National Dex number it still lacks), how
+ * many of them its title asks for (`goal`, `game/dexRegions.ts`), the ones
+ * that don't count (`left`: the mythicals and the event legends, by name)
+ * and how many SpriteCollab's artists are still drawing (`drawing`).
+ * `entries` is `gameDex()`, passed in when it's already at hand.
+ */
+export const regionCounts = (region: DexRegion, entries: readonly DexEntry[] = gameDex()) => {
+  const game = entries.filter((e) => dexRegionOf(e.dex) === region)
+  const have = new Set(game.map((e) => nationalDex(e.dex)))
+  const missing = Array.from({ length: NATIONAL_LAST }, (_, i) => i + 1).filter((n) => dexRegionOf(n) === region && !have.has(n))
+  const left = game.filter((e) => !inDexGoal(e.dex)).map((e) => e.name)
+  return { inGame: game.length, total: game.length + missing.length, goal: game.length - left.length, left, drawing: missing.filter((n) => SHEETLESS.has(n)).length }
 }
 
 /**
  * The site's Pokédex: every species the game loads, `gameDex()` plus the
- * gift-only companions, the domains' cameos and the lobby's Leavanny (never
- * met in a run, so never counted in game).
+ * gift-only companions, the domains' cameos, the lobby's Leavanny and the
+ * café cards' Unown (never met in a run, so never counted in game).
  */
 export const pokedex = (): DexEntry[] => {
-  return [...gameDex(), ...SPECIAL_COMPANION_IDS.map(companionEntry), ...cameoEntries(), ...lobbyEntries()].sort(byDex)
+  const game = gameDex()
+  const listed = new Set(game.map((e) => e.dex))
+  // Leavanny roams the horde too: its wild card stands for the tailor's.
+  const extras = [...SPECIAL_COMPANION_IDS.map(companionEntry), ...cameoEntries(), ...lobbyEntries(), ...cardEntries(), ...summonEntries(), ...cosmogEntries()].filter((e) => !listed.has(e.dex))
+  return [...game, ...extras].sort(byDex)
 }
 
 /* ---------------- When a wild Pokémon shows up ---------------- */
@@ -191,8 +290,14 @@ export type Appearance =
   | { kind: 'rift'; from: number }
   /** An event legend (`EVENT_LEGENDS`): its event's rift may take a rift's place in a haunted run, from `from`. */
   | { kind: 'eventRift'; from: number }
+  /** A Tera Raid's giant (`RAID_BOSSES`), in a den from `from`; `stellar` for Terapagos, the weekends' 7★ raid of the day. */
+  | { kind: 'raid'; from: number; stellar: boolean }
+  /** An Ultra Beast (`data/ultraBeasts.ts`): its Ultra Wormhole opens once a solo run, at `at`. */
+  | { kind: 'wormhole'; at: number }
   /** Hunts the player in endless mode from `at`. */
   | { kind: 'reaper'; at: number }
+  /** Wakes in its temple (`REGIGIGAS`), which rises between `from` and `until` in the runs of the Regi trio's captor. */
+  | { kind: 'temple'; from: number; until: number }
   /** Lives in a place (`data/places.ts`), coming out from `from`; `boss` for the place's own boss. */
   | { kind: 'place'; place: PlaceId; from: number; boss: boolean }
   /** Pops out of a hidden zone's spots (its lucky ones), from `from`. */
@@ -201,6 +306,20 @@ export type Appearance =
   | { kind: 'summoned'; by: EnemyId }
   /** Comes at the player in a legendary's domain (`by`'s rift): its crossing's retinue, adds it calls in or keepers of its barrier. */
   | { kind: 'retinue'; by: EnemyId }
+  /** A roaming lake legend (`game/roamers.ts`): some runs bring it, from about `from`. */
+  | { kind: 'roam'; from: number }
+  /** Wakes in one of the Ruínas da Decisão (`RUINS`), which rise between `from` and `until` in the runs of Regigigas's captor. */
+  | { kind: 'ruins'; from: number; until: number }
+  /** A Force of Nature roaming the map with its weather (`data/forces.ts`): some runs bring it, from about `from`. */
+  | { kind: 'force'; from: number; force: ForceId }
+  /** A Sword of Justice waiting for its duel in its biomes (`game/duels.ts`), from `from`. */
+  | { kind: 'duel'; from: number; sword: SwordId }
+  /** Brought back by Hoopa's Rings once captured (`game/rush.ts`), or (`last`) Hoopa itself, the last ring. */
+  | { kind: 'rush'; last: boolean }
+  /** Zeraora out of the Power Plant's storm (`game/zeraora.ts`): some runs bring it, from `from`, when it rains there. */
+  | { kind: 'storm'; from: number }
+  /** Ogerpon's own Tera Raid (`OGERPON`): some runs' first den, from `from`, in the mask of the run's Tera type. */
+  | { kind: 'maskRaid'; from: number }
 
 /**
  * When an enemy can show up: the spawn-pool windows of the stages with a slot
@@ -233,11 +352,23 @@ export const appearances = (id: EnemyId): Appearance[] => {
     return [{ kind: e.kind, at: e.at, count: e.count }]
   })
   const event = EVENT_LEGENDS.some((l) => l === id)
-  const rift: Appearance[] = event ? [{ kind: 'eventRift', from: RIFT.slots[0] }] : isRiftLegend(id) ? [{ kind: 'rift', from: RIFT.slots[0] }] : []
+  const rift: Appearance[] = event
+    ? [{ kind: 'eventRift', from: RIFT.slots[0] }]
+    : isUltraBeast(id)
+      ? [{ kind: 'wormhole', at: WORMHOLE.at + RIFT.omenTime }]
+      : isRiftLegend(id)
+        ? [{ kind: 'rift', from: RIFT.slots[0] }]
+        : []
   const reaper: Appearance[] = id === REAPER ? [{ kind: 'reaper', at: ENDLESS.reaperAt }] : []
+  const raid: Appearance[] =
+    id === 'terapagos' ? [{ kind: 'raid', from: RAID.slots[1], stellar: true }]
+      : id === 'ogerpon' ? [{ kind: 'maskRaid', from: RAID.slots[0] }]
+        : RAID_BOSSES.some((b) => b === id) ? [{ kind: 'raid', from: RAID.slots[0], stellar: false }] : []
+  const temple: Appearance[] = id === 'regigigas' ? [{ kind: 'temple', from: REGIGIGAS.at[0], until: REGIGIGAS.at[1] }] : []
   // A place's dwellers come out once the run's stage has their tier (never before the first entrance; a hidden zone's, never before it can open).
   const placed = PLACE_IDS.flatMap((place): Appearance[] => {
     if (place === 'graveyard' && id === GRAVEYARD.boss) return [{ kind: 'place', place, from: PLACE.firstAt, boss: true }]
+    if (place === 'hideout' && Object.hasOwn(HIDEOUT_BOSSES, id)) return [{ kind: 'place', place, from: HIDEOUT.at, boss: true }]
     const hidden = hiddenOf(place)
     const first = hidden ? HIDDEN.from : PLACE.firstAt
     const own: Appearance[] = hidden?.lucky.some(([e]) => e === id) ? [{ kind: 'hidden', place, from: first }] : []
@@ -252,7 +383,16 @@ export const appearances = (id: EnemyId): Appearance[] => {
   const retinue = (Object.keys(DOMAINS) as RiftLegend[])
     .filter((by) => domainCast(by).includes(id))
     .map((by): Appearance => ({ kind: 'retinue', by }))
-  return [...windows, ...events, ...rift, ...reaper, ...placed, ...summoned, ...retinue]
+  // The legends met on the open map, and the ones Hoopa's rings bring back.
+  const quest: Appearance[] = [
+    ...(isLakeLegend(id) ? [{ kind: 'roam' as const, from: ROAM.first[0] }] : []),
+    ...(isForceLegend(id) ? [{ kind: 'force' as const, from: FORCE_ROAM.first[0], force: id }] : []),
+    ...(isRuinsRegi(id) ? [{ kind: 'ruins' as const, from: RUINS.at[0], until: RUINS.at[1] }] : []),
+    ...(isSword(id) ? [{ kind: 'duel' as const, from: DUEL.from, sword: id }] : []),
+    ...(id === 'hoopa' || RUSH_ORDER.some((l) => l === id) ? [{ kind: 'rush' as const, last: id === 'hoopa' }] : []),
+    ...(id === 'zeraora' ? [{ kind: 'storm' as const, from: ZERAORA.from }] : []),
+  ]
+  return [...windows, ...events, ...rift, ...raid, ...reaper, ...temple, ...placed, ...summoned, ...retinue, ...quest]
 }
 
 /** Everyone a legendary's domain brings besides its legendaries: the crossing's retinue, its adds and its barrier's keepers. */
@@ -295,9 +435,11 @@ export const dexPages = (): readonly DexPage[] => {
   })
   // A festival legend (Cresselia) is a surprise for now: its page comes with its festival's announcement.
   const legends = LEGEND_IDS.filter((id) => !legendFestival(id)).map((id): DexPage => {
-    const entry = entries.find((e) => e.source.kind === 'wild' && e.source.id === id)
+    const entry = entries.find((e) => ((e.source.kind === 'wild' || e.source.kind === 'gift') && e.source.id === id) || (e.source.kind === 'path' && e.source.legend === id && e.dex === LEGENDS[id].line[0].dex))
     if (!entry) throw new Error(`No Pokédex entry for legend ${id}`)
-    return { kind: 'legend', id, slug: entry.slug, entries: [entry] }
+    // A path legend's page shows its forms of other species too (Urshifu, Melmetal).
+    const forms = entries.filter((e) => e !== entry && e.source.kind === 'path' && e.source.legend === id)
+    return { kind: 'legend', id, slug: entry.slug, entries: [entry, ...forms] }
   })
   return (pages = [...families, ...legends])
 }

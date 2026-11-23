@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { MINIGAMES } from '../../data/minigames'
-import { BIG_HAUL, CATCHES, CATCH_IDS, featsOf, fightStep, inZone, logOf, rollCatch, scoreOf, startFight, widthOf, zoneOf, zoneWidth, ZONES, type CatchId, type Fight, type FightEnd, type Rng } from './fishing.rules'
+import { BIG_HAUL, CATCHES, CATCH_IDS, featsOf, fightStep, inZone, logOf, rollCatch, scoreOf, startFight, widthOf, zoneOf, zoneWidth, ZONES, type CatchId, type Fight, type FightEnd, type Rng, type Zone } from './fishing.rules'
 
 /** A seeded rng (mulberry32). */
 const seeded = (seed: number): Rng => () => {
@@ -117,5 +117,23 @@ describe('a round', () => {
       { id: 'magikarp', count: 2, points: 2 * CATCHES.magikarp.value },
       { id: 'boot', count: 1, points: CATCHES.boot.value },
     ])
+  })
+})
+
+describe('the high tide', () => {
+  const share = (zone: Zone, id: CatchId, tide: boolean) => {
+    const rng = seeded(7)
+    let hits = 0
+    for (let i = 0; i < 40_000; i++) if (rollCatch(zone, rng, tide) === id) hits++
+    return hits / 40_000
+  }
+
+  it('brings the rare ones up far out', () => {
+    expect(share('far', 'feebas', true)).toBeGreaterThan(share('far', 'feebas', false) * 2)
+    expect(share('far', 'shinyGyarados', true)).toBeGreaterThan(share('far', 'shinyGyarados', false) * 2)
+  })
+
+  it('never brings them near the dock', () => {
+    expect(share('near', 'feebas', true)).toBe(0)
   })
 })

@@ -2,6 +2,7 @@ import { formatTime } from '../engine/math'
 import { canEvolve, evolutionOf, evolvedFrom } from '../data/evolutions'
 import { ENEMIES } from '../data/enemies'
 import { ABILITIES } from '../data/abilities'
+import { BUFFS } from '../data/consumables'
 import { abilityLit, abilityStacks } from '../game/abilities'
 import { playerDex } from '../game/game'
 import { playerForm } from '../game/branch'
@@ -18,11 +19,16 @@ import { isDuo, readyDuos } from '../game/duoRules'
 import { consumableIcon } from '../render/props'
 import { weatherIcon } from '../render/weather'
 import { treatIcon } from '../render/halloweenArt'
-import { portraitUrl } from '../render/sprites'
+import { MELTAN } from '../data/legendPaths'
+import { nutIcon } from './pathRun'
+import { loadSave } from './save'
+import { hookPortrait } from '../render/gaHookLook'
 import { abilityIcon } from '../render/abilityArt'
 import { abilityMark, abilityMarkKey } from './abilityMark'
 import { megaIcon } from '../render/megaFx'
 import { h, setStyle, setText } from './dom'
+import { createDuelCard } from './quests'
+import { createRuinsCard } from './ruinsCard'
 import { createRiftHud } from './riftHud'
 import { createPlaceCard } from './placeCard'
 import { createRiftTitle } from './riftTitle'
@@ -30,8 +36,12 @@ import { phasesOf, pooledShare } from '../game/bossFight'
 import { createFieldMissionHud } from './fieldMissionHud'
 import { createLungeControls } from './lungeButton'
 import { createMegaControls } from './megaButton'
+import { createTeraControls } from './teraButton'
+import { crownIcon, TERA_RAMPS } from '../render/teraArt'
+import { teraName } from './teraText'
 import { moveCard, withMoveCard } from './moveCard'
 import { createMovePad } from './movePad'
+import { createStickLock } from './stickLock'
 import { createSpecialControls } from './specialButton'
 import { localPlayer } from '../game/players'
 import { createMinimap } from './minimap'
@@ -41,17 +51,21 @@ const hpClass = (ratio: number) => (ratio > 0.5 ? 'hp-high' : ratio > 0.2 ? 'hp-
 
 /**
  * In-run heads-up display. `update` is called every frame and only touches what changed.
- * `onSpecial`, `onMega` and `onLunge` fire when the touch special, Mega and lunge buttons are pressed;
- * `onPause` backs the on-screen pause button (phones have no Esc key; `menu`: co-op's menu button); `isHeld` (the input's)
+ * `onSpecial`, `onMega`, `onTera` and `onLunge` fire when the touch special, Mega, TERA and lunge buttons are pressed;
+ * `onPause` backs the on-screen pause button (phones have no Esc key; `menu`: co-op's menu button); `onLayout` runs when the HUD's frame changes: the padlock changes the joystick mode (the status box moves), or the boss bar or the pill under the timer comes or goes (the shell re-measures it, `syncMarkerInsets`); `isHeld` (the input's)
  * lights the desktop WASD keys. Hovering or holding a move slot opens its card (`withMoveCard`). Labels are
  * read at creation: rebuild the HUD after a language switch.
  */
-export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () => void, onLunge: () => void, onPause: () => void, isHeld: (code: string) => boolean, menu = false, zoom: ReturnType<typeof zoomButton> | null = null) => {
+export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () => void, onTera: () => void, onLunge: () => void, onPause: () => void, onLayout: () => void, isHeld: (code: string) => boolean, menu = false, zoom: ReturnType<typeof zoomButton> | null = null) => {
   const movePad = createMovePad(isHeld)
+  const stickLock = createStickLock(root, onLayout)
   const special = createSpecialControls(onSpecial)
   const mega = createMegaControls(onMega)
+  const tera = createTeraControls(onTera)
   const lunge = createLungeControls(onLunge)
   const rift = createRiftHud()
+  const duel = createDuelCard()
+  const ruins = createRuinsCard()
   const card = createPlaceCard()
   const title = createRiftTitle()
   const mission = createFieldMissionHud()
@@ -59,12 +73,17 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
   const xpLabel = h('div', { class: 'xp-label' })
   const clock = h('span')
   const weather = h('img', { class: 'weather-icon hidden', alt: '' })
-  const timer = h('div', { class: 'timer' }, weather, clock)
+  const timer = h('div', { class: 'timer arc-outline' }, weather, clock)
   const kills = h('span')
   const coins = h('span')
   const candies = h('span')
   // Noite das Bruxas: the candies of a haunted run, beside the ₽.
   const candyCounter = h('div', { class: 'kills treats hidden' }, h('img', { src: treatIcon(), alt: t().halloween.candies }), candies)
+  // Meltan's run: its Hex Nuts so far (the save's as the run began, plus the run's), toward Melmetal.
+  const nuts = h('span')
+  const nutCounter = h('div', { class: 'kills treats hidden' }, h('img', { src: nutIcon(), alt: '' }), nuts)
+  let nutRun: Game | null = null
+  let nutBase = 0
   const moveSlots = h('div', { class: 'slots' })
   const itemSlots = h('div', { class: 'slots' })
   const buffs = h('div', { class: 'buffs' })
@@ -74,7 +93,12 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
   // A linked pair (Latias and Latios) shares the bar; under it, each one's own HP in its color.
   const pairFills = [h('i', { class: 'boss-pair-fill' }), h('i', { class: 'boss-pair-fill' })] as const
   const pairBars = h('div', { class: 'boss-pair hidden' }, h('span', { class: 'boss-pair-bar' }, pairFills[0]), h('span', { class: 'boss-pair-bar' }, pairFills[1]))
-  const boss = h('div', { class: 'boss hidden' }, bossName, bossBar, pairBars)
+  // A Tera Raid's giant: its crown by its name, and its Tera shield's points under its HP while it's up (`game/teraRaid.ts`).
+  const bossCrown = h('img', { class: 'boss-crown hidden', alt: '' })
+  const shieldFill = h('div', { class: 'boss-shield-fill' })
+  const shieldBar = h('div', { class: 'boss-shield hidden' }, shieldFill, h('span', { class: 'boss-shield-label' }, t().raid.shield))
+  const bossClock = h('span', { class: 'boss-clock hidden' })
+  const boss = h('div', { class: 'boss hidden' }, h('div', { class: 'boss-head' }, bossCrown, bossName, bossClock), bossBar, shieldBar, pairBars)
   /** The boss whose phase ticks the bar shows (`BOSS_PHASES`), so they're laid once per boss. */
   let ticked: string | null = null
   const portrait = h('img', { class: 'status-portrait', alt: '' })
@@ -105,7 +129,7 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
     h(
       'div',
       { class: 'hud-row' },
-      h('div', { class: 'hud-left' }, h('div', { class: 'loadout' }, moveSlots, itemSlots, buffs), special.badge, lunge.badge, mega.badge),
+      h('div', { class: 'hud-left' }, h('div', { class: 'loadout' }, moveSlots, itemSlots, buffs), special.badge, lunge.badge, mega.badge, tera.badge),
       timer,
       h(
         'div',
@@ -116,6 +140,7 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
           h('div', { class: 'kills' }, h('img', { src: pokeballIcon(), alt: '' }), kills),
           h('div', { class: 'kills coins' }, h('img', { src: coinIcon(0), alt: '' }), coins),
           candyCounter,
+          nutCounter,
         ),
         zoom?.el ?? null,
         pause,
@@ -123,6 +148,8 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
     ),
     boss,
     rift.el,
+    duel.el,
+    ruins.el,
     card.el,
     title.el,
     mission.el,
@@ -137,10 +164,12 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
         h('div', { class: 'status-hp' }, h('span', { class: 'hp-tag' }, 'HP'), h('div', { class: 'hp-bar' }, hpFill)),
         h('div', { class: 'status-foot' }, ability, hpText),
       ),
+      stickLock.button,
     ),
     movePad.el,
     special.button,
     mega.button,
+    tera.button,
     lunge.button,
   )
   const minimap = createMinimap(el)
@@ -200,6 +229,8 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
     )
   }
 
+  /** What the HUD's frame last held (`onLayout`). */
+  const framed = { boss: false, pill: '' }
   const update = (g: Game) => {
     const p = localPlayer(g)
     setStyle(xpFill, 'width', `${Math.min(100, (p.xp / p.xpNext) * 100).toFixed(1)}%`)
@@ -220,14 +251,29 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
       setText(candies, String(g.candies))
     }
     zoom?.refresh()
+    const meltan = g.coop === null && g.player.legend?.id === 'meltan'
+    nutCounter.classList.toggle('hidden', !meltan)
+    if (meltan) {
+      if (nutRun !== g) {
+        nutRun = g
+        nutBase = loadSave().paths.nuts
+      }
+      setText(nuts, `${Math.min(MELTAN.nuts, nutBase + g.paths.nuts)}/${MELTAN.nuts}`)
+    }
     movePad.update()
+    stickLock.update()
     special.update(g)
     mega.update(g)
+    tera.update(g)
     lunge.update(g)
     rift.update(g)
+    duel.update(g)
+    ruins.update(g)
     card.update(g)
     title.update(g)
     mission.update(g, !rift.el.classList.contains('hidden'))
+    // A wave legend's entrance or capture centers the camera on it: the pills step aside so they don't cover it or its name.
+    el.classList.toggle('legend-scene', g.legendScene !== null)
     minimap.update(g)
 
     const key = [...p.moves.map((m) => `${m.id}${m.level}`), ...p.items.map((i) => `${i.id}${i.level}`), abilityMarkKey(p)].join()
@@ -244,7 +290,9 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
     localPlayer(g).buffs.forEach((b, i) => {
       const fill = buffFills[i]
       if (!fill) return
-      setStyle(fill, 'width', `${((b.left / b.total) * 100).toFixed(1)}%`)
+      // Against the base duration, not `b.total` (which sticks at the longest stack), so any
+      // pickup reads as full; time past the base (a stack, an altar's) sits full, then drains.
+      setStyle(fill, 'width', `${(Math.min(1, b.left / BUFFS[b.id].duration) * 100).toFixed(1)}%`)
       fill.parentElement!.parentElement!.classList.toggle('ending', b.left < 3)
     })
 
@@ -252,9 +300,10 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
     const megaName = localPlayer(g).mega.active > 0 ? heldMega(g)?.name : undefined
     // A legend's awakened form (Primal Kyogre) renames it on the same dex.
     const formName = playerForm(g).name
-    if (`${dex}${p.shiny}${megaName}${formName}` !== portraitKey) {
-      portraitKey = `${dex}${p.shiny}${megaName}${formName}`
-      portrait.setAttribute('src', portraitUrl(dex, p.shiny))
+    const face = hookPortrait(g, p, dex)
+    if (`${face}${megaName}${formName}` !== portraitKey) {
+      portraitKey = `${face}${megaName}${formName}`
+      portrait.setAttribute('src', face)
       shinyBadge.classList.toggle('hidden', !p.shiny)
       name.classList.toggle('shiny-name', p.shiny)
       name.classList.toggle('mega-name', megaName !== undefined)
@@ -287,6 +336,12 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
 
     const b = g.bossId !== null ? g.enemies.find((e) => e.id === g.bossId) : undefined
     boss.classList.toggle('hidden', !b)
+    // The boss bar or the pill coming or going moves what the camera frames under (`frameRush`, `frameRaid`): the shell measures again.
+    if (!!b !== framed.boss || rift.el.className !== framed.pill) {
+      framed.boss = !!b
+      framed.pill = rift.el.className
+      onLayout()
+    }
     const mate = b?.fight && b.fight.link >= 0 ? g.enemies.find((e) => e.id === b.fight!.link) : undefined
     pairBars.classList.toggle('hidden', !mate)
     if (b && mate) {
@@ -301,6 +356,21 @@ export const createHud = (root: HTMLElement, onSpecial: () => void, onMega: () =
     } else if (b) {
       setText(bossName, isClone(g, b) ? t().legend.clone(ENEMIES[b.kind].name) : ENEMIES[b.kind].name)
       setStyle(bossFill, 'width', `${((b.hp / b.maxHp) * 100).toFixed(1)}%`)
+    }
+    const raid = b && g.raid.arena?.bossId === b.id ? g.raid.arena : null
+    bossCrown.classList.toggle('hidden', !raid)
+    bossClock.classList.toggle('hidden', !raid || raid.loot !== null)
+    bossClock.classList.toggle('urgent', raid !== null && raid.left < 15)
+    if (raid) setText(bossClock, formatTime(Math.ceil(Math.max(0, raid.left))))
+    shieldBar.classList.toggle('hidden', !raid?.shield.up)
+    if (raid) {
+      const src = crownIcon(raid.raid.tera)
+      if (bossCrown.getAttribute('src') !== src) bossCrown.setAttribute('src', src)
+      setText(bossName, `${t().raid.title(ENEMIES[raid.raid.boss].name, teraName(raid.raid.tera))} ${raid.raid.stars}★`)
+      const r = TERA_RAMPS[raid.raid.tera]
+      setStyle(shieldBar, '--tera-mid', r[2])
+      setStyle(shieldBar, '--tera-light', r[4])
+      setStyle(shieldFill, 'width', `${raid.shield.max > 0 ? ((Math.max(0, raid.shield.hp) / raid.shield.max) * 100).toFixed(1) : 0}%`)
     }
     if (b) {
       if (ticked !== b.kind) {

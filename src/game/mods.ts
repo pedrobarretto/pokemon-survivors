@@ -4,7 +4,7 @@ import { TYPE_COLORS } from '../data/types'
 import { burst, shakeScreen } from './effects'
 import { chainTargets } from './moveRules'
 import { bonusApplies, type DamageBonus } from './kitRules'
-import { spawnAttack } from './spawn'
+import { dropPatch, spawnAttack } from './spawn'
 import type { CastStats } from './moves'
 import type { Attack, Enemy, Game, Motion } from './types'
 import * as dm from '../engine/dmath'
@@ -323,7 +323,7 @@ const dropGround = (g: Game, a: Attack) => {
   const mod = a.mod!
   mod.tx = a.x
   mod.ty = a.y
-  spawnAttack(g, {
+  dropPatch(g, {
     move: a.move, type: a.type, visual: 'modTrail', x: a.x, y: a.y + 4,
     shape: { kind: 'circle', r: MOD.trail.r }, motion: { kind: 'static' },
     damage: a.damage * MOD.trail.damage, status: a.status, ttl: MOD.trail.ttl, hitInterval: MOD.trail.hitInterval,

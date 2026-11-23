@@ -580,6 +580,42 @@ describe('arena rooms', () => {
     expect(started?.run.players[0]?.loadout).toEqual({ starter: 'pikachu', look: { head: 'strawHat', trail: 'sparkTrail' } })
   })
 
+  it("plays only the legends the API vouched for an account's seat, never a claim", () => {
+    const state = newState()
+    connect(state, 'a', 'ua', T0)
+    hello(state, 'a', helloMsg('x'.repeat(16), { auth: { kind: 'clerk', token: 'jwt' }, name: '@ash' }), { id: 'u:ash', account: true }, T0, { guests: false })
+    join(state, 'c', guest(1))
+    say(state, 'a', { t: 'settings', settings: { difficulty: 'normal', legend: true } }, T0)
+    // Even a relay that lets dev guests claim legends never takes an account's word for them.
+    message(state, 'a', { t: 'loadout', loadout: { starter: 'kyogre', partner: 'pikachu', legends: ['kyogre', 'lugia'] } }, T0, { guestLegends: true })
+    say(state, 'c', { t: 'loadout', loadout: { starter: 'mew', partner: 'eevee', legends: ['mew'] } }, T0)
+    say(state, 'c', { t: 'ready', ready: true }, T0)
+    expect(roomOf(state).seats.map((s) => s.loadout?.legends)).toEqual([undefined, undefined])
+    say(state, 'a', { t: 'start' }, T0)
+    const started = of(sent(looked(state, 1, {}, T0, { 'u:ash': ['kyogre', 'groudon'] }), 'a'), 'start')[0]
+    expect(started?.run.players.map((p) => p.loadout)).toEqual([
+      { starter: 'kyogre', partner: 'pikachu', legends: ['kyogre', 'groudon'] },
+      { starter: 'mew', partner: 'eevee' },
+    ])
+  })
+
+  it("keeps a guest's own legends only where the relay allows it, never in a matched room", () => {
+    const state = newState()
+    join(state, 'c0', guest(0))
+    const dev = { guestLegends: true }
+    message(state, 'c0', { t: 'loadout', loadout: { starter: 'mew', legends: ['mew', 7] } }, T0, dev)
+    // A malformed list is no list.
+    expect(roomOf(state).seats[0]?.loadout).toEqual({ starter: 'mew' })
+    message(state, 'c0', { t: 'loadout', loadout: { starter: 'mew', legends: ['mew'] } }, T0, dev)
+    expect(of(sent(say(state, 'c0', { t: 'start' }, T0), 'c0'), 'start')[0]?.run.players[0]?.loadout).toEqual({ starter: 'mew', legends: ['mew'] })
+
+    const queue = matched(2)
+    join(queue, 'c0', guest(0))
+    join(queue, 'c1', guest(1))
+    for (const conn of ['c0', 'c1']) message(queue, conn, { t: 'loadout', loadout: { starter: 'pikachu', legends: ['mew'] } }, T0, dev)
+    expect(roomOf(queue).run?.start.players.map((p) => p.loadout.legends)).toEqual([undefined, undefined])
+  })
+
   it("starts a friends' Arena room bare when the API can't vouch, and a room of guests at once", () => {
     const state = newState()
     connect(state, 'a', 'ua', T0)

@@ -4,6 +4,7 @@ import type { PollKind, PollOption } from './data/supporters'
 import type { Save } from './game/meta'
 import { isRecord } from './game/parse'
 import { parseHidden, parsePoll, parseSupporterStatus, parseWall, savedSupporterTier, withVote, type Poll, type SupporterStatus, type SupporterTier, type Wall } from './game/supporters'
+import { leaveTo } from './handoff'
 
 /**
  * The supporters' side of the API (`server/`): the player's own standing,
@@ -54,9 +55,11 @@ export const fetchSupporterStatus = async (): Promise<SupporterStatus | null> =>
   return parsed
 }
 
-/** Dev: stands the device at `tier` (an OG for `og`) as if the API said so (`ps.supporter`). */
-export const stageSupporterStatus = (tier: SupporterTier, og = false) =>
-  storeStatus({ tier, since: new Date().toISOString(), public: true, og, vote: null, diamondVote: null, patreon: null })
+/** Dev: stands the device at `tier` (an OG for `og`) as if the API said so (`ps.supporter`); Gold and Diamond as a linked Patreon's pledge, as they come now. */
+export const stageSupporterStatus = (tier: SupporterTier, og = false) => {
+  const pledge = tier === 'supporter' ? null : tier
+  storeStatus({ tier, since: new Date().toISOString(), public: true, og, vote: null, diamondVote: null, patreon: pledge !== null, pledge })
+}
 
 let asked: string | null = null
 
@@ -97,7 +100,7 @@ export const redeemCode = async (code: string): Promise<Redeemed> => {
 export const linkPatreon = async (): Promise<boolean> => {
   const { status, body } = await apiCall(`/patreon/link?page=${encodeURIComponent(location.pathname)}`, { auth: true })
   if (status !== 200 || !isRecord(body) || typeof body.url !== 'string') return false
-  location.assign(body.url)
+  leaveTo(body.url)
   return true
 }
 
@@ -128,6 +131,11 @@ export const fetchWall = () =>
     }
     return { entries: parseWall(body.supporters), hidden: parseHidden(body.hidden) }
   }))
+
+/** Dev (`ps.hall`): what `fetchWall` answers from now on; null asks the API again. */
+export const fakeWall = (fake: Promise<Wall | null> | null) => {
+  wall = fake
+}
 
 const POLL_PATHS = { supporters: '/poll', diamond: '/poll/diamond' } as const satisfies Record<PollKind, string>
 

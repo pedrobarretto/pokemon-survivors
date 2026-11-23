@@ -11,7 +11,7 @@ export type ChangelogUpdate = {
   /** ISO date (`YYYY-MM-DD`) the update went live. One update per day, so it also names the update. */
   date: string
   title: Localized
-  /** 3 to 5 one-liners, what a player most wants to hear: the lobby's Novidades shows the newest update's. */
+  /** 3 to 6 one-liners, what a player most wants to hear: the lobby's Novidades shows the newest update's. */
   highlights: readonly Localized[]
   changes: readonly ChangelogChange[]
 }
@@ -24,21 +24,21 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
-    date: '2026-11-09',
+    date: '2026-11-23',
     title: { pt: 'Zoom da câmera', en: 'Camera zoom', es: 'Zoom de cámara', fr: 'Zoom de la caméra', zh: '鏡頭縮放' },
     highlights: [
       {
         pt: 'Afaste a câmera nas partidas para ver mais do mapa e da horda.',
         en: 'Pull the camera back in your runs to see more of the map and the horde.',
         es: 'Aleja la cámara en tus partidas para ver más del mapa y de la horda.',
-        fr: 'Reculez la caméra pendant vos parties pour voir plus de la carte et de la horde.',
+        fr: 'Recule la caméra pendant tes parties pour voir plus de la carte et de la horde.',
         zh: '在遊戲中拉遠鏡頭，看見更多地圖與敵群。',
       },
       {
         pt: 'No PC, use a roda do mouse ou as teclas + e -. No celular, faça pinça com dois dedos ou toque na lupa.',
         en: 'On PC, use the mouse wheel or the + and - keys. On phones, pinch with two fingers or tap the magnifier.',
         es: 'En PC, usa la rueda del ratón o las teclas + y -. En el celular, pellizca con dos dedos o toca la lupa.',
-        fr: 'Sur PC, utilisez la molette ou les touches + et -. Sur mobile, pincez à deux doigts ou touchez la loupe.',
+        fr: 'Sur PC, utilise la molette ou les touches + et -. Sur mobile, pince à deux doigts ou touche la loupe.',
         zh: '電腦上使用滑鼠滾輪或 + 與 - 鍵；手機上用雙指縮放或點選放大鏡。',
       },
       {
@@ -57,7 +57,7 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             pt: 'A lupa ao lado do botão de pausa afasta a câmera, com níveis que dependem da sua tela. O jogo lembra o nível escolhido neste aparelho.',
             en: 'The magnifier beside the pause button pulls the camera back, with levels that depend on your screen. The game remembers your choice on this device.',
             es: 'La lupa junto al botón de pausa aleja la cámara, con niveles que dependen de tu pantalla. El juego recuerda tu elección en este dispositivo.',
-            fr: 'La loupe à côté du bouton pause recule la caméra, avec des niveaux qui dépendent de votre écran. Le jeu retient votre choix sur cet appareil.',
+            fr: 'La loupe à côté du bouton pause recule la caméra, avec des niveaux qui dépendent de ton écran. Le jeu retient ton choix sur cet appareil.',
             zh: '暫停按鈕旁的放大鏡可拉遠鏡頭，可用層級依螢幕而定。遊戲會在此裝置上記住你的選擇。',
           },
           {
@@ -66,6 +66,1351 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             es: 'Con la cámara más lejos, los enemigos también aparecen más lejos, fuera de la pantalla. En co-op, el zoom solo llega hasta donde nadie aparece de la nada, así que algunas pantallas no lo tienen allí.',
             fr: 'Avec la caméra plus loin, les ennemis apparaissent aussi plus loin, hors de l’écran. En co-op, le zoom s’arrête là où personne ne surgit à l’écran, donc certains écrans n’y ont pas droit.',
             zh: '鏡頭拉遠時，敵人也會在更遠的畫面外出現。合作模式中，縮放僅限於敵人不會憑空出現的範圍，因此部分螢幕無法使用。',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    date: '2026-11-22',
+    title: { pt: 'Seu progresso a salvo', en: 'Your progress kept safe', es: 'Tu progreso a salvo', fr: 'Ta progression en sécurité', zh: '你的進度安全無虞' },
+    highlights: [
+      {
+        pt: 'Uma cópia desatualizada do jogo (uma aba antiga, um app que não recarregou) não apaga mais o seu progresso ao sincronizar.',
+        en: 'An outdated copy of the game (an old tab, an app that didn’t reload) can no longer erase your progress when it syncs.',
+        es: 'Una copia desactualizada del juego (una pestaña vieja, una app que no se recargó) ya no borra tu progreso al sincronizar.',
+        fr: 'Une copie obsolète du jeu (un vieil onglet, une app qui ne s’est pas rechargée) ne peut plus effacer ta progression en se synchronisant.',
+        zh: '過時的遊戲版本（舊分頁、沒有重新載入的 App）同步時不會再抹掉你的進度。',
+      },
+      {
+        pt: 'Lendários capturados e o progresso dos caminhos lendários (Células e Núcleos de Zygarde, Cosmog, a Torre, as Hex Nuts) ficam na conta mesmo se um aparelho antigo sincronizar.',
+        en: 'Captured legends and legend path progress (Zygarde’s Cells and Cores, Cosmog, the Torre, Hex Nuts) stay on your account even when an old device syncs.',
+        es: 'Los legendarios capturados y el progreso de los caminos legendarios (Células y Núcleos de Zygarde, Cosmog, la Torre, las Hex Nuts) quedan en tu cuenta aunque sincronice un dispositivo viejo.',
+        fr: 'Les légendaires capturés et la progression des chemins légendaires (Cellules et Noyaux de Zygarde, Cosmog, la Torre, les Hex Nuts) restent sur ton compte même quand un vieil appareil se synchronise.',
+        zh: '捕獲的傳說寶可夢與傳說之路的進度（基格爾德的細胞與核心、科斯莫古、高塔、六角螺帽）即使舊裝置同步也會留在帳號上。',
+      },
+      {
+        pt: 'O que uma versão antiga não conhece agora se junta ao que a conta guarda, em vez de ficar no lugar dele.',
+        en: 'Whatever an old version doesn’t know about is now merged with what your account keeps instead of replacing it.',
+        es: 'Lo que una versión vieja no conoce ahora se junta con lo que guarda tu cuenta, en vez de reemplazarlo.',
+        fr: 'Ce qu’une ancienne version ne connaît pas est maintenant fusionné avec ce que garde ton compte au lieu de le remplacer.',
+        zh: '舊版本不認得的內容，現在會與帳號保存的資料合併，而不是取而代之。',
+      },
+      {
+        pt: 'A habilidade inata de cada lendário agora diz o que faz: nos detalhes do Pokémon, no menu de pausa, no Dojo e na Pokédex do site.',
+        en: 'Every legend’s innate ability now says what it does: in the Pokémon’s details, the pause menu, the Dojo and the site’s Pokédex.',
+        es: 'La habilidad innata de cada legendario ahora dice qué hace: en los detalles del Pokémon, el menú de pausa, el Dojo y la Pokédex del sitio.',
+        fr: 'Le talent inné de chaque légendaire dit maintenant ce qu’il fait : dans les détails du Pokémon, le menu pause, le Dojo et le Pokédex du site.',
+        zh: '每隻傳說寶可夢的固有特性現在都會說明效果：在寶可夢詳情、暫停選單、道場和網站圖鑑中。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Sincronização da conta', en: 'Account sync', es: 'Sincronización de la cuenta', fr: 'Synchronisation du compte', zh: '帳號同步' },
+        notes: [
+          {
+            pt: 'Um aparelho que ainda roda uma versão antiga do jogo não conhecia os lendários e caminhos mais novos e, ao sincronizar, podia deixar a conta sem eles. Agora cada sincronização diz de qual versão do jogo vem, e a de uma versão mais antiga que a última que salvou a conta sempre se junta ao que está guardado, sem tirar nada.',
+            en: 'A device still running an old version of the game didn’t know the newest legends and legend paths and, when it synced, could leave your account without them. Now every sync says which version of the game it comes from, and one from a version older than the last that saved your account is always merged with what’s kept, taking nothing away.',
+            es: 'Un dispositivo que todavía corre una versión vieja del juego no conocía los legendarios y caminos más nuevos y, al sincronizar, podía dejar tu cuenta sin ellos. Ahora cada sincronización dice de qué versión del juego viene, y la de una versión más vieja que la última que guardó tu cuenta siempre se junta con lo guardado, sin quitar nada.',
+          },
+          {
+            pt: 'Uma sincronização sem uma captura de lendário ou com menos progresso num caminho lendário do que a conta tem também se junta ao que está guardado.',
+            en: 'A sync missing a legend capture, or with less legend path progress than your account has, is merged with what’s kept too.',
+            es: 'Una sincronización sin una captura de legendario, o con menos progreso en un camino legendario del que tiene tu cuenta, también se junta con lo guardado.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Lendários', en: 'Legends', es: 'Legendarios', fr: 'Légendaires', zh: '傳說寶可夢' },
+        notes: [
+          {
+            pt: 'A inata (Snow Cloak do Articuno, Serene Grace do Jirachi…) mostra o texto da habilidade e o que o Modo Lendário soma a ela, como o frio das asas do Articuno. No menu de pausa ela aparece desde o Nv 1, ao lado da habilidade escolhida no primeiro despertar.',
+            en: 'The innate (Articuno’s Snow Cloak, Jirachi’s Serene Grace…) shows the ability’s text and what the Legend mode adds to it, like the chill of Articuno’s wings. In the pause menu it shows from Lv 1, beside the ability picked at the first awakening.',
+            es: 'La innata (Snow Cloak de Articuno, Serene Grace de Jirachi…) muestra el texto de la habilidad y lo que el Modo Legendario le suma, como el frío de las alas de Articuno. En el menú de pausa aparece desde el Nv 1, junto a la habilidad elegida en el primer despertar.',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    date: '2026-11-21',
+    title: { pt: 'Gemas na sua moeda', en: 'Gems in your currency', es: 'Gemas en tu moneda', fr: 'Des gemmes dans ta devise', zh: '以你的幣別購買寶石' },
+    highlights: [
+      {
+        pt: 'Pacotes de gemas agora mostram o preço na sua moeda (dólar, euro, NT$, peso…), e o pagamento cobra nela.',
+        en: 'Gem packs now show their price in your currency (dollars, euros, NT$, pesos…), and checkout charges in it.',
+        es: 'Los paquetes de gemas ahora muestran el precio en tu moneda (dólar, euro, NT$, peso…), y el pago cobra en ella.',
+        fr: 'Les packs de gemmes affichent maintenant leur prix dans ta devise (dollar, euro, NT$, peso…), et le paiement se fait dans celle-ci.',
+        zh: '寶石包現在會以你的幣別顯示價格（美元、歐元、新台幣、披索…），付款也以該幣別扣款。',
+      },
+      {
+        pt: 'Um só pagamento com tudo junto: cartão, Apple Pay, Google Pay e, no Brasil, Pix.',
+        en: 'One checkout with everything in it: card, Apple Pay, Google Pay, and Pix in Brazil.',
+        es: 'Un solo pago con todo junto: tarjeta, Apple Pay, Google Pay y, en Brasil, Pix.',
+        fr: 'Un seul paiement avec tout dedans : carte, Apple Pay, Google Pay, et Pix au Brésil.',
+        zh: '同一個付款頁面就有全部方式：信用卡、Apple Pay、Google Pay，在巴西還有 Pix。',
+      },
+      {
+        pt: 'Faltam gemas para um visual? O botão dele já abre o pacote que cobre a diferença.',
+        en: 'Short of gems for a look? Its button now opens the pack that covers the difference.',
+        es: '¿Te faltan gemas para un visual? Su botón ya abre el paquete que cubre la diferencia.',
+        fr: 'Il te manque des gemmes pour un look ? Son bouton ouvre directement le pack qui couvre la différence.',
+        zh: '寶石不夠買外觀嗎？它的按鈕會直接打開能補足差額的寶石包。',
+      },
+      {
+        pt: 'A Loja de gemas mostra o apoio mensal no Patreon: cada nível traz gemas todo mês, e quem já vinculou vê o próprio nível.',
+        en: 'The gem shop now shows monthly support on Patreon: every tier brings gems each month, and patrons who linked see their own tier.',
+        es: 'La tienda de gemas muestra el apoyo mensual en Patreon: cada nivel trae gemas cada mes, y quien ya lo vinculó ve su propio nivel.',
+        fr: 'La boutique de gemmes montre le soutien mensuel sur Patreon : chaque niveau apporte des gemmes chaque mois, et qui l’a déjà lié voit son propre niveau.',
+        zh: '寶石商店現在會顯示 Patreon 每月贊助：每個等級每月都會帶來寶石，已連結的玩家會看到自己的等級。',
+      },
+      {
+        pt: 'Black Friday de 27 a 30 de novembro: +50% de gemas em todos os pacotes pagos.',
+        en: 'Black Friday from November 27 to 30: +50% gems on every paid pack.',
+        es: 'Black Friday del 27 al 30 de noviembre: +50% de gemas en todos los paquetes pagos.',
+        fr: 'Black Friday du 27 au 30 novembre : +50 % de gemmes sur tous les packs payants.',
+        zh: '黑色星期五 11 月 27 日至 30 日：所有付費寶石包多送 50% 寶石。',
+      },
+      {
+        pt: 'Com conta, o resultado da partida mostra as gemas grátis do dia e o que o seu saldo já compra, a um toque da Boutique.',
+        en: 'Signed in, the run’s results show the day’s free gems and what your balance already buys, one tap from the Boutique.',
+        es: 'Con cuenta, el resultado de la partida muestra las gemas gratis del día y lo que tu saldo ya compra, a un toque de la Boutique.',
+        fr: 'Connecté, l’écran de fin montre les gemmes gratuites du jour et ce que ton solde peut déjà acheter, à un toucher de la Boutique.',
+        zh: '登入後，結算畫面會顯示當天的免費寶石，以及你的餘額已經買得起的外觀，點一下就到服飾店。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Compra de gemas', en: 'Buying gems', es: 'Compra de gemas', fr: 'Achat de gemmes', zh: '購買寶石' },
+        notes: [
+          {
+            pt: 'Fora do Brasil, a Loja mostra um preço aproximado na moeda do seu aparelho, e a página de pagamento mostra e cobra o valor exato na sua moeda. No Brasil, nada muda: os mesmos preços em reais, agora com Pix na mesma página do cartão.',
+            en: 'Outside Brazil, the Shop shows an approximate price in your device’s currency, and the checkout page shows and charges the exact amount in your currency. In Brazil nothing changes: the same prices in reais, now with Pix on the same page as cards.',
+            es: 'Fuera de Brasil, la Tienda muestra un precio aproximado en la moneda de tu dispositivo, y la página de pago muestra y cobra el valor exacto en tu moneda. En Brasil no cambia nada: los mismos precios en reales, ahora con Pix en la misma página que la tarjeta.',
+          },
+          {
+            pt: 'Desistiu no meio do pagamento? Você volta para a Boutique, que oferece o mesmo pacote de novo e lembra dos outros jeitos de pagar, em vez de cair na tela inicial.',
+            en: 'Backed out of a payment? You land back in the Boutique, which offers the same pack again and the other ways to pay, instead of the title screen.',
+            es: '¿Te arrepentiste a mitad del pago? Vuelves a la Boutique, que te ofrece el mismo paquete otra vez y las otras formas de pagar, en vez de caer en la pantalla inicial.',
+          },
+          {
+            pt: 'Um visual caro demais mostra no próprio botão quantas gemas faltam e o pacote que cobre a diferença, com o preço; tocar abre o pagamento dele.',
+            en: 'A look you can’t afford yet shows on its own button how many gems you’re short and the pack that covers them, with its price; tapping opens that pack’s checkout.',
+            es: 'Un visual que aún no alcanzas muestra en su propio botón cuántas gemas faltan y el paquete que las cubre, con su precio; tocarlo abre el pago de ese paquete.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Apoio ao jogo', en: 'Supporting the game', es: 'Apoyo al juego', fr: 'Soutenir le jeu', zh: '支持遊戲' },
+        notes: [
+          {
+            pt: 'A Loja de gemas ganhou um card do Patreon com as gemas por mês de cada nível e as vantagens de quem apoia. Quem já vinculou o Patreon vê o próprio nível no lugar do convite, e o Hall da Fama e a página Apoie também passam a dizer as gemas por mês.',
+            en: 'The gem shop has a Patreon card with every tier’s gems a month and what supporters get. Patrons who linked Patreon see their own tier instead, and the Hall of Fame and the Support page now say the gems a month too.',
+            es: 'La tienda de gemas tiene una tarjeta de Patreon con las gemas al mes de cada nivel y lo que recibe quien apoya. Quien ya vinculó Patreon ve su propio nivel en lugar de la invitación, y el Salón de la Fama y la página Apoya también dicen las gemas al mes.',
+          },
+          {
+            pt: 'Doações avulsas agora são pelo Stripe, do Brasil e de fora, num só formulário: Pix e cartão em reais, e quem é de outro país vê o valor na própria moeda.',
+            en: 'One-time donations now go through Stripe, from Brazil and abroad, in a single form: Pix and cards in reais, and donors from other countries see the amount in their own currency.',
+            es: 'Las donaciones únicas ahora van por Stripe, desde Brasil y desde fuera, en un solo formulario: Pix y tarjeta en reales, y quien es de otro país ve el monto en su propia moneda.',
+          },
+          {
+            pt: 'Depois de alguns marcos (25 partidas, a primeira vitória no Pesadelo, 100 partidas), o lobby pergunta uma vez se você quer apoiar o jogo. Quem já apoia não vê a pergunta.',
+            en: 'After a few milestones (25 runs, a first Nightmare win, 100 runs), the lobby asks once whether you’d like to support the game. Supporters never see it.',
+            es: 'Después de algunos hitos (25 partidas, la primera victoria en Pesadilla, 100 partidas), el lobby pregunta una vez si quieres apoyar el juego. Quien ya apoya no ve la pregunta.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Black Friday', en: 'Black Friday', es: 'Black Friday', fr: 'Black Friday', zh: '黑色星期五' },
+        notes: [
+          {
+            pt: 'De 27 a 30 de novembro (horário de Brasília), todo pacote pago traz 50% a mais de gemas, pelo mesmo preço. O Pacote de boas-vindas fica de fora: ele já dá o dobro. A Loja, o contador de gemas e a Boutique no lobby mostram o selo e quanto falta para acabar.',
+            en: 'From November 27 to 30 (Brasília time), every paid pack brings 50% more gems for the same price. The welcome pack is left out: it already gives twice as many. The Shop, the gem counter and the Boutique in the lobby show the tag and how long is left.',
+            es: 'Del 27 al 30 de noviembre (hora de Brasilia), todo paquete pago trae 50% más de gemas por el mismo precio. El paquete de bienvenida queda fuera: ya da el doble. La Tienda, el contador de gemas y la Boutique en el lobby muestran la etiqueta y cuánto falta para que termine.',
+          },
+          {
+            pt: 'Vale o que a Loja mostrou quando você abriu o pagamento: um pacote aberto na Black Friday e pago depois ainda traz as gemas a mais.',
+            en: 'What counts is what the Shop showed when you opened the checkout: a pack opened during Black Friday and paid later still brings the extra gems.',
+            es: 'Vale lo que la Tienda mostró cuando abriste el pago: un paquete abierto en Black Friday y pagado después igual trae las gemas de más.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Gemas grátis', en: 'Free gems', es: 'Gemas gratis', fr: 'Gemmes gratuites', zh: '免費寶石' },
+        notes: [
+          {
+            pt: 'A primeira partida do dia de 5 minutos ou mais dá 15 gemas, e jogar 5 dias na semana dá mais 35. Agora o resultado mostra quando elas entram e o saldo, com o visual mais barato que você ainda não tem (ou o da Vitrine do dia) que já dá para comprar e um botão que abre a Boutique nele; se ainda não dá, quantas gemas faltam.',
+            en: 'The day’s first run of 5 minutes or more gives 15 gems, and playing 5 days in a week gives 35 more. The results now show when they land and your balance, with the cheapest look you don’t own yet (or the Vitrine do dia’s) that you can already buy and a button that opens the Boutique on it; if none yet, how many gems are left to go.',
+            es: 'La primera partida del día de 5 minutos o más da 15 gemas, y jugar 5 días en la semana da 35 más. Ahora el resultado muestra cuándo llegan y tu saldo, con el visual más barato que aún no tienes (o el de la Vitrine do dia) que ya puedes comprar y un botón que abre la Boutique en él; si todavía no alcanza, cuántas gemas faltan.',
+          },
+          {
+            pt: 'O contador de gemas do lobby brilha quando o saldo cobre um visual que você ainda não tem, até você passar na Boutique.',
+            en: 'The lobby’s gem counter glows when your balance covers a look you don’t own yet, until you visit the Boutique.',
+            es: 'El contador de gemas del lobby brilla cuando tu saldo cubre un visual que aún no tienes, hasta que pases por la Boutique.',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    date: '2026-11-20',
+    title: { pt: 'Lendários no co-op e Beast Boost consertado', en: 'Legendaries in co-op and Beast Boost fixed', es: 'Legendarios en co-op y Beast Boost arreglado', fr: 'Légendaires en coop et Beast Boost corrigé', zh: '合作模式的傳說寶可夢與異獸提升修正' },
+    highlights: [
+      {
+        pt: 'Modo Lendário no co-op: o anfitrião liga na sala e cada um joga com um lendário que já capturou, com horda mais forte, Pressão e despertares.',
+        en: 'Legend Mode in co-op: the host turns it on in the room and everyone plays a legend they captured, with a tougher horde, Pressure and awakenings.',
+        es: 'Modo Legendario en co-op: el anfitrión lo activa en la sala y cada uno juega con un legendario que ya capturó, con horda más fuerte, Presión y despertares.',
+        fr: 'Le Mode Légendaire arrive en coop : l’hôte l’active dans le salon et chacun joue un légendaire qu’il a capturé, avec une horde plus forte, la Pression et les éveils.',
+        zh: '合作模式也能玩傳說模式：房主在房間開啟後，每人使用自己捕獲的傳說寶可夢，敵群更強，還有壓迫感與覺醒。',
+      },
+      {
+        pt: 'Rankings novos: Lendários de Duplas, Trios e Squads, no lado Co-op Lendário do Ranking.',
+        en: 'New boards: Legendary Duos, Trios and Squads, on the Ranking’s Legendary Co-op side.',
+        es: 'Tablas nuevas: Dúos, Tríos y Escuadras Legendarios, en el lado Co-op Legendario del Ranking.',
+        fr: 'Nouveaux classements : Duos, Trios et Escouades Légendaires, du côté Coop Légendaire du Classement.',
+        zh: '新排行榜：傳說雙人、三人與四人小隊，位於排行榜的傳說合作頁。',
+      },
+      {
+        pt: 'Só valem lendários capturados na sua conta: quem ainda não capturou nenhum não fica pronto numa sala com o Modo Lendário.',
+        en: 'Only legends captured on your account count: a player who hasn’t captured any can’t get ready in a Legend Mode room.',
+        es: 'Solo valen los legendarios capturados en tu cuenta: quien todavía no capturó ninguno no puede estar listo en una sala con el Modo Legendario.',
+        fr: 'Seuls comptent les légendaires capturés sur ton compte : qui n’en a capturé aucun ne peut pas se déclarer prêt dans un salon en Mode Légendaire.',
+        zh: '只有帳號裡捕獲過的傳說寶可夢才算：還沒捕獲任何一隻的玩家，無法在傳說模式房間準備。',
+      },
+      {
+        pt: 'Beast Boost (Ultra Beasts) e Moxie: o nível que você acabou de ganhar não some mais na hora.',
+        en: 'Beast Boost (Ultra Beasts) and Moxie: the stack you just earned no longer vanishes at once.',
+        es: 'Beast Boost (Ultraentes) y Moxie: el nivel que acabas de ganar ya no desaparece al instante.',
+        fr: 'Beast Boost (Ultra-Chimères) et Moxie : le niveau que vous venez de gagner ne disparaît plus aussitôt.',
+        zh: '異獸提升（究極異獸）與自信過度：剛獲得的層數不會再立刻消失。',
+      },
+      {
+        pt: 'Um nível só cai depois de 4 s sem nocautes (1 s no Moxie), então uma sequência de nocautes chega ao máximo.',
+        en: 'A stack only drops after 4 s without KOs (1 s for Moxie), so a streak of KOs reaches the cap.',
+        es: 'Un nivel solo se pierde tras 4 s sin derrotas (1 s en Moxie), así que una racha de derrotas llega al máximo.',
+        fr: 'Un niveau ne retombe qu’après 4 s sans K.O. (1 s pour Moxie), donc une série de K.O. atteint le maximum.',
+        zh: '只有連續 4 秒沒有擊倒（自信過度為 1 秒）才會掉一層，連續擊倒就能疊到上限。',
+      },
+      {
+        pt: 'Partidas ranqueadas começam numa versão nova das regras; corridas da versão anterior continuam valendo.',
+        en: 'Ranked runs start on a new rules version; runs from the previous one still count.',
+        es: 'Las partidas clasificatorias empiezan en una nueva versión de las reglas; las de la versión anterior siguen valiendo.',
+        fr: 'Les parties classées passent à une nouvelle version des règles ; celles de la version précédente comptent toujours.',
+        zh: '排名對局改用新版規則，舊版規則的對局仍然有效。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Modo Lendário no co-op', en: 'Legend Mode in co-op', es: 'Modo Legendario en co-op' },
+        notes: [
+          {
+            pt: 'Numa sala de co-op, o anfitrião tem a nova opção Modo Lendário. Ligada, cada jogador escolhe um dos lendários que já capturou, e a partida segue as regras do Modo Lendário: horda mais forte, Pressão e despertares no Lv 12 e 28 (Kyogre e Groudon Primais, Rayquaza Mega).',
+            en: 'In a co-op room, the host has a new Legend Mode option. With it on, each player picks one of the legends they captured, and the run plays by Legend Mode’s rules: a tougher horde, Pressure and awakenings at Lv 12 and 28 (Primal Kyogre and Groudon, Mega Rayquaza).',
+            es: 'En una sala de co-op, el anfitrión tiene la nueva opción Modo Legendario. Activada, cada jugador elige uno de los legendarios que ya capturó, y la partida sigue las reglas del Modo Legendario: horda más fuerte, Presión y despertares en Nv. 12 y 28 (Kyogre y Groudon Primigenios, Rayquaza Mega).',
+          },
+          {
+            pt: 'Só valem lendários capturados na sua conta: o servidor confere na largada. Quem ainda não capturou nenhum não consegue ficar pronto numa sala com o Modo Lendário.',
+            en: 'Only legends captured on your account count: the server checks as the run starts. A player who hasn’t captured any can’t get ready in a Legend Mode room.',
+            es: 'Solo valen los legendarios capturados en tu cuenta: el servidor lo confirma al empezar. Quien todavía no capturó ninguno no puede estar listo en una sala con el Modo Legendario.',
+          },
+          {
+            pt: 'As partidas lendárias têm rankings próprios no Ranking, no lado Co-op Lendário. O Desafio co-op do dia continua no modo normal, e as fendas épicas seguem na arena antiga no co-op.',
+            en: 'Legendary runs have their own boards in the Ranking, on the Legendary Co-op side. The daily co-op Challenge stays in the standard mode, and epic rifts are still fought in the old arena in co-op.',
+            es: 'Las partidas legendarias tienen sus propias tablas en el Ranking, en el lado Co-op Legendario. El Desafío co-op del día sigue en el modo normal, y las fisuras épicas siguen en la arena antigua en co-op.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Correctifs', zh: '修正' },
+        notes: [
+          {
+            pt: 'Beast Boost (Ultra Beasts) e Moxie: o nível que você acabou de ganhar não some mais na hora; um nível só cai depois de 4 s sem nocautes (1 s no Moxie).',
+            en: 'Beast Boost (Ultra Beasts) and Moxie: the stack you just earned no longer vanishes at once; a stack only drops after 4 s without KOs (1 s for Moxie).',
+            es: 'Beast Boost (Ultraentes) y Moxie: el nivel que acabas de ganar ya no desaparece al instante; un nivel solo se pierde tras 4 s sin derrotas (1 s en Moxie).',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    date: '2026-11-19',
+    title: { pt: 'Chinês simplificado', en: 'Simplified Chinese', es: 'Chino simplificado', fr: 'Chinois simplifié', zh: '簡體中文' },
+    highlights: [
+      {
+        pt: 'Novo idioma: chinês simplificado (简体中文), no jogo inteiro e no site, em /zh-cn/. Navegadores em chinês da China continental, de Singapura e da Malásia já abrem nele.',
+        en: 'New language: Simplified Chinese (简体中文), across the whole game and the site, at /zh-cn/. Chinese browsers in mainland China, Singapore and Malaysia open in it on their own.',
+        es: 'Nuevo idioma: chino simplificado (简体中文), en todo el juego y el sitio, en /zh-cn/. Los navegadores en chino de China continental, Singapur y Malasia ya abren en él.',
+        fr: 'Nouvelle langue : le chinois simplifié (简体中文), dans tout le jeu et sur le site, à /zh-cn/. Les navigateurs en chinois de Chine continentale, de Singapour et de Malaisie s’ouvrent directement dedans.',
+        zh: '新語言：簡體中文，遍及整個遊戲和網站，網址是 /zh-cn/。中國大陸、新加坡和馬來西亞的中文瀏覽器會直接以簡體中文開啟。',
+      },
+      {
+        pt: 'O jogo ganhou um nome em chinês: 寶可夢生存戰 (宝可梦生存战 no simplificado).',
+        en: 'The game has a Chinese name now: 寶可夢生存戰 (宝可梦生存战 in Simplified).',
+        es: 'El juego tiene un nombre en chino: 寶可夢生存戰 (宝可梦生存战 en simplificado).',
+        fr: 'Le jeu a désormais un nom chinois : 寶可夢生存戰 (宝可梦生存战 en simplifié).',
+        zh: '遊戲有了中文名稱：寶可夢生存戰。',
+      },
+      {
+        pt: 'Quem prefere o chinês tradicional (Taiwan, Hong Kong) continua com ele, e os dois aparecem em Ajustes > Idioma.',
+        en: 'Traditional Chinese (Taiwan, Hong Kong) stays as it was, and both are in Settings > Language.',
+        es: 'El chino tradicional (Taiwán, Hong Kong) sigue igual, y los dos están en Ajustes > Idioma.',
+        fr: 'Le chinois traditionnel (Taïwan, Hong Kong) reste tel quel, et les deux sont dans Réglages > Langue.',
+        zh: '繁體中文（台灣、香港）維持不變，兩種都能在設定 > 語言中切換。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Chinês simplificado', en: 'Simplified Chinese', es: 'Chino simplificado', fr: 'Chinois simplifié', zh: '簡體中文' },
+        notes: [
+          {
+            pt: 'O jogo, a Pokédex, o guia, a tier list, as novidades e as outras páginas do site agora existem em chinês simplificado (/zh-cn/), com o vocabulário da China continental. Nomes de Pokémon, golpes e itens continuam em inglês, como nos outros idiomas.',
+            en: 'The game, the Pokédex, the guide, the tier list, the changelog and the site’s other pages now come in Simplified Chinese (/zh-cn/), in mainland China’s vocabulary. Pokémon, move and item names stay in English, as in the other languages.',
+            es: 'El juego, la Pokédex, la guía, la tier list, las novedades y las demás páginas del sitio ahora están en chino simplificado (/zh-cn/), con el vocabulario de China continental. Los nombres de Pokémon, movimientos y objetos siguen en inglés, como en los demás idiomas.',
+            fr: 'Le jeu, le Pokédex, le guide, la tier list, les nouveautés et les autres pages du site existent maintenant en chinois simplifié (/zh-cn/), avec le vocabulaire de Chine continentale. Les noms des Pokémon, des capacités et des objets restent en anglais, comme dans les autres langues.',
+            zh: '遊戲、寶可夢圖鑑、攻略、強度排行、更新紀錄與網站其他頁面現在都有簡體中文版（/zh-cn/），使用中國大陸的用語。寶可夢、招式和道具名稱和其他語言一樣維持英文。',
+          },
+          {
+            pt: 'Em chinês, o jogo agora se chama 寶可夢生存戰, o mesmo nome que o portal 4388 já usava para ele.',
+            en: 'The game’s Chinese name is now 寶可夢生存戰, the name the 4388 games portal already used for it.',
+            es: 'El nombre del juego en chino ahora es 寶可夢生存戰, el mismo que ya usaba el portal 4388.',
+            fr: 'Le nom chinois du jeu est désormais 寶可夢生存戰, celui que le portail 4388 utilisait déjà.',
+            zh: '遊戲的中文名稱現在是寶可夢生存戰，和 4388 小遊戲上的名稱相同。',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    date: '2026-11-18',
+    title: { pt: 'Soro Sombrio e Game Corner sem limite', en: 'Shadow Serum and an unlimited Game Corner', es: 'Suero Oscuro y un Casino sin límite', fr: 'Sérum Obscur et Salle de jeux sans limite', zh: '暗影血清與不設限的遊戲城' },
+    highlights: [
+      {
+        pt: 'Purificar um Pokémon Sombrio agora pede confirmação, com o nome dele e o aviso de que a forma Sombria vai embora.',
+        en: 'Purifying a Shadow Pokémon now asks first, naming it and warning that its Shadow form goes away.',
+        es: 'Purificar un Pokémon Oscuro ahora pide confirmación, con su nombre y el aviso de que la forma Oscura se va.',
+        fr: 'Purifier un Pokémon Obscur demande désormais confirmation, avec son nom et l’avertissement que sa forme Obscure disparaît.',
+        zh: '淨化暗影寶可夢前會先確認，並寫出牠的名字，提醒暗影型態會消失。',
+      },
+      {
+        pt: 'Novo no balcão do Meowth, no Game Corner: o Soro Sombrio, que faz um Pokémon Purificado (você escolhe qual) voltar a ser Sombrio.',
+        en: 'New at Meowth’s counter in the Game Corner: the Shadow Serum turns a Purified Pokémon of your choice back into a Shadow.',
+        es: 'Nuevo en el mostrador de Meowth, en el Casino: el Suero Oscuro hace que un Pokémon Purificado (tú eliges cuál) vuelva a ser Oscuro.',
+        fr: 'Nouveau au comptoir de Meowth, dans la Salle de jeux : le Sérum Obscur rend sa forme Obscure au Pokémon Purifié de ton choix.',
+        zh: '遊戲城喵喵櫃台新上架：暗影血清，可讓你選的一隻淨化寶可夢變回暗影。',
+      },
+      {
+        pt: 'Purificou o Mewtwo Sombrio sem querer? O Soro traz a forma Sombria de volta; para purificar de novo, é só andar o coração inteiro outra vez.',
+        en: 'Purified Shadow Mewtwo by mistake? The Serum brings its Shadow form back; to purify it again, walk its whole heart gauge again.',
+        es: '¿Purificaste a Mewtwo Oscuro sin querer? El Suero devuelve su forma Oscura; para purificarlo otra vez, camina todo su corazón de nuevo.',
+        fr: 'Mewtwo Obscur purifié par erreur ? Le Sérum lui rend sa forme Obscure ; pour le purifier à nouveau, il faut remarcher toute sa jauge.',
+        zh: '不小心淨化了暗影超夢？血清能讓暗影型態回來；想再淨化，就要重新走滿心門量表。',
+      },
+      {
+        pt: 'O Game Corner não fecha mais: jogue o caça-níqueis e o Caça ao Koffing o quanto quiser, e compre até 5.000 fichas por dia (eram 500).',
+        en: 'The Game Corner no longer closes: play the slots and Koffing Sweep as long as you like, and buy up to 5,000 tokens a day (it was 500).',
+        es: 'El Casino ya no cierra: juega en las tragaperras y en la Caza de Koffing cuanto quieras, y compra hasta 5.000 fichas al día (eran 500).',
+        fr: 'La Salle de jeux ne ferme plus : joue aux machines à sous et à la Chasse au Koffing autant que tu veux, et achète jusqu’à 5 000 jetons par jour (contre 500).',
+        zh: '遊戲城不再打烊：拉霸機和瓦斯彈掃雷想玩多久就玩多久，每天最多可買 5,000 枚代幣（原本是 500）。',
+      },
+      {
+        pt: 'Prêmios shiny no balcão do Game Corner: Ditto, Absol, Mawile, Gimmighoul, os Nidoran, Cleffa, Plusle e Minun, agora também em versão shiny.',
+        en: 'Shiny prizes at the Game Corner’s counter: Ditto, Absol, Mawile, Gimmighoul, both Nidoran, Cleffa, Plusle and Minun now come shiny too.',
+        es: 'Premios shiny en el mostrador del Casino: Ditto, Absol, Mawile, Gimmighoul, los Nidoran, Cleffa, Plusle y Minun, ahora también en versión shiny.',
+        fr: 'Des prix chromatiques au comptoir de la Salle de jeux : Ditto, Absol, Mawile, Gimmighoul, les deux Nidoran, Cleffa, Plusle et Minun existent aussi en chromatique.',
+        zh: '遊戲城櫃台新增異色獎品：Ditto、Absol、Mawile、Gimmighoul、兩隻 Nidoran、Cleffa、Plusle 和 Minun 都有異色版了。',
+      },
+      {
+        pt: 'Já tem Rotom ou Wishiwashi? Achar de novo agora pode trazer o shiny: a TV velha das casas abandonadas e a pesca longe do píer têm uma chance pequena.',
+        en: 'Already have Rotom or Wishiwashi? Finding them again can now bring the shiny: the old TV in abandoned cottages and fishing far from the pier have a small chance.',
+        es: '¿Ya tienes a Rotom o a Wishiwashi? Encontrarlos de nuevo ahora puede traer el shiny: la tele vieja de las casas abandonadas y la pesca lejos del muelle tienen una pequeña probabilidad.',
+        fr: 'Tu as déjà Rotom ou Wishiwashi ? Les retrouver peut maintenant donner le chromatique : la vieille télé des maisons abandonnées et la pêche loin du ponton ont une petite chance.',
+        zh: '已經有 Rotom 或 Wishiwashi 了嗎？再次找到牠們時有小機率得到異色：廢棄小屋的舊電視和離碼頭很遠的釣魚都有機會。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Shiny em achados repetidos', en: 'Shinies on repeat finds', es: 'Shiny en hallazgos repetidos' },
+        notes: [
+          {
+            pt: 'Quem já tem o Rotom tem 1 chance em 20, a cada vez que a TV velha chia numa run, de soltar um Rotom shiny. Ele chega na caixa de presentes.',
+            en: 'If you already own Rotom, each run where the old TV crackles has a 1 in 20 chance of letting out a shiny Rotom. It arrives in the gift box.',
+            es: 'Si ya tienes a Rotom, cada partida en que la tele vieja chisporrotea tiene 1 probabilidad entre 20 de soltar un Rotom shiny. Llega a la caja de regalos.',
+          },
+          {
+            pt: 'Quem já tem o Wishiwashi tem 1 chance em 25, a cada pescaria que fisga outro, de ganhar um Wishiwashi shiny. Ele chega na caixa de presentes.',
+            en: 'If you already own Wishiwashi, each fishing session that hooks another has a 1 in 25 chance of bringing a shiny Wishiwashi. It arrives in the gift box.',
+            es: 'Si ya tienes a Wishiwashi, cada pesca que atrapa otro tiene 1 probabilidad entre 25 de traer un Wishiwashi shiny. Llega a la caja de regalos.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Game Corner', en: 'Game Corner', es: 'Casino' },
+        notes: [
+          {
+            pt: 'O caça-níqueis não tem mais limite de giros nem cofre que fecha: cada giro paga o que tirar. Três Poké Balls agora pagam 10 (eram 12) e três Magikarp 7 (eram 9); os prêmios grandes não mudaram.',
+            en: 'The slots no longer have a spin limit or a vault that closes: every spin pays what it lands. Three Poké Balls now pay 10 (was 12) and three Magikarp 7 (was 9); the big prizes are the same.',
+            es: 'Las tragaperras ya no tienen límite de giros ni una caja que cierra: cada giro paga lo que saque. Tres Poké Balls ahora pagan 10 (eran 12) y tres Magikarp 7 (eran 9); los premios grandes no cambian.',
+          },
+          {
+            pt: 'O Caça ao Koffing não tem mais limite de mesas. Ele paga cheio até 1.500 fichas por dia, metade até 2.250, e depois entra no modo livre: as mesas continuam valendo o nível, só não dão fichas até o dia seguinte.',
+            en: 'Koffing Sweep no longer has a board limit. It pays in full up to 1,500 tokens a day and half up to 2,250, then goes into free play: boards still count for your level, they just give no tokens until the next day.',
+            es: 'La Caza de Koffing ya no tiene límite de mesas. Paga completo hasta 1.500 fichas al día, la mitad hasta 2.250, y luego pasa al modo libre: las mesas siguen valiendo el nivel, solo que no dan fichas hasta el día siguiente.',
+          },
+          {
+            pt: 'No balcão do Meowth dá para comprar até 5.000 fichas por dia, e tem um pacote novo de 1.000 fichas por ₽20.000.',
+            en: 'Meowth’s counter sells up to 5,000 tokens a day, with a new pack of 1,000 tokens for ₽20,000.',
+            es: 'En el mostrador de Meowth puedes comprar hasta 5.000 fichas al día, y hay un paquete nuevo de 1.000 fichas por ₽20.000.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Pokémon Sombrios', en: 'Shadow Pokémon', es: 'Pokémon Oscuros' },
+        notes: [
+          {
+            pt: 'O botão Purificar abre uma janela de confirmação (Cancelar já vem selecionado) que diz qual Pokémon vai ser purificado e que a forma Sombria se perde, a não ser com o Soro Sombrio.',
+            en: 'The Purify button opens a confirmation (Cancel comes selected) that names the Pokémon and says its Shadow form is lost, unless you use the Shadow Serum.',
+            es: 'El botón Purificar abre una ventana de confirmación (Cancelar viene seleccionado) que dice qué Pokémon se purifica y que la forma Oscura se pierde, salvo con el Suero Oscuro.',
+          },
+          {
+            pt: 'O Soro Sombrio custa 11.000 fichas no balcão de prêmios e pode ser trocado quantas vezes quiser. Ele chega na caixa de presentes e, ao abrir, o Pokémon escolhido volta a ser Sombrio com o coração fechado.',
+            en: 'The Shadow Serum costs 11,000 tokens at the prize counter and can be traded for as often as you like. It arrives in the gift box, and opening it turns the chosen Pokémon Shadow again, its heart closed.',
+            es: 'El Suero Oscuro cuesta 11.000 fichas en el mostrador de premios y se puede canjear las veces que quieras. Llega a la caja de regalos y, al abrirlo, el Pokémon elegido vuelve a ser Oscuro con el corazón cerrado.',
+          },
+          {
+            pt: 'Cada família do balcão tem seu prêmio shiny, de 7.500 fichas (Ditto) a 15.000 (Cleffa). Ele chega na caixa de presentes e choca a família já shiny; se você já tinha a família, ela passa a ser shiny. Quem já trocou a família normal paga só a diferença.',
+            en: 'Every counter family has a shiny prize, from 7,500 tokens (Ditto) to 15,000 (Cleffa). It arrives in the gift box and hatches the family shiny; if you already had the family, it turns shiny. If you already traded for the regular family, you only pay the difference.',
+            es: 'Cada familia del mostrador tiene su premio shiny, de 7.500 fichas (Ditto) a 15.000 (Cleffa). Llega a la caja de regalos y eclosiona la familia ya shiny; si ya tenías la familia, pasa a ser shiny. Si ya canjeaste la familia normal, pagas solo la diferencia.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones' },
+        notes: [
+          {
+            pt: 'A Carpintaria do Bibarel dizia "Na sua coleção" em todos os troféus dos mini games e das Estampas, mesmo sem tê-los. Agora cada um diz o que falta para ganhar, como "Faça 400 pontos em Pesca no Píer".',
+            en: 'Bibarel’s Carpentry said "In your collection" on every mini game and Stamps trophy, even ones you didn’t have. Now each says what earns it, like "Score 400 points in Pier Fishing".',
+            es: 'La Carpintería de Bibarel decía "En tu colección" en todos los trofeos de los minijuegos y de las Estampas, aunque no los tuvieras. Ahora cada uno dice qué falta para ganarlo, como "Haz 400 puntos en Pesca en el Muelle".',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    date: '2026-11-17',
+    title: { pt: 'Correções da Temporada 1', en: 'Season 1 fixes', es: 'Correcciones de la Temporada 1', fr: 'Correctifs de la Saison 1', zh: '第 1 賽季修正' },
+    highlights: [
+      {
+        pt: 'As partidas voltam a abrir em navegadores mais antigos (Chrome 109 e anteriores).',
+        en: 'Runs open again on older browsers (Chrome 109 and earlier).',
+        es: 'Las partidas vuelven a abrir en navegadores más antiguos (Chrome 109 y anteriores).',
+        fr: 'Les parties se lancent de nouveau sur les navigateurs plus anciens (Chrome 109 et avant).',
+        zh: '舊版瀏覽器（Chrome 109 及更早）又能開始對局了。',
+      },
+      {
+        pt: 'Lendário shiny derrotado agora libera o shiny para jogar quando o lendário é capturado.',
+        en: 'A shiny legend you beat now unlocks the playable shiny once the legend is captured.',
+        es: 'Un legendario shiny derrotado ahora desbloquea el shiny jugable al capturar al legendario.',
+        fr: 'Un légendaire chromatique vaincu débloque désormais le chromatique jouable une fois le légendaire capturé.',
+        zh: '擊敗過的異色傳說寶可夢，在捕獲該傳說後就能以異色遊玩。',
+      },
+      {
+        pt: 'Mega Stones e itens de chefe caem sempre onde dá para pegar.',
+        en: 'Mega Stones and boss loot always land where you can reach them.',
+        es: 'Las Megapiedras y el botín de los jefes siempre caen donde puedes alcanzarlos.',
+        fr: 'Les Méga-Gemmes et le butin des boss tombent toujours là où tu peux les ramasser.',
+        zh: '超級石和頭目掉落物一定會落在走得到的地方。',
+      },
+      {
+        pt: 'Electro Shot do Duraludon mais forte, ainda mais na chuva.',
+        en: 'Duraludon’s Electro Shot hits harder, even more in the rain.',
+        es: 'El Electro Shot de Duraludon pega más fuerte, y aún más con lluvia.',
+        fr: 'L’Electro Shot de Duraludon frappe plus fort, encore plus sous la pluie.',
+        zh: '鋁鋼龍的 Electro Shot 威力提升，下雨時更強。',
+      },
+      {
+        pt: 'No iPhone, uma opção nova em Ajustes → Som deixa seu podcast ou música tocando junto com o jogo.',
+        en: 'On iPhone, a new option in Settings → Sound keeps your podcast or music playing alongside the game.',
+        es: 'En iPhone, una opción nueva en Ajustes → Sonido deja tu pódcast o música sonando junto con el juego.',
+        fr: 'Sur iPhone, une nouvelle option dans Réglages → Son laisse ton podcast ou ta musique jouer en même temps que le jeu.',
+        zh: 'iPhone 在「設定 → 音效」新增選項，可以一邊玩一邊聽 Podcast 或音樂。',
+      },
+    ],
+    changes: [
+      {
+        title: {
+          pt: 'Primeira vez? O Rotom te mostra o jogo',
+          en: 'First time? Rotom shows you the game',
+          es: '¿Primera vez? Rotom te muestra el juego',
+          fr: 'Première fois ? Rotom te montre le jeu',
+          zh: '第一次玩？Rotom 帶你認識遊戲',
+        },
+        notes: [
+          {
+            pt: 'Quem chega pela primeira vez pode ser recebido pelo Rotom, que ensina o básico jogando, em uns 2 minutos: andar, os golpes que saem sozinhos, a experiência, as melhorias, a Poké Ball e um chefe. Dá pra pular a qualquer hora, ou tocar em "Já sei jogar".',
+            en: 'New players may be greeted by Rotom, who teaches the basics by playing, in about 2 minutes: moving, the moves that fire on their own, experience, upgrades, the Poké Ball and a boss. Skip it any time, or tap "I know how to play".',
+            es: 'Quien llega por primera vez puede ser recibido por Rotom, que enseña lo básico jugando, en unos 2 minutos: moverse, los ataques que salen solos, la experiencia, las mejoras, la Poké Ball y un jefe. Se puede saltar en cualquier momento, o tocar "Ya sé jugar".',
+            fr: 'Les nouveaux joueurs peuvent être accueillis par Rotom, qui apprend les bases en jouant, en 2 minutes environ : se déplacer, les attaques qui partent seules, l’expérience, les améliorations, la Poké Ball et un boss. On peut passer à tout moment, ou toucher « Je sais jouer ».',
+            zh: '新玩家可能會遇到 Rotom 迎接，花大約 2 分鐘邊玩邊教基本操作：移動、自動施放的招式、經驗值、強化、精靈球和頭目。隨時都能跳過，或點「我會玩了」。',
+          },
+          {
+            pt: 'Depois, você escolhe o primeiro parceiro entre os 27 iniciais de todas as regiões. E em Ajustes > Jogo, "Rever tutorial" mostra tudo de novo, com um passeio pelo lobby.',
+            en: 'Then you pick your first partner from the 27 starters of every region. And in Settings > Game, "See the tutorial again" shows it all again, with a tour of the lobby.',
+            es: 'Después eliges tu primer compañero entre los 27 iniciales de todas las regiones. Y en Ajustes > Juego, "Ver el tutorial otra vez" lo muestra todo de nuevo, con un paseo por el lobby.',
+            fr: 'Ensuite, tu choisis ton premier partenaire parmi les 27 starters de toutes les régions. Et dans Réglages > Jeu, « Revoir le tutoriel » montre tout à nouveau, avec une visite du lobby.',
+            zh: '接著從各地區的 27 隻御三家中選出第一位夥伴。在設定 > 遊戲裡的「重看教學」可以再看一次，還會帶你逛一圈大廳。',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Doações com Apple Pay e Google Pay no Brasil', en: 'Apple Pay and Google Pay for donations in Brazil', es: 'Donaciones con Apple Pay y Google Pay en Brasil' },
+        notes: [
+          {
+            pt: 'Na página Apoie, a doação em reais (AbacatePay) agora aceita Apple Pay e Google Pay, além de Pix e cartão.',
+            en: 'On the Support page, donations in reais (AbacatePay) now take Apple Pay and Google Pay, besides Pix and card.',
+            es: 'En la página Apoya, las donaciones en reales (AbacatePay) ahora aceptan Apple Pay y Google Pay, además de Pix y tarjeta.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Correctifs', zh: '修正' },
+        notes: [
+          {
+            pt: 'Partidas não começavam no Chrome 109 e anteriores (Windows 7 e 8, Chromebooks antigos) desde a Temporada 1. Corrigido.',
+            en: 'Runs wouldn’t start on Chrome 109 and earlier (Windows 7 and 8, older Chromebooks) since Season 1. Fixed.',
+            es: 'Las partidas no empezaban en Chrome 109 y anteriores (Windows 7 y 8, Chromebooks antiguos) desde la Temporada 1. Corregido.',
+          },
+          {
+            pt: 'Quem estava preso no "Carregando…" na primeira visita (sobretudo na China e em Hong Kong) agora entra no jogo.',
+            en: 'Players stuck on “Loading…” on their first visit (mostly in mainland China and Hong Kong) now get into the game.',
+            es: 'Quien se quedaba en "Cargando…" en su primera visita (sobre todo en China y Hong Kong) ahora entra al juego.',
+          },
+          {
+            pt: 'Anéis do Hoopa: derrotar um ajudante do chefe não pula mais para o próximo anel.',
+            en: 'Hoopa’s Rings: beating a boss’s helper no longer skips to the next ring.',
+            es: 'Anillos de Hoopa: derrotar a un ayudante del jefe ya no salta al siguiente anillo.',
+          },
+          {
+            pt: 'O estilhaço do cristal Tera não dá mais erro no co-op, e um cristal sem facetas não quebra mais a transformação.',
+            en: 'The Tera crystal’s shatter no longer errors in co-op, and a crystal with no facets no longer breaks the transformation.',
+            es: 'El estallido del cristal Tera ya no da error en el cooperativo, y un cristal sin facetas ya no rompe la transformación.',
+          },
+          {
+            pt: 'Em navegadores de apps no Android, o grito de um Pokémon não fecha mais o jogo.',
+            en: 'In Android in-app browsers, a Pokémon’s cry no longer crashes the game.',
+            es: 'En los navegadores de apps de Android, el grito de un Pokémon ya no cierra el juego.',
+          },
+          {
+            pt: 'Mega Stones e itens de chefe que caíam no buraco da arena de Lugia ou no lago de lava do Groudon agora caem no chão mais próximo.',
+            en: 'Mega Stones and boss loot that fell into Lugia’s whirlpool or Groudon’s lava lake now land on the nearest ground.',
+            es: 'Las Megapiedras y el botín de jefe que caían en el remolino de Lugia o en el lago de lava de Groudon ahora caen en el suelo más cercano.',
+          },
+          {
+            pt: 'Um lendário shiny derrotado antes da captura agora libera o shiny jogável. Saves nessa situação recebem o shiny ao abrir o jogo.',
+            en: 'A shiny legend beaten before the capture now unlocks the playable shiny. Saves in that state get it when the game opens.',
+            es: 'Un legendario shiny derrotado antes de la captura ahora desbloquea el shiny jugable. Las partidas guardadas en esa situación lo reciben al abrir el juego.',
+          },
+          {
+            pt: 'Pegar um X Attack ou X Speed durante um bônus longo de altar não encurta mais o bônus.',
+            en: 'Picking up an X Attack or X Speed during a long altar buff no longer shortens the buff.',
+            es: 'Recoger un X Attack o X Speed durante un bonus largo de altar ya no acorta el bonus.',
+          },
+          {
+            pt: 'No iPhone em pé, o botão Começar não cobre mais a Mochila antes da partida.',
+            en: 'On iPhone in portrait, the Start button no longer covers the Bag before a run.',
+            es: 'En iPhone en vertical, el botón Empezar ya no tapa la Mochila antes de la partida.',
+          },
+          {
+            pt: 'O Livro de Estampas aberto pelo Cartão de Treinador volta a fechar no Voltar.',
+            en: 'The Stamp Book opened from the Trainer Card closes with Back again.',
+            es: 'El Libro de Estampas abierto desde la Tarjeta de Entrenador vuelve a cerrarse con Volver.',
+          },
+          {
+            pt: 'No co-op, subir de nível com tudo no máximo não pisca mais a tela.',
+            en: 'In co-op, leveling up with everything maxed no longer flashes the screen.',
+            es: 'En el cooperativo, subir de nivel con todo al máximo ya no hace parpadear la pantalla.',
+          },
+          {
+            pt: 'A sombra do coqueiro no píer do Poké Realm agora fica embaixo dele.',
+            en: 'The palm tree’s shadow on the Poké Realm pier now sits under it.',
+            es: 'La sombra de la palmera del muelle del Poké Realm ahora queda debajo de ella.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Ajustes', en: 'Tweaks', es: 'Ajustes', fr: 'Ajustements', zh: '調整' },
+        notes: [
+          {
+            pt: 'Electro Shot (Duraludon): dano 16 → 28, recarga 2,6 → 2,2 s, raio maior e bônus de chuva ×1,2 → ×1,5.',
+            en: 'Electro Shot (Duraludon): damage 16 → 28, cooldown 2.6 → 2.2 s, a bigger beam and the rain bonus ×1.2 → ×1.5.',
+            es: 'Electro Shot (Duraludon): daño 16 → 28, recarga 2,6 → 2,2 s, rayo más grande y bonus de lluvia ×1,2 → ×1,5.',
+          },
+          {
+            pt: 'iPhone: "Tocar com outros apps" em Ajustes → Som deixa podcasts e música de outros apps tocando com o jogo (com o celular no silencioso, o jogo fica mudo).',
+            en: 'iPhone: “Play with other apps” in Settings → Sound keeps other apps’ podcasts and music playing with the game (on silent, the game goes quiet).',
+            es: 'iPhone: "Sonar con otras apps" en Ajustes → Sonido deja pódcasts y música de otras apps sonando con el juego (en silencio, el juego queda mudo).',
+          },
+          {
+            pt: 'Textos mais claros: a chance dos míticos no final das 15:00, o que acontece com um shiny selvagem derrotado e o que o Esquecer faz.',
+            en: 'Clearer texts: the mythicals’ chance at the 15:00 finale, what happens to a wild shiny you beat, and what Forget does.',
+            es: 'Textos más claros: la probabilidad de los míticos en el final de las 15:00, qué pasa con un shiny salvaje derrotado y qué hace Olvidar.',
+          },
+          {
+            pt: 'O Ponyta de Galar agora fica junto das outras formas de Galar: aparece na seção de Galar da escolha de parceiro e choca do Ovo de Viagem na semana de Galar (não mais do Ovo Raro). Quem já tem continua com ele.',
+            en: 'Galarian Ponyta now sits with the other Galarian forms: it shows in the partner select’s Galar section and hatches from the Travel Egg in Galar’s week (no longer from the Rare Egg). If you have it, you keep it.',
+            es: 'El Ponyta de Galar ahora está junto a las otras formas de Galar: aparece en la sección de Galar de la elección de compañero y sale del Huevo de Viaje en la semana de Galar (ya no del Huevo Raro). Si ya lo tienes, lo conservas.',
+          },
+          {
+            pt: 'O ranking do Desafio do dia de 17/11 misturou Stufful e Starly: o Pokémon do dia mudou no meio do dia. Os próximos dias não mudam mais. Desculpa!',
+            en: 'The Daily Challenge board of 11/17 mixed Stufful and Starly: the day’s Pokémon changed mid-day. The next days won’t change anymore. Sorry!',
+            es: 'El ranking del Desafío del día del 17/11 mezcló Stufful y Starly: el Pokémon del día cambió a mitad del día. Los próximos días ya no cambian. ¡Perdón!',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    date: '2026-11-16',
+    title: { pt: 'Temporada 1: Terastal, Pokédex Nacional e lendas novas', en: 'Season 1: Terastal, the National Pokédex and new legends', es: 'Temporada 1: Teracristal, la Pokédex Nacional y leyendas nuevas', fr: 'Saison 1 : Téracristal, le Pokédex National et de nouvelles légendes', zh: '第 1 賽季：太晶化、全國圖鑑和新的傳說' },
+    highlights: [
+      {
+        pt: 'A Pokédex Nacional chegou: 745 espécies na horda e 104 famílias novas, cada uma com a sua mecânica.',
+        en: 'The National Pokédex is here: 745 species in the horde and 104 new families, each with a mechanic of its own.',
+        es: 'Llegó la Pokédex Nacional: 745 especies en la horda y 104 familias nuevas, cada una con su mecánica.',
+        fr: 'Le Pokédex National est là : 745 espèces dans la horde et 104 nouvelles familles, chacune avec sa mécanique.',
+        zh: '全國圖鑑登場：745 種寶可夢加入怪潮，還有 104 個新的可玩家族，各有獨特機制。',
+      },
+      {
+        pt: 'Lendas novas: Palkia, 10 Ultracriaturas, o trio dos lagos, as Forças da Natureza, Regieleki e Regidrago, Diancie, Zeraora, Ogerpon e Manaphy. São 62 no Modo Lendário.',
+        en: 'New legends: Palkia, 10 Ultra Beasts, the lake trio, the Forces of Nature, Regieleki and Regidrago, Diancie, Zeraora, Ogerpon and Manaphy. That’s 62 in Legend mode.',
+        es: 'Leyendas nuevas: Palkia, 10 Ultraentes, el trío del lago, las Fuerzas de la Naturaleza, Regieleki y Regidrago, Diancie, Zeraora, Ogerpon y Manaphy. Son 62 en el Modo Legendario.',
+        fr: 'De nouvelles légendes : Palkia, 10 Ultra-Chimères, le trio des lacs, les Forces de la Nature, Regieleki et Regidrago, Diancie, Zeraora, Ogerpon et Manaphy. Ça fait 62 en mode Légendaire.',
+        zh: '新的傳說：帕路奇亞、10 隻究極異獸、湖之三神、自然之力、雷吉艾勒奇和雷吉鐸拉戈、蒂安希、捷拉奧拉、厄鬼椪和瑪納霏。傳說模式共有 62 隻。',
+      },
+      {
+        pt: '23 Megas novas, de Mega Heracross a Mega Clefable: agora são 66 Megas em 59 linhagens.',
+        en: '23 new Megas, from Mega Heracross to Mega Clefable: 66 Megas across 59 lines now.',
+        es: '23 Megas nuevas, de Mega Heracross a Mega Clefable: ahora son 66 Megas en 59 líneas.',
+        fr: '23 nouvelles Méga-Évolutions, de Méga-Heracross à Méga-Clefable : 66 Mégas sur 59 lignées.',
+        zh: '23 種新的超級進化，從超級赫拉克羅斯到超級皮可西：現在共有 59 條進化線、66 種超級進化。',
+      },
+      {
+        pt: 'Terastal: junte Fragmentos Tera dos chefes, encha o Orbe Tera e vire cristal com uma das 19 coroas. Raide Tera em toda partida, Raide do dia e Terapagos.',
+        en: 'Terastal: collect Tera Shards from bosses, fill the Tera Orb and turn to crystal under one of 19 crowns. A Tera Raid every run, the Raid of the Day and Terapagos.',
+        es: 'Teracristal: junta Teralitos de los jefes, llena el Orbe Tera y vuélvete cristal con una de las 19 coronas. Teraincursión en cada partida, Incursión del día y Terapagos.',
+        fr: 'Téracristal : récupère des Téra-Éclats sur les boss, remplis l’Orbe Téracristal et deviens cristal sous l’une des 19 couronnes. Raid dans chaque partie, Raid du jour et Terapagos.',
+        zh: '太晶化：從頭目身上收集太晶碎塊，集滿太晶珠，戴上 19 種皇冠之一化為結晶。每局都有太晶團體戰，還有每日團體戰和太樂巴戈斯。',
+      },
+      {
+        pt: 'No Poké Realm: o Game Corner da Equipe Rocket e famílias só do Safári, como o Vivillon com as asas da sua região.',
+        en: 'In the Poké Realm: Team Rocket’s Game Corner and Safari-only families, like Vivillon wearing your region’s wings.',
+        es: 'En el Poké Realm: el Casino del Team Rocket y familias solo del Safari, como Vivillon con las alas de tu región.',
+        fr: 'Dans le Poké Realm : la Salle de jeux de la Team Rocket et des familles propres au Safari, comme Prismillon aux ailes de ta région.',
+        zh: 'Poké Realm 裡：火箭隊的遊戲城，還有狩獵地帶限定的家族，像翅膀是你所在地區花紋的彩粉蝶。',
+      },
+      {
+        pt: 'Rádio no lobby: escolha a música e monte a sua fila. E trilha nova no lobby, no Poké Realm, na Zona Safári, nas Tera Raids e no Dojo.',
+        en: 'A Radio in the lobby: pick the music and build your queue. Plus new music in the lobby, the Poké Realm, the Safari Zone, Tera Raids and the Dojo.',
+        es: 'Radio en el lobby: elige la música y arma tu cola. Y música nueva en el lobby, el Poké Realm, la Zona Safari, las Teraincursiones y el Dojo.',
+        fr: 'Une Radio dans le lobby : choisis la musique et compose ta file. Et de nouvelles musiques dans le lobby, le Poké Realm, le Parc Safari, les Raids Téracristal et le Dojo.',
+        zh: '大廳新增收音機：自己選音樂、排播放佇列。大廳、Poké Realm、狩獵地帶、太晶團體戰和道場也都有了新音樂。',
+      },
+    ],
+    changes: [
+      {
+        title: {
+          pt: 'Escolha do parceiro feita para o celular',
+          en: 'A partner select made for phones',
+          es: 'Elección de compañero hecha para el celular',
+          fr: 'Le choix du partenaire pensé pour le téléphone',
+          zh: '為手機重新設計的夥伴選擇',
+        },
+        notes: [
+          {
+            pt: 'No celular em pé, o painel do Pokémon ficou compacto e a lista ganhou o resto da tela; deitado, a lista ocupa toda a altura e a dificuldade e o Começar ficam ao lado, à mão. As abas mostram a contagem embaixo do nome, e nada mais sai da tela.',
+            en: 'With the phone upright, the Pokémon panel is compact and the list gets the rest of the screen; on its side, the list takes the whole height with the difficulty and Start beside it, in thumb reach. The tabs show their count under the name, and nothing runs off the screen anymore.',
+            es: 'Con el celular en vertical, el panel del Pokémon es compacto y la lista se lleva el resto de la pantalla; en horizontal, la lista ocupa toda la altura y la dificultad y Empezar quedan al lado, a mano. Las pestañas muestran la cuenta bajo el nombre, y ya nada se sale de la pantalla.',
+            fr: 'Téléphone en portrait, le panneau du Pokémon est compact et la liste prend le reste de l’écran ; en paysage, la liste occupe toute la hauteur, la difficulté et Commencer à côté, sous le pouce. Les onglets affichent leur compte sous le nom, et plus rien ne sort de l’écran.',
+            zh: '手機直拿時，寶可夢面板變得精簡，清單佔滿其餘畫面；橫拿時，清單佔滿整個高度，難度和開始按鈕就在旁邊，伸手可及。分頁的數量改顯示在名稱下方，不再有內容超出畫面。',
+          },
+          {
+            pt: 'Na aba Lendários, o banner dos Anéis de Hoopa agora rola junto com a lista: dá para deslizar até qualquer lendário no celular.',
+            en: 'In the Legendaries tab, the Hoopa’s Rings banner now scrolls with the list: you can swipe down to any legend on a phone.',
+            es: 'En la pestaña Legendarios, el cartel de los Aros de Hoopa ahora se desplaza con la lista: puedes deslizar hasta cualquier legendario en el celular.',
+            fr: 'Dans l’onglet Légendaires, la bannière des Anneaux de Hoopa défile maintenant avec la liste : on peut glisser jusqu’à n’importe quelle légende sur téléphone.',
+            zh: '在傳說分頁中，Hoopa 的圓環橫幅現在會隨清單一起捲動：在手機上可以滑到任何一隻傳說寶可夢。',
+          },
+          {
+            pt: 'Os lendários bloqueados explicam melhor como conseguir: cada Espada da Justiça diz em que biomas espera e qual é o teste, o Cosmog diz onde fica a Pesquisa estelar e quantas partidas faltam, e o Meltan diz que a Mystery Box sai em no máximo 12 paredes.',
+            en: 'Locked legends now explain better how to get them: each Sword of Justice names the biomes it waits in and its test, Cosmog says where the Star research is and how many runs it takes, and Meltan says the Mystery Box turns up within 12 walls.',
+            es: 'Los legendarios bloqueados explican mejor cómo conseguirlos: cada Espada de la Justicia dice en qué biomas espera y cuál es su prueba, Cosmog dice dónde está la Investigación estelar y cuántas partidas hacen falta, y Meltan dice que la Mystery Box sale en 12 paredes como máximo.',
+            fr: 'Les légendes verrouillées expliquent mieux comment les obtenir : chaque Épée de la Justice indique ses biomes et son épreuve, Cosmog indique où est la Recherche stellaire et combien de parties il faut, et Meltan que la Mystery Box sort en 12 murs au plus.',
+            zh: '未解鎖的傳說寶可夢會更清楚地說明取得方式：每把正義之劍會寫出牠等待的地區和考驗內容，Cosmog 會說明星空研究在哪裡、需要幾場遊戲，Meltan 則說明最多 12 面岩壁內一定能挖到 Mystery Box。',
+          },
+          {
+            pt: 'Os dois estilos do Urshifu: na Torre do Dojo, quem já subiu uma torre agora pode subir a outra, e o cartão da torre troca entre o Estilo Golpe Único e o Estilo Golpe Fluido quando você quiser.',
+            en: 'Both of Urshifu’s styles: at the Dojo Tower, whoever climbed one tower can now climb the other, and the tower’s card switches between the Single Strike and Rapid Strike Styles whenever you like.',
+            es: 'Los dos estilos de Urshifu: en la Torre del Dojo, quien ya subió una torre ahora puede subir la otra, y la tarjeta de la torre cambia entre el Estilo Brusco y el Estilo Fluido cuando quieras.',
+            fr: 'Les deux styles d’Urshifu : à la Tour du Dojo, qui a gravi une tour peut maintenant gravir l’autre, et la carte de la tour passe du Style Poing Final au Style Mille Poings quand vous voulez.',
+            zh: 'Urshifu 的兩種流派：在道館之塔，爬過一座塔的人現在可以爬另一座，並隨時在塔的卡片上切換一擊流和連擊流。',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Temporada 1 e o Hall da Fama da Era 1', en: 'Season 1 and the Era 1 Hall of Fame', es: 'Temporada 1 y el Salón de la Fama de la Era 1', fr: 'Saison 1 et le Panthéon de l’Ère 1', zh: '第 1 賽季與第 1 紀元名人堂' },
+        notes: [
+          {
+            pt: 'Os rankings de partidas ganham temporadas: a aba principal passa a ser Temporada, que abre zerada em 16 de novembro. Nada é apagado: os recordes de antes ficam para sempre na Era 1, um Hall da Fama com pódio próprio.',
+            en: 'The run rankings get seasons: the main tab is now Season, which opens fresh on November 16. Nothing is erased: the records from before stay forever in Era 1, a Hall of Fame with its own podium.',
+            es: 'Los rankings de partidas tienen temporadas: la pestaña principal pasa a ser Temporada, que abre desde cero el 16 de noviembre. No se borra nada: los récords de antes quedan para siempre en la Era 1, un Salón de la Fama con su propio podio.',
+          },
+          {
+            pt: 'O topo da Era 1 ganha recompensa: o nº 1 de cada ranking leva o título Campeão(ã) da Era 1, a moldura Coroa e o céu Trono, e os seguintes do topo levam o título Lenda da Era 1 e a moldura Era 1. Os presentes chegam sozinhos depois da virada.',
+            en: 'Era 1’s top players are rewarded: each ranking’s #1 gets the Era 1 Champion title, the Crown frame and the Throne sky, and the next ones at the top get the Era 1 Legend title and the Era 1 frame. The gifts arrive on their own after the turnover.',
+            es: 'Lo más alto de la Era 1 tiene recompensa: el n.º 1 de cada ranking recibe el título Campeón(a) de la Era 1, el marco Corona y el cielo Trono, y los siguientes en lo alto reciben el título Leyenda de la Era 1 y el marco Era 1. Los regalos llegan solos después del cambio.',
+          },
+          {
+            pt: 'O modo sem fim aperta depois dos 30 minutos: a horda cresce cada vez mais rápido, e as melhores builds agora caem entre 45 e 60 minutos, em vez de durar horas.',
+            en: 'Endless mode tightens after 30 minutes: the horde grows faster and faster, and the best builds now fall between 45 and 60 minutes instead of lasting hours.',
+            es: 'El modo sin fin aprieta después de los 30 minutos: la horda crece cada vez más rápido, y las mejores builds ahora caen entre los 45 y los 60 minutos, en vez de durar horas.',
+          },
+          {
+            pt: 'Ajustes nas builds invencíveis: Magic Guard só reduz pela metade o dano de explosões e poças, Bulletproof protege 40%, reduções de recarga rendem menos depois de 30% e o Iron Head protege menos tempo.',
+            en: 'Tweaks to the unbeatable builds: Magic Guard only halves damage from blasts and pools, Bulletproof blocks 40%, cooldown cuts pay less past 30% and Iron Head guards for less time.',
+            es: 'Ajustes a las builds invencibles: Magic Guard solo reduce a la mitad el daño de explosiones y charcos, Bulletproof protege un 40 %, las reducciones de recarga rinden menos pasado el 30 % y Iron Head protege menos tiempo.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Terastal e Raides Tera', en: 'Terastal and Tera Raids', es: 'Teracristal y Teraincursiones', fr: 'Téracristal et Raids Téracristal', zh: '太晶化與太晶團體戰' },
+        notes: [
+          {
+            pt: 'Todo chefe deixa dois Fragmentos Tera: o tipo dele e um dos tipos do seu Pokémon. Ande até o que você quer para escolher o seu tipo Tera.',
+            en: 'Every boss leaves two Tera Shards: its type and one of your Pokémon’s types. Walk to the one you want to pick your Tera type.',
+            es: 'Cada jefe deja dos Teralitos: su tipo y uno de los tipos de tu Pokémon. Camina hasta el que quieras para elegir tu teratipo.',
+          },
+          {
+            pt: 'O Orbe Tera enche com nocautes e com o tempo. Cheio, aperte TERA (R): o seu Pokémon vira cristal com uma coroa do tipo por 20 segundos, e os golpes daquele tipo batem mais forte. O tipo Astral dá um golpe triplo no primeiro acerto de cada tipo.',
+            en: 'The Tera Orb fills with KOs and with time. Once full, press TERA (R): your Pokémon turns to crystal under its type’s crown for 20 seconds, and moves of that type hit harder. Stellar triples the first hit of each move type.',
+            es: 'El Orbe Tera se llena con derrotas y con el tiempo. Lleno, pulsa TERA (R): tu Pokémon se vuelve cristal con una corona del tipo durante 20 segundos, y los movimientos de ese tipo pegan más fuerte. El tipo Astral triplica el primer golpe de cada tipo.',
+          },
+          {
+            pt: 'São 19 coroas de cristal, uma por tipo mais a Astral, cada uma com o seu formato, assentadas na cabeça do Pokémon (as cabeças pequenas usam uma versão menor). A transformação tem cristal crescendo, estilhaço em câmera lenta e uma faixa de tela inteira.',
+            en: 'There are 19 crystal crowns, one per type plus Stellar, each with its own shape, sitting on the Pokémon’s head (small heads wear a smaller cut). The transformation has the crystal growing, a slow-motion shatter and a full-screen banner.',
+            es: 'Son 19 coronas de cristal, una por tipo más la Astral, cada una con su forma, puestas en la cabeza del Pokémon (las cabezas pequeñas llevan una versión más chica). La transformación tiene cristal creciendo, un estallido en cámara lenta y una franja de pantalla completa.',
+          },
+          {
+            pt: 'Raides Tera: um Covil Tera abre no mapa no meio de cada partida, solo ou co-op. Lá dentro, um chefe gigante de cristal com escudo Tera: quebre o escudo com a fraqueza dele ou com o seu tipo Tera. Mais tarde abre a Raide do dia, igual para todos, e no fim de semana é o Terapagos Astral 7★.',
+            en: 'Tera Raids: a Tera Den opens on the map halfway through every run, solo or co-op. Inside, a giant crystal boss with a Tera shield: break it with its weakness or your Tera type. Later the Raid of the Day opens, the same for everyone, and on weekends it’s a 7★ Stellar Terapagos.',
+            es: 'Teraincursiones: una Guarida Tera se abre en el mapa a mitad de cada partida, solo o en co-op. Dentro, un jefe gigante de cristal con escudo Tera: rómpelo con su debilidad o con tu teratipo. Más tarde se abre la Incursión del día, igual para todos, y el fin de semana es Terapagos Astral 7★.',
+          },
+          {
+            pt: 'Vença a Raide Astral 7★ para capturar o Terapagos e jogar com ele no Modo Lendário: desperta na Forma Terastal e depois na Forma Astral, com o golpe Tera Starstorm.',
+            en: 'Beat the 7★ Stellar Raid to capture Terapagos and play it in Legend mode: it awakens into its Terastal Form and then its Stellar Form, with Tera Starstorm.',
+            es: 'Gana la Incursión Astral 7★ para capturar a Terapagos y jugar con él en el Modo Legendario: despierta en su Forma Teracristal y luego en la Forma Astral, con Astrogénesis.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'A Pokédex Nacional', en: 'The National Pokédex', es: 'La Pokédex Nacional', fr: 'Le Pokédex National', zh: '全國圖鑑' },
+        notes: [
+          {
+            pt: 'A horda passa de 415 para 745 espécies: quase todo Pokémon que existe aparece no mundo. Os raros continuam raros, e cada bioma puxa os seus tipos.',
+            en: 'The horde grows from 415 to 745 species: almost every Pokémon there is shows up in the world. Rare ones stay rare, and each biome pulls in its own types.',
+            es: 'La horda pasa de 415 a 745 especies: casi todos los Pokémon que existen aparecen en el mundo. Los raros siguen siendo raros, y cada bioma atrae sus tipos.',
+          },
+          {
+            pt: 'A Pokédex do jogo agora é a Nacional, por região, de Kanto a Paldea: 909 dos 1.025 Pokémon estão no jogo, mais 43 formas (42 regionais e a Eternal Floette). Complete uma região para ganhar o título de Pesquisador(a) dela, e as nove para a moldura Pokédex Nacional.',
+            en: 'The in-game Pokédex is now the National one, region by region, from Kanto to Paldea: 909 of the 1,025 Pokémon are in the game, plus 43 forms (42 regional ones and Eternal Floette). Complete a region to earn its Researcher title, and all nine for the National Pokédex frame.',
+            es: 'La Pokédex del juego ahora es la Nacional, por región, de Kanto a Paldea: 909 de los 1.025 Pokémon están en el juego, más 43 formas (42 regionales y Eternal Floette). Completa una región para ganar su título de Investigador(a), y las nueve para el marco Pokédex Nacional.',
+          },
+          {
+            pt: 'Os Pokémon que os artistas do SpriteCollab ainda estão desenhando aparecem na Pokédex com um agradecimento e um link para ajudar a desenhar.',
+            en: 'The Pokémon SpriteCollab’s artists are still drawing show in the Pokédex with a thank-you and a link to help draw them.',
+            es: 'Los Pokémon que los artistas de SpriteCollab todavía están dibujando aparecen en la Pokédex con un agradecimiento y un enlace para ayudar a dibujarlos.',
+          },
+          {
+            pt: 'No site, a Pokédex ganhou uma página por região.',
+            en: 'On the website, the Pokédex now has a page per region.',
+            es: 'En el sitio, la Pokédex ahora tiene una página por región.',
+          },
+        ],
+      },
+      {
+        title: { pt: '104 famílias novas', en: '104 new families', es: '104 familias nuevas', fr: '104 nouvelles familles', zh: '104 個新家族' },
+        notes: [
+          {
+            pt: 'Agora são 194 famílias jogáveis: os 27 iniciais e 167 que saem de ovos, da Zona Safári, da Escavação, de encontros no mapa e de prêmios. Cada família nova tem golpe assinatura com caminhos no Nv 4 e 7, três habilidades e uma mecânica própria.',
+            en: 'There are now 194 playable families: the 27 starters and 167 from eggs, the Safari Zone, the Mine Dig, encounters on the map and prizes. Each new family has a signature move with paths at Lv 4 and 7, three abilities and a mechanic of its own.',
+            es: 'Ahora son 194 familias jugables: los 27 iniciales y 167 que salen de huevos, de la Zona Safari, de la Excavación, de encuentros en el mapa y de premios. Cada familia nueva tiene movimiento firma con caminos en el Nv 4 y 7, tres habilidades y una mecánica propia.',
+          },
+          {
+            pt: 'Dos ovos: Snom, Joltik, Salandit, Hatenna, Darumaka, Wimpod, Applin (com Dipplin, Flapple e Appletun), Finizen, Pawniard, Frigibax, Ponyta e Ponyta de Galar. Do novo Ovo Fóssil (o Old Amber): Aerodactyl, com Mega.',
+            en: 'From eggs: Snom, Joltik, Salandit, Hatenna, Darumaka, Wimpod, Applin (with Dipplin, Flapple and Appletun), Finizen, Pawniard, Frigibax, Ponyta and Galarian Ponyta. From the new Fossil Egg (Old Amber): Aerodactyl, with a Mega.',
+            es: 'De los huevos: Snom, Joltik, Salandit, Hatenna, Darumaka, Wimpod, Applin (con Dipplin, Flapple y Appletun), Finizen, Pawniard, Frigibax, Ponyta y Ponyta de Galar. Del nuevo Huevo Fósil (el Old Amber): Aerodactyl, con Mega.',
+          },
+          {
+            pt: 'Achados de outro jeito: Rotom na TV velha das casas abandonadas, Castform no tempo fechado, Wishiwashi na pesca do Realm, Mimikyu, Morpeko e Tandemaus na Zona Safári, e Mankey (até Annihilape), Goomy e Tatsugiri pela nova aba Pesquisa das Missões.',
+            en: 'Found other ways: Rotom in the old TV of abandoned houses, Castform in bad weather, Wishiwashi in the Realm’s fishing, Mimikyu, Morpeko and Tandemaus in the Safari Zone, and Mankey (up to Annihilape), Goomy and Tatsugiri through the new Research tab in Missions.',
+            es: 'Encontrados de otra forma: Rotom en la tele vieja de las casas abandonadas, Castform con mal tiempo, Wishiwashi en la pesca del Realm, Mimikyu, Morpeko y Tandemaus en la Zona Safari, y Mankey (hasta Annihilape), Goomy y Tatsugiri en la nueva pestaña Investigación de las Misiones.',
+          },
+          {
+            pt: 'Mais 30 com mecânicas que mudam o jogo: Jangmo-o paga HP pelo Clangorous Soul, Axew acumula Dragon Dance até a Guillotine, Onix arrasta um corpo de pedra que se enrola, Happiny bota Ovos da Sorte que curam até os colegas, Sandile mergulha na areia, Stufful abraça e arremessa inimigos, Ninjask deixa um Shedinja para trás, Lapras leva o time pela água, Sableye come gemas de EXP, Spiritomb junta 108 espíritos e Polteageist serve chá.',
+            en: '30 more with mechanics that change the game: Jangmo-o pays HP for Clangorous Soul, Axew stacks Dragon Dance into Guillotine, Onix drags a stone body that coils up, Happiny lays Lucky Eggs that heal teammates too, Sandile dives into the sand, Stufful hugs and throws foes, Ninjask leaves a Shedinja behind, Lapras ferries the team over water, Sableye eats EXP gems, Spiritomb gathers 108 spirits and Polteageist serves tea.',
+            es: '30 más con mecánicas que cambian el juego: Jangmo-o paga PS por el Clangorous Soul, Axew acumula Dragon Dance hasta la Guillotine, Onix arrastra un cuerpo de piedra que se enrosca, Happiny pone Huevos Suerte que curan hasta a los compañeros, Sandile se sumerge en la arena, Stufful abraza y lanza enemigos, Ninjask deja un Shedinja atrás, Lapras lleva al equipo por el agua, Sableye come gemas de EXP, Spiritomb junta 108 espíritus y Polteageist sirve té.',
+          },
+          {
+            pt: 'E também: Clauncher, Fletchling, Golett, Nacli, Inkay (que evolui de cabeça para baixo), Skorupi, Snover, Tynamo, Dewpider, Duraludon, Bounsweet, Sneasel, Heracross, Croagunk, Sinistea, Impidimp, Pawmi, Rookidee, Elekid e Magby.',
+            en: 'Also: Clauncher, Fletchling, Golett, Nacli, Inkay (which evolves upside down), Skorupi, Snover, Tynamo, Dewpider, Duraludon, Bounsweet, Sneasel, Heracross, Croagunk, Sinistea, Impidimp, Pawmi, Rookidee, Elekid and Magby.',
+            es: 'Y también: Clauncher, Fletchling, Golett, Nacli, Inkay (que evoluciona boca abajo), Skorupi, Snover, Tynamo, Dewpider, Duraludon, Bounsweet, Sneasel, Heracross, Croagunk, Sinistea, Impidimp, Pawmi, Rookidee, Elekid y Magby.',
+          },
+          {
+            pt: 'Só na Zona Safári, cada uma no seu habitat: Kangaskhan, Pinsir, Skarmory, Drilbur, Drampa, Meditite, Numel, Buneary, Flabébé e Skrelp, todas com Mega, e Phione, na Baía Gelada, para quem já tem o Manaphy.',
+            en: 'Only in the Safari Zone, each in its habitat: Kangaskhan, Pinsir, Skarmory, Drilbur, Drampa, Meditite, Numel, Buneary, Flabébé and Skrelp, all with Megas, and Phione, in the Frozen Cove, once Manaphy is yours.',
+            es: 'Solo en la Zona Safari, cada una en su hábitat: Kangaskhan, Pinsir, Skarmory, Drilbur, Drampa, Meditite, Numel, Buneary, Flabébé y Skrelp, todas con Mega, y Phione, en la Bahía Helada, para quien ya tiene a Manaphy.',
+          },
+          {
+            pt: 'Famílias com um gancho só delas, também do Safári: o Vivillon usa as asas da região onde você está e solta pós que envenenam, paralisam ou fazem dormir; o Minior perde a casca abaixo da metade do HP e mostra o Núcleo, mais rápido e mais forte; e o Tyrogue evolui pela sua build: mais Ataque vira Hitmonlee, mais Defesa vira Hitmonchan, empate vira Hitmontop.',
+            en: 'Families with a hook of their own, from the Safari too: Vivillon wears the wings of the region you’re in and scatters powders that poison, paralyze or put foes to sleep; Minior drops its shell under half HP and shows its Core, faster and stronger; and Tyrogue evolves by your build: more Attack makes Hitmonlee, more Defense makes Hitmonchan, a tie makes Hitmontop.',
+            es: 'Familias con un gancho propio, también del Safari: Vivillon lleva las alas de la región donde estás y suelta polvos que envenenan, paralizan o duermen; Minior pierde la coraza bajo la mitad de los PS y muestra su Núcleo, más rápido y más fuerte; y Tyrogue evoluciona según tu build: más Ataque da Hitmonlee, más Defensa da Hitmonchan, empate da Hitmontop.',
+          },
+          {
+            pt: 'Prêmios novos do balcão do Game Corner: Nidoran♀, Nidoran♂, Cleffa (com Mega Clefable), Plusle e Minun, e cada um também como Sombrio. No co-op, um Plusle e um Minun no mesmo time se ligam numa corrente que fere a horda.',
+            en: 'New prizes at the Game Corner counter: Nidoran♀, Nidoran♂, Cleffa (with Mega Clefable), Plusle and Minun, and each as a Shadow too. In co-op, a Plusle and a Minun on the same team link up in a current that hurts the horde.',
+            es: 'Premios nuevos en el mostrador del Casino: Nidoran♀, Nidoran♂, Cleffa (con Mega Clefable), Plusle y Minun, y cada uno también como Oscuro. En co-op, un Plusle y un Minun en el mismo equipo se enlazan con una corriente que hiere a la horda.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Megas novas', en: 'New Megas', es: 'Megas nuevas', fr: 'Nouvelles Méga-Évolutions', zh: '新的超級進化' },
+        notes: [
+          {
+            pt: 'Em linhas que já existiam: Mega Steelix, Mega Eelektross, Mega Sableye, Mega Absol e Mega Absol Z, Mega Mawile, Mega Heracross, Mega Abomasnow, Mega Froslass, Mega Scrafty, Mega Chandelure, Mega Golurk, Mega Malamar, Mega Golisopod, Mega Baxcalibur e Mega Tatsugiri.',
+            en: 'On lines already in the game: Mega Steelix, Mega Eelektross, Mega Sableye, Mega Absol and Mega Absol Z, Mega Mawile, Mega Heracross, Mega Abomasnow, Mega Froslass, Mega Scrafty, Mega Chandelure, Mega Golurk, Mega Malamar, Mega Golisopod, Mega Baxcalibur and Mega Tatsugiri.',
+            es: 'En líneas que ya estaban: Mega Steelix, Mega Eelektross, Mega Sableye, Mega Absol y Mega Absol Z, Mega Mawile, Mega Heracross, Mega Abomasnow, Mega Froslass, Mega Scrafty, Mega Chandelure, Mega Golurk, Mega Malamar, Mega Golisopod, Mega Baxcalibur y Mega Tatsugiri.',
+          },
+          {
+            pt: 'Com as famílias novas: Mega Aerodactyl, Mega Kangaskhan, Mega Pinsir, Mega Skarmory, Mega Excadrill, Mega Drampa, Mega Medicham, Mega Camerupt, Mega Lopunny, Mega Floette, Mega Dragalge e Mega Clefable. Agora são 66 Megas em 59 linhagens.',
+            en: 'With the new families: Mega Aerodactyl, Mega Kangaskhan, Mega Pinsir, Mega Skarmory, Mega Excadrill, Mega Drampa, Mega Medicham, Mega Camerupt, Mega Lopunny, Mega Floette, Mega Dragalge and Mega Clefable. That’s 66 Megas across 59 lines now.',
+            es: 'Con las familias nuevas: Mega Aerodactyl, Mega Kangaskhan, Mega Pinsir, Mega Skarmory, Mega Excadrill, Mega Drampa, Mega Medicham, Mega Camerupt, Mega Lopunny, Mega Floette, Mega Dragalge y Mega Clefable. Ahora son 66 Megas en 59 líneas.',
+          },
+          {
+            pt: 'No Modo Lendário, Mewtwo também vira Mega Mewtwo X, Zygarde ganha a sua Mega, Diancie e Zeraora despertam Mega no Nv 28 e Dialga desperta Primal.',
+            en: 'In Legend mode, Mewtwo also becomes Mega Mewtwo X, Zygarde gets its Mega, Diancie and Zeraora awaken Mega at Lv 28 and Dialga awakens Primal.',
+            es: 'En el Modo Legendario, Mewtwo también se vuelve Mega Mewtwo X, Zygarde recibe su Mega, Diancie y Zeraora despiertan Mega en el Nv 28 y Dialga despierta Primigenio.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Fósseis', en: 'Fossils', es: 'Fósiles', fr: 'Fossiles', zh: '化石' },
+        notes: [
+          {
+            pt: 'O Old Amber agora traz o Aerodactyl, como nos jogos, com Mega Aerodactyl.',
+            en: 'Old Amber now brings Aerodactyl, as in the games, with Mega Aerodactyl.',
+            es: 'El Old Amber ahora trae a Aerodactyl, como en los juegos, con Mega Aerodactyl.',
+          },
+          {
+            pt: 'Os outros fósseis saem da Escavação e o laboratório restaura na hora: Omanyte, Kabuto, Lileep, Anorith, Cranidos, Shieldon, Archen, Tyrunt e Amaura. As metades de Galar esperam no laboratório até a outra chegar: junte as duas para o Dracozolt, o Arctozolt ou o Dracovish.',
+            en: 'The other fossils come from the Mine Dig and the lab restores them on the spot: Omanyte, Kabuto, Lileep, Anorith, Cranidos, Shieldon, Archen, Tyrunt and Amaura. Galar’s halves wait in the lab until the other one turns up: put two together for Dracozolt, Arctozolt or Dracovish.',
+            es: 'Los otros fósiles salen de la Excavación y el laboratorio los restaura al instante: Omanyte, Kabuto, Lileep, Anorith, Cranidos, Shieldon, Archen, Tyrunt y Amaura. Las mitades de Galar esperan en el laboratorio hasta que llegue la otra: junta dos para Dracozolt, Arctozolt o Dracovish.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Formas regionais e A Viagem', en: 'Regional forms and The Trip', es: 'Formas regionales y El Viaje', fr: 'Formes régionales et Le Voyage', zh: '地區形態與旅行' },
+        notes: [
+          {
+            pt: '42 formas regionais de Alola, Galar, Hisui e Paldea, cada uma jogando do seu jeito: Vulpix e Sandshrew de Alola, Meowth, Slowpoke, Zigzagoon, Corsola e Darumaka de Galar, Growlithe, Zorua, Voltorb e Qwilfish de Hisui, Wooper e Tauros de Paldea e mais. São 18 famílias novas, com golpes e habilidades da região.',
+            en: '42 regional forms from Alola, Galar, Hisui and Paldea, each playing its own way: Alolan Vulpix and Sandshrew, Galarian Meowth, Slowpoke, Zigzagoon, Corsola and Darumaka, Hisuian Growlithe, Zorua, Voltorb and Qwilfish, Paldean Wooper and Tauros, and more. That’s 18 new families, with moves and abilities from their region.',
+            es: '42 formas regionales de Alola, Galar, Hisui y Paldea, cada una jugando a su manera: Vulpix y Sandshrew de Alola, Meowth, Slowpoke, Zigzagoon, Corsola y Darumaka de Galar, Growlithe, Zorua, Voltorb y Qwilfish de Hisui, Wooper y Tauros de Paldea y más. Son 18 familias nuevas, con movimientos y habilidades de su región.',
+          },
+          {
+            pt: 'Evoluções regionais: Pichu, Cubone e Exeggcute podem virar a forma de Alola com a nova Sparkling Stone, e Cyndaquil, Oshawott, Rowlet e Goomy a de Hisui com a Black Augurite. Compre a pedra na prateleira ou ache com um chefe.',
+            en: 'Regional evolutions: Pichu, Cubone and Exeggcute can become their Alolan form with the new Sparkling Stone, and Cyndaquil, Oshawott, Rowlet and Goomy their Hisuian form with the Black Augurite. Buy the stone on the shelf or find it on a boss.',
+            es: 'Evoluciones regionales: Pichu, Cubone y Exeggcute pueden volverse su forma de Alola con la nueva Sparkling Stone, y Cyndaquil, Oshawott, Rowlet y Goomy su forma de Hisui con la Black Augurite. Compra la piedra en el estante o encuéntrala con un jefe.',
+          },
+          {
+            pt: 'A Viagem: toda segunda a viagem vai para a próxima região. O Ovo de Viagem, na Vitrine do Kecleon, só choca famílias da região da semana, e elas também visitam a Zona Safári.',
+            en: 'The Trip: every Monday the trip moves on to the next region. The Travel Egg, in Kecleon’s Showcase, only hatches families from the week’s region, and they visit the Safari Zone too.',
+            es: 'El Viaje: cada lunes el viaje pasa a la siguiente región. El Huevo de Viaje, en la Vitrina de Kecleon, solo eclosiona familias de la región de la semana, y también visitan la Zona Safari.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Equipe Rocket', en: 'Team Rocket', es: 'Team Rocket', fr: 'Team Rocket', zh: '火箭隊' },
+        notes: [
+          {
+            pt: 'O Game Corner da Equipe Rocket abriu no Poké Realm: compre fichas com ₽ (nunca com gemas), jogue o Caça-níqueis e a Caça ao Koffing e troque as fichas por prêmios no balcão do Meowth.',
+            en: 'Team Rocket’s Game Corner has opened in the Poké Realm: buy tokens with ₽ (never gems), play the slots and Koffing Sweep, and trade the tokens for prizes at Meowth’s counter.',
+            es: 'El Casino del Team Rocket abrió en el Poké Realm: compra fichas con ₽ (nunca con gemas), juega a las Tragaperras y a la Caza de Koffing y cambia las fichas por premios en el mostrador de Meowth.',
+          },
+          {
+            pt: 'Prêmios exclusivos: Ditto, que copia o inimigo; Absol, que prevê desastres; Gimmighoul, que vira Gholdengo com 999 moedas; e Mawile, que morde quem chega pelas costas. Absol e Mawile têm Mega.',
+            en: 'Exclusive prizes: Ditto, which copies a foe; Absol, which foresees disaster; Gimmighoul, which becomes Gholdengo at 999 coins; and Mawile, which bites whoever comes from behind. Absol and Mawile have Megas.',
+            es: 'Premios exclusivos: Ditto, que copia al enemigo; Absol, que presagia desastres; Gimmighoul, que se vuelve Gholdengo con 999 monedas; y Mawile, que muerde a quien llega por la espalda. Absol y Mawile tienen Mega.',
+          },
+          {
+            pt: 'Pokémon Sombrios: mais dano dado e recebido, com uma aura violeta. Ande com eles nas partidas para purificá-los.',
+            en: 'Shadow Pokémon: more damage dealt and taken, with a violet aura. Walk with them in your runs to purify them.',
+            es: 'Pokémon Oscuros: más daño hecho y recibido, con un aura violeta. Camina con ellos en tus partidas para purificarlos.',
+          },
+          {
+            pt: 'Esconderijo Rocket: o pôster do Game Corner abre o caminho. Desça os andares de recrutas e enfrente o Persian do Giovanni e o Mewtwo Sombrio.',
+            en: 'Rocket Hideout: the Game Corner’s poster opens the way. Go down through the grunts’ floors and face Giovanni’s Persian and Shadow Mewtwo.',
+            es: 'Escondite Rocket: el póster del Casino abre el camino. Baja los pisos de reclutas y enfréntate al Persian de Giovanni y a Mewtwo Oscuro.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Zona Safári, Escavação e Máquina de Pelúcias', en: 'Safari Zone, Mine Dig and the Plush Claw Machine', es: 'Zona Safari, Excavación y Máquina de Peluches', fr: 'Parc Safari, Excavation et Machine à Peluches', zh: '狩獵地帶、礦坑挖掘與玩偶夾娃娃機' },
+        notes: [
+          {
+            pt: 'A Zona Safári abriu na Trilha do Realm: ande pelo capim alto de quatro reservas, encontre Pokémon e jogue Safari Balls, frutas, pedras e iscas. Uma sessão grátis por dia, as outras com ₽, e família repetida devolve ₽. A cada 10 sessões sem família nova, a próxima traz uma garantida.',
+            en: 'The Safari Zone has opened on the Realm’s Trail: walk the tall grass of four reserves, meet Pokémon and throw Safari Balls, berries, rocks and bait. One free session a day, the rest for ₽, and a family you already have pays ₽ back. After 10 sessions without a new family, the next one brings a sure one.',
+            es: 'La Zona Safari abrió en el Sendero del Realm: camina por la hierba alta de cuatro reservas, encuentra Pokémon y lanza Safari Balls, bayas, piedras y cebos. Una sesión gratis al día, las demás con ₽, y una familia repetida devuelve ₽. Cada 10 sesiones sin familia nueva, la siguiente trae una asegurada.',
+          },
+          {
+            pt: 'Dia e noite pelo seu relógio, Pokémon visíveis no capim para chegar de mansinho, corrente de shiny, a Pokédex de cada habitat e o Concurso de Insetos às terças, quintas e sábados, com ranking semanal.',
+            en: 'Day and night by your own clock, Pokémon visible in the grass to sneak up on, a shiny chain, each habitat’s Pokédex and the Bug-Catching Contest on Tuesdays, Thursdays and Saturdays, with a weekly ranking.',
+            es: 'Día y noche según tu reloj, Pokémon visibles en la hierba para acercarte sin que te vean, cadena de shiny, la Pokédex de cada hábitat y el Concurso de Bichos los martes, jueves y sábados, con ranking semanal.',
+          },
+          {
+            pt: 'Complete a Pokédex da Baía Gelada para ganhar o Ovo de Manaphy: ele choca o Manaphy, que joga no Modo Lendário com Heart Swap, e abre o Phione no Safári.',
+            en: 'Complete the Frozen Cove Pokédex to earn the Manaphy Egg: it hatches Manaphy, which plays in Legend mode with Heart Swap, and opens Phione in the Safari.',
+            es: 'Completa la Pokédex de la Bahía Helada para ganar el Huevo de Manaphy: eclosiona a Manaphy, que se juega en el Modo Legendario con Heart Swap, y abre a Phione en el Safari.',
+          },
+          {
+            pt: 'A Escavação, com o Excadrill: quebre uma parede e tire o que estiver enterrado antes que ela desabe. Fósseis vão para o laboratório, às vezes vem uma parede dourada, e o tesouro mais raro é o Pink Diamond, de onde sobe a Diancie.',
+            en: 'Mine Dig, with Excadrill: break a wall open and pull out what’s buried before it collapses. Fossils go to the lab, sometimes a golden wall turns up, and the rarest treasure is the Pink Diamond, out of which Diancie rises.',
+            es: 'La Excavación, con Excadrill: rompe una pared y saca lo enterrado antes de que se derrumbe. Los fósiles van al laboratorio, a veces aparece una pared dorada, y el tesoro más raro es el Pink Diamond, del que surge Diancie.',
+          },
+          {
+            pt: 'A Máquina de Pelúcias no fliperama: mire a garra e leve uma pelúcia para a sua base. Cada erro aproxima a pelúcia da saída, e a décima ficha nela sempre ganha.',
+            en: 'The Plush Claw Machine in the arcade: aim the claw and take a plush home to your base. Every miss nudges the plush toward the chute, and the tenth credit on it always wins.',
+            es: 'La Máquina de Peluches en los recreativos: apunta la garra y llévate un peluche a tu base. Cada fallo acerca el peluche a la salida, y la décima ficha en él siempre gana.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Ultracriaturas', en: 'Ultra Beasts', es: 'Ultraentes', fr: 'Ultra-Chimères', zh: '究極異獸' },
+        notes: [
+          {
+            pt: 'Uma Ultrafenda se abre em toda partida: o céu racha em luz de prisma, você atravessa o Ultraespaço e enfrenta uma das 10 Ultracriaturas, cada uma no seu estilo, até a Beast Ball.',
+            en: 'An Ultra Wormhole opens in every run: the sky cracks with prismatic light, you cross Ultra Space and face one of 10 Ultra Beasts, each in its own style, all the way to the Beast Ball.',
+            es: 'Un Ultraumbral se abre en cada partida: el cielo se agrieta con luz de prisma, cruzas el Ultraespacio y te enfrentas a uno de los 10 Ultraentes, cada uno a su manera, hasta la Ente Ball.',
+          },
+          {
+            pt: 'A Ultracriatura da semana aparece mais vezes, e o lobby mostra qual é. Capture as 10 para jogar com elas no Modo Lendário, com Beast Boost, e ganhe o Poipole de presente.',
+            en: 'The Ultra Beast of the week shows up more often, and the lobby shows which one it is. Capture all 10 to play them in Legend mode, with Beast Boost, and get Poipole as a gift.',
+            es: 'El Ultraente de la semana aparece más seguido, y el lobby muestra cuál es. Captura los 10 para jugar con ellos en el Modo Legendario, con Ultraimpulso, y recibe a Poipole de regalo.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Palkia e as lendas do mapa', en: 'Palkia and the legends of the map', es: 'Palkia y las leyendas del mapa', fr: 'Palkia et les légendes de la carte', zh: '帕路奇亞與地圖上的傳說' },
+        notes: [
+          {
+            pt: 'Palkia tem a sua fenda, o Espaço Dobrado: lajes ligadas por portais gêmeos, um salão que dá a volta, Palkia trocando de lugar com você e a Forma Origem na última fase. Capturado, joga no Modo Lendário com Spacial Rend. Quem tem Dialga e Palkia ganha o título Mestre do Tempo e do Espaço.',
+            en: 'Palkia has its own rift, the Folded Space: slabs linked by twin portals, a hall that wraps around, Palkia swapping places with you and its Origin Forme in the last phase. Once captured, it plays in Legend mode with Spacial Rend. Owning Dialga and Palkia earns the Master of Time and Space title.',
+            es: 'Palkia tiene su grieta, el Espacio Plegado: losas unidas por portales gemelos, una sala que da la vuelta, Palkia cambiando de lugar contigo y su Forma Origen en la última fase. Capturado, se juega en el Modo Legendario con Corte Vacío. Quien tiene a Dialga y Palkia gana el título Maestro del Tiempo y el Espacio.',
+          },
+          {
+            pt: 'Uxie, Mesprit e Azelf vagam pelo mapa e fogem quando você chega perto. O HP que eles perdem fica guardado de uma partida para a outra.',
+            en: 'Uxie, Mesprit and Azelf roam the map and flee when you come close. The HP they lose carries over from one run to the next.',
+            es: 'Uxie, Mesprit y Azelf vagan por el mapa y huyen cuando te acercas. Los PS que pierden se guardan de una partida a otra.',
+          },
+          {
+            pt: 'As Espadas da Justiça esperam no bioma delas com um teste: Cobalion de Defesa, Terrakion de Força e Virizion de Velocidade. Capture as três e o Keldeo chega de presente.',
+            en: 'The Swords of Justice wait in their biomes with a trial: Cobalion of Defense, Terrakion of Strength and Virizion of Speed. Capture all three and Keldeo arrives as a gift.',
+            es: 'Los Espadachines Místicos esperan en su bioma con una prueba: Cobalion de Defensa, Terrakion de Fuerza y Virizion de Velocidad. Captura a los tres y Keldeo llega de regalo.',
+          },
+          {
+            pt: 'Anéis de Hoopa: o boss rush da aba Lendários. Cada nível abre com tantos lendários capturados quanto os seus anéis (Normal 4, Difícil 7, Pesadelo 10) e traz esse tanto deles, um depois do outro (das aves às Ultracriaturas, Regigigas, Zeraora com a sua tempestade e Terapagos). Cada anel é lutado numa ilha flutuante do tipo do lendário, e o último é o próprio Hoopa, na ilha dourada dele. Vença uma vez para capturá-lo.',
+            en: 'Hoopa’s Rings: the boss rush on the Legends tab. Each level opens with as many captured legends as its rings (Normal 4, Hard 7, Nightmare 10) and brings that many of them back, one after another (from the birds to the Ultra Beasts, Regigigas, Zeraora with its storm and Terapagos). Each ring is fought on a floating island of its legend’s type, and the last one is Hoopa itself, on its golden island. Win once to capture it.',
+            es: 'Anillos de Hoopa: el boss rush de la pestaña Legendarios. Cada nivel se abre con tantos legendarios capturados como anillos tiene (Normal 4, Difícil 7, Pesadilla 10) y trae esa cantidad, uno tras otro (de las aves a los Ultraentes, Regigigas, Zeraora con su tormenta y Terapagos). Cada anillo se lucha en una isla flotante del tipo de su legendario, y el último es el propio Hoopa, en su isla dorada. Gana una vez para capturarlo.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Caminhos lendários', en: 'Legend paths', es: 'Caminos legendarios', fr: 'Chemins légendaires', zh: '傳說之路' },
+        notes: [
+          {
+            pt: 'Zygarde: junte Cells e Cores nas partidas e forme o Zygarde 10%, 50% e Complete.',
+            en: 'Zygarde: collect Cells and Cores in your runs and build Zygarde 10%, 50% and Complete.',
+            es: 'Zygarde: junta Cells y Cores en tus partidas y forma a Zygarde 10 %, 50 % y Complete.',
+          },
+          {
+            pt: 'Cosmog: complete a pesquisa estelar e ele flutua ao lado do seu parceiro, crescendo com as suas partidas. Vira Solgaleo se você joga mais de dia, Lunala se joga mais de noite.',
+            en: 'Cosmog: finish the stellar research and it floats beside your partner, growing with your runs. It becomes Solgaleo if you play more by day, Lunala if you play more at night.',
+            es: 'Cosmog: completa la investigación estelar y flota junto a tu compañero, creciendo con tus partidas. Se vuelve Solgaleo si juegas más de día, Lunala si juegas más de noche.',
+          },
+          {
+            pt: 'Kubfu: suba os três andares da Torre do Dojo do Machoke e escolha a Torre da Escuridão ou a das Águas para o seu Urshifu.',
+            en: 'Kubfu: climb the three floors of Machoke’s Dojo Tower and pick the Tower of Darkness or of Waters for your Urshifu.',
+            es: 'Kubfu: sube los tres pisos de la Torre del Dojo de Machoke y elige la Torre de la Oscuridad o la Torre de las Aguas para tu Urshifu.',
+          },
+          {
+            pt: 'Meltan: uma Mystery Box pode aparecer enterrada na Escavação. Junte 400 Hex Nuts nas partidas com ele para o Melmetal.',
+            en: 'Meltan: a Mystery Box may turn up buried in the Mine Dig. Gather 400 Hex Nuts in its runs for Melmetal.',
+            es: 'Meltan: una Mystery Box puede aparecer enterrada en la Excavación. Junta 400 Hex Nuts en sus partidas para Melmetal.',
+          },
+          {
+            pt: 'Regigigas: quem capturou o trio Regi pode encontrar um templo antigo nas partidas, onde o gigante acorda para lutar.',
+            en: 'Regigigas: whoever captured the Regi trio may find an ancient temple in their runs, where the giant wakes up to fight.',
+            es: 'Regigigas: quien capturó al trío Regi puede encontrar un templo antiguo en sus partidas, donde el gigante despierta para luchar.',
+          },
+          {
+            pt: 'Com tudo isso, o Modo Lendário chega a 62 lendários, míticos e Ultracriaturas para jogar.',
+            en: 'With all of this, Legend mode reaches 62 legendaries, mythicals and Ultra Beasts to play.',
+            es: 'Con todo esto, el Modo Legendario llega a 62 legendarios, singulares y Ultraentes para jugar.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Ruínas, Forças da Natureza e míticos', en: 'Ruins, Forces of Nature and mythicals', es: 'Ruinas, Fuerzas de la Naturaleza y singulares', fr: 'Ruines, Forces de la Nature et Pokémon fabuleux', zh: '遺跡、自然之力與幻之寶可夢' },
+        notes: [
+          {
+            pt: 'Ruínas da Decisão: depois do Regigigas, o templo dele pode trazer duas ruínas, a Elétrica e a Dragão. Entre numa delas para acordar o Regieleki ou o Regidrago: só um desperta por partida.',
+            en: 'Split-Decision Ruins: after Regigigas, its temple may bring two ruins, the Electric and the Dragon. Step into one to wake Regieleki or Regidrago: only one wakes a run.',
+            es: 'Ruinas de la Elección: después de Regigigas, su templo puede traer dos ruinas, la Eléctrica y la Dragón. Entra en una para despertar a Regieleki o a Regidrago: solo uno despierta por partida.',
+          },
+          {
+            pt: 'Forças da Natureza: Tornadus traz a neve, Thundurus a chuva, Landorus a areia e Enamorus o sol da primavera. Vagam pelo mapa como o trio dos lagos, com o HP guardado entre partidas. Landorus vem depois de Tornadus e Thundurus, e Enamorus depois dos três; os dois despertam na Forma Therian.',
+            en: 'Forces of Nature: Tornadus brings snow, Thundurus rain, Landorus sand and Enamorus the spring sun. They roam the map like the lake trio, their HP kept between runs. Landorus comes after Tornadus and Thundurus, and Enamorus after all three; both awaken into their Therian Forme.',
+            es: 'Fuerzas de la Naturaleza: Tornadus trae la nieve, Thundurus la lluvia, Landorus la arena y Enamorus el sol de primavera. Vagan por el mapa como el trío del lago, con los PS guardados entre partidas. Landorus llega después de Tornadus y Thundurus, y Enamorus después de los tres; los dos despiertan en su Forma Tótem.',
+          },
+          {
+            pt: 'Zeraora: fique na Usina enquanto chove e a tempestade traz o Zeraora, com Plasma Fists. Ogerpon tem a sua própria Raide Tera, na máscara do tipo Tera da partida, e no Modo Lendário troca de máscara e Terastaliza com o Embody Aspect. Diancie sobe do Pink Diamond da Escavação, com Diamond Storm.',
+            en: 'Zeraora: stay at the Power Plant while it rains and the storm brings Zeraora, with Plasma Fists. Ogerpon has its own Tera Raid, in the mask of the run’s Tera type, and in Legend mode it swaps masks and Terastallizes with Embody Aspect. Diancie rises from the Mine Dig’s Pink Diamond, with Diamond Storm.',
+            es: 'Zeraora: quédate en la Central Eléctrica mientras llueve y la tormenta trae a Zeraora, con Plasma Fists. Ogerpon tiene su propia Teraincursión, con la máscara del teratipo de la partida, y en el Modo Legendario cambia de máscara y se teracristaliza con Embody Aspect. Diancie surge del Pink Diamond de la Excavación, con Diamond Storm.',
+          },
+          {
+            pt: 'Dialga ganhou a Forma Origem: desperta nela no Nv 12 do Modo Lendário e vira Origem na última fase da fenda. No Nv 28 desperta Primal, e no Pesadelo a última fase da fenda vira Primal Dialga.',
+            en: 'Dialga gets its Origin Forme: it awakens into it at Lv 12 in Legend mode and turns Origin in its rift’s last phase. At Lv 28 it awakens Primal, and on Nightmare the rift’s last phase turns into Primal Dialga.',
+            es: 'Dialga recibe su Forma Origen: despierta en ella en el Nv 12 del Modo Legendario y se vuelve Origen en la última fase de su grieta. En el Nv 28 despierta Primigenio, y en Pesadilla la última fase de la grieta se vuelve Dialga Primigenio.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Melhorias', en: 'Improvements', es: 'Mejoras', fr: 'Améliorations', zh: '改進' },
+        notes: [
+          {
+            pt: 'Nas lutas contra chefes, os avisos aparecem um de cada vez e fora do topo da tela, e o status do chefe (queimado, envenenado…) fica embaixo dele, sem cobrir o rosto.',
+            en: 'In boss fights, the news comes one at a time and away from the top of the screen, and the boss’s status (burned, poisoned…) sits under it, never over its face.',
+            es: 'En las peleas contra jefes, los avisos aparecen de a uno y fuera de la parte de arriba de la pantalla, y el estado del jefe (quemado, envenenado…) queda debajo de él, sin taparle la cara.',
+          },
+          {
+            pt: 'A bola da captura dos lendários ficou maior e brilha a cada sacudida.',
+            en: 'The ball in legend captures is bigger and glows with each shake.',
+            es: 'La ball de la captura de legendarios es más grande y brilla en cada sacudida.',
+          },
+          {
+            pt: 'No celular deitado, os Anéis de Hoopa mostram o tempo do anel no lugar do cronômetro, e a câmera deixa o lendário inteiro à vista, abaixo da barra do chefe.',
+            en: 'On a phone in landscape, Hoopa’s Rings show the ring’s timer in place of the clock, and the camera keeps the legend in full view, below the boss bar.',
+            es: 'En el celular en horizontal, los Anillos de Hoopa muestran el tiempo del anillo en lugar del cronómetro, y la cámara deja al legendario entero a la vista, debajo de la barra del jefe.',
+          },
+          {
+            pt: 'O último nível do especial de Pedra agora se chama Stone Edge: Diamond Storm virou o golpe da Diancie.',
+            en: 'The Rock special’s last tier is now called Stone Edge: Diamond Storm became Diancie’s move.',
+            es: 'El último nivel del especial de Roca ahora se llama Stone Edge: Diamond Storm pasó a ser el movimiento de Diancie.',
+          },
+          {
+            pt: 'O Discharge do Rotom Heat voltou a aparecer na tela: as chamas sempre acertaram, só não eram desenhadas.',
+            en: 'Heat Rotom’s Discharge shows on screen again: the flames always hit, they just weren’t drawn.',
+            es: 'El Discharge de Rotom Calor vuelve a verse en pantalla: las llamas siempre golpearon, solo no se dibujaban.',
+          },
+          {
+            pt: 'No celular, a descrição inteira do Pokémon agora aparece em Detalhes, na escolha do parceiro.',
+            en: 'On phones, the Pokémon’s full description now shows in Details, on the partner select.',
+            es: 'En el celular, la descripción completa del Pokémon ahora aparece en Detalles, en la elección del compañero.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Pedidos da comunidade', en: 'Community requests', es: 'Pedidos de la comunidad', fr: 'Demandes de la communauté', zh: '社群許願' },
+        notes: [
+          {
+            pt: 'A linha de evolução do Meltan e do Kubfu agora mostra o Melmetal e o Urshifu, com o despertar e o que os libera (400 Porcas Sextavadas, a Torre). A Pokédex explica também.',
+            en: 'Meltan’s and Kubfu’s evolution lines now show Melmetal and Urshifu, with the awakening and what opens them (400 Hex Nuts, the Tower). The Pokédex explains it too.',
+            es: 'La línea evolutiva de Meltan y Kubfu ahora muestra a Melmetal y Urshifu, con el despertar y lo que los abre (400 Tuercas Hexagonales, la Torre). La Pokédex también lo explica.',
+          },
+          {
+            pt: 'Largar item: no pause, toque num item para largá-lo e liberar o espaço. Com a build cheia, o item que um golpe no nível máximo precisa para evoluir aparece como carta de troca no level-up e nas Poké Balls. Um item largado só volta às ofertas 5 níveis depois.',
+            en: 'Drop items: in the pause menu, tap an item to drop it and free its slot. With a full build, the item a maxed move needs to evolve shows up as a swap card on level-ups and in Poké Balls. A dropped item only comes back to the offers 5 levels later.',
+            es: 'Soltar objetos: en la pausa, toca un objeto para soltarlo y liberar su espacio. Con la build llena, el objeto que un movimiento al máximo necesita para evolucionar aparece como carta de cambio al subir de nivel y en las Poké Balls. Un objeto soltado solo vuelve a las ofertas 5 niveles después.',
+          },
+          {
+            pt: 'Ponyta aprende High Horsepower, Low Kick, Horn Drill, Morning Sun e Bounce, cada um com a sua evolução: Headlong Rush, Axe Kick, Hyper Drill, Revival Blessing e Sky Drop. Morning Sun cura mais no sol, como nos jogos.',
+            en: 'Ponyta learns High Horsepower, Low Kick, Horn Drill, Morning Sun and Bounce, each with its own evolution: Headlong Rush, Axe Kick, Hyper Drill, Revival Blessing and Sky Drop. Morning Sun heals more in the sun, as in the games.',
+            es: 'Ponyta aprende High Horsepower, Low Kick, Horn Drill, Morning Sun y Bounce, cada uno con su evolución: Headlong Rush, Axe Kick, Hyper Drill, Revival Blessing y Sky Drop. Morning Sun cura más con sol, como en los juegos.',
+          },
+          {
+            pt: 'Duas mesas novas no café do Poké Realm, para 2 a 4 treinadores, com bots nas cadeiras vazias: Ludo e Unown, um jogo de cartas em que você descarta pelo tipo ou pela letra Unown, com Ditto e Mew de curinga. Cada um tem Placar e troféu (Dado de Ouro e Placa UNOWN).',
+            en: 'Two new tables at the Poké Realm café, for 2 to 4 trainers with bots in the empty seats: Ludo and Unown, a card game where you discard by type or by Unown letter, with Ditto and Mew as wild cards. Each has a Scoreboard and a trophy (Golden Die and UNOWN Plaque).',
+            es: 'Dos mesas nuevas en el café del Poké Realm, para 2 a 4 entrenadores con bots en las sillas vacías: Ludo y Unown, un juego de cartas en el que descartas por tipo o por letra Unown, con Ditto y Mew como comodines. Cada uno tiene Marcador y trofeo (Dado de Oro y Placa UNOWN).',
+          },
+          {
+            pt: 'Partidas longas e o modo infinito ficaram bem mais leves para celulares e computadores mais fracos, sem travadas quando golpes miram na maior multidão. Rastros como o do Fire Spin mantêm o dano todo com menos chamas na tela, e quem entra no meio de uma partida em co-op não fica mais com o jogo lento.',
+            en: 'Long runs and endless mode are much lighter on phones and weaker computers, with no stutter when moves aim at the thickest crowd. Trails like Fire Spin’s keep their full damage with fewer flames on screen, and joining a co-op run midway no longer leaves you with a slower game.',
+            es: 'Las partidas largas y el modo infinito son mucho más ligeros en celulares y computadoras más modestas, sin tirones cuando los movimientos apuntan a la mayor multitud. Los rastros como el de Fire Spin mantienen todo su daño con menos llamas en pantalla, y quien entra a mitad de una partida en co-op ya no tiene el juego más lento.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Ícones da comunidade', en: 'Community icons', es: 'Íconos de la comunidad', fr: 'Icônes de la communauté', zh: '社群圖示' },
+        notes: [
+          {
+            pt: 'Os moderadores do Discord redesenharam os ícones do lobby: a Poké Ball da Pokédex, o ovo de Ovos, a barraca da Loja, a medalha do Ranking, a lâmpada de Ideias, as duas Poké Balls do Co-op, o ovo da amizade dos Convites e os ícones do Discord, TikTok, YouTube e Instagram. Valeu, mods!',
+            en: 'Our Discord moderators redrew the lobby icons: the Pokédex Poké Ball, the Eggs egg, the Shop stall, the Ranking medal, the Ideas bulb, the two Co-op Poké Balls, the Invites friendship egg and the Discord, TikTok, YouTube and Instagram icons. Thanks, mods!',
+            es: 'Los moderadores de Discord redibujaron los íconos del lobby: la Poké Ball de la Pokédex, el huevo de Huevos, el puesto de la Tienda, la medalla del Ranking, la bombilla de Ideas, las dos Poké Balls del Co-op, el huevo de la amistad de Invitaciones y los íconos de Discord, TikTok, YouTube e Instagram. ¡Gracias, mods!',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Rádio e músicas novas', en: 'The Radio and new music', es: 'La Radio y música nueva', fr: 'La Radio et de nouvelles musiques', zh: '收音機和新音樂' },
+        notes: [
+          {
+            pt: 'O lobby ganhou um Rádio, apresentado pelo Rotom: monte uma fila com as músicas do jogo, reordene, embaralhe, repita e guarde as favoritas, só nos menus ou também nas partidas. As músicas se liberam conforme você passa pelos biomas e encontra os lendários. Fica também em Ajustes › Som.',
+            en: 'The lobby has a Radio now, hosted by Rotom: queue up the game’s tunes, reorder, shuffle, repeat and keep favorites, in the menus only or in runs too. Tunes unlock as you walk through biomes and meet legends. It’s also in Settings › Sound.',
+            es: 'El lobby tiene una Radio, presentada por Rotom: arma una cola con las canciones del juego, reordena, mezcla, repite y guarda favoritas, solo en los menús o también en las partidas. Las canciones se desbloquean al recorrer los biomas y encontrar a los legendarios. También está en Ajustes › Sonido.',
+            fr: 'Le lobby a maintenant une Radio, animée par Rotom : une file d’attente avec les morceaux du jeu, réordonner, aléatoire, répétition et favoris, dans les menus seulement ou aussi en partie. Les morceaux se débloquent en traversant les biomes et en rencontrant les légendaires. Elle est aussi dans Réglages › Son.',
+            zh: '大廳新增由洛托姆主持的收音機：把遊戲裡的曲子排進佇列、調整順序、隨機、重複播放，還能收藏最愛，可以只在選單播放，也可以在遊戲中播放。走過地區、遇見傳說寶可夢就能解鎖更多曲子。也可以從設定 › 聲音進入。',
+          },
+          {
+            pt: 'O lobby não toca mais a mesma música o tempo todo: cinco temas novos se revezam com o da vila conforme a hora do seu dia (manhã, tarde, noite e chuva), e um tema de festa toca enquanto o Festival da Praça acontece.',
+            en: 'The lobby no longer plays the same tune all the time: five new themes take turns with the village one by the hour of your day (morning, afternoon, night and rain), and a festive one plays while the Festival da Praça runs.',
+            es: 'El lobby ya no toca la misma música todo el tiempo: cinco temas nuevos se turnan con el de la aldea según la hora de tu día (mañana, tarde, noche y lluvia), y uno de fiesta suena mientras dura el Festival da Praça.',
+            fr: 'Le lobby ne joue plus toujours le même air : cinq nouveaux thèmes alternent avec celui du village selon l’heure de ta journée (matin, après-midi, nuit et pluie), et un thème de fête joue pendant le Festival da Praça.',
+            zh: '大廳不再一直播同一首歌：五首新曲會依你當地的時段（早上、下午、晚上和雨天）和村莊主題輪流播放，廣場慶典期間還有一首慶典曲。',
+          },
+          {
+            pt: 'O Poké Realm ganhou trilha própria: a cidade, o píer, o café, o fliperama, o Game Corner e cada mini game tocam a sua. Na Zona Safári, o mato tem música de aventura, um Pokémon selvagem traz a música de batalha e o Concurso de Insetos tem a sua.',
+            en: 'The Poké Realm has its own soundtrack: the town, the pier, the café, the arcade, the Game Corner and every mini game play their own. In the Safari Zone, the tall grass has adventure music, a wild Pokémon brings the battle theme and the Bug-Catching Contest has one of its own.',
+            es: 'El Poké Realm tiene banda sonora propia: la ciudad, el muelle, el café, el Arcade, el Game Corner y cada minijuego tocan la suya. En la Zona Safari, la hierba alta tiene música de aventura, un Pokémon salvaje trae la música de batalla y el Concurso de Bichos tiene la suya.',
+            fr: 'Le Poké Realm a sa propre bande-son : la ville, le ponton, le café, la salle d’arcade, la Salle de jeux et chaque mini-jeu ont la leur. Dans le Parc Safari, les hautes herbes ont une musique d’aventure, un Pokémon sauvage amène le thème de combat et le Concours de capture d’insectes a le sien.',
+            zh: 'Poké Realm 有了專屬配樂：城鎮、碼頭、咖啡館、電玩間、遊戲城和每個小遊戲都有自己的曲子。在狩獵地帶，草叢裡是冒險的音樂，遇到野生寶可夢會換成對戰曲，捕蟲大會也有自己的曲子。',
+          },
+          {
+            pt: 'As Tera Raids ganharam música própria, épica e cristalina, da entrada no covil até a saída. O Dojo do Machoke treina ao som de um koto calmo e tambores, e a Torre do Kubfu tem uma versão tensa e acelerada.',
+            en: 'Tera Raids have their own epic, crystalline music, from walking into the den until you leave it. Machoke’s Dojo trains to a calm koto and drums, and Kubfu’s Tower has a tense, faster take on it.',
+            es: 'Las Teraincursiones tienen su propia música, épica y cristalina, desde que entras en la guarida hasta que sales. El Dojo de Machoke entrena al son de un koto tranquilo y tambores, y la Torre de Kubfu tiene una versión tensa y más rápida.',
+            fr: 'Les Raids Téracristal ont leur propre musique, épique et cristalline, de l’entrée dans la tanière jusqu’à la sortie. Le Dojo de Machoke s’entraîne sur un koto calme et des tambours, et la Tour de Kubfu en a une version tendue et plus rapide.',
+            zh: '太晶團體戰有了專屬音樂，史詩又晶瑩，從走進洞窟一直播到離開。Machoke 的道場伴著平靜的古箏和太鼓訓練，Kubfu 之塔則是緊張、更快的版本。',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Fila de ovos e incubadora maior', en: 'Egg waiting line and a bigger incubator', es: 'Fila de huevos e incubadora más grande', fr: 'File d’œufs et incubateur plus grand', zh: '蛋的等候隊列與更大的孵化器' },
+        notes: [
+          {
+            pt: 'Com a incubadora cheia, o ovo novo não vira mais ₽ na hora: até 6 ovos esperam numa fila e entram sozinhos assim que um ovo choca. Só depois que a fila enche é que o ovo vira ₽.',
+            en: 'With the incubator full, a new egg no longer turns into ₽ right away: up to 6 eggs wait in line and move in on their own as soon as an egg hatches. Only once the line is full does an egg turn into ₽.',
+            es: 'Con la incubadora llena, el huevo nuevo ya no se vuelve ₽ al instante: hasta 6 huevos esperan en una fila y entran solos en cuanto eclosiona un huevo. Solo cuando la fila se llena el huevo se vuelve ₽.',
+            fr: 'Avec l’incubateur plein, un nouvel œuf ne devient plus des ₽ tout de suite : jusqu’à 6 œufs attendent dans une file et entrent seuls dès qu’un œuf éclot. Ce n’est qu’une fois la file pleine qu’un œuf devient des ₽.',
+            zh: '孵化器滿了時，新的蛋不會再立刻變成₽：最多 6 顆蛋會排隊等候，一有蛋孵化就自動放入。只有隊列也滿了，蛋才會變成₽。',
+          },
+          {
+            pt: 'A loja do Kecleon no nível 5 vende mais 3 vagas para sempre, por ₽1M, ₽2M e ₽4M: até 8 ovos chocando ao mesmo tempo.',
+            en: 'Kecleon’s shop at level 5 sells 3 more slots for good, for ₽1M, ₽2M and ₽4M: up to 8 eggs hatching at once.',
+            es: 'La tienda de Kecleon en el nivel 5 vende 3 lugares más para siempre, por ₽1M, ₽2M y ₽4M: hasta 8 huevos eclosionando a la vez.',
+            fr: 'La boutique de Kecleon au niveau 5 vend 3 places de plus pour toujours, pour 1 M ₽, 2 M ₽ et 4 M ₽ : jusqu’à 8 œufs en incubation à la fois.',
+            zh: 'Kecleon 商店 5 級時會再賣 3 個永久格位，價格為₽1M、₽2M 和₽4M：最多 8 顆蛋同時孵化。',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    date: '2026-11-09',
+    title: { pt: 'Lobby novo e Realm vivo', en: 'A new lobby and a livelier Realm', es: 'Lobby nuevo y un Realm con vida', fr: 'Un nouvel accueil et un Realm plein de vie', zh: '全新大廳，Realm 熱鬧起來了' },
+    highlights: [
+      {
+        pt: 'Lobby novo: os 7 modos à vista, cada um com sua turma no campo, e o JOGAR faz o modo escolhido.',
+        en: 'A new lobby: all 7 modes in view, each with its own cast on the meadow, and PLAY starts the one you picked.',
+        es: 'Lobby nuevo: los 7 modos a la vista, cada uno con su elenco en el prado, y JUGAR inicia el que elegiste.',
+        fr: 'Nouvel accueil : les 7 modes en vue, chacun avec sa troupe dans la prairie, et JOUER lance celui que tu as choisi.',
+        zh: '全新大廳：7 種模式一目了然，各有專屬角色站上草原，按下「開始」就進入選好的模式。',
+      },
+      {
+        pt: 'O Poké Realm agora tem 4 cidades e você entra direto na primeira com vaga, para encontrar mais gente.',
+        en: 'The Poké Realm now has 4 cities and you go straight into the first with room, so you meet more people.',
+        es: 'El Poké Realm ahora tiene 4 ciudades y entras directo en la primera con lugar, para encontrar a más gente.',
+        fr: 'Le Poké Realm compte maintenant 4 villes et tu entres directement dans la première qui a de la place, pour croiser plus de monde.',
+        zh: 'Poké Realm 現在有 4 座城市，你會直接進入第一座還有空位的城市，更容易遇到其他人。',
+      },
+      {
+        pt: 'Novo Livro de Estampas: 40 para colecionar, algumas escondidas, com móveis, moldura e título de recompensa.',
+        en: 'New Stamp Book: 40 to collect, some of them hidden, with furniture, a frame and a title as rewards.',
+        es: 'Nuevo Libro de Estampas: 40 para coleccionar, algunas ocultas, con muebles, un marco y un título de recompensa.',
+        fr: 'Nouveau Livre de Timbres : 40 à collectionner, certains cachés, avec des meubles, un cadre et un titre en récompense.',
+        zh: '全新郵票冊：共 40 枚可以收集，部分是隱藏的，還能獲得家具、頭像框和稱號。',
+      },
+      {
+        pt: 'Todo dia, 3 Recados no mural da praça pagam ₽, e todos dá para fazer sozinho.',
+        en: 'Every day, 3 Errands on the plaza board pay ₽, and you can do all of them alone.',
+        es: 'Cada día, 3 Recados en el tablón de la plaza pagan ₽, y todos se pueden hacer en solitario.',
+        fr: 'Chaque jour, 3 Courses au panneau de la place rapportent des ₽, et tu peux toutes les faire seul.',
+        zh: '廣場佈告欄每天有 3 項跑腿任務可以賺 ₽，一個人也能全部完成。',
+      },
+      {
+        pt: 'No celular, o novo cadeado na caixa do seu Pokémon fixa o joystick no canto, sem sair da partida.',
+        en: 'On phones, the new padlock on your Pokémon’s box fixes the joystick in its corner without leaving the run.',
+        es: 'En el celular, el nuevo candado en el recuadro de tu Pokémon fija el joystick en su esquina sin salir de la partida.',
+        fr: 'Sur téléphone, le nouveau cadenas sur l’encart de ton Pokémon fixe le joystick dans son coin sans quitter la partie.',
+        zh: '手機上，寶可夢狀態框的新鎖頭可把搖桿固定在角落，不必離開遊戲。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Modos de jogo de cara nova', en: 'A new look for Game Modes', es: 'Modos de juego renovados', fr: 'Nouveau look pour les modes de jeu', zh: '遊戲模式換上新面貌' },
+        notes: [
+          {
+            pt: 'A tela de modos agora abre por cima do campo, e cada modo é um lugar: o pôr do sol da horda, a tempestade de Kyogre, a fogueira do Co-op, o Dojo, a Arena e o café do Realm.',
+            en: 'The modes screen now opens over the meadow, and each mode is a place: the horde at sunset, Kyogre\'s storm, the Co-op campfire, the Dojo, the Arena and the Realm\'s café.',
+            es: 'La pantalla de modos ahora se abre sobre el prado, y cada modo es un lugar: el atardecer de la horda, la tormenta de Kyogre, la fogata del Co-op, el Dojo, la Arena y el café del Realm.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Lobby novo', en: 'A new lobby', es: 'Lobby nuevo', fr: 'Nouvel accueil', zh: '全新大廳' },
+        notes: [
+          {
+            pt: 'Os 7 modos ficam numa barra sempre à vista. Escolha um e quem está no campo muda: seu parceiro no Survivors, um lendário em Lendas, dois times na Arena. O JOGAR ganha a cor do modo e faz o que ele faz.',
+            en: 'The 7 modes sit on a bar that is always in view. Pick one and who stands on the meadow changes: your partner in Survivors, a legend in Legends, two teams in the Arena. PLAY takes the mode\'s color and starts it.',
+            es: 'Los 7 modos están en una barra siempre a la vista. Elige uno y quién está en el prado cambia: tu compañero en Survivors, un legendario en Leyendas, dos equipos en la Arena. JUGAR toma el color del modo y lo inicia.',
+          },
+          {
+            pt: 'O dia vem primeiro, em Hoje: Presentes, Desafio do dia, Ovos, Missões e Surto. Na Praça ficam o Festival, as lojas e o Hall da Fama. Discord, redes e Ideias foram para a Comunidade.',
+            en: 'Your day comes first, under Today: Gifts, Daily Challenge, Eggs, Missions and Outbreak. At the Plaza you find the Festival, the shops and the Hall of Fame. Discord, socials and Ideas moved to Community.',
+            es: 'Tu día va primero, en Hoy: Regalos, Desafío del día, Huevos, Misiones y Brote. En la Plaza están el Festival, las tiendas y el Salón de la Fama. Discord, redes e Ideas pasaron a Comunidad.',
+          },
+          {
+            pt: 'O jogo inteiro ganhou o mesmo visual: letras novas, mais fáceis de ler, e cartões e botões de contorno grosso, nos menus e na partida.',
+            en: 'The whole game got the same look: new, easier-to-read lettering and bold-outlined cards and buttons, in the menus and in a run.',
+            es: 'Todo el juego tiene el mismo aspecto: letras nuevas, más fáciles de leer, y tarjetas y botones de contorno grueso, en los menús y en la partida.',
+          },
+          {
+            pt: 'O botão Passear saiu: tudo o que ele alcançava agora tem o seu botão. No celular, cinco abas embaixo guardam o resto.',
+            en: 'The Explore button is gone: everything it reached now has its own button. On phones, five tabs at the bottom hold the rest.',
+            es: 'El botón Pasear ya no está: todo lo que alcanzaba ahora tiene su botón. En el celular, cinco pestañas abajo guardan el resto.',
+          },
+          {
+            pt: 'Em alguns tamanhos de janela, a tela tremia um pouco enquanto o seu Pokémon andava. Não treme mais.',
+            en: 'At some window sizes, the screen shook a little while your Pokémon walked. It no longer does.',
+            es: 'En algunos tamaños de ventana, la pantalla temblaba un poco mientras tu Pokémon caminaba. Ya no tiembla.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Cidades mais cheias', en: 'Fuller cities', es: 'Ciudades más llenas', fr: 'Des villes plus animées', zh: '城市更熱鬧' },
+        notes: [
+          {
+            pt: 'De 10 cidades passamos para 4, e o Realm coloca todo mundo na primeira com vaga. Para escolher outra, toque no nome da cidade.',
+            en: 'We went from 10 cities to 4, and the Realm puts everyone in the first with room. To pick another, tap the city’s name.',
+            es: 'Pasamos de 10 ciudades a 4, y el Realm pone a todos en la primera con lugar. Para elegir otra, toca el nombre de la ciudad.',
+            fr: 'Nous sommes passés de 10 villes à 4, et le Realm place tout le monde dans la première qui a de la place. Pour en choisir une autre, touche le nom de la ville.',
+            zh: '城市從 10 座減少為 4 座，Realm 會讓大家進入第一座還有空位的城市。想換城市，點一下城市名稱即可。',
+          },
+          {
+            pt: 'O lobby mostra quantos treinadores estão no Realm quando há movimento.',
+            en: 'The lobby shows how many trainers are in the Realm when it’s busy.',
+            es: 'El lobby muestra cuántos entrenadores hay en el Realm cuando hay movimiento.',
+            fr: 'Le lobby indique combien de dresseurs sont dans le Realm quand il y a du monde.',
+            zh: '當 Realm 有人氣時，大廳會顯示目前的訓練家人數。',
+          },
+          {
+            pt: 'Jogar mini games com outro treinador na sala agora rende 25% a mais.',
+            en: 'Playing mini games with another trainer in the room now pays 25% more.',
+            es: 'Jugar minijuegos con otro entrenador en la sala ahora paga un 25 % más.',
+            fr: 'Jouer aux mini-jeux avec un autre dresseur dans la salle rapporte maintenant 25 % de plus.',
+            zh: '和其他訓練家在同一個房間玩小遊戲，獎勵增加 25%。',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Estampas', en: 'Stamps', es: 'Estampas', fr: 'Timbres', zh: '郵票' },
+        notes: [
+          {
+            pt: 'Explore a cidade, visite bases, jogue e encontre outros treinadores para ganhar Estampas. As escondidas só revelam o que são depois de conquistadas.',
+            en: 'Explore the town, visit bases, play and meet other trainers to earn Stamps. Hidden ones only reveal themselves once earned.',
+            es: 'Explora la ciudad, visita bases, juega y encuentra a otros entrenadores para ganar Estampas. Las ocultas solo se revelan al conseguirlas.',
+            fr: 'Explore la ville, visite des bases, joue et rencontre d’autres dresseurs pour gagner des Timbres. Les timbres cachés ne se révèlent qu’une fois gagnés.',
+            zh: '探索城鎮、參觀基地、玩小遊戲和遇見其他訓練家，就能獲得郵票。隱藏郵票要到手後才會揭曉。',
+          },
+          {
+            pt: 'Com 5, 12, 20, 30 e 38 Estampas você ganha móveis exclusivos, uma moldura e um título. O total aparece no cartão do treinador.',
+            en: 'At 5, 12, 20, 30 and 38 Stamps you earn exclusive furniture, a frame and a title. Your total shows on your trainer card.',
+            es: 'Con 5, 12, 20, 30 y 38 Estampas ganas muebles exclusivos, un marco y un título. El total aparece en tu tarjeta de entrenador.',
+            fr: 'À 5, 12, 20, 30 et 38 Timbres, tu gagnes des meubles exclusifs, un cadre et un titre. Ton total s’affiche sur ta carte de dresseur.',
+            zh: '收集到 5、12、20、30 和 38 枚郵票時，可以獲得專屬家具、頭像框和稱號。總數會顯示在訓練家卡片上。',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Recados do dia', en: 'Daily Errands', es: 'Recados del día', fr: 'Courses du jour', zh: '每日跑腿' },
+        notes: [
+          {
+            pt: 'São três por dia, os mesmos para todo mundo. Colete cada um no mural da praça; terminar os três dá um bônus de ₽.',
+            en: 'There are three a day, the same for everyone. Collect each one at the plaza board; finishing all three gives a ₽ bonus.',
+            es: 'Son tres por día, los mismos para todos. Cobra cada uno en el tablón de la plaza; terminar los tres da un bono de ₽.',
+            fr: 'Il y en a trois par jour, les mêmes pour tous. Récupère chacune au panneau de la place ; finir les trois donne un bonus de ₽.',
+            zh: '每天三項，大家都一樣。到廣場佈告欄領取獎勵，全部完成還有額外的 ₽。',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Hora do Realm', en: 'Realm Hour', es: 'Hora del Realm', fr: 'Heure du Realm', zh: 'Realm 時刻' },
+        notes: [
+          {
+            pt: 'Às 0h, 12h e 20h (UTC), o píer, o fliperama ou o café mudam por 15 minutos: Maré Alta, Chuva de Frutas ou Noite das Mesas, sempre com Estampas próprias.',
+            en: 'At 00:00, 12:00 and 20:00 UTC, the pier, the arcade or the café change for 15 minutes: High Tide, Berry Storm or Table Night, each with its own Stamps.',
+            es: 'A las 0:00, 12:00 y 20:00 UTC, el muelle, el arcade o el café cambian por 15 minutos: Marea Alta, Lluvia de Bayas o Noche de Mesas, siempre con Estampas propias.',
+            fr: 'À 0 h, 12 h et 20 h UTC, la jetée, la salle d’arcade ou le café changent pendant 15 minutes : Marée Haute, Pluie de Baies ou Soirée Jeux, chacune avec ses Timbres.',
+            zh: '每天 UTC 0:00、12:00 和 20:00，碼頭、遊樂場或咖啡館會變身 15 分鐘：大滿潮、樹果雨或桌遊之夜，各有專屬郵票。',
+          },
+          {
+            pt: 'Na Maré Alta, peixes raros mordem mais. Uma faixa mostra a contagem regressiva e leva você até lá.',
+            en: 'During High Tide, rare fish bite more often. A banner shows the countdown and takes you there.',
+            es: 'En la Marea Alta, los peces raros pican más. Una franja muestra la cuenta regresiva y te lleva hasta allí.',
+            fr: 'Pendant la Marée Haute, les poissons rares mordent plus souvent. Une bannière affiche le compte à rebours et t’y emmène.',
+            zh: '大滿潮期間，稀有的魚更容易上鉤。橫幅會顯示倒數，並帶你前往現場。',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Cadeado do joystick na partida', en: 'Joystick padlock in the run', es: 'Candado del joystick en la partida', fr: 'Cadenas du joystick en partie', zh: '遊戲中的搖桿鎖頭' },
+        notes: [
+          {
+            pt: 'Em telas de toque, um cadeado na caixa do seu Pokémon alterna entre o joystick fixo no canto e o que segue o dedo, em qualquer modo. A escolha fica salva e é a mesma de Ajustes → Controles.',
+            en: 'On touchscreens, a padlock on your Pokémon’s box switches between the joystick fixed in its corner and the one that follows your finger, in every mode. The choice is saved and is the same one as in Settings → Controls.',
+            es: 'En pantallas táctiles, un candado en el recuadro de tu Pokémon alterna entre el joystick fijo en su esquina y el que sigue tu dedo, en todos los modos. La elección se guarda y es la misma de Ajustes → Controles.',
+            fr: 'Sur écran tactile, un cadenas sur l’encart de ton Pokémon alterne entre le joystick fixe dans son coin et celui qui suit ton doigt, dans tous les modes. Le choix est gardé et c’est le même que dans Réglages → Commandes.',
+            zh: '在觸控螢幕上，寶可夢狀態框的鎖頭可在固定於角落的搖桿與跟隨手指的搖桿之間切換，所有模式皆可使用。選擇會保存，與「設定 → 操作」中的設定相同。',
+          },
+          {
+            pt: 'A altura e a distância da borda do joystick fixo ficam em Ajustes → Controles.',
+            en: 'The fixed joystick’s height and distance from the edge are in Settings → Controls.',
+            es: 'La altura y la distancia al borde del joystick fijo están en Ajustes → Controles.',
+            fr: 'La hauteur du joystick fixe et sa distance au bord se règlent dans Réglages → Commandes.',
+            zh: '固定搖桿的高度與離邊緣的距離可在「設定 → 操作」調整。',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Correções visuais', en: 'Visual fixes', es: 'Correcciones visuales', fr: 'Corrections visuelles', zh: '畫面修正' },
+        notes: [
+          {
+            pt: 'A barra do X Attack e do X Speed agora enche quando você pega outro com um ainda ativo. A duração sempre esteve certa, só a barra enganava.',
+            en: 'The X Attack and X Speed bar now fills when you pick up another while one is still active. The duration was always right; only the bar was misleading.',
+            es: 'La barra de X Attack y X Speed ahora se llena cuando recoges otro con uno aún activo. La duración siempre estuvo bien, solo la barra engañaba.',
+            fr: 'La barre d’X Attack et d’X Speed se remplit maintenant quand tu en ramasses un autre alors qu’un est encore actif. La durée a toujours été bonne, seule la barre trompait.',
+            zh: '在 X Attack 或 X Speed 仍生效時再撿到一個，效果條現在會填滿。持續時間一直是正確的，只是效果條顯示有誤。',
+          },
+          {
+            pt: 'O marcador de Alfa fora da tela agora mostra um A, em vez de um símbolo que parecia um Ω.',
+            en: 'The off-screen Alpha marker now shows an A instead of a symbol that looked like an Ω.',
+            es: 'El marcador de Alfa fuera de la pantalla ahora muestra una A, en lugar de un símbolo que parecía una Ω.',
+            fr: 'Le marqueur d’Alpha hors de l’écran affiche maintenant un A, au lieu d’un symbole qui ressemblait à un Ω.',
+            zh: '畫面外的頭目標記現在顯示 A，不再是看起來像 Ω 的符號。',
           },
         ],
       },
@@ -104,14 +1449,26 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         zh: '使用 AZERTY 鍵盤時，遊戲現在會顯示正確的按鍵：Z Q S D。',
       },
       {
-        pt: 'Se o jogo ainda não abrir, recarregue a página.',
-        en: 'If the game still doesn’t open, reload the page.',
-        es: 'Si el juego aún no abre, recarga la página.',
-        fr: 'Si le jeu ne s’ouvre toujours pas, recharge la page.',
-        zh: '如果遊戲仍然無法開啟，請重新載入頁面。',
+        pt: 'Mew, Celebi e Jirachi agora têm garantia por azar: a chance sobe a cada final sem um mítico.',
+        en: 'Mew, Celebi and Jirachi now have bad-luck protection: the chance rises with each finale without a mythical.',
+        es: 'Mew, Celebi y Jirachi ahora tienen protección contra la mala suerte: la probabilidad sube con cada final sin un mítico.',
+        fr: 'Mew, Celebi et Jirachi ont maintenant une protection contre la malchance : les chances montent à chaque finale sans Pokémon fabuleux.',
+        zh: 'Mew、Celebi 和 Jirachi 現在有保底機制：每場沒有幻之寶可夢的決戰後，機率都會提高。',
       },
     ],
     changes: [
+      {
+        title: { pt: 'Garantia por azar dos míticos', en: 'Bad-luck protection for mythicals', es: 'Protección contra la mala suerte de los míticos', fr: 'Protection contre la malchance des fabuleux', zh: '幻之寶可夢保底機制' },
+        notes: [
+          {
+            pt: 'Depois de 5 finais sem derrotar um mítico, a chance de ele aparecer junto do Mewtwo sobe a cada final, até ser garantida na 21ª. Enquanto faltar algum, o que aparece é sempre um que você ainda não capturou.',
+            en: 'After 5 finales without beating a mythical, the chance of one joining Mewtwo rises with each finale, up to a sure thing on the 21st. While you still miss any, the one that comes is always one you have not captured.',
+            es: 'Tras 5 finales sin derrotar a un mítico, la probabilidad de que aparezca junto a Mewtwo sube con cada final, hasta ser segura en la 21.ª. Mientras te falte alguno, siempre aparece uno que aún no capturaste.',
+            fr: 'Après 5 finales sans battre de Pokémon fabuleux, les chances d’en voir un aux côtés de Mewtwo montent à chaque finale, jusqu’à être certaines à la 21e. Tant qu’il vous en manque, celui qui vient est toujours un que vous n’avez pas capturé.',
+            zh: '連續 5 場決戰沒有打倒幻之寶可夢後，牠與 Mewtwo 一同出現的機率會逐場提高，第 21 場必定出現。只要還有缺少的，出現的一定是你尚未捕捉的那一隻。',
+          },
+        ],
+      },
       {
         title: { pt: 'Tela preta ao abrir', en: 'Black screen on opening', es: 'Pantalla negra al abrir', fr: 'Écran noir à l’ouverture', zh: '開啟時黑畫面' },
         notes: [

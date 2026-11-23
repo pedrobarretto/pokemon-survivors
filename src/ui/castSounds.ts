@@ -7,6 +7,17 @@ import type { MoveId } from '../game/moves'
  * hits already sound.
  */
 const CAST_SOUNDS: Partial<Record<MoveId, readonly [Sfx, number]>> = {
+  // Ponyta's gallop batch (`game/gallopMoves.ts`).
+  highHorsepower: ['rumble', 300],
+  headlongRush: ['rockBurst', 300],
+  lowKick: ['trip', 250],
+  axeKick: ['axe', 250],
+  hornDrill: ['drill', 300],
+  hyperDrill: ['drill', 250],
+  morningSun: ['heal', 600],
+  revivalBlessing: ['wish', 600],
+  bounce: ['leap', 300],
+  skyDrop: ['dive', 300],
   dreamEater: ['hypnosis', 300],
   dig: ['dig', 200],
   twister: ['whoosh', 400],

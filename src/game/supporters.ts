@@ -52,7 +52,7 @@ export const donationPoints = (cents: number, currency: string) => {
 export const ogTier = (points: number): SupporterTier | null => (points >= SUPPORTER.gold ? 'gold' : points > 0 ? 'supporter' : null)
 
 /** The tier of a Patreon pledge of `cents` a month (`PATREON_TIERS`), or null under the lowest. */
-export const pledgeTier = (cents: number): SupporterTier | null => SUPPORTER_TIERS.findLast((tier) => cents >= PATREON_TIERS[tier]) ?? null
+export const pledgeTier = (cents: number): SupporterTier | null => [...SUPPORTER_TIERS].reverse().find((tier) => cents >= PATREON_TIERS[tier]) ?? null
 
 /**
  * An account's support, as the API keeps it: one-time `points`, the `og`
@@ -200,8 +200,9 @@ export type DonationStatus = { paid: boolean; handle: string | null; code: strin
 /**
  * `GET /me/supporter`: the player's tier (`effectiveTier`, null for none),
  * since when, whether they show it, whether they're an OG, their vote in each
- * poll, and whether they linked a Patreon (null when the API has no Patreon,
- * or is older than it).
+ * poll, whether they linked a Patreon (null when the API has no Patreon,
+ * or is older than it) and the tier of the linked Patreon's active pledge
+ * (`pledge`, null without one: what brings gems each month, `GEM_PATREON`).
  */
 export type SupporterStatus = {
   tier: SupporterTier | null
@@ -211,6 +212,7 @@ export type SupporterStatus = {
   vote: PollOption<'supporters'> | null
   diamondVote: PollOption<'diamond'> | null
   patreon: boolean | null
+  pledge: SupporterTier | null
 }
 
 /**
@@ -257,6 +259,7 @@ export const parseSupporterStatus = (v: unknown): SupporterStatus | null =>
         vote: isPollOptionOf('supporters', v.vote) ? v.vote : null,
         diamondVote: isPollOptionOf('diamond', v.diamondVote) ? v.diamondVote : null,
         patreon: typeof v.patreon === 'boolean' ? v.patreon : null,
+        pledge: parseTier(v.pledge),
       }
     : null
 

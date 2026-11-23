@@ -21,6 +21,8 @@ export type RosterSpecies = {
   name: string
   types: readonly PokeType[]
   stats: BaseStats
+  /** The main series' capture rate (3..255): how rare the species is in the wild. */
+  capture: number
 }
 
 export const baseStatTotal = (s: BaseStats) => s.hp + s.attack + s.defense + s.spAttack + s.spDefense + s.speed
@@ -46,6 +48,16 @@ export const TIER_STATS = {
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v))
 const round1 = (v: number) => dm.round(v * 10) / 10
 
+/** Least draw odds a species gets (`rarityOf`), so even Beldum-rare ones turn up now and then. */
+export const RAREST = 0.15
+
+/**
+ * Draw odds of a wild species from its capture rate, as in the games' tall grass:
+ * (capture / 255)^0.6, at least `RAREST`. Rattata and Caterpie (255) are 1, a
+ * Murkrow (30) 0.28, the pseudo-legendaries' and fossils' first stages (45) 0.35.
+ */
+export const rarityOf = (capture: number) => dm.round(clamp(dm.pow(capture / 255, 0.6), RAREST, 1) * 100) / 100
+
 /**
  * Game stats from base stats (Spe, Atk… are base stats, total = base stat total):
  * - hp: tier hp × bulk share, where bulk = HP + (Def + SpD) / 2 and a balanced species has total / 3 (share kept in 0.7..1.5).
@@ -53,6 +65,7 @@ const round1 = (v: number) => dm.round(v * 10) / 10
  * - speed (px/s): (8 + 60 × Spe / (Spe + 45)) × tier speed, a curve that flattens out so fast species stay
  *   dodgeable; flyers +12%.
  * - xp: one per 13 hp. mass (knockback resistance): (HP + Def) / 65, lighter for flying and ghost types.
+ * - rarity: `rarityOf` its capture rate.
  */
 export const deriveEnemy = (s: RosterSpecies): EnemyDef => {
   const st = s.stats
@@ -74,6 +87,7 @@ export const deriveEnemy = (s: RosterSpecies): EnemyDef => {
     xp: Math.max(1, dm.round(hp / 13)),
     mass: round1(clamp(((st.hp + st.defense) / 65) * (light ? 0.65 : 1), 0.5, 3)),
     tier,
+    rarity: rarityOf(s.capture),
   }
 }
 

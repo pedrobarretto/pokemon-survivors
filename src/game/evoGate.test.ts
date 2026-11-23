@@ -158,9 +158,9 @@ describe('line steps that need an item (Porygon, Exeggcute)', () => {
     expect(g.player.stage).toBe(1)
   }, 30_000)
 
-  it('need the Leaf Stone for Exeggutor, the one that opens Leafeon too', () => {
+  it('need the Leaf Stone for Exeggutor (the one that opens Leafeon too), or the Sparkling Stone for Alolan Exeggutor', () => {
     const held = atEvolution('exeggcute')
-    expect(missingEvoItems(held)).toEqual(['leafStone'])
+    expect(missingEvoItems(held)).toEqual(['leafStone', 'sparklingStone'])
     advancePhase(held)
     settle(held)
     expect([held.player.stage, held.player.evoHeld]).toEqual([0, true])
@@ -168,7 +168,10 @@ describe('line steps that need an item (Porygon, Exeggcute)', () => {
     advancePhase(g)
     expect(g.phase).toBe('evolving')
     evolveOut(g)
-    expect(g.player.stage).toBe(1)
+    expect([g.player.stage, g.player.branch]).toEqual([1, 'exeggutor'])
+    const alolan = atEvolution('exeggcute', { evo: ['sparklingStone'] })
+    advancePhase(alolan)
+    expect(alolan.player.branch).toBe('exeggutorAlola')
     // Scraggy's step is a plain level one.
     const scraggy = atEvolution('scraggy')
     expect(missingEvoItems(scraggy)).toEqual([])

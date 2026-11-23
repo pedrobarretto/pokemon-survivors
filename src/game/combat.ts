@@ -1,4 +1,5 @@
 import { dirTo } from '../engine/math'
+import { rushDown } from './rush'
 import { chance, range } from '../engine/rng'
 import { effectiveness, TYPE_COLORS, type PokeType } from '../data/types'
 import { ENEMY_BERRY_CHANCE } from '../data/consumables'
@@ -17,7 +18,11 @@ import { coinDrops } from './meta'
 import { modKill } from './mods'
 import { awardEgg, dropCoins, dropPickup, dropXp } from './pickups'
 import { bustDisguise, faintCandies, nightBossDown } from './halloween'
+import { faintNuts } from './hexNuts'
+import { trialHit } from './towerTrial'
 import { applyStatus, breakOnHit, hitTakenMult, STATUS_RULES, type StatusKind } from './status'
+import { venomJump, VENOM, VENOM_MOVE } from './seasonOneEggRules'
+import { toxicSpreads } from './regionalRules'
 import { bonusMult, drainAmount, drainRefill, executes, nearestFoes, SEED_DECAY, SEED_JUMPS, SEED_MIN_TIME, SEED_REACH } from './kitRules'
 import { guardHit, moveEvent, moveHit } from './moveHooks'
 import { fallInArena } from './riftArena'
@@ -34,8 +39,20 @@ import type { Attack, DamageSource, Enemy, Game, Player } from './types'
 import { playerWeatherBoost, weatherHere, weatherPower } from './weather'
 import { dropForEach, faint, winRun } from './coop'
 import { inPlay } from './players'
+import { lootSpot } from './terrain'
 import { knockOut, strikeAvatar, tickAvatar, wildDown } from './versusCombat'
+import { seasonKitBlocks, seasonKitHolds, seasonKitHurt, seasonKitKill } from './seasonOneKitSystem'
+import { kitBBlocks, kitBHurt, kitBKill } from './gaKitBSystem'
+import { kitMAHit } from './gaKitMASystem'
+import { kitSCHurt, kitSCKill } from './scKitSystem'
+import { kitHHurt, kitHKill } from './gaHookSystem'
+import { gaKitAHolds, gaKitAHurt, gaKitAKill, gaKitATaken } from './gaKitASystem'
+import { dropBossShards, stellarBurst, teraGuard, teraKill, teraPower } from './tera'
+import { fallInRaid, isRaidBoss, raidHarm, shieldTakes } from './teraRaid'
+import { TERA } from '../data/tera'
+import { rocketKitKill } from './rocketKitSystem'
 import * as dm from '../engine/dmath'
+import { tutorialHp } from './tutorial'
 
 const TEXT_COLORS = { super: '#ffd830', normal: '#ffffff', weak: '#a8a8b8', warded: '#88b8f8' } as const
 
@@ -47,14 +64,20 @@ export const damageEnemy = (g: Game, e: Enemy, attack: Attack) => {
   const eff = attack.sure ? Math.max(1, effectiveness(attack.type, e.types)) : effectiveness(attack.type, e.types)
   // Conditional bonuses (Hex), a mark and a freeze multiply the hit; without them it's exactly ×1.
   const base = attack.damage * (bonusMult(attack.bonus, e) * hitTakenMult(e.status) * phaseTaken(e))
-  const raw = Math.max(1, dm.round(base * eff * playerWeatherBoost(g, attack.type) * strikeBonus(g, e) * range(g.rng, 0.9, 1.1)))
-  // A Bronzong ward soaks the hit first, unless the move or the ability (Infiltrator) goes through wards.
-  const dmg = attack.sure || attack.ignoreWards || abilityImmune(g, 'wards') ? raw : absorb(e.trait, raw)
+  // Terastallized, the Tera type's moves hit harder (Stellar: each type's first hit, big).
+  const tera = teraPower(g, attack.type)
+  if (tera === TERA.stellarFirst) stellarBurst(g, e.x, e.y - e.radius)
+  const raw = Math.max(1, dm.round(base * eff * tera * playerWeatherBoost(g, attack.type) * strikeBonus(g, e) * range(g.rng, 0.9, 1.1)))
+  // A Bronzong ward soaks the hit first, unless the move or the ability (Infiltrator) goes through wards; a raid boss's Tera shield next (`shieldTakes`).
+  const dmg = shieldTakes(g, e, attack.sure || attack.ignoreWards || abilityImmune(g, 'wards') ? raw : absorb(e.trait, raw), eff, attack.type)
   // Mimikyu's Disguise takes the first big hit whole.
   if (disguiseTakes(e, dmg)) return bustDisguise(g, e)
+  // A first strike: the foe had all its HP (Bolt Beak's and Fishious Rend's hooks read it, `moveHit`).
+  const unhurt = e.hp >= e.maxHp
   e.hp -= dmg
   e.flash = 0.16
   g.player.damageByMove[attack.move] = (g.player.damageByMove[attack.move] ?? 0) + dmg
+  if (g.training !== null) trialHit(g)
   if (breakOnHit(e.status)) shatter(g, e, 'freeze')
 
   // Vines push sideways; everything else pushes away from the hitbox center.
@@ -79,8 +102,9 @@ export const damageEnemy = (g: Game, e: Enemy, attack: Attack) => {
   if (attack.drain > 0) drainHeal(g, dmg, attack.drain)
   if (attack.move !== 'special' && attack.move !== 'ability') {
     moveEvent(g, attack.move, 'hit')
-    moveHit(g, attack, e)
+    moveHit(g, attack, e, unhurt)
   }
+  kitMAHit(g, attack, e)
 
   if (e.hp > 0 && executes(attack.execute, e.hp, e.maxHp, e.boss)) {
     shatter(g, e, 'execute')
@@ -119,7 +143,7 @@ export const drainHeal = (g: Game, damage: number, fraction: number) => {
  */
 export const bumpDamage = (g: Game, e: Enemy, amount: number, move: DamageSource | null) => {
   if (e.behavior.kind === 'avatar') return tickAvatar(g, e, amount, move, TEXT_COLORS.normal)
-  const dmg = Math.max(1, dm.round(amount))
+  const dmg = shieldTakes(g, e, Math.max(1, dm.round(amount)), 1, null)
   e.hp -= dmg
   e.flash = 0.16
   if (move) g.player.damageByMove[move] = (g.player.damageByMove[move] ?? 0) + dmg
@@ -143,10 +167,21 @@ const spreadSeed = (g: Game, e: Enemy) => {
   }
 }
 
+/** A fainting foe poisoned by Corrosive Gas (`VENOM_MOVE`), or badly poisoned by Toxic (`toxicSpreads`), passes the poison on to its nearest neighbors, a little weaker, while it's strong enough (`venomJump`). */
+const spreadVenom = (g: Game, e: Enemy) => {
+  const poison = e.status.poison
+  const spec = venomJump(poison)
+  if (!spec) return
+  for (const o of nearestFoes(g.enemies, e, VENOM.jumps, VENOM.reach, (f) => f.status.poison.time > 0)) {
+    applyStatus(o.status, spec, 1, o.boss, poison.move, poison.by)
+    burst(g, o.x, o.y - o.radius, { colors: ['#c878f0', '#f0c0ff'], count: 5, speed: 60, ttl: 0.3 })
+  }
+}
+
 /** Damage-over-time tick: no knockback or hit sound, number in the status color. */
 export const dotDamage = (g: Game, e: Enemy, amount: number, move: DamageSource | null, kind: StatusKind) => {
   if (e.behavior.kind === 'avatar') return tickAvatar(g, e, amount, move, STATUS_RULES[kind].color)
-  const dmg = Math.max(1, dm.round(amount))
+  const dmg = shieldTakes(g, e, Math.max(1, dm.round(amount)), 1, null)
   e.hp -= dmg
   if (move) g.player.damageByMove[move] = (g.player.damageByMove[move] ?? 0) + dmg
   damageText(g, e, dmg, STATUS_RULES[kind].color)
@@ -162,17 +197,27 @@ export const killEnemy = (g: Game, e: Enemy, source?: DamageSource | null) => {
   }
   // A Versus match rewards with Energy and EXP for the team, nothing else (`wildDown`).
   if (g.versus) return wildDown(g, e)
+  // Hoopa's Rings: a ring's legend down opens the next ring (`rushDown`); nothing drops.
+  if (g.rush) return rushDown(g, e)
   if (e.status.seed.time > 0) spreadSeed(g, e)
+  if (e.status.poison.time > 0 && (e.status.poison.move === VENOM_MOVE || toxicSpreads(e.status.poison))) spreadVenom(g, e)
   e.dying = 0
   e.hp = 0
   g.kills++
   g.player.record.kills++
+  teraKill(g, e.boss)
   noteKill(g, e)
   if (source === 'special' || g.player.special.chaining) g.player.special.kills++
   countKill(g.tally, e, weatherHere(g), g.player.biome, g.outbreak)
   // Co-op: the killer's own count too, for their missions (`coopPayout`).
   if (g.coop !== null) countKill(g.player.record.tally, e, weatherHere(g), g.player.biome, g.outbreak)
   abilityKill(g, e)
+  seasonKitKill(g, e)
+  kitBKill(g, source)
+  kitSCKill(g)
+  gaKitAKill(g, e)
+  rocketKitKill(g, e)
+  kitHKill(g)
   const big = e.boss || e.shiny
   burst(g, e.x, e.y - e.radius, { colors: ['#ffffff', '#f8f8c8', '#c8d8f8'], count: big ? 60 : 8, speed: big ? 160 : 70, ttl: 0.45 })
   g.events.push({ kind: 'kill', boss: e.boss })
@@ -191,6 +236,7 @@ export const killEnemy = (g: Game, e: Enemy, source?: DamageSource | null) => {
   if (e.weight > 1) g.player.record.folded += e.weight - 1
   dropCoins(g, e.x, e.y, coinDrops(g.rng, e, g.endless !== null))
   faintCandies(g, e, odds)
+  faintNuts(g, e)
   if (e.shiny) dropPickup(g, e.x + 6, e.y, 'pokeball')
   if (e.alpha) {
     alphaDown(g, e)
@@ -204,11 +250,15 @@ export const killEnemy = (g: Game, e: Enemy, source?: DamageSource | null) => {
       g.events.push({ kind: 'legendBeaten', legend: e.kind, shiny: e.shiny })
     }
     nightBossDown(g, e)
+    // The loot lands where a player can walk to it, not over the water or the hole the boss flew over (`lootSpot`).
+    const at = lootSpot(g, e.x, e.y)
+    // A choice of two Tera Shards for each player (`tera.ts`); a raid pays its own type's (`teraRaid.ts`).
+    if (!isRaidBoss(g, e)) dropBossShards(g, at.x, at.y, e.types[0] ?? 'normal')
     // Co-op: a Poké Ball, the TM and an evolution item for each player (`dropForEach`); the egg is everyone's.
-    dropForEach(g, () => dropPickup(g, e.x, e.y, 'pokeball'))
-    awardEgg(g, bossEggSource(e.kind), e.x, e.y)
-    dropForEach(g, () => dropBossTm(g, e))
-    dropForEach(g, () => dropEvoItem(g, e.x + 10, e.y + 2))
+    dropForEach(g, () => dropPickup(g, at.x, at.y, 'pokeball'))
+    awardEgg(g, bossEggSource(e.kind), at.x, at.y)
+    dropForEach(g, () => dropBossTm(g, e, at.x, at.y))
+    dropForEach(g, () => dropEvoItem(g, at.x + 10, at.y + 2))
     if (g.bossId === e.id) g.bossId = null
     setScreenShake(g, 6, e)
     // A wave legendary's capture plays where it fell; Mewtwo's victory waits for it.
@@ -246,20 +296,24 @@ export const hurtPlayer = (
   by: HarmBy | null = null,
 ) => {
   const p = g.player
-  // The Dojo never hurts (`training.ts`).
-  if (p.iframes > 0 || p.hidden || isRepelled(g) || g.phase !== 'playing' || g.training !== null) return
+  // The Dojo never hurts (`training.ts`); the training run does, down to its floor (`tutorialHp`).
+  if (p.iframes > 0 || p.hidden || isRepelled(g) || g.phase !== 'playing' || (g.training !== null && g.training.tutorial === null)) return
   // Co-op: fainted, away, gone or mid-evolution players can't be hurt.
   if (g.coop !== null && !inPlay(p)) return
   if (p.guard) return guardHit(g, p.guard, from)
+  if (seasonKitBlocks(g) || kitBBlocks(g)) return
   if (from && blinded(g, from)) return
   const taken = abilityTakes(g, amount, types, hit, from)
   if (taken === null) return
   const mods = runMods(g)
   // Air Lock: the weather boosts no foe's hit.
   const weather = abilityImmune(g, 'weather') ? 1 : weatherPower(weatherHere(g), types)
-  const dmg = armored(taken * mods.enemyDamage * weather * domainHarm(g, from !== undefined) * p.stats.damageTaken, p.stats.armor)
+  // Terastallized, the player defends as its Tera type (`teraGuard`).
+  const dmg = armored(gaKitATaken(g, taken, types) * mods.enemyDamage * weather * teraGuard(g, types) * domainHarm(g, from !== undefined) * raidHarm(g, from !== undefined) * p.stats.damageTaken, p.stats.armor)
   p.hp -= dmg
+  if (g.training !== null) p.hp = tutorialHp(p.hp, p.stats.maxHp)
   p.record.taken += dmg
+  p.record.hits++
   noteHit(p, by ?? (from ? harmBy(from) : NO_ONE), hit, dmg)
   p.iframes = mods.iframes
   noteHarm(g, dmg)
@@ -270,6 +324,11 @@ export const hurtPlayer = (
   g.events.push({ kind: 'hurt' })
   abilityHurt(g)
   moveEvent(g, null, 'hurt')
+  seasonKitHurt(g, dmg)
+  kitBHurt(g)
+  kitSCHurt(g)
+  gaKitAHurt(g)
+  kitHHurt(g, from)
   // A small shove keeps the player from being body-blocked into a death spiral.
   if (from) {
     const away = dirTo(from.x, from.y, p.x, p.y)
@@ -282,8 +341,9 @@ export const hurtPlayer = (
   // (in co-op once the last one standing falls; until then they faint).
   if (g.rift.arena && (g.coop === null || !teammateStanding(g))) return fallInArena(g)
   if (g.place.inside && (g.coop === null || !teammateStanding(g))) return fallInPlace(g)
+  if (g.raid.arena && (g.coop === null || !teammateStanding(g))) return fallInRaid(g)
   // Sturdy holds before a Max Revive (the Bag's), which goes before a held Revive.
-  if (!abilityHolds(g) && !tryMaxRevive(g) && !tryRevive(g)) {
+  if (!seasonKitHolds(g) && !gaKitAHolds(g) && !abilityHolds(g) && !tryMaxRevive(g) && !tryRevive(g)) {
     // Versus: knocked out until the respawn, by nobody (the wild, a boss's shot).
     if (p.versus) return knockOut(g, p, -1)
     if (g.coop !== null) return faint(g, from?.kind ?? null, hit)

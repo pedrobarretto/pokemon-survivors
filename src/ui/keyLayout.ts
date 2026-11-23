@@ -28,7 +28,7 @@ const SHOWABLE = /^(?:\p{Script=Latin}|[^\p{L}\s])$/u
 /**
  * The label a layout prints on a key, or null to name it by its code. Digits
  * stay digits (AZERTY's need Shift, but the 1 is still printed there), and
- * capitals lose their accents (Press Start 2P has none).
+ * capitals lose their accents, as key caps print them.
  */
 export const printedOn = (layout: KeyLayout, code: string): string | null => {
   const key = code.startsWith('Digit') ? undefined : layout.get(code)

@@ -33,9 +33,11 @@ import {
   type MoveShelf,
   type TrainingForm,
 } from '../game/training'
-import { formAfter, innateAbility } from '../game/legend'
+import { formAfter } from '../game/legend'
+import { innateText } from './innateText'
+import type { PathFormId } from '../data/legendPaths'
 import { MEGAS } from '../data/megas'
-import { isFinalStage, runMegas } from '../game/mega'
+import { atMegaBase, runMegas } from '../game/mega'
 import { megaIcon } from '../render/megaFx'
 import { formLocked } from '../game/communityGoal'
 import { AWAKEN_AT, isLegend, LEGENDS } from '../data/legends'
@@ -76,6 +78,8 @@ export type TrainingActions = {
   clear: (() => void) | null
   /** Leaves the Dojo, back to the lobby. */
   leave: () => void
+  /** Opens Machoke's Torre (`ui/legendPaths.ts`), whose trials play here. */
+  tower: () => void
   /** Where the player should stand on screen: the middle of the field the panel leaves open, from the screen's center (CSS px). */
   lens: (x: number, y: number) => void
 }
@@ -94,11 +98,12 @@ const sourceView = (g: Game, source: DamageSource) => {
 const whole = (n: number) => formatNumber(Math.round(n))
 
 /** A form's portrait and name: a legend's awakened form where it has one (and the community goal opened it), else the line's stage. */
-const lookOf = (starter: PlayableId, shiny: boolean, f: TrainingForm) => {
+const lookOf = (starter: PlayableId, shiny: boolean, f: TrainingForm, forms: readonly PathFormId[]) => {
   if (isLegend(starter)) {
     const own = LEGENDS[starter].line[0]
-    const form = formAfter(starter, f.awakened)
-    return form && !formLocked(form) ? { src: formPortraitUrl(own.dex, form.key), name: form.name } : { src: portraitUrl(own.dex, shiny), name: own.name }
+    const form = formAfter(starter, f.awakened, forms)
+    if (!form || formLocked(form)) return { src: portraitUrl(own.dex, shiny), name: own.name }
+    return { src: form.key ? formPortraitUrl(form.dex, form.key) : portraitUrl(form.dex, shiny), name: form.name }
   }
   const form = formAt(starter, f.branch, f.stage)
   return { src: portraitUrl(form.dex, shiny), name: form.name }
@@ -274,7 +279,7 @@ export const trainingPanel = (root: HTMLElement, g: Game, actions: TrainingActio
   const formTab = (): Part[] => {
     const p = me()
     const forms = trainingForms(p.starter).map((f) => {
-      const look = lookOf(p.starter, p.shiny, f)
+      const look = lookOf(p.starter, p.shiny, f, p.legend?.forms ?? [])
       const on = p.stage === f.stage && (f.branch === null || p.branch === f.branch) && (p.legend?.awakened ?? 0) === f.awakened
       return h(
         'button',
@@ -286,7 +291,7 @@ export const trainingPanel = (root: HTMLElement, g: Game, actions: TrainingActio
       )
     })
     const set = abilitySet(p.starter, p.branch)
-    const innate = innateAbility(p.starter)
+    const innate = isLegend(p.starter) ? innateText(t(), p.starter) : null
     const abilities =
       p.legend?.awakened === 0
         ? [h('p', { class: 'dojo-empty' }, m().abilityAwaken)]
@@ -320,14 +325,15 @@ export const trainingPanel = (root: HTMLElement, g: Game, actions: TrainingActio
           ),
         ),
       ),
-      p.mega.stone !== null && h('p', { class: 'dojo-row-note' }, rich(isFinalStage(p.starter, p.stage) ? m().megaReady : m().megaLocked)),
+      p.mega.stone !== null && h('p', { class: 'dojo-row-note' }, rich(atMegaBase(p) ? m().megaReady : m().megaLocked)),
     ]
     return [
       h('h3', { class: 'dojo-label' }, m().form),
       h('div', { class: 'dojo-forms' }, ...forms),
       h('h3', { class: 'dojo-label' }, m().ability),
       // A legend's innate is always on, besides the ability picked.
-      innate && h('p', { class: 'dojo-innate' }, h('img', { src: abilityIcon(innate), alt: '' }), `${t().legend.innate}: ${ABILITIES[innate].name}`),
+      innate && h('p', { class: 'dojo-innate' }, h('img', { src: abilityIcon(innate.ability), alt: '' }), `${t().legend.innate}: ${innate.name}`),
+      innate && h('p', { class: 'dojo-row-note' }, innate.text),
       h('div', { class: 'dojo-chips' }, ...abilities),
       ability && h('p', { class: 'dojo-row-note' }, t().abilities[ability]),
       ...mega,
@@ -386,13 +392,13 @@ export const trainingPanel = (root: HTMLElement, g: Game, actions: TrainingActio
     meterEl,
     h('div', { class: 'shop-tabs dojo-tabs' }, ...tabButtons),
     body,
-    h('div', { class: 'dojo-actions' }, saveBtn, clearBtn, h('button', { class: 'btn dojo-leave', type: 'button', onclick: () => actions.leave() }, m().leave)),
+    h('div', { class: 'dojo-actions' }, saveBtn, clearBtn, h('button', { class: 'btn dojo-tower', type: 'button', onclick: () => actions.tower() }, t().paths.names.kubfu), h('button', { class: 'btn dojo-leave', type: 'button', onclick: () => actions.leave() }, m().leave)),
   )
 
   /** Rebuilds the panel around what the player carries now (the meter keeps going). */
   function render() {
     const p = me()
-    const look = lookOf(p.starter, p.shiny, { stage: p.stage, branch: p.branch, awakened: p.legend?.awakened ?? 0 })
+    const look = lookOf(p.starter, p.shiny, { stage: p.stage, branch: p.branch, awakened: p.legend?.awakened ?? 0 }, p.legend?.forms ?? [])
     head.replaceChildren(h('img', { src: look.src, alt: '' }), h('b', {}, look.name), h('small', {}, m().title))
     TABS.forEach((k, i) => tabButtons[i]!.classList.toggle('on', k === tab))
     const scroll = body.scrollTop

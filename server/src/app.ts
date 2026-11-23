@@ -10,7 +10,7 @@ import { challengeOpen } from '../../src/game/challenge'
 import { cosmeticPrice, isCosmeticId } from '../../src/data/cosmetics'
 import { parseTeamSize } from '../../src/game/coopBoard'
 import { parseDonation } from '../../src/data/donations'
-import { GEM_PACKS, isGemPackId, packGems, type GemCurrency } from '../../src/data/gems'
+import { isGemMarket, isGemPackId, packGemsOn, packPrice, type GemMarket } from '../../src/data/gems'
 import { isPollOptionOf, type PollKind } from '../../src/data/supporters'
 import { brasiliaDay, isDayKey } from '../../src/game/day'
 import { parseDonationAmount } from '../../src/game/festival'
@@ -20,12 +20,14 @@ import { isDifficulty } from '../../src/game/difficulty'
 import { halloweenAt } from '../../src/game/halloween'
 import { parseHandlePrefix, parsePresenceUpdate, parseRoomCode } from '../../src/game/friends'
 import { parseSaveData } from '../../src/game/meta'
+import { pushBuild } from '../../src/game/sync'
 import { outbreakAt } from '../../src/game/outbreak'
+import { ultraAt } from '../../src/game/ultraWeek'
 import { isRecord } from '../../src/game/parse'
 import type { LooksResponse } from '../../src/net/looks'
-import type { GameClaimed, RealmCities, RealmFriends, RealmMe, RealmSettings } from '../../src/net/realmApi'
+import type { ClawInserted as ClawInsertedBody, ClawState, CornerRedeemed, CornerSpun, CornerState, CornerSwept, DigStarted as DigStartedBody, DigState, ErrandClaimed, GameClaimed, RealmBook, RealmCities, RealmFriends, RealmMe, RealmSettings, SafariActed, SafariStarted as SafariStartedBody, SafariState } from '../../src/net/realmApi'
 import { coinsFor, isMinigameId } from '../../src/data/minigames'
-import type { IdentityRequest } from '../../src/net/realmRelay'
+import type { DeedsAnswer, IdentityRequest } from '../../src/net/realmRelay'
 import { parseRealmModeration } from '../../src/realm/moderation'
 import { isGameBoardPeriod, type GameBoard } from '../../src/realm/boards'
 import { isBoardPeriod, isPlayable, isRunMode, parseDisplayName, parseHandle, parseRunResult } from '../../src/game/ranking'
@@ -38,11 +40,10 @@ import type { AdminStore } from './admin'
 import { ARENA_PAGES, parseAbandonedReport, parseArenaReport, shownSeason, verifyArenaSignature, type ArenaStore } from './arena'
 import type { Verify } from './auth'
 import type { BugReports } from './bugReports'
-import { coopListing, parseCoopReport, type CoopBoardStore } from './coopBoards'
+import { coopListing, legendsVouched, parseCoopReport, type CoopBoardStore } from './coopBoards'
 import type { SaveStore } from './db'
 import type { DiscordLink } from './discordLink'
 import type { Report, TellRevenue } from './errors'
-import type { Donate, GemPix } from './donations'
 import type { CandyGoalStore } from './candyGoal'
 import type { DonateError, FestivalStore } from './festival'
 import type { FriendStore } from './friends'
@@ -52,12 +53,19 @@ import type { ModerationStore } from './moderation'
 import type { PatreonOAuth } from './patreon'
 import type { Revenue } from './revenue'
 import type { RankingStore } from './ranking'
+import { parseClawDrop, parseClawInsert, type ClawRefusal, type ClawStore } from './claw'
+import { parseCornerBank, parseCornerBuy, parseCornerFlip, parseCornerRedeem, parseCornerSpin, type CornerRefusal, type CornerStore } from './corner'
+import { parseSafariAct, parseSafariStart, type SafariRefusal, type SafariStore } from './safari'
+import { parseDigHit, parseDigStart, parseDigStop, type DigRefusal, type DigStore } from './dig'
+import { parseDeedsReport, parseErrandClaim } from './realmDeeds'
 import { furniturePrice, IDENTITY_BATCH, parseBaseSave, parseFurnitureBuy, parseGameClaim, parsePresenceReport, parseRealmReport, parseRealmSettings, type BuyError, type RealmStore } from './realm'
 import { checkoutLocale, type StripeCheckout } from './stripe'
+import type { StripeDonate } from './stripeDonations'
+import { rateLimiter } from './rateLimit'
 import { rulesVerdict } from './rulesGrace'
 import type { SupporterStore } from './supporters'
 import { SUGGESTION_ID, type SuggestionStore } from './suggestions'
-import { abacateDonation, abacateGems, ABACATE_GEMS_REF, ABACATE_REF, patreonCharge, patreonMember, stripeDonation, stripeGems, verifyAbacate, verifyPatreon, verifyStandard, verifyStripe } from './webhooks'
+import { abacateDonation, abacateGems, patreonCharge, patreonMember, stripeDonation, stripeGems, verifyAbacate, verifyPatreon, verifyStandard, verifyStripe } from './webhooks'
 
 export type AppDeps = {
   store: SaveStore
@@ -66,13 +74,13 @@ export type AppDeps = {
   friends: FriendStore
   gifts: Pick<GiftStore, 'inbox' | 'claim' | 'refer' | 'credit' | 'invites'>
   verify: Verify
-  /** Donation checkouts (AbacatePay), null when the server has no key for them. */
-  donate: Donate | null
+  /** Donation checkouts (Stripe Checkout, in reais), null when the server has no key for them. */
+  donate: StripeDonate | null
   supporters: SupporterStore
   /** Gems: the ledger, packs bought with money, cosmetics bought with gems and the equipped Arena look. */
   gems: Pick<GemStore, 'status' | 'ledger' | 'purchase' | 'buy' | 'buyBundle' | 'setLook' | 'looks' | 'open' | 'opened' | 'event' | 'takeCheckout' | 'takeBuy' | 'takeLook'>
-  /** Gem pack checkouts: `card` Stripe Checkout, `pix` AbacatePay; null when the server has no key for one (it answers 503). */
-  gemCheckout: { card: StripeCheckout | null; pix: GemPix | null }
+  /** Gem pack checkouts (Stripe Checkout); null when the server has no Stripe key (it answers 503). */
+  gemCheckout: StripeCheckout | null
   /** Festival da Praça: the pot, donations from the stored save and the plaque. */
   festival: Pick<FestivalStore, 'status' | 'donate' | 'setPublic' | 'takeDonate' | 'takeToggle' | 'held' | 'review'>
   /** Meta da comunidade: every account's candy jar summed, toward the goal that opens Mega Darkrai. */
@@ -94,8 +102,14 @@ export type AppDeps = {
   /** The Poké Realm: identities, visits and presence for the relay; bases, furniture and reports for the game; bans for the admin. */
   realm: Pick<
     RealmStore,
-    'identity' | 'visit' | 'presence' | 'cities' | 'friends' | 'settings' | 'takeFriends' | 'takeSettings' | 'me' | 'base' | 'save' | 'list' | 'like' | 'buy' | 'claim' | 'board' | 'report' | 'desk' | 'act' | 'closed' | 'takeSave' | 'takeLike' | 'takeBuy' | 'takeGame'
+    'identity' | 'visit' | 'presence' | 'cities' | 'friends' | 'settings' | 'takeFriends' | 'takeSettings' | 'me' | 'base' | 'save' | 'list' | 'like' | 'buy' | 'claim' | 'deeds' | 'book' | 'claimErrand' | 'takeErrand' | 'board' | 'report' | 'desk' | 'act' | 'closed' | 'takeSave' | 'takeLike' | 'takeBuy' | 'takeGame'
   >
+  /** The Máquina de Pelúcias: charges credits and decides drops. */
+  claw: Pick<ClawStore, 'state' | 'insert' | 'drop' | 'take'>
+  safari: Pick<SafariStore, 'state' | 'start' | 'act' | 'take'>
+  dig: Pick<DigStore, 'state' | 'start' | 'hit' | 'stop' | 'take'>
+  /** The Rocket Game Corner: tokens, spins, Koffing Sweep boards and the prize counter. */
+  corner: Pick<CornerStore, 'state' | 'buy' | 'spin' | 'deal' | 'flip' | 'bank' | 'redeem' | 'take'>
   /** The secret the relay signs Arena and co-op reports and ticket lookups with; unset, those routes answer 503. */
   arenaReportSecret: string | undefined
   /** Linking a Patreon account (its OAuth client), null when the server has none. */
@@ -121,7 +135,7 @@ const SITE = 'https://www.pokemonsurvivors.com'
 /** A same-site path to come back to (`/apoie/`, `/en/support/`). */
 const SITE_PATH = /^\/[a-z0-9/-]{0,40}$/
 
-/** A donation's `ref`: our uuid (AbacatePay) or a Stripe Checkout Session id. */
+/** A donation's `ref`: our uuid (`POST /donations`) or a Stripe Payment Link's Checkout Session id (from before). */
 const DONATION_REF = /^(?:[0-9a-f-]{36}|cs_(?:test|live)_[A-Za-z0-9]{10,200})$/
 
 /**
@@ -143,6 +157,9 @@ const REPORT_ERRORS = { self: 400, limit: 429 } as const
 
 /** What inviting a friend answers when it doesn't go, by `Invited`'s error. */
 const INVITE_ERRORS = { notFriend: 404, limit: 429 } as const
+
+/** Donation checkouts an address may open: enough to change one's mind a few times, not to script sessions. */
+const DONATION_LIMIT = { count: 10, windowMs: 10 * 60_000 } as const
 
 /** What a festival donation answers when it's refused, by `DonateError`. */
 const DONATE_ERRORS = { closed: 409, profile: 403, runs: 403, cap: 409, funds: 409, nosave: 409, stale: 409 } as const satisfies Record<DonateError, number>
@@ -181,9 +198,11 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  *
  * - `GET /health`: 200 while the database answers, else 503.
  * - `GET /save` (auth): the stored save and its revision, 404 before the first push.
- * - `PUT /save` (auth) `{ save, base }`: pushes the device's save on top of
- *   revision `base` (null if it never synced). Returns `{ save, revision, merged }`,
- *   what is stored now, for the device to keep (see `applyPush`).
+ * - `PUT /save` (auth) `{ save, base, build? }`: pushes the device's save on top of
+ *   revision `base` (null if it never synced) from game build `build` (its commit's
+ *   time in Unix seconds; older games send none, and a time ahead of the API's clock
+ *   is dropped). Returns `{ save, revision, merged }`, what is stored now, for the
+ *   device to keep (see `applyPush`: a build older than the one that stored the save merges).
  * - `GET /me` (auth): `{ profile }`, the player's handle and name, null before they pick them.
  * - `PUT /me` (auth) `{ handle, name }`: sets them. 409 `{ suggestion }` when the handle is taken.
  * - `POST /runs` (auth) `{ challenge? }`: `{ token, seed, rules }` for the player's next run: the start
@@ -236,10 +255,11 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  * - `POST /referral` (auth) `{ ref }`: the inviter's handle a new account came with. `{ referred }`:
  *   whether it counted (only a new account, never oneself: `canRefer`).
  * - `GET /invites` (auth): `{ friends }` (`InvitedFriend[]`), who signed up with the player's link, newest first.
- * - `POST /donations` `{ amount, page, handle? }`: `{ url }`, an AbacatePay checkout (Pix or a
- *   Brazilian card) for `amount` whole reais (`parseDonation`), for the account of `handle`
- *   (400 when nobody has it). The donor comes back to `page` on the site, with
- *   `?thanks=<ref>` once paid. 503 without an AbacatePay key.
+ * - `POST /donations` `{ amount, page, handle?, locale? }`: `{ url }`, a Stripe Checkout (Pix and cards in reais,
+ *   the donor's own currency abroad by Adaptive Pricing) for `amount` whole reais (`parseDonation`), for the
+ *   account of `handle` (400 when nobody has it), in `locale`'s language. The donor comes back to `page` on the
+ *   site, with `?thanks=<ref>` once paid. 429 past `DONATION_LIMIT` an address, 503 without a Stripe key.
+ *   Donations of AbacatePay checkouts opened before still land through its webhook.
  * - `GET /donations/:ref`: `DonationStatus`, for the thank-you page (404 until the payment is known).
  * - `POST /donations/redeem` (auth) `{ code }`: credits a donation's code to the player. `{ tier }`;
  *   404 for an unknown code, 409 for one already used.
@@ -258,9 +278,11 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  *   negative, `lockedCosmetics`; the look leaves them out). `GET /gems/ledger` (auth): the latest 50 `GemLedgerEntry`, newest first.
  * - `GET /gems/purchase/:ref` (auth): `GemPurchaseResponse` `{ status, gems, balance }`, where the account's own pack `ref` (the
  *   checkout's `?gems=<ref>`) stands; 404 for anyone else's or an unknown one.
- * - `POST /gems/checkout` (auth) `{ pack, method, currency }`: `{ url }`, a checkout for a gem pack: `card` Stripe Checkout in
- *   `currency`, `pix` AbacatePay in reais (whatever `currency` says). Paid, it comes back to the game with `?gems=<ref>`, and
- *   the webhook credits the pack. 400 invalid, 429 past the checkout limit, 503 without the method's key.
+ * - `POST /gems/checkout` (auth) `{ pack, market, locale? }`: `{ url }`, a Stripe Checkout for a gem pack, in reais at
+ *   `market`'s price (`br` Brazil's, `intl` everyone else's, which Stripe shows in the buyer's currency); a page from before
+ *   2026-11-20 sends `{ method, currency }` instead (`brl` or Pix as `br`). Paid, it comes back to the game with
+ *   `?gems=<ref>`; given up, with `?gems=<ref>&cancel=<pack>`; the webhook credits the pack. 400 invalid, 409 refused
+ *   (`once`, `cap`), 429 past the checkout limit, 503 without the Stripe key.
  * - `POST /gems/buy` (auth) `{ id }`: buys a cosmetic. `{ balance, owned, locked }`; 402 `{ error: 'gems' }` short (or negative),
  *   409 owned already (a free one too), 404 unknown or not on sale. The debit and the ownership land together, once.
  * - `POST /gems/bundle` (auth) `{ id }`: buys a skin bundle (`SKIN_BUNDLES`): the skins the account lacks, for what they cost
@@ -314,7 +336,8 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  * - `POST /arena/report` (relay, signed: `x-arena-signature`) `ArenaReport`: a finished match, once per (room, run); an abandoned one (`abandoned: true`) only moves Fair Play.
  *   `ArenaReportResponse`; a retry gets the stored match with `duplicate`. 400 invalid, 401 bad signature, 503 without `ARENA_REPORT_SECRET`.
  * - `POST /arena/tickets` (relay, signed) `{ userIds }`: `ArenaTicketsResponse`, each player's current-season MMR, RP and games, and their Fair Play.
- * - `POST /looks` (relay, signed) `{ userIds }`: `LooksResponse`, each account's vouched look (a room, co-op or Arena, asks as its run starts).
+ * - `POST /looks` (relay, signed) `{ userIds }`: `LooksResponse`, each account's vouched look and captured legends (from its stored
+ *   save, for a co-op room's Legend mode); a room, co-op or Arena, asks as its run starts.
  * - `POST /arena/practice` (auth) `ArenaPracticeRequest`: a quick match against bots, for history and totals only.
  *   201 `{ match }` (200 `{ duplicate: true }` for a retried `key`), 400 invalid or a bot's slot, 429 past the hourly limit.
  * - `GET /arena/me` (auth): `ArenaProfile`. `GET /arena/history?before=<ms>&limit=` (auth): `ArenaHistoryEntry[]`, newest first.
@@ -322,21 +345,23 @@ const CHUNK_ERRORS = { unknown: 404, replaced: 409, committed: 409, gap: 409, cl
  * - `POST /coop/report` (relay, signed like `/arena/report`) `CoopReport`: a finished co-op run, once per (room, run, endedAt).
  *   `CoopReportResponse`: the stored run (a retry gets it with `duplicate`), or `run: null` (200) when it doesn't list
  *   (`coopListing`: a guest seat, a single player, under 2 votes, a result that doesn't parse, a challenge off its day or
- *   difficulty). 400 malformed or ended in the future, 401 bad signature, 503 without `ARENA_REPORT_SECRET`.
- * - `GET /coop/boards/:difficulty?size=duo|trio|squad&period=day|week|all&friends=1`: `CoopBoard`, the top teams (best run
- *   each; challenge runs stay off it) and with a token the asker's best team (`me`). `size` 2 to 4 or its key (duo when
- *   left out), `period` all when left out, `friends` (needs a token) only teams with the asker or someone they follow.
+ *   difficulty, a Legend run with a seat that isn't a legend or on a challenge). 400 malformed or ended in the future, 401 bad signature, 503 without `ARENA_REPORT_SECRET`.
+ * - `GET /coop/boards/:difficulty?size=duo|trio|squad&period=day|week|all&friends=1&mode=standard|legend`: `CoopBoard`, the top
+ *   teams (best run each; challenge runs stay off it) and with a token the asker's best team (`me`). `size` 2 to 4 or its key
+ *   (duo when left out), `period` all when left out, `friends` (needs a token) only teams with the asker or someone they follow,
+ *   `mode=legend` the co-op Legend runs' side (the Lendário boards), the regular side without it.
  * - `GET /coop/challenge/:day?size=&friends=1`: `CoopChallengeBoard`, the day's Desafio co-op board for that size.
  * - The Poké Realm (`src/realm.ts`): the game's routes as `src/net/realmApi.ts` lists them (`/realm/me`, `/realm/cities`,
- *   `/realm/friends`, `/realm/settings`, `/realm/base…`, `/realm/bases`, `/realm/furniture/buy`, `/realm/game/claim`, `/realm/boards/:game`, `/realm/report`), and the relay's, signed like
- *   `/looks`, as `src/net/realmRelay.ts` lists them (`/realm/identity`, `/realm/visit`, `/realm/presence`). A realm-banned
+ *   `/realm/friends`, `/realm/settings`, `/realm/base…`, `/realm/bases`, `/realm/furniture/buy`, `/realm/game/claim`, `/realm/claw…`, `/realm/corner…`, `/realm/safari…`, `/realm/dig…`, `/realm/boards/:game`, `/realm/report`, `/realm/book`, `/realm/errands/claim`), and the relay's, signed like
+ *   `/looks`, as `src/net/realmRelay.ts` lists them (`/realm/identity`, `/realm/visit`, `/realm/presence`, `/realm/deeds`). A realm-banned
  *   account's realm writes get 403 `{ error: 'banned' }`. The desk's `GET /admin/realm`: `RealmDesk` (open realm reports
  *   by trainer, bans in force); `POST /admin/realm/moderation` (`parseRealmModeration`) `{ userId, action, days?, reason? }`:
  *   `ban` (days, or for good), `unban`, `dismiss`, resolving their realm reports. `{ resolved }`, 404 for an unknown player.
  */
-export const createApp = ({ store, ranking, friends, gifts, verify, donate, supporters, gems, gemCheckout, festival, candyGoal, suggestions, bugReports, discord, admin, moderation, arena, coop, realm, arenaReportSecret, patreon, webhooks, allowedOrigin, ping, report, revenue = () => {} }: AppDeps) => {
+export const createApp = ({ store, ranking, friends, gifts, verify, donate, supporters, gems, gemCheckout, festival, candyGoal, suggestions, bugReports, discord, admin, moderation, arena, coop, realm, claw, safari, dig, corner, arenaReportSecret, patreon, webhooks, allowedOrigin, ping, report, revenue = () => {} }: AppDeps) => {
   // `userId` is set by `auth` or `maybeAuth` on the routes that ask who's calling; `onError` reports it.
   const app = new Hono<MaybeAuth>()
+  const donations = rateLimiter(DONATION_LIMIT.count, DONATION_LIMIT.windowMs)
 
   app.use(logger())
   app.use(cors({ origin: (origin) => (allowedOrigin(origin) ? origin : null), allowMethods: ['GET', 'PUT', 'POST', 'DELETE'], allowHeaders: ['Authorization', 'Content-Type'], maxAge: 86400 }))
@@ -377,7 +402,7 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     const body = await json(c)
     if (!isRecord(body) || !isRecord(body.save)) return c.json({ error: 'expected { save, base }' }, 400)
     const base = typeof body.base === 'number' && Number.isInteger(body.base) ? body.base : null
-    return c.json(await store.push(c.var.userId, { save: parseSaveData(body.save), base }))
+    return c.json(await store.push(c.var.userId, { save: parseSaveData(body.save), base, build: pushBuild(body.build, Date.now()) }))
   })
 
   app.get('/me', auth, async (c) => c.json({ profile: await ranking.profileName(c.var.userId) }))
@@ -397,9 +422,9 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     const challenge = isRecord(body) && body.challenge !== undefined ? body.challenge : null
     if (challenge !== null && (!isDayKey(challenge) || !challengeOpen(challenge, new Date()))) return c.json({ error: 'not an open challenge' }, 400)
     const started = await ranking.startRun(c.var.userId, challenge)
-    // The day by this clock (the one `outbreakFits` and `halloweenFits` check against): its outbreak and whether it's haunted, so a wrong device clock can't play another day's.
+    // The day by this clock (the one `outbreakFits`, `halloweenFits` and `ultraFits` check against): its outbreak, whether it's haunted and the week's Ultra Beast, so a wrong device clock can't play another day's.
     const now = new Date()
-    return started ? c.json({ ...started, outbreak: outbreakAt(now), halloween: halloweenAt(now), rules: RULES_VERSION }, 201) : c.json({ error: 'too many runs' }, 429)
+    return started ? c.json({ ...started, outbreak: outbreakAt(now), halloween: halloweenAt(now), ultra: ultraAt(now), rules: RULES_VERSION }, 201) : c.json({ error: 'too many runs' }, 429)
   })
 
   app.post('/runs/:token/start', auth, async (c) => {
@@ -437,7 +462,8 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     if (verdict === 'grace') console.log(`run ${token}: taken under the previous rules (${replay.rules})`)
     void gifts.credit(c.var.userId).catch((err) => console.error('invite credit failed', err))
     const challenge = finished.challenge ? await ranking.challengePlace(c.var.userId, finished.challenge, finished.official === true) : null
-    return c.json({ ranks: finished.ranks, challenge, listed: finished.listed })
+    // `gems` only when the report brought some (an older client ignores it): the results' gem line.
+    return c.json({ ranks: finished.ranks, challenge, listed: finished.listed, ...(finished.gems && { gems: finished.gems }) })
   })
 
   app.get('/boards/:difficulty', maybeAuth, async (c) => {
@@ -464,9 +490,10 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     const size = parseTeamSize(c.req.query('size') ?? 'duo')
     const period = c.req.query('period') ?? 'all'
     const friends = c.req.query('friends') === '1'
-    if (!isDifficulty(difficulty) || size === null || !isBoardPeriod(period)) return c.json({ error: 'unknown board' }, 400)
+    const mode = c.req.query('mode') ?? 'standard'
+    if (!isDifficulty(difficulty) || size === null || !isBoardPeriod(period) || !isRunMode(mode)) return c.json({ error: 'unknown board' }, 400)
     if (friends && !c.var.userId) return c.json({ error: 'unauthorized' }, 401)
-    return c.json(await coop.board({ size, difficulty, period, friends, viewer: c.var.userId }))
+    return c.json(await coop.board({ mode, size, difficulty, period, friends, viewer: c.var.userId }))
   })
 
   app.get('/coop/challenge/:day', maybeAuth, async (c) => {
@@ -569,12 +596,14 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     const typed = isRecord(body) && typeof body.handle === 'string' ? body.handle.trim() : ''
     const handle = typed ? parseHandle(typed) : null
     if (typed && !handle) return c.json({ error: 'no such player' }, 400)
+    if (!donations.take([clientIp(c.req.header('X-Real-IP'), c.req.header('X-Forwarded-For'))], Date.now())) return c.json({ error: 'too many checkouts' }, 429)
     const origin = c.req.header('Origin')
     const base = origin && allowedOrigin(origin) ? origin : SITE
     const page = isRecord(body) && typeof body.page === 'string' && SITE_PATH.test(body.page) ? body.page : '/'
+    const locale = (isRecord(body) ? checkoutLocale(body.locale) : null) ?? 'pt'
     const ref = crypto.randomUUID()
-    if (!(await supporters.open(ref, handle))) return c.json({ error: 'no such player' }, 400)
-    const url = await donate(amount, { completionUrl: `${base}${page}?thanks=${ref}`, returnUrl: `${base}${page}` }, `${ABACATE_REF}${ref}`)
+    if (!(await supporters.open(ref, handle, 'stripe'))) return c.json({ error: 'no such player' }, 400)
+    const url = await donate({ ref, amount, handle, locale, successUrl: `${base}${page}?thanks=${ref}`, cancelUrl: `${base}${page}` })
     return c.json({ url })
   })
 
@@ -605,25 +634,32 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
   app.post('/gems/checkout', auth, smallBody, async (c) => {
     const body = await json(c)
     const pack = isRecord(body) && isGemPackId(body.pack) ? body.pack : null
-    const method = isRecord(body) && (body.method === 'card' || body.method === 'pix') ? body.method : null
-    const asked: GemCurrency | null = isRecord(body) && (body.currency === 'brl' || body.currency === 'usd') ? body.currency : null
-    if (!pack || !method || !asked) return c.json({ error: 'expected { pack, method, currency }' }, 400)
+    // Pages from before one price list per market sent a method and a currency: reais (or Pix, reais only) were Brazil's.
+    const legacy = isRecord(body) && (body.currency === 'brl' || body.method === 'pix') ? 'br' : isRecord(body) && body.currency === 'usd' ? 'intl' : null
+    const market: GemMarket | null = isRecord(body) && isGemMarket(body.market) ? body.market : legacy
+    if (!pack || !market) return c.json({ error: 'expected { pack, market }' }, 400)
     const locale = isRecord(body) ? checkoutLocale(body.locale) : null
-    // Pix is reais only.
-    const currency = method === 'pix' ? 'brl' : asked
-    const card = method === 'card' ? gemCheckout.card : null
-    const pix = method === 'pix' ? gemCheckout.pix : null
-    if (!card && !pix) return c.json({ error: `${method} is off` }, 503)
+    if (!gemCheckout) return c.json({ error: 'checkout is off' }, 503)
     if (!gems.takeCheckout(c.var.userId)) return c.json({ error: 'too many checkouts' }, 429)
     const origin = c.req.header('Origin')
     const base = origin && allowedOrigin(origin) ? origin : SITE
     const ref = crypto.randomUUID()
-    const back = `${base}/?gems=${ref}`
+    // The pack's gems as the Loja shows them today (a promotion's included): stored now, so a checkout paid after the window still brings them.
+    const packGems = packGemsOn(pack, brasiliaDay(new Date()))
     // A once pack bought already, or past the day's limit: 409 with why (`GemCheckoutRefusal`), before any payment opens.
-    const refused = await gems.open({ ref, userId: c.var.userId, pack, gems: packGems(pack), provider: card ? 'stripe' : 'abacatepay', currency, amount: GEM_PACKS[pack][currency] })
+    const refused = await gems.open({ ref, userId: c.var.userId, pack, gems: packGems, provider: 'stripe', market, amount: packPrice(pack, market) })
     if (refused) return c.json({ error: refused }, 409)
-    if (pix) return c.json({ url: await pix(pack, { completionUrl: back, returnUrl: `${base}/` }, `${ABACATE_GEMS_REF}${ref}`) })
-    const opened = await card!({ ref, userId: c.var.userId, pack, currency, locale: locale ?? (currency === 'brl' ? 'pt' : 'en'), successUrl: back, cancelUrl: `${base}/` })
+    const opened = await gemCheckout({
+      ref,
+      userId: c.var.userId,
+      pack,
+      gems: packGems,
+      market,
+      locale: locale ?? (market === 'br' ? 'pt' : 'en'),
+      successUrl: `${base}/?gems=${ref}`,
+      // Given up (Stripe's back link): the Boutique's "Não deu certo?" sheet, which offers the same pack again.
+      cancelUrl: `${base}/?gems=${ref}&cancel=${pack}`,
+    })
     await gems.opened(ref, opened.session)
     return c.json({ url: opened.url })
   })
@@ -893,7 +929,9 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     if (!r || r.endedAt > Date.now() + ARENA_CLOCK_SKEW_MS) return c.json({ error: 'invalid report' }, 400)
     // A run that doesn't list is still taken (200), so the relay's outbox lets it go.
     const listing = coopListing(r)
-    return c.json(listing ? await coop.report(r, listing) : { run: null, duplicate: false })
+    // A Legend run lists only when every seat's legend is one its account captured (the stored save's, not the relay's word alone).
+    const vouched = listing !== null && (!listing.result.legend || legendsVouched(listing, await store.capturedLegends(listing.members.map((m) => m.userId))))
+    return c.json(listing && vouched ? await coop.report(r, listing) : { run: null, duplicate: false })
   })
 
   app.post('/arena/tickets', smallBody, async (c) => {
@@ -909,8 +947,11 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     if ('error' in signed) return signed.error
     const ids = isRecord(signed.body) && Array.isArray(signed.body.userIds) ? signed.body.userIds : null
     if (!ids || ids.length > 64 || !ids.every((id): id is string => typeof id === 'string' && id.length > 0 && id.length <= 64)) return c.json({ error: 'expected { userIds }' }, 400)
-    const looks = await gems.looks(ids)
-    return c.json({ looks: Object.fromEntries(ids.map((id) => [id, looks.get(id) ?? {}])) } satisfies LooksResponse)
+    const [looks, legends] = await Promise.all([gems.looks(ids), store.capturedLegends(ids)])
+    return c.json({
+      looks: Object.fromEntries(ids.map((id) => [id, looks.get(id) ?? {}])),
+      legends: Object.fromEntries(ids.map((id) => [id, legends.get(id) ?? []])),
+    } satisfies LooksResponse)
   }
   app.post('/looks', smallBody, looksLookup)
   // The old path, for relays deployed before the API's rename: drop it once both relays ask `/looks`.
@@ -1018,7 +1059,165 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     if (!realm.takeGame(c.var.userId)) return c.json({ error: 'too many claims' }, 429)
     const got = await realm.claim(c.var.userId, claim, coins, brasiliaDay(new Date()))
     if (!got.ok) return c.json({ error: got.error }, 403)
-    return c.json({ coins: got.coins, today: got.today, trophies: got.trophies, furniture: got.furniture } satisfies GameClaimed)
+    return c.json({ coins: got.coins, today: got.today, trophies: got.trophies, furniture: got.furniture, family: got.family, shiny: got.shiny } satisfies GameClaimed)
+  })
+
+  const CLAW_REFUSALS = { profile: 403, banned: 403, cap: 403, funds: 402, nosave: 409, stale: 409 } as const satisfies Record<ClawRefusal, number>
+
+  app.get('/realm/claw', auth, async (c) => {
+    const state = await claw.state(c.var.userId)
+    return state ? c.json(state satisfies ClawState) : c.json({ error: 'profile' }, 403)
+  })
+
+  app.post('/realm/claw/insert', auth, smallBody, async (c) => {
+    const body = parseClawInsert(await json(c))
+    if (!body) return c.json({ error: 'expected { base?, mode?, offset? }' }, 400)
+    if (!claw.take(c.var.userId)) return c.json({ error: 'too many credits' }, 429)
+    const got = await claw.insert(c.var.userId, body.base)
+    if (!got.ok) return c.json({ error: got.error }, CLAW_REFUSALS[got.error])
+    return c.json({ play: got.play, used: got.used, ...(got.paid ?? {}) } satisfies ClawInsertedBody)
+  })
+
+  app.post('/realm/claw/drop', auth, smallBody, async (c) => {
+    const body = parseClawDrop(await json(c))
+    if (!body) return c.json({ error: 'expected { id, x, y }' }, 400)
+    if (!claw.take(c.var.userId)) return c.json({ error: 'too many drops' }, 429)
+    const got = await claw.drop(c.var.userId, body.id, body.at)
+    if (!got.ok) return c.json({ error: got.error }, got.error === 'missing' ? 404 : 403)
+    return c.json(got.dropped)
+  })
+
+  const CORNER_REFUSALS = { profile: 403, banned: 403, cap: 403, funds: 402, nosave: 409, stale: 409, tokens: 403, owned: 403, missing: 404, unpurified: 409 } as const satisfies Record<CornerRefusal, number>
+
+  app.get('/realm/corner', auth, async (c) => {
+    const state = await corner.state(c.var.userId)
+    return state ? c.json(state satisfies CornerState) : c.json({ error: 'profile' }, 403)
+  })
+
+  app.post('/realm/corner/buy', auth, smallBody, async (c) => {
+    const body = parseCornerBuy(await json(c))
+    if (!body) return c.json({ error: 'expected { pack, base }' }, 400)
+    if (!corner.take(c.var.userId)) return c.json({ error: 'too many calls' }, 429)
+    const got = await corner.buy(c.var.userId, body.pack, body.base)
+    if (!got.ok) return c.json({ error: got.error }, CORNER_REFUSALS[got.error])
+    return c.json({ tokens: got.tokens, bought: got.bought, ...got.paid })
+  })
+
+  app.post('/realm/corner/spin', auth, smallBody, async (c) => {
+    const body = parseCornerSpin(await json(c))
+    if (!body) return c.json({ error: 'expected { bet, nonce }' }, 400)
+    if (!corner.take(c.var.userId)) return c.json({ error: 'too many spins' }, 429)
+    const got = await corner.spin(c.var.userId, body.bet, body.nonce)
+    if (!got.ok) return c.json({ error: got.error }, CORNER_REFUSALS[got.error])
+    return c.json(got.spun satisfies CornerSpun)
+  })
+
+  app.post('/realm/corner/sweep/start', auth, smallBody, async (c) => {
+    if (!corner.take(c.var.userId)) return c.json({ error: 'too many calls' }, 429)
+    const got = await corner.deal(c.var.userId)
+    if (!got.ok) return c.json({ error: got.error }, CORNER_REFUSALS[got.error])
+    return c.json(got.swept satisfies CornerSwept)
+  })
+
+  app.post('/realm/corner/sweep/flip', auth, smallBody, async (c) => {
+    const body = parseCornerFlip(await json(c))
+    if (!body) return c.json({ error: 'expected { id, at }' }, 400)
+    if (!corner.take(c.var.userId)) return c.json({ error: 'too many calls' }, 429)
+    const got = await corner.flip(c.var.userId, body.id, body.at)
+    if (!got.ok) return c.json({ error: got.error }, CORNER_REFUSALS[got.error])
+    return c.json(got.swept satisfies CornerSwept)
+  })
+
+  app.post('/realm/corner/sweep/bank', auth, smallBody, async (c) => {
+    const body = parseCornerBank(await json(c))
+    if (!body) return c.json({ error: 'expected { id }' }, 400)
+    if (!corner.take(c.var.userId)) return c.json({ error: 'too many calls' }, 429)
+    const got = await corner.bank(c.var.userId, body.id)
+    if (!got.ok) return c.json({ error: got.error }, CORNER_REFUSALS[got.error])
+    return c.json(got.swept satisfies CornerSwept)
+  })
+
+  app.post('/realm/corner/redeem', auth, smallBody, async (c) => {
+    const body = parseCornerRedeem(await json(c))
+    if (!body) return c.json({ error: 'expected { prize, target? }' }, 400)
+    if (!corner.take(c.var.userId)) return c.json({ error: 'too many calls' }, 429)
+    const got = await corner.redeem(c.var.userId, body.prize, body.target)
+    if (!got.ok) return c.json({ error: got.error }, CORNER_REFUSALS[got.error])
+    return c.json({ tokens: got.tokens, gift: got.gift } satisfies CornerRedeemed)
+  })
+
+  const SAFARI_REFUSALS = { profile: 403, banned: 403, cap: 403, funds: 402, nosave: 409, stale: 409, closed: 403 } as const satisfies Record<SafariRefusal, number>
+
+  app.get('/realm/safari', auth, async (c) => {
+    const state = await safari.state(c.var.userId)
+    return state ? c.json(state satisfies SafariState) : c.json({ error: 'profile' }, 403)
+  })
+
+  app.post('/realm/safari/start', auth, smallBody, async (c) => {
+    const body = parseSafariStart(await json(c))
+    if (!body) return c.json({ error: 'expected { base?, mode?, offset? }' }, 400)
+    if (!safari.take(c.var.userId)) return c.json({ error: 'too many sessions' }, 429)
+    const got = await safari.start(c.var.userId, body)
+    if (!got.ok) return c.json({ error: got.error }, SAFARI_REFUSALS[got.error])
+    return c.json({ session: got.session, used: got.used, ...(got.paid ?? {}) } satisfies SafariStartedBody)
+  })
+
+  app.post('/realm/safari/act', auth, smallBody, async (c) => {
+    const body = parseSafariAct(await json(c))
+    if (!body) return c.json({ error: 'expected { id, turn, action, slot? }' }, 400)
+    if (!safari.take(c.var.userId)) return c.json({ error: 'too many actions' }, 429)
+    const got = await safari.act(c.var.userId, body.id, body.turn, body.action)
+    if (!got.ok) return c.json({ error: got.error }, got.error === 'missing' ? 404 : got.error === 'stale' || got.error === 'illegal' ? 409 : 403)
+    return c.json(got.acted satisfies SafariActed)
+  })
+
+  const DIG_REFUSALS = { profile: 403, banned: 403, cap: 403, funds: 402, nosave: 409, stale: 409 } as const satisfies Record<DigRefusal, number>
+
+  app.get('/realm/dig', auth, async (c) => {
+    const state = await dig.state(c.var.userId)
+    return state ? c.json(state satisfies DigState) : c.json({ error: 'profile' }, 403)
+  })
+
+  app.post('/realm/dig/start', auth, smallBody, async (c) => {
+    const body = parseDigStart(await json(c))
+    if (!body) return c.json({ error: 'expected { partner, base }' }, 400)
+    if (!dig.take(c.var.userId)) return c.json({ error: 'too many walls' }, 429)
+    const got = await dig.start(c.var.userId, body.base, body.partner)
+    if (!got.ok) return c.json({ error: got.error }, DIG_REFUSALS[got.error])
+    return c.json({ wall: got.wall, used: got.used, ...(got.paid ?? {}) } satisfies DigStartedBody)
+  })
+
+  app.post('/realm/dig/hit', auth, smallBody, async (c) => {
+    const body = parseDigHit(await json(c))
+    if (!body) return c.json({ error: 'expected { id, seq, tool, cell }' }, 400)
+    if (!dig.take(c.var.userId)) return c.json({ error: 'too many hits' }, 429)
+    const got = await dig.hit(c.var.userId, body.id, body.seq, body.tool, body.cell)
+    if (!got.ok) return c.json({ error: got.error }, got.error === 'missing' ? 404 : got.error === 'seq' || got.error === 'empty' || got.error === 'over' ? 409 : 403)
+    return c.json(got.answer)
+  })
+
+  app.post('/realm/dig/stop', auth, smallBody, async (c) => {
+    const body = parseDigStop(await json(c))
+    if (!body) return c.json({ error: 'expected { id }' }, 400)
+    if (!dig.take(c.var.userId)) return c.json({ error: 'too many stops' }, 429)
+    const got = await dig.stop(c.var.userId, body.id)
+    if (!got.ok) return c.json({ error: got.error }, got.error === 'missing' ? 404 : 403)
+    return c.json({ end: got.end })
+  })
+
+  app.get('/realm/book', auth, async (c) => {
+    const got = await realm.book(c.var.userId)
+    if (!got.ok) return c.json({ error: got.error }, 403)
+    return c.json(got.book satisfies RealmBook)
+  })
+
+  app.post('/realm/errands/claim', auth, smallBody, async (c) => {
+    const claim = parseErrandClaim(await json(c))
+    if (!claim) return c.json({ error: 'expected { id }' }, 400)
+    if (!realm.takeErrand(c.var.userId)) return c.json({ error: 'too many claims' }, 429)
+    const got = await realm.claimErrand(c.var.userId, claim.id)
+    if (!got.ok) return c.json({ error: got.error }, got.error === 'profile' || got.error === 'banned' ? 403 : 409)
+    return c.json({ coins: got.coins, book: got.book } satisfies ErrandClaimed)
   })
 
   app.get('/realm/boards/:game', maybeAuth, async (c) => {
@@ -1062,6 +1261,14 @@ export const createApp = ({ store, ranking, friends, gifts, verify, donate, supp
     if (!report) return c.json({ error: 'invalid presence' }, 400)
     realm.presence(report)
     return c.json({ ok: true })
+  })
+
+  app.post('/realm/deeds', bodyLimit({ maxSize: 128 * 1024 }), async (c) => {
+    const signed = await relayBody(c)
+    if ('error' in signed) return signed.error
+    const entries = parseDeedsReport(signed.body)
+    if (!entries) return c.json({ error: 'invalid deeds' }, 400)
+    return c.json((await realm.deeds(entries)) satisfies DeedsAnswer)
   })
 
   /** The desk's routes, all behind a valid token whose user Clerk says is admin. Everyone else gets 403, whatever they send. */

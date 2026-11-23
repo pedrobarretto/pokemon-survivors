@@ -1,3 +1,4 @@
+import { assetUrl } from '../assets'
 import { LOCALE_IDS, type Locale } from '../i18n'
 import { SITE_MESSAGES } from '../i18n/site'
 import { html, jsonLd, raw, type Html } from './html'
@@ -75,7 +76,7 @@ const head = ({ id, locale, title, description, schema = [], css, sub }: PageMet
     <meta property="og:image:height" content="630" />
     <meta property="og:locale" content="${m.lang.og}" />
     ${others(locale).map((l) => html`<meta property="og:locale:alternate" content="${SITE_MESSAGES[l].lang.og}" />\n    `)}    <meta name="twitter:card" content="summary_large_image" />
-    <link rel="icon" href="/assets/pokemon/4/portrait.png" />
+    <link rel="icon" href="${assetUrl('pokemon/4/portrait.png')}" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <script>${raw(THEME_SCRIPT)}</script>
     <link rel="stylesheet" href="/src/site/site.css" />
@@ -90,7 +91,7 @@ export const header = (locale: Locale, paths: Paths, current: RouteId | null) =>
   const m = SITE_MESSAGES[locale]
   return html`<a class="skip" href="#content">${m.skip}</a>
   <header class="site-header">
-    <a class="brand" href="${ROUTES.play[locale]}"><img src="/assets/pokemon/4/portrait.png" width="40" height="40" alt="" /><span>Pokémon<br />Survivors</span></a>
+    <a class="brand" href="${ROUTES.play[locale]}"><img src="${assetUrl('pokemon/4/portrait.png')}" width="40" height="40" alt="" /><span>Pokémon<br />Survivors</span></a>
     <nav class="site-nav" aria-label="${m.nav.label}">
       ${NAV.map(
         (r) => html`<a href="${ROUTES[r][locale]}" class="${r === 'play' ? 'nav-play' : ''}"${r === current ? html` aria-current="page"` : ''}>${m.nav[r]}</a>`,

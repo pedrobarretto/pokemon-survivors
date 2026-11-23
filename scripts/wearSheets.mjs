@@ -9,7 +9,7 @@
 // node_modules/.cache/ps-offsets, never committed.
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { FORMS, PLAYERS, pad } from './dex.mjs'
+import { FORMS, PLAYERS, RECOLORED_SHINIES, formFolder, pad, shinyPath } from './dex.mjs'
 import { readPng } from './png.mjs'
 
 export const ROOT = new URL('..', import.meta.url).pathname
@@ -36,7 +36,7 @@ const tag = (xml, name) => xml.match(new RegExp(`<${name}>([^<]*)</${name}>`))?.
 /** Every variant a player can be: each species and each of its forms (`FORMS`), by its key and its SpriteCollab folder. */
 export const VARIANTS = PLAYERS.flatMap((dex) => [
   { key: String(dex), dex, form: null, path: pad(dex) },
-  ...Object.entries(FORMS[dex] ?? {}).map(([form, id]) => ({ key: `${dex}:${form}`, dex, form, path: `${pad(dex)}/${id}` })),
+  ...Object.entries(FORMS[dex] ?? {}).map(([form, id]) => ({ key: `${dex}:${form}`, dex, form, path: formFolder(dex, id) })),
 ])
 
 /** A variant's sheets in the manifest (`shiny`: its shiny colors'), if the game has them. */
@@ -54,8 +54,9 @@ const cacheDir = ({ key }, shiny) => join(CACHE, `${key.replace(':', '-')}${shin
 export const fetchOffsets = async (v, shiny) => {
   const variant = sheetsOf(v, shiny)
   const dir = cacheDir(v, shiny)
-  // A shiny lives under `0000/0001` (a form's under its own `<id>/0001`).
-  const path = shiny ? `${v.path}/${v.form ? '' : '0000/'}0001` : v.path
+  // A shiny lives under `0000/0001` (a form's under its own `<id>/0001`); a recolored one (`RECOLORED_SHINIES`) shares the normal frames.
+  const recolored = !v.form && v.dex in RECOLORED_SHINIES
+  const path = shiny && !recolored ? (v.form ? `${v.path}/0001` : `${v.path}${shinyPath(v.dex)}`) : v.path
   await mkdir(dir, { recursive: true })
   if (!(await download(`${REMOTE}/${path}/AnimData.xml`, join(dir, 'AnimData.xml')))) return false
   const xml = await readFile(join(dir, 'AnimData.xml'), 'utf8')

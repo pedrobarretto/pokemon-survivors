@@ -9,7 +9,7 @@ import { dailyChallenge } from '../game/challenge'
 import { brasiliaDay, previousDay, type DayKey } from '../game/day'
 import { DIFFICULTY_IDS, type Difficulty } from '../game/difficulty'
 import { pumpkinRow } from '../game/halloween'
-import { BOARD_PERIODS, isPlayable, RUN_MODES, runMode, type Board, type BoardEntry, type BoardPeriod, type RunMode } from '../game/ranking'
+import { isPlayable, LIVE_PERIODS, RUN_MODES, runMode, type Board, type BoardEntry, type BoardPeriod, type RunMode } from '../game/ranking'
 import { fetchBoard, fetchChallengeBoard, fetchCoopBoard, fetchCoopChallengeBoard, type BoardFilter, type RankOutcome } from '../ranking'
 import { dailyCoopChallenge, TEAM_SIZE_KEYS, TEAM_SIZES, type CoopBoard, type CoopBoardEntry, type CoopChallengeBoard, type TeamSize } from '../game/coopBoard'
 import { formatDay, t } from '../i18n'
@@ -22,6 +22,9 @@ import { profileScreen, runForm, runPortrait, supporterBadges } from './profile'
 import { reportDialog } from './report'
 import { shopIcon } from './shopIcons'
 import { hint, menu, type Screen } from './screens'
+import { coopHall, soloHall } from './era1Hall'
+import { era1Closed } from '../game/era1'
+import { SEASON_ONE } from '../data/seasons'
 
 const step = <T>(list: readonly T[], at: T, by: number) => list[(list.indexOf(at) + by + list.length) % list.length]!
 
@@ -113,16 +116,19 @@ type Tab = Difficulty | 'challenge'
 
 const TABS: readonly Tab[] = [...DIFFICULTY_IDS, 'challenge']
 
+/** The periods' tabs in the order they show: the season first, Era 1's Hall da Fama last. */
+const PERIOD_TABS: readonly BoardPeriod[] = ['all', 'week', 'day', 'era1']
+
 const CHALLENGE_DAYS = ['today', 'yesterday'] as const
 
 type ChallengeDay = (typeof CHALLENGE_DAYS)[number]
 
-/** The boards' sides: the regular runs, the Legend mode's, and the co-op teams'. */
-type Side = RunMode | 'coop'
+/** The boards' sides: the regular runs, the Legend mode's, the co-op teams' and the co-op teams' Legend runs (a room with the Modo Lendário on). */
+type Side = RunMode | 'coop' | 'coopLegend'
 
-const SIDES: readonly Side[] = [...RUN_MODES, 'coop']
+const SIDES: readonly Side[] = [...RUN_MODES, 'coop', 'coopLegend']
 
-/** The challenge has no Legend mode: its sides are the solo one and the co-op one. */
+/** The challenge has no Legend mode, solo or co-op: its sides are the solo one and the co-op one. */
 const CHALLENGE_SIDES: readonly Side[] = ['standard', 'coop']
 
 /** The Brasília day a challenge tab shows (on the missions' clock, like the challenge screen). */
@@ -141,7 +147,7 @@ type Shown = { kind: 'solo'; board: Board } | { kind: 'coop'; board: CoopBoard |
  * every player once with their official attempt. The Co-op side (the mode
  * toggle's third) has the same tabs for teams, by size (Duplas, Trios,
  * Squads, T): every team once with its best run, and the Desafio co-op do
- * dia's. Filters by Pokémon (not the challenge's: it's one Pokémon, nor
+ * dia's; the fourth, Co-op Lendário, the teams' Legend runs (no challenge). Filters by Pokémon (not the challenge's: it's one Pokémon, nor
  * co-op's) and by friends (who the player follows, plus them). The player's
  * own line stays in sight below the top when they're further down. A row (a
  * team's member) opens that trainer's profile over the board; signed in, the
@@ -149,20 +155,22 @@ type Shown = { kind: 'solo'; board: Board } | { kind: 'coop'; board: CoopBoard |
  *
  * Keys: ↑/↓ rows and buttons, ←/→ period (or day), Q/E board, M mode, T team size, F friends, Enter
  * opens, Esc goes back. `onClose` runs after the key dispatch.
- * `challenge` opens on the challenge's tab, `mode` on that mode's boards, `coop` on the co-op side at that team size.
+ * `challenge` opens on the challenge's tab, `mode` on that mode's boards, `coop` on the co-op side at that team size (its Legend side with `legend`).
  */
 export const rankingScreen = (
   root: HTMLElement,
   input: Input,
   onClose: () => void,
-  opts: { difficulty?: Difficulty; mode?: RunMode; challenge?: boolean; coop?: { size: TeamSize } } = {},
+  opts: { difficulty?: Difficulty; mode?: RunMode; period?: BoardPeriod; challenge?: boolean; coop?: { size: TeamSize; legend?: boolean } } = {},
 ): Screen => {
   const signedIn = () => accountState().kind === 'signedIn'
-  const filter: BoardFilter = { mode: opts.mode ?? 'standard', difficulty: opts.difficulty ?? 'normal', period: 'day', starter: null, friends: false }
+  const filter: BoardFilter = { mode: opts.mode ?? 'standard', difficulty: opts.difficulty ?? 'normal', period: opts.period ?? 'all', starter: null, friends: false }
   let tab: Tab = opts.challenge ? 'challenge' : filter.difficulty
   let day: ChallengeDay = 'today'
   let coop = opts.coop !== undefined
   let size: TeamSize = opts.coop?.size ?? 2
+  /** On the co-op side: its Legend runs' boards (never on the challenge's tab). */
+  let coopLegend = opts.coop?.legend === true && !opts.challenge
   /** Players (or teams) on the challenge board shown. */
   let total = 0
   const el = h('div', { class: 'screen dim rank-screen' })
@@ -178,7 +186,7 @@ export const rankingScreen = (
   let opening = true
 
   /** The side on screen (the challenge's solo board for the Legend mode's, which has none). */
-  const side = (): Side => (coop ? 'coop' : tab === 'challenge' ? 'standard' : filter.mode)
+  const side = (): Side => (coop ? (coopLegend && tab !== 'challenge' ? 'coopLegend' : 'coop') : tab === 'challenge' ? 'standard' : filter.mode)
 
   const openProfile = (handle: string) => {
     nav?.off()
@@ -245,20 +253,32 @@ export const rankingScreen = (
     const boards = TABS.map((d) => button(d === 'challenge' ? m.challengeTab : t().difficulty.names[d], d === tab, () => setTab(d)))
     const periods = onChallenge
       ? CHALLENGE_DAYS.map((d) => button(m.days[d], d === day, () => setDay(d)))
-      : BOARD_PERIODS.map((p) => button(m.periods[p], p === filter.period, () => set({ period: p })))
+      : PERIOD_TABS.map((p) => {
+          const b = button(m.periods[p], p === filter.period, () => set({ period: p }))
+          if (p === 'era1') b.classList.add('era-tab')
+          return b
+        })
     const scope = [button(m.everyone, !filter.friends, () => set({ friends: false })), button(m.friends, filter.friends, () => set({ friends: true }))]
-    const sides = (onChallenge ? CHALLENGE_SIDES : SIDES).map((s) => button(s === 'coop' ? m.coop : m.modes[s], s === side(), () => setSide(s)))
+    const sides = (onChallenge ? CHALLENGE_SIDES : SIDES).map((s) => button(s === 'coop' ? m.coop : s === 'coopLegend' ? m.coopLegend : m.modes[s], s === side(), () => setSide(s)))
     const sizes = TEAM_SIZES.map((n) => button(m.sizes[TEAM_SIZE_KEYS[n]], n === size, () => setSize(n)))
     const solo = onChallenge && !coop ? dailyChallenge(challengeDay(day)) : null
     const team = onChallenge && coop ? dailyCoopChallenge(challengeDay(day)) : null
 
     const rows: { el: HTMLElement; handle: string }[] = []
     const status = (text: string, cls = '') => h('p', { class: `rank-status ${cls}` }, text)
+    const hall = !onChallenge && filter.period === 'era1'
     let list: Node[]
     if (filter.friends && !signedIn()) list = [status(m.friendsGuest)]
     else if (board === 'loading') list = [status(m.loading, 'blink')]
     else if (board === 'offline') list = [status(m.offline)]
-    else {
+    else if (hall) {
+      const b = board.board
+      const shown = board.kind === 'solo' ? soloHall(board.board, myHandle() ?? null) : 'period' in b ? coopHall(b, myHandle() ?? null, teamRow) : soloHall({ entries: [], me: null }, null)
+      rows.push(...shown.lines)
+      list = shown.empty ? [...shown.nodes, status(filter.friends ? m.emptyFriends : coop ? m.coopEmpty : m.empty)] : shown.nodes
+    } else if (filter.period === 'all' && !onChallenge && !era1Closed(today().getTime()) && (board.kind === 'solo' ? board.board.entries : board.board.entries).length === 0) {
+      list = [status(m.seasonSoon(formatDay(SEASON_ONE.day)))]
+    } else {
       const { top, below } = board.kind === 'solo' ? soloLines(board.board, rows) : teamLines(board.board, rows)
       const empty = filter.friends ? m.emptyFriends : coop ? (onChallenge ? m.coopChallengeEmpty : m.coopEmpty) : onChallenge ? m.challengeEmpty : m.empty
       list = top.length === 0 && !below ? [status(empty)] : [...top, ...(below ? [h('div', { class: 'rank-gap', 'aria-hidden': 'true' }, '⋮'), below] : [])]
@@ -282,7 +302,7 @@ export const rankingScreen = (
     nav?.off()
     nav = menu(input, stops, (i) => (playSfx('select'), later(actions[i]!)), { initial: Math.max(0, meAt) })
 
-    const resets = coop ? (onChallenge ? m.coopChallengeResets : m.coopResets) : onChallenge ? m.challengeResets : filter.period !== 'all' ? m.resets : null
+    const resets = hall ? null : coop ? (onChallenge ? m.coopChallengeResets : m.coopResets) : onChallenge ? m.challengeResets : filter.period === 'day' || filter.period === 'week' ? m.resets : null
     el.replaceChildren(
       h(
         'div',
@@ -305,14 +325,15 @@ export const rankingScreen = (
             m.challengeHead(formatDay(solo.day), PLAYABLE[solo.starter].name, t().difficulty.names[solo.difficulty], total),
           ),
         team && h('p', { class: 'rank-challenge' }, h('img', { src: coopIcon(), alt: '' }), m.coopChallengeHead(formatDay(team.day), t().difficulty.names[team.difficulty], total)),
-        h('div', { class: 'rank-list' }, ...list),
+        h('div', { class: hall ? 'rank-list era-hall' : 'rank-list' }, ...list),
         resets && h('p', { class: 'rank-resets' }, resets),
         h('div', { class: 'buttons' }, ...footer),
         hint(coop ? (onChallenge ? m.coopChallengeHint : m.coopHint) : onChallenge ? m.challengeHint : m.hintKeys, m.hintTouch),
       ),
     )
     opening = false
-    stops[nav.index]?.scrollIntoView({ block: 'nearest' })
+    // The Hall opens on its header: the cursor on the #1 needn't scroll it away.
+    if (!(hall && nav.index === 0)) stops[nav.index]?.scrollIntoView({ block: 'nearest' })
   }
 
   const load = async () => {
@@ -323,7 +344,7 @@ export const rankingScreen = (
     const next = await fetchShown()
     if (id !== request || closed) return
     board = next ?? 'offline'
-    total = next && 'total' in next.board ? next.board.total : 0
+    total = next && 'total' in next.board ? (next.board.total ?? 0) : 0
     render()
   }
 
@@ -333,7 +354,7 @@ export const rankingScreen = (
     if (coop) {
       const b = onChallenge
         ? await fetchCoopChallengeBoard(challengeDay(day), size, filter.friends)
-        : await fetchCoopBoard({ size, difficulty: filter.difficulty, period: filter.period, friends: filter.friends })
+        : await fetchCoopBoard({ size, difficulty: filter.difficulty, period: filter.period, friends: filter.friends, mode: coopLegend ? 'legend' : 'standard' })
       return b && { kind: 'coop', board: b }
     }
     const b = onChallenge ? await fetchChallengeBoard(challengeDay(day), filter.friends) : await fetchBoard(filter)
@@ -343,6 +364,8 @@ export const rankingScreen = (
   const setTab = (next: Tab) => {
     if (next === tab) return
     tab = next
+    // The challenge has no Legend side: Co-op Lendário lands on its Co-op one.
+    if (next === 'challenge') coopLegend = false
     if (next !== 'challenge') filter.difficulty = next
     playSfx('move')
     void load()
@@ -366,9 +389,10 @@ export const rankingScreen = (
   /** The regular boards, the Legend mode's (a Pokémon filter of the other side goes) or co-op's. */
   const setSide = (next: Side) => {
     if (next === side()) return
-    coop = next === 'coop'
-    if (next !== 'coop') {
-      filter.mode = next
+    coop = next === 'coop' || next === 'coopLegend'
+    coopLegend = next === 'coopLegend'
+    if (!coop) {
+      filter.mode = next === 'legend' ? 'legend' : 'standard'
       filter.starter = filter.starter && runMode(filter.starter) === next ? filter.starter : null
     }
     playSfx('move')
@@ -387,7 +411,7 @@ export const rankingScreen = (
     if (key === 'Escape' || key === 'Backspace') return close()
     if (key === 'ArrowLeft' || key === 'KeyA' || key === 'ArrowRight' || key === 'KeyD') {
       const by = key === 'ArrowLeft' || key === 'KeyA' ? -1 : 1
-      return tab === 'challenge' ? setDay(step(CHALLENGE_DAYS, day, by)) : set({ period: step<BoardPeriod>(BOARD_PERIODS, filter.period, by) })
+      return tab === 'challenge' ? setDay(step(CHALLENGE_DAYS, day, by)) : set({ period: step(PERIOD_TABS, filter.period, by) })
     }
     if (key === 'KeyQ' || key === 'PageUp') return setTab(step(TABS, tab, -1))
     if (key === 'KeyE' || key === 'PageDown') return setTab(step(TABS, tab, 1))
@@ -423,7 +447,7 @@ export const rankingScreen = (
 const outcomeLine = (o: RankOutcome) => {
   const m = t().ranking
   if (o.kind !== 'ranked') return h('span', {}, m[o.kind])
-  const places = BOARD_PERIODS.flatMap((p) => {
+  const places = LIVE_PERIODS.flatMap((p) => {
     const rank = o.ranks[p]
     return rank === null ? [] : [h('span', { class: 'rank-place' }, h('b', {}, `#${rank}`), ` ${m.place[p]}`)]
   })

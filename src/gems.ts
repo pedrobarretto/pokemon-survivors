@@ -3,8 +3,10 @@ import { track } from './analytics'
 import { apiCall } from './api'
 import { equip, ownedOnly, sameLook } from './arena/gemShop'
 import { COSMETICS, COSMETIC_IDS, COSMETIC_SLOTS, cosmeticPrice, isCosmeticId, parseLook, slotOf, type Look, type CosmeticId } from './data/cosmetics'
-import { isGemPackId, oncePack, packGems, type GemCurrency, type GemMethod, type GemPackId } from './data/gems'
-import { bundleMissing, bundlePrice, isGemPurchaseStatus, isGemReason, type GemBuyResponse, type GemCheckoutRefusal, type GemCheckoutRequest, type GemLedgerEntry, type GemPurchaseResponse, type GemsStatus } from './game/gems'
+import { isGemPackId, oncePack, packGems, packGemsOn, promoOf, type GemMarket, type GemPackId, type GemPromo } from './data/gems'
+import { brasiliaDay, dayNumber, msToNextDay, type DayKey } from './game/day'
+import { today } from './ui/save'
+import { bundleMissing, bundlePrice, isGemPurchaseStatus, isGemReason, type GemBuyResponse, type GemCheckoutRefusal, type GemCheckoutRequest, type GemLedgerEntry, type GemPurchaseResponse, type GemsStatus, type RunGems } from './game/gems'
 import { locale } from './i18n'
 import { isRecord } from './game/parse'
 import { setLocalLook } from './render/looks'
@@ -14,8 +16,9 @@ import type { SkinBundleId } from './data/skinCatalog'
 /**
  * The Arena's gem shop through the API (`server/`): the balance, what the
  * account owns and its equipped look (`GET /gems`), a pack's checkout
- * (`POST /gems/checkout`, then Stripe or AbacatePay, back on `/?gems=<ref>`,
- * which polls `GET /gems/purchase/<ref>`),
+ * (`POST /gems/checkout`, then Stripe Checkout, back on `/?gems=<ref>`, which
+ * polls `GET /gems/purchase/<ref>`, or on `/?gems=<ref>&cancel=<pack>` when
+ * the buyer gave up),
  * a cosmetic bought (`POST /gems/buy`), the look saved (`PUT /gems/look`)
  * and the receipts (`GET /gems/ledger`). The shop needs an account; nothing
  * here ever blocks a guest's game: every call fails soft.
@@ -79,6 +82,15 @@ export const stageGems = (patch: { balance?: number; own?: readonly CosmeticId[]
   remember(f.status)
 }
 
+/** Dev, faking: a run's report brought `n` gems (the results' gem line, `ps.gems('run', n)`): they land as the API's would. */
+export const stageRunGems = (n: number): RunGems | null => {
+  if (!fake) return null
+  fake.status = { ...fake.status, balance: fake.status.balance + n }
+  fake.ledger.unshift({ amount: n, reason: 'run', ref: 'dev', at: Date.now() })
+  notify()
+  return { earned: n, balance: fake.status.balance }
+}
+
 /** Dev, faking: every checkout is turned down for `refusal` (null: none again). */
 export const stageRefusal = (refusal: GemCheckoutRefusal | null) => {
   if (!fake) fakeGems(true)
@@ -93,7 +105,7 @@ export const stageRefusal = (refusal: GemCheckoutRefusal | null) => {
 export const stageCheckout = (pack: GemPackId | 'never') => {
   if (!fake) fakeGems(true)
   const ref = `dev-${pack}`
-  fake!.landing = { ref, gems: packGems(pack === 'never' ? 'pouch' : pack), at: pack === 'never' ? null : Date.now() + 2500, landed: false }
+  fake!.landing = { ref, gems: pack === 'never' ? packGems('pouch') : packGemsOn(pack, promoDay()), at: pack === 'never' ? null : Date.now() + 2500, landed: false }
   return ref
 }
 
@@ -106,6 +118,29 @@ const landFake = (f: Fake) => {
   const taken = isGemPackId(pack) && oncePack(pack) ? [...f.status.taken, pack] : f.status.taken
   f.status = { ...f.status, balance: f.status.balance + land.gems, taken }
   f.ledger.unshift({ amount: land.gems, reason: 'pack', ref: 'dev', at: Date.now() })
+}
+
+/* ---------------- Promotions ---------------- */
+
+/** The day `ps.gems('promo', day)` holds the promotions on, or null: today's. */
+let promoDayHeld: DayKey | null = null
+
+/** Dev: shows the gem promotions (`GEM_PROMOS`) as on Brasília `day` until a reload; null goes back to today. */
+export const holdPromoDay = (day: DayKey | null) => {
+  promoDayHeld = day
+  notify()
+}
+
+/** The Brasília day the shop's promotions follow (the missions' clock, `today`, or the held one). The API decides by its own clock as a checkout opens. */
+export const promoDay = (): DayKey => promoDayHeld ?? brasiliaDay(today())
+
+/** The promotion on show now, or null. */
+export const livePromo = (): GemPromo | null => promoOf(promoDay())
+
+/** What's left of `promo`: whole days and hours to the midnight in Brasília after its last day. */
+export const promoLeft = (promo: GemPromo, now = new Date()) => {
+  const hours = Math.max(0, Math.floor((msToNextDay(now) + (dayNumber(promo.to) - dayNumber(promoDay())) * 86_400_000) / 3_600_000))
+  return { days: Math.floor(hours / 24), hours: hours % 24 }
 }
 
 /* ---------------- The device's mirror ---------------- */
@@ -232,21 +267,26 @@ export const fetchGems = async (): Promise<GemsStatus | null> => {
 /** `staged`: faking, the checkout's ref, back at once in the page (null for a real one, which leaves for `url`). */
 export type CheckoutOpened = { ok: true; url: string; staged: string | null } | { ok: false; why: GemCheckoutRefusal | 'busy' | 'banned' | 'offline' }
 
+/** Where a pack's checkout was opened from: its card (`pack`), an item's "Faltam" button (`short`), the Vitrine (`vitrine`), the "Não deu certo?" sheet (`retry`). */
+export type CheckoutFrom = 'pack' | 'short' | 'vitrine' | 'retry'
+
 /**
- * `POST /gems/checkout`: opens a pack's checkout and says where to send the
- * player (Stripe Checkout for `card`, AbacatePay for `pix`, in the game's
- * language), or why the API turned it down (409: `once`, `cap`). A `once`
- * pack refused is marked taken, so the shop stops offering it. Faking, the
- * checkout "comes back" at once in the page (`?gems=dev-<pack>`).
+ * `POST /gems/checkout`: opens a pack's Stripe Checkout at `market`'s price
+ * (in the game's language) and says where to send the player, or why the API
+ * turned it down (409: `once`, `cap`). A `once` pack refused is marked taken,
+ * so the shop stops offering it. `shown` (the currency the shop guessed the
+ * price in) and `from` only go to analytics. Faking, the checkout "comes
+ * back" at once in the page (`?gems=dev-<pack>`).
  */
-export const openCheckout = async (pack: GemPackId, method: GemMethod, currency: GemCurrency): Promise<CheckoutOpened> => {
+export const openCheckout = async (pack: GemPackId, market: GemMarket, shown: string, from: CheckoutFrom): Promise<CheckoutOpened> => {
+  const opened = () => track('gems_checkout', { pack, market, currency: shown, from })
   if (fake?.refusal) return { ok: false, why: fake.refusal }
   if (fake) {
-    track('gems_checkout', { pack, method, currency })
+    opened()
     const ref = stageCheckout(pack)
     return { ok: true, url: `?gems=${ref}`, staged: ref }
   }
-  const body: GemCheckoutRequest = { pack, method, currency, locale: locale() }
+  const body: GemCheckoutRequest = { pack, market, locale: locale() }
   const res = await apiCall('/gems/checkout', { method: 'POST', body, auth: true })
   const refused = res.status === 409 && isRecord(res.body) && (res.body.error === 'once' || res.body.error === 'cap') ? res.body.error : null
   if (refused) {
@@ -257,7 +297,7 @@ export const openCheckout = async (pack: GemPackId, method: GemMethod, currency:
   if (res.status === 403) return { ok: false, why: 'banned' }
   const url = isRecord(res.body) && typeof res.body.url === 'string' ? res.body.url : null
   if (res.status !== 200 || !url) return { ok: false, why: 'offline' }
-  track('gems_checkout', { pack, method, currency })
+  opened()
   return { ok: true, url, staged: null }
 }
 
@@ -379,16 +419,31 @@ export const fetchReceipts = async (): Promise<GemLedgerEntry[] | null> => {
 /* ---------------- The checkout's return ---------------- */
 
 const RETURN_PARAM = 'gems'
+const CANCEL_PARAM = 'cancel'
 
-/** The `?gems=<ref>` a checkout came back with (taken off the address, so a reload doesn't wait again), or null. */
-export const takeCheckoutReturn = (): string | null => {
+/** A checkout came back: the purchase's `ref`, and the pack when the buyer gave up on it (`cancel`), else null. */
+export type CheckoutReturn = { ref: string; cancel: GemPackId | null }
+
+/**
+ * The `?gems=<ref>` a checkout came back with, and its `&cancel=<pack>` when
+ * the buyer gave up (both taken off the address, so a reload doesn't open
+ * them again), or null.
+ */
+export const takeCheckoutReturn = (): CheckoutReturn | null => {
   const url = new URL(location.href)
   const ref = url.searchParams.get(RETURN_PARAM)
   if (ref === null) return null
+  const cancel = url.searchParams.get(CANCEL_PARAM)
   url.searchParams.delete(RETURN_PARAM)
+  url.searchParams.delete(CANCEL_PARAM)
   history.replaceState(history.state, '', `${url.pathname}${url.search}${url.hash}`)
-  return ref || null
+  if (!ref) return null
+  // A cancel without a pack this build knows still gave up: the sheet offers the packs instead.
+  return { ref, cancel: cancel === null ? null : isGemPackId(cancel) ? cancel : 'pouch' }
 }
+
+/** A checkout given up came back (`takeCheckoutReturn`'s `cancel`): told once, as the "Não deu certo?" sheet opens. */
+export const reportCancel = () => track('gems_return', { outcome: 'cancel', gems: 0, seconds: 0 })
 
 /** How long a return waits for its gems before saying they're on their way (a Pix or a slow webhook can take longer). */
 const RETURN_WAIT = { ms: 60_000, fakeMs: 7000 }

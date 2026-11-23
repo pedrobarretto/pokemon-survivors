@@ -10,6 +10,12 @@ describe('parseRealmMessage', () => {
     expect(parseRealmMessage('{"t":"moves","rows":[[1,2,3,9,1]]}')).toEqual({ t: 'moves', rows: [] })
     expect(parseRealmMessage('nope')).toBeNull()
   })
+
+  it('reads who earned stamps and which errands finished, dropping what is not a string', () => {
+    expect(parseRealmMessage('{"t":"stamped","id":3,"stamps":["wetFeet",7]}')).toEqual({ t: 'stamped', id: 3, stamps: ['wetFeet'] })
+    expect(parseRealmMessage('{"t":"errands","done":["say:3"]}')).toEqual({ t: 'errands', done: ['say:3'] })
+    expect(parseRealmMessage('{"t":"stamped","stamps":[]}')).toBeNull()
+  })
 })
 
 describe('createRealmClient', () => {

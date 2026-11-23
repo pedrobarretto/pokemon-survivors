@@ -1,10 +1,11 @@
+import { GUIDE } from '../data/guide'
 import { CARAVAN, CARPENTER, STALLS, TAILOR, type StallId } from '../data/visitors'
 import { caravanHere, isCaravanDay } from '../game/caravan'
 import { addDays, brasiliaDay, type DayKey } from '../game/day'
 import { hasStatue } from '../game/loyalty'
 import type { Save } from '../game/meta'
 import { stallGoods, stallOn } from '../game/stalls'
-import { LANTURN, type PlazaVisitors } from '../render/plaza'
+import { type PlazaVisitors } from '../render/plaza'
 import { emotionUrl, type Speaker } from './dialogue'
 import { h } from './dom'
 import { today } from './save'
@@ -80,14 +81,14 @@ export const meowthSpeaker = () => visitorSpeaker(CARAVAN.dex, CARAVAN.name, '#b
 /** A seasonal stall's keeper. */
 export const stallSpeaker = (id: StallId) => visitorSpeaker(STALLS[id].dex, STALLS[id].name, id === 'halloween' ? '#7048a8' : '#c83030')
 
-/** Lanturn, at the festival's Lantern Market. */
-export const lanturnSpeaker = () => visitorSpeaker(LANTURN.dex, LANTURN.name, '#2f78b8')
-
 /** Machoke, the Dojo's sensei (`render/dojo.ts`). */
 export const senseiSpeaker = () => visitorSpeaker(SENSEI.dex, SENSEI.name, '#c04830')
 
 /** Leavanny, the Boutique's tailor (`ui/boutique.ts`). */
 export const tailorSpeaker = () => visitorSpeaker(TAILOR.dex, TAILOR.name, '#3f8f3a')
+
+/** Rotom, the first visit's guide (`data/guide.ts`): the welcome, the training run and the lobby tour. */
+export const guideSpeaker = () => visitorSpeaker(GUIDE.dex, GUIDE.name, GUIDE.color)
 
 /** Bibarel, the carpentry's carpenter (`ui/carpentry.ts`). */
 export const carpenterSpeaker = () => visitorSpeaker(CARPENTER.dex, CARPENTER.name, '#8a5a2b')

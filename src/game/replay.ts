@@ -1,6 +1,8 @@
 import type { EnemyId } from '../data/enemies'
 import { PLAYABLE, type PlayableId } from '../data/hatchlings'
-import { isLegend } from '../data/legends'
+import { isLegend, type RuinsRegi } from '../data/legends'
+import { parseRuins } from './splitRuins'
+import { PATH_FORM_IDS, PATH_FORMS, type PathFormId } from '../data/legendPaths'
 import { createRng } from '../engine/rng'
 import * as dm from '../engine/dmath'
 import type { Vec } from '../engine/math'
@@ -10,13 +12,16 @@ import { parseEvoItems } from './evoItems'
 import { parseTmList, type ShelfTm } from './tmShelf'
 import { isDifficulty, type Difficulty } from './difficulty'
 import { continueEndless } from './endlessSystem'
+import { dropItem } from './itemDrop'
 import { banishOffer, chooseOffer, createGame, rerollOffers, skipLevelUp, step } from './game'
 import { UPGRADE_IDS, UPGRADES, type Ranks } from './meta'
 import { LEGEND_HORDE } from './legend'
 import { isRecord, wholeNumber } from './parse'
 import { isOutbreakSpecies, withOutbreak } from './outbreak'
+import { isUltraBeast, type UltraBeast } from '../data/ultraBeasts'
 import { withHaunts } from './halloween'
 import { drawRoster } from './roster'
+import { isDayKey, type DayKey } from './day'
 import type { Game, Player } from './types'
 
 /**
@@ -31,6 +36,9 @@ import type { Game, Player } from './types'
 /** The fixed simulation step, the same in the shell and here. */
 export { TICK } from './tick'
 import { TICK } from './tick'
+import { parseHunt, type MythicalHunt } from './mythicalHunt'
+import { isShadowVariant, type ShadowVariant } from './shadow'
+import { parseWild, type WildStart } from './quests'
 
 /**
  * Version of the rules a replay plays by. Bump it with any change that makes
@@ -42,7 +50,7 @@ import { TICK } from './tick'
  * and run `npm run rules:freeze` so the API keeps the previous rules' simulator
  * for the runs that straddle the deploy (`server/sims/README.md`).
  */
-export const RULES_VERSION = 47
+export const RULES_VERSION = 51
 
 /**
  * How this build stands to a replay's rules: it can judge the `same`; a
@@ -76,22 +84,41 @@ export type ReplayStart = {
   evo?: readonly EvoItemId[]
   /** The Pokémon's Bottle Cap level, 0..`MAX_CAPS` (`runBoost`). 0 when absent. */
   caps?: number
+  /** The mythicals' bad-luck protection from the save (`game/mythicalHunt.ts`). The plain odds when absent: co-op, the Desafio do dia, every mythical captured. */
+  mythical?: MythicalHunt
+  /** The day whose Tera Raid the run's late den holds (`raidOfDay`); the server checks it against the day the run started. Its own raid there when absent. */
+  raid?: DayKey
+  /** A Shadow or Purified Pokémon (`shadow.ts`): stronger and frailer, or a little sturdier. The plain one when absent. */
+  variant?: ShadowVariant
+  /** The Game Corner poster's pass (`hideoutPass.ts`): the Rocket Hideout's hatch opens on this run's map. Absent otherwise. */
+  hideout?: true
+  /** The Ultra Beast of the week (`game/ultraWeek.ts`); the server checks it against the week the run started (`ultraFits`). None when absent. */
+  ultra?: UltraBeast
+  /** The forms the legend's path opened (`openForms` in `game/legendPaths.ts`): only the starter's own, each once. None when absent. */
+  forms?: readonly PathFormId[]
+  /** The run brings Regigigas's temple (`templeRun` in `game/legendPaths.ts`). Not when absent. */
+  temple?: boolean
+  /** The run brings the Ruínas da Decisão with these Regis still free in them (`ruinsRun` in `game/legendPaths.ts`). Not when absent. */
+  ruins?: readonly RuinsRegi[]
+  /** The legends the save still has to catch on the open map (`game/quests.ts`): none when absent (co-op, the Desafio do dia, all caught). */
+  wild?: WildStart
   /** World px the screen showed at the start: spawns and despawns depend on it. */
   view: { w: number; h: number }
 }
 
 /**
  * What the shell did to the run at a tick (before that tick's step): the
- * special attack, the Mega button, a manual lunge (Quick Attack), a level-up pick (index into the offers;
+ * special attack, the Mega button, the TERA button, a manual lunge (Quick Attack), a level-up pick (index into the offers;
  * a fork's branch is a second pick), a reroll or skip, forgetting a card (Esquecer, index into the offers),
+ * letting go of a held item (Largar item, index into the items: from the pause menu, or before a swap card's pick),
  * going on into endless mode, and a new screen size (rotation, resize).
  */
 /** The buttons a run steps with (`StepInput`). */
-type Press = 'special' | 'mega' | 'lunge'
+type Press = 'special' | 'mega' | 'tera' | 'lunge'
 
 export type ReplayEvent =
   | readonly [tick: number, kind: Press | 'reroll' | 'skip' | 'endless']
-  | readonly [tick: number, kind: 'offer' | 'banish', index: number]
+  | readonly [tick: number, kind: 'offer' | 'banish' | 'drop', index: number]
   | readonly [tick: number, kind: 'view', w: number, h: number]
 
 /**
@@ -181,12 +208,20 @@ export const parseView = (w: unknown, h: unknown) =>
 export const parseEvent = (raw: unknown): ReplayEvent | null => {
   if (!Array.isArray(raw) || !isWhole(raw[0])) return null
   const [tick, kind, a, b] = raw
-  if (kind === 'offer' || kind === 'banish') return isWhole(a) && a < 8 ? [tick, kind, a] : null
+  if (kind === 'offer' || kind === 'banish' || kind === 'drop') return isWhole(a) && a < 8 ? [tick, kind, a] : null
   if (kind === 'view') {
     const view = parseView(a, b)
     return view ? [tick, kind, view.w, view.h] : null
   }
-  return kind === 'special' || kind === 'mega' || kind === 'lunge' || kind === 'reroll' || kind === 'skip' || kind === 'endless' ? [tick, kind] : null
+  return kind === 'special' || kind === 'mega' || kind === 'tera' || kind === 'lunge' || kind === 'reroll' || kind === 'skip' || kind === 'endless' ? [tick, kind] : null
+}
+
+/** A replay's path forms: known ones of its starter's legend, each once, in table order; null when it names any other. */
+const parseForms = (raw: unknown, starter: string): PathFormId[] | null => {
+  if (raw === undefined) return []
+  if (!Array.isArray(raw)) return null
+  const forms = PATH_FORM_IDS.filter((id) => raw.includes(id) && PATH_FORMS[id].legend === starter)
+  return forms.length === raw.length ? forms : null
 }
 
 /** Whether `moves` is a run-length encoded stick (`[code, count…]`, every count above 0). */
@@ -220,6 +255,13 @@ export const parseReplay = (raw: unknown): Replay | null => {
   if (s.tms !== undefined && (!Array.isArray(s.tms) || tms.length !== s.tms.length || tms.length > MAX_ARMED_TMS)) return null
   if (s.evo !== undefined && (!Array.isArray(s.evo) || evo.length !== s.evo.length)) return null
   if (s.caps !== undefined && (!isWhole(s.caps) || s.caps > MAX_CAPS)) return null
+  const mythical = s.mythical === undefined ? undefined : parseHunt(s.mythical)
+  if (mythical === null) return null
+  const forms = parseForms(s.forms, s.starter)
+  if (forms === null) return null
+  const wild = s.wild === undefined ? undefined : parseWild(s.wild)
+  if (wild === null) return null
+  const ruins = parseRuins(s.ruins)
   return {
     rules: isWhole(raw.rules) && raw.rules > 0 ? raw.rules : 1,
     start: {
@@ -235,6 +277,15 @@ export const parseReplay = (raw: unknown): Replay | null => {
       tms,
       evo,
       caps: isWhole(s.caps) ? s.caps : 0,
+      ...(mythical ? { mythical } : {}),
+      ...(isDayKey(s.raid) ? { raid: s.raid } : {}),
+      ...(isShadowVariant(s.variant) ? { variant: s.variant } : {}),
+      ...(s.hideout === true ? { hideout: true } : {}),
+      ...(isUltraBeast(s.ultra) ? { ultra: s.ultra } : {}),
+      ...(forms.length > 0 ? { forms } : {}),
+      ...(s.temple === true ? { temple: true } : {}),
+      ...(ruins.length > 0 ? { ruins } : {}),
+      ...(wild ? { wild } : {}),
       view,
     },
     moves: raw.moves,
@@ -268,6 +319,15 @@ export const startGame = (start: ReplayStart, view: Game['view'] = { ...start.vi
     tms: start.tms ?? [],
     evo: start.evo ?? [],
     caps: start.caps ?? 0,
+    mythical: start.mythical,
+    raidDay: start.raid ?? null,
+    variant: start.variant ?? null,
+    hideout: start.hideout === true,
+    ultra: start.ultra ?? null,
+    forms: start.forms ?? [],
+    temple: start.temple === true,
+    ruins: start.ruins ?? [],
+    wild: start.wild,
   })
 
 const applyEvent = (g: Game, e: ReplayEvent) => {
@@ -275,6 +335,7 @@ const applyEvent = (g: Game, e: ReplayEvent) => {
     // Presses reach the next step as input (`resimulate`).
     case 'special':
     case 'mega':
+    case 'tera':
     case 'lunge':
       return
     case 'offer': {
@@ -284,6 +345,8 @@ const applyEvent = (g: Game, e: ReplayEvent) => {
     }
     case 'banish':
       return banishOffer(g, e[2])
+    case 'drop':
+      return dropItem(g, e[2])
     case 'reroll':
       return rerollOffers(g)
     case 'skip':
@@ -319,21 +382,23 @@ export const resimulate = (replay: Replay, g: Game = startGame(replay.start)): R
   const applyDue = () => {
     let special = false
     let mega = false
+    let tera = false
     let lunge = false
     while (next < events.length && events[next]![0] === tick) {
       const e = events[next++]!
       special ||= e[1] === 'special'
       mega ||= e[1] === 'mega'
+      tera ||= e[1] === 'tera'
       lunge ||= e[1] === 'lunge'
       applyEvent(g, e)
     }
-    return { special, mega, lunge }
+    return { special, mega, tera, lunge }
   }
   for (let i = 0; i < moves.length; i += 2) {
     const move = moveOf(moves[i]!)
     for (let n = 0; n < moves[i + 1]!; n++) {
-      const { special, mega, lunge } = applyDue()
-      step(g, { move, special, mega, lunge }, TICK)
+      const { special, mega, tera, lunge } = applyDue()
+      step(g, { move, special, mega, tera, lunge }, TICK)
       g.events.length = 0
       tick++
     }

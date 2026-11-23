@@ -108,7 +108,7 @@ export const checkLayout = (layout: BaseLayout, owned: FurnitureCounts): LayoutE
     }
   }
   // The doorway opens onto the room: the last piece to shut its last side is the one to move.
-  const shut = DOOR_SIDES.map((t) => layout.items.findLastIndex((p, i) => FURNITURE[p.id].blocks === true && overlaps({ ...t, w: 1, h: 1 }, boxes[i]!)))
+  const shut = DOOR_SIDES.map((t) => layout.items.reduce((last, p, i) => (FURNITURE[p.id].blocks === true && overlaps({ ...t, w: 1, h: 1 }, boxes[i]!) ? i : last), -1))
   if (shut.every((i) => i >= 0)) return { error: 'door', item: Math.max(...shut) }
   return null
 }

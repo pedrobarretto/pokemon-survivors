@@ -3,11 +3,15 @@ import { hash2 } from '../engine/rng'
 import { PLAYABLE } from '../data/hatchlings'
 import { playerDex } from '../game/game'
 import { legendLook } from '../game/legend'
+import { seasonKitForm } from '../game/seasonOneKitRules'
+import { hookForm } from './gaHookLook'
+import { SHADOW_SHEETS } from '../game/shadow'
+import { weatherHere } from '../game/weather'
 import type { Game } from '../game/types'
 import { skinFor } from '../data/cosmetics'
 import { shownLook } from './looks'
 import { STANCE_FORMS } from './specialFx'
-import { fitSprites, skinSprites, sprites, type FormKey, type SpeciesSprites } from './sprites'
+import { fitSprites, loadedSprites, sheetForm, skinSprites, sprites, type FormKey, type SpeciesSprites } from './sprites'
 
 /**
  * How the Legend mode looks (`game/legend.ts`): a legend wears its form and
@@ -36,13 +40,22 @@ export const LEGEND_MIN_HEIGHT = 30
  */
 export const playerSprites = (g: Game, megaForm?: FormKey): SpeciesSprites => {
   const p = g.player
+  // Ditto wears the foe it Transformed into (its sheets are loaded: that foe was on screen).
+  const copy = p.rocket?.kind === 'transform' && p.rocket.dex !== 0 && megaForm === undefined ? loadedSprites(p.rocket.dex) : undefined
+  if (copy) return copy
   const stance = p.special.stance
-  const form = megaForm ?? legendLook(g) ?? (stance ? STANCE_FORMS[stance] : undefined)
+  const form = sheetForm(megaForm ?? legendLook(g) ?? (stance ? STANCE_FORMS[stance] : undefined) ?? seasonKitForm(p.kit, p.stage, weatherHere(g)) ?? hookForm(g, p) ?? shadowForm(g))
   const dex = playerDex(g)
   const skin = form === undefined ? skinFor(shownLook(g, p.slot), dex) : null
   const s = (skin && skinSprites(skin, dex, p.shiny)) || sprites(dex, p.shiny, form)
   return p.legend ? fitSprites(s, LEGEND_BODY, LEGEND_MIN_HEIGHT) : s
 }
+
+/** SpriteCollab's own Shadow sheets for a Shadow Pokémon that has them (Mewtwo; `SHADOW_SHEETS`), else none. */
+const shadowForm = (g: Game): 'shadow' | undefined => (g.player.variant === 'shadow' ? SHADOW_SHEETS[playerDex(g)] : undefined)
+
+/** Whether the acting player draws SpriteCollab's Shadow sheets (and so goes without the code-drawn aura). */
+export const wearsShadowSheets = (g: Game) => shadowForm(g) !== undefined
 
 /** A boss of the player's own species (`isClone`): a dark violet cast and outline. */
 export const CLONE_TINT = { color: '#281838', amount: 0.55 } as const
@@ -88,9 +101,9 @@ export const drawLegendAura = (ctx: Ctx, g: Game, t: number, calm: boolean) => {
   ctx.globalAlpha = 1
 }
 
-/** The sprites an awakening's scene swaps between (its form's, where it lands in one) and the scale it plays at: big legends at 1×. */
-export const awakeningLook = (g: Game, from: number, form: FormKey | undefined) => {
+/** The sprites an awakening's scene swaps between (the look it lands in: `to`'s `form`, another species' for Urshifu or Melmetal) and the scale it plays at: big legends at 1×. */
+export const awakeningLook = (g: Game, from: number, to: number, form: FormKey | undefined) => {
   const before = sprites(from, g.player.shiny, legendLook(g))
-  const after = sprites(from, g.player.shiny, form ?? legendLook(g))
-  return { before, after, scale: before.bodyW > 40 ? 1 : 2 }
+  const after = sprites(to, g.player.shiny, form)
+  return { before, after, scale: Math.max(before.bodyW, after.bodyW) > 40 ? 1 : 2 }
 }

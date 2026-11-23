@@ -5,7 +5,7 @@ import type { EnemyId } from './data/enemies'
 import type { PlayableId } from './data/hatchlings'
 import type { MegaId } from './data/megas'
 import type { BagItem } from './data/shop'
-import type { SurveyAnswer } from './data/survey'
+import type { DesignAspect, DesignRating, SurveyAnswer } from './data/survey'
 import type { Difficulty } from './game/difficulty'
 import type { RunMode } from './game/ranking'
 import type { RelayHome, VpsHome } from './net/protocol'
@@ -19,13 +19,16 @@ import type { DeviceInfo } from './telemetry'
 import type { ArenaFormat } from './data/arenaFormats'
 import type { CatalogSlot, CosmeticId, Rarity } from './data/cosmetics'
 import type { SkinBundleId } from './data/skinCatalog'
-import type { GemCurrency, GemMethod, GemPackId } from './data/gems'
+import type { GemMarket, GemPackId } from './data/gems'
 import type { FirstStep, GateAnswer, StepTimes } from './firstSteps'
 import type { InAppApp, OnboardingStep } from './onboarding'
+import type { Arm, TourOutcome, TutorialOutcome } from './firstTime'
+import { analyticsLive } from './liveHosts'
+import type { SupportMilestone } from './ui/supportAskRules'
 
 /**
  * Analytics and error reports. Events go to PostHog (product analytics and
- * error tracking, through our `/ingest` proxy). It loads after the game is up,
+ * error tracking, through our `/ingest` proxy, `ingestHost`). It loads after the game is up,
  * so play never waits on it; events and errors from before it loads wait in a short queue.
  * Only production domains report (or a device with `ps:analytics` set to `on`, for testing).
  */
@@ -89,6 +92,9 @@ type AnalyticsEvents = {
     moves: string[]
     items: string[]
     bosses: number
+    /** The finale's mythical: who came, `none` when it rolled and missed, null when the run never got there; and the finales without one it played under (null: the plain odds). */
+    mythical: EnemyId | 'none' | null
+    mythicalDry: number | null
     /** What landed the last hit of a faint: the foe's species (null for a hazard) and the kind of hit. */
     foe: EnemyId | null
     hit: HitKind | null
@@ -124,9 +130,35 @@ type AnalyticsEvents = {
     inApp: InAppApp | null
     /** The onboarding moments the load went through (`OnboardingStep`), each once. */
     moments: OnboardingStep[]
+    /** The device's onboarding arm (`firstTime.ts`; null: out of the test), and how its training run ended so far and the furthest step it reached (null: never ended). */
+    arm: Arm | null
+    tutorial: TutorialOutcome['how'] | null
+    tutorialStep: string | null
+    /** 1 inside another site's page (a portal's frame, `handoff.ts`). */
+    framed: 0 | 1
+    /** Seconds since the page started, as the event went. */
+    at: number
+    /** The first run's opening sheets loaded of those it waits for (null before a run loads). */
+    sheets: { done: number; total: number } | null
+    /** The Pokémon sheets fetched: how many, median and slowest ms, KB over the network (null: none yet). */
+    sprites: { n: number; p50: number; max: number; kb: number } | null
+    /** The browser's network guess (Chrome only): effective type and round trip ms. */
+    network: { type: string | null; rtt: number | null } | null
     account: 0 | 1
     replay: 0 | 1
   } & DeviceInfo
+  /**
+   * The first visit's onboarding ended (`firstTime.ts`): the lobby tour done or skipped, once per device in arm
+   * `tour` (and again each time Settings' "Rever tutorial" replays it), with the tour's furthest stop
+   * (null when the tour doesn't tell) and how the device's training run ended (`none`: "Já sei jogar", or cut short).
+   */
+  onboarding: {
+    arm: Arm | null
+    how: TourOutcome
+    stop: number | null
+    tutorial: TutorialOutcome['how'] | 'none'
+    replay: 0 | 1
+  }
   /**
    * A Dojo session ended (`game/training.ts`), one per visit: who trained, for how long, and the
    * loadout it left with (`id:level`, as `run_end`), saved as a build or not. Says which builds
@@ -212,8 +244,18 @@ type AnalyticsEvents = {
    * from our button or the browser's menu (`installed`).
    */
   install: { step: 'prompt' | 'accepted' | 'dismissed' | 'ios' | 'installed' }
+  /** The lobby's ask for support at a milestone (`ui/supportAsk.ts`, once per device per milestone): what the player chose. */
+  support_ask: { milestone: SupportMilestone; choice: 'patreon' | 'donate' | 'later' }
+  /** The gem shop's Patreon card (`ui/patreonCard.ts`): Patreon's page opened (`join`, `manage`) or the Hall's link started (`link`). */
+  patreon_card: { action: 'join' | 'link' | 'manage' }
   /** The lobby's survey (`ui/survey.ts`): how each difficulty feels, with the runs and wins the player had when answering. */
   survey_difficulty: Record<Difficulty, SurveyAnswer> & { runs: number; wins: number }
+  /**
+   * The lobby's survey on the redesign (`ui/survey.ts`): the rating (1 to 5), what stands out (at most two),
+   * the runs played, the days since this device first saw it, and whether it already had runs banked by then
+   * (`returning`, `DESIGN_SURVEY.returningRuns`). The layout is in PostHog's `$viewport_width` and `$viewport_height`.
+   */
+  survey_design: { rating: DesignRating; aspects: DesignAspect[]; runs: number; days: number; returning: boolean }
   /** A co-op client diverged and was healed from the agreed snapshot: the room, the tick it was told at, and how long until it was back in step. */
   coop_heal: { room: string; tick: number; ms: number }
   /**
@@ -269,12 +311,17 @@ type AnalyticsEvents = {
    * handle: the queues and rooms are open), else only bots are.
    */
   arena_open: { screen: 'arena' | 'hub'; account: 0 | 1 }
-  /** The Arena's gem shop (`ui/gemShop.ts`): a pack's checkout opened (Stripe for `card`, AbacatePay for `pix`), in the currency shown. */
-  gems_checkout: { pack: GemPackId; method: GemMethod; currency: GemCurrency }
-  /** A checkout came back (`?gems=`): the gems landed (`ok`, how many and after how long) or the wait ran out first (`timeout`). */
-  gems_return: { outcome: 'ok' | 'timeout'; gems: number; seconds: number }
+  /**
+   * The gem shop (`ui/gemShop.ts`): a pack's Stripe Checkout opened, at `market`'s price, with the price shown
+   * in `currency` (`brl` in Brazil, the shop's guess elsewhere: `usd`, `twd`…), from a pack's card, an item's
+   * "Faltam" button, the Vitrine or the "Não deu certo?" sheet (`from`). Before 2026-11-20 it carried `method`
+   * (`card`, `pix`) and `currency` was `brl` or `usd`.
+   */
+  gems_checkout: { pack: GemPackId; market: GemMarket; currency: string; from: 'pack' | 'short' | 'vitrine' | 'retry' }
+  /** A checkout came back (`?gems=`): the gems landed (`ok`, how many and after how long), the wait ran out first (`timeout`) or the buyer gave up (`cancel`, `&cancel=`). */
+  gems_return: { outcome: 'ok' | 'timeout' | 'cancel'; gems: number; seconds: number }
   /** A Poké Realm visit, summed as it ends (`ui/realm.ts`): one event per city entered, never per line or step. */
-  realm_session: { city: string; seconds: number; rooms: number; lines: number; emotes: number; party: 0 | 1; portal: 'coop' | 'arena' | 'none' }
+  realm_session: { city: string; seconds: number; rooms: number; peers: number; lines: number; emotes: number; party: 0 | 1; portal: 'coop' | 'arena' | 'none' }
   /** A cosmetic bought with gems (a skin's `slot` is `skin`). */
   cosmetic_buy: { id: CosmeticId; slot: CatalogSlot; rarity: Rarity; price: number }
   /** A skin bundle bought with gems (`SKIN_BUNDLES`): what it cost the buyer and how many skins it brought. */
@@ -319,7 +366,6 @@ type AnalyticsEvents = {
 }
 
 const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY
-const LIVE_HOSTS = ['www.pokemonsurvivors.com', 'www.pokemonsurvivors.com.br']
 /** Errors one page load reports at most: a bug in the game loop throws every frame. */
 const MAX_ERRORS = 20
 /** Longest replay attached to an error report, in characters; PostHog drops events past 1 MB. */
@@ -415,6 +461,7 @@ const stackUrl = (stack: string) => /(?:https?|[a-z-]+-extension):\/\/[^\s)]+?(?
  * None of that is ours to fix. Those scripts may run in a JavaScript world
  * of their own, whose errors aren't this page's `Error`s (no `instanceof`)
  * though they are errors: the game's never are. With nothing to go on, it counts as ours.
+ * The game's scripts come from the site's `origin`.
  */
 export const isOwnError = (error: unknown, filename: string | undefined, origin: string) => {
   if (!(error instanceof Error) && Object.prototype.toString.call(error) === '[object Error]') return false
@@ -472,15 +519,7 @@ const reportError = (error: unknown, context: () => ErrorContext) => {
   withPosthog((ph) => ph.captureException(error, props))
 }
 
-const live = () => {
-  if (!POSTHOG_KEY) return false
-  if (LIVE_HOSTS.includes(location.hostname)) return true
-  try {
-    return localStorage.getItem('ps:analytics') === 'on'
-  } catch {
-    return false
-  }
-}
+const live = () => analyticsLive(POSTHOG_KEY)
 
 /**
  * Starts reporting: catches uncaught errors and rejections right away (with
@@ -497,6 +536,7 @@ export const startAnalytics = (context: () => ErrorContext) => {
     import('posthog-js')
       .then(({ default: ph }) => {
         ph.init(key, {
+          // PostHog's proxy on the site (`worker/worker.ts`).
           api_host: '/ingest',
           ui_host: 'https://us.posthog.com',
           persistence: 'localStorage',
@@ -510,7 +550,7 @@ export const startAnalytics = (context: () => ErrorContext) => {
           enable_heatmaps: false,
           // Replays only for the sampled new devices (`recordReplay`). They wait for the remote config
           // (`/array/<key>/config.js`), which says recording is on for the project: feature flags
-          // (`/flags/?v=2`) and remote config load, both through `/ingest` (vercel.json).
+          // (`/flags/?v=2`) and remote config load, both through `/ingest`.
           disable_session_recording: true,
           session_recording: { maskAllInputs: true },
           disable_surveys: true,

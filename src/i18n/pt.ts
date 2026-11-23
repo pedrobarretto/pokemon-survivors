@@ -1,3 +1,37 @@
+import { CAFE_TABLES_WORDS } from './cafeTables'
+import type { DexRegion } from '../data/nationalDex'
+import { GALLOP_WORDS } from './gallop'
+import { ITEM_DROP_WORDS } from './itemDrop'
+import { SUPPORT_WORDS } from './support'
+import { LOBBY_TOUR_WORDS } from './lobbyTour'
+import { TUTORIAL_WORDS } from './tutorial'
+import { WELCOME_WORDS } from './welcome'
+import { RADIO_WORDS } from './radio'
+import type { GameModeId } from '../data/gameModes'
+import { realmBookPt as realmBook } from './realmStamps/pt'
+import { SEASON_ONE_EGGS_WORDS } from './seasonOne/eggs'
+import { TERA_WORDS } from './tera'
+import { SEASON_ONE_KITS_WORDS } from './seasonOne/kits'
+import { GA_FAMILIES_B_WORDS } from './gaFamiliesB'
+import { GA_FOSSILS_WORDS } from './gaFossils'
+import { MEGA_FAMILIES_B_WORDS } from './megaFamiliesB'
+import { GA_FAMILIES_A_WORDS } from './gaFamiliesA'
+import { GA_HOOK_WORDS } from './gaHook'
+import { ROCKET_FAMILY_WORDS } from './rocket/families'
+import { GA_MEGAS_WORDS } from './gaMegas'
+import { GA_MEGA_FAMILIES_A_WORDS } from './gaMegaFamiliesA'
+import { SC_WAVE_WORDS } from './scWave'
+import { ROCKET_WORDS } from './rocket/words'
+import { ULTRA_WORDS } from './ultra'
+import { LEGEND_PATHS_WORDS } from './legendPaths'
+import { QUEST_WORDS } from './quests'
+import { MYTHICAL_WORDS } from './mythicals'
+import { REGIS_FORCES_WORDS } from './regisForces'
+import { SEASON_ONE_UNLOCKS_WORDS } from './seasonOne/unlocks'
+import { SEASON_ONE_CLAW_WORDS } from './seasonOne/claw'
+import { SEASON_ONE_SAFARI_WORDS } from './seasonOne/safari'
+import { SEASON_ONE_DIG_WORDS } from './seasonOne/dig'
+import { REGIONAL_WORDS } from './regional'
 import type { AchievementId, AchievementStat, GiftTitleId, TitleId } from '../data/achievements'
 import type { BiomeId } from '../data/biomes'
 import type { DigFind, HiddenPlaceId, PlaceId, WingId } from '../data/places'
@@ -10,8 +44,9 @@ import type { RiftLegend } from '../data/rifts'
 import type { WaveLegend } from '../data/legendBosses'
 import type { PlayableId } from '../data/hatchlings'
 import type { MegaId } from '../data/megas'
-import type { LegendId } from '../data/legends'
+import type { ExtraInnateLegend } from '../data/legends'
 import type { AbilityId } from '../data/abilities'
+import type { OtherStat } from '../ui/statBars'
 import type { ItemId } from '../data/items'
 import type { CurseId } from '../data/curses'
 import type { TraitId } from '../data/traits'
@@ -26,7 +61,7 @@ import type { ArenaEffectId } from '../data/arenaEffects'
 import type { CatalogSlot, Rarity } from '../data/cosmetics'
 import type { ShopFurnitureId } from '../data/furniture'
 import type { Season, SkinId } from '../data/skinCatalog'
-import type { GemPackId } from '../data/gems'
+import type { GemPackId, GemPromoName } from '../data/gems'
 import type { GemReason } from '../game/gems'
 import type { ArenaFormat } from '../data/arenaFormats'
 import type { BoardStat, PingKind, QuickChat } from '../game/versusSocial'
@@ -35,14 +70,13 @@ import type { FurnitureKind, FurnitureSet } from '../data/furniture'
 import type { BaseExterior, BaseVisibility } from '../data/secretBases'
 import type { AimAssist } from '../ui/arenaAim'
 import type { MatchKind, TierId } from '../data/arenaRanked'
-import type { SurveyAnswer } from '../data/survey'
+import type { DesignAspect, DesignRating, SurveyAnswer } from '../data/survey'
 import type { BackgroundId, FrameId, StyleSlot, WallpaperId } from '../data/style'
 import type { BagItem } from '../game/bag'
 import type { ShopLevel, ShopProp } from '../data/shop'
 import type { VitrineBlock } from '../game/shop'
 import type { CaravanBlock } from '../game/caravan'
 import type { StallBlock } from '../game/stalls'
-import type { StallId } from '../data/visitors'
 import type { FestivalId } from '../data/festivals'
 import type { RibbonTier } from '../game/ribbons'
 import type { SupporterTier } from '../game/supporters'
@@ -60,6 +94,9 @@ import type { Action } from '../engine/bindings'
 import type { RealmEmote, RealmLine, RealmRefusal } from '../net/realm'
 import type { ReportReason as RealmReportReason } from '../net/realmApi'
 import type { SpotKind } from '../data/realmMap'
+
+/** The regions as the Pokédex names them (`data/nationalDex.ts`). */
+const REGION_NAMES = { kanto: 'Kanto', johto: 'Johto', hoenn: 'Hoenn', sinnoh: 'Sinnoh', unova: 'Unova', kalos: 'Kalos', alola: 'Alola', galar: 'Galar', paldea: 'Paldea' } satisfies Record<DexRegion, string>
 
 /** A fork branch's texts: its name and a one-line description (~45 characters). */
 type BranchText = { readonly name: string; readonly desc: string }
@@ -120,59 +157,57 @@ export const pt = {
     regen: 'Regeneração',
   },
 
-  /** The title screen: the "press start" intro, then the lobby (`ui/title.ts`). Press Start 2P has no uppercase accented glyphs: its labels stay unaccented or mixed case. */
+  /** The title screen: the "press start" intro, then the lobby (`ui/title.ts`). Older capital labels stay unaccented from when the font had no accented capitals. */
   home: {
     pressKeys: 'Pressione qualquer tecla',
     pressTouch: 'Toque para começar',
     play: 'JOGAR',
     today: 'HOJE',
-    outbreak: 'SURTO DO DIA',
-    challenge: 'DESAFIO DO DIA',
+    /** Na Praça's column head and the note beside it. */
+    plaza: 'NA PRAÇA',
+    plazaNote: 'evento + lojas',
+    outbreakName: (name: string) => `Surto: ${name}`,
+    outbreakLine: 'shiny mais fácil hoje',
+    challengeName: 'Desafio do dia',
+    challengeLine: (name: string) => `${name} · vale fita de ouro`,
     /** The Desafio do dia card once today's attempt was made: its time. */
     challengeDone: (time: string) => `Feito: ${time}`,
     challengeOpen: 'Ainda não jogado hoje',
     missions: 'Missões',
     missionsLeft: (n: number) => (n === 1 ? '1 missão de hoje por fazer' : `${n} missões de hoje por fazer`),
-    hall: 'HALL DA FAMA',
-    /** The Hall da Fama card's ticker: the newest supporter. */
-    hallJoined: (handle: string, today: boolean) => (today ? `@${handle} entrou hoje` : `@${handle} entrou no Hall`),
+    hallName: 'Hall da Fama',
+    hallNewest: 'Último:',
+    hallCount: (n: number, shown: string) => (n === 1 ? `${shown} apoiador` : `${shown} apoiadores`),
     /** The name plate under the partner: tapping it opens the Pokémon select. */
     change: 'Trocar',
-    /** Over the partner until its first walk: after the movement keys, and on touch screens. */
-    stroll: 'passear',
-    strollTouch: 'Toque na grama para passear',
-    /** Passear: the button by the partner that puts the lobby's cards away to walk the meadow and the plaza, its label for screen readers, and the hint while walking. */
-    explore: 'Passear',
-    exploreLabel: 'Passear pelo campo e pela praça',
-    exploreTouch: 'Toque ou arraste para andar',
-    exploreKeys: 'andar',
     pokedex: 'Pokédex',
     eggs: 'Ovos',
     eggsReady: (n: number) => (n === 1 ? '1 ovo pronto para chocar' : `${n} ovos prontos para chocar`),
+    eggsWalking: (n: number) => (n === 1 ? '1 a caminho' : `${n} a caminho`),
+    eggsNone: 'Incubadora vazia',
+    gifts: 'Presentes',
+    giftsToOpen: (n: number) => (n === 1 ? '1 para abrir' : `${n} para abrir`),
     mart: 'Loja',
-    /** The lobby's Dojo tile (`ui/training.ts`): Machoke's training hall, west of home. */
-    dojo: 'Dojo',
-    /** Its label for screen readers and the rail tile's long name. */
-    dojoLabel: 'Dojo: treine golpes e monte builds',
     ranking: 'Ranking',
     ideas: 'Ideias',
     /** Support chip (donations page), and the Hall da Fama card before it has names. */
     support: 'Apoie o projeto',
-    /** Phones held upright: the lobby's side rails, an icon over a short label (Press Start 2P at 6 px: keep them to about 9 letters), and the days an event has left on its corner. */
-    rail: {
-      halloween: 'Bruxas',
-      festival: 'Festival',
-      outbreak: 'Surto',
-      challenge: 'Desafio',
-      missions: 'Missões',
-      hall: 'Hall',
-      invites: 'Convidar',
-      discord: 'Discord',
-      days: (n: number) => `${n}d`,
-    },
+    /** Na Praça's shop rows. */
+    shopName: 'Loja do Kecleon',
+    shopLine: 'Vitrine do dia · Ovo Kecleon',
+    boutiqueName: 'Boutique',
+    boutiqueLine: 'Chapéus e efeitos novos',
+    carpentryName: 'Marcenaria',
+    carpentryLine: 'Móveis para a sua base',
+    /** Over the partner pill, before its name. */
+    partner: 'Parceiro',
+    community: 'Comunidade',
+    friends: 'Amigos',
+    /** The bottom tabs on a phone (and the rail on a phone on its side). */
+    tabs: { home: 'Início', collection: 'Coleção', plaza: 'Praça', social: 'Social', profile: 'Perfil' },
   },
 
-  /** The menus' top bar (`ui/shell.ts`). Press Start 2P has no uppercase accented glyphs: titles stay unaccented or mixed case. */
+  /** The menus' top bar (`ui/shell.ts`). Older capital titles stay unaccented from when the font had no accented capitals. */
   shell: {
     back: 'Voltar',
     settings: 'Ajustes',
@@ -205,6 +240,20 @@ export const pt = {
     statsSection: 'Status',
     legendBase: 'início',
     legendFinal: 'evoluído',
+    /** The details sheet's "Outros bônus": stats the bars leave out that the line raises (`otherBonuses` in `ui/statBars.ts`), each given its value in display units. */
+    otherBonuses: 'Outros bônus',
+    otherBonusesNote: 'Além das barras, no último estágio.',
+    otherBonus: {
+      amount: (n: number) => (n === 1 ? '+1 projétil' : `+${n} projéteis`),
+      projectileSpeed: (n: number) => `+${n}% velocidade dos projéteis`,
+      duration: (n: number) => `+${n}% duração`,
+      magnet: (n: number) => `+${n} alcance de coleta`,
+      growth: (n: number) => `+${n}% XP`,
+      greed: (n: number) => `+${n}% ₽`,
+      statusChance: (n: number) => `+${n}% chance de condição`,
+      statusDamage: (n: number) => `+${n}% dano de condição`,
+      specialRecharge: (n: number) => `Especial: -${n / 10} s por nocaute`,
+    } satisfies Record<OtherStat, (n: number) => string>,
     evolution: 'Evolução',
     special: 'Especial',
     moves: 'Golpes',
@@ -216,7 +265,7 @@ export const pt = {
     credits: 'Fan game não oficial · Sprites: PMD SpriteCollab · Cries: PokéAPI · Pokémon © Nintendo/Creatures/GAME FREAK',
   },
 
-  /** The partner select: roster tabs, the partner panel, its details sheet and the start bar. Press Start 2P labels: unaccented capitals or mixed case. */
+  /** The partner select: roster tabs, the partner panel, its details sheet and the start bar. Older capital labels stay unaccented from when the font had no accented capitals. */
   partner: {
     title: 'ESCOLHA SEU PARCEIRO',
     titleShort: 'PARCEIRO',
@@ -256,8 +305,12 @@ export const pt = {
     /** The manual lunge button (Quick Attack, Extreme Speed). */
     lunge: 'Bote',
     lungeTitle: (name: string) => `${name} (Shift)`,
+    /** The padlock on the status box (touch): the joystick fixed in its corner or following the thumb, and what it says when pressed. */
+    stickLock: 'Joystick fixo',
+    stickLocked: 'Joystick fixo! Mude o lugar em Ajustes → Controles.',
+    stickFree: 'Joystick solto: ele segue o dedo.',
     /** Aegislash's forme, shown on the special button (Stance Change). */
-    stances: { shield: 'Escudo', blade: 'Lâmina', normal: 'Normal', attack: 'Ataque', defense: 'Defesa', speed: 'Velocidade' } satisfies Record<Stance, string>,
+    stances: { shield: 'Escudo', blade: 'Lâmina', normal: 'Normal', attack: 'Ataque', defense: 'Defesa', speed: 'Velocidade', heat: 'Forno', wash: 'Lavadora', frost: 'Geladeira', fan: 'Ventilador', mow: 'Cortador' } satisfies Record<Stance, string>,
     /** Jumps left in a running chain dash. */
     jumps: (n: number) => `×${n}`,
   },
@@ -765,7 +818,11 @@ export const pt = {
     shop: {
       pitch: 'Visuais para o seu Pokémon nas partidas, no co-op e na Arena: todo mundo vê, e nenhum dá poder.',
       balance: 'Seu saldo',
-      currency: 'Moeda',
+      /** The Brasil / Outro país switch over the packs (which price list, `GemMarket`), and the note under them abroad, where prices are a guess in the buyer's currency. */
+      market: 'Onde você paga',
+      marketBr: 'Brasil',
+      marketIntl: 'Outro país',
+      approx: 'Preços aproximados na sua moeda: o valor final aparece no pagamento.',
       packs: 'Pacotes de gemas',
       bonus: (n: string) => `+${n} bônus`,
       catalog: 'Visuais',
@@ -791,6 +848,8 @@ export const pt = {
       confirm: (name: string, price: string) => `Comprar ${name} por ${price} gemas?`,
       bought: (name: string) => `${name} é seu, e você já está usando!`,
       short: (n: string) => `Faltam ${n} gemas. Que tal um pacote?`,
+      /** An item out of reach: its button buys the pack that covers it (gems missing and the pack's name; its price follows). */
+      shortPack: (n: string, pack: string) => `Faltam ${n} · ${pack}`,
       busy: 'Calma! Muitas compras seguidas. Tente de novo em um minuto.',
       offline: 'A loja está fora de alcance agora. Tente de novo em instantes.',
       banned: 'Esta conta não pode usar a Loja.',
@@ -808,13 +867,15 @@ export const pt = {
     checkout: {
       split: (gems: string, bonus: string) => `${gems} + ${bonus} bônus`,
       pay: 'Pagar com',
-      card: 'Cartão, Apple Pay ou Google Pay',
-      pix: 'Pix',
+      /** What Stripe Checkout takes, by price list (Pix only shows in reais), the button to it and the note on a price abroad. */
+      ways: { br: 'Pix, cartão, Apple Pay ou Google Pay', intl: 'Cartão, Apple Pay, Google Pay e outros, na sua moeda' },
+      go: 'Ir para o pagamento',
+      approx: 'Valor aproximado: o preço final, na sua moeda, aparece no pagamento.',
       /** The box the pay buttons need ticked. */
       age: 'Tenho 18 anos ou mais, ou tenho a permissão dos meus pais ou responsáveis.',
       /** The checkout turned down (`GemCheckoutRefusal`): a once pack taken, the day's limit (`GEM_CHECKOUT.daily`, as a price). */
       once: 'Esta conta já pegou o pacote de boas-vindas.',
-      cap: (limit: string) => `Por segurança, cada conta compra até ${limit} em gemas por dia, e um pagamento em aberto conta por meia hora. Tente de novo amanhã (o dia vira à meia-noite de Brasília).`,
+      cap: (limit: string) => `Por segurança, cada conta compra até ${limit} em gemas por dia, e um pagamento em aberto conta por cerca de uma hora. Tente de novo amanhã (o dia vira à meia-noite de Brasília).`,
       cancel: 'Cancelar',
       opening: 'Abrindo o pagamento…',
       failed: 'Não deu para abrir o pagamento. Tente de novo.',
@@ -825,6 +886,19 @@ export const pt = {
       timeout: 'Pagamento a caminho',
       timeoutNote: 'Ainda estamos confirmando o pagamento. As gemas chegam à sua conta em alguns minutos (um Pix pode demorar um pouco mais), e você pode continuar jogando.',
       ok: 'Continuar',
+    },
+    /** Back from a checkout given up (`&cancel=`): nothing charged, the same pack again, the other ways to pay (by price list) and Patreon. */
+    cancelled: {
+      title: 'Não deu certo?',
+      text: 'Nada foi cobrado. Quer tentar de novo?',
+      retry: (pack: string, price: string) => `Tentar de novo: ${pack} · ${price}`,
+      ways: {
+        br: 'Dá para pagar com Pix, Apple Pay ou Google Pay, além de cartão.',
+        intl: 'Cartão recusado? Tente Apple Pay, Google Pay ou outro cartão: alguns bancos recusam compras de lojas de outro país.',
+      },
+      patreon: 'Prefere apoiar todo mês? O Patreon também traz gemas.',
+      patreonLink: 'Ver o Patreon',
+      close: 'Agora não',
     },
     /** The Skins page (`ui/skinShop.ts`): skins by line, the bundles and the launch offers. */
     skinShop: {
@@ -871,6 +945,22 @@ export const pt = {
       wear: (name: string) => `Usar ${name}`,
       see: (name: string) => `${name}: ver na Boutique`,
     },
+    /** A gem promotion (`GEM_PROMOS`): its name, the packs' tag, the Loja's banner, the split of a pack's gems, the time left (and short, for the lobby's Boutique row). */
+    promo: {
+      names: { blackFriday: 'Black Friday' } satisfies Record<GemPromoName, string>,
+      tag: (pct: string, name: string) => `+${pct}% ${name}`,
+      banner: (name: string, pct: string) => `${name}: +${pct}% de gemas em todos os pacotes`,
+      split: (gems: string, extra: string, name: string) => `${gems} + ${extra} da ${name}`,
+      left: (days: number, hours: number) => (days > 0 ? `Termina em ${days} d ${hours} h` : hours > 0 ? `Termina em ${hours} h` : 'Termina em menos de 1 h'),
+      short: (days: number, hours: number) => (days > 0 ? `${days} d ${hours} h` : `${hours} h`),
+    },
+    /** The results' gem line (`runGemsLine`): the run gems the report brought and the balance, then what they buy now or how far the next look is. */
+    run: {
+      earned: (n: string, balance: string) => `+${n} gemas · saldo ${balance}`,
+      covers: (item: string) => `Já dá para comprar ${item}`,
+      short: (n: string, first: boolean) => (first ? `Faltam ${n} para o primeiro visual` : `Faltam ${n} para o próximo visual`),
+      see: 'Ver na Boutique',
+    },
     /** The gem chip for a guest (no balance): the way to the Boutique. */
     chipGuest: 'Boutique: visuais com gemas',
     locker: {
@@ -886,6 +976,7 @@ export const pt = {
     },
   },
   realm: {
+    ...realmBook,
     name: 'Poké Realm',
     entry: 'Realm',
     entryLabel: 'Poké Realm: a cidade online',
@@ -896,7 +987,11 @@ export const pt = {
     off: 'O Poké Realm não está disponível nesta versão do jogo.',
     cities: {
       title: 'Escolha uma cidade',
-      hint: 'Cada cidade é uma cópia da mesma vila, com até 40 treinadores.',
+      hint: 'Você entra na primeira com vaga. Todas são a mesma vila, com até 40 treinadores.',
+      switch: 'Trocar de cidade',
+      here: 'Você está aqui',
+      lobbyLine: 'Passeie com seu parceiro',
+      crowd: (n: number) => `${n} treinadores agora`,
       trainers: (n: number) => (n === 1 ? '1 treinador' : `${n} treinadores`),
       full: 'Lotada',
       enter: 'Entrar',
@@ -906,7 +1001,7 @@ export const pt = {
       offline: 'Não deu para ver as cidades agora. Você ainda pode entrar.',
       back: 'Voltar',
     },
-    rooms: { plaza: 'Praça', pier: 'Píer', cafe: 'Café', trail: 'Bosque das Bases', arcade: 'Fliperama' },
+    rooms: { plaza: 'Praça', pier: 'Píer', cafe: 'Café', trail: 'Bosque das Bases', arcade: 'Fliperama', gameCorner: ROCKET_WORDS.pt.corner.name },
     base: (handle: string) => `Base de @${handle}`,
     status: {
       connecting: 'Conectando…',
@@ -974,6 +1069,10 @@ export const pt = {
       gameTable: 'Mesa de jogos',
       cabinet: 'Fliperama',
       prizes: 'Prêmios',
+      tokens: ROCKET_WORDS.pt.corner.spots.tokens,
+      rocketPrizes: ROCKET_WORDS.pt.corner.spots.prizes,
+      poster: ROCKET_WORDS.pt.corner.spots.poster,
+      hideoutStairs: ROCKET_WORDS.pt.corner.spots.stairs,
     } satisfies Record<SpotKind, string>,
     use: 'Usar',
     pieces: {
@@ -1002,6 +1101,15 @@ export const pt = {
     counter: 'O café ainda está arrumando o balcão. Volte em breve!',
     pool: 'Pokémon de Água nadam aqui. Em breve!',
     prizes: 'Bata recordes nos fliperamas e ganhe troféus para enfeitar a sua base secreta!',
+    /** The Hora do Realm: the banner, the lobby's tag and the fishing screen's chip. */
+    hours: {
+      names: { tide: 'Maré Alta', storm: 'Chuva de Frutas', tables: 'Noite das Mesas' },
+      perks: { tide: 'Pesca em dobro e mais peixes raros', storm: 'Fliperama em dobro', tables: 'Jogos de mesa em dobro' },
+      go: 'Ir',
+      starts: (c: string) => `em ${c}`,
+      ends: (c: string) => `resta ${c}`,
+      tideChip: 'Maré alta!',
+    },
     grove: {
       first: [
         'Psiu! Eu sou só uma árvore... Tá bom, eu sou o Sudowoodo. Bem-vindo ao Bosque das Bases!',
@@ -1174,13 +1282,24 @@ export const pt = {
       /** Back in the room while the others still play (the endless mode). */
       playing: 'A equipe está numa partida.',
       rejoin: 'Voltar para a partida',
-      rules: 'Co-op é o modo normal: sem Modo Lendário, Surto do dia, Noite das Bruxas, Mochila nem TMs da loja. As partidas entram no ranking de Duplas, Trios e Squads.',
+      rules: 'Co-op é o modo normal (ou o Modo Lendário, se o anfitrião ligar): sem Surto do dia, Noite das Bruxas, Mochila nem TMs da loja. As partidas entram no ranking de Duplas, Trios e Squads.',
       /** The host's switch for the Desafio co-op do dia (run rooms): the day's seed and difficulty, upgrades off. */
       challenge: 'Desafio do dia',
       challengeModes: { off: 'Desligado', on: 'Ligado' },
       challengeBadge: (date: string) => `Desafio co-op do dia · ${date}`,
       challengeRules: 'Semente e dificuldade do dia, sem melhorias da Poké Mart. Vale a melhor partida do time.',
       challengeFixed: 'a do desafio',
+      /** The host's switch for the Modo Lendário (run rooms, never with the Desafio co-op do dia): every seat plays a legend it captured. */
+      legend: 'Modo Lendário',
+      legendBadge: 'Modo Lendário',
+      legendRules: 'Cada um joga um lendário que já capturou: horda mais forte, Pressão e despertares no Lv 12 e 28. Vale nos rankings Lendários de Duplas, Trios e Squads.',
+      legendOff: 'desligado no Desafio do dia',
+      legendPick: 'Trocar lendário',
+      /** This player has no legend captured: they can't get ready in a legend room. */
+      noLegend: 'Você ainda não capturou um lendário. Vença um no modo solo para jogar nesta sala.',
+      noLegendSeat: 'sem lendário',
+      legendFellBack: (name: string, pokemon: string) => `O lendário de ${name} não foi confirmado pela conta: joga com ${pokemon}, e a partida fica fora do placar.`,
+      legendNote: 'Escolha um dos seus lendários capturados. O servidor confere a captura na largada; sem ela, você joga com seu parceiro.',
       hintKeys: '← → escolher · ENTER confirmar · ESC sair',
       hintTouch: 'Toque para escolher',
       /** The partner select, picking for the room. */
@@ -1229,6 +1348,12 @@ export const pt = {
     inviteLater: 'Agora não',
   },
 
+  itemDrop: ITEM_DROP_WORDS.pt,
+  support: SUPPORT_WORDS.pt,
+  welcome: WELCOME_WORDS.pt,
+  tutorial: TUTORIAL_WORDS.pt,
+  lobbyTour: LOBBY_TOUR_WORDS.pt,
+  radio: RADIO_WORDS.pt,
   levelUp: {
     title: (name: string, level: number) => `${name} subiu para o Nv ${level}!`,
     ready: 'PRONTO!',
@@ -1258,8 +1383,8 @@ export const pt = {
     shinyNote: 'Escolha grátis: depois tem outra!',
     banish: (n: number) => `Esquecer (${n})`,
     banishCancel: 'Cancelar',
-    banishHintKeys: 'Escolha o card a esquecer · ESC cancela',
-    banishHintTouch: 'Toque no card a esquecer',
+    banishHintKeys: 'Escolha o card a esquecer: ele não volta mais nesta partida (um golpe que você já tem para no nível atual) · ESC cancela',
+    banishHintTouch: 'Toque no card a esquecer: ele não volta mais nesta partida (um golpe que você já tem para no nível atual)',
     /** Title of a prize level-up (every card rare), by where it came from (`Game.prize`). */
     prize: { alpha: 'Prêmio do Alfa!', mission: 'Missão cumprida!' } satisfies Record<PrizeSource, string>,
   },
@@ -1335,6 +1460,7 @@ export const pt = {
     music: 'Música',
     sfx: 'Efeitos',
     sound: 'Som',
+    mixOthers: 'Tocar com outros apps',
     damageNumbers: 'Números de dano',
     damageModes: { all: 'Todos', reduced: 'Reduzidos', off: 'OFF' },
     screenShake: 'Tremor de tela',
@@ -1404,6 +1530,7 @@ export const pt = {
       right: 'Mover para a direita',
       special: 'Ataque especial',
       mega: 'Mega Evolução',
+      tera: TERA_WORDS.pt.action,
       lunge: 'Bote',
       pause: 'Pausar',
       confirm: 'Confirmar',
@@ -1465,6 +1592,7 @@ export const pt = {
     inAppOpen: 'Abrir no Chrome',
     inAppIos: 'Toque em *...* e escolha *Abrir no navegador*',
     inAppSignIn: 'O Google não deixa entrar por dentro deste app. Abra o jogo no navegador para entrar com sua conta.',
+    framedSignIn: 'Abrimos o jogo numa aba nova para você entrar, com o seu progresso. Continue jogando por lá.',
     close: 'Fechar',
   },
 
@@ -1512,7 +1640,7 @@ export const pt = {
     /** A row's Bag items, for screen readers and the tooltip. */
     bag: (items: string) => `Mochila: ${items}`,
     title: 'RANKING',
-    periods: { day: 'Hoje', week: 'Semana', all: 'Total' },
+    periods: { day: 'Hoje', week: 'Semana', all: 'Temporada', era1: 'Era 1' },
     everyone: 'Todos',
     friends: 'Amigos',
     allPokemon: 'Todos os Pokémon',
@@ -1563,6 +1691,7 @@ export const pt = {
     legendGroup: 'Lendários',
     /** The Co-op side (a third mode): boards of teams by size (Duplas, Trios, Squads), and the Desafio co-op do dia's. */
     coop: 'Co-op',
+    coopLegend: 'Co-op Lendário',
     sizes: { duo: 'Duplas', trio: 'Trios', squad: 'Squads' },
     coopOutcomes: { victory: 'Venceu', wipe: 'Desmaiaram' },
     coopEmpty: 'Nenhum time neste quadro ainda. Chame a galera e seja o primeiro!',
@@ -1573,6 +1702,17 @@ export const pt = {
     coopHint: '↑ ↓ treinador · ← → período · Q E dificuldade · M modo · T time · F amigos · ENTER perfil · ESC voltar',
     coopChallengeHint: '↑ ↓ treinador · ← → dia · Q E quadro · M modo · T time · F amigos · ENTER perfil · ESC voltar',
     team: (names: string) => `Time: ${names}`,
+    /** The Era 1 Hall da Fama (period `era1`): the runs from before Temporada 1, kept for good, and what its top earns (`game/era1.ts`). */
+    hall: {
+      kicker: 'Hall da Fama',
+      closed: (date: string) => `Os recordes de antes da Temporada 1. Fechados em ${date}, ficam aqui para sempre.`,
+      open: (date: string) => `A Era 1 fecha em ${date}, quando a Temporada 1 abre. Os recordes de até lá ficam aqui para sempre.`,
+      reward: (top: number) => `O nº 1 de cada quadro ganha o título *Campeão(ã) da Era 1*, uma moldura e um céu só dele. Até o ${top}º: *Lenda da Era 1* e sua moldura.`,
+      coopReward: (top: number) => `Os ${top} primeiros times de cada quadro: *Lenda da Era 1* e sua moldura.`,
+      thin: (n: number) => (n === 0 ? 'Menos de 10 neste quadro: ele não dá recompensa.' : `Poucos jogadores neste quadro: a recompensa vai até o ${n}º.`),
+      tags: { champion: 'Campeão(ã)', hall: 'Lenda' },
+    },
+    seasonSoon: (date: string) => `A Temporada 1 abre em ${date}. Até lá, os recordes entram na Era 1.`,
   },
 
   /** Public profiles and the profile editor. */
@@ -1735,6 +1875,8 @@ export const pt = {
   dex: {
     seen: 'Vistos',
     defeated: 'Derrotados',
+    /** The defeated counter's tooltip: why its total is smaller than the seen one's. */
+    defeatedHint: 'Só os que aparecem para lutar: os que você só joga, choca ou ganha não contam',
     caught: 'Capturados',
     /** Clears (`game/clears.ts`): the Pokémon that beat Mewtwo, the hardest difficulty picking the trophy's metal. */
     cleared: 'Zerados',
@@ -1751,7 +1893,23 @@ export const pt = {
     back: 'Voltar',
     site: 'Onde encontrar ↗',
     pc: 'Caixa do PC',
-    hintKeys: 'SETAS navegar · Q E filtro · ESC voltar',
+    regions: REGION_NAMES,
+    regionsDone: 'Regiões',
+    goal: (left: number, title: string) => `Faltam *${left}* para o título *${title}*`,
+    goalDone: (title: string) => `Região completa! Título *${title}* conquistado`,
+    nationalGoal: (done: number, total: number, frame: string) => `${done}/${total} regiões · moldura *${frame}*`,
+    /** A region's counts, the same in the game and on the site (`regionCounts`): the species it has, how many its title asks and the ones that don't count. */
+    counts: (inGame: number, total: number) => `${inGame} de ${total} no jogo`,
+    forTitle: (goal: number) => `${goal} para o título`,
+    notCounted: (names: readonly string[]) => `${new Intl.ListFormat('pt-BR').format(names)} ${names.length > 1 ? 'não contam' : 'não conta'}`,
+    drawing: 'Arte a caminho',
+    drawingText: 'Os artistas do PMD SpriteCollab, que desenharam todos os Pokémon do jogo, ainda estão criando este. Obrigado, artistas! ♥',
+    /** `drawingText` for a phone's detail strip. */
+    drawingShort: 'Os artistas do SpriteCollab ainda estão desenhando este. Obrigado, artistas! ♥',
+    contribute: 'Ajudar a desenhar ↗',
+    soon: 'Ainda não aparece no jogo. Fique de olho nas novidades!',
+    soonTag: 'Em breve',
+    hintKeys: 'SETAS navegar · Q E região · ESC voltar',
     hintTouch: 'Toque num Pokémon para ver detalhes',
   },
 
@@ -1776,8 +1934,8 @@ export const pt = {
       wallpaper: 'Papel de parede da Caixa do PC.',
     } satisfies Record<StyleSlot, string>,
     styles: {
-      frame: { classic: 'Clássica', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embaixador(a)', supporter: 'Apoiador(a)', pumpkin: 'Abóbora', spectral: 'Espectral', regular: 'Freguês', kecleon: 'Kecleon Dourado', meowth: 'Meowth', lantern: 'Lanterna', creator: 'Criador(a)', grotto: 'Gruta Oculta' } satisfies Record<FrameId, string>,
-      background: { night: 'Noite estrelada', meadow: 'Rota 1', forest: 'Floresta de Viridian', cave: 'Monte Moon', snow: 'Monte Prateado', tower: 'Torre de Lavender', supporter: 'Céu dourado', halloween: 'Noite das Bruxas', friendship: 'Amizade' } satisfies Record<BackgroundId, string>,
+      frame: { classic: 'Clássica', poke: 'Poké Ball', great: 'Great Ball', ultra: 'Ultra Ball', master: 'Master Ball', ambassador: 'Embaixador(a)', supporter: 'Apoiador(a)', pumpkin: 'Abóbora', spectral: 'Espectral', regular: 'Freguês', kecleon: 'Kecleon Dourado', meowth: 'Meowth', lantern: 'Lanterna', creator: 'Criador(a)', grotto: 'Gruta Oculta', stampFrame: 'Estampas', era1: 'Era 1', era1Champion: 'Coroa da Era 1', bugContest: 'Concurso de Insetos', rocket: ROCKET_WORDS.pt.frame, nationalDex: 'Pokédex Nacional' } satisfies Record<FrameId, string>,
+      background: { night: 'Noite estrelada', meadow: 'Rota 1', forest: 'Floresta de Viridian', cave: 'Monte Moon', snow: 'Monte Prateado', tower: 'Torre de Lavender', supporter: 'Céu dourado', halloween: 'Noite das Bruxas', friendship: 'Amizade', era1Champion: 'Trono da Era 1' } satisfies Record<BackgroundId, string>,
       wallpaper: { classic: 'Clássico', forest: 'Folhas', cave: 'Pedrinhas', snow: 'Flocos de neve', tower: 'Fantasminhas', supporter: 'Estrelas douradas', haunted: 'Casa Assombrada', secretBase: 'Base Secreta' } satisfies Record<WallpaperId, string>,
     },
   },
@@ -1886,7 +2044,7 @@ export const pt = {
     incubator: {
       intro: (slots: number, max: number) => `Sua incubadora: ${slots} de ${max} vagas · vagas extras são para sempre`,
       slot: (n: number) => `${n}ª vaga`,
-      slotText: 'Mais um ovo chocando ao mesmo tempo, para sempre. Com a incubadora cheia, ovo novo vira ₽.',
+      slotText: 'Mais um ovo chocando ao mesmo tempo, para sempre. Com a incubadora cheia, ovo novo espera na fila.',
       before: 'Compre a vaga anterior primeiro.',
       needs: (level: string) => `À venda com a loja em ${level}.`,
       buy: (price: string) => `Comprar ${price}`,
@@ -2059,6 +2217,9 @@ export const pt = {
     },
     /** The lobby's Hoje card and the shop's button. */
     card: 'FESTIVAL',
+    /** Na Praça's card: what a donation does, and the next milestone. */
+    cardLine: 'Doe ₽ e acenda a praça',
+    nextPot: (pot: string) => `próximo: ${pot}`,
     daysLeftShort: (days: number) => (days === 1 ? 'ÚLTIMO DIA' : `${days} DIAS`),
     shopButton: 'Festival',
   },
@@ -2187,6 +2348,31 @@ export const pt = {
     hintTouch: 'Toque para responder',
   },
 
+  /** The survey on the redesign (`designSurveyScreen`). */
+  designSurvey: {
+    title: 'NOVO VISUAL',
+    open: 'Pesquisa: o que você acha do novo visual?',
+    question: 'O que você achou do novo visual do jogo?',
+    ratings: { 1: 'Não gostei', 2: 'Achei fraco', 3: 'Tanto faz', 4: 'Gostei', 5: 'Adorei' } satisfies Record<DesignRating, string>,
+    pickRating: 'Escolha uma Poké Ball',
+    aspectsQuestion: 'O que mais chamou sua atenção? (até 2)',
+    aspects: {
+      easyToFind: 'Acho tudo fácil',
+      hardToFind: 'Difícil de achar as coisas',
+      niceLook: 'Ficou bonito',
+      badLook: 'Não curti o visual',
+      readable: 'Fácil de ler',
+      hardToRead: 'Difícil de ler',
+    } satisfies Record<DesignAspect, string>,
+    send: 'Enviar',
+    later: 'Agora não',
+    never: 'Não perguntar mais',
+    close: 'Fechar',
+    thanks: 'Valeu! Sua resposta ajuda a melhorar o jogo.',
+    hintKeys: '← → ↑ ↓ mover · ENTER escolher · ESC fechar',
+    hintTouch: 'Toque para responder',
+  },
+
   /** Ribbons of the Desafio do dia, on the profile and the Trainer Card. */
   ribbons: {
     names: { gold: 'Fita de Ouro', silver: 'Fita de Prata', bronze: 'Fita de Bronze' } satisfies Record<RibbonTier, string>,
@@ -2288,7 +2474,13 @@ export const pt = {
     patron: (festival: string) => `Por ser Mecenas do ${festival} ♥`,
     og: 'Por apoiar o jogo desde o começo ♥',
     arenaSeason: (season: number) => `Pelo seu pico na temporada ${season} da Arena`,
+    era1: (rank: number, board: string) => `#${rank} no Hall da Fama da Era 1 · ${board}`,
+    bugContest: (rank: number) => `#${rank} no Concurso de Insetos da semana`,
+    safariDex: (place: string) => `Pokédex completa: ${place}`,
+    safariDexAll: 'Pokédex de todos os habitats da Zona Safári completa',
     hiddenZone: { grotto: 'Por encontrar a Gruta Oculta', underground: 'Por encontrar o Subterrâneo' } satisfies Record<HiddenPlaceId, string>,
+    dex: (region: string | null) => (region ? `Por completar a Pokédex de ${region}` : 'Por completar a Pokédex Nacional: todas as regiões!'),
+    ultraBeasts: 'Por capturar todas as Ultracriaturas',
   },
 
   /**
@@ -2531,7 +2723,7 @@ export const pt = {
     boss: (name: string) => `Um *${name}* selvagem apareceu!`,
     bossFled: (name: string) => `O *${name}* selvagem fugiu!`,    shiny: (name: string) => `Um *${name}* shiny apareceu!`,
     shinyPlayer: (name: string) => `Que sorte! Seu *${name}* é shiny! Agora ele fica _liberado_ na seleção.`,
-    caught: (name: string) => `*${name}* shiny é seu! Registrado na _Pokédex_.`,
+    caught: (name: string) => `*${name}* shiny derrotado! Registrado na _Pokédex_ e na _Caixa do PC_.`,
     evolving: (name: string) => `Hã? ${name} está evoluindo!`,
     evolved: (from: string, to: string) => `Parabéns! ${from} evoluiu para ${to}!`,
     moveEvolved: (from: string, to: string) => `*${from}* evoluiu para *${to}*!`,
@@ -2569,6 +2761,8 @@ export const pt = {
     how: (stone: string, seconds: number, recharge: number) =>
       `Vença um lendário de fenda para ganhar a ${stone}. Na evolução final, Mega Evolua por ${seconds} s (recarga de ${recharge} s):`,
     effects: {
+      ...GA_FAMILIES_B_WORDS.pt.megas,
+      ...MEGA_FAMILIES_B_WORDS.pt.megas,
       venusaur: 'HP +50, defesa +3 e regenera 1 HP/s. O especial vira Petal Blizzard.',
       charizardX: 'golpes +30%, velocidade +8 e defesa +1. O especial vira Dragon Flare, uma investida em chamas azuis de dragão.',
       charizardY: 'faz sol forte (fora das fendas), que deixa golpes de Fogo ×1,5; golpes +25% e área +15%. O especial vira Heat Wave.',
@@ -2608,8 +2802,14 @@ export const pt = {
       manectric: 'inimigos a até 80 px perdem 30% da velocidade, velocidade +12, golpes +20% e recargas −5%. O especial vira Wild Charge.',
       altaria: 'golpes Normal e Fada +30%, golpes Dragão +20%, HP +30 e regenera 1 HP/s. O especial vira Hyper Voice.',
       banette: 'recargas −20%, +10% de chance de condição em todo golpe e golpes +15%. O especial vira Phantom Force, uma investida em cadeia que solta um anel de sombras a cada pouso.',
+      ...GA_FAMILIES_A_WORDS.pt.megas,
+      ...GA_FOSSILS_WORDS.pt.megas,
       glalie: 'golpes Normal e Gelo +30% e golpes +25%. O especial vira Sheer Cold.',
       salamence: 'golpes Normal e Voador +30%, velocidade +12 e golpes +25%. O especial vira Double-Edge.',
+      ...ROCKET_FAMILY_WORDS.pt.megas,
+      ...GA_MEGAS_WORDS.pt.megas,
+      ...GA_MEGA_FAMILIES_A_WORDS.pt.megas,
+      ...SC_WAVE_WORDS.pt.megas,
     } satisfies Record<MegaId, string>,
   },
 
@@ -2695,6 +2895,13 @@ export const pt = {
 
   /** What each ability does (`ABILITIES`). */
   abilities: {
+    ...SEASON_ONE_EGGS_WORDS.pt.abilities,
+    ...REGIONAL_WORDS.pt.abilities,
+    ...SEASON_ONE_KITS_WORDS.pt.abilities,
+    ...ULTRA_WORDS.pt.abilities,
+    ...LEGEND_PATHS_WORDS.pt.abilities,
+    ...QUEST_WORDS.pt.abilities,
+    ...REGIS_FORCES_WORDS.pt.abilities,
     overgrow: 'Com menos de 1/3 do HP, golpes de Planta causam +50%.',
     blaze: 'Com menos de 1/3 do HP, golpes de Fogo causam +50%.',
     torrent: 'Com menos de 1/3 do HP, golpes de Água causam +50%.',
@@ -2728,9 +2935,9 @@ export const pt = {
     waterAbsorb: 'Ataques de Água te curam em vez de ferir.',
     voltAbsorb: 'Ataques Elétricos te curam em vez de ferir.',
     lightningRod: 'Ataques Elétricos te curam em vez de ferir, e golpes Elétricos +15%.',
-    bulletproof: 'Projéteis de chefes e explosões causam 60% menos dano.',
+    bulletproof: 'Projéteis de chefes e explosões causam 40% menos dano.',
     levitate: 'Você flutua: lava, armadilhas, poças e chamas no chão, água e gelo não te afetam.',
-    magicGuard: 'Só golpes diretos te ferem: nada de lava, armadilhas, explosões, poças no chão, desgaste do clima ou mordidas de itens amaldiçoados.',
+    magicGuard: 'Nada de lava, armadilhas, desgaste do clima ou mordidas de itens amaldiçoados, e explosões e poças no chão causam metade do dano.',
     magicBounce: 'A cada 12 s bloqueia um golpe e o devolve em dobro a quem encostou.',
     illusion: 'A cada 10 s bloqueia um golpe por completo.',
     damp: 'Explosões não te ferem, e golpes de Água +10%.',
@@ -2833,13 +3040,18 @@ export const pt = {
   },
   /** Eggs: the incubator, the hatching scene and the egg box in the Pokémon select. */
   eggs: {
-    tiers: { common: 'Ovo comum', rare: 'Ovo raro', ultra: 'Ovo ultra raro', friend: 'Ovo da Amizade', haunted: 'Ovo Assombrado', kecleon: 'Ovo do Kecleon', kecleonShiny: 'Ovo do Kecleon brilhante' } satisfies Record<EggTier, string>,
+    tiers: { common: 'Ovo comum', rare: 'Ovo raro', ultra: 'Ovo ultra raro', friend: 'Ovo da Amizade', haunted: 'Ovo Assombrado', kecleon: 'Ovo do Kecleon', kecleonShiny: 'Ovo do Kecleon brilhante', fossil: 'Ovo Fóssil', found: 'Encontro', dig: 'Fóssil da Escavação', ...REGIONAL_WORDS.pt.tiers } satisfies Record<EggTier, string>,
     found: (egg: string) => `Você achou um *${egg}*! Ele vai para a incubadora.`,
-    /** Found mid-run with no room left in the incubator: it will be paid in ₽ when the run ends. */
-    foundFull: (egg: string, coins: string) => `Você achou um *${egg}*! A incubadora está cheia, então ele vai virar *${coins}*.`,
+    /** Found mid-run with no slot and no place in line left: it will be paid in ₽ when the run ends. */
+    foundFull: (egg: string, coins: string) => `Você achou um *${egg}*! A incubadora e a fila estão cheias, então ele vai virar *${coins}*.`,
+    /** Found mid-run with every slot taken but room in the waiting line (`EGGS.queue`). */
+    foundQueued: (egg: string) => `Você achou um *${egg}*! A incubadora está cheia, então ele espera na fila.`,
     title: 'INCUBADORA',
     intro: 'Os ovos chocam com os passos dados nas partidas. Todos os ovos da incubadora andam juntos.',
     sources: 'Chefes, baús trancados e fendas às vezes deixam um ovo.',
+    /** The waiting line (`Save.eggQueue`): its label, an empty place and its rule. */
+    queue: (n: number, max: number) => `Fila de espera ${n}/${max}`,
+    queueRule: (max: number) => `Com a incubadora cheia, até ${max} ovos esperam na fila e entram sozinhos quando uma vaga abre. Depois disso, viram ₽.`,
     empty: 'Vazio',
     stepsLeft: (n: string) => `Faltam ${n} passos`,
     ready: 'Pronto!',
@@ -2930,6 +3142,9 @@ export const pt = {
     },
   },
   /** Legendary rifts and the endless mode after Mewtwo. */
+  tera: TERA_WORDS.pt.tera,
+  raid: TERA_WORDS.pt.raid,
+
   rifts: {
     open: 'Uma *fenda lendária* se abriu! Siga a seta.',
     closed: 'A fenda se fechou.',
@@ -2965,6 +3180,7 @@ export const pt = {
     calms: (name: string) => `O vento silencia o que restava da fúria de *${name}*.`,
     /** Per legendary: its domain's name, its epithet on the title card, its omen, the crossing's warning and a line per phase after the first. */
     domains: {
+      ...ULTRA_WORDS.pt.domains,
       kyogre: {
         place: 'Caverna do Fundo do Mar',
         epithet: 'Senhor dos Mares',
@@ -3005,8 +3221,22 @@ export const pt = {
         epithet: 'Senhor do Tempo',
         omen: 'O tempo começa a tropeçar…',
         crossing: 'O tempo está se desfazendo! Avance pelo Pilar Lança!',
-        phases: ['O tempo se distorce! No Roar of Time, seus golpes congelam no ar.', 'O tempo acelera! Dialga fica cada vez mais rápido.'],
+        phases: ['O tempo se distorce! No Roar of Time, seus golpes congelam no ar.', 'Forma Origem! O tempo acelera e Dialga fica cada vez mais rápido.'],
         cues: { stop: 'O tempo parou!', forward: 'O tempo saltou para frente!', rewind: 'O tempo voltou!' },
+      },
+      palkia: {
+        place: 'Espaço Dobrado',
+        epithet: 'Senhor do Espaço',
+        omen: 'O espaço começa a se dobrar…',
+        crossing: 'O espaço está se fechando! Atravesse as fendas pelos portais gêmeos!',
+        phases: ['O espaço se curva! As bordas do salão se tocam: saia por um lado e volte pelo outro.', 'Forma Origem! O espaço se dobra e as paredes do salão se fecham.'],
+        cues: {
+          twist: 'O espaço se torceu! Os portais levam para trás!',
+          thrownBack: 'Jogado para trás!',
+          swap: '*Palkia* trocou de lugar com você!',
+          fold: 'As paredes do espaço se fecham!',
+          dialga: '*Palkia* sente em você o tempo de *Dialga*… e ruge mais alto!',
+        },
       },
       latias: {
         place: 'Ilha do Sul',
@@ -3092,15 +3322,16 @@ export const pt = {
     noCrossing: 'Anda devagar nos lagos e escorrega no gelo.',
   },
   places: {
-    names: { cave: 'Caverna Escura', graveyard: 'Cemitério Assombrado', sky: 'Acima das Nuvens', grotto: 'Gruta Oculta', underground: 'Subterrâneo' } satisfies Record<PlaceId, string>,
+    names: { cave: 'Caverna Escura', graveyard: 'Cemitério Assombrado', sky: 'Acima das Nuvens', grotto: 'Gruta Oculta', underground: 'Subterrâneo', hideout: 'Esconderijo Rocket' } satisfies Record<PlaceId, string>,
     /** Short names for the HUD's pill while an entrance is open. */
-    hudNames: { cave: 'Caverna', graveyard: 'Cemitério', sky: 'Corrente', grotto: 'Gruta', underground: 'Subterrâneo' } satisfies Record<PlaceId, string>,
+    hudNames: { cave: 'Caverna', graveyard: 'Cemitério', sky: 'Corrente', grotto: 'Gruta', underground: 'Subterrâneo', hideout: 'Esconderijo' } satisfies Record<PlaceId, string>,
     open: {
       cave: 'A entrada de uma *caverna* apareceu! Siga a seta.',
       graveyard: 'Um *cemitério* surgiu na névoa! Siga a seta.',
       sky: 'Uma *corrente de ar* sobe para o céu! Siga a seta e voe.',
       grotto: 'Você achou uma *Gruta Oculta* escondida no mato!',
       underground: 'Uma rachadura na pedra leva ao *Subterrâneo*!',
+      hideout: 'A escotilha do *Esconderijo Rocket* se abriu! Siga a seta.',
     } satisfies Record<PlaceId, string>,
     sealed: {
       cave: 'Pedras desabaram na entrada da caverna.',
@@ -3108,6 +3339,7 @@ export const pt = {
       sky: 'A corrente de ar se desfez.',
       grotto: 'As folhas cobriram a entrada da gruta.',
       underground: 'A rachadura na pedra desmoronou.',
+      hideout: 'A escotilha do Esconderijo se trancou.',
     } satisfies Record<PlaceId, string>,
     blocked: 'Só um Pokémon do tipo *Voador* consegue subir nessa corrente de ar.',
     /** What to do, shown on the way in. */
@@ -3117,6 +3349,7 @@ export const pt = {
       sky: 'Pegue as *asas* que o vento traz antes que ele acalme!',
       grotto: 'Derrote os *Audino* que saem da grama balançando!',
       underground: 'Fique nos *brilhos* das paredes para cavar e acerte os *Diglett*!',
+      hideout: 'Desça os andares e enfrente o *chefe da Equipe Rocket*!',
     } satisfies Record<PlaceId, string>,
     /** A dungeon floor, as Mystery Dungeon names them (B1F). */
     floor: (n: number) => `B${n}F`,
@@ -3169,7 +3402,7 @@ export const pt = {
       sphere: 'Você desenterrou uma *Prism Sphere*! Vale ₽.',
       rareCandy: 'Você desenterrou um *Rare Candy*!',
       stone: 'Você desenterrou uma *pedra de evolução*!',
-      fossil: 'Você desenterrou *Old Amber*! Tinha um ovo dentro!',
+      fossil: 'Você desenterrou *Old Amber*! Tinha um ovo de *Aerodactyl* dentro!',
     } satisfies Record<DigFind, string>,
     hudGrotto: (n: number, time: string) => `Audino ${n} · ${time}`,
     hudDig: (n: number, time: string) => `Achados ${n} · parede ${time}`,
@@ -3255,9 +3488,10 @@ export const pt = {
     titleTag: 'TÍTULO',
     equipped: 'EM USO',
     /** Titles that come as a Mystery Gift, with how they were earned. */
-    giftTitles: { ambassador: 'Trouxe 3 amigos para o jogo', supporter: 'Apoiou o projeto com uma doação', pumpkinKing: 'Encheu o pote de doces da Noite das Bruxas', exorcist: 'Venceu todos os chefes da Caça aos Fantasmas', vipCustomer: 'Juntou 30 carimbos no cartão fidelidade do Kecleon', tycoon: 'Transformou a loja do Kecleon em Loja de Departamento', patron: 'Doou ₽50.000 ou mais num Festival da Praça', ogSupporter: 'Apoiou o jogo antes do Patreon', arenaPoke: 'Fechou uma temporada ranqueada da Arena em Poké Ball', arenaGreat: 'Chegou a Great Ball numa temporada ranqueada da Arena', arenaUltra: 'Chegou a Ultra Ball numa temporada ranqueada da Arena', arenaMaster: 'Chegou a Master Ball numa temporada ranqueada da Arena', creator: 'Faz vídeos e lives de Pokémon Survivors', friendLegend: 'Trouxe 10 amigos para o jogo' } satisfies Record<GiftTitleId, string>,
+    giftTitles: { ambassador: 'Trouxe 3 amigos para o jogo', supporter: 'Apoiou o projeto com uma doação', pumpkinKing: 'Encheu o pote de doces da Noite das Bruxas', exorcist: 'Venceu todos os chefes da Caça aos Fantasmas', vipCustomer: 'Juntou 30 carimbos no cartão fidelidade do Kecleon', tycoon: 'Transformou a loja do Kecleon em Loja de Departamento', patron: 'Doou ₽50.000 ou mais num Festival da Praça', ogSupporter: 'Apoiou o jogo antes do Patreon', arenaPoke: 'Fechou uma temporada ranqueada da Arena em Poké Ball', arenaGreat: 'Chegou a Great Ball numa temporada ranqueada da Arena', arenaUltra: 'Chegou a Ultra Ball numa temporada ranqueada da Arena', arenaMaster: 'Chegou a Master Ball numa temporada ranqueada da Arena', creator: 'Faz vídeos e lives de Pokémon Survivors', friendLegend: 'Trouxe 10 amigos para o jogo', stampCollector: 'Juntou 30 Estampas no Poké Realm', era1Legend: 'Ficou no topo de um quadro da Era 1', era1Champion: 'Foi o nº 1 de um quadro da Era 1', spaceTime: 'Capturou Dialga e Palkia', bugChampion: 'Venceu uma semana do Concurso de Insetos', safariWarden: 'Completou a Pokédex de todos os habitats da Zona Safári', ...ROCKET_WORDS.pt.giftTitles, ...SC_WAVE_WORDS.pt.giftTitles, kantoDex: 'Viu todos os Pokémon de Kanto no Pokédex', johtoDex: 'Viu todos os Pokémon de Johto no Pokédex', hoennDex: 'Viu todos os Pokémon de Hoenn no Pokédex', sinnohDex: 'Viu todos os Pokémon de Sinnoh no Pokédex', unovaDex: 'Viu todos os Pokémon de Unova no Pokédex', kalosDex: 'Viu todos os Pokémon de Kalos no Pokédex', alolaDex: 'Viu todos os Pokémon de Alola no Pokédex', galarDex: 'Viu todos os Pokémon de Galar no Pokédex', paldeaDex: 'Viu todos os Pokémon de Paldea no Pokédex' } satisfies Record<GiftTitleId, string>,
     newMedals: 'Novas medalhas',
     names: {
+      ...TERA_WORDS.pt.achievementNames,
       firstRun: 'Primeiros passos',
       regular: 'Freguês',
       veteran: 'Veterano',
@@ -3324,6 +3558,7 @@ export const pt = {
       reaperDown: 'Lenda Viva',
     } satisfies Record<AchievementId, string>,
     titles: {
+      ...TERA_WORDS.pt.titles,
       veteran: 'Veterano',
       kills100k: 'Imparável',
       coins1m: 'Magnata',
@@ -3354,8 +3589,26 @@ export const pt = {
       arenaMaster: 'Master Ball da Arena',
       creator: 'Criador(a) de Conteúdo',
       friendLegend: 'Lenda da Amizade',
+      stampCollector: 'Colecionador(a) de Estampas',
+      era1Legend: 'Lenda da Era 1',
+      era1Champion: 'Campeão(ã) da Era 1',
+      kantoDex: 'Pesquisador(a) de Kanto',
+      johtoDex: 'Pesquisador(a) de Johto',
+      hoennDex: 'Pesquisador(a) de Hoenn',
+      sinnohDex: 'Pesquisador(a) de Sinnoh',
+      unovaDex: 'Pesquisador(a) de Unova',
+      kalosDex: 'Pesquisador(a) de Kalos',
+      alolaDex: 'Pesquisador(a) de Alola',
+      galarDex: 'Pesquisador(a) de Galar',
+      paldeaDex: 'Pesquisador(a) de Paldea',
+      ...ROCKET_WORDS.pt.titles,
+      ...SC_WAVE_WORDS.pt.titles,
+      bugChampion: 'Campeão(ã) dos Insetos',
+      safariWarden: 'Guarda-Parque',
+      spaceTime: 'Mestre do Tempo e do Espaço',
     } satisfies Record<TitleId, string>,
     goals: {
+      ...TERA_WORDS.pt.goals,
       runs: (n: string) => (n === '1' ? 'Jogue uma partida' : `Jogue ${n} partidas`),
       kills: (n: string) => `Derrote ${n} Pokémon no total`,
       bestMinutes: (n: string) => `Sobreviva ${n} min numa partida`,
@@ -3394,6 +3647,24 @@ export const pt = {
   },
 
   moves: {
+    ...SEASON_ONE_EGGS_WORDS.pt.moves,
+    ...REGIONAL_WORDS.pt.moves,
+    teraStarstorm: TERA_WORDS.pt.move,
+    ...SEASON_ONE_KITS_WORDS.pt.moves,
+    ...GA_FAMILIES_B_WORDS.pt.moves,
+    ...MEGA_FAMILIES_B_WORDS.pt.moves,
+    ...GA_FAMILIES_A_WORDS.pt.moves,
+    ...GA_FOSSILS_WORDS.pt.moves,
+    ...ROCKET_FAMILY_WORDS.pt.moves,
+    ...GA_MEGA_FAMILIES_A_WORDS.pt.moves,
+    ...SC_WAVE_WORDS.pt.moves,
+    ...GA_HOOK_WORDS.pt.moves,
+    ...GALLOP_WORDS.pt,
+    ...ULTRA_WORDS.pt.moves,
+    ...LEGEND_PATHS_WORDS.pt.moves,
+    ...QUEST_WORDS.pt.moves,
+    ...MYTHICAL_WORDS.pt.moves,
+    ...REGIS_FORCES_WORDS.pt.moves,
     leechSeed: {
       description: 'Arremessa sementes nos inimigos mais próximos. A semente suga HP com o tempo e cura você; quando o inimigo cai, ela pula para dois vizinhos.',
       upgrades: [
@@ -5864,6 +6135,22 @@ export const pt = {
   },
 
   blurbs: {
+    ...SEASON_ONE_EGGS_WORDS.pt.blurbs,
+    ...REGIONAL_WORDS.pt.blurbs,
+    ...SEASON_ONE_KITS_WORDS.pt.blurbs,
+    ...GA_FAMILIES_B_WORDS.pt.blurbs,
+    ...MEGA_FAMILIES_B_WORDS.pt.blurbs,
+    ...GA_FAMILIES_A_WORDS.pt.blurbs,
+    ...GA_FOSSILS_WORDS.pt.blurbs,
+    ...ROCKET_FAMILY_WORDS.pt.blurbs,
+    ...GA_MEGA_FAMILIES_A_WORDS.pt.blurbs,
+    ...SC_WAVE_WORDS.pt.blurbs,
+    ...GA_HOOK_WORDS.pt.blurbs,
+    ...ULTRA_WORDS.pt.blurbs,
+    ...LEGEND_PATHS_WORDS.pt.blurbs,
+    ...QUEST_WORDS.pt.blurbs,
+    ...MYTHICAL_WORDS.pt.blurbs,
+    ...REGIS_FORCES_WORDS.pt.blurbs,
     bulbasaur: 'Equilibrado. Regenera vida.',
     charmander: 'Ofensivo. Mais dano, menos vida.',
     squirtle: 'Defensivo. Mais vida e defesa.',
@@ -5979,9 +6266,11 @@ export const pt = {
     arceus: 'O deus. Seu tipo muda com cada bioma.',
     darkrai: 'Pesadelo. Adormece multidões e as fere em sonho.',
     cresselia: 'Lua crescente. Lâminas que voltam e uma lua cheia que cura.',
+    terapagos: TERA_WORDS.pt.blurb,
   },
 
   specials: {
+    ...MEGA_FAMILIES_B_WORDS.pt.specials,
     blastBurn: 'Investida em chamas que deixa um rastro de fogo.',
     hydroCannon: 'Jato concentrado na direção em que você anda.',
     frenzyPlant: 'Anéis de raízes brotam do chão e desaceleram.',
@@ -6006,6 +6295,7 @@ export const pt = {
     braveBird: 'Mergulha no inimigo mais próximo. Aperte de novo logo após acertar para saltar ao próximo.',
     ironHead: 'Avança com a lâmina até o inimigo mais próximo. Aperte de novo logo após acertar para saltar ao próximo.',
     stanceChange: 'Alterna entre a Forma Escudo (−30% de dano recebido, golpes ×0,7) e a Forma Lâmina (golpes ×1,3, +10% de dano recebido).',
+    applianceChange: 'Rotom troca de aparelho: Forno, Lavadora, Geladeira, Ventilador ou Cortador. Cada um muda o tipo e o jeito de Discharge.',
     formeChange: 'Alterna entre as Formas Normal, Ataque (golpes ×1,35, +25% de dano recebido), Defesa (−40% de dano recebido, golpes ×0,75) e Velocidade (+35% de velocidade).',
     dragonFlare: 'Investida longa em chamas azuis de dragão, com rastro de fogo e explosão no fim.',
     psystrike: 'Três ondas psíquicas enormes ao redor que empurram e desaceleram.',
@@ -6044,6 +6334,7 @@ export const pt = {
     phantomForce: 'Investida em cadeia de até 6 saltos; cada pouso solta um anel de sombras.',
     sheerCold: 'Três ondas de frio absoluto ao redor que desaceleram muito.',
     doubleEdge: 'Doze mergulhos aéreos caem nos inimigos mais próximos.',
+    ...GA_MEGAS_WORDS.pt.specials,
   },
 
 
@@ -6089,8 +6380,6 @@ export const pt = {
   },
   /** The Kecleon plaza in the lobby (render/plaza.ts, ui/title.ts) and its dialogue box (ui/dialogue.ts). */
   plaza: {
-    /** The prompt over a shopkeeper when the strolling partner stands close (E on a keyboard, a tap on touch). */
-    talk: 'Falar',
     /** The dialogue box's "next" arrow, for screen readers. */
     next: 'Continuar',
     /** Kecleon's greeting when the partner arrives, by the local time of day. */
@@ -6152,13 +6441,6 @@ export const pt = {
       hello: ['Ovos Assombrados, por ₽ ou por doces. O que sai deles? Fantasmas que não aparecem em nenhum outro ovo.', 'Buu... Esses ovos não chocam no calor. Chocam no medo. Leva um?', 'Quatro fantasmas, um ovo. Qual vai sair? Nem eu sei... hehehe.'],
       thanks: ['Buu... Boa escolha. Cuidado com ele à meia-noite.', 'Hehehe... Ele já está olhando pra você.', 'Volte amanhã. Se tiver coragem.'],
     },
-    /** The seasonal stalls' keepers (`STALLS` in data/visitors.ts), line by line. */
-    stalls: {
-      halloween: ['Buu... A Noite das Bruxas chegou à praça.', 'Os doces das partidas vão pro pote, lá no lobby. Aqui eu vendo outra coisa...'],
-      christmas: ['Deli! A Delibird Presentes chegou à praça!', 'Ainda tô embrulhando tudo. Volta no Natal que o saco vai estar cheio!'],
-    } satisfies Record<StallId, readonly string[]>,
-    /** Lanturn at the festival's Lantern Market (`render/plaza.ts`), before the festival's sheet opens. */
-    lanturn: ['Lan-turn! Cada moeda na fonte acende uma lanterna na praça. Vem ver o pote!'],
   },
 
   /** The Dojo (`game/training.ts`, `ui/training.ts`): the training run's panel, the builds, and Machoke, its sensei in the lobby. */
@@ -6219,7 +6501,7 @@ export const pt = {
     saved: (name: string) => `Build de *${name}* salva! Nas partidas, as cartas dela ganham ★ BUILD.`,
     loaded: (name: string) => `A build salva de *${name}* já está equipada.`,
     cleared: (name: string) => `Build de *${name}* apagada.`,
-    /** The tag on a level-up card that follows the build (Press Start 2P: keep it short). */
+    /** The tag on a level-up card that follows the build (keep it short). */
     buildTag: 'BUILD',
     buildHint: 'Faz parte da build que você montou no Dojo',
     /** Machoke, the Dojo's sensei, before the partner select opens: the first visit, then one of these in turn. */
@@ -6228,8 +6510,6 @@ export const pt = {
   },
   /** The Estádio (`render/stadium.ts`), south of home: the Arena's place in the lobby. */
   stadium: {
-    /** Its boards' names, on the talk bubble while the partner stands by one: Jogar opens the Arena, the rest its hub's tabs. */
-    boards: { play: 'Jogar', ranking: 'Ranking', season: 'Temporada', history: 'Histórico', rules: 'Regras' },
     /** Ninjask, the Arena's judge, before the Arena opens: the first visit, then one of these in turn. */
     first: [
       'Bzzz! Bem-vindo ao Estádio! Eu sou o juiz da Arena: rápido demais para deixar qualquer lance passar.',
@@ -6264,6 +6544,7 @@ export const pt = {
   /** Secret bases' furniture (`data/furniture.ts`): each piece's name by id (a doll's from its legend, whose name stays English), and the kinds. */
   furniture: {
     names: {
+      ...CAFE_TABLES_WORDS.pt.furniture,
       woodChair: 'Cadeira de madeira',
       stool: 'Banquinho',
       woodTable: 'Mesa de madeira',
@@ -6440,12 +6721,17 @@ export const pt = {
       // The arcade's trophies (data/furnitureSets/games.ts).
       berryBasket: 'Cesta de frutas',
       goldenMallet: 'Marreta de ouro',
+      stampDesk: 'Escrivaninha de Estampas',
+      stampCabinet: 'Arquivo de Estampas',
+      goldenStampPress: 'Prensa Dourada de Estampas',
       // The fishing trophies (`MINIGAMES.fishing.trophies`).
       fishingRodRack: 'Suporte de varas',
       goldenMagikarpPlaque: 'Placa do Magikarp Dourado',
       shinyGyaradosTrophy: 'Troféu do Gyarados Shiny',
     } satisfies Record<ShopFurnitureId, string>,
     doll: (legend: string) => `Boneco de ${legend}`,
+    plush: SEASON_ONE_CLAW_WORDS.pt.plush,
+    dig: SEASON_ONE_DIG_WORDS.pt.pieces,
     kinds: { floor: 'Móvel', rug: 'Tapete', top: 'Enfeite', wall: 'Parede', wallpaper: 'Papel de parede', flooring: 'Piso' } satisfies Record<FurnitureKind, string>,
     /** The carpentry's collections (`FURNITURE_SETS`). */
     sets: { classic: 'Clássico', cozy: 'Aconchego', elegant: 'Elegante', modern: 'Moderno', pop: 'Pop', garden: 'Jardim', aqua: 'Aquático', arcade: 'Fliperama', kitchen: 'Cozinha', trainer: 'Treinador', center: 'Centro Pokémon', gallery: 'Galeria', trophies: 'Troféus' } satisfies Record<FurnitureSet, string>,
@@ -6539,6 +6825,16 @@ export const pt = {
     },
     captured: 'Na sua coleção',
     locked: (legend: string) => `Capture ${legend}`,
+    /** What earns a mini game's or the Estampas' trophy (the API grants it). */
+    earn: {
+      plays: (game: string, n: number) => `Jogue ${n} partidas de ${game}`,
+      best: (game: string, n: number) => `Faça ${n} pontos em ${game}`,
+      wins: (game: string, n: number) => `Vença ${n} partidas de ${game}`,
+      feat: (game: string) => `Um feito em ${game}`,
+      stamps: (n: number) => `Junte ${n} Estampas`,
+      note: 'Este troféu chega quando você cumpre a meta. Não está à venda!',
+      featNote: (feat: string) => `Este troféu chega com o feito: ${feat} Não está à venda!`,
+    },
     /** The catalog (`realm/catalog.ts`): the collections' rail, the filters, a page's head, the close-up. */
     collections: 'Coleções',
     all: 'Tudo',
@@ -6594,6 +6890,8 @@ export const pt = {
     intro: '*O mundo ataca!* O chão marca onde você está e cai em seguida: _não fique parado_.',
   },
   /** The Legend mode in a run (`game/legend.ts`): awakenings, the innate, the Clone. Pokémon names stay English. */
+  /** The Ultra Wormholes and the Ultra Beasts (`i18n/ultra.ts`). */
+  ultra: ULTRA_WORDS.pt.ui,
   legend: {
     mode: 'Modo Lendário',
     awakening: (name: string) => `${name} está despertando!`,
@@ -6605,7 +6903,16 @@ export const pt = {
     innateExtra: {
       articuno: 'O frio das asas deixa lentos os inimigos por perto.',
       jirachi: 'Cartas raras e brilhantes saem com mais frequência.',
-    } satisfies Partial<Record<LegendId, string>>,
+      uxie: 'Ganha 8% mais experiência.',
+      mesprit: 'Recupera 4% do HP a cada 10 s.',
+      azelf: 'Com menos de metade do HP, +25% de dano.',
+      regieleki: 'Corre mais rápido: +6 de velocidade.',
+      regidrago: 'Com o HP cheio, +15% de dano.',
+      tornadus: 'Na neve: +10 de velocidade e recarga 5% mais rápida; imune ao desgaste do clima.',
+      thundurus: 'Chama a chuva; na chuva, +12% de dano e +8% de área.',
+      landorus: 'Chama a tempestade de areia.',
+      enamorus: 'Quem encosta em você tem 30% de chance de dormir por 2 s.',
+    } satisfies Record<ExtraInnateLegend, string>,
     /** A boss of the player's own species (Mewtwo's finale for a Mewtwo). */
     clone: (name: string) => `${name} Clone`,
     /* Capturing legends (`game/capture.ts`, `ui/capture.ts`): the toasts as one falls, and the partner select's Lendários tab. */
@@ -6629,14 +6936,22 @@ export const pt = {
     where: {
       rift: 'Espera numa _fenda lendária_: entre no portal e vença-o lá dentro.',
       trio: 'Vem como chefe com o _trio lendário_ sorteado na partida.',
-      mythical: 'Às vezes (1 partida em 10) aparece junto do *Mewtwo* no final.',
+      mythical: 'Às vezes aparece junto do *Mewtwo* aos 15:00: 1 final em 10 traz um dos míticos que faltam (com os três faltando, cada um sai em 1 final de 30). Depois de 5 finais sem mítico a chance sobe, até ser certa no 21º.',
       finale: 'É o chefe final: vença uma partida.',
       endless: 'O último troféu: depois de capturar os outros 22, vença-o no _modo sem fim_.',
       event: 'Só na _Noite das Bruxas_: vença-o na _fenda do Pesadelo_.',
       festival: 'Prêmio do _Festival da Praça_: chega como Presente Misterioso, nunca é enfrentada.',
+      ultra: 'Sai de uma _Ultrafenda_ (uma por partida solo, perto dos 8 min): vença-a lá dentro.',
+      ultraGift: 'Chega como Presente Misterioso quando você capturar as 10 Ultracriaturas.',
+      path: LEGEND_PATHS_WORDS.pt.paths.where.zygarde,
+      temple: LEGEND_PATHS_WORDS.pt.paths.where.regigigas,
+      ...QUEST_WORDS.pt.where,
+      egg: SC_WAVE_WORDS.pt.legendWhere,
+      ...MYTHICAL_WORDS.pt.where,
+      ...REGIS_FORCES_WORDS.pt.where,
     },
     rule: (need: number) => (need === 1 ? 'Para capturar, vença este lendário 1 vez como chefe, numa partida solo, em qualquer modo. Vitórias no co-op não contam.' : `Para capturar, vença este lendário ${need} vezes como chefe, numa partida solo, em qualquer modo. Vitórias no co-op não contam.`),
-    shinyRule: 'Vencer um shiny na vitória da captura, ou depois, libera a forma shiny.',
+    shinyRule: 'Vencer um shiny em qualquer vitória, antes ou depois da captura, libera a forma shiny assim que ele é capturado.',
     selectNote: 'Lendários jogam o *Modo Lendário*: ranking próprio, horda mais forte, despertares no Nv 12 e 28.',
     /** An event legend (`LegendUnlock.event`): its badge on the partner select, and its card before, during and after the event (dates as `formatDay`). */
     event: {
@@ -6652,6 +6967,10 @@ export const pt = {
     },
   },
   /** Wave legendaries on the map (`data/legendBosses.ts`): the epithet on each one's title card, and a line per phase after the first. */
+  quests: QUEST_WORDS.pt.ui,
+  mythicals: MYTHICAL_WORDS.pt.ui,
+  /** The Ruínas da Decisão and the Forces of Nature (`game/splitRuins.ts`, `game/roamers.ts`): the choice on screen, the Forces' visits, their title cards and phase lines. */
+  regisForces: { ...REGIS_FORCES_WORDS.pt.ui, epithets: REGIS_FORCES_WORDS.pt.epithets, phases: REGIS_FORCES_WORDS.pt.phases },
   legends: {
     epithets: {
       articuno: 'Ave do Gelo Eterno',
@@ -6668,6 +6987,10 @@ export const pt = {
       jirachi: 'Estrela dos Desejos',
       mewtwo: 'Fúria Genética',
       arceus: 'O Primeiro de Todos',
+      regigigas: LEGEND_PATHS_WORDS.pt.epithet,
+      zeraora: MYTHICAL_WORDS.pt.epithet,
+      regieleki: REGIS_FORCES_WORDS.pt.epithets.regieleki,
+      regidrago: REGIS_FORCES_WORDS.pt.epithets.regidrago,
     } satisfies Record<WaveLegend, string>,
     phases: {
       articuno: ['*Articuno* alça voo! Fuja da _sombra_ dele.', 'Uma nevasca! Corra para um _abrigo de neve_ antes do Snowscape.'],
@@ -6684,6 +7007,10 @@ export const pt = {
       jirachi: ['*Jirachi* se teleporta para cima de você: fuja do _círculo_!', 'Wish! Uma chuva de estrelas: ache os _vãos_.'],
       mewtwo: ['*Mewtwo* libera o poder psíquico! Fuja do _círculo_ do Teleport.', 'Psystrike! Passe pelos _vãos_ e corra para um _abrigo_.'],
       arceus: ['*Arceus* se teleporta para julgar você!', 'Judgment! Só os _abrigos de luz_ te salvam.'],
+      regigigas: LEGEND_PATHS_WORDS.pt.phases,
+      zeraora: MYTHICAL_WORDS.pt.phases,
+      regieleki: REGIS_FORCES_WORDS.pt.phases.regieleki,
+      regidrago: REGIS_FORCES_WORDS.pt.phases.regidrago,
     } satisfies Record<WaveLegend, readonly [string, string]>,
   },
   /** Co-op in a run (`ui/team*.ts`): the team's cards, its pauses, the spectator, the endless vote and the end screen. */
@@ -6731,6 +7058,7 @@ export const pt = {
       evolved: (name: string, from: string, to: string) => `*${name}*: ${from} evoluiu para *${to}*!`,
       mega: (name: string, form: string) => `*${name}* Mega Evoluiu em *${form}*!`,
       duo: (name: string, move: string) => `*${name}* fundiu um golpe duplo: *${move}*!`,
+      awakened: (name: string, form: string) => `*${name}* despertou: *${form}*!`,
     },
     vote: {
       title: 'A equipe venceu Mewtwo!',
@@ -6769,17 +7097,32 @@ export const pt = {
     },
   },
   /** Bibarel, the carpentry's carpenter on the plaza's north-east, as the partner walks up: the first visit, then one of these in turn. */
+  seasonUnlocks: { ...SEASON_ONE_UNLOCKS_WORDS.pt, where: { ...SEASON_ONE_UNLOCKS_WORDS.pt.where, ...GA_HOOK_WORDS.pt.where } },
+  megaFamiliesWhere: GA_MEGA_FAMILIES_A_WORDS.pt.where,
+  rocket: ROCKET_WORDS.pt,
+  scWave: SC_WAVE_WORDS.pt,
+  paths: LEGEND_PATHS_WORDS.pt.paths,
   minigames: {
+    claw: SEASON_ONE_CLAW_WORDS.pt.words,
+    safari: { ...SEASON_ONE_SAFARI_WORDS.pt.words, only: SC_WAVE_WORDS.pt.safari },
+    dig: SEASON_ONE_DIG_WORDS.pt.words,
     close: 'Sair',
     choose: 'Qual jogo?',
+    cafe: CAFE_TABLES_WORDS.pt,
     games: {
+      ...CAFE_TABLES_WORDS.pt.games,
       fishing: { name: 'Pesca no Píer', blurb: 'Jogue a linha e fisgue o que morder.' },
       berryCatch: { name: 'Chuva de Frutas', blurb: 'Pegue as frutas e fuja dos Voltorb.' },
       whackDiglett: { name: 'Acerte o Diglett', blurb: 'Bata nos Diglett antes que se escondam.' },
       fourInRow: { name: 'Quatro em Linha', blurb: 'Alinhe quatro Poké Balls antes do outro.' },
       typeDuel: { name: 'Duelo de Tipos', blurb: 'Fogo vence Planta, Planta vence Água, Água vence Fogo.' },
+      claw: SEASON_ONE_CLAW_WORDS.pt.game,
+      safari: SEASON_ONE_SAFARI_WORDS.pt.game,
+      dig: SEASON_ONE_DIG_WORDS.pt.game,
+      slots: { name: ROCKET_WORDS.pt.slots.name, blurb: ROCKET_WORDS.pt.slots.blurb },
+      sweep: { name: ROCKET_WORDS.pt.sweep.name, blurb: ROCKET_WORDS.pt.sweep.blurb },
     },
-    feats: { fishing: { feebas: 'Pesquei um Feebas!', shinyGyarados: 'Pesquei um Gyarados shiny!!', bigHaul: 'Pescaria de 300 pontos!' }, berryCatch: { flawless: 'Chuva de Frutas sem perder uma vida!', goldRush: 'Três frutas douradas numa rodada!', combo50: 'Combo de 50 frutas!' }, whackDiglett: { combo30: 'Combo de 30 marteladas!', dugtrio: 'Acertou 5 Dugtrio numa rodada!' }, fourInRow: {}, typeDuel: { perfectDuel: 'Duelo perfeito, sem perder uma rodada!' } },
+    feats: { ...CAFE_TABLES_WORDS.pt.feats, fishing: { feebas: 'Pesquei um Feebas!', shinyGyarados: 'Pesquei um Gyarados shiny!!', wishiwashi: 'Pesquei um Wishiwashi!', bigHaul: 'Pescaria de 300 pontos!' }, berryCatch: { flawless: 'Chuva de Frutas sem perder uma vida!', goldRush: 'Três frutas douradas numa rodada!', combo50: 'Combo de 50 frutas!' }, whackDiglett: { combo30: 'Combo de 30 marteladas!', dugtrio: 'Acertou 5 Dugtrio numa rodada!' }, fourInRow: {}, typeDuel: { perfectDuel: 'Duelo perfeito, sem perder uma rodada!' }, claw: SEASON_ONE_CLAW_WORDS.pt.feats, safari: SEASON_ONE_SAFARI_WORDS.pt.feats, dig: SEASON_ONE_DIG_WORDS.pt.feats, slots: ROCKET_WORDS.pt.feats.slots, sweep: ROCKET_WORDS.pt.feats.sweep },
     duel: {
       pick: 'Escolha uma carta',
       play: 'Jogar',
@@ -6873,10 +7216,49 @@ export const pt = {
       junk: { boot: 'Bota velha', can: 'Lata', seaweed: 'Alga' },
     },
   },
+  /** The Modos de jogo screen (`ui/gameModes.ts`). The kit's text is Jersey 10 / 15, which has accented capitals: French all-caps keeps its accents here. */
+  gameModes: {
+    title: 'MODOS DE JOGO',
+    close: 'Fechar',
+    names: { survivors: 'Survivors', legends: 'Lendas', challenge: 'Desafio do dia', coop: 'Co-op', arena: 'Arena', dojo: 'Dojo', realm: 'Poké Realm' } satisfies Record<GameModeId, string>,
+    /** One team format on the Arena's card: its size and minutes. */
+    arenaFormat: (size: number, minutes: number) => `${size}v${size} (${minutes} min)`,
+    blurbs: {
+      survivors: 'Sobreviva às hordas até o fim',
+      legends: 'Jogue com um lendário',
+      challenge: 'O mesmo Pokémon para todos',
+      coop: 'Sobreviva junto com amigos',
+      arena: (formats: readonly string[]) => `Times ${formats.join(' ou ')}`,
+      dojo: 'Treine builds e veja o seu dano',
+      realm: 'Cidade online: bases e mini games',
+    },
+    tags: {
+      solo: 'Solo',
+      /** The Legend mode's card: solo, or a co-op room with the Modo Lendário on. */
+      soloCoop: 'Solo e co-op',
+      minutes: (n: number) => `${n} min`,
+      endless: '+ modo sem fim',
+      legends: (n: number) => `${n} lendários`,
+      today: (name: string) => `hoje: ${name}`,
+      oneTry: '1 tentativa oficial',
+      players: (min: number, max: number) => `${min} a ${max} jogadores`,
+      bots: 'contra bots',
+      casual: 'casual',
+      ranked: 'ranqueada',
+      training: 'Treino livre',
+      builds: 'salva builds',
+      needsAccount: 'precisa de conta',
+      fresh: 'NOVO',
+    },
+  },
   carpenter: {
     first: ['Opa, freguês novo! Eu sou Bibarel, o carpinteiro da praça.', 'Faço móveis para as bases secretas do Poké Realm: cadeiras, tapetes, estantes e umas peças bem especiais.', 'Pague em ₽ ou em gemas. E quem captura uma lenda ganha um bonequinho dela para enfeitar a base!'],
     hello: ['Serrando e lixando, como sempre. Vai levar alguma coisa?', 'Madeira boa, preço justo. Dá uma olhada!', 'Base sem móvel é só um buraco na parede!', 'Acabei de envernizar umas peças novas.'],
   },
+  /** A Viagem (`game/travel.ts`): the Ovo de Viagem's card and the trip of the week. */
+  travel: REGIONAL_WORDS.pt.travel,
+  /** The wave's hook families (`data/gaFamiliesHook.ts`): Tyrogue's evolution, Vivillon's pattern, Plus and Minus. */
+  gaHook: { tyrogue: GA_HOOK_WORDS.pt.tyrogue, vivillon: GA_HOOK_WORDS.pt.vivillon, plusMinus: GA_HOOK_WORDS.pt.plusMinus },
 } satisfies ContentTexts & Record<string, unknown>
 
 export type Messages = typeof pt

@@ -1,6 +1,7 @@
 import { branchesAt, branchesOf, branchStage } from '../../data/branches'
-import { HATCHLINGS, isHatchling, isStarter, PLAYABLE, type PlayableId } from '../../data/hatchlings'
-import { legendEvent, LEGENDS, REGULAR_LEGENDS, type LegendId, type LegendUnlock } from '../../data/legends'
+import { familySource } from '../../data/familySource'
+import { isHatchling, isStarter, PLAYABLE, type HatchlingId, type PlayableId } from '../../data/hatchlings'
+import { LEGEND_IDS, legendEvent, LEGENDS, type LegendId, type LegendUnlock } from '../../data/legends'
 import { MEGAS, megasOf } from '../../data/megas'
 import { STARTER_IDS, type PlayableDef } from '../../data/starters'
 import { formLine } from '../../game/branch'
@@ -16,7 +17,7 @@ import { dexPaths, ROUTES } from '../routes'
 import { createSpriteCss } from '../spriteCss'
 import { TIER_SNAPSHOT } from '../../data/tierRuns'
 import { currentTierList, winPercent, type FamilyId } from '../tierList'
-import { appearance, card } from './pokedex'
+import { appearance, captureText, card, pathNote } from './pokedex'
 
 /** A question and its answer, shown on the page and repeated in its `FAQPage` JSON-LD. */
 type Qa = { q: string; a: string }
@@ -58,13 +59,19 @@ const tierQa = (id: FamilyId, name: string, m: SiteMessages): Qa => {
   }
 }
 
+/** How a family is first had, by its source (`familySource`): the Safári, the Game Corner or its egg. */
+const hatchA = (id: HatchlingId, name: string, m: SiteMessages, game: (typeof MESSAGES)[Locale]) => {
+  const source = familySource(id)
+  return source === 'safari' ? m.dexPage.safariA(name) : source === 'corner' ? m.dexPage.cornerA(name) : m.dexPage.eggA(name, game.eggs.tiers[source])
+}
+
 const familyFaq = (id: FamilyId, base: DexEntry, m: SiteMessages, locale: Locale): Qa[] => {
   const name = base.name
   const game = MESSAGES[locale]
   const steps = evolutionSteps(id, m)
   const needsItem = formLine(id, null).some((st) => st.item) || branchesOf(id).some((b) => branchNeeds(b))
   const megas = megasOf(id).map((mega) => MEGAS[mega].name)
-  const unlock = isHatchling(id) ? m.dexPage.eggA(name, game.eggs.tiers[HATCHLINGS[id].egg]) : m.dexPage.starterA(name)
+  const unlock = isHatchling(id) ? hatchA(id, name, m, game) : m.dexPage.starterA(name)
   return [
     { q: m.dexPage.unlockQ(name), a: unlock },
     ...(steps.length > 0 ? [{ q: m.dexPage.evolveQ(name), a: `${m.dexPage.evolveA(steps)}${needsItem ? ` ${m.dexPage.evolveItem}` : ''}` }] : []),
@@ -74,10 +81,10 @@ const familyFaq = (id: FamilyId, base: DexEntry, m: SiteMessages, locale: Locale
   ]
 }
 
-const legendFaq = (id: LegendId, entry: DexEntry, m: SiteMessages): Qa[] => {
+const legendFaq = (id: LegendId, entry: DexEntry, m: SiteMessages, locale: Locale): Qa[] => {
   const def = LEGENDS[id]
   const rule: LegendUnlock = def.unlock
-  const unlock = rule.event ? m.pokedex.captureEvent(rule.wins) : rule.last ? m.pokedex.captureLast : m.pokedex.capture(rule.wins)
+  const unlock = rule.path || rule.after ? pathNote(id, locale) : captureText(rule, m)
   const form = 'form' in def ? m.dexPage.awakens(def.form.name) : ''
   const where = entry.source.kind === 'wild' ? appearances(entry.source.id).map((a) => appearance(a, m)) : []
   return [
@@ -91,7 +98,7 @@ const intro = (page: DexPage, m: SiteMessages, locale: Locale) => {
   const base = page.entries[0]!
   const blurb = MESSAGES[locale].blurbs[page.id]
   if (page.kind === 'legend') {
-    const what = legendEvent(page.id) ? m.dexPage.eventLegend(base.name, typesOf(base, m)) : m.dexPage.legend(base.name, typesOf(base, m), REGULAR_LEGENDS.length)
+    const what = legendEvent(page.id) ? m.dexPage.eventLegend(base.name, typesOf(base, m)) : m.dexPage.legend(base.name, typesOf(base, m), LEGEND_IDS.length)
     return `${what} ${blurb}`
   }
   const what = isStarter(page.id) ? m.dexPage.starter(base.name, typesOf(base, m), base.region.name, STARTER_IDS.length) : m.dexPage.egg(base.name, typesOf(base, m))
@@ -129,7 +136,7 @@ export const dexPage = (page: DexPage, locale: Locale) => {
   const base = page.entries[0]!
   const names = page.kind === 'legend' ? [base.name] : namesOf(page, m)
   const css = createSpriteCss()
-  const faq = page.kind === 'legend' ? legendFaq(page.id, base, m) : familyFaq(page.id, base, m, locale)
+  const faq = page.kind === 'legend' ? legendFaq(page.id, base, m, locale) : familyFaq(page.id, base, m, locale)
   const play = page.kind === 'legend' ? m.playCta : m.dexPage.play(base.name)
   const main: Html = html`<div class="page-head">
     <h1>${m.dexPage.h1(names)}</h1>

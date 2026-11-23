@@ -18,6 +18,8 @@ import { COSMETIC_IDS, slotOf, type CosmeticSlot } from '../data/cosmetics'
 import { PLAYABLE_IDS } from '../data/hatchlings'
 import { BASE_ROOM, REALM_ROOMS, isTownRoomId, type Door, type Point, type Shape, type Spot, type TownRoomId } from '../data/realmMap'
 import { tableAt } from '../../relay/src/realmTables'
+import { isMinigameId, isTableGame } from '../data/minigames'
+import { TABLE_GAMES } from './games/tables'
 import type { TableView } from '../net/realmTables'
 import { REALM, REALM_LINES, REALM_EMOTES, baseRoom, type CityId, type Facing, type RealmIdentity, type RealmServerMessage, type RoomKey } from '../net/realm'
 import type { PresenceReport } from '../net/realmRelay'
@@ -71,6 +73,12 @@ export type LocalRealm = {
   presence: () => PresenceReport
   /** Dev: the bot with `handle` invites the player to its base (`ps.realm('invite', 'misty')`); whether one did. */
   inviteFrom: (handle: string) => boolean
+  /** Dev: tells the room the player just earned stamps (`stamped`), as the relay does when the API answers its deeds. */
+  stamped: (stamps: readonly string[]) => void
+  /** Dev: a bot of the player's room earned these (one at random when it's alone: for `ps.realm('stamp', 'bot')`); whether one did. */
+  botStamped: (stamps: readonly string[]) => boolean
+  /** Dev: tells the player its errands `done` are waiting at the board (`errands`). */
+  errandsDone: (done: readonly string[]) => void
   /** Stops the bots and the beat, and closes every socket. */
   dispose: () => void
 }
@@ -228,7 +236,16 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
     shiny: opts.me?.shiny ?? false,
     look: opts.me?.look ?? {},
     supporter: opts.me?.supporter ?? null,
+    stamps: opts.me?.stamps ?? 0,
   })
+
+  /** Dev: each trainer's made-up Estampas count, kept here so the card shows one before the relay sends its own (`Avatar.stamps`). */
+  const stampsOf = (handle: string) => (handle === (opts.me?.handle ?? 'you') ? 12 : (handle.charCodeAt(0) * 7) % 41)
+  const withStamps = (msg: RealmServerMessage): RealmServerMessage => {
+    const dress = <A extends { handle: string; stamps?: number }>(a: A): A => ({ ...a, stamps: a.stamps ?? stampsOf(a.handle) })
+    if (msg.t === 'welcome' || msg.t === 'room') return { ...msg, avatars: msg.avatars.map(dress) }
+    return msg.t === 'join' ? { ...msg, avatar: dress(msg.avatar) } : msg
+  }
 
   const apply = (effects: readonly RealmEffect[]) => {
     const texts = new Map<RealmServerMessage, string>()
@@ -238,7 +255,7 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
         if (bot) hear(bot, e.msg)
         const ws = sockets.get(e.to)
         if (!ws) continue
-        const text = texts.get(e.msg) ?? JSON.stringify(e.msg)
+        const text = texts.get(e.msg) ?? JSON.stringify(withStamps(e.msg))
         texts.set(e.msg, text)
         later(() => ws.open && ws.on.message(text))
       } else if (e.k === 'close') {
@@ -353,7 +370,8 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
       }
     }
     const table = staged ? staged.spot : tableToSit(bot)
-    bot.sitGame = staged ? bot.stageGame : null
+    // The staged game, else one the table plays.
+    bot.sitGame = (staged ? bot.stageGame : null) ?? (table?.games && table.games.length > 0 ? pick(table.games) : null)
     if (staged) bot.stage = null
     if (table?.id && clearPath(bot.room, from, table.at)) {
       bot.target = { ...table.at }
@@ -428,14 +446,19 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
     const seat = bot.id === null ? -1 : tb.seats.indexOf(bot.id)
     const city = state.cities.get(opts.city)
     if (seat < 0 || !city) return
-    const alone = tb.seats.some((s) => s === null)
+    const open = isMinigameId(tb.game) && isTableGame(tb.game) && TABLE_GAMES[tb.game].open !== null
+    const people = tb.seats.filter((s) => s !== null).length
+    // An open table needs two people (bots fill the rest); a 2-seat one, both seats.
+    const alone = open ? tb.phase !== 'playing' && people < 2 : tb.seats.some((s) => s === null)
     bot.aloneSince = alone ? (bot.aloneSince ?? t) : null
     if (alone && t - (bot.aloneSince ?? t) > 45_000) {
       bot.aloneSince = null
       bot.restUntil = t + between(2_000, 6_000)
       return step(() => message(state, bot.conn, { t: 'stand' }, t))
     }
-    const due = (tb.phase === 'playing' && tb.pending.includes(seat)) || (tb.phase === 'over' && bot.id !== null && !tb.ready.includes(bot.id))
+    const due =
+      (tb.phase === 'playing' && tb.pending.includes(seat)) ||
+      ((tb.phase === 'over' || (open && tb.phase === 'waiting' && people >= 2)) && bot.id !== null && !tb.ready.includes(bot.id))
     if (!due) {
       bot.actAt = null
       return
@@ -443,6 +466,7 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
     if (bot.actAt === null) bot.actAt = t + (tb.phase === 'over' ? between(2_500, 5_000) : between(900, 2_600))
     if (t < bot.actAt) return
     bot.actAt = null
+    if (tb.phase === 'waiting') return step(() => message(state, bot.conn, { t: 'ready' }, t))
     if (tb.phase === 'over') return step(() => message(state, bot.conn, random() < 0.75 ? { t: 'ready' } : { t: 'stand' }, t))
     const match = tableAt(city, bot.room, tb.id)?.match
     if (match) step(() => message(state, bot.conn, { t: 'play', move: match.bot(seat, Math.floor(random() * 2 ** 31)) }, t))
@@ -549,7 +573,7 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
   const addBot = (i: number) => {
     const userId = `bot-${i}`
     const handle = `${BOT_NAMES[i % BOT_NAMES.length]}${i >= BOT_NAMES.length ? Math.floor(i / BOT_NAMES.length) : ''}`
-    identities.set(userId, { userId, handle, partner: pick(PLAYABLE_IDS), shiny: random() < 0.1, look: look(), supporter: random() < 0.15 ? pick(['supporter', 'gold', 'diamond']) : null })
+    identities.set(userId, { userId, handle, partner: pick(PLAYABLE_IDS), shiny: random() < 0.1, look: look(), supporter: random() < 0.15 ? pick(['supporter', 'gold', 'diamond']) : null, stamps: 0 })
     const conn = `bot-${nextConn++}`
     const t = now()
     const room: TownRoomId = opts.start?.[handle] ?? 'plaza'
@@ -628,8 +652,27 @@ export const startLocalRealm = (opts: LocalRealmOptions): LocalRealm => {
     return true
   }
 
+  /** The player's connections with their avatar ids, to tell them what the API would. */
+  const players = () => [...sockets.values()].flatMap((ws) => {
+    const id = state.conns.get(ws.id)?.avatar
+    return id === null || id === undefined ? [] : [{ ws, id }]
+  })
+  const tell = (ws: FakeSocket, msg: RealmServerMessage) => later(() => ws.open && ws.on.message(JSON.stringify(msg)))
+
   return {
     socket,
+    stamped: (stamps) => {
+      for (const { ws, id } of players()) tell(ws, { t: 'stamped', id, stamps })
+    },
+    botStamped: (stamps) => {
+      const bot = [...bots.values()].find((b) => b.id !== null && players().some((p) => state.cities.get(opts.city)?.trainers.get(p.id)?.room === b.room))
+      if (!bot || bot.id === null) return false
+      for (const { ws } of players()) tell(ws, { t: 'stamped', id: bot.id, stamps })
+      return true
+    },
+    errandsDone: (done) => {
+      for (const { ws } of players()) tell(ws, { t: 'errands', done })
+    },
     bots: () => [...bots.values()].flatMap((b) => (b.id === null ? [] : [b.id])),
     stage,
     presence: () => presence(state, now()),

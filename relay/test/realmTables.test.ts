@@ -18,7 +18,7 @@ const join = (state: RealmState, conn: string, user: string, room = 'cafe', at =
   connect(state, conn, 'pallet', T0)
   const ask = hello(state, conn, { t: 'hello', v: REALM_PROTOCOL, city: 'pallet', token: 'tok', room }, user, T0).find((e) => e.k === 'identify')
   if (ask?.k !== 'identify') throw new Error('no identify ask')
-  const out = identified(state, ask.ask, { identities: { [user]: { userId: user, handle: user, partner: 'charmander', shiny: false, look: {}, supporter: null } }, banned: [] }, T0)
+  const out = identified(state, ask.ask, { identities: { [user]: { userId: user, handle: user, partner: 'charmander', shiny: false, look: {}, supporter: null, stamps: 0 } }, banned: [] }, T0)
   const welcome = sent(out, conn).find((m) => m.t === 'welcome')
   if (welcome?.t !== 'welcome') throw new Error('not seated')
   const t = state.cities.get('pallet')!.trainers.get(welcome.you)!
@@ -130,7 +130,7 @@ describe('the realm’s tables', () => {
     connect(late, 'n', 'pallet', T0)
     const ask = hello(late, 'n', { t: 'hello', v: REALM_PROTOCOL, city: 'pallet', token: 't', room: 'cafe' }, 'u5', T0).find((e) => e.k === 'identify')
     if (ask?.k !== 'identify') throw new Error('no ask')
-    const seated = identified(late, ask.ask, { identities: { u5: { userId: 'u5', handle: 'u5', partner: 'eevee', shiny: false, look: {}, supporter: null } }, banned: [] }, T0)
+    const seated = identified(late, ask.ask, { identities: { u5: { userId: 'u5', handle: 'u5', partner: 'eevee', shiny: false, look: {}, supporter: null, stamps: 0 } }, banned: [] }, T0)
     const listed = sent(seated, 'n').find((m) => m.t === 'tables')
     expect(listed?.t === 'tables' && listed.tables.map((t) => t.id)).toEqual(['cafe-1'])
     const gone = tableTo(say(late, 'a', { t: 'stand' }), 'n')
@@ -154,4 +154,80 @@ describe('the realm’s tables', () => {
     expect(sit(state, 'a', 'cafe-1')).toEqual([])
     expect(tableTo(sit(state, 'a', 'f3-2', 'typeDuel'), 'a')).toMatchObject({ id: 'f3-2', game: 'typeDuel' })
   })
+
+  describe('an open table (Ludo, Unown)', () => {
+    const at = { x: 150, y: 228 }
+    const LUDO_OPEN = { turnMs: 15_000, botMs: 900 }
+    /** Two trainers at cafe-3's Ludo, both ready: the match on with two bots. */
+    const gathered = () => {
+      const state = createRealm('sa', T0)
+      const a = join(state, 'a', 'u1', 'cafe', at)
+      const b = join(state, 'b', 'u2', 'cafe', at)
+      sit(state, 'a', 'cafe-3', 'ludo')
+      sit(state, 'b', 'cafe-3', 'ludo')
+      return { state, a, b }
+    }
+
+    it('starts once two or more sit and all are ready, the empty seats the bots’', () => {
+      const { state, a, b } = gathered()
+      const waiting = tableTo(say(state, 'a', { t: 'ready' }), 'b')!
+      expect(waiting).toMatchObject({ seats: [a, b, null, null], phase: 'waiting', ready: [a] })
+      const on = tableTo(say(state, 'b', { t: 'ready' }), 'a')!
+      expect(on).toMatchObject({ seats: [a, b, null, null], phase: 'playing', leftMs: LUDO_OPEN.turnMs })
+      const alone = createRealm('sa', T0)
+      join(alone, 'a', 'u1', 'cafe', at)
+      sit(alone, 'a', 'cafe-3', 'ludo')
+      expect(tableTo(say(alone, 'a', { t: 'ready' }), 'a')).toMatchObject({ phase: 'waiting' })
+    })
+
+    it('plays the bots’ seats after their think, and the late seat’s turn for it', () => {
+      const { state } = gathered()
+      say(state, 'a', { t: 'ready' })
+      const v = tableTo(say(state, 'b', { t: 'ready' }), 'a')!
+      const first = v.pending[0]!
+      const tb = [...state.cities.get('pallet')!.tables.values()][0]!
+      const moves = () => (tb.match!.view(null) as { moves: number }).moves
+      if (v.seats[first] === null) {
+        expect(tick(state, T0 + LUDO_OPEN.botMs - 1)).toEqual([])
+        tick(state, T0 + LUDO_OPEN.botMs)
+        expect(moves()).toBe(1)
+      } else {
+        tick(state, T0 + LUDO_OPEN.botMs)
+        expect(moves()).toBe(0)
+        tick(state, T0 + LUDO_OPEN.turnMs)
+        expect(moves()).toBe(1)
+        expect(tb.phase).toBe('playing')
+      }
+    })
+
+    it('hands a seat that stands mid-match to the bot, and lets someone sit in a bot’s seat', () => {
+      const { state, a, b } = gathered()
+      say(state, 'a', { t: 'ready' })
+      say(state, 'b', { t: 'ready' })
+      const stood = tableTo(say(state, 'b', { t: 'stand' }), 'a')!
+      expect(stood).toMatchObject({ phase: 'playing', seats: [a, null, null, null], result: null })
+      const c = join(state, 'c', 'u3', 'cafe', at)
+      expect(tableTo(sit(state, 'c', 'cafe-3', 'ludo'), 'a')).toMatchObject({ phase: 'playing', seats: [a, c, null, null] })
+      expect(b).not.toBe(c)
+    })
+
+    it('stands up a seat whose clock runs out twice running, the bot playing on', () => {
+      const { state, a } = gathered()
+      const tb = [...state.cities.get('pallet')!.tables.values()][0]!
+      say(state, 'a', { t: 'ready' })
+      say(state, 'b', { t: 'ready' })
+      // Only a: b plays its turns at once, the bots after their think.
+      let now = T0
+      for (let i = 0; i < 400 && tb.seats[0] === a && tb.phase === 'playing'; i++) {
+        now += 1000
+        const seat = tb.awaited[0]
+        if (seat === 1) say(state, 'b', { t: 'play', move: tb.match!.bot(1, i) }, now)
+        else if (seat === 0) now += LUDO_OPEN.turnMs
+        tick(state, now)
+      }
+      expect(tb.seats[0]).toBeNull()
+      expect(state.cities.get('pallet')!.trainers.get(a)!.table).toBeNull()
+    })
+  })
 })
+

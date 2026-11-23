@@ -1,7 +1,8 @@
-import { GEM_CHECKOUT, GEM_PACKS, GEM_PLAY, oncePack, type GemCurrency, type GemMethod, type GemPackId } from '../data/gems'
+import { GEM_CHECKOUT, GEM_PLAY, oncePack, packPrice, type GemMarket, type GemPackId } from '../data/gems'
 import { COSMETICS, COSMETIC_SLOTS, cosmeticPrice, isCosmeticId, parseLook, withSkins, type Look, type CosmeticBase, type CosmeticId } from '../data/cosmetics'
 import { bundleOf, SKIN_LAUNCH, type SkinBundleId } from '../data/skinCatalog'
 import { addDays, type DayKey } from './day'
+import { isRecord } from './parse'
 
 /**
  * The gem shop's rules, shared by the API (`server/src/gems.ts`, which keeps
@@ -33,8 +34,13 @@ export type GemsStatus = { balance: number; owned: readonly CosmeticId[]; locked
 /** One line of `GET /gems/ledger`: `amount` signed, `at` in ms. */
 export type GemLedgerEntry = { amount: number; reason: GemReason; ref: string; at: number }
 
-/** `POST /gems/checkout`'s body: `locale`, the game's language, picks the checkout page's (Stripe's). */
-export type GemCheckoutRequest = { pack: GemPackId; method: GemMethod; currency: GemCurrency; locale?: string }
+/**
+ * `POST /gems/checkout`'s body: the pack, the price it's bought at
+ * (`market`) and the game's language (`locale`), which picks the checkout
+ * page's (Stripe's). Pages from before 2026-11-20 send `{ method, currency }`
+ * instead, which the API still reads (`brl` as Brazil's price).
+ */
+export type GemCheckoutRequest = { pack: GemPackId; market: GemMarket; locale?: string }
 
 /**
  * Why `POST /gems/checkout` turns a pack down before any payment opens:
@@ -45,14 +51,14 @@ export type GemCheckoutRequest = { pack: GemPackId; method: GemMethod; currency:
 export type GemCheckoutRefusal = 'once' | 'cap'
 
 /**
- * Whether an account may open a checkout of `pack` in `currency`, given
- * `spentToday` (cents of that currency in its packs paid or pending this
- * Brasília day) and whether it holds the pack already (`taken`, for a `once`
- * pack). Null when it may.
+ * Whether an account may open a checkout of `pack` at `market`'s price, given
+ * `spentToday` (centavos in its packs paid or pending this Brasília day) and
+ * whether it holds the pack already (`taken`, for a `once` pack). Null when
+ * it may.
  */
-export const checkoutRefusal = (pack: GemPackId, currency: GemCurrency, spentToday: number, taken: boolean): GemCheckoutRefusal | null => {
+export const checkoutRefusal = (pack: GemPackId, market: GemMarket, spentToday: number, taken: boolean): GemCheckoutRefusal | null => {
   if (oncePack(pack) && taken) return 'once'
-  return spentToday + GEM_PACKS[pack][currency] > GEM_CHECKOUT.daily[currency] ? 'cap' : null
+  return spentToday + packPrice(pack, market) > GEM_CHECKOUT.daily ? 'cap' : null
 }
 
 /** `POST /gems/buy`'s answer (`locked` as in `GemsStatus`: a buy leaves the balance at 0 or more, so none). */
@@ -75,6 +81,17 @@ export const isGemPurchaseStatus = (v: unknown): v is GemPurchaseStatus => v ===
 
 /** `GET /gems/purchase/:ref`'s answer: where the account's pack stands, the gems it brings and the balance now. */
 export type GemPurchaseResponse = { status: GemPurchaseStatus; gems: number; balance: number }
+
+/**
+ * The gems a run's report brought (`PUT /runs/:token` answers with them):
+ * `earned` now (the day's first long run, the week's on its fifth day) and
+ * the `balance` after. Absent when the report brought none.
+ */
+export type RunGems = { earned: number; balance: number }
+
+/** A run report's `gems`, or null (none, or an API from before them). */
+export const parseRunGems = (v: unknown): RunGems | null =>
+  isRecord(v) && typeof v.earned === 'number' && typeof v.balance === 'number' && v.earned > 0 ? { earned: v.earned, balance: v.balance } : null
 
 /** Whether a cosmetic is free: price 0 counts as owned by every account. */
 export const isFree = (id: CosmeticId) => cosmeticPrice(id) === 0
