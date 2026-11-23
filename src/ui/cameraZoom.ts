@@ -5,10 +5,11 @@ import { zoomIcon } from '../render/art'
 import { h } from './dom'
 
 /**
- * The camera's zoom, shell state only: the shell resizes the view (`main.ts`,
- * `resize`), which a solo run's replay records like a rotated phone. Runs
- * (solo and co-op) and the Poké Realm have it, never the Arena or the menus.
- * The levels of this screen and the one shown, as `resize` left them.
+ * The camera's zoom, shell state only: the shell resizes the canvas (`main.ts`,
+ * `resize`) and never the simulation's view, so no run, replay or co-op hash
+ * sees it. Runs (solo and co-op) and the Poké Realm have it, never the Arena or
+ * the menus; a level never shows past the simulation's spawn ring
+ * (`zoomScales`). The levels of this screen and the one shown, as `resize` left them.
  */
 export const zoomShown = { level: 0, levels: 1 }
 

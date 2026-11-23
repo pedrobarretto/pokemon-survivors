@@ -22,8 +22,11 @@ import type { Game } from './types'
 import * as dm from '../engine/dmath'
 import { setScreenShake } from './effects'
 
+/** How far from a player (px) the horde spawns for a simulation's `view`: just outside it, in any direction. The shell caps the camera's zoom with it (`zoomScales`). */
+export const spawnReach = (view: { w: number; h: number }) => dm.hypot(view.w, view.h) / 2 + 12
+
 /** Just outside the visible area, in a random direction around a player. */
-const ringDistance = (g: Game) => dm.hypot(g.view.w, g.view.h) / 2 + 12
+const ringDistance = (g: Game) => spawnReach(g.view)
 
 /** Co-op: draws of a spawn point at most before one on a teammate's screen stands anyway. */
 const OFFSCREEN_TRIES = 6

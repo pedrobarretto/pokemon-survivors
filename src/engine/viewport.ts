@@ -47,22 +47,30 @@ export const pickViewport = <V extends ViewportSize>(visual: V | null, layout: V
 
 /**
  * How far the camera zooms out (`zoomScales`): at most `farthest` times the
- * resting view, and never past `maxShort` world px across the short side, as
- * spawns and despawns follow the view (`replay.ts`, `VIEW_LIMIT`): a zoom keeps
- * a run inside what big monitors already played.
+ * resting view and `maxShort` world px across the short side, in `levels`
+ * steps at most.
  */
 export const ZOOM = { farthest: 1.7, maxShort: 500, levels: 3 } as const
 
+/** World px the camera frames above the player's feet (`centerScreen` in `game/players.ts`). */
+const FRAME_LIFT = 10
+
 /**
  * The upscale factors a screen can zoom through, closest first (the first is
- * always `deviceScale`). Whole device px only, so the zoom stays pixel-perfect:
- * a 1080p monitor has few, a phone's dense screen more, up to `ZOOM.levels`.
- * `reach` caps the view's half diagonal (co-op simulates a fixed view, and past
- * its spawn ring the horde would pop in on screen).
+ * always `deviceScale`). Whole device px only, so the zoom stays pixel-perfect.
+ * The zoom is only drawn: the simulation keeps its own view, and `reach` is how
+ * far from the player that view spawns its horde (`spawnReach` in
+ * `game/spawner.ts`), so no level shows a corner past it and no foe pops in on
+ * screen. A solo run simulates the resting view itself, so its ring sits just
+ * past the resting corners and leaves no level; co-op's fixed `COOP.view` leaves
+ * a phone some. The Poké Realm has no horde (`Infinity`).
  */
-export const zoomScales = (cssW: number, cssH: number, dpr: number, reach = Infinity): readonly number[] => {
+export const zoomScales = (cssW: number, cssH: number, dpr: number, reach: number): readonly number[] => {
   const rest = deviceScale(cssW, cssH, dpr)
-  const fits = (s: number) => rest / s <= ZOOM.farthest && (Math.min(cssW, cssH) * dpr) / s <= ZOOM.maxShort && Math.hypot(cssW * dpr, cssH * dpr) / s / 2 <= reach
+  const fits = (s: number) => {
+    const { w, h } = fitView(cssW, cssH, dpr, s)
+    return rest / s <= ZOOM.farthest && Math.min(w, h) <= ZOOM.maxShort && Math.hypot(w / 2, h / 2 + FRAME_LIFT) <= reach
+  }
   const scales = [rest]
   for (let s = rest - 1; s >= 2 && fits(s); s--) scales.push(s)
   return scales.length <= ZOOM.levels ? scales : [scales[0]!, scales[(scales.length - 1) >> 1]!, scales[scales.length - 1]!]

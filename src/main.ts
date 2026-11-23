@@ -76,6 +76,7 @@ import { HALLOWEEN, isNightBoss, NIGHT_BOSSES } from './data/halloween'
 import { jackIcon, treatIcon } from './render/halloweenArt'
 import { brasiliaDay, isDayKey, previousDay, type DayKey } from './game/day'
 import { spawnEnemy } from './game/enemies'
+import { spawnReach } from './game/spawner'
 import { pickAlpha, spawnAlpha } from './game/alphas'
 import { EVENTS, stageIndexAt } from './data/waves'
 import { makeShiny } from './game/shiny'
@@ -337,34 +338,49 @@ const fixedStickCenter = (): Vec | null => {
 const input = createInput(canvas, () => settings().controls, fixedStickCenter)
 watchCursorMode(input)
 readRunToasts(() => settings().runToasts)
-/** Internal canvas size in world px. Shared by reference with the running game. */
+/** Internal canvas size in world px: what the screen draws, the camera's zoom included. */
 const view = { w: 480, h: 270 }
+/**
+ * The view a solo run simulates (spawns, despawns, what's on screen), shared by
+ * reference with the running game: the canvas at rest, never zoomed, so a
+ * rotation or a new window changes it (recorded as the replay's `view` event)
+ * and the camera's zoom never does.
+ */
+const simView = { w: 480, h: 270 }
 /** CSS px per world px (integer in device px, see `fitView`). */
 let cssScale = 4
 /** Set when the canvas was cleared and must be redrawn even if the game is paused. */
 let dirty = true
 
-/** What the camera's zoom applies to now (`ui/cameraZoom.ts`): a run, a co-op run (its simulation's view is fixed), the Poké Realm, or nothing. */
+/** What the camera's zoom applies to now (`ui/cameraZoom.ts`): a run (solo, the Dojo), a co-op run, the Poké Realm, or nothing. */
 type ZoomScope = 'run' | 'coop' | 'realm' | null
 let zoomScope: ZoomScope = null
-/** How far a co-op view may reach: its simulation's spawn ring (`ringDistance`), so the horde never pops in on screen. */
-const COOP_ZOOM_REACH = Math.hypot(COOP.view.w, COOP.view.h) / 2 + 12
+/** How far from the player the simulation's horde spawns, which no zoom level may show past (`zoomScales`): the Realm has no horde. */
+const zoomReach = (scope: Exclude<ZoomScope, null>) => (scope === 'run' ? spawnReach(simView) : scope === 'coop' ? spawnReach(COOP.view) : Infinity)
 /** CSS px per world px with no zoom: the UI's pixel frames stay this size whatever the camera does. */
 let restScale = 4
 
-/** The canvas' fit for the viewport now, zoomed as the scope allows (a crash's safe mode keeps the resting view), or null while the browser reports no screen to fit (`pickViewport`). */
+/**
+ * The canvas' fit for the viewport now, zoomed as the scope allows (a crash's
+ * safe mode keeps the resting view), and the resting fit (the solo
+ * simulation's view), or null while the browser reports no screen to fit
+ * (`pickViewport`).
+ */
 const fitNow = () => {
   const visual = window.visualViewport
   const size = pickViewport(visual, { width: window.innerWidth, height: window.innerHeight })
   if (visual && size !== visual) canvasLosses.badViewport++
   if (!size) return null
   const dpr = window.devicePixelRatio || 1
-  const rest = deviceScale(size.width, size.height, dpr)
-  const scales = zoomScope && !safeModeOn() ? zoomScales(size.width, size.height, dpr, zoomScope === 'coop' ? COOP_ZOOM_REACH : Infinity) : [rest]
-  restScale = rest / dpr
+  const rest = fitView(size.width, size.height, dpr)
+  restScale = rest.cssScale
+  // The resting view first: a solo run's reach is read from it.
+  simView.w = rest.w
+  simView.h = rest.h
+  const scales = zoomScope && !safeModeOn() ? zoomScales(size.width, size.height, dpr, zoomReach(zoomScope)) : [deviceScale(size.width, size.height, dpr)]
   zoomShown.levels = scales.length
   zoomShown.level = Math.min(settings().cameraZoom, scales.length - 1)
-  return fitView(size.width, size.height, dpr, scales[zoomShown.level])
+  return zoomShown.level === 0 ? rest : fitView(size.width, size.height, dpr, scales[zoomShown.level])
 }
 const fitted = (fit: ReturnType<typeof fitView>) => fit.w === canvas.width && fit.h === canvas.height && fit.cssScale === cssScale
 
@@ -406,7 +422,7 @@ const setZoomScope = (scope: ZoomScope) => {
   zoomScope = scope
   resize()
 }
-/** Sets the zoom level, kept on this device (`Settings.cameraZoom`) and applied at once: a solo run records the new view like a rotation. */
+/** Sets the zoom level, kept on this device (`Settings.cameraZoom`) and applied at once: only the canvas changes, never the simulation's view. */
 const setZoom = (level: number) => {
   updateSettings({ cameraZoom: level })
   resize()
@@ -645,6 +661,23 @@ let run: Run | null = null
  * `playerForm`, `heldMega`, `gameSpecial` and the like read).
  */
 const shownGame = (r: Run) => (r.coop ? r.coop.view.game : r.game)
+
+/** The camera of a solo run drawn zoomed (`drawnSolo`). */
+const soloCamera = { x: 0, y: 0 }
+let soloDrawn: Game | null = null
+/**
+ * A solo game as the canvas draws it: the game itself while the canvas is its
+ * view, else a copy (refreshed into the same object, like co-op's draw view,
+ * `coop/view.ts`) with the canvas' size and the simulation's camera widened
+ * around the same center. Only drawing reads it; nothing in the game is written.
+ */
+const drawnSolo = (g: Game): Game => {
+  if (g.view.w === view.w && g.view.h === view.h) return g
+  soloCamera.x = g.camera.x + (g.view.w - view.w) / 2
+  soloCamera.y = g.camera.y + (g.view.h - view.h) / 2
+  soloDrawn = Object.assign(soloDrawn ?? { ...g }, g, { view, camera: soloCamera })
+  return soloDrawn
+}
 /** Special attack press (Space, touch button, gamepad A), consumed by the next simulation step. */
 let specialQueued = false
 /** Mega Evolution press (E, the Mega button, gamepad Y), consumed like the special. */
@@ -1724,7 +1757,7 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
   const { bag, used } = c ? { bag: before.bag, used: [] } : useArmed(before.bag, SHOP_LEVELS[before.shop.level].bagSlots, keep)
   updateSave((s) => ({ ...s, bag }))
   const save = loadSave()
-  const start: ReplayStart = c ? challengeStart(c, view, challengeShiny(c)) : {
+  const start: ReplayStart = c ? challengeStart(c, simView, challengeShiny(c)) : {
     seed: plan.seed,
     starter,
     difficulty: save.difficulty,
@@ -1750,11 +1783,11 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
     // The legend paths: the forms the save opened for this legend, and Regigigas's temple for the Regi trio's captor.
     ...pathStart(save, starter, plan.seed),
     wild: wildOf(save),
-    view: { w: view.w, h: view.h },
+    view: { w: simView.w, h: simView.h },
   }
   // Created like a replay is re-simulated (the roster drawn ahead is the same one).
   if (start.hideout) updateSave((s) => ({ ...s, hideout: usePass(s.hideout) }))
-  const game = startGame(start, view)
+  const game = startGame(start, simView)
   if (devMap) setDevMap(game, devMap)
   const me = localPlayer(game)
   // The 1/64 roll unlocks this Pokémon's shiny for good (Normal/Shiny on the select screen).
@@ -1886,13 +1919,13 @@ const startDojo = async (starter: PlayableId, trial: TrialId | null = null) => {
     ui.append(loading)
     const save = loadSave()
     const shiny = playsShiny(save, starter)
-    const game = createGame(starter, view, Date.now(), save.ranks, undefined, { shiny, evo: [...save.evo], caps: capLevel(save.caps, starter), forms: openForms(save.paths, starter) })
+    const game = createGame(starter, simView, Date.now(), save.ranks, undefined, { shiny, evo: [...save.evo], caps: capLevel(save.caps, starter), forms: openForms(save.paths, starter) })
     // The 1/64 roll is a run's luck: nothing unlocks at the Dojo, and it plays in the colors picked.
     const me = localPlayer(game)
     me.shiny = shiny
     me.luckyShiny = false
     // The dummies stand left of the player, near enough to share the field the panel leaves open (the camera centers the player there: the panel's `lens`).
-    startTraining(game, TRAINING.target, TRAINING.counts[0], { x: -1, y: 0, reach: Math.min(TRAINING.reach, Math.round(view.w * 0.28)) })
+    startTraining(game, TRAINING.target, TRAINING.counts[0], { x: -1, y: 0, reach: Math.min(TRAINING.reach, Math.round(simView.w * 0.28)) })
     const build = trial ? undefined : save.builds[starter]
     if (build) applyBuild(game, build)
     if (trial) startTrial(game, trial)
@@ -1900,7 +1933,7 @@ const startDojo = async (starter: PlayableId, trial: TrialId | null = null) => {
     game.events.length = 0
     await loadRunSheets(familySheets(starter, shiny), [ENEMIES[TRAINING.target].dex])
     loading.remove()
-    const start: ReplayStart = { seed: 0, starter, difficulty: save.difficulty, ranks: save.ranks, shiny, luckyEgg: false, outbreak: null, halloween: false, bag: [], view: { ...view } }
+    const start: ReplayStart = { seed: 0, starter, difficulty: save.difficulty, ranks: save.ranks, shiny, luckyEgg: false, outbreak: null, halloween: false, bag: [], view: { ...simView } }
     const r: Run = {
       game,
       hud: runHud(game),
@@ -2010,7 +2043,7 @@ const startTutorial = async (done: (end: TutorialEnd) => void) => {
     const save = loadSave()
     const starter = save.partner
     const shiny = playsShiny(save, starter)
-    const game = createGame(starter, view, Date.now(), NO_RANKS, undefined, { shiny, forms: openForms(save.paths, starter) })
+    const game = createGame(starter, simView, Date.now(), NO_RANKS, undefined, { shiny, forms: openForms(save.paths, starter) })
     const me = localPlayer(game)
     me.shiny = shiny
     me.luckyShiny = false
@@ -2018,7 +2051,7 @@ const startTutorial = async (done: (end: TutorialEnd) => void) => {
     game.events.length = 0
     await loadRunSheets(familySheets(starter, shiny), TUTORIAL_DEXES)
     loading.remove()
-    const start: ReplayStart = { seed: 0, starter, difficulty: 'normal', ranks: NO_RANKS, shiny, luckyEgg: false, outbreak: null, halloween: false, bag: [], view: { ...view } }
+    const start: ReplayStart = { seed: 0, starter, difficulty: 'normal', ranks: NO_RANKS, shiny, luckyEgg: false, outbreak: null, halloween: false, bag: [], view: { ...simView } }
     const r: Run = {
       game,
       hud: runHud(game),
@@ -2102,7 +2135,7 @@ const startRushRun = async (starter: PlayableId, difficulty: Difficulty) => {
     const loading = loadingScreen()
     ui.append(loading)
     const shiny = playsShiny(save, starter)
-    const game = createGame(starter, view, Date.now(), save.ranks, undefined, { shiny, difficulty, caps: capLevel(save.caps, starter), forms: openForms(save.paths, starter) })
+    const game = createGame(starter, simView, Date.now(), save.ranks, undefined, { shiny, difficulty, caps: capLevel(save.caps, starter), forms: openForms(save.paths, starter) })
     const me = localPlayer(game)
     me.shiny = shiny
     me.luckyShiny = false
@@ -2110,7 +2143,7 @@ const startRushRun = async (starter: PlayableId, difficulty: Difficulty) => {
     const dexes = lineup.map((id) => ENEMIES[id].dex)
     await loadRunSheets(familySheets(starter, shiny), dexes)
     loading.remove()
-    const start: ReplayStart = { seed: 0, starter, difficulty, ranks: save.ranks, shiny, luckyEgg: false, outbreak: null, halloween: false, bag: [], view: { ...view } }
+    const start: ReplayStart = { seed: 0, starter, difficulty, ranks: save.ranks, shiny, luckyEgg: false, outbreak: null, halloween: false, bag: [], view: { ...simView } }
     const r: Run = {
       game,
       hud: runHud(game),
@@ -4711,7 +4744,7 @@ const frame = (now: number) => {
         if (megaQueued) recordEvent(r.recorder, ['mega'])
         if (teraQueued) recordEvent(r.recorder, ['tera'])
         if (lungeQueued) recordEvent(r.recorder, ['lunge'])
-        step(g, { move: recordStep(r.recorder, view, input.readMove()), special: specialQueued, mega: megaQueued, tera: teraQueued, lunge: lungeQueued }, STEP)
+        step(g, { move: recordStep(r.recorder, simView, input.readMove()), special: specialQueued, mega: megaQueued, tera: teraQueued, lunge: lungeQueued }, STEP)
         specialQueued = false
         megaQueued = false
         teraQueued = false
@@ -4751,12 +4784,14 @@ const frame = (now: number) => {
         runDrawnAt = now
         if (g.raid.arena) frameRaid(g, t, localPlayer(g).screen.y)
         if (g.rush) frameRush(g, t, localPlayer(g).screen.y)
-        render(ctx, g, t, { ...settings(), companion: r.companion })
+        // The camera's zoom draws more than the simulation's view (`drawnSolo`).
+        const drawn = drawnSolo(g)
+        render(ctx, drawn, t, { ...settings(), companion: r.companion })
         firstFrameDrawn()
         if (!r.tutorial) firstRunClock(g.time)
         const stick = input.readStick()
         if (stick && g.phase === 'playing') drawJoystick(ctx, stick, cssScale)
-        r.hud.update(g)
+        r.hud.update(drawn)
       }
       // Only frames that moved the run tell how the device keeps up.
       if (steps > 0) {

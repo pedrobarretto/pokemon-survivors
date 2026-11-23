@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { FIXED_STICK_REACH, fixedJoystick, gripDown, gripMove, gripUp, joystick, STICK_RADIUS } from './input'
 import { deviceScale, fitView, pickViewport, ZOOM, zoomScales } from './viewport'
 import { pinchStep, wheelStep } from './zoomGesture'
+import { spawnReach } from '../game/spawner'
+import { COOP } from '../data/coop'
 
 describe('joystick', () => {
   it('ignores jitter inside the dead zone', () => {
@@ -83,23 +85,32 @@ describe('viewport', () => {
     expect(fitView(-20, Number.NaN, 2)).toMatchObject({ w: 1, h: 1 })
   })
 
+  const SCREENS = [[1920, 1080, 1], [1920, 950, 1], [1440, 900, 2], [390, 844, 3], [844, 390, 3], [412, 915, 2.625], [3840, 2000, 1], [768, 1024, 2]] as const
+
   it('zooms out in whole device px, from the resting scale, inside the limits', () => {
-    for (const [w, h, dpr] of [[1920, 1080, 1], [1920, 950, 1], [1440, 900, 2], [390, 844, 3], [412, 915, 2.625], [3840, 2000, 1]] as const) {
-      const scales = zoomScales(w, h, dpr)
+    for (const [w, h, dpr] of SCREENS) {
+      const scales = zoomScales(w, h, dpr, Infinity)
       expect(scales[0]).toBe(deviceScale(w, h, dpr))
       expect(scales.length).toBeLessThanOrEqual(ZOOM.levels)
       for (const s of scales.slice(1)) {
         expect(Number.isInteger(s)).toBe(true)
         expect(s).toBeLessThan(scales[0]!)
-        expect(Math.min(fitView(w, h, dpr, s).w, fitView(w, h, dpr, s).h)).toBeLessThanOrEqual(ZOOM.maxShort + 1)
+        expect(Math.min(fitView(w, h, dpr, s).w, fitView(w, h, dpr, s).h)).toBeLessThanOrEqual(ZOOM.maxShort)
       }
     }
   })
 
-  it('gives a windowed 1080p monitor a zoom, and co-op only what stays inside its reach', () => {
-    expect(zoomScales(1920, 950, 1)).toEqual([3, 2])
-    expect(zoomScales(1920, 950, 1, 363)).toEqual([3])
-    expect(zoomScales(1920, 1080, 1, 363).length).toBe(1 + Number(Math.hypot(640, 360) / 2 <= 363))
+  it("never shows a corner past the simulation's spawn ring: none for a solo run, some for co-op's wider view", () => {
+    for (const [w, h, dpr] of SCREENS) {
+      // A solo run simulates the resting view itself.
+      expect(zoomScales(w, h, dpr, spawnReach(fitView(w, h, dpr)))).toEqual([deviceScale(w, h, dpr)])
+      for (const s of zoomScales(w, h, dpr, spawnReach(COOP.view))) {
+        const { w: vw, h: vh } = fitView(w, h, dpr, s)
+        expect(Math.hypot(vw / 2, vh / 2 + 10)).toBeLessThanOrEqual(spawnReach(COOP.view))
+      }
+    }
+    expect(zoomScales(390, 844, 3, spawnReach(COOP.view))).toEqual([5, 4])
+    expect(zoomScales(1920, 950, 1, spawnReach(COOP.view))).toEqual([3])
   })
 
   it('spends a wheel step only once enough has scrolled, down meaning out', () => {
