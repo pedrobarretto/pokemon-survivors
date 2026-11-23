@@ -1,5 +1,5 @@
 import { dirTo } from '../engine/math'
-import { rushDown } from './rush'
+import { rushDown, rushHarm } from './rush'
 import { chance, range } from '../engine/rng'
 import { effectiveness, TYPE_COLORS, type PokeType } from '../data/types'
 import { ENEMY_BERRY_CHANCE } from '../data/consumables'
@@ -309,7 +309,7 @@ export const hurtPlayer = (
   // Air Lock: the weather boosts no foe's hit.
   const weather = abilityImmune(g, 'weather') ? 1 : weatherPower(weatherHere(g), types)
   // Terastallized, the player defends as its Tera type (`teraGuard`).
-  const dmg = armored(gaKitATaken(g, taken, types) * mods.enemyDamage * weather * teraGuard(g, types) * domainHarm(g, from !== undefined) * raidHarm(g, from !== undefined) * p.stats.damageTaken, p.stats.armor)
+  const dmg = armored(gaKitATaken(g, taken, types) * mods.enemyDamage * weather * teraGuard(g, types) * domainHarm(g, from !== undefined) * raidHarm(g, from !== undefined) * rushHarm(g) * p.stats.damageTaken, p.stats.armor)
   p.hp -= dmg
   if (g.training !== null) p.hp = tutorialHp(p.hp, p.stats.maxHp)
   p.record.taken += dmg

@@ -74,7 +74,7 @@ export const rushRingLine = (ring: number, rings: number, legend: EnemyId, islan
 }
 
 /**
- * The rush's end: won (the time, a record, Hoopa caught on the first clear)
+ * The rush's end: won (the time, a record, Hoopa caught on the first clear, a shiny Hoopa)
  * or lost (the ring reached). Try again or leave.
  */
 export const rushEnd = (root: HTMLElement, input: Input, g: Game, opts: { record: boolean; caught: boolean; again: () => void; leave: () => void }): Screen => {
@@ -90,11 +90,12 @@ export const rushEnd = (root: HTMLElement, input: Input, g: Game, opts: { record
     h(
       'div',
       { class: 'dialog box pop wide' },
-      h('img', { class: 'rush-end-hoopa', src: portraitUrl(ENEMIES.hoopa.dex, false), alt: '' }),
+      h('img', { class: 'rush-end-hoopa', src: portraitUrl(ENEMIES.hoopa.dex, won && r.shiny), alt: '' }),
       h('div', { class: 'dialog-title' }, won ? m.won : m.lost),
       h('p', { class: 'rush-end-line' }, won ? m.time(formatTime(Math.round(g.time))) : m.reached(Math.min(r.ring + 1, r.lineup.length), r.lineup.length)),
       won && opts.record && h('p', { class: 'rush-end-record' }, m.record),
       won && opts.caught && h('p', { class: 'rush-end-line' }, rich(m.hoopaCaught)),
+      won && r.shiny && h('p', { class: 'rush-end-record' }, rich(m.hoopaShiny)),
       h('div', { class: 'row' }, again, leave),
     ),
   )

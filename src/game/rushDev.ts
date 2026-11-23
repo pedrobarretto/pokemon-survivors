@@ -7,7 +7,8 @@ import type { Game } from './types'
  * a rush at that level with the partner (the save needs as many captured legends as its rings, 4 for Normal:
  * `ps.captureAll()` first), `ps.rush('select')` opens the partner select on
  * its Lendários tab (the rings' banner), `ps.rushRing(5)` jumps to ring 5 (its
- * legend comes through at once, on its island; the last ring is Hoopa).
+ * legend comes through at once, on its island; the last ring is Hoopa) and
+ * `ps.rushShiny()` makes the Hoopa fighting now shiny (`ps.rushRing(99)` first).
  */
 export const rushDevTools = (game: () => Game | undefined, start: (difficulty: Difficulty) => void, select: () => void) => ({
   rush: (difficulty: Difficulty | 'select' = 'normal') =>
@@ -22,5 +23,13 @@ export const rushDevTools = (game: () => Game | undefined, start: (difficulty: D
     g.hazards.length = 0
     jumpToRing(g, Math.round(n) - 1)
     return `Ring ${r.ring + 1}/${r.lineup.length}: ${r.lineup[r.ring]} on the ${r.island} island`
+  },
+  rushShiny: () => {
+    const g = game()
+    const r = g?.rush
+    const hoopa = g?.enemies.find((e) => e.id === r?.bossId && e.kind === 'hoopa')
+    if (!r || !hoopa) return 'Hoopa is not fighting: ps.rushRing(99)'
+    hoopa.shiny = r.shiny = true
+    return 'Hoopa is shiny'
   },
 })

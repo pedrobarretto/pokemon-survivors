@@ -162,7 +162,9 @@ export const bossForms = (g: Game): Variant[] => {
     if (!phases || !e.fight) return []
     const d = e.fight.difficulty
     const forms = [phaseForm(phases[e.fight.phase - 1], d), phaseForm(phases[e.fight.phase], d), phaseForm(phases[e.fight.phase + 1], d)]
-    return forms.flatMap((form) => (form ? [{ dex: ENEMIES[e.kind].dex, shiny: e.shiny, form }] : []))
+    const dex = ENEMIES[e.kind].dex
+    // A shiny one (Hoopa from its rings) needs its shiny colors in its base form too.
+    return [...forms.flatMap((form) => (form ? [{ dex, shiny: e.shiny, form }] : [])), ...(e.shiny ? [{ dex, shiny: true }] : [])]
   })
   // Ogerpon's raid giant wears its mask Terastallized (`bossForm`), from its den's opening on.
   const raid = g.raid.den?.raid ?? g.raid.arena?.raid

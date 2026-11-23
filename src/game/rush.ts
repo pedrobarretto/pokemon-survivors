@@ -10,6 +10,7 @@ import type { Build } from './builds'
 import type { Difficulty } from './difficulty'
 import { offstage } from './bosses'
 import { burst, setScreenShake, shakeScreen } from './effects'
+import { rollShiny } from './shiny'
 import { spawnEnemy } from './enemies'
 import { legendFell } from './legendScene'
 import { winRun } from './coop'
@@ -56,6 +57,8 @@ export type RushState = {
   island: IslandId
   /** The island as a room (`roomOf`): its floor and what stands on it, so the map's terrain, weather and map events wait outside. */
   room: Room
+  /** Whether Hoopa came through shiny (`RUSH.shiny`), for the end screen. */
+  shiny: boolean
 }
 
 /** Whether a level of the rings is open for `captured` legends they can bring: as many as its rings, so each level is always the same fight. */
@@ -79,6 +82,12 @@ export const rushLineup = (captured: readonly LegendId[], difficulty: Difficulty
 /** A ring's legend's HP: the same for every species, growing ring by ring; Hoopa's the most. */
 export const rushHp = (difficulty: Difficulty, ring: number, hoopa: boolean) =>
   dm.round(RUSH.hp * RUSH.hpBy[difficulty] * (1 + RUSH.ramp * ring) * (hoopa ? RUSH.hoopa : 1))
+
+/** What a ring's legend's hits are multiplied by (`hurtPlayer`): the level's, growing ring by ring. 1 outside a rush. */
+export const rushHarm = (g: Game) => {
+  const r = g.rush
+  return r ? RUSH.harm[r.difficulty] * (1 + RUSH.harmRamp * r.ring) : 1
+}
 
 /** The player's loadout for the rush: their Dojo build, or the final form with the family's first moves at max level. */
 const loadout = (g: Game, build: Build | null) => {
@@ -152,7 +161,7 @@ export const startRush = (g: Game, difficulty: Difficulty, lineup: readonly Enem
   g.phase = 'playing'
   const home = { x: p.x, y: p.y - ISLAND_START }
   const island = islandOf(lineup, 0)
-  g.rush = { difficulty, lineup: [...lineup], ring: 0, stage: 'gate', clock: RUSH.gate, home, bossId: -1, island, room: islandRoom(home, island) }
+  g.rush = { difficulty, lineup: [...lineup], ring: 0, stage: 'gate', clock: RUSH.gate, home, bossId: -1, island, room: islandRoom(home, island), shiny: false }
   g.events.length = 0
 }
 
@@ -176,6 +185,8 @@ const openRing = (g: Game, r: RushState) => {
   e.hp = e.maxHp = rushHp(r.difficulty, r.ring, id === 'hoopa')
   e.mass *= RUSH.grip
   e.xp = 0
+  // Hoopa's shiny is the rings' alone: the rush is never replayed, so the run's rng can draw it.
+  if (id === 'hoopa') e.shiny = r.shiny = rollShiny(g.rng, RUSH.shiny[r.difficulty])
   r.bossId = e.id
   g.bossId = e.id
   r.stage = 'fight'

@@ -28,6 +28,13 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
     title: { pt: 'Tornados sem travar e Patreon no lobby', en: 'Lag-free tornadoes and Patreon in the lobby', es: 'Tornados sin trabas y Patreon en el lobby', fr: 'Des tornades fluides et Patreon dans le lobby', zh: '龍捲風不再卡頓，大廳加入 Patreon' },
     highlights: [
       {
+        pt: 'Os Anéis de Hoopa ficaram bem mais difíceis: cada lendário aguenta muito mais, bate mais forte a cada anel e cura menos entre eles. E o Hoopa pode vir shiny, a única forma de ganhar o Hoopa shiny!',
+        en: 'Hoopa’s Rings got much harder: each legend takes far more to beat, hits harder ring by ring and you heal less between rings. And Hoopa can come shiny, the only way to get shiny Hoopa!',
+        es: 'Los Anillos de Hoopa se volvieron mucho más difíciles: cada legendario aguanta mucho más, pega más fuerte en cada anillo y curas menos entre ellos. ¡Y Hoopa puede salir shiny, la única forma de conseguir a Hoopa shiny!',
+        fr: 'Les Anneaux de Hoopa sont bien plus durs : chaque légendaire encaisse bien plus, frappe plus fort d’anneau en anneau et tu te soignes moins entre eux. Et Hoopa peut être chromatique, le seul moyen d’avoir Hoopa chromatique !',
+        zh: 'Hoopa 的圓環變得更難了：每隻傳說寶可夢更耐打、每個圓環打得更重，圓環之間回復更少。而且 Hoopa 可能以異色登場，這是取得異色 Hoopa 的唯一方式！',
+      },
+      {
         pt: 'A Zona Safári tem um Guia: toque em Guia no topo para ver, com cenas do jogo, como encontrar, acalmar e capturar, e as chances de verdade.',
         en: 'The Safari Zone has a Guide: tap Guide at the top to see, with scenes from the game, how to find, calm and catch Pokémon, and the real odds.',
         es: 'La Zona Safari tiene una Guía: toca Guía arriba para ver, con escenas del juego, cómo encontrar, calmar y atrapar Pokémon, y las probabilidades reales.',
@@ -35,18 +42,11 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         zh: '狩獵地帶有了指南：點上方的「指南」，用遊戲畫面看怎麼找到、安撫和捕捉寶可夢，以及真正的機率。',
       },
       {
-        pt: 'Os tornados do Whirlwind (do Lugia, ou do TM que ele deixa) não travam mais o jogo numa build de área grande, como a do Tornadus com Long Reach.',
-        en: 'Whirlwind’s tornadoes (Lugia’s, or from the TM it leaves) no longer slow the game down on a big-area build, like Tornadus with Long Reach.',
-        es: 'Los tornados de Whirlwind (de Lugia, o del TM que deja) ya no traban el juego con una build de área grande, como Tornadus con Long Reach.',
-        fr: 'Les tornades de Whirlwind (celles de Lugia, ou du TM qu’il laisse) ne ralentissent plus le jeu avec un build de grande zone, comme Tornadus avec Long Reach.',
-        zh: 'Whirlwind 的龍捲風（Lugia 的，或牠留下的招式學習器）在大範圍配置下不再拖慢遊戲，例如帶 Long Reach 的 Tornadus。',
-      },
-      {
-        pt: 'O anel e os raios do Origin Pulse do Kyogre e os outros anéis e raios grandes dos golpes lendários ficaram muito mais leves de desenhar, sobretudo em celulares.',
-        en: 'Kyogre’s Origin Pulse ring and beams, and the other big rings and beams of the legendary moves, are far lighter to draw, above all on phones.',
-        es: 'El anillo y los rayos del Origin Pulse de Kyogre y los demás anillos y rayos grandes de los movimientos legendarios son mucho más livianos de dibujar, sobre todo en celulares.',
-        fr: 'L’anneau et les rayons de l’Origin Pulse de Kyogre et les autres grands anneaux et rayons des attaques légendaires sont bien plus légers à dessiner, surtout sur téléphone.',
-        zh: 'Kyogre 的 Origin Pulse 光環與光束，以及其他傳說招式的大型光環與光束，繪製起來都輕量許多，手機上尤其明顯。',
+        pt: 'Os tornados do Whirlwind (do Lugia ou do TM) não travam mais numa build de área grande, e o Origin Pulse do Kyogre e os outros anéis e raios lendários ficaram muito mais leves, sobretudo em celulares.',
+        en: 'Whirlwind’s tornadoes (Lugia’s or the TM’s) no longer slow the game on a big-area build, and Kyogre’s Origin Pulse and the other legendary rings and beams are far lighter, above all on phones.',
+        es: 'Los tornados de Whirlwind (de Lugia o del TM) ya no traban el juego con una build de área grande, y el Origin Pulse de Kyogre y los demás anillos y rayos legendarios son mucho más livianos, sobre todo en celulares.',
+        fr: 'Les tornades de Whirlwind (de Lugia ou du TM) ne ralentissent plus le jeu avec un build de grande zone, et l’Origin Pulse de Kyogre et les autres anneaux et rayons légendaires sont bien plus légers, surtout sur téléphone.',
+        zh: 'Whirlwind 的龍捲風（Lugia 的或招式學習器的）在大範圍配置下不再拖慢遊戲，Kyogre 的 Origin Pulse 與其他傳說光環、光束也輕量許多，手機上尤其明顯。',
       },
       {
         pt: 'A tela de fim de partida foi refeita: o Pokémon, o tempo, o nível, os derrotados e os ₽ no topo, as novidades em uma linha e o resto em Detalhes. Os botões ficam sempre à vista, e o card de compartilhar ficou mais nítido, com o seu Pokémon em destaque.',
@@ -88,6 +88,25 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             pt: 'No celular deitado, o resumo fica à esquerda e o resto rola à direita; o fim de partida do co-op também ganhou os botões fixos.',
             en: 'On a phone held sideways, the summary stays on the left while the rest scrolls on the right; co-op’s end screen got the fixed buttons too.',
             es: 'En el celular acostado, el resumen queda a la izquierda y el resto se desplaza a la derecha; el fin de partida del co-op también ganó los botones fijos.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Anéis de Hoopa mais difíceis, e o Hoopa shiny', en: 'Harder Hoopa’s Rings, and shiny Hoopa', es: 'Anillos de Hoopa más difíciles, y Hoopa shiny', fr: 'Des Anneaux de Hoopa plus durs, et Hoopa chromatique', zh: '更難的 Hoopa 的圓環，以及異色 Hoopa' },
+        notes: [
+          {
+            pt: 'Tinha gente fechando os anéis em 2 minutos quase sem perder vida. Agora cada lendário tem cerca de 4 vezes mais HP, o dano deles cresce a cada anel (mais no Difícil e no Pesadelo) e a cura entre anéis caiu de 40% para 30%.',
+            en: 'Some players were clearing the rings in 2 minutes, barely losing any HP. Now each legend has about 4 times the HP, their damage grows ring by ring (more on Hard and Nightmare) and the heal between rings went from 40% to 30%.',
+            es: 'Había gente cerrando los anillos en 2 minutos casi sin perder vida. Ahora cada legendario tiene unas 4 veces más HP, su daño crece en cada anillo (más en Difícil y Pesadilla) y la curación entre anillos bajó del 40% al 30%.',
+            fr: 'Certains bouclaient les anneaux en 2 minutes sans presque perdre de PV. Désormais chaque légendaire a environ 4 fois plus de PV, ses dégâts augmentent d’anneau en anneau (plus en Difficile et Cauchemar) et le soin entre les anneaux passe de 40 % à 30 %.',
+            zh: '有玩家 2 分鐘就打完所有圓環，幾乎沒掉血。現在每隻傳說寶可夢的 HP 約為 4 倍，傷害隨每個圓環提高（困難和惡夢更多），圓環之間的回復從 40% 降到 30%。',
+          },
+          {
+            pt: 'O Hoopa do último anel pode vir shiny: 1 em 12 no Normal, 1 em 8 no Difícil e 1 em 5 no Pesadelo. Vencê-lo shiny libera o Hoopa shiny no Modo Lendário.',
+            en: 'The last ring’s Hoopa can come shiny: 1 in 12 on Normal, 1 in 8 on Hard and 1 in 5 on Nightmare. Beating it shiny unlocks shiny Hoopa in Legend mode.',
+            es: 'El Hoopa del último anillo puede salir shiny: 1 de cada 12 en Normal, 1 de cada 8 en Difícil y 1 de cada 5 en Pesadilla. Vencerlo shiny desbloquea a Hoopa shiny en el Modo Legendario.',
+            fr: 'Le Hoopa du dernier anneau peut être chromatique : 1 sur 12 en Normal, 1 sur 8 en Difficile et 1 sur 5 en Cauchemar. Le battre chromatique débloque Hoopa chromatique en Mode Légende.',
+            zh: '最後一個圓環的 Hoopa 可能以異色登場：普通 1/12、困難 1/8、惡夢 1/5。擊敗異色 Hoopa 即可在傳說模式解鎖異色 Hoopa。',
           },
         ],
       },
