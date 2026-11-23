@@ -24,6 +24,50 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-23',
+    title: { pt: 'Tornados sem travar', en: 'Tornadoes without the lag', es: 'Tornados sin trabas', fr: 'Des tornades sans ralentissement', zh: '龍捲風不再卡頓' },
+    highlights: [
+      {
+        pt: 'Os tornados do Whirlwind (do Lugia, ou do TM que ele deixa) não travam mais o jogo numa build de área grande, como a do Tornadus com Long Reach.',
+        en: 'Whirlwind’s tornadoes (Lugia’s, or from the TM it leaves) no longer slow the game down on a big-area build, like Tornadus with Long Reach.',
+        es: 'Los tornados de Whirlwind (de Lugia, o del TM que deja) ya no traban el juego con una build de área grande, como Tornadus con Long Reach.',
+        fr: 'Les tornades de Whirlwind (celles de Lugia, ou du TM qu’il laisse) ne ralentissent plus le jeu avec un build de grande zone, comme Tornadus avec Long Reach.',
+        zh: 'Whirlwind 的龍捲風（Lugia 的，或牠留下的招式學習器）在大範圍配置下不再拖慢遊戲，例如帶 Long Reach 的 Tornadus。',
+      },
+      {
+        pt: 'O anel e os raios do Origin Pulse do Kyogre custam uma fração do que custavam para desenhar.',
+        en: 'Kyogre’s Origin Pulse ring and beams take a fraction of what they did to draw.',
+        es: 'El anillo y los rayos del Origin Pulse de Kyogre cuestan una fracción de lo que costaban dibujar.',
+        fr: 'L’anneau et les rayons de l’Origin Pulse de Kyogre ne coûtent plus qu’une fraction de ce qu’ils coûtaient à dessiner.',
+        zh: 'Kyogre 的 Origin Pulse，其光環與光束的繪製成本只剩原本的一小部分。',
+      },
+      {
+        pt: 'Os outros anéis e raios grandes dos golpes lendários ficaram mais leves também, sobretudo em celulares.',
+        en: 'The other big rings and beams of the legendary moves got lighter too, above all on phones.',
+        es: 'Los demás anillos y rayos grandes de los movimientos legendarios también quedaron más livianos, sobre todo en celulares.',
+        fr: 'Les autres grands anneaux et rayons des attaques légendaires sont plus légers aussi, surtout sur téléphone.',
+        zh: '其他傳說招式的大型光環與光束也變得更輕量，手機上尤其明顯。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Desempenho', en: 'Performance', es: 'Rendimiento', fr: 'Performances', zh: '效能' },
+        notes: [
+          {
+            pt: 'Um tornado maior agora é desenhado com pontos maiores e mais espaçados, então custa o mesmo que um do tamanho normal; os do tamanho normal estão iguais.',
+            en: 'A bigger tornado is now drawn with bigger, more spaced-out dots, so it costs what a normal-sized one does; normal-sized ones look the same.',
+            es: 'Un tornado más grande ahora se dibuja con puntos más grandes y espaciados, así que cuesta lo mismo que uno de tamaño normal; los de tamaño normal se ven igual.',
+          },
+          {
+            pt: 'Anéis e raios são desenhados linha a linha em vez de pixel a pixel: o anel do Origin Pulse cruzando a tela passou de dezenas de milhares de pixels por quadro para poucos milhares.',
+            en: 'Rings and beams are drawn row by row instead of pixel by pixel: Origin Pulse’s ring crossing the screen went from tens of thousands of pixels a frame to a few thousand.',
+            es: 'Los anillos y rayos se dibujan fila por fila en vez de píxel por píxel: el anillo de Origin Pulse cruzando la pantalla pasó de decenas de miles de píxeles por cuadro a unos pocos miles.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-11-22',
     title: { pt: 'Seu progresso a salvo', en: 'Your progress kept safe', es: 'Tu progreso a salvo', fr: 'Ta progression en sécurité', zh: '你的進度安全無虞' },
     highlights: [
