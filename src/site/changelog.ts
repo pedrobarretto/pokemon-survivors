@@ -35,11 +35,11 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         zh: 'Hoopa 的圓環變得更難了：每隻傳說寶可夢更耐打、每個圓環打得更重，圓環之間回復更少。而且 Hoopa 可能以異色登場，這是取得異色 Hoopa 的唯一方式！',
       },
       {
-        pt: 'A Zona Safári tem um Guia: toque em Guia no topo para ver, com cenas do jogo, como encontrar, acalmar e capturar, e as chances de verdade.',
-        en: 'The Safari Zone has a Guide: tap Guide at the top to see, with scenes from the game, how to find, calm and catch Pokémon, and the real odds.',
-        es: 'La Zona Safari tiene una Guía: toca Guía arriba para ver, con escenas del juego, cómo encontrar, calmar y atrapar Pokémon, y las probabilidades reales.',
-        fr: 'Le Parc Safari a un Guide : touchez Guide en haut pour voir, avec des scènes du jeu, comment trouver, calmer et capturer, et les vraies chances.',
-        zh: '狩獵地帶有了指南：點上方的「指南」，用遊戲畫面看怎麼找到、安撫和捕捉寶可夢，以及真正的機率。',
+        pt: 'A Zona Safári tem um Guia: toque em Guia no topo para ver, com cenas do jogo, como encontrar, acalmar e capturar, e as chances de verdade. E um Pokémon que você já tem entra na Pokédex do habitat só de aparecer: nada de gastar bola para registrar.',
+        en: 'The Safari Zone has a Guide: tap Guide at the top to see, with scenes from the game, how to find, calm and catch Pokémon, and the real odds. And a Pokémon you already have goes in the habitat’s Pokédex just by showing up: no more spending balls to register it.',
+        es: 'La Zona Safari tiene una Guía: toca Guía arriba para ver, con escenas del juego, cómo encontrar, calmar y atrapar Pokémon, y las probabilidades reales. Y un Pokémon que ya tienes entra en la Pokédex del hábitat con solo aparecer: ya no gastas balls para registrarlo.',
+        fr: 'Le Parc Safari a un Guide : touchez Guide en haut pour voir, avec des scènes du jeu, comment trouver, calmer et capturer, et les vraies chances. Et un Pokémon que tu as déjà entre dans le Pokédex de l’habitat rien qu’en apparaissant : plus besoin de gaspiller des Balls pour l’enregistrer.',
+        zh: '狩獵地帶有了指南：點上方的「指南」，用遊戲畫面看怎麼找到、安撫和捕捉寶可夢，以及真正的機率。已經擁有的寶可夢只要出現就會登錄到棲地圖鑑，不必再浪費球。',
       },
       {
         pt: 'Os tornados do Whirlwind (do Lugia ou do TM) não travam mais numa build de área grande, e o Origin Pulse do Kyogre e os outros anéis e raios lendários ficaram muito mais leves, sobretudo em celulares.',

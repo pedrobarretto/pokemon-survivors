@@ -306,6 +306,8 @@ const start = (ctx: SoloCtx): GameRun => {
       if (isFailure(got)) return trouble(got.error)
       session = got.session
       lastActed = got
+      // An owned family registered on sight: the board's Pokédex shows it without asking the API again.
+      if (got.registered && got.turn.kind === 'appear' && view && !view.dex[got.session.habitat].includes(got.turn.family)) view.dex[got.session.habitat].push(got.turn.family)
       syncWanderers()
       then(got)
     })
@@ -678,11 +680,12 @@ const start = (ctx: SoloCtx): GameRun => {
     const pips = Array.from({ length: SAFARI.maxCalm }, (_, i) => h('i', { class: i < wildCalm ? 'sz-pip sz-pip-on' : 'sz-pip' }))
     const moodTurns = e?.moodTurns ?? 0
     const fresh = session?.mode !== 'contest' && lacks(family)
+    const inDex = !fresh && view !== null && view.dex[session?.habitat ?? view.habitat].includes(family)
     wildPanel.replaceChildren(
       row(h('b', {}, safariForm(family).name, ...(shiny ? [h('span', { class: 'sz-star' }, '★')] : [])), h('span', { class: 'sz-lv' }, w.level(level))),
       row(
         h('span', { class: 'sz-readout' }, h('small', {}, w.calmLabel), ...pips),
-        wildMood ? h('em', { class: `sz-mood sz-mood-${wildMood}` }, w.moodLabel[wildMood], ...Array.from({ length: Math.max(1, moodTurns) }, () => h('i', { class: 'sz-mood-pip' }))) : fresh ? h('em', {}, w.fresh) : false,
+        wildMood ? h('em', { class: `sz-mood sz-mood-${wildMood}` }, w.moodLabel[wildMood], ...Array.from({ length: Math.max(1, moodTurns) }, () => h('i', { class: 'sz-mood-pip' }))) : fresh ? h('em', {}, w.fresh) : inDex ? h('em', {}, w.registered) : false,
       ),
       ...((e?.chain ?? 0) >= 2 ? [row(h('span', { class: 'sz-chain' }, h('img', { class: 'sz-spark', src: ICONS.spark(), alt: '', width: 14, height: 14 }), w.chain(e!.chain)))] : []),
     )

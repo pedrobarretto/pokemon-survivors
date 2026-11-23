@@ -262,6 +262,19 @@ describe.skipIf(!url)('Zona Safári (Postgres)', () => {
     expect(sent.map((r) => r.key)).toEqual(residents.includes(first!.family) ? [`safariDex:${habitat}`, ...rewards].sort() : [])
   })
 
+  it('registers a family the account already has on sight, no ball spent, and says so once', async () => {
+    const { session } = await started()
+    const [first, second] = await hiding(session.id)
+    await setSave({ hatched: { [first!.family]: { shiny: false } } })
+    const met = await act(session, 0, { kind: 'grass' })
+    expect(met.registered).toBe(true)
+    expect(met.session.balls).toBe(SAFARI.balls)
+    expect((await safari.state('u_ash'))!.dex[habitat]).toContain(first!.family)
+    expect((await act(session, 0, { kind: 'grass' })).registered).toBe(true)
+    await act(session, 1, { kind: 'leave' })
+    if (second!.family !== first!.family) expect((await act(session, 2, { kind: 'grass' })).registered).toBe(false)
+  })
+
   it('keeps a habitat completed before its residents grew, and sends the rewards it was completed without', async () => {
     await sql`insert into gifts (user_id, kind, payload, key) values ('u_ash', 'egg', ${sql.json({ kind: 'egg', tier: 'ultra' })}, 'safariDex:cove')`
     const state = (await safari.state('u_ash'))!

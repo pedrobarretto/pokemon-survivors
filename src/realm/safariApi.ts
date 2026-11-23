@@ -311,7 +311,7 @@ const parseActed = (v: unknown): SafariActed | null => {
   const turn = parseTurn(v.turn)
   const session = parseSession(v.session)
   const gift: Gift | null = v.gift === null || v.gift === undefined ? null : parseGift(v.gift)
-  return turn && session ? { turn, gift, session } : null
+  return turn && session ? { turn, gift, registered: v.registered === true, session } : null
 }
 
 const fakeContest = (): SafariContest => {
@@ -392,14 +392,16 @@ const breaksAndFlees = () => {
 }
 
 /** Faked: what the API does with a catch's habitat Pokédex, its gifts staged in the gift box as the API would send them. */
+/** `fillDex` faked: true when the family went in now. */
 const fakeDex = (family: HatchlingId) => {
   const habitat = fake.habitat
   const list = fake.dex[habitat]
-  if (!habitatResidents(habitat).some((e) => e.family === family) || list.includes(family)) return
+  if (!habitatResidents(habitat).some((e) => e.family === family) || list.includes(family)) return false
   list.push(family)
-  if (!habitatDone(habitat, list, fake.done) || fake.done.includes(habitat)) return
+  if (!habitatDone(habitat, list, fake.done) || fake.done.includes(habitat)) return true
   fake.done = [...fake.done, habitat]
   stageGifts(fakeRewards(habitat))
+  return true
 }
 
 /** A habitat's gifts as the API sends them (`server/src/safari.ts`), under dev ids. */
@@ -426,6 +428,7 @@ export const actSafari = async (session: SafariSession, action: SafariAction): P
     fake.turn += 1
     let gift: Gift | null = null
     const contest = got.run.mode === 'contest'
+    const registered = got.turn.kind === 'appear' && loadSave().hatched[got.turn.family] !== undefined && fakeDex(got.turn.family)
     if (got.turn.kind === 'ball' && got.turn.caught) {
       if (!contest) {
         gift = devGift(fake.turn, got.turn.family, got.turn.shiny)
@@ -448,7 +451,7 @@ export const actSafari = async (session: SafariSession, action: SafariAction): P
       if (!contest) fake.dry = fake.fresh ? 0 : fake.dry + 1
       fake.run = null
     }
-    return { turn: got.turn, gift, session: view }
+    return { turn: got.turn, gift, registered, session: view }
   }
   const { status, body } = await apiCall('/realm/safari/act', { method: 'POST', body: { id: session.id, turn: session.turn, action: action.kind, ...(action.kind === 'stalk' ? { slot: action.slot } : {}) }, auth: true })
   return (status === 200 ? parseActed(body) : null) ?? failed(status, body)
