@@ -4,26 +4,27 @@ import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
 import { formatTime } from '../engine/math'
 import { ACHIEVEMENTS, MEDALS, type Medal, type TitleId } from '../data/achievements'
-import { ENEMIES } from '../data/enemies'
 import { PLAYABLE, type PlayableId } from '../data/hatchlings'
-import { TYPE_COLORS } from '../data/types'
 import { playerForm } from '../game/branch'
-import { dexCounts, dexNews, type Pokedex } from '../game/dex'
+import { dexCounts, type Pokedex } from '../game/dex'
 import type { ChallengePlace } from '../game/ranking'
 import { ribbonCounts } from '../game/ribbons'
 import { playsShiny } from '../game/shinyPicks'
 import type { Save } from '../game/meta'
-import type { DamageSource, Game } from '../game/types'
-import { CARD, cardBlob, drawRunCard, drawTrainerCard, type CardMon, type CardTrainer, type RunCardData, type TrainerCardData } from '../render/card'
+import type { Game } from '../game/types'
+import { boardPlace, CARD, cardBlob, drawRunCard, drawTrainerCard, type CardMon, type CardTrainer, type RunCardData, type TrainerCardData } from '../render/card'
+import { localLook, shownLook } from '../render/looks'
+import { skinFor } from '../data/cosmetics'
+import type { RankOutcome } from '../ranking'
 import { titleMark, type CardStyle } from '../render/cosmetics'
-import { logoScale } from '../render/logo'
+import { sparkleIcon } from '../render/art'
 import { gameUrl } from '../ranking'
 import { gameDex, pokedex } from '../site/pokedex'
 import { t } from '../i18n'
 import { h, later } from './dom'
 import { boxSpecies, caughtShinies } from './pcBox'
 import { loadSave } from './save'
-import { damageSource, hint, menu, type Screen } from './screens'
+import { hint, menu, type Screen } from './screens'
 import { uiDpr, uiViewport } from './uiScale'
 import { localPlayer } from '../game/players'
 
@@ -63,51 +64,60 @@ const trainerLine = (title: TitleId | null): CardTrainer & { url: string } => {
   return { handle, title: title ? t().achievements.titles[title] : null, mark: titleMark(title), link: url.replace(/^https?:\/\/(www\.)?/, ''), url }
 }
 
-/** How long the card waits for the challenge's place before it's drawn without it (offline, a slow API). */
-const PLACE_WAIT_MS = 4000
+/** How long the card waits for the API's answer (the challenge's place, the boards') before it's drawn without it (offline, a slow API). */
+const API_WAIT_MS = 4000
+
+/** What `promise` brings within `API_WAIT_MS`, else null. */
+const inTime = <T>(promise: Promise<T> | null | undefined): Promise<T | null> =>
+  promise ? Promise.race([promise.catch(() => null), new Promise<null>((resolve) => setTimeout(() => resolve(null), API_WAIT_MS))]) : Promise.resolve(null)
 
 /** The place an official challenge attempt got, when the API tells it in time; null otherwise (practice, offline). */
-const officialPlace = async (place: Promise<ChallengePlace | null>): Promise<RunCardData['challenge']> => {
-  const got = await Promise.race([place, new Promise<null>((resolve) => setTimeout(() => resolve(null), PLACE_WAIT_MS))])
-  return got?.official && got.rank !== null ? { day: got.day, rank: got.rank, total: got.total } : null
+const officialPlace = async (place: Promise<ChallengePlace | null> | null): Promise<RunCardData['challenge']> => {
+  const got = await inTime(place)
+  return got?.official && got.rank !== null ? { rank: got.rank, total: got.total } : null
 }
 
+/** The run's best place on its boards (`boardPlace`), when the API ranked it in time. */
+const boardOf = async (rank: Promise<RankOutcome> | null | undefined): Promise<RunCardData['board']> => {
+  const got = await inTime(rank)
+  return got?.kind === 'ranked' ? boardPlace(got.ranks) : null
+}
+
+/** What else the results know that the run's card can brag about: the best time before the run and its report to the boards. */
+export type RunShareExtras = { bestBefore?: number; rank?: Promise<RankOutcome> | null }
+
 /**
- * The run's card, from the run as it ended and the Pokédex it started from.
- * `place`: a Desafio do dia run's place, as the API answers it at the end of the run.
+ * The run's card, from the run as it ended. `place`: a Desafio do dia run's
+ * place, as the API answers it at the end of the run. The Pokédex the run
+ * started from (`dexBase`) is no longer drawn, kept for the callers.
  */
-export const runShare = (g: Game, dexBase: Pokedex, place: Promise<ChallengePlace | null> | null = null): ShareCard => {
+export const runShare = (g: Game, _dexBase: Pokedex, place: Promise<ChallengePlace | null> | null = null, extras: RunShareExtras = {}): ShareCard => {
   const form = playerForm(g)
+  const me = localPlayer(g)
   const trainer = trainerLine(loadSave().title)
   const outcome = g.endless ? 'endless' : g.phase === 'victory' ? 'victory' : 'fainted'
-  const moves = (Object.entries(localPlayer(g).damageByMove) as Array<[DamageSource, number]>)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3)
-    .map(([id, damage]) => {
-      const src = damageSource(g, id)
-      return { name: src.name, icon: src.icon, damage, color: TYPE_COLORS[src.type] }
-    })
-  const shinies = [...g.dexLog.shinies]
-  const card: RunCardData = {
-    date: new Date(),
-    mon: { dex: form.dex, name: form.name, shiny: localPlayer(g).shiny },
+  // The look the run wore, read now: the game's looks go with it.
+  const look = shownLook(g, me.slot)
+  const best = extras.bestBefore ?? 0
+  const card: Omit<RunCardData, 'challenge' | 'board'> = {
+    mon: { dex: form.dex, name: form.name, shiny: me.shiny, skin: skinFor(look, form.dex), look },
     outcome,
     difficulty: g.difficulty,
     time: g.time,
-    level: localPlayer(g).level,
+    level: me.level,
     kills: g.kills,
-    shinies: shinies.map((dex) => mon(dex, true)),
-    newShinies: dexNews(dexBase, g.dexLog).shinies,
-    newSpecies: [...g.dexLog.seen].filter((dex) => !dexBase[dex]).map((dex) => mon(dex, false)),
-    moves,
-    legends: g.rift.cleared.map((id) => ENEMIES[id].dex),
-    challenge: null,
+    shinies: g.dexLog.shinies.size,
+    legends: g.rift.cleared.length,
+    record: best > 0 && g.time > best,
     trainer,
   }
   return {
     kind: 'run',
-    draw: async () => drawRunCard({ ...card, challenge: place ? await officialPlace(place) : null }, wornStyle()),
-    text: t().share.runText({ name: form.name, shiny: localPlayer(g).shiny, time: formatTime(g.time), outcome, shinies: shinies.length, link: trainer.url }),
+    draw: async () => {
+      const [challenge, board] = await Promise.all([officialPlace(place), boardOf(extras.rank)])
+      return drawRunCard({ ...card, challenge, board }, wornStyle())
+    },
+    text: t().share.runText({ name: form.name, shiny: me.shiny, time: formatTime(g.time), outcome, shinies: card.shinies, link: trainer.url }),
     file: `pokemon-survivors-${form.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.png`,
   }
 }
@@ -141,10 +151,11 @@ export const trainerShare = (partner: PlayableId): ShareCard => {
     .sort(showcaseOrder)
     .map((e) => mon(e.dex, true))
   const first = PLAYABLE[partner].line[0]
+  const look = localLook()
   const card: TrainerCardData = {
     date: new Date(),
     name: s.kind === 'signedIn' && s.name ? s.name : null,
-    partner: { dex: first.dex, name: first.name, shiny: playsShiny(save, partner) },
+    partner: { dex: first.dex, name: first.name, shiny: playsShiny(save, partner), skin: skinFor(look, first.dex), look },
     medals,
     shinies: shinies.length,
     ribbons: ribbonCounts(save.ribbons),
@@ -194,41 +205,47 @@ const primaryMethod = (file: File): ShareMethod => {
 
 /* ---------------- Preview ---------------- */
 
-/** Whole device px per card px that fit `maxW`×`maxH` CSS px, as the CSS width: the preview stays pixel-sharp. */
+/** Room the actions take beside the card on a wide screen (their column and the gap), in CSS px. */
+const SIDE_W = 236
+
+/**
+ * The card's CSS width inside `maxW`×`maxH`: whole device px per card px,
+ * so the pixels stay square, unless that leaves it much smaller than the
+ * room; then it fills the room (`image-rendering: pixelated` keeps it crisp).
+ */
 const previewWidth = (maxW: number, maxH: number) => {
+  const room = Math.max(120, Math.min(maxW, (maxH * CARD.w) / CARD.h))
   const dpr = uiDpr()
-  const k = logoScale(CARD.w, CARD.h, maxW, maxH, dpr)
-  return Math.min((CARD.w * k) / dpr, maxW)
+  const sharp = (CARD.w * Math.floor((room * dpr) / CARD.w)) / dpr
+  return sharp >= room * 0.85 ? sharp : Math.floor(room)
 }
 
 /**
- * The card before it leaves: the image as it will look, the main button
- * (Share on phones, Copy image on computers), Download and Back. It draws the
- * card first, so the share sheet and the clipboard get it right in the tap.
- * Esc or Backspace close it; `onClose` runs after the key dispatch.
+ * The card before it leaves: the image as big as the screen takes it, the
+ * main button (Share on phones, Copy image on computers), then Download and
+ * Close. Beside the card on a wide screen, under it on a tall one. It draws
+ * the card first, so the share sheet and the clipboard get it right in the
+ * tap. Esc or Backspace close it; `onClose` runs after the key dispatch.
  */
 export const sharePreview = (root: HTMLElement, input: Input, card: ShareCard, onClose: () => void): Screen => {
   const m = t().share
   const img = h('img', { class: 'share-image hidden', alt: '' })
-  const status = h('p', { class: 'share-status blink' }, m.rendering)
-  const figure = h('div', { class: 'share-figure' }, img)
-  const primary = h('button', { class: 'btn confirm', disabled: true }, touchFirst() ? m.share : m.copy)
+  const drawing = h('p', { class: 'share-drawing blink' }, m.rendering)
+  const status = h('p', { class: 'share-status', role: 'status' })
+  const figure = h('div', { class: 'share-figure' }, img, drawing, status)
+  const primary = h('button', { class: 'btn confirm share-primary', disabled: true }, h('img', { src: sparkleIcon(), alt: '' }), touchFirst() ? m.share : m.copy)
   const save = h('button', { class: 'btn', disabled: true }, m.download)
   const back = h('button', { class: 'btn' }, m.back)
   let ready: { blob: Blob; file: File; url: string } | null = null
   let closed = false
 
+  let quiet = 0
+  /** A line over the card's foot for a few seconds. */
   const say = (text: string, error = false) => {
     status.textContent = text
-    status.classList.remove('blink')
     status.classList.toggle('error', error)
-  }
-
-  const fitImage = () => {
-    const { w: vw, h: vh } = uiViewport()
-    const sideBySide = vh <= 500 && vw > vh
-    const width = sideBySide ? previewWidth(vw * 0.5, vh - 32) : previewWidth(Math.min(vw - 72, 520), vh - 250)
-    img.style.width = `${width}px`
+    clearTimeout(quiet)
+    quiet = window.setTimeout(() => (status.textContent = ''), 2600)
   }
 
   const send = async (method: ShareMethod) => {
@@ -254,21 +271,39 @@ export const sharePreview = (root: HTMLElement, input: Input, card: ShareCard, o
 
   const actions = [() => ready && void send(primaryMethod(ready.file)), () => void send('download'), () => close()]
   const nav = menu(input, [primary, save, back], (i) => actions[i]?.(), { horizontal: true, initial: 2 })
-  const offKeys = input.onKey((key) => (key === 'Escape' || key === 'Backspace') && close())
-  window.addEventListener('resize', fitImage)
+  const offKeys = input.onKey((key) => {
+    if (key === 'Escape' || key === 'Backspace') close()
+    // The buttons stack too: up and down walk them as left and right do.
+    else if (key === 'ArrowUp' || key === 'KeyW') nav.focus(nav.index - 1)
+    else if (key === 'ArrowDown' || key === 'KeyS') nav.focus(nav.index + 1)
+  })
 
-  const el = h(
+  const side = h(
     'div',
-    { class: 'screen dim share-screen' },
-    h(
-      'div',
-      { class: 'dialog box pop share' },
-      h('div', { class: 'dialog-title' }, card.kind === 'run' ? m.title : m.trainerTitle),
-      h('div', { class: 'share-body' }, figure, h('div', { class: 'share-side' }, status, h('div', { class: 'buttons' }, primary, save, back), hint(m.hintKeys, m.hintTouch))),
-    ),
+    { class: 'share-side' },
+    h('div', { class: 'dialog-title' }, card.kind === 'run' ? m.title : m.trainerTitle),
+    primary,
+    h('div', { class: 'share-more' }, save, back),
+    hint(m.hintKeys, ''),
   )
+  const sheet = h('div', { class: 'box pop share' }, figure, side)
+  const el = h('div', { class: 'screen dim share-screen' }, sheet)
+
+  /** Lays the sheet out for the screen: the card beside the actions when the screen is wide, above them when it's tall. */
+  const fit = () => {
+    const { w: vw, h: vh } = uiViewport()
+    const wide = vw >= 560 && vw >= vh * 1.15
+    sheet.classList.toggle('wide', wide)
+    // The screen's and the sheet's padding, both sides.
+    const pad = (vw <= 520 || vh <= 500 ? 8 : 16) * 2 + 24
+    // Under the card, the actions take what they measure (the hint shows only with keys or a pad) and the gap.
+    const width = wide ? previewWidth(vw - pad - SIDE_W, vh - pad) : previewWidth(Math.min(vw - pad, 560), vh - pad - side.offsetHeight - 12)
+    figure.style.width = `${width}px`
+    figure.style.height = `${Math.round((width * CARD.h) / CARD.w)}px`
+  }
+  window.addEventListener('resize', fit)
   root.append(el)
-  fitImage()
+  fit()
 
   void card
     .draw()
@@ -281,19 +316,23 @@ export const sharePreview = (root: HTMLElement, input: Input, card: ShareCard, o
       ready = { blob, file: new File([blob], card.file, { type: 'image/png' }), url }
       img.src = url
       img.classList.remove('hidden')
-      status.textContent = ''
-      status.classList.remove('blink')
+      drawing.remove()
       primary.disabled = false
       save.disabled = false
       nav.focus(0, false)
     })
-    .catch(() => say(m.failed, true))
+    .catch(() => {
+      drawing.textContent = m.failed
+      drawing.classList.remove('blink')
+      drawing.classList.add('error')
+    })
 
   const dispose = () => {
     closed = true
+    clearTimeout(quiet)
     nav.off()
     offKeys()
-    window.removeEventListener('resize', fitImage)
+    window.removeEventListener('resize', fit)
     if (ready) URL.revokeObjectURL(ready.url)
     el.remove()
   }
@@ -305,5 +344,5 @@ export const sharePreview = (root: HTMLElement, input: Input, card: ShareCard, o
     later(onClose)
   }
 
-  return { el, dispose, dim: 0.5 }
+  return { el, dispose, dim: 0.7 }
 }

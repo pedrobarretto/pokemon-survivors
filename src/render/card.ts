@@ -1,38 +1,43 @@
-import { loadAssetImage } from '../assets'
 import { formatTime } from '../engine/math'
 import { blitPacked, canvasCache, context2d, createCanvas, ellipse, fromStrings, onCanvasReset, type PixelSprite } from '../engine/pixelart'
 import { MEDALS, type Medal } from '../data/achievements'
+import type { Look } from '../data/cosmetics'
 import type { BackgroundId, FrameId } from '../data/style'
 import type { Difficulty } from '../game/difficulty'
+import type { RunRanks } from '../game/ranking'
 import { RIBBON_TIERS, type RibbonTier } from '../game/ribbons'
-import { formatDay, formatNumber, locale, LOCALES, t } from '../i18n'
+import { formatNumber, locale, LOCALES, t } from '../i18n'
 import { medalSprite, outlined, PICKUPS, ribbonSprite, SPARKLE } from './art'
-import { CARD_BACKGROUNDS, CARD_FRAMES, DEFAULT_CARD_STYLE, type BallArt, type CardBackground, type CardFrame, type CardStyle } from './cosmetics'
+import { CARD_BACKGROUNDS, CARD_FRAMES, DEFAULT_CARD_STYLE, ERA1_MARKS, type BallArt, type CardBackground, type CardFrame, type CardStyle } from './cosmetics'
 import { titleLogo } from './logo'
-import { drawPokemon, hasShiny, loadSpecies, portraitUrl, type SpeciesSprites } from './sprites'
+import { drawPokemon, fitSprites, hasShiny, loadSkin, loadSpecies, type SpeciesSprites } from './sprites'
+import { drawDressed, loadWearables, wearMisses } from './wearables'
 
 /**
  * Share cards: the run's card (results screen) and the Trainer Card (profile,
- * Caixa do PC), drawn like the game: a 270×338 pixel layout (≈4:5, a feed
- * post) built from code art, PMD sprites at whole scales and the game's fonts
- * snapped to hard pixels, then blown up ×4 into a 1080×1352 PNG. Text reads
+ * Caixa do PC), drawn like the game: a 270×338 pixel layout (≈4:5: a feed
+ * post uncropped on Instagram and X, a story with room for stickers) built
+ * from code art, PMD sprites at whole scales and the game's fonts at their
+ * native pixel sizes, then blown up ×4 into a 1080×1352 PNG. Text reads
  * `t()` when drawn. `style` takes the equipped frame and background
  * (`render/cosmetics.ts`), the default one otherwise.
  */
 
 export const CARD = { w: 270, h: 338, scale: 4 } as const
 
-/** A Pokémon on a card: its dex number, name and colors. */
-export type CardMon = { dex: number; name: string; shiny: boolean }
+/**
+ * A Pokémon on a card: its dex number, name and colors, and what it wears:
+ * a skin for its species (`skinFor`) and the look whose hats it puts on
+ * (`render/wearables.ts`), both as the game shows them.
+ */
+export type CardMon = { dex: number; name: string; shiny: boolean; skin?: string | null; look?: Look | null }
 
-/** Who shares the card: handle and equipped title when there is one, and the game's link (with `?ref=`). */
 /** Who made the card: handle, title (and its mark, an Era 1 title's coin or ruby, drawn in the ★'s place) and the game's link. */
 export type CardTrainer = { handle: string | null; title: string | null; mark?: BallArt | null; link: string }
 
 export type RunOutcome = 'victory' | 'fainted' | 'endless'
 
 export type RunCardData = {
-  date: Date
   /** The form the run ended in. */
   mon: CardMon
   outcome: RunOutcome
@@ -40,17 +45,16 @@ export type RunCardData = {
   time: number
   level: number
   kills: number
-  /** Shinies caught this run, and how many of them the Pokédex didn't have. */
-  shinies: readonly CardMon[]
-  newShinies: number
-  /** Species the Pokédex saw for the first time (shown when no shiny came). */
-  newSpecies: readonly CardMon[]
-  /** The moves that hurt the most (shown when nothing new came). `icon` is a data URL. */
-  moves: ReadonlyArray<{ name: string; icon: string; damage: number; color: string }>
-  /** Rift legendaries beaten, by dex number. */
-  legends: readonly number[]
-  /** The official Desafio do dia attempt's place, when the API told it ("Desafio de 15/10: #12 de 340"). */
-  challenge: { day: string; rank: number; total: number } | null
+  /** Shinies caught this run. */
+  shinies: number
+  /** Rift legendaries beaten. */
+  legends: number
+  /** The run beat the device's best time (a first run never counts). */
+  record: boolean
+  /** The run's best place on its boards (`boardPlace`), when the API told it in time. */
+  board: { period: keyof RunRanks; rank: number } | null
+  /** The official Desafio do dia attempt's place, when the API told it. */
+  challenge: { rank: number; total: number } | null
   trainer: CardTrainer
 }
 
@@ -84,6 +88,48 @@ export const showcase = <T>(items: readonly T[], slots = CARD_SLOTS): { shown: r
   return { shown, more: items.length - shown.length }
 }
 
+/* ---------------- Highlights ---------------- */
+
+/** How deep a board place still brags: past it, the card keeps quiet. */
+export const BOARD_SHOWN = 100
+
+/**
+ * The place worth putting on a run's card: all time first, then the week,
+ * then the day, the first within `BOARD_SHOWN`; null when none is.
+ */
+export const boardPlace = (ranks: Readonly<Partial<RunRanks>>): RunCardData['board'] => {
+  for (const period of ['all', 'week', 'day'] as const) {
+    const rank = ranks[period]
+    if (rank != null && rank <= BOARD_SHOWN) return { period, rank }
+  }
+  return null
+}
+
+export type RunBadge = 'challenge' | 'record' | 'board' | 'shinies' | 'legends'
+
+/** Badges a run's card has room for, side by side. */
+export const BADGES_SHOWN = 3
+
+type BadgeFacts = Pick<RunCardData, 'challenge' | 'record' | 'board' | 'shinies' | 'legends'>
+
+/**
+ * A run's highlights, most telling first (the challenge's place, a new
+ * record, a board place, shinies, legendaries), `BADGES_SHOWN` at most.
+ */
+export const runBadges = (card: BadgeFacts): RunBadge[] => {
+  const all: Array<RunBadge | false> = [card.challenge !== null && 'challenge', card.record && 'record', card.board !== null && 'board', card.shinies > 0 && 'shinies', card.legends > 0 && 'legends']
+  return all.filter((b): b is RunBadge => b !== false).slice(0, BADGES_SHOWN)
+}
+
+/** What a badge says. */
+const badgeLabel = (badge: RunBadge, card: BadgeFacts) => {
+  const m = t().share.card
+  if (badge === 'challenge') return card.challenge ? m.challengeBadge(card.challenge.rank, card.challenge.total) : ''
+  if (badge === 'record') return m.record
+  if (badge === 'board') return card.board ? `#${card.board.rank} ${t().ranking.place[card.board.period]}` : ''
+  return badge === 'shinies' ? m.shinyCount(card.shinies) : m.legendCount(card.legends)
+}
+
 /* ---------------- Palette ---------------- */
 
 const INK = '#303040'
@@ -95,7 +141,12 @@ const GOLD_LIGHT = '#f8d860'
 const MUTED = '#707088'
 const SHADOW = '#060a18'
 const DIFFICULTY_COLORS = { normal: '#58b858', hard: '#f08030', nightmare: '#a040c8' } as const satisfies Record<Difficulty, string>
-const OUTCOME_COLORS = { victory: '#3878e8', fainted: '#d04848', endless: '#7048d8' } as const satisfies Record<RunOutcome, string>
+/** The outcome's ribbon: its face and the folds behind its ends. */
+const OUTCOME_COLORS = {
+  victory: { face: '#3878e8', fold: '#2050a8' },
+  fainted: { face: '#d04848', fold: '#902830' },
+  endless: { face: '#7048d8', fold: '#4a2c98' },
+} as const satisfies Record<RunOutcome, { face: string; fold: string }>
 
 /* ---------------- Text ---------------- */
 
@@ -104,29 +155,50 @@ type Font = 'title' | 'body'
 /** Cubic 11 draws the Chinese text the Latin pixel fonts have no glyphs for (see `ui/style.css`). */
 const FAMILY = { title: '"Jersey 10", VT323, "Cubic 11"', body: '"Jersey 15", VT323, "Cubic 11"' } as const satisfies Record<Font, string>
 
-/** The card's sizes count a title's capitals in card pixels: Jersey 10's capitals are half its em, so it's drawn at twice the size. */
-const emOf = (font: Font, size: number) => (font === 'title' ? size * 2 : size)
+/**
+ * The card's type styles. A pixel font only comes out with even strokes at
+ * the sizes where its pixels land on whole (or half) card pixels: Jersey 15
+ * at 18 px (27 at a pixel and a half), Jersey 10 at 18⅔ px (28), and Cubic 11
+ * (any text with Chinese in it) at 12 and 24 px.
+ */
+const FACES = {
+  /** Small text: labels, names, the footer. */
+  label: { font: 'body', em: 18, cjk: 12 },
+  /** Headings: the outcome, a cell's "+N". */
+  title: { font: 'title', em: 56 / 3, cjk: 12 },
+  /** The Pokémon's name. */
+  display: { font: 'title', em: 28, cjk: 24 },
+  /** The big numbers. */
+  number: { font: 'body', em: 27, cjk: 24 },
+} as const satisfies Record<string, { font: Font; em: number; cjk: number }>
+
+type Face = keyof typeof FACES
+
+const HAN = /[⺀-鿿豈-﫿＀-￯]/
+
+const emOf = (text: string, face: Face) => (HAN.test(text) ? FACES[face].cjk : FACES[face].em)
 
 /** Waits for the game fonts: a card drawn before them would fall back to a smooth system font. A line of the current language as the sample loads Cubic 11 only when the card is in Chinese. */
-const fontsReady = () => Promise.all([document.fonts.load(`8px ${FAMILY.title}`, t().loading), document.fonts.load(`16px ${FAMILY.body}`, t().loading)])
+const fontsReady = () => Promise.all([document.fonts.load(`28px ${FAMILY.title}`, t().loading), document.fonts.load(`18px ${FAMILY.body}`, t().loading)])
 
 type Mask = { canvas: HTMLCanvasElement; width: number; baseline: number }
 
 const masks = canvasCache<string, Mask>('lobby')
 
 /** Text in white with every pixel fully on or off, so it reads like the rest of the pixel art. */
-const textMask = (text: string, font: Font, size: number): Mask => {
-  const key = `${font}|${size}|${text}`
+const textMask = (text: string, face: Face): Mask => {
+  const key = `${face}|${text}`
   const cached = masks.get(key)
   if (cached) return cached
-  const em = emOf(font, size)
+  const em = emOf(text, face)
+  const font = `${em}px ${FAMILY[FACES[face].font]}`
   const probe = context2d(createCanvas(1, 1))
-  probe.font = `${em}px ${FAMILY[font]}`
+  probe.font = font
   const width = Math.ceil(probe.measureText(text).width)
   const baseline = Math.round(em * 1.5)
-  const canvas = createCanvas(width + 2, em * 2)
+  const canvas = createCanvas(width + 2, Math.ceil(em * 2))
   const ctx = canvas.getContext('2d', { willReadFrequently: true })!
-  ctx.font = `${em}px ${FAMILY[font]}`
+  ctx.font = font
   ctx.textBaseline = 'alphabetic'
   ctx.fillStyle = '#fff'
   ctx.fillText(text, 1, baseline)
@@ -148,27 +220,31 @@ const recolor = (mask: HTMLCanvasElement, color: string) => {
   return canvas
 }
 
-type TextOpts = { font?: Font; size?: number; color?: string; shadow?: string; align?: 'left' | 'center' | 'right' }
+/** `shadow`: a 1 px drop below; `outline`: a 1 px ring all round with the drop under it, for big text over the sky. */
+type TextOpts = { face?: Face; color?: string; shadow?: string; outline?: string; align?: 'left' | 'center' | 'right' }
 
-const textWidth = (text: string, font: Font = 'body', size = 16) => textMask(text, font, size).width
+const textWidth = (text: string, face: Face = 'label') => textMask(text, face).width
 
 /** `text` cut with "…" until it fits `max` px. */
-const fit = (text: string, max: number, font: Font = 'body', size = 16) => {
-  if (textWidth(text, font, size) <= max) return text
+const fit = (text: string, max: number, face: Face = 'label') => {
+  if (textWidth(text, face) <= max) return text
   let cut = text
-  while (cut.length > 1 && textWidth(`${cut}…`, font, size) > max) cut = cut.slice(0, -1)
+  while (cut.length > 1 && textWidth(`${cut}…`, face) > max) cut = cut.slice(0, -1)
   return `${cut.trimEnd()}…`
 }
 
-/** Draws pixel text with its baseline at `y`, with a 1 px drop shadow if asked. Returns its width. */
+/** Draws pixel text with its baseline at `y`. Returns its width. */
 const text = (ctx: CanvasRenderingContext2D, value: string, x: number, y: number, opts: TextOpts = {}) => {
-  const { font = 'body', size = 16, color = INK, shadow, align = 'left' } = opts
-  const mask = textMask(value, font, size)
-  const left = align === 'center' ? x - Math.floor(mask.width / 2) : align === 'right' ? x - mask.width : x
+  const { face = 'label', color = INK, shadow, outline, align = 'left' } = opts
+  const mask = textMask(value, face)
+  // The mask has a 1 px margin on the left.
+  const left = (align === 'center' ? x - Math.floor(mask.width / 2) : align === 'right' ? x - mask.width : x) - 1
   const top = y - mask.baseline
-  // The mask has a 1 px margin on the left; the shadow sits 1 px right and down.
-  if (shadow) ctx.drawImage(recolor(mask.canvas, shadow), left, top + 1)
-  ctx.drawImage(recolor(mask.canvas, color), left - 1, top)
+  if (outline) {
+    const ring = recolor(mask.canvas, outline)
+    for (let dy = -1; dy <= 2; dy++) for (let dx = -1; dx <= 1; dx++) if (dx !== 0 || dy !== 0) ctx.drawImage(ring, left + dx, top + dy)
+  } else if (shadow) ctx.drawImage(recolor(mask.canvas, shadow), left + 1, top + 1)
+  ctx.drawImage(recolor(mask.canvas, color), left, top)
   return mask.width
 }
 
@@ -201,16 +277,18 @@ const pcCell = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, 
   rounded(ctx, x + 1, y + 1, w - 2, h - 2, PAPER)
   rounded(ctx, x + 2, y + 2, w - 4, h - 4, GOLD)
   rounded(ctx, x + 3, y + 3, w - 6, h - 6, '#fffdf4')
-  rect(ctx, x + 3, y + h - 13, w - 6, 10, '#f4f0e0')
+  rect(ctx, x + 3, y + h - 14, w - 6, 11, '#f4f0e0')
 }
 
-/** A label chip (SHINY, the outcome, the difficulty). Returns its width. */
+const CHIP_H = 15
+
+/** A label chip (the difficulty). Returns its width. */
 const chip = (ctx: CanvasRenderingContext2D, label: string, x: number, y: number, bg: string, color = '#ffffff') => {
-  const w = textWidth(label) + 8
-  rounded(ctx, x, y + 1, w, 12, SHADOW)
-  rounded(ctx, x, y, w, 12, bg)
+  const w = textWidth(label) + 10
+  rounded(ctx, x, y + 1, w, CHIP_H, SHADOW)
+  rounded(ctx, x, y, w, CHIP_H, bg)
   rect(ctx, x + 1, y, w - 2, 1, 'rgba(255,255,255,0.35)')
-  text(ctx, label, x + 4, y + 10, { color })
+  text(ctx, label, x + 5, y + 12, { color })
   return w
 }
 
@@ -344,14 +422,39 @@ export const styleThumb = (frame: FrameId | null, background: BackgroundId, w = 
 
 /* ---------------- Pieces ---------------- */
 
-/** Sprites of a card Pokémon: shiny when it is and SpriteCollab has the colors, never a rejection. */
-const spritesOf = (mon: CardMon): Promise<SpeciesSprites | null> =>
-  loadSpecies(mon.dex, mon.shiny && hasShiny(mon.dex)).catch(() => loadSpecies(mon.dex).catch(() => null))
+/** Sprites of a card Pokémon: its skin's when it wears one, shiny when it is and SpriteCollab has the colors, never a rejection. */
+const spritesOf = async (mon: CardMon): Promise<SpeciesSprites | null> => {
+  const skinned = mon.skin ? await loadSkin(mon.skin, mon.dex, mon.shiny).catch(() => null) : null
+  return skinned ?? loadSpecies(mon.dex, mon.shiny && hasShiny(mon.dex)).catch(() => loadSpecies(mon.dex).catch(() => null))
+}
 
-const loadImage = (src: string) => loadAssetImage(src).catch(() => null)
+/** Largest whole scale, up to `max`, that keeps the body inside `maxW`×`maxH`. */
+const heroScale = (s: SpeciesSprites, maxW: number, maxH: number, max: number) => Math.max(1, Math.min(max, Math.floor(Math.min(maxW / s.bodyW, maxH / s.bodyH))))
 
-/** Largest whole scale that keeps the body inside `maxW`×`maxH`, from 1 to 4. */
-const heroScale = (s: SpeciesSprites, maxW: number, maxH: number) => Math.max(1, Math.min(4, Math.floor(Math.min(maxW / s.bodyW, maxH / s.bodyH))))
+/** How long a card waits for the wearables' worker to dress its Pokémon before drawing it bare: tries × ms. */
+const DRESS_WAIT = { tries: 25, ms: 120 } as const
+
+/**
+ * A card Pokémon's first Idle frame, facing out, dressed in its look's worn
+ * items (`drawDressed`). The worker dresses the frame's row on the first ask,
+ * so the frame is drawn again until no draw found its row still dressing
+ * (`wearMisses`), or the wait runs out and it goes bare.
+ */
+const drawMon = async (ctx: CanvasRenderingContext2D, s: SpeciesSprites, look: Look | null, x: number, feetY: number, scale: number) => {
+  const wears = look && (look.head !== undefined || look.back !== undefined)
+  if (!wears || !(await loadWearables().then(() => true, () => false))) return drawPokemon(ctx, s, 'Idle', 0, 0, x, feetY, { scale })
+  const layer = createCanvas(ctx.canvas.width, ctx.canvas.height)
+  const lctx = context2d(layer)
+  for (let i = 0; ; i++) {
+    wearMisses()
+    lctx.clearRect(0, 0, layer.width, layer.height)
+    drawDressed(lctx, s, look, 'Idle', 0, 0, x, feetY, { scale })
+    if (wearMisses() === 0 || i >= DRESS_WAIT.tries) break
+    await new Promise((resolve) => setTimeout(resolve, DRESS_WAIT.ms))
+  }
+  ctx.drawImage(layer, 0, 0)
+  layer.width = layer.height = 0
+}
 
 /** A battle platform: a rim, its face and a lighter ring, like the stages of the games. */
 const platform = (ctx: CanvasRenderingContext2D, cx: number, cy: number, rx: number, ry: number, colors: { rim: string; face: string; ring: string }) => {
@@ -365,32 +468,47 @@ const platform = (ctx: CanvasRenderingContext2D, cx: number, cy: number, rx: num
 const NIGHT_PLATFORM = { rim: '#1c2648', face: '#3a5288', ring: '#5070b0' }
 const PAPER_PLATFORM = { rim: '#a8b0c8', face: '#d8dcea', ring: '#eceef6' }
 
-/** The big Pokémon of a card standing on its platform, with sparkles around a shiny. */
-const hero = (ctx: CanvasRenderingContext2D, s: SpeciesSprites | null, mon: CardMon, cx: number, feetY: number, box: { w: number; h: number }, colors = NIGHT_PLATFORM) => {
+/** A spotlight behind the run card's Pokémon: rings of light over the sky, whatever the sky. */
+const halo = (ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number) => {
+  blitPacked(ctx, ellipse(r, r, 'rgba(255,255,255,0.05)'), cx, cy)
+  blitPacked(ctx, ellipse(r - 14, r - 14, 'rgba(255,255,255,0.05)'), cx, cy)
+  blitPacked(ctx, ellipse(r - 28, r - 28, 'rgba(255,255,255,0.06)'), cx, cy)
+}
+
+type HeroBox = { w: number; h: number; max: number }
+
+/** The big Pokémon of a card standing on its platform, with sparkles around a shiny. Returns the top of its body. */
+const hero = async (ctx: CanvasRenderingContext2D, s: SpeciesSprites | null, mon: CardMon, cx: number, feetY: number, box: HeroBox, colors = NIGHT_PLATFORM) => {
   platform(ctx, cx, feetY + 2, Math.round(box.w / 2) - 6, 8, colors)
-  if (!s) return blit(ctx, PICKUPS.pokeball(), cx, feetY - 8)
-  const k = heroScale(s, box.w - 12, box.h)
-  drawPokemon(ctx, s, 'Idle', 0, 0, cx, feetY, { scale: k })
-  if (!mon.shiny) return
-  const top = feetY - s.bodyH * k
-  const half = (s.bodyW * k) / 2
+  if (!s) {
+    blit(ctx, PICKUPS.pokeball(), cx, feetY - 8)
+    return feetY - 16
+  }
+  // A body wider than the box at 1:1 (a legend's) is shrunk to it, the pixel-art way.
+  const body = s.bodyW > box.w - 12 ? fitSprites(s, box.w - 12) : s
+  const k = heroScale(body, box.w - 12, box.h, box.max)
+  await drawMon(ctx, body, mon.look ?? null, cx, feetY, k)
+  const top = feetY - body.bodyH * k
+  if (!mon.shiny) return top
+  const half = (body.bodyW * k) / 2
   const marks = [
     [cx - half - 8, top + 4, 2],
     [cx + half + 6, top - 2, 2],
-    [cx + half + 10, top + (s.bodyH * k) / 2, 1],
+    [cx + half + 10, top + (body.bodyH * k) / 2, 1],
     [cx - half - 12, feetY - 14, 1],
     [cx + 4, top - 8, 0],
     [cx - half + 2, top - 6, 0],
   ] as const
   for (const [x, y, size] of marks) blit(ctx, sparkles()[size]!, x, y)
+  return top
 }
 
 /** A cell of the grid: the Pokémon's first Idle frame, its name and a sparkle for a shiny. */
 const monCell = (ctx: CanvasRenderingContext2D, s: SpeciesSprites | null, mon: CardMon, x: number, y: number, w: number, h: number) => {
   pcCell(ctx, x, y, w, h)
-  clipped(ctx, x + 3, y + 3, w - 6, h - 16, () => {
-    if (s) drawPokemon(ctx, s, 'Idle', 0, 0, x + w / 2, y + h - 15)
-    else blit(ctx, PICKUPS.pokeball(), x + w / 2, y + (h - 13) / 2)
+  clipped(ctx, x + 3, y + 3, w - 6, h - 17, () => {
+    if (s) drawPokemon(ctx, s, 'Idle', 0, 0, x + w / 2, y + h - 16)
+    else blit(ctx, PICKUPS.pokeball(), x + w / 2, y + (h - 14) / 2)
   })
   text(ctx, fit(mon.name, w - 8), x + w / 2, y + h - 5, { align: 'center' })
   if (mon.shiny) blit(ctx, outlinedSparkles()[1]!, x + w - 8, y + 8)
@@ -399,7 +517,7 @@ const monCell = (ctx: CanvasRenderingContext2D, s: SpeciesSprites | null, mon: C
 /** The "+N" cell closing a grid that doesn't fit. */
 const moreCell = (ctx: CanvasRenderingContext2D, more: number, x: number, y: number, w: number, h: number) => {
   pcCell(ctx, x, y, w, h)
-  text(ctx, `+${more}`, x + w / 2, y + h / 2 + 2, { font: 'title', size: 16, color: '#c08010', align: 'center' })
+  text(ctx, `+${more}`, x + w / 2, y + h / 2 + 3, { face: 'title', color: '#c08010', align: 'center' })
   text(ctx, t().share.card.more, x + w / 2, y + h - 5, { align: 'center', color: MUTED })
   blit(ctx, outlinedSparkles()[2]!, x + 12, y + 10)
   blit(ctx, outlinedSparkles()[0]!, x + w - 10, y + h - 20)
@@ -428,88 +546,71 @@ const monGrid = async (ctx: CanvasRenderingContext2D, mons: readonly CardMon[], 
   }
 }
 
-/** Empty Caixa do PC cells with a faint Poké Ball, for a Trainer Card with no shiny yet. */
+/** One wide Caixa do PC cell with faint Poké Balls, for a Trainer Card with no shiny yet. */
 const emptyGrid = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number) => {
-  const cellW = Math.floor((w - GRID.gap * (GRID.cols - 1)) / GRID.cols)
-  for (let i = 0; i < GRID.cols; i++) {
-    const cx = x + i * (cellW + GRID.gap)
-    pcCell(ctx, cx, y, cellW, GRID.cellH)
-    ctx.globalAlpha = 0.25
-    blit(ctx, PICKUPS.pokeball(), cx + cellW / 2, y + GRID.cellH / 2 - 4)
-    ctx.globalAlpha = 1
-  }
-  text(ctx, t().share.card.noShinies, x + w / 2, y + GRID.cellH - 5, { align: 'center', color: MUTED })
+  pcCell(ctx, x, y, w, GRID.cellH)
+  ctx.globalAlpha = 0.25
+  for (let i = 0; i < GRID.cols; i++) blit(ctx, PICKUPS.pokeball(), x + Math.round((w * (i + 0.5)) / GRID.cols), y + GRID.cellH / 2 - 5)
+  ctx.globalAlpha = 1
+  text(ctx, fit(t().share.card.noShinies, w - 12), x + w / 2, y + GRID.cellH - 5, { align: 'center', color: MUTED })
 }
 
-const MOVE_ROW = 14
+const STRIP_H = 46
 
-/** The moves that hurt the most: icon, name, a bar in the move's type color and the damage. */
-const moveList = async (ctx: CanvasRenderingContext2D, moves: RunCardData['moves'], x: number, y: number, w: number) => {
-  const icons = await Promise.all(moves.map((m) => loadImage(m.icon)))
-  const top = moves[0]?.damage || 1
-  paperBox(ctx, x, y, w, moves.length * MOVE_ROW + 8)
-  moves.forEach((m, i) => {
-    const ry = y + 4 + i * MOVE_ROW
-    const icon = icons[i]
-    if (icon) ctx.drawImage(icon, x + 6, ry + Math.round((MOVE_ROW - icon.height) / 2))
-    text(ctx, fit(m.name, 88), x + 22, ry + 11)
-    const barX = x + 114
-    const barW = w - 114 - 56
-    rect(ctx, barX, ry + 5, barW, 4, '#d0d4e4')
-    rect(ctx, barX, ry + 5, Math.max(2, Math.round((barW * m.damage) / top)), 4, m.color)
-    text(ctx, formatNumber(m.damage), x + w - 8, ry + 11, { align: 'right' })
-  })
-}
+/** Faces a stat's number may take, biggest first: a long one ("217/568") steps down until it fits its column. */
+const STAT_FACES = ['number', 'title', 'label'] as const satisfies readonly Face[]
 
-const movesHeight = (moves: number) => moves * MOVE_ROW + 8
-
-const STRIP_H = 42
-
-/** Number sizes a stat may take, biggest first: a long one ("217/568") steps down until it fits its column. */
-const STAT_SIZES = [32, 24, 16] as const
-
-/** A paper strip of three stats: small label, big number. */
+/** A paper strip of stats: small label, big number. */
 const statStrip = (ctx: CanvasRenderingContext2D, stats: ReadonlyArray<readonly [string, string]>, x: number, y: number, w: number) => {
   paperBox(ctx, x, y, w, STRIP_H)
   const col = Math.floor((w - 8) / stats.length)
   stats.forEach(([label, value], i) => {
     const cx = x + 4 + col * i + Math.floor(col / 2)
     if (i > 0) rect(ctx, x + 4 + col * i, y + 8, 1, STRIP_H - 16, '#d8dce8')
-    text(ctx, label, cx, y + 13, { align: 'center', color: MUTED })
-    const size = STAT_SIZES.find((s) => textWidth(value, 'body', s) <= col - 6) ?? 16
-    text(ctx, value, cx, y + 36, { size, align: 'center' })
+    text(ctx, fit(label, col - 6), cx, y + 15, { align: 'center', color: MUTED })
+    const face = STAT_FACES.find((f) => textWidth(value, f) <= col - 6) ?? 'label'
+    text(ctx, value, cx, y + 38, { face, align: 'center' })
   })
 }
 
 /** A section title in gold, with an optional note on the right. */
 const sectionTitle = (ctx: CanvasRenderingContext2D, title: string, note: string | null, x: number, y: number, w: number) => {
-  text(ctx, title, x + 1, y + 8, { font: 'title', size: 8, color: GOLD_LIGHT, shadow: SHADOW })
-  if (note) text(ctx, note, x + w - 1, y + 9, { align: 'right', color: '#c8d0f0', shadow: SHADOW })
-}
-
-/** The footer: who shares it (handle and title) and the link that brings friends in. */
-const footer = (ctx: CanvasRenderingContext2D, trainer: CardTrainer, y: number) => {
-  const { w } = CARD
-  const m = t().share.card
-  rect(ctx, 14, y, w - 28, 1, '#34447a')
-  const who = [trainer.handle && `@${trainer.handle}`, trainer.title && `★ ${trainer.title} ★`].filter((s): s is string => Boolean(s)).join(' · ')
-  text(ctx, fit(who || m.play, w - 28), w / 2, y + 13, { align: 'center', color: '#e8ecff', shadow: SHADOW })
-  const link = textWidth(trainer.link) <= w - 28 ? trainer.link : trainer.link.replace(/\?.*$/, '')
-  text(ctx, link, w / 2, y + 25, { align: 'center', color: GOLD_LIGHT, shadow: SHADOW })
+  text(ctx, title, x + 1, y + 10, { face: 'title', color: GOLD_LIGHT, shadow: SHADOW })
+  if (note) text(ctx, note, x + w - 1, y + 10, { align: 'right', color: '#c8d0f0', shadow: SHADOW })
 }
 
 const FOOTER_H = 28
 
-/** The logo (top left), a line or two on the right, and between them the frame's crest when it has one and they leave it room. */
-const header = async (ctx: CanvasRenderingContext2D, right: readonly string[], frame: CardFrame) => {
+/** The footer: who shares it (handle and title, with its mark) and the link that brings friends in. */
+const footer = (ctx: CanvasRenderingContext2D, trainer: CardTrainer, y: number) => {
+  const { w } = CARD
+  const m = t().share.card
+  rect(ctx, 14, y, w - 28, 1, 'rgba(200,210,255,0.25)')
+  const mark = trainer.title && trainer.mark ? fromStrings(trainer.mark[0], trainer.mark[1]) : null
+  const title = trainer.title && (mark ? trainer.title : `★ ${trainer.title}`)
+  const who = [trainer.handle && `@${trainer.handle}`, title].filter((s): s is string => Boolean(s)).join(' · ')
+  const line = fit(who || m.play, w - 28 - (mark ? mark.width + 4 : 0))
+  const lineW = textWidth(line) + (mark ? mark.width + 4 : 0)
+  const left = Math.round((w - lineW) / 2)
+  if (mark) ctx.drawImage(mark, left, y + 14 - mark.height)
+  text(ctx, line, left + (mark ? mark.width + 4 : 0), y + 14, { color: '#e8ecff', shadow: SHADOW })
+  const link = textWidth(trainer.link) <= w - 28 ? trainer.link : trainer.link.replace(/\?.*$/, '')
+  text(ctx, link, w / 2, y + 27, { align: 'center', color: GOLD_LIGHT, shadow: SHADOW })
+}
+
+/**
+ * The logo (top left), what `right` draws right-aligned at `x` (returning its
+ * width), and between them the frame's crest when it has one and they leave
+ * it room.
+ */
+const header = async (ctx: CanvasRenderingContext2D, frame: CardFrame, right: (x: number) => number) => {
   const logo = await titleLogo()
   ctx.drawImage(logo, 10, 9)
-  const font = (i: number) => (i === 0 ? { font: 'body' as const, size: 16 } : { font: 'title' as const, size: 8 })
-  right.forEach((line, i) => text(ctx, line, CARD.w - 11, 20 + i * 11, { ...font(i), align: 'right', color: i === 0 ? '#a8b4e0' : GOLD_LIGHT, shadow: SHADOW }))
+  const rightW = right(CARD.w - 11)
   if (!frame.crest) return
   const crest = fromStrings(frame.crest[0], frame.crest[1])
   const from = 10 + logo.width
-  const to = CARD.w - 11 - Math.max(...right.map((line, i) => textWidth(line, font(i).font, font(i).size)))
+  const to = CARD.w - 11 - rightW
   if (to - from < crest.width + 6) return
   ctx.drawImage(crest, Math.round((from + to - crest.width) / 2), 9 + Math.round((logo.height - crest.height) / 2))
 }
@@ -551,104 +652,130 @@ const INNER = { x: 8, w: CARD.w - 16 } as const
 
 /* ---------------- The run's card ---------------- */
 
-/** What fills the grid of a run's card: its shinies, else what the Pokédex gained, else its strongest moves. */
-type RunSection = { kind: 'mons'; title: string; note: string | null; mons: readonly CardMon[] } | { kind: 'moves' } | { kind: 'none' }
+const RIBBON_H = 18
 
-const runSection = (card: RunCardData): RunSection => {
-  const m = t().share.card
-  if (card.shinies.length > 0) return { kind: 'mons', title: m.shinies, note: card.newShinies > 0 ? m.newShinies(card.newShinies) : null, mons: card.shinies }
-  if (card.newSpecies.length > 0) return { kind: 'mons', title: m.newSpecies, note: m.speciesCount(card.newSpecies.length), mons: card.newSpecies }
-  return card.moves.length > 0 ? { kind: 'moves' } : { kind: 'none' }
+/** The outcome on a ribbon across the card, its ends folded behind it with a notch. */
+const ribbon = (ctx: CanvasRenderingContext2D, label: string, cx: number, y: number, colors: { face: string; fold: string }) => {
+  const w = textWidth(label, 'title') + 28
+  const x = Math.round(cx - w / 2)
+  // The folded ends: 10 px out each side, a V cut into their outer edge.
+  for (let i = 0; i < RIBBON_H; i++) {
+    const notch = Math.max(0, 4 - Math.round(Math.abs(i - (RIBBON_H - 1) / 2)))
+    rect(ctx, x - 9 + notch, y + 3 + i, 13 - notch, 1, colors.fold)
+    rect(ctx, x + w - 4, y + 3 + i, 13 - notch, 1, colors.fold)
+  }
+  rect(ctx, x - 9, y + 3 + RIBBON_H, 13, 1, SHADOW)
+  rect(ctx, x + w - 4, y + 3 + RIBBON_H, 13, 1, SHADOW)
+  rect(ctx, x, y + 1, w, RIBBON_H, SHADOW)
+  rect(ctx, x, y, w, RIBBON_H, colors.face)
+  rect(ctx, x, y, w, 1, 'rgba(255,255,255,0.35)')
+  rect(ctx, x, y + RIBBON_H - 1, w, 1, colors.fold)
+  text(ctx, label, cx, y + 14, { face: 'title', color: '#ffffff', shadow: colors.fold, align: 'center' })
 }
+
+const BADGE_H = 18
+
+/** A badge's icon: the challenge's ribbon, a record's gold medal, the board's crown, a sparkle, a Poké Ball. */
+const badgeIcon = (kind: RunBadge): PixelSprite => {
+  if (kind === 'challenge') return ribbonSprite('gold')
+  if (kind === 'record') return medalSprite('gold')
+  if (kind === 'board') return fromStrings(ERA1_MARKS.champion[0], ERA1_MARKS.champion[1])
+  if (kind === 'shinies') return sparkles()[1]!
+  return PICKUPS.pokeball()
+}
+
+/** The run's highlights in gold-edged badges, centered in a row (one that doesn't fit is left out). */
+const badgeRow = (ctx: CanvasRenderingContext2D, card: BadgeFacts, cx: number, y: number, maxW: number) => {
+  const GAP = 6
+  const items = runBadges(card).map((b) => ({ icon: badgeIcon(b), label: badgeLabel(b, card) }))
+  const widthOf = (b: (typeof items)[number]) => b.icon.width + textWidth(b.label) + 14
+  // Most telling first, each one that still fits.
+  const shown: typeof items = []
+  let used = -GAP
+  for (const b of items) if (used + GAP + widthOf(b) <= maxW) (shown.push(b), (used += GAP + widthOf(b)))
+  if (shown.length === 0 && items[0]) shown.push(items[0])
+  const total = shown.reduce((sum, b) => sum + widthOf(b), 0) + GAP * (shown.length - 1)
+  let x = Math.round(cx - Math.min(total, maxW) / 2)
+  for (const b of shown) {
+    const label = fit(b.label, maxW - b.icon.width - 14)
+    const w = Math.min(widthOf(b), maxW)
+    rounded(ctx, x, y + 1, w, BADGE_H, SHADOW)
+    rounded(ctx, x, y, w, BADGE_H, GOLD)
+    rounded(ctx, x + 1, y + 1, w - 2, BADGE_H - 2, '#1c2244')
+    ctx.drawImage(b.icon, x + 5, y + Math.round((BADGE_H - b.icon.height) / 2))
+    text(ctx, label, x + 9 + b.icon.width, y + 13, { color: '#fff4c8' })
+    x += w + GAP
+  }
+}
+
+/**
+ * The run's card: the Pokémon big on its platform in a spotlight, its name
+ * and the outcome on a ribbon, the time, level and KOs, and up to three
+ * highlights (`runBadges`); the difficulty in the header.
+ */
+export const drawRunCard = async (card: RunCardData, style: CardStyle = DEFAULT_CARD_STYLE) => {
+  await fontsReady()
+  const m = t().share.card
+  const { canvas, ctx } = blank(style)
+  await header(ctx, CARD_FRAMES[style.frame], (x) => {
+    const label = t().difficulty.names[card.difficulty]
+    const w = textWidth(label) + 10
+    chip(ctx, label, x - w, 13, DIFFICULTY_COLORS[card.difficulty])
+    return w
+  })
+  const badges = runBadges(card)
+  const cx = CARD.w / 2
+  // Without badges the space they'd take goes to the Pokémon.
+  const feetY = badges.length > 0 ? 158 : 178
+  const box: HeroBox = { w: 172, h: feetY - HEADER_H - 6, max: 5 }
+
+  const sprites = await spritesOf(card.mon)
+  const bodyH = sprites ? Math.min(box.h, sprites.bodyH * heroScale(sprites, box.w - 12, box.h, box.max)) : 16
+  halo(ctx, cx, Math.round(feetY - bodyH / 2), 64)
+  await hero(ctx, sprites, card.mon, cx, feetY, box)
+
+  const nameY = feetY + 33
+  // A long name ("Mega Charizard X") steps down a size before it's cut.
+  const nameFace: Face = textWidth(card.mon.name, 'display') <= INNER.w - 40 ? 'display' : 'title'
+  const name = fit(card.mon.name, INNER.w - 40, nameFace)
+  const nameW = text(ctx, name, cx, nameY, { face: nameFace, color: card.mon.shiny ? GOLD_LIGHT : '#ffffff', outline: SHADOW, align: 'center' })
+  if (card.mon.shiny) {
+    blit(ctx, sparkles()[2]!, cx - nameW / 2 - 10, nameY - 9)
+    blit(ctx, sparkles()[2]!, cx + nameW / 2 + 9, nameY - 9)
+  }
+  const ribbonY = nameY + 6
+  ribbon(ctx, m.outcomes[card.outcome], cx, ribbonY, OUTCOME_COLORS[card.outcome])
+
+  const statsY = ribbonY + RIBBON_H + 10
+  statStrip(ctx, [[m.time, formatTime(card.time)], [m.level, String(card.level)], [m.kills, formatNumber(card.kills)]], INNER.x, statsY, INNER.w)
+  if (badges.length > 0) badgeRow(ctx, card, cx, statsY + STRIP_H + 7, INNER.w)
+
+  footer(ctx, card.trainer, CARD.h - 11 - FOOTER_H)
+  return finish(canvas, ctx, style)
+}
+
+/* ---------------- The Trainer Card ---------------- */
 
 const HERO_H = 90
 
 /** The Trainer Card's ribbon row, under the medals. */
 const RIBBON_ROW = 18
 
-/** Legendary portraits beside the hero; more show as "+N". */
-const LEGENDS_SHOWN = 2
-
-/** The run's card: the Pokémon on its platform, name and chips, legendaries beaten, the stats and the run's best catch. */
-export const drawRunCard = async (card: RunCardData, style: CardStyle = DEFAULT_CARD_STYLE) => {
-  await fontsReady()
-  const m = t().share.card
-  const { canvas, ctx } = blank(style)
-  // An official challenge attempt reads in the header: "Desafio de 15/10" over "#12 DE 340", in gold.
-  const place = card.challenge
-  await header(ctx, place ? [m.challenge(formatDay(place.day)), m.challengePlace(place.rank, place.total)] : [cardDate(card.date)], CARD_FRAMES[style.frame])
-  const section = runSection(card)
-  const sectionH = section.kind === 'none' ? 0 : 12 + (section.kind === 'mons' ? gridHeight(Math.min(section.mons.length, CARD_SLOTS)) : movesHeight(card.moves.length))
-  const [heroY, statsY, sectionY] = stack(section.kind === 'none' ? [HERO_H, STRIP_H] : [HERO_H, STRIP_H, sectionH], HEADER_H, CARD.h - 8 - FOOTER_H)
-
-  // Hero: the Pokémon on the left half, its name, chips and legendaries on the right.
-  const [sprites, portraits] = await Promise.all([spritesOf(card.mon), Promise.all(card.legends.slice(0, LEGENDS_SHOWN).map((dex) => loadImage(portraitUrl(dex))))])
-  hero(ctx, sprites, card.mon, 72, heroY! + HERO_H - 12, { w: 124, h: 78 })
-  const rx = 142
-  const rw = CARD.w - 10 - rx
-  const nameW = text(ctx, fit(card.mon.name, rw - 10, 'title', 8), rx, heroY! + 14, { font: 'title', size: 8, color: '#ffffff', shadow: SHADOW })
-  if (card.mon.shiny) blit(ctx, sparkles()[2]!, rx + nameW + 6, heroY! + 10)
-  const chips = [
-    ...(card.mon.shiny ? [[m.shiny, GOLD_LIGHT, INK] as const] : []),
-    [m.outcomes[card.outcome], OUTCOME_COLORS[card.outcome], '#ffffff'] as const,
-    [t().difficulty.names[card.difficulty], DIFFICULTY_COLORS[card.difficulty], '#ffffff'] as const,
-  ]
-  let cx = rx
-  let cy = heroY! + 20
-  for (const [label, bg, color] of chips) {
-    if (cx + textWidth(label) + 8 > rx + rw) {
-      cx = rx
-      cy += 14
-    }
-    cx += chip(ctx, label, cx, cy, bg, color) + 4
-  }
-  if (card.legends.length > 0) {
-    // Portraits at 1:1 in gold frames, two at most and a "+N".
-    const ly = heroY! + HERO_H - 42
-    portraits.forEach((img, i) => {
-      const px = rx + i * 45
-      rounded(ctx, px, ly + 1, 42, 42, SHADOW)
-      rounded(ctx, px, ly, 42, 42, BOX_EDGE)
-      rect(ctx, px + 1, ly + 1, 40, 40, GOLD)
-      if (img) ctx.drawImage(img, px + 1, ly + 1)
-    })
-    if (card.legends.length > LEGENDS_SHOWN) text(ctx, `+${card.legends.length - LEGENDS_SHOWN}`, rx + rw, ly + 26, { font: 'title', size: 8, align: 'right', color: GOLD_LIGHT, shadow: SHADOW })
-  } else if (card.moves[0]) {
-    // No legendary: the move that carried the run.
-    const top = card.moves[0]
-    const icon = await loadImage(top.icon)
-    const ly = heroY! + HERO_H - 30
-    text(ctx, m.topMove, rx, ly, { color: '#c8d0f0', shadow: SHADOW })
-    if (icon) ctx.drawImage(icon, rx, ly + 4)
-    text(ctx, fit(top.name, rw - 18), rx + (icon?.width ?? 0) + 4, ly + 14, { color: '#ffffff', shadow: SHADOW })
-  }
-
-  statStrip(ctx, [[m.time, formatTime(card.time)], [m.level, String(card.level)], [m.kills, formatNumber(card.kills)]], INNER.x, statsY!, INNER.w)
-
-  if (section.kind === 'mons') {
-    sectionTitle(ctx, section.title, section.note, INNER.x, sectionY!, INNER.w)
-    await monGrid(ctx, section.mons, INNER.x, sectionY! + 12, INNER.w)
-  } else if (section.kind === 'moves') {
-    sectionTitle(ctx, m.moves, null, INNER.x, sectionY!, INNER.w)
-    await moveList(ctx, card.moves, INNER.x, sectionY! + 12, INNER.w)
-  }
-
-  footer(ctx, card.trainer, CARD.h - 8 - FOOTER_H)
-  return finish(canvas, ctx, style)
-}
-
-/* ---------------- The Trainer Card ---------------- */
-
 /** The Trainer Card: name, handle, title and medals beside the partner, the collection in numbers and up to six shinies. */
 export const drawTrainerCard = async (card: TrainerCardData, style: CardStyle = DEFAULT_CARD_STYLE) => {
   await fontsReady()
   const m = t().share.card
   const { canvas, ctx } = blank(style)
-  await header(ctx, [cardDate(card.date), ...m.trainerCard], CARD_FRAMES[style.frame])
-  const gridH = 12 + gridHeight(card.showcase.length > 0 ? Math.min(card.showcase.length, CARD_SLOTS) : 1)
+  await header(ctx, CARD_FRAMES[style.frame], (x) => {
+    const date = cardDate(card.date)
+    text(ctx, date, x, 20, { align: 'right', color: '#a8b4e0', shadow: SHADOW })
+    m.trainerCard.forEach((line, i) => text(ctx, line, x, 32 + i * 12, { face: 'title', align: 'right', color: GOLD_LIGHT, shadow: SHADOW }))
+    return Math.max(textWidth(date), ...m.trainerCard.map((line) => textWidth(line, 'title')))
+  })
+  const gridH = 13 + gridHeight(card.showcase.length > 0 ? Math.min(card.showcase.length, CARD_SLOTS) : 1)
   const ribbons = RIBBON_TIERS.some((tier) => card.ribbons[tier] > 0)
   const idH = HERO_H + (ribbons ? RIBBON_ROW : 0)
-  const [idY, statsY, gridY] = stack([idH, STRIP_H, gridH], HEADER_H, CARD.h - 8 - FOOTER_H)
+  const [idY, statsY, gridY] = stack([idH, STRIP_H, gridH], HEADER_H, CARD.h - 11 - FOOTER_H)
 
   // The ID: paper with the trainer's lines on the left and the partner on the right.
   const x = INNER.x
@@ -656,15 +783,15 @@ export const drawTrainerCard = async (card: TrainerCardData, style: CardStyle = 
   paperBox(ctx, x, y, INNER.w, idH)
   const textW = INNER.w - 104
   text(ctx, m.idLabel, x + 9, y + 14, { color: MUTED })
-  text(ctx, fit(card.name ?? m.guest, textW, 'title', 8), x + 9, y + 26, { font: 'title', size: 8 })
-  if (card.trainer.handle) text(ctx, fit(`@${card.trainer.handle}`, textW), x + 9, y + 38, { color: BOX_FRAME })
+  text(ctx, fit(card.name ?? m.guest, textW, 'title'), x + 9, y + 28, { face: 'title' })
+  if (card.trainer.handle) text(ctx, fit(`@${card.trainer.handle}`, textW), x + 9, y + 40, { color: BOX_FRAME })
   if (card.trainer.title) {
     const mark = card.trainer.mark ? fromStrings(card.trainer.mark[0], card.trainer.mark[1]) : null
-    if (mark) ctx.drawImage(mark, x + 9, y + 50 - mark.height + 1)
+    if (mark) ctx.drawImage(mark, x + 9, y + 52 - mark.height + 1)
     const tx = mark ? x + 9 + mark.width + 4 : x + 9
-    text(ctx, fit(mark ? card.trainer.title : `★ ${card.trainer.title}`, textW - (tx - x - 9)), tx, y + 50, { color: '#b07800' })
+    text(ctx, fit(mark ? card.trainer.title : `★ ${card.trainer.title}`, textW - (tx - x - 9)), tx, y + 52, { color: '#b07800' })
   }
-  rect(ctx, x + 9, y + 56, textW, 1, '#d8dce8')
+  rect(ctx, x + 9, y + 57, textW, 1, '#d8dce8')
   // Medals in a row after their label, gold first.
   const medalsX = x + 9 + text(ctx, m.medals, x + 9, y + 74, { color: MUTED }) + 6
   ;[...MEDALS].reverse().forEach((medal, i) => {
@@ -684,16 +811,16 @@ export const drawTrainerCard = async (card: TrainerCardData, style: CardStyle = 
   const partner = await spritesOf(card.partner)
   const px = x + INNER.w - 52
   rounded(ctx, px - 46, y + 6, 92, HERO_H - 12, '#e8ecf6')
-  hero(ctx, partner, card.partner, px, y + HERO_H - 18, { w: 88, h: 62 }, PAPER_PLATFORM)
+  await hero(ctx, partner, card.partner, px, y + HERO_H - 18, { w: 88, h: 62, max: 4 }, PAPER_PLATFORM)
 
   const dex = `${card.dex.caught}/${card.dex.total}`
   statStrip(ctx, [[m.shinyTotal, formatNumber(card.shinies)], [m.pokedex, dex], [m.best, card.bestTime > 0 ? formatTime(card.bestTime) : '—']], INNER.x, statsY!, INNER.w)
 
   sectionTitle(ctx, m.showcase, m.inBox(card.shinies), INNER.x, gridY!, INNER.w)
-  if (card.showcase.length > 0) await monGrid(ctx, card.showcase, INNER.x, gridY! + 12, INNER.w)
-  else emptyGrid(ctx, INNER.x, gridY! + 12, INNER.w)
+  if (card.showcase.length > 0) await monGrid(ctx, card.showcase, INNER.x, gridY! + 13, INNER.w)
+  else emptyGrid(ctx, INNER.x, gridY! + 13, INNER.w)
 
-  footer(ctx, card.trainer, CARD.h - 8 - FOOTER_H)
+  footer(ctx, card.trainer, CARD.h - 11 - FOOTER_H)
   return finish(canvas, ctx, style)
 }
 

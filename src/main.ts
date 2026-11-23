@@ -2362,7 +2362,7 @@ const syncOverlay = (r: Run) => {
           // The day's free gems, once the report answers: what they buy now, a tap away in the Boutique (banked by `afterRun` first, as the other ways out).
           gems: runGems(r.rank),
           share: {
-            open: (back) => sharePreview(ui, input, runShare(g, r.dexBase, r.challenge && r.rank ? r.rank.then((o) => (o.kind === 'ranked' ? o.challenge : null)) : null), back),
+            open: (back) => sharePreview(ui, input, runShare(g, r.dexBase, r.challenge && r.rank ? r.rank.then((o) => (o.kind === 'ranked' ? o.challenge : null)) : null, { bestBefore: r.bestBefore, rank: r.rank }), back),
             glow: me.shiny || g.dexLog.shinies.size > 0 || wonRun(g) || g.time > r.bestBefore,
           },
           credits: g.phase === 'victory' && rankingEnabled ? creditsLine() : null,
