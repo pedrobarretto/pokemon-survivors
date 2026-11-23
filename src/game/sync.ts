@@ -200,13 +200,30 @@ export const behind = (save: Save, stored: Save) => {
 export const olderBuild = (push: Push, stored: Stored) => stored.build !== null && (push.build === null || push.build < stored.build)
 
 /**
+ * A push on top of the latest revision that still merges (from an
+ * `olderBuild`, or `behind` because that build stripped what it can't read):
+ * merged, so nothing stored is lost, but its incubator, waiting line and egg
+ * pity are the device's. It saw the stored ones, so an egg missing from it was
+ * hatched there: `mergeIncubated`, which keeps the most eggs of each tier, would
+ * hand it back ready, and the device would hatch it again on every push.
+ */
+const keepingIncubator = (stored: Save, pushed: Save): Save => ({
+  ...mergeSaves(stored, pushed),
+  eggs: pushed.eggs,
+  eggQueue: pushed.eggQueue,
+  eggPity: pushed.eggPity,
+})
+
+/**
  * What a push stores. A device that pushes on top of the latest revision has
  * seen everything stored, so its save is the newer one and replaces it as is:
- * that keeps ₽ spent, eggs hatched and refunds. Anything else (a first sign
- * in, another device pushed in between, a save `behind` the stored one, or a
- * push from an `olderBuild`, which would wipe what it can't read) merges both
- * with `mergeSaves`, run by the API's own (current) code, so nothing the old
- * build dropped is lost. The stored `build` is the newest that pushed.
+ * that keeps ₽ spent, eggs hatched and refunds. One from an `olderBuild`, which
+ * would wipe what it can't read, or `behind` the stored save merges, but keeps
+ * its own incubator (`keepingIncubator`), unless it has fewer lifetime runs:
+ * then it lost its save, incubator and all. Anything else (a first sign in,
+ * another device pushed in between) merges both with `mergeSaves`, run by the
+ * API's own (current) code, so nothing the old build dropped is lost. The
+ * stored `build` is the newest that pushed.
  *
  * `resetAt` is the revision a reset stored, when the account's save was wiped
  * (an edited save, see `server/README.md`). A device that hasn't seen it (its
@@ -217,8 +234,11 @@ export const olderBuild = (push: Push, stored: Stored) => stored.build !== null 
 export const applyPush = (stored: Stored | null, push: Push, resetAt: number | null = null): Stored & { merged: boolean } => {
   if (!stored) return { save: push.save, revision: 1, build: push.build, merged: false }
   if (resetAt !== null && (push.base === null || push.base < resetAt)) return { ...stored, merged: true }
-  const merged = push.base !== stored.revision || olderBuild(push, stored) || behind(push.save, stored.save)
+  const seen = push.base === stored.revision
+  const lost = push.save.achievements.lifetime.runs < stored.save.achievements.lifetime.runs
+  const merged = !seen || olderBuild(push, stored) || behind(push.save, stored.save)
   const build = stored.build === null ? push.build : push.build === null ? stored.build : Math.max(stored.build, push.build)
-  return { save: merged ? mergeSaves(stored.save, push.save) : push.save, revision: stored.revision + 1, build, merged }
+  const save = !merged ? push.save : seen && !lost ? keepingIncubator(stored.save, push.save) : mergeSaves(stored.save, push.save)
+  return { save, revision: stored.revision + 1, build, merged }
 }
 
