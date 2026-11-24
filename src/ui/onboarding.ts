@@ -72,27 +72,23 @@ export type SaveCard = { el: HTMLElement; buttons: readonly { button: HTMLButton
 
 /**
  * The results' "save your progress" card in a guest's first runs: what an
- * account keeps (the ₽, the Pokédex, the ranking) and the sign-in buttons
- * (Google, Discord), which the results put in their row. In an app's
- * browser, where Google won't sign in, the way to a real browser instead.
+ * account keeps (the ₽, the Pokédex, the ranking) and one button, which the
+ * results put in their row: `ask` opens the choice of ways to sign in
+ * (`askSignIn`), so a phone shows one clear button here and the three ways
+ * (Google, Discord, email) laid out in the sheet, email the one an app's
+ * browser and mainland China can use.
  */
-export const saveCard = (wallet: string, dexSeen: number, app: InAppBrowser | null, signIn: (provider: 'google' | 'discord') => void): SaveCard => {
+export const saveCard = (wallet: string, dexSeen: number, ask: () => void): SaveCard => {
   const m = t().onboarding
-  const pick = (provider: 'google' | 'discord') => () => (onboardingStep('savePromptSignIn'), signIn(provider))
-  const buttons = app
-    ? []
-    : [
-        { button: h('button', { class: 'btn save-google', type: 'button' }, t().account.google), run: pick('google') },
-        { button: h('button', { class: 'btn', type: 'button' }, t().discord.signIn), run: pick('discord') },
-      ]
+  const button = h('button', { class: 'btn confirm save-ask', type: 'button' }, m.saveButton)
   const el = h(
     'div',
     { class: 'save-card' },
     h('b', { class: 'save-title' }, m.saveTitle),
     // The amount never breaks between ₽ and its number.
     rich(m.saveText(wallet.replace(/ /g, '\u00a0'), dexSeen), { class: 'save-text' }),
-    app ? h('div', { class: 'save-inapp' }, h('span', {}, m.inAppTitle), openWay(app)) : h('div', { class: 'save-buttons' }, ...buttons.map((b) => b.button)),
+    h('div', { class: 'save-buttons' }, button),
   )
   onboardingStep('savePromptShown')
-  return { el, buttons }
+  return { el, buttons: [{ button, run: () => (onboardingStep('savePromptSignIn'), ask()) }] }
 }

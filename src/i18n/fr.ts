@@ -1333,7 +1333,7 @@ export const fr: Messages = {
   },
 
   account: {
-    pitch: 'Connecte-toi avec Google pour garder ta progression dans le cloud et la retrouver sur n’importe quel appareil. Tout ce que tu as obtenu en invité te suit.',
+    pitch: 'Connecte-toi pour garder ta progression dans le cloud et la retrouver sur n’importe quel appareil. Tout ce que tu as obtenu en invité te suit.',
     google: 'Se connecter avec Google',
     failed: 'Connexion impossible. Réessaie.',
     busy: 'Connexion…',
@@ -1350,6 +1350,21 @@ export const fr: Messages = {
     installedNote: 'Utilise le même compte que dans le navigateur.',
     installedNew: 'Je suis nouveau',
     installedNewNote: 'Jamais joué ? Pars de zéro, tu pourras créer ton compte plus tard.',
+    ask: {
+      title: 'SE CONNECTER',
+      why: {
+        boutique: 'Connecte-toi pour acheter des gemmes et des styles. Ils restent sur ton compte, sur tous tes appareils.',
+        carpentry: 'Connecte-toi pour acheter des meubles pour ta base secrète.',
+        festival: 'Connecte-toi pour jeter tes ₽ dans la fontaine du festival.',
+        trainer: 'Connecte-toi pour garder ta progression dans le cloud, choisir ton @nom et apparaître au classement.',
+        friends: 'Connecte-toi pour ajouter des amis, voir qui est en ligne et les inviter à jouer ensemble.',
+        invites: 'Connecte-toi pour obtenir ton lien d’invitation et les cadeaux des amis que tu amènes.',
+        supporters: 'Connecte-toi pour lier ton soutien à ton compte et recevoir les récompenses.',
+        ideas: 'Connecte-toi pour proposer des idées et voter pour celles des autres.',
+        save: 'Connecte-toi pour garder ta progression dans le cloud et la retrouver sur n’importe quel appareil.',
+        arena: 'Connecte-toi pour jouer en file publique, gagner des RP et apparaître au classement de la saison.',
+      },
+    },
     email: {
       button: 'Se connecter par e-mail',
       pitch: 'On t’envoie un code par e-mail. Sans mot de passe : il ouvre ton compte ou en crée un nouveau.',
@@ -1383,6 +1398,7 @@ export const fr: Messages = {
     moveTouch: '*Glisse le doigt* pour bouger',
     auto: 'Tes attaques partent toutes seules : esquive et monte de niveau !',
     saveTitle: 'SAUVEGARDE TA PROGRESSION',
+    saveButton: 'Sauvegarder ma progression',
     saveText: (money: string, dex: number) => `Crée ton compte gratuit et garde tes *${money}*, les *${dex}* Pokémon de ton Pokédex et ta place au *classement*, sur tous tes appareils.`,
     inAppTitle: 'Ouvre dans ton navigateur pour sauvegarder ta progression',
     inAppOpen: 'Ouvrir dans Chrome',

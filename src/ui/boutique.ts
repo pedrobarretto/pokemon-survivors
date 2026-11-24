@@ -20,7 +20,7 @@ import { BOUTIQUE_TABS, markBoutiqueSeen, type BoutiqueTab } from './boutiqueSee
 
 /**
  * `close`: Voltar (the lobby pans home). `signIn`: the way to an account
- * (null in a build without accounts). `pick`: the Arena's Pokémon, who wears
+ * (`askSignIn`, told the tab on show to come back to; null in a build without accounts). `pick`: the Arena's Pokémon, who wears
  * the previews when the partner can't (no anchors), and `keepPick` saves the
  * one Visual's picker takes. `checkout`: what the page came back from a gem
  * pack's checkout with (`?gems=<ref>`, `&cancel=<pack>`), so Loja opens on its
@@ -31,7 +31,7 @@ import { BOUTIQUE_TABS, markBoutiqueSeen, type BoutiqueTab } from './boutiqueSee
 export type BoutiqueOpts = {
   close: () => void
   tab: BoutiqueTab
-  signIn: (() => void) | null
+  signIn: ((tab: BoutiqueTab) => void) | null
   pick: VersusPick
   keepPick: (id: VersusPick) => void
   checkout: CheckoutReturn | null
@@ -64,10 +64,12 @@ export const openBoutique = (root: HTMLElement, input: Input, opts: BoutiqueOpts
   let tab: BoutiqueTab = opts.tab
   let closed = false
 
+  const ask = opts.signIn
   const ctx: GemTabsContext = {
     root,
     input,
-    signIn: opts.signIn,
+    // Back from a provider's round trip, the Boutique opens on the tab it was on.
+    signIn: ask && (() => ask(tab)),
     // The partner tries things on (every player species has anchors but a few), the Arena pick only when its species has none.
     wearer: () => (chosen ? pickWearer(chosen) : wearsLooks(partner.dex) === false ? pickWearer(opts.pick) : partner),
     pick: () => chosen,

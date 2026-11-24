@@ -1,4 +1,5 @@
-import { accountHandle, accountState, accountsEnabled, signIn } from '../account'
+import { accountHandle, accountState, accountsEnabled } from '../account'
+import { askSignIn } from './account'
 import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
 import { parseHandlePrefix, type CoopInvite, type FriendList, type FriendPresence, type PlayerMatch } from '../game/friends'
@@ -43,7 +44,7 @@ export const friendsScreen = (root: HTMLElement, input: Input, opts: FriendsOpti
   let matches: PlayerMatch[] | 'limit' | null = null
   let query = ''
   let nav: ReturnType<typeof menu> | null = null
-  /** The profile editor or a confirmation, open over this screen. */
+  /** The profile editor, a confirmation or the sign-in choice, open over this screen. */
   let sub: Screen | null = null
   let closed = false
   /** The footer's buttons as the last `render` made them: they come after the rows in the arrows' tour. */
@@ -107,6 +108,12 @@ export const friendsScreen = (root: HTMLElement, input: Input, opts: FriendsOpti
       el.classList.remove('hidden')
       render()
     })
+  }
+
+  /** The ways to sign in over this screen (`askSignIn`), which stays in view; once in, the lists load. */
+  const askAccount = () => {
+    nav?.off()
+    sub = askSignIn(root, input, { why: t().account.ask.why.friends, place: { to: 'friends' }, back: () => ((sub = null), render()), done: () => ((sub = null), render(), void load()) })
   }
 
   const confirmUnfriend = (p: ProfileName) =>
@@ -193,7 +200,7 @@ export const friendsScreen = (root: HTMLElement, input: Input, opts: FriendsOpti
 
     const view = presenceView()
     const footer: Action[] = [
-      ...(s.kind !== 'signedIn' && accountsEnabled ? [{ label: m.signIn, primary: true, run: () => void signIn() }] : []),
+      ...(s.kind !== 'signedIn' && accountsEnabled ? [{ label: m.signIn, primary: true, run: askAccount }] : []),
       ...(s.kind === 'signedIn' && !handle ? [{ label: m.createProfile, primary: true, run: () => over((back) => profileEditor(root, input, () => (back(), void load()))) }] : []),
       ...(handle && view ? [{ label: m.appearOffline(view.appearOffline), run: () => void setAppearOffline(!view.appearOffline).then(render) }] : []),
       { label: m.back, run: close },

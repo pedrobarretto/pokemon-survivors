@@ -1335,7 +1335,7 @@ export const es: Messages = {
   },
 
   account: {
-    pitch: 'Entra con Google para guardar tu progreso en la nube y seguir en cualquier dispositivo. Lo que conseguiste como invitado se viene contigo.',
+    pitch: 'Entra a tu cuenta para guardar tu progreso en la nube y seguir en cualquier dispositivo. Lo que conseguiste como invitado se viene contigo.',
     google: 'Entrar con Google',
     failed: 'No se pudo conectar. Inténtalo de nuevo.',
     busy: 'Conectando…',
@@ -1352,6 +1352,21 @@ export const es: Messages = {
     installedNote: 'Usa la misma cuenta con la que juegas en el navegador.',
     installedNew: 'Soy nuevo aquí',
     installedNewNote: '¿Nunca jugaste? Empieza de cero, puedes crear la cuenta después.',
+    ask: {
+      title: 'INICIAR SESIÓN',
+      why: {
+        boutique: 'Inicia sesión para comprar gemas y estilos. Quedan en tu cuenta, en cualquier dispositivo.',
+        carpentry: 'Inicia sesión para comprar muebles para tu base secreta.',
+        festival: 'Inicia sesión para echar tu ₽ en la fuente del festival.',
+        trainer: 'Inicia sesión para guardar tu progreso en la nube, elegir tu @nombre y aparecer en el ranking.',
+        friends: 'Inicia sesión para agregar amigos, ver quién está en línea e invitarlos a jugar juntos.',
+        invites: 'Inicia sesión para obtener tu enlace de invitación y los regalos de quienes traigas.',
+        supporters: 'Inicia sesión para vincular tu apoyo a tu cuenta y recibir las recompensas.',
+        ideas: 'Inicia sesión para sugerir ideas y votar las de los demás.',
+        save: 'Inicia sesión para guardar tu progreso en la nube y seguir en cualquier dispositivo.',
+        arena: 'Inicia sesión para jugar en la fila pública, ganar RP y aparecer en el ranking de la temporada.',
+      },
+    },
     email: {
       button: 'Entrar con correo',
       pitch: 'Te enviamos un código a tu correo. Sin contraseña: entra a tu cuenta o crea una nueva.',
@@ -1385,6 +1400,7 @@ export const es: Messages = {
     moveTouch: '*Desliza el dedo* para moverte',
     auto: 'Los ataques salen solos: ¡esquiva y sube de nivel!',
     saveTitle: 'GUARDA TU PROGRESO',
+    saveButton: 'Guardar mi progreso',
     saveText: (money: string, dex: number) => `Crea tu cuenta gratis y guarda tus *${money}*, los *${dex}* Pokémon de tu Pokédex y tu lugar en el *ranking*, en cualquier dispositivo.`,
     inAppTitle: 'Abre en el navegador para guardar tu progreso',
     inAppOpen: 'Abrir en Chrome',

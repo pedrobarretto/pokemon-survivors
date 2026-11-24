@@ -28,11 +28,11 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
     title: { pt: 'Correções da comunidade', en: 'Community fixes', es: 'Arreglos de la comunidad', fr: 'Corrections de la communauté', zh: '社群回報修正' },
     highlights: [
       {
-        pt: 'Agora dá para entrar com um código por e-mail, sem senha, além do Google e do Discord. Serve para criar a conta também, e uma conta do Google entra pelo mesmo e-mail.',
-        en: 'You can now sign in with a code sent by email, no password, besides Google and Discord. It creates the account too, and a Google account signs in with the same email.',
-        es: 'Ahora puedes entrar con un código por correo, sin contraseña, además de Google y Discord. También crea la cuenta, y una cuenta de Google entra con el mismo correo.',
-        fr: 'Tu peux maintenant te connecter avec un code reçu par e-mail, sans mot de passe, en plus de Google et Discord. Il crée aussi le compte, et un compte Google se connecte avec le même e-mail.',
-        zh: '現在除了 Google 和 Discord，也能用電子郵件收到的驗證碼登入，不用密碼。沒有帳號會自動建立，Google 帳號用同一個信箱也能登入。',
+        pt: 'Agora dá para entrar com um código por e-mail, sem senha, além do Google e do Discord. Serve para criar a conta também, e uma conta do Google entra pelo mesmo e-mail. Funciona em todo botão de entrar do jogo, da Boutique ao fim da partida.',
+        en: 'You can now sign in with a code sent by email, no password, besides Google and Discord. It creates the account too, and a Google account signs in with the same email. It works from every sign-in button in the game, from the Boutique to the end of a run.',
+        es: 'Ahora puedes entrar con un código por correo, sin contraseña, además de Google y Discord. También crea la cuenta, y una cuenta de Google entra con el mismo correo. Funciona en todos los botones para entrar del juego, de la Boutique al final de la partida.',
+        fr: 'Tu peux maintenant te connecter avec un code reçu par e-mail, sans mot de passe, en plus de Google et Discord. Il crée aussi le compte, et un compte Google se connecte avec le même e-mail. Ça marche depuis tous les boutons de connexion du jeu, de la Boutique à la fin d’une partie.',
+        zh: '現在除了 Google 和 Discord，也能用電子郵件收到的驗證碼登入，不用密碼。沒有帳號會自動建立，Google 帳號用同一個信箱也能登入。從精品服飾店到對戰結束畫面，遊戲裡每個登入按鈕都能使用。',
       },
       {
         pt: 'Os upgrades que deixam chão que fere (Solar Beam, Fire Spin, Will-O-Wisp, Razor Leaf e outros) voltam a marcar a área toda, e o Arco de Dream Eater e Foul Play agora salta para outros inimigos.',
@@ -47,13 +47,6 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         es: 'Co-op en Modo Legendario: si el servidor tarda en confirmar los legendarios, la sala ya no empieza con los compañeros. Te avisa para que lo intentes de nuevo.',
         fr: 'Coop en mode Légende : quand le serveur tarde à confirmer les légendaires, le salon ne démarre plus avec les partenaires. Il te prévient et tu peux réessayer.',
         zh: '傳說模式合作：伺服器確認傳說寶可夢太慢時，房間不會再直接用夥伴開始，而是提示你再試一次。',
-      },
-      {
-        pt: 'O alarme do Esconderijo Rocket não interrompe mais a luta contra Giovanni: dentro do covil você só sai vencendo ou desmaiando.',
-        en: 'The Rocket Hideout’s alarm no longer cuts the fight with Giovanni short: in the lair you only leave by winning or fainting.',
-        es: 'La alarma del Escondite Rocket ya no corta la pelea contra Giovanni: en la guarida solo sales ganando o debilitado.',
-        fr: 'L’alarme du Repaire Rocket n’interrompt plus le combat contre Giovanni : dans le repaire, tu ne sors qu’en gagnant ou K.O.',
-        zh: '火箭隊秘密基地的警報不會再打斷與坂木的對戰：在巢穴裡只有獲勝或倒下才會離開。',
       },
       {
         pt: 'O app instalado no iPhone agora ocupa a tela inteira, sem a faixa escura embaixo (reinstale o ícone para pegar a correção).',
@@ -135,6 +128,11 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             pt: 'O templo do Regigigas e as Ruínas da Decisão agora ficam na ordem certa com árvores e rochas (e ficam translúcidos quando você passa atrás deles).',
             en: 'Regigigas’s temple and the Split-Decision Ruins now sort correctly with trees and rocks (and turn see-through when you walk behind them).',
             es: 'El templo de Regigigas y las Ruinas de la Decisión ahora se ordenan bien con árboles y rocas (y se vuelven translúcidos cuando pasas detrás).',
+          },
+          {
+            pt: 'O alarme do Esconderijo Rocket não interrompe mais a luta contra Giovanni: dentro do covil você só sai vencendo ou desmaiando.',
+            en: 'The Rocket Hideout’s alarm no longer cuts the fight with Giovanni short: in the lair you only leave by winning or fainting.',
+            es: 'La alarma del Escondite Rocket ya no corta la pelea contra Giovanni: en la guarida solo sales ganando o debilitado.',
           },
         ],
       },

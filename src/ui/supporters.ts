@@ -1,4 +1,5 @@
-import { accountState, accountsEnabled, onAccountChange, signIn, syncSave } from '../account'
+import { accountState, accountsEnabled, onAccountChange, syncSave } from '../account'
+import { askSignIn } from './account'
 import { playCry, playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
 import { HATCHLINGS, isHatchling, PLAYABLE, PLAYABLE_IDS, type PlayableId } from '../data/hatchlings'
@@ -635,6 +636,12 @@ export const supportersScreen = (root: HTMLElement, input: Input, actions: Suppo
     })
   }
 
+  /** The ways to sign in over the Hall, which stays in view (`askSignIn`); once in, it shows the account's standing. */
+  const askAccount = () => {
+    const back = () => ((sub = null), build())
+    sub = askSignIn(root, input, { why: t().account.ask.why.supporters, place: { to: 'supporters' }, back })
+  }
+
   const loadStatus = () => {
     const s = accountState()
     if (s.kind !== 'signedIn') return void (status = null)
@@ -726,7 +733,7 @@ export const supportersScreen = (root: HTMLElement, input: Input, actions: Suppo
     const links: Action[] = tier
       ? patreon
       : [
-          ...(accountsEnabled && s.kind === 'guest' ? [{ label: m.signIn, run: () => void signIn() }] : []),
+          ...(accountsEnabled && s.kind === 'guest' ? [{ label: m.signIn, run: askAccount }] : []),
           ...(signedIn && s.handle === null ? [{ label: m.createProfile, run: () => openSub((back) => profileEditor(root, input, () => back())) }] : []),
           { label: m.vote, run: () => poll('supporters') },
           { label: m.diamondPoll.link, run: () => poll('diamond') },

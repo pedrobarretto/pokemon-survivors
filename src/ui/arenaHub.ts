@@ -112,11 +112,12 @@ const meter = (value: number, max: number, level: 'good' | 'warn' | 'bad' | 'gol
   h('div', { class: `arena-hub-bar meter ${level}`, role: 'img', 'aria-label': `${value}/${max}` }, h('i', { style: `width:${Math.round((Math.max(0, Math.min(max, value)) / max) * 100)}%` }))
 
 /**
- * `signIn`: the way to an account (null in a build without accounts: the hub shows the device's history alone).
+ * `signIn`: the way to an account (`askSignIn`, told the tab on show to come back to; null in a build without accounts:
+ * the hub shows the device's history alone).
  * `pick`: the Arena's Pokémon, Visual's preview (its picker changes it with `keepPick`). `shop`: Loja's shortcut, into
  * the Boutique's (the hub comes back on `from`, the tab it left).
  */
-export type ArenaHubActions = { back: () => void; signIn: (() => void) | null; pick: VersusPick; keepPick: (id: VersusPick) => void; shop: (from: ArenaHubTab) => void }
+export type ArenaHubActions = { back: () => void; signIn: ((tab: ArenaHubTab) => void) | null; pick: VersusPick; keepPick: (id: VersusPick) => void; shop: (from: ArenaHubTab) => void }
 
 export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, actions: ArenaHubActions): Screen => {
   const m = t().versus.hub
@@ -142,10 +143,13 @@ export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, acti
 
   // Visual keeps its page (and preview) across tab switches, made the first time it shows; Loja leaves for the Boutique.
   let pick = actions.pick
+  const ask = actions.signIn
+  /** Signing in from the tab on show, which the hub comes back on. */
+  const signIn = ask && (() => ask(current))
   const gemCtx: GemTabsContext = {
     root,
     input,
-    signIn: actions.signIn,
+    signIn,
     wearer: () => pickWearer(pick),
     pick: () => pick,
     setPick: (id) => ((pick = id), actions.keepPick(id)),
@@ -159,7 +163,6 @@ export const arenaHub = (root: HTMLElement, input: Input, tab: ArenaHubTab, acti
   let primary: HTMLButtonElement | null = null
 
   const signInCard = () => {
-    const signIn = actions.signIn
     if (!signIn) return null
     const button = h('button', { class: 'btn confirm', type: 'button', onclick: () => (playSfx('select'), later(signIn)) }, m.signIn.button)
     primary = button
