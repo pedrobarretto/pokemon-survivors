@@ -271,7 +271,8 @@ const FRAME = { side: 44, top: 96, bottom: 48, tall: 84, legend: 100, edge: 28 }
 /**
  * The rush's camera (`followPlayers`' frame): on the middle of the player and
  * the ring's legend, a little low so the HUD doesn't cover it, never so far
- * the player leaves the frame, easing there as a domain's does. The shell
+ * the player leaves the frame, easing there as a domain's does (on the player
+ * alone while the legend is off the stage on its script). The shell
  * lifts the drawn camera off it where the HUD it measures would still cover
  * the legend (`frameRush` in `render/rush.ts`).
  */
@@ -282,7 +283,8 @@ export const rushCamera = (g: Game, dt: number) => {
   const { w, h } = g.view
   let x = p.x - w / 2
   let y = p.y - 10 - h / 2
-  const boss = g.enemies.find((e) => e.id === r.bossId && e.dying < 0)
+  // A legend off the stage on its script (parked on a teleport or a dive, out on a swoop's pass) isn't framed, as in a domain (`domainCamera`).
+  const boss = g.enemies.find((e) => e.id === r.bossId && e.dying < 0 && !offstage(e))
   const at = boss ?? (r.stage === 'gate' ? rushGate(r) : null)
   if (at) {
     x = Math.max(p.x - (w - FRAME.side), Math.min(p.x - FRAME.side, (p.x + at.x) / 2 - w / 2))

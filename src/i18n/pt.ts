@@ -1224,7 +1224,7 @@ export const pt = {
       full: 'O servidor do co-op está cheio. Tente de novo em instantes.',
       offline: 'Sem conexão com o servidor do co-op.',
     },
-    denied: { notHost: 'Só o anfitrião pode começar.', notReady: 'Espere todos ficarem prontos.' },
+    denied: { notHost: 'Só o anfitrião pode começar.', notReady: 'Espere todos ficarem prontos.', unvouched: 'O servidor não respondeu a tempo para confirmar os lendários. Tente começar de novo.' },
     /** "Entre para jogar junto": co-op is for accounts (the team sees the @handle). */
     gate: {
       title: 'JOGAR JUNTO',
@@ -1300,7 +1300,7 @@ export const pt = {
       /** This player has no legend captured: they can't get ready in a legend room. */
       noLegend: 'Você ainda não capturou um lendário. Vença um no modo solo para jogar nesta sala.',
       noLegendSeat: 'sem lendário',
-      legendFellBack: (name: string, pokemon: string) => `O lendário de ${name} não foi confirmado pela conta: joga com ${pokemon}, e a partida fica fora do placar.`,
+      legendFellBack: (name: string, pokemon: string) => `O save na nuvem da conta de ${name} não tem esse lendário capturado: joga com ${pokemon}, e a partida fica fora do placar.`,
       legendNote: 'Escolha um dos seus lendários capturados. O servidor confere a captura na largada; sem ela, você joga com seu parceiro.',
       hintKeys: '← → escolher · ENTER confirmar · ESC sair',
       hintTouch: 'Toque para escolher',
@@ -1365,6 +1365,10 @@ export const pt = {
     berry: (name: string) => `${name} recupera 40 HP.`,
     /** Toast of level-ups that took the Oran Berry on their own (nothing else to pick), `count` of them at once. */
     autoBerry: (level: number, count: number) => `Nv ${level}! Tudo no máximo: *Oran Berry*${count > 1 ? ` ×${count}` : ''}`,
+    /** The same, with something held short of its max because Esquecer forgot its card (`berryReason`). */
+    autoBerryForgotten: (level: number, count: number) => `Nv ${level}! Nada a escolher (o que você esqueceu não sobe mais): *Oran Berry*${count > 1 ? ` ×${count}` : ''}`,
+    /** The same, with a slot still free and nothing new to fill it. */
+    autoBerryNothingNew: (level: number, count: number) => `Nv ${level}! Nada novo para aprender: *Oran Berry*${count > 1 ? ` ×${count}` : ''}`,
     reroll: (n: number) => `Trocar (${n})`,
     skip: (n: number) => `Pular (${n})`,
     hintKeys: '↑ ↓ escolher · ENTER confirmar · 1-3 atalho',
@@ -1386,8 +1390,8 @@ export const pt = {
     shinyNote: 'Escolha grátis: depois tem outra!',
     banish: (n: number) => `Esquecer (${n})`,
     banishCancel: 'Cancelar',
-    banishHintKeys: 'Escolha o card a esquecer: ele não volta mais nesta partida (um golpe que você já tem para no nível atual) · ESC cancela',
-    banishHintTouch: 'Toque no card a esquecer: ele não volta mais nesta partida (um golpe que você já tem para no nível atual)',
+    banishHintKeys: 'Escolha o card a esquecer: ele não volta mais nesta partida (um golpe ou item que você já tem para no nível atual) · ESC cancela',
+    banishHintTouch: 'Toque no card a esquecer: ele não volta mais nesta partida (um golpe ou item que você já tem para no nível atual)',
     /** Title of a prize level-up (every card rare), by where it came from (`Game.prize`). */
     prize: { alpha: 'Prêmio do Alfa!', mission: 'Missão cumprida!' } satisfies Record<PrizeSource, string>,
   },

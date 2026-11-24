@@ -1212,28 +1212,50 @@ export const solidCovers = (g: Game, s: Solid, x: number, y: number, w: number, 
   return x + w / 2 > left && x - w / 2 < left + piece.packed.w && y > top && y - h < top + piece.packed.h
 }
 
+/** Where the hole around the player goes in the art being painted through `seeThrough` (art px), and where that art lands on screen. */
+const hole = { hx: 0, hy: 0, x: 0, y: 0, w: 0, h: 0 }
+
+/**
+ * Starts painting art `w`×`h` px at (x, y) whose foot stands at `foot` (world
+ * px): when this screen's player is behind it (north of its foot, their body
+ * inside its box), the art goes see-through around them. Returns the scratch
+ * context to paint it into at (0, 0), finished by `seeThroughEnd`; null when
+ * the player isn't behind, and the art is painted straight onto the frame.
+ */
+export const seeThrough = (g: Game, x: number, y: number, w: number, h: number, foot: number): CanvasRenderingContext2D | null => {
+  const p = localPlayer(g)
+  const hx = Math.round(p.x) - HOLE - x
+  const hy = Math.round(p.y) - 12 - HOLE - y
+  if (!(p.y < foot && hx > -HOLE * 2 && hy > -HOLE * 2 && hx < w && hy < h) || w <= 0 || h <= 0) return null
+  if (!scratch || scratch.canvas.width < w || scratch.canvas.height < h) {
+    const canvas = createCanvas(Math.max(w, scratch?.canvas.width ?? 0), Math.max(h, scratch?.canvas.height ?? 0))
+    scratch = { canvas, ctx: context2d(canvas) }
+  }
+  Object.assign(hole, { hx, hy, x, y, w, h })
+  scratch.ctx.clearRect(0, 0, w, h)
+  return scratch.ctx
+}
+
+/** Punches the hole around the player in the art `seeThrough` started and draws it onto the frame. */
+export const seeThroughEnd = (ctx: CanvasRenderingContext2D) => {
+  if (!scratch) return
+  const { hx, hy, x, y, w, h } = hole
+  const sc = scratch.ctx
+  sc.globalCompositeOperation = 'destination-out'
+  sc.drawImage(holes[(x + y + hx + hy) & 1]!(), hx, hy)
+  sc.globalCompositeOperation = 'source-over'
+  ctx.drawImage(scratch.canvas, 0, 0, w, h, x, y, w, h)
+}
+
 /** Draws one solid; a tall one goes see-through around the player when they walk behind it. A looted landmark treasure shows open (and every one in co-op, `treasureOpen`). */
 export const drawSolid = (ctx: CanvasRenderingContext2D, g: Game, s: Solid) => {
   const piece = pieceOf(solidBiome(g, s), s.kind, s.variant, s.loot !== undefined && treasureOpen(g, s.loot))
   const x = Math.round(s.x - piece.ax)
   const y = Math.round(s.y - piece.ay)
-  const p = localPlayer(g)
-  const hx = Math.round(p.x) - HOLE - x
-  const hy = Math.round(p.y) - 12 - HOLE - y
-  const { w, h } = piece.packed
-  const behind = tallOf(s.kind) && p.y < s.y && hx > -HOLE * 2 && hy > -HOLE * 2 && hx < w && hy < h
-  if (!behind) return drawPacked(ctx, piece.packed, x, y)
-  if (!scratch || scratch.canvas.width < w || scratch.canvas.height < h) {
-    const canvas = createCanvas(Math.max(w, scratch?.canvas.width ?? 0), Math.max(h, scratch?.canvas.height ?? 0))
-    scratch = { canvas, ctx: context2d(canvas) }
-  }
-  const sc = scratch.ctx
-  sc.clearRect(0, 0, w, h)
+  const sc = tallOf(s.kind) ? seeThrough(g, x, y, piece.packed.w, piece.packed.h, s.y) : null
+  if (!sc) return drawPacked(ctx, piece.packed, x, y)
   drawPacked(sc, piece.packed, 0, 0)
-  sc.globalCompositeOperation = 'destination-out'
-  sc.drawImage(holes[(x + y + hx + hy) & 1]!(), hx, hy)
-  sc.globalCompositeOperation = 'source-over'
-  if (w > 0) ctx.drawImage(scratch.canvas, 0, 0, w, h, x, y, w, h)
+  seeThroughEnd(ctx)
 }
 
 const ripples = canvasCache<string, PixelSprite>()

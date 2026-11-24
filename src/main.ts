@@ -108,7 +108,7 @@ import { ABILITIES, type AbilityEffect, type AbilityId } from './data/abilities'
 import { BRANCHES, branchesAt, familyDex, MEGA_BRANCH, type BranchId } from './data/branches'
 import { abilityStacks, grantAbility } from './game/abilities'
 import { abilityIcon } from './render/abilityArt'
-import { nothingToChoose, recomputeStats, xpFor } from './game/leveling'
+import { berryReason, nothingToChoose, recomputeStats, xpFor } from './game/leveling'
 import { atMegaBase, dropMegaStones, grantStone, heldMega, megaBaseName } from './game/mega'
 import { REAPER } from './game/endless'
 import { continueEndless } from './game/endlessSystem'
@@ -307,6 +307,7 @@ import { ARENA_FORMAT_IDS, ARENA_FORMATS, parseArenaFormat, type ArenaFormat } f
 import { formatPlays, rulesOf } from './game/versusRules'
 import { parseLoadout, parseSettings, type CoopPick } from './coop/start'
 import { countFinale, mythicalHunt } from './game/mythicalHunt'
+import { jitGoesStale } from './staleJit'
 import { MYTHICAL_PITY } from './data/waves'
 
 /** Fixed simulation step: the replays the ranking re-simulates count on it. */
@@ -843,6 +844,8 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
   // A newer build went live during the run (see `watchDeploys`): back in the lobby, with the run banked, ranked and its crash watch cleared, is the moment to load it
   // (not while a co-op room still holds this player: leaving it comes back here).
   if (reloadForDeploy && !inCoopRoom()) return location.reload()
+  // On an engine whose optimized code outlives a run (`staleJit.ts`), the next run gets a fresh page too.
+  if (ranOnStaleJit && !inCoopRoom()) return reloadFresh()
   // Every Play in the lobby (the partner select, the challenge, a hatch, a shiny pick) finds its ticket in hand.
   prefetchRun()
   prefetchRun(challengeToday().day)
@@ -1452,8 +1455,34 @@ const errorContext = (): ErrorContext => {
   return { in_run: true, starter: localPlayer(g).starter, phase: g.phase, minute: Math.floor(g.time / 60), tick: r.recorder.tick, replay: JSON.stringify(r.recorder.replay) }
 }
 
+/** Whether this engine's optimized code goes stale between runs (`staleJit.ts`). */
+const staleJit = jitGoesStale(navigator.userAgent)
+/** Set as any run ends on such an engine: the next trip to the lobby, or the next run, starts on a fresh page (`reloadFresh`). */
+let ranOnStaleJit = false
+const FRESH_PAGE = 'ps:freshPage'
+
+/** Reloads the page into the lobby, past "press start" (`takeFreshPage` at boot). */
+const reloadFresh = () => {
+  try {
+    sessionStorage.setItem(FRESH_PAGE, '1')
+  } catch {}
+  location.reload()
+}
+
+/** Whether this page is `reloadFresh`'s, once. */
+const takeFreshPage = () => {
+  try {
+    const fresh = sessionStorage.getItem(FRESH_PAGE) !== null
+    sessionStorage.removeItem(FRESH_PAGE)
+    return fresh
+  } catch {
+    return false
+  }
+}
+
 const endRun = () => {
   if (!run) return
+  ranOnStaleJit = staleJit
   if (run.coop) return endCoopRun(run, run.coop)
   if (run.tutorial) return endTutorial(run, run.tutorial)
   if (run.training) return endDojo(run, run.training)
@@ -1684,6 +1713,8 @@ const launchRun =async (starter: PlayableId, daily: ChallengeRun | null) => {
   if (reloadForDeploy) return location.reload()
   setScreen(null)
   endRun()
+  // "Play again" right after a run on an engine whose code outlives it (`staleJit.ts`): the lobby on a fresh page, the run banked.
+  if (ranOnStaleJit) return reloadFresh()
   wonLastRun = false
   // The crash watch holds the launch from here: a page dying while the run loads says where (`launchStep`).
   launchStep('ticket')
@@ -2432,9 +2463,13 @@ const guestSaveCard = () => {
   return saveCard(formatPokeDollars(save.wallet), dexCounts(save.dex).seen, hostApp(), (provider) => void signIn(provider))
 }
 
-/** Level-ups that took the Oran Berry on their own (`takeBerryLevelUps`): the level reached and how many at once. */
-const berryToast = (g: Game, count: number) =>
-  aside(h('span', { class: 'item-toast' }, h('img', { src: berryIcon(), alt: '' }), rich(t().levelUp.autoBerry(localPlayer(g).level, count))), 2200, 'autoBerry')
+/** Level-ups that took the Oran Berry on their own (`takeBerryLevelUps`): the level reached, how many at once and why (`berryReason`: "all maxed" only when it's true). */
+const berryToast = (g: Game, count: number) => {
+  const me = localPlayer(g)
+  const m = t().levelUp
+  const line = { maxed: m.autoBerry, forgotten: m.autoBerryForgotten, nothingNew: m.autoBerryNothingNew }[berryReason(me)]
+  aside(h('span', { class: 'item-toast' }, h('img', { src: berryIcon(), alt: '' }), rich(line(me.level, count))), 2200, 'autoBerry')
+}
 
 /** An evolution item's toast: its icon, a line and a hint under it. One found is minor; one missing (`evoHeld`) explains a held evolution. */
 const evoItemToast = (items: readonly EvoItemId[], line: string, hint: string, key: string, show: typeof news) =>
@@ -3467,7 +3502,8 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
         : null,
   }
   const me = localPlayer(live.game)
-  // A co-op Legend room's seat whose legend the account didn't vouch for plays its partner (`parseLoadout`): say so, since the run then lists on no board.
+  // A co-op Legend room's seat whose legend the account's stored save hasn't captured plays its partner (`parseLoadout`): say so, since the run
+  // then lists on no board. (A Legend room the API gave no answer for never starts: the host is told `unvouched` and tries again.)
   if (!live.game.versus && parseSettings(live.start.settings).legend === true)
     live.start.players.forEach((p, i) => {
       const asked = p.loadout.starter
@@ -5017,6 +5053,7 @@ const boot = () => {
   captureRef()
   const shared = rankingEnabled ? parseHandle(new URLSearchParams(location.search).get(PROFILE_PARAM)) : null
   const checkoutRef = takeCheckoutReturn()
+  const freshPage = takeFreshPage()
   const poll = accountsEnabled ? linkedPoll() : null
   if (shared) showSharedProfile(shared)
   else if (rankingEnabled && new URLSearchParams(location.search).has(IDEAS_PARAM)) showIdeasLink()
@@ -5029,8 +5066,8 @@ const boot = () => {
   // Back from a gem pack's checkout (`?gems=<ref>`): the Boutique's Loja, waiting for that pack (or, given up, offering it again).
   else if (checkoutRef !== null) showBoutique('shop', undefined, checkoutRef)
   else if (poll) showPollLink(poll)
-  // Back from signing in, the player already pressed start before leaving: straight to the menu.
-  else showTitle({ intro: !backFromSignIn() })
+  // Back from signing in, the player already pressed start before leaving: straight to the menu (and back from a run's fresh page, `reloadFresh`).
+  else showTitle({ intro: !backFromSignIn() && !freshPage })
   askAboutCrash()
   requestAnimationFrame(frame)
   scheduleWarmUp(1000)

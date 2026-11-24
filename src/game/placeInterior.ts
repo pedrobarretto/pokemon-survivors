@@ -4,7 +4,7 @@ import { PLACE, PLACES, type PlaceId } from '../data/places'
 import { onFloor } from './arenaFloor'
 import { buildCave, updateCave } from './cave'
 import { buildGraveyard, updateGraveyard } from './graveyard'
-import { buildHideout, updateHideout } from './hideout'
+import { buildHideout, inLair, updateHideout } from './hideout'
 import { buildGrotto, grottoDone, updateGrotto } from './grotto'
 import { buildUnderground, updateUnderground } from './underground'
 import type { PlaceInterior, PlaceInteriorOf, PlaceOutcome, PlaceStates } from './place'
@@ -34,6 +34,8 @@ type PlaceRule<K extends PlaceId> = {
   walls: boolean
   /** Time ran out: how the visit ends (the cave's wind throws the player out, the sky's calm lands them). */
   timeUp: (g: Game, inside: PlaceInteriorOf<K>) => 'done' | 'timeout'
+  /** The clock stops while this holds (the Hideout's lair fight: the alarm never cuts it short). */
+  holds?: (inside: PlaceInteriorOf<K>) => boolean
 }
 
 const thrownOut = () => 'timeout' as const
@@ -46,7 +48,7 @@ const PLACE_RULES: { [K in PlaceId]: PlaceRule<K> } = {
   // The walls give: the team scrambles out.
   underground: { build: buildUnderground, update: updateUnderground, walls: true, timeUp: thrownOut },
   // Team Rocket's alarm: the grunts throw the team out.
-  hideout: { build: buildHideout, update: updateHideout, walls: true, timeUp: thrownOut },
+  hideout: { build: buildHideout, update: updateHideout, walls: true, timeUp: thrownOut, holds: inLair },
 }
 
 /** How far south of the door the team steps back out, clear of the entrance. */
@@ -138,7 +140,7 @@ const run = <K extends PlaceId>(g: Game, inside: PlaceInteriorOf<K>, dt: number)
     if (inside.loot <= 0) exitPlace(g, 'done')
     return
   }
-  inside.left -= dt
+  if (!rule.holds?.(inside)) inside.left -= dt
   if (inside.left <= 0) return exitPlace(g, rule.timeUp(g, inside))
   rule.update(g, inside, dt)
 }

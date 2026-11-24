@@ -13,7 +13,7 @@ import { burst, floatText, setScreenShake, shakeScreen } from './effects'
 import { spawnEnemy } from './enemies'
 import { dropCoins } from './pickups'
 import { bringBack, keepOnFloor, setAside, type Room, type Stash } from './room'
-import { chargeOrb, dropShard } from './tera'
+import { chargeOrb, dropRaidShard } from './tera'
 import { clearSpot, footOf } from './terrain'
 import { aimScreen, anchorPlayer, centerScreen, placeTeam, playerWithin } from './players'
 import { spawnHazard } from './bosses'
@@ -390,7 +390,7 @@ const crystalStorm = (g: Game, e: Enemy, arena: RaidArena) => {
 const raidWin = (g: Game, arena: RaidArena, x: number, y: number) => {
   const k = arena.raid.stars / 4
   dropCoins(g, x, y, RAID.coins.map((c) => dm.round(c * k)))
-  dropForEach(g, () => dropShard(g, x, y + 14, arena.raid.tera, g.nextId))
+  dropForEach(g, () => dropRaidShard(g, x, y, arena.raid.tera))
   const before = g.player
   for (const p of g.players) {
     if (p.gone) continue

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { ArenaReport } from '../../src/net/arena'
 import { COOP_REPORT_PATH, type CoopReport } from '../../src/net/coopReport'
-import { ARENA_REPORT_PATH, RETRY_MS, SIGNATURE_HEADER, createOutbox, lookUpLooks, outcomeOf, parseOutgoing, sign, type Fetcher, type Outgoing } from '../src/report'
+import { ARENA_REPORT_PATH, LOOKS_TIMEOUTS_MS, RETRY_MS, SIGNATURE_HEADER, createOutbox, lookUpLooks, outcomeOf, parseOutgoing, sign, type Fetcher, type Outgoing } from '../src/report'
 
 const arena = (run = 1): ArenaReport => ({ v: 1, room: 'ABCDE', run, kind: 'ranked', region: 'enam', endedAt: 5000, seats: [{ slot: 0, userId: 'user_ash', handle: 'ash', left: false }], result: { v: 1 } })
 const report = (run = 1) => ({ path: ARENA_REPORT_PATH, report: arena(run) })
@@ -119,17 +119,28 @@ describe('looks for a friends\' Arena room', () => {
       posts.push({ url, body, signature: new Headers(init.headers).get(SIGNATURE_HEADER) })
       return Response.json({ looks: { user_ash: { head: 'strawHat' }, user_brock: { head: 7 } }, legends: { user_ash: ['kyogre', 'mew'], user_brock: [] } })
     }
-    expect(await lookUpLooks(API, ['u:user_ash', 'u:user_brock', 'g:guest'], fetcher)).toEqual({ looks: { 'u:user_ash': { head: 'strawHat' } }, legends: { 'u:user_ash': ['kyogre', 'mew'] } })
+    expect(await lookUpLooks(API, ['u:user_ash', 'u:user_brock', 'g:guest'], fetcher)).toEqual({ answered: true, looks: { 'u:user_ash': { head: 'strawHat' } }, legends: { 'u:user_ash': ['kyogre', 'mew'] } })
     expect(posts).toEqual([{ url: 'https://api.test/looks', body: '{"userIds":["user_ash","user_brock"]}', signature: await sign('s3cret', '{"userIds":["user_ash","user_brock"]}') }])
   })
 
-  it('vouches for nothing when the API fails, is older or is unset', async () => {
-    const none = { looks: {}, legends: {} }
+  it('vouches for nothing when the API fails or is older, and says it gave no answer', async () => {
+    const none = { answered: false, looks: {}, legends: {} }
     expect(await lookUpLooks(API, ['u:user_ash'], async () => new Response(null, { status: 404 }))).toEqual(none)
     expect(await lookUpLooks(API, ['u:user_ash'], async () => Promise.reject(new Error('down')))).toEqual(none)
-    expect(await lookUpLooks(null, ['u:user_ash'])).toEqual(none)
+    // No API set (a dev relay) vouches for nothing, as an answer.
+    expect(await lookUpLooks(null, ['u:user_ash'])).toEqual({ ...none, answered: true })
     // An API from before the legends: looks only.
-    expect(await lookUpLooks(API, ['u:user_ash'], async () => Response.json({ looks: { user_ash: { head: 'strawHat' } } }))).toEqual({ looks: { 'u:user_ash': { head: 'strawHat' } }, legends: {} })
+    expect(await lookUpLooks(API, ['u:user_ash'], async () => Response.json({ looks: { user_ash: { head: 'strawHat' } } }))).toEqual({ answered: true, looks: { 'u:user_ash': { head: 'strawHat' } }, legends: {} })
+  })
+
+  it('asks once more, with longer to answer, when the first try gets no answer', async () => {
+    let tries = 0
+    const flaky: Fetcher = async () => {
+      tries += 1
+      return tries === 1 ? new Response(null, { status: 503 }) : Response.json({ looks: {}, legends: { user_ash: ['kyogre'] } })
+    }
+    expect(await lookUpLooks(API, ['u:user_ash'], flaky)).toEqual({ answered: true, looks: {}, legends: { 'u:user_ash': ['kyogre'] } })
+    expect(tries).toBe(LOOKS_TIMEOUTS_MS.length)
   })
 
   it('drops a malformed legend list', async () => {

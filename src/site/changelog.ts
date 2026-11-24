@@ -24,6 +24,94 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-24',
+    title: { pt: 'Correções da comunidade', en: 'Community fixes', es: 'Arreglos de la comunidad', fr: 'Corrections de la communauté', zh: '社群回報修正' },
+    highlights: [
+      {
+        pt: 'Os upgrades que deixam chão que fere (Solar Beam, Fire Spin, Will-O-Wisp, Razor Leaf e outros) voltam a marcar a área toda, e o Arco de Dream Eater e Foul Play agora salta para outros inimigos.',
+        en: 'Upgrades that leave damaging ground (Solar Beam, Fire Spin, Will-O-Wisp, Razor Leaf and more) cover their whole area again, and Dream Eater’s and Foul Play’s Arc now jumps to other foes.',
+        es: 'Las mejoras que dejan suelo dañino (Solar Beam, Fire Spin, Will-O-Wisp, Razor Leaf y más) vuelven a cubrir toda el área, y el Arco de Dream Eater y Foul Play ahora salta a otros enemigos.',
+        fr: 'Les améliorations qui laissent un sol brûlant (Solar Beam, Fire Spin, Will-O-Wisp, Razor Leaf et d’autres) couvrent de nouveau toute leur zone, et l’Arc de Dream Eater et Foul Play rebondit enfin sur d’autres ennemis.',
+        zh: '留下傷害地面的強化（Solar Beam、Fire Spin、Will-O-Wisp、Razor Leaf 等）再次覆蓋整個範圍，Dream Eater 與 Foul Play 的「連鎖」也會跳到其他敵人身上了。',
+      },
+      {
+        pt: 'Co-op no Modo Lendário: quando o servidor demora para confirmar os lendários, a sala não começa mais com os parceiros. Ela avisa e você tenta de novo.',
+        en: 'Co-op Legend mode: when the server is slow to confirm the legends, the room no longer starts with everyone’s partners. It tells you, and you can try again.',
+        es: 'Co-op en Modo Legendario: si el servidor tarda en confirmar los legendarios, la sala ya no empieza con los compañeros. Te avisa para que lo intentes de nuevo.',
+        fr: 'Coop en mode Légende : quand le serveur tarde à confirmer les légendaires, le salon ne démarre plus avec les partenaires. Il te prévient et tu peux réessayer.',
+        zh: '傳說模式合作：伺服器確認傳說寶可夢太慢時，房間不會再直接用夥伴開始，而是提示你再試一次。',
+      },
+      {
+        pt: 'O alarme do Esconderijo Rocket não interrompe mais a luta contra Giovanni: dentro do covil você só sai vencendo ou desmaiando.',
+        en: 'The Rocket Hideout’s alarm no longer cuts the fight with Giovanni short: in the lair you only leave by winning or fainting.',
+        es: 'La alarma del Escondite Rocket ya no corta la pelea contra Giovanni: en la guarida solo sales ganando o debilitado.',
+        fr: 'L’alarme du Repaire Rocket n’interrompt plus le combat contre Giovanni : dans le repaire, tu ne sors qu’en gagnant ou K.O.',
+        zh: '火箭隊秘密基地的警報不會再打斷與坂木的對戰：在巢穴裡只有獲勝或倒下才會離開。',
+      },
+      {
+        pt: 'O app instalado no iPhone agora ocupa a tela inteira, sem a faixa escura embaixo (reinstale o ícone para pegar a correção).',
+        en: 'The installed app on iPhone now fills the whole screen, with no dark strip at the bottom (re-add the icon to get the fix).',
+        es: 'La app instalada en el iPhone ahora ocupa toda la pantalla, sin la franja oscura abajo (vuelve a añadir el ícono para tener el arreglo).',
+        fr: 'L’app installée sur iPhone occupe maintenant tout l’écran, sans bande sombre en bas (réajoute l’icône pour avoir la correction).',
+        zh: 'iPhone 上安裝的 App 現在會填滿整個螢幕，下方不再有黑色橫條（請重新加入主畫面圖示以套用修正）。',
+      },
+      {
+        pt: 'Navegadores baseados em Chromium antigo (360, Huawei) não travam mais na segunda partida seguida: o jogo recarrega entre uma partida e outra.',
+        en: 'Older Chromium-based browsers (360, Huawei) no longer freeze on the second run in a row: the game reloads between runs.',
+        es: 'Los navegadores basados en Chromium antiguo (360, Huawei) ya no se congelan en la segunda partida seguida: el juego se recarga entre partidas.',
+        fr: 'Les navigateurs basés sur un ancien Chromium (360, Huawei) ne plantent plus à la deuxième partie d’affilée : le jeu se recharge entre deux parties.',
+        zh: '以舊版 Chromium 為基礎的瀏覽器（360、華為）不會在連續第二場時卡住了：遊戲會在每場之間重新載入。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Golpes e upgrades', en: 'Moves and upgrades', es: 'Movimientos y mejoras', fr: 'Capacités et améliorations', zh: '招式與強化' },
+        notes: [
+          {
+            pt: 'O chão que fere de um mesmo golpe não some mais enquanto você ainda está lançando: uma mancha que cai em cima de outra renova a que já estava lá.',
+            en: 'A move’s damaging ground no longer vanishes while you’re still casting: a patch landing on another refreshes the one already there.',
+            es: 'El suelo dañino de un mismo movimiento ya no desaparece mientras aún lo lanzas: una mancha que cae sobre otra renueva la que ya estaba.',
+          },
+          {
+            pt: 'O Eclipse do Moongeist Beam (Lunala) agora solta o segundo feixe para o lado oposto, como diz a descrição.',
+            en: 'Moongeist Beam’s Eclipse (Lunala) now fires its second beam to the opposite side, as described.',
+            es: 'El Eclipse de Moongeist Beam (Lunala) ahora lanza el segundo rayo hacia el lado opuesto, como dice su descripción.',
+          },
+          {
+            pt: 'O aviso de "Tudo no máximo" no level-up agora só aparece quando é verdade; se um golpe ou item parou porque você o esqueceu, ou se sobrou um slot sem golpe novo para aprender, o aviso diz isso.',
+            en: 'The level-up’s "All maxed out" note now only shows when it’s true; if a move or item stopped because you forgot it, or a slot is left with no new move to learn, the note says so.',
+            es: 'El aviso de "Todo al máximo" al subir de nivel ahora solo aparece cuando es cierto; si un movimiento u objeto se detuvo porque lo olvidaste, o queda un espacio sin movimiento nuevo que aprender, el aviso lo dice.',
+          },
+          {
+            pt: 'Os especiais que caem do céu (Blizzard, Draco Meteor e companhia) não mostram mais meteoros misturados.',
+            en: 'Sky-falling specials (Blizzard, Draco Meteor and the like) no longer show stray meteors.',
+            es: 'Los especiales que caen del cielo (Blizzard, Draco Meteor y compañía) ya no muestran meteoritos mezclados.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Lendários e lugares', en: 'Legends and places', es: 'Legendarios y lugares', fr: 'Légendaires et lieux', zh: '傳說與地點' },
+        notes: [
+          {
+            pt: 'A Tera Raid de Terapagos (e as de tipos fora das máscaras) agora dá ao Ogerpon uma escolha de duas máscaras, em vez de um fragmento que ele não podia usar.',
+            en: 'Terapagos’s Tera Raid (and raids of types no mask has) now gives Ogerpon a choice of two masks instead of a shard it couldn’t use.',
+            es: 'La Tera Raid de Terapagos (y las de tipos sin máscara) ahora le da a Ogerpon a elegir entre dos máscaras, en vez de un fragmento que no podía usar.',
+          },
+          {
+            pt: 'Anéis do Hoopa: a câmera não dispara mais para o topo do mapa quando o lendário se teletransporta ou mergulha.',
+            en: 'Hoopa’s Rings: the camera no longer jumps to the top of the map when the legend teleports or dives.',
+            es: 'Anillos de Hoopa: la cámara ya no salta a la parte superior del mapa cuando el legendario se teletransporta o se sumerge.',
+          },
+          {
+            pt: 'O templo do Regigigas e as Ruínas da Decisão agora ficam na ordem certa com árvores e rochas (e ficam translúcidos quando você passa atrás deles).',
+            en: 'Regigigas’s temple and the Split-Decision Ruins now sort correctly with trees and rocks (and turn see-through when you walk behind them).',
+            es: 'El templo de Regigigas y las Ruinas de la Decisión ahora se ordenan bien con árboles y rocas (y se vuelven translúcidos cuando pasas detrás).',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-11-23',
     title: { pt: 'Tornados sem travar e Patreon no lobby', en: 'Lag-free tornadoes and Patreon in the lobby', es: 'Tornados sin trabas y Patreon en el lobby', fr: 'Des tornades fluides et Patreon dans le lobby', zh: '龍捲風不再卡頓，大廳加入 Patreon' },
     highlights: [

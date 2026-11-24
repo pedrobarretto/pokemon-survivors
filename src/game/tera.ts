@@ -143,6 +143,17 @@ export const dropBossShards = (g: Game, x: number, y: number, bossType: PokeType
   g.events.push({ kind: 'teraShards' })
 }
 
+/**
+ * A raid's giant fell at (x, y): the acting player's shard of its Tera type.
+ * Ogerpon, whose mask takes only its four types, gets a boss's choice of two
+ * masks instead of a shard it can't wear (Terapagos's Stellar, any other type).
+ */
+export const dropRaidShard = (g: Game, x: number, y: number, tera: TeraType) => {
+  const pair = g.nextId
+  if (playsOgerpon(g.player) && !isMaskType(tera)) return maskShards(g, (type, side) => dropShard(g, x + (side * TERA.shardGap) / 2, y + 14, type, pair))
+  dropShard(g, x, y + 14, tera, pair)
+}
+
 /** The acting player touched a Tera Shard: it sets their Tera type; the rest of its choice crumbles. */
 export const collectShard = (g: Game, tera: TeraType, pair: number) => {
   const p = g.player

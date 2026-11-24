@@ -18,9 +18,10 @@ import { sceneryArt } from './scenery'
 import { PATH_ART, TEMPLE, TEMPLE_LIGHTS, TEMPLE_MARKS, TEMPLES } from './pathLegendArt'
 import { TEMPLE_RISE, TEMPLE_WAKE } from '../game/pathRun'
 import { RUINS, RUINS_SIDES } from '../data/forces'
-import { RUINS_LEGENDS } from '../data/legends'
+import { RUINS_LEGENDS, type RuinsRegi } from '../data/legends'
 import { ruinSpot, ruinThreshold, RUINS_SINK, RUINS_WAKE } from '../game/splitRuins'
 import { RUIN, RUIN_GATE, RUINS_ART, ruinsIcon } from './ruinsArt'
+import { seeThrough, seeThroughEnd } from './terrain'
 
 /** The temple shrunk to an arrow's icon: its middle, with the three lights on. */
 const templeIcon = lazy(() => {
@@ -316,9 +317,10 @@ const drawBrokenGround = (ctx: Ctx, x: number, y: number, spread: number) => {
  * Regigigas's temple: it rises out of the ground over `TEMPLE_RISE` (only the part above the
  * ground shows, the earth churning at its foot, dust rolling out and stones falling off it),
  * then waits, a mark pulsing now and then; woken, its three Regi marks light one by one and
- * it shakes, and once the giant is out it stands lit behind it.
+ * it shakes, and once the giant is out it stands lit behind it. Its broken ground lies on the
+ * ground layer (`drawTempleGround`); the temple stands in the depth pass (`drawStanding`).
  */
-const drawTemple = (ctx: Ctx, ev: MapEventOf<'regiTemple'>, t: number, calm: boolean) => {
+const drawTemple = (ctx: Ctx, g: Game, ev: MapEventOf<'regiTemple'>, t: number, calm: boolean) => {
   const { waking, out } = ev.state
   const rise = Math.min(1, ev.age / TEMPLE_RISE)
   const up = 1 - (1 - rise) * (1 - rise)
@@ -328,9 +330,8 @@ const drawTemple = (ctx: Ctx, ev: MapEventOf<'regiTemple'>, t: number, calm: boo
   const left = Math.round(ev.x - TEMPLE.w / 2)
   const rumbling = rise < 1 || (waking >= 0 && !out)
   const jolt = rumbling && !calm ? (Math.floor(t * 24) % 2 === 0 ? 1 : -1) * (rise < 1 ? 1 : Math.min(2, 1 + Math.floor(waking))) : 0
-  drawBrokenGround(ctx, ev.x, foot, Math.min(1, rise * 3))
   const shown = Math.round(TEMPLE.h * up)
-  if (shown > 0) ctx.drawImage(sprite, 0, 0, TEMPLE.w, shown, left + jolt, foot - shown, TEMPLE.w, shown)
+  if (shown > 0) drawRisen(ctx, g, sprite, TEMPLE.w, shown, left + jolt, foot - shown, ev.y + 2)
   if (rise < 1 && !calm) {
     // Dust rolling out from its foot, and stones knocked off its top falling back down.
     for (let i = 0; i < 16; i++) {
@@ -357,51 +358,116 @@ const drawTemple = (ctx: Ctx, ev: MapEventOf<'regiTemple'>, t: number, calm: boo
   }
 }
 
-/**
- * The Ruínas da Decisão: both ruins rise out of the ground like the temple;
- * asleep, each free ruin's gate breathes its Regi's light inside a dashed
- * ring (walk into it to choose), its sign bobbing over it; a caught Regi's
- * ruin stands dark and shut. Once one is chosen, it lights and shakes while
- * the other sinks back into the earth.
- */
-const drawRuins = (ctx: Ctx, ev: MapEventOf<'splitRuins'>, t: number, calm: boolean) => {
+/** The part of a rising structure's sprite above the ground (its top `w`×`shown` px) at (x, y), see-through around the player behind it. */
+const drawRisen = (ctx: Ctx, g: Game, sprite: CanvasImageSource, w: number, shown: number, x: number, y: number, foot: number) => {
+  const sc = seeThrough(g, x, y, w, shown, foot)
+  if (!sc) return ctx.drawImage(sprite, 0, 0, w, shown, x, y, w, shown)
+  sc.drawImage(sprite, 0, 0, w, shown, 0, 0, w, shown)
+  seeThroughEnd(ctx)
+}
+
+/** The temple's churned earth, on the ground layer under everything standing. */
+const drawTempleGround = (ctx: Ctx, ev: MapEventOf<'regiTemple'>) =>
+  drawBrokenGround(ctx, ev.x, Math.round(ev.y + 2), Math.min(1, (ev.age / TEMPLE_RISE) * 3))
+
+/** How the Ruínas da Decisão stand this frame: how far they've risen, and one ruin's look and how far it has sunk. */
+const ruinPose = (ev: MapEventOf<'splitRuins'>, regi: RuinsRegi) => {
   const { free, pick, waking, out } = ev.state
   const rise = Math.min(1, ev.age / RUINS.rise)
+  const open = free.includes(regi)
+  const chosen = pick === regi
+  const sealed = pick !== null && !chosen
+  const sink = sealed ? Math.min(1, (out ? RUINS_SINK : waking) / RUINS_SINK) : 0
+  const at = ruinSpot(ev, regi)
+  return { rise, open, chosen, sealed, sink, at, foot: Math.round(at.y + 2) }
+}
+
+/**
+ * One ruin of the Ruínas da Decisão: both rise out of the ground like the
+ * temple; asleep, each free ruin's gate breathes its Regi's light, its sign
+ * bobbing over it; a caught Regi's ruin stands dark and shut. Once one is
+ * chosen, it lights and shakes while the other sinks back into the earth.
+ * Their footings and the rings at their gates lie on the ground layer
+ * (`drawRuinsGround`); each ruin stands in the depth pass (`drawStanding`).
+ */
+const drawRuin = (ctx: Ctx, g: Game, ev: MapEventOf<'splitRuins'>, regi: RuinsRegi, t: number, calm: boolean) => {
+  const { pick, waking, out } = ev.state
+  const { rise, open, chosen, sealed, sink, at, foot } = ruinPose(ev, regi)
   const up = 1 - (1 - rise) * (1 - rise)
+  const look = !open ? 'dark' : chosen ? 'lit' : 'asleep'
+  const sprite = RUINS_ART()[regi][look]
+  const left = Math.round(at.x - RUIN.w / 2)
+  const shaking = (rise < 1 || (chosen && !out) || (sealed && sink < 1)) && !calm
+  const jolt = shaking ? (Math.floor(t * 24 + (regi === 'regieleki' ? 0 : 1)) % 2 === 0 ? 1 : -1) : 0
+  const shown = Math.round(RUIN.h * up * (1 - sink))
+  if (shown > 0) drawRisen(ctx, g, sprite, RUIN.w, shown, left + jolt, foot - shown, at.y + 2)
+  if (rise < 1 || !open || sealed) return
+  const [glow, core] = RUINS_SIDES[regi].light
+  const gx = left + RUIN_GATE.x
+  const gy = foot - RUIN.h + RUIN_GATE.y
+  if (pick === null) {
+    // Asleep and free: its gate breathes, and its sign bobs over it.
+    if (!calm && (t * 1.2 + (regi === 'regieleki' ? 0 : 0.5)) % 1.6 < 0.5) blitEllipse(ctx, 3, 4, glow, gx, gy)
+    const bob = Math.round(Math.sin(t * 3 + (regi === 'regieleki' ? 0 : 1.5)) * 1.5)
+    blitCentered(ctx, RUINS_ICONS()[regi], at.x, foot - RUIN.h - 8 + bob)
+  } else if (chosen && !out) {
+    // Waking: its gate floods with light, brighter as the Regi comes.
+    const k = Math.min(1, waking / RUINS_WAKE)
+    blitEllipse(ctx, Math.round(3 + k * 3), Math.round(4 + k * 6), glow, gx, gy)
+    blitEllipse(ctx, Math.round(1 + k * 2), Math.round(2 + k * 4), core, gx, gy)
+  }
+}
+
+/** The ruins' footings, and while none is chosen the way into each free one: a ring on the ground at its gate. */
+const drawRuinsGround = (ctx: Ctx, ev: MapEventOf<'splitRuins'>, t: number) => {
   for (const regi of RUINS_LEGENDS) {
-    const at = ruinSpot(ev, regi)
-    const open = free.includes(regi)
-    const chosen = pick === regi
-    const sealed = pick !== null && !chosen
-    const sink = sealed ? Math.min(1, (out ? RUINS_SINK : waking) / RUINS_SINK) : 0
-    const look = !open ? 'dark' : chosen ? 'lit' : 'asleep'
-    const sprite = RUINS_ART()[regi][look]
-    const foot = Math.round(at.y + 2)
-    const left = Math.round(at.x - RUIN.w / 2)
-    const shaking = (rise < 1 || (chosen && !out) || (sealed && sink < 1)) && !calm
-    const jolt = shaking ? (Math.floor(t * 24 + (regi === 'regieleki' ? 0 : 1)) % 2 === 0 ? 1 : -1) : 0
+    const { rise, open, sealed, at, foot } = ruinPose(ev, regi)
     const rx = Math.round(RUIN.w / 2 + 3)
     blitEllipse(ctx, rx, Math.max(1, Math.round(rx * 0.3)), '#5c4428', at.x, foot)
-    const shown = Math.round(RUIN.h * up * (1 - sink))
-    if (shown > 0) ctx.drawImage(sprite, 0, 0, RUIN.w, shown, left + jolt, foot - shown, RUIN.w, shown)
-    if (rise < 1 || !open || sealed) continue
+    if (rise < 1 || !open || sealed || ev.state.pick !== null) continue
     const [glow, core] = RUINS_SIDES[regi].light
-    const gx = left + RUIN_GATE.x
-    const gy = foot - RUIN.h + RUIN_GATE.y
-    if (pick === null) {
-      // Asleep and free: the way in, a ring on the ground at its gate, and its sign over it.
-      const step = ruinThreshold(ev, regi)
-      dashedRing(ctx, step.x, step.y, RUINS.wake, t * 1.5, [glow, core], 0.55, 0.45)
-      if (!calm && (t * 1.2 + (regi === 'regieleki' ? 0 : 0.5)) % 1.6 < 0.5) blitEllipse(ctx, 3, 4, glow, gx, gy)
-      const bob = Math.round(Math.sin(t * 3 + (regi === 'regieleki' ? 0 : 1.5)) * 1.5)
-      blitCentered(ctx, RUINS_ICONS()[regi], at.x, foot - RUIN.h - 8 + bob)
-    } else if (chosen && !out) {
-      // Waking: its gate floods with light, brighter as the Regi comes.
-      const k = Math.min(1, waking / RUINS_WAKE)
-      blitEllipse(ctx, Math.round(3 + k * 3), Math.round(4 + k * 6), glow, gx, gy)
-      blitEllipse(ctx, Math.round(1 + k * 2), Math.round(2 + k * 4), core, gx, gy)
+    const step = ruinThreshold(ev, regi)
+    dashedRing(ctx, step.x, step.y, RUINS.wake, t * 1.5, [glow, core], 0.55, 0.45)
+  }
+}
+
+/**
+ * A map event that stands up off the ground (Regigigas's temple, one ruin of
+ * the Ruínas da Decisão): it goes through the frame's depth pass with the
+ * terrain's solids, the foes and the players, sorted by its foot (`y`), so
+ * what stands south of it draws in front and what stands north behind.
+ */
+export type Standing = { standing: MapEventOf<'regiTemple'> | MapEventOf<'splitRuins'>; regi: RuinsRegi | null; y: number }
+
+/** The box (world px) a standing event's sprite covers at its full height. */
+const standingBox = (d: Standing) => {
+  if (d.regi === null) return { x: d.standing.x - TEMPLE.w / 2, w: TEMPLE.w, h: TEMPLE.h }
+  return { x: ruinSpot(d.standing, d.regi).x - RUIN.w / 2, w: RUIN.w, h: RUIN.h + 12 }
+}
+
+/** Pushes every standing map event near the screen into `out`, for the depth pass. */
+export const standingInView = (g: Game, out: { push: (d: Standing) => unknown }) => {
+  for (const ev of g.mapEvents.list) {
+    if (ev.kind === 'regiTemple' && near(g, ev.x, ev.y, 80)) out.push({ standing: ev, regi: null, y: ev.y + 2 })
+    else if (ev.kind === 'splitRuins' && near(g, ev.x, ev.y, 80 + RUINS.apart / 2)) {
+      for (const regi of RUINS_LEGENDS) out.push({ standing: ev, regi, y: ruinSpot(ev, regi).y + 2 })
     }
   }
+}
+
+/** Whether a standing event drawn after a body at (x, y) (its feet) `bw` × `bh` px hides it: their boxes overlap. */
+export const standingCovers = (d: Standing, x: number, y: number, bw: number, bh: number) => {
+  const box = standingBox(d)
+  return x + bw / 2 > box.x && x - bw / 2 < box.x + box.w && y > d.y - box.h && y - bh < d.y
+}
+
+/** Draws a standing map event in its place in the depth pass, fading out once spent as the ground layer does. */
+export const drawStanding = (ctx: Ctx, g: Game, d: Standing, t: number, calm: boolean) => {
+  const ev = d.standing
+  ctx.globalAlpha = ev.gone >= 0 ? Math.max(0, 1 - ev.gone / FADE) : 1
+  if (ev.kind === 'regiTemple') drawTemple(ctx, g, ev, t, calm)
+  else if (d.regi !== null) drawRuin(ctx, g, ev, d.regi, t, calm)
+  ctx.globalAlpha = 1
 }
 
 /** Each Regi's sign over its free ruin: a type mark in its colors on a dark disc. */
@@ -425,8 +491,8 @@ const drawEvent = (ctx: Ctx, g: Game, ev: MapEvent, t: number, calm: boolean) =>
     case 'castform': return drawCastform(ctx, ev, t, calm)
     case 'zygardeCell':
     case 'zygardeCore': return drawPiece(ctx, ev, t, calm)
-    case 'regiTemple': return drawTemple(ctx, ev, t, calm)
-    case 'splitRuins': return drawRuins(ctx, ev, t, calm)
+    case 'regiTemple': return drawTempleGround(ctx, ev)
+    case 'splitRuins': return drawRuinsGround(ctx, ev, t)
     case 'tutor': return drawTutor(ctx, ev, t)
   }
 }

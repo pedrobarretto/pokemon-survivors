@@ -44,49 +44,71 @@ export const postSigned = async (api: ArenaApi, path: string, body: string, fetc
     signal: AbortSignal.timeout(timeout),
   })
 
-/** A room's run waits this long at most for its looks before starting without them. */
-export const LOOKS_TIMEOUT_MS = 1500
+/**
+ * How long each ask for a room's looks waits (ms): a second, longer try
+ * follows a failed first one, so a slow moment of the API doesn't play a
+ * Legend room's legends as their partners.
+ */
+export const LOOKS_TIMEOUTS_MS = [1500, 3000] as const
 
 /**
  * What the API vouches for a room's accounts as its run starts, by identity
  * (`u:<clerk id>`): the look each wears and the legends each has captured
  * (a co-op room's Legend mode; an account with none is left out).
+ * `answered`: whether the API answered at all (false after a failure, a slow
+ * answer or an API from before `/looks`), which a Legend room needs before
+ * it starts (`looked`); with no API set (a dev relay) nothing is vouched and
+ * that counts as answered.
  */
-export type Vouched = { looks: Record<string, WireLook>; legends: Record<string, string[]> }
+export type Vouched = { answered: boolean; looks: Record<string, WireLook>; legends: Record<string, string[]> }
 
-export const NOTHING_VOUCHED: Vouched = { looks: {}, legends: {} }
+export const NOTHING_VOUCHED: Vouched = { answered: false, looks: {}, legends: {} }
+
+/** The API's answer to `POST /looks`, or null when it gave none (a failure, a timeout, an error status). */
+const askLooks = async (api: ArenaApi, body: string, fetcher: Fetcher, timeout: number): Promise<unknown> => {
+  try {
+    const res = await postSigned(api, '/looks', body, fetcher, timeout)
+    const answer: unknown = res.ok ? await res.json() : null
+    return answer
+  } catch {
+    return null
+  }
+}
 
 /**
  * What the API vouches for (`POST /looks`, signed), by identity: what each
- * account stored and owns, and the legends its stored save has captured.
- * Anything else (no API set, an API from before it, a failure, a slow answer,
- * a malformed look or list) leaves those seats bare and without legends: a
+ * account stored and owns, and the legends its stored save has captured,
+ * asked again once if the first try gets no answer (`LOOKS_TIMEOUTS_MS`).
+ * Anything else (an API from before it, a failure, a slow answer, a
+ * malformed look or list) leaves those seats bare and without legends: a
  * client's own claim never stands.
  */
 export const lookUpLooks = async (api: ArenaApi | null, ids: readonly string[], fetcher: Fetcher = fetch): Promise<Vouched> => {
   const userIds = ids.flatMap((id) => (id.startsWith('u:') ? [id.slice(2)] : []))
-  if (!api || userIds.length === 0) return NOTHING_VOUCHED
-  try {
-    const res = await postSigned(api, '/looks', JSON.stringify({ userIds } satisfies LooksRequest), fetcher, LOOKS_TIMEOUT_MS)
-    const body: unknown = res.ok ? await res.json() : null
-    const looks = isRecord(body) && isRecord(body.looks) ? body.looks : {}
-    const legends = isRecord(body) && isRecord(body.legends) ? body.legends : {}
-    return {
-      looks: Object.fromEntries(
-        userIds.flatMap((id) => {
-          const look = parseWireLook(looks[id])
-          return look ? [[`u:${id}`, look] as const] : []
-        }),
-      ),
-      legends: Object.fromEntries(
-        userIds.flatMap((id) => {
-          const list = parseLegendList(legends[id])
-          return list && list.length > 0 ? [[`u:${id}`, list] as const] : []
-        }),
-      ),
-    }
-  } catch {
-    return NOTHING_VOUCHED
+  if (!api || userIds.length === 0) return { ...NOTHING_VOUCHED, answered: true }
+  const request = JSON.stringify({ userIds } satisfies LooksRequest)
+  let body: unknown = null
+  for (const timeout of LOOKS_TIMEOUTS_MS) {
+    body = await askLooks(api, request, fetcher, timeout)
+    if (isRecord(body)) break
+  }
+  if (!isRecord(body)) return NOTHING_VOUCHED
+  const looks = isRecord(body.looks) ? body.looks : {}
+  const legends = isRecord(body.legends) ? body.legends : {}
+  return {
+    answered: true,
+    looks: Object.fromEntries(
+      userIds.flatMap((id) => {
+        const look = parseWireLook(looks[id])
+        return look ? [[`u:${id}`, look] as const] : []
+      }),
+    ),
+    legends: Object.fromEntries(
+      userIds.flatMap((id) => {
+        const list = parseLegendList(legends[id])
+        return list && list.length > 0 ? [[`u:${id}`, list] as const] : []
+      }),
+    ),
   }
 }
 
