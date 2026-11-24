@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { NO_RANKS } from './meta'
 import { startGame } from './replay'
-import { dropPatch, PATCH_CAP } from './spawn'
+import { dropPatch, PATCH_CAP, PATCH_CEILING } from './spawn'
 
-const patch = (x: number) => ({ move: 'fireSpin' as const, type: 'fire' as const, visual: 'modTrail' as const, x, y: 0, shape: { kind: 'circle' as const, r: 9 }, motion: { kind: 'static' as const }, damage: 3, ttl: 1.4, hitInterval: 0.5 })
+// Patches 20 px apart: none lands on another (`PATCH_OVERLAP`).
+const patch = (i: number) => ({ move: 'fireSpin' as const, type: 'fire' as const, visual: 'modTrail' as const, x: i * 20, y: 0, shape: { kind: 'circle' as const, r: 9 }, motion: { kind: 'static' as const }, damage: 3, ttl: 1.4, hitInterval: 0.5 })
 
 describe('patches of ground', () => {
   const game = () => {
@@ -20,17 +21,32 @@ describe('patches of ground', () => {
     expect(live(g).every((a) => a.damage === 3)).toBe(true)
   })
 
-  it('past the cap, the oldest hands the new one what it had left to deal', () => {
+  it('a patch landing on live ground refreshes it, adding what it had left to deal', () => {
     const g = game()
-    for (let i = 0; i < PATCH_CAP; i++) dropPatch(g, patch(i)).age = 1.4 - i * 0.01
-    // The first one's life is already up (age 1.4), so the next drop only fills the cap back; past it, the oldest left had 0.01 s of its 1.4 s to go.
+    const first = dropPatch(g, patch(0))
+    first.age = 0.7
+    const again = dropPatch(g, { ...patch(0), x: 3 })
+    expect(again).toBe(first)
+    expect(live(g)).toHaveLength(1)
+    expect([first.age, first.x]).toEqual([0, 0])
+    expect(first.damage).toBeCloseTo(3 + 3 * 0.5, 12)
+  })
+
+  it('past the cap, the oldest spent one hands the new one what it had left to deal', () => {
+    const g = game()
+    for (let i = 0; i < PATCH_CAP; i++) dropPatch(g, patch(i)).age = 1.39 - i * 0.01
     const fresh = dropPatch(g, patch(100))
     expect(live(g)).toHaveLength(PATCH_CAP)
-    expect(fresh.damage).toBe(3)
-    const next = dropPatch(g, patch(101))
-    expect(live(g)).toHaveLength(PATCH_CAP)
-    expect(next.damage).toBeCloseTo(3 + (3 * 0.01) / 1.4, 12)
-    expect(g.attacks.find((a) => a.x === 1)!.activeUntil).toBe(-Infinity)
+    expect(fresh.damage).toBeCloseTo(3 + (3 * 0.01) / 1.4, 12)
+    expect(g.attacks.find((a) => a.x === 0)!.activeUntil).toBe(-Infinity)
+  })
+
+  it('never cuts fresh ground short of the ceiling, so one cast keeps its whole area', () => {
+    const g = game()
+    for (let i = 0; i < PATCH_CEILING; i++) dropPatch(g, patch(i)).age = 0.1
+    expect(live(g)).toHaveLength(PATCH_CEILING)
+    dropPatch(g, patch(PATCH_CEILING))
+    expect(live(g)).toHaveLength(PATCH_CEILING)
   })
 
   it('counts each move of each player on its own', () => {

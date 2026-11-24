@@ -143,6 +143,8 @@ const move = (g: Game, a: Attack, m: Motion, dt: number) => {
       if (a.age < m.next) break
       m.next += m.every
       damageEnemy(g, e, a)
+      // A tethered hit is a hit like `collide`'s: its branch mods (Arc) hear of it.
+      if (a.mod) modHit(g, a, e)
       break
     }
   }
