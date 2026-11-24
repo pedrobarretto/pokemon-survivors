@@ -122,7 +122,7 @@ export const notFoundPage = () => {
     <meta name="robots" content="noindex" />
     <title>${escape(pt.notFound.title)}</title>
     <link rel="icon" href="${assetUrl('pokemon/4/portrait.png')}" />
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png?v=2" />
     <link rel="stylesheet" href="/src/site/site.css" />
     <script type="module" src="/src/site/client.ts"></script>
   </head>

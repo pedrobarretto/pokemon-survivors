@@ -77,7 +77,7 @@ const head = ({ id, locale, title, description, schema = [], css, sub }: PageMet
     <meta property="og:locale" content="${m.lang.og}" />
     ${others(locale).map((l) => html`<meta property="og:locale:alternate" content="${SITE_MESSAGES[l].lang.og}" />\n    `)}    <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href="${assetUrl('pokemon/4/portrait.png')}" />
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png?v=2" />
     <script>${raw(THEME_SCRIPT)}</script>
     <link rel="stylesheet" href="/src/site/site.css" />
     ${css && html`<style>${raw(css)}</style>`}
