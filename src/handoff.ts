@@ -1,5 +1,6 @@
 import { mergeSaves } from './game/sync'
 import { parseSaveData, type Save } from './game/meta'
+import { keepPlaceParam, placeParam } from './signInPlace'
 import { loadSave } from './ui/save'
 
 /**
@@ -13,6 +14,8 @@ import { loadSave } from './ui/save'
 
 /** Query parameter of a tab the frame opened to sign in: the way to sign in (`SignInWay`). */
 const PARAM = 'entrar'
+/** And where the sign in began in the frame (`signInPlace.ts`), for the tab to land there once in. */
+const PLACE = 'voltar'
 
 const READY = 'ps:handoff-ready'
 const SAVE = 'ps:handoff-save'
@@ -41,12 +44,14 @@ export const handedSave = (data: unknown, origin: string, ours: string): unknown
 
 /**
  * Opens the game on the site in a new tab that signs in `way` (the email sheet open there for `email`), and
- * hands it this frame's save once it asks. False when the browser blocked the
+ * hands it this frame's save once it asks. The place the sign in began goes along (`placeParam`). False when the browser blocked the
  * tab: the frame then leaves for the site itself (the save stays in the frame).
  */
 export const continueOnSite = (way: SignInWay): boolean => {
   const url = new URL(`${location.origin}${location.pathname}`)
   url.searchParams.set(PARAM, way)
+  const place = placeParam()
+  if (place) url.searchParams.set(PLACE, place)
   const tab = window.open(url, '_blank')
   if (!tab) {
     window.open(url, '_top')
@@ -63,15 +68,17 @@ export const continueOnSite = (way: SignInWay): boolean => {
 
 /**
  * In a tab `continueOnSite` opened: merges the frame's save into this one's
- * (`land` writes it and lets the screens know), cleans the URL and resolves to
- * the way to sign in. Null on any other load. Without an answer within
+ * (`land` writes it and lets the screens know), keeps the place the sign in
+ * began (`keepPlaceParam`), cleans the URL and resolves to the way to sign in. Null on any other load. Without an answer within
  * `WAIT_MS` it resolves anyway, so the sign in never hangs on the frame.
  */
 export const takeHandoff = (land: (save: Save) => void): Promise<SignInWay | null> => {
   const params = new URLSearchParams(location.search)
   const asked = params.get(PARAM)
   if (!isWay(asked)) return Promise.resolve(null)
+  keepPlaceParam(params.get(PLACE))
   params.delete(PARAM)
+  params.delete(PLACE)
   const rest = params.toString()
   history.replaceState(history.state, '', `${location.pathname}${rest ? `?${rest}` : ''}${location.hash}`)
   const frame = window.opener as Window | null

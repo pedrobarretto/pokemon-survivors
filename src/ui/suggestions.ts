@@ -1,4 +1,5 @@
-import { accountState, accountsEnabled, onAccountChange, signIn } from '../account'
+import { accountState, accountsEnabled, onAccountChange } from '../account'
+import { askSignIn } from './account'
 import { isAdmin } from '../admin'
 import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
@@ -313,7 +314,7 @@ export const suggestionsScreen = (root: HTMLElement, input: Input, onClose: () =
 
   /** ▲ or ▼ on an idea: shown at once, then set to what the API says (or back, offline). */
   const vote = async (id: string, pressed: 1 | -1) => {
-    if (accountState().kind !== 'signedIn') return toast(root, m.voteGuest, 2200)
+    if (accountState().kind !== 'signedIn') return accountsEnabled ? (playSfx('select'), askAccount()) : toast(root, m.voteGuest, 2200)
     const before = typeof list === 'object' ? list.find((s) => s.id === id) : undefined
     if (!before) return
     const next = nextVote(before.vote, pressed)
@@ -348,12 +349,18 @@ export const suggestionsScreen = (root: HTMLElement, input: Input, onClose: () =
     })
   }
 
+  /** The ways to sign in over the board, which stays in view (`askSignIn`): posting and voting need an account. */
+  function askAccount() {
+    const back = () => ((sub = null), (postLabel.textContent = label()), focus(index, false))
+    sub = askSignIn(root, input, { why: t().account.ask.why.ideas, place: { to: 'ideas' }, back })
+  }
+
   /** The action bar: signs in, creates the profile, or opens the form. A posted idea shows on top of the Backlog, waiting for review. */
   function compose() {
     if (sub || closed) return
     playSfx('select')
     const s = accountState()
-    if (s.kind !== 'signedIn') return void signIn()
+    if (s.kind !== 'signedIn') return askAccount()
     if (s.handle === null) return openSub((back) => profileEditor(root, input, () => back()))
     openSub((back) =>
       ideaForm(root, input, (idea) => {

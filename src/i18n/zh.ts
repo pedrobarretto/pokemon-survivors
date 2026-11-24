@@ -1333,7 +1333,7 @@ export const zh: Messages = {
   },
 
   account: {
-    pitch: '用 Google 登入，把進度保存在雲端，在任何裝置上繼續玩。你以訪客身分取得的一切都會一起帶過去。',
+    pitch: '登入帳號，把進度保存在雲端，在任何裝置上繼續玩。你以訪客身分取得的一切都會一起帶過去。',
     google: '用 Google 登入',
     failed: '無法登入。請再試一次。',
     busy: '連線中…',
@@ -1350,6 +1350,21 @@ export const zh: Messages = {
     installedNote: '請使用你在瀏覽器裡遊玩的同一個帳號。',
     installedNew: '我是新玩家',
     installedNewNote: '從沒玩過？直接從頭開始，之後再建立帳號也可以。',
+    ask: {
+      title: '登入帳號',
+      why: {
+        boutique: '登入後就能購買寶石和造型，它們會保存在你的帳號，任何裝置都能使用。',
+        carpentry: '登入後就能為你的秘密基地購買家具。',
+        festival: '登入後就能把你的 ₽ 投進祭典的噴泉。',
+        trainer: '登入帳號，把進度保存在雲端、取一個 @名稱，還能登上排行榜。',
+        friends: '登入後就能新增好友、查看誰在線上，並邀請他們一起玩。',
+        invites: '登入後就能拿到你的邀請連結，並收到帶朋友來的禮物。',
+        supporters: '登入後就能把你的支持連結到帳號，並領取獎勵。',
+        ideas: '登入後就能提出點子，並為其他人的點子投票。',
+        save: '登入帳號，把進度保存在雲端，在任何裝置上繼續玩。',
+        arena: '登入後就能加入公開配對、賺取 RP，並登上本季排行榜。',
+      },
+    },
     email: {
       button: '用電子郵件登入',
       pitch: '我們會寄一組驗證碼到你的信箱。不用密碼：已有帳號就直接登入，沒有就自動建立。',
@@ -1383,6 +1398,7 @@ export const zh: Messages = {
     moveTouch: '*拖曳手指* 移動',
     auto: '招式會自動施放：閃避並升級吧！',
     saveTitle: '保存你的進度',
+    saveButton: '保存我的進度',
     saveText: (money: string, dex: number) => `免費建立帳號，在任何裝置上保留你的 *${money}*、圖鑑裡的 *${dex}* 隻寶可夢和你在 *排行榜* 上的名次。`,
     inAppTitle: '在瀏覽器中開啟，才能保存進度',
     inAppOpen: '用 Chrome 開啟',

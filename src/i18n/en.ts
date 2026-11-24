@@ -1334,7 +1334,7 @@ export const en: Messages = {
   },
 
   account: {
-    pitch: 'Sign in with Google to keep your progress in the cloud and pick it up on any device. Everything you got as a guest comes along.',
+    pitch: 'Sign in to keep your progress in the cloud and pick it up on any device. Everything you got as a guest comes along.',
     google: 'Sign in with Google',
     failed: "Couldn't sign in. Please try again.",
     busy: 'Connecting…',
@@ -1351,6 +1351,21 @@ export const en: Messages = {
     installedNote: 'Use the same account you play with in the browser.',
     installedNew: "I'm new here",
     installedNewNote: 'Never played? Start fresh, you can make an account later.',
+    ask: {
+      title: 'SIGN IN',
+      why: {
+        boutique: 'Sign in to buy gems and looks. They stay on your account, on any device.',
+        carpentry: 'Sign in to buy furniture for your secret base.',
+        festival: "Sign in to toss your ₽ into the festival's fountain.",
+        trainer: 'Sign in to keep your progress in the cloud, pick your @name and show up on the ranking.',
+        friends: "Sign in to add friends, see who's online and invite them to play together.",
+        invites: 'Sign in to get your invite link and the gifts for the friends you bring.',
+        supporters: 'Sign in to link your support to your account and get the rewards.',
+        ideas: "Sign in to suggest ideas and vote on other players' ideas.",
+        save: 'Sign in to keep your progress in the cloud and pick it up on any device.',
+        arena: "Sign in to play the public queue, earn RP and show up on the season's ranking.",
+      },
+    },
     email: {
       button: 'Sign in with email',
       pitch: "We'll email you a code. No password: it signs in to your account or makes a new one.",
@@ -1384,6 +1399,7 @@ export const en: Messages = {
     moveTouch: '*Drag your finger* to move',
     auto: 'Your moves fire on their own: dodge and level up!',
     saveTitle: 'SAVE YOUR PROGRESS',
+    saveButton: 'Save my progress',
     saveText: (money: string, dex: number) => `Create a free account to keep your *${money}*, the *${dex}* Pokémon in your Pokédex and your spot on the *ranking*, on any device.`,
     inAppTitle: 'Open in your browser to save your progress',
     inAppOpen: 'Open in Chrome',

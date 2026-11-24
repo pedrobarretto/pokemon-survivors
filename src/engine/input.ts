@@ -34,6 +34,13 @@ export type Input = {
    * and `onKey`, until the returned function is called (the remap screen).
    */
   capture: (take: (press: RawPress) => void) => () => void
+  /**
+   * Opens a layer over what's on screen (the sign-in sheet over a shop): until
+   * `close`, keys go only to the handlers added through the layer's `input`,
+   * so the screen under it hears none, even one that rebuilds its menu
+   * meanwhile. Layers stack: the newest one has the keys.
+   */
+  layer: () => { input: Input; close: () => void }
   /** The page is back in view: forgets what was held before it left, as iOS needn't have said so (`gripOnReturn`). */
   releaseOnReturn: () => void
 }
@@ -175,7 +182,9 @@ export const createInput = (target: HTMLElement, bindings: () => Bindings, fixed
   /** Keys held down, by physical code, with the code they typed (the bindings may change while one is held). */
   const held = new Map<string, string>()
   const handlers = new Set<(key: string) => void>()
-  const dispatch = (key: string) => dispatchKey(handlers, key)
+  /** The open layers' handlers (`layer`), the newest last: it alone hears the keys. */
+  const layers: Set<(key: string) => void>[] = []
+  const dispatch = (key: string) => dispatchKey(layers.at(-1) ?? handlers, key)
   let capturing: ((press: RawPress) => void) | null = null
   /** The pointer holding the stick, or null (`gripDown`). */
   let grip: Grip | null = null
@@ -323,11 +332,22 @@ export const createInput = (target: HTMLElement, bindings: () => Bindings, fixed
 
   const isHeld = (code: string) => padHeld.includes(code) || [...held.values()].includes(code)
 
-  return {
+  const layer = () => {
+    const own = new Set<(key: string) => void>()
+    layers.push(own)
+    const close = () => {
+      const at = layers.indexOf(own)
+      if (at >= 0) layers.splice(at, 1)
+    }
+    return { input: { ...api, onKey: (handler: (key: string) => void) => (own.add(handler), () => void own.delete(handler)) }, close }
+  }
+
+  const api: Input = {
     readMove,
     readStick,
     isHeld,
     onKey,
+    layer,
     press: dispatch,
     poll,
     readAim: () => padAim,
@@ -337,4 +357,5 @@ export const createInput = (target: HTMLElement, bindings: () => Bindings, fixed
     capture,
     releaseOnReturn,
   }
+  return api
 }

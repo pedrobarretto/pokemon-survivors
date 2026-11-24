@@ -1,4 +1,5 @@
-import { accountHandle, accountsEnabled, accountState, signIn } from '../account'
+import { accountHandle, accountsEnabled, accountState } from '../account'
+import { askSignIn } from './account'
 import { track } from '../analytics'
 import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
@@ -106,7 +107,7 @@ const section = (title: string, ...body: Node[]) => h('section', { class: 'invit
 export const invitesScreen = (root: HTMLElement, input: Input, onClose: () => void): Screen => {
   const el = h('div', { class: 'screen dim profile-screen invites-screen' })
   let nav: ReturnType<typeof menu> | null = null
-  /** The profile editor, open over this screen. */
+  /** The profile editor or the sign-in choice, open over this screen. */
   let sub: Screen | null = null
   let friends: InvitedFriend[] | null | 'loading' = 'loading'
   let closed = false
@@ -123,7 +124,7 @@ export const invitesScreen = (root: HTMLElement, input: Input, onClose: () => vo
 
     const actions: Action[] = [
       ...(url ? [{ label: sheet() ? m.share : m.copy, run: () => void shareLink(root, url) }] : []),
-      ...(s.kind === 'guest' ? [{ label: m.signIn, run: () => void signIn() }] : []),
+      ...(s.kind === 'guest' ? [{ label: m.signIn, run: askAccount }] : []),
       ...(s.kind === 'signedIn' && !handle ? [{ label: m.createProfile, run: openEditor }] : []),
       { label: m.back, run: close },
     ]
@@ -184,6 +185,11 @@ export const invitesScreen = (root: HTMLElement, input: Input, onClose: () => vo
       el.classList.remove('hidden')
       void load()
     })
+  }
+
+  /** The ways to sign in over this screen (`askSignIn`); once in, the link and the list load. */
+  const askAccount = () => {
+    sub = askSignIn(root, input, { why: t().account.ask.why.invites, place: { to: 'invites' }, back: () => (sub = null), done: () => ((sub = null), void load()) })
   }
 
   const offKeys = input.onKey((key) => !sub && (key === 'Escape' || key === 'Backspace') && close())

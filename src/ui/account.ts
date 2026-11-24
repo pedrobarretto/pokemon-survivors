@@ -5,6 +5,7 @@ import { cjk, t } from '../i18n'
 import { h, later } from './dom'
 import { emailSheet, type EmailSheet } from './emailSignIn'
 import { hint, menu, type Screen } from './screens'
+import { keepSignInPlace, type SignInPlace } from '../signInPlace'
 
 type Action = { label: string; run: () => void }
 
@@ -22,6 +23,8 @@ type GateActions = {
   signingIn?: () => void
   /** Opens on the email sheet (a tab a portal's frame opened for it, `handoff.ts`). */
   email?: boolean
+  /** Opens over the screen on show instead of in its place: that screen keeps its look and hears no keys meanwhile (`Input.layer`). */
+  over?: boolean
 }
 
 /**
@@ -34,8 +37,10 @@ type GateActions = {
  * away and goes on to `play` once `ready`. Back, Esc or Backspace call `back`
  * (on the email sheet, they go back to the other ways).
  */
-const gate = (root: HTMLElement, input: Input, text: GateText, actions: GateActions, lead: readonly string[] = []): Screen => {
-  const el = h('div', { class: 'screen dim' })
+const gate = (root: HTMLElement, base: Input, text: GateText, actions: GateActions, lead: readonly string[] = []): Screen => {
+  const layer = actions.over ? base.layer() : null
+  const input = layer?.input ?? base
+  const el = h('div', { class: actions.over ? 'screen dim account-over' : 'screen dim' })
   let nav: ReturnType<typeof menu> | null = null
   const ready = actions.ready ?? ((s: AccountState) => s.kind === 'signedIn')
   const guest = actions.guest
@@ -108,7 +113,7 @@ const gate = (root: HTMLElement, input: Input, text: GateText, actions: GateActi
     else leave(actions.back)
   })
 
-  const dispose = () => (nav?.off(), email?.dispose(), offState(), offKeys(), el.remove())
+  const dispose = () => (nav?.off(), email?.dispose(), offState(), offKeys(), layer?.close(), el.remove())
 
   let left = false
   /** Closes the gate and runs `next` after the current key dispatch. */
@@ -127,8 +132,8 @@ const gate = (root: HTMLElement, input: Input, text: GateText, actions: GateActi
 }
 
 /**
- * Asked when a guest taps Play (accounts on): sign in with Google or Discord,
- * which also creates the account, or play as a guest. Signing in leaves for the provider; an
+ * Asked when a guest taps Play (accounts on): sign in with Google, Discord or
+ * a code by email, which also creates the account, or play as a guest. Signing in leaves for the provider; an
  * account already open in another tab links right away and goes on to `play`.
  * Back, Esc or Backspace call `onBack`; `signingIn` hears a sign in start.
  */
@@ -194,4 +199,26 @@ export const arenaGate = (root: HTMLElement, input: Input, actions: { play: () =
 export const emailGate = (root: HTMLElement, input: Input, actions: { play: () => void; back: () => void }): Screen => {
   const m = t().account
   return gate(root, input, { title: m.gateTitle, pitch: m.gatePitch, note: m.gateNewAccount, guestNote: null }, { ...actions, guest: null, email: true })
+}
+
+/**
+ * The one way every button that asks a guest for an account goes (the
+ * Boutique, the Trainer Card, Amigos, the results' save card…): the gates'
+ * choice of Google, Discord or a code by email (email first in Chinese), over
+ * the screen that asked, which keeps its place and hears no keys meanwhile.
+ * `why` says what the account is for there. Back, Esc or Backspace close it
+ * (`back`); once in, it closes too (`done`, `back` without one) and the screen
+ * under it follows the account as it always does. A provider's round trip
+ * comes back to a bare page: `place` is where the shell lands it then
+ * (`signInPlace.ts`; null, the lobby).
+ */
+export const askSignIn = (root: HTMLElement, input: Input, ask: { why: string; place: SignInPlace | null; back?: () => void; done?: () => void }): Screen => {
+  const m = t().account
+  const leave = (next: (() => void) | undefined) => () => (keepSignInPlace(null), next?.())
+  return gate(
+    root,
+    input,
+    { title: m.ask.title, pitch: ask.why, note: m.gateNewAccount, guestNote: null },
+    { play: leave(ask.done ?? ask.back), back: leave(ask.back), guest: null, over: true, signingIn: () => keepSignInPlace(ask.place) },
+  )
 }

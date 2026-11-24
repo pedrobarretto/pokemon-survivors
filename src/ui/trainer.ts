@@ -1,4 +1,5 @@
-import { accountState, accountsEnabled, onAccountChange, signIn, signOut, syncSave, type AccountState } from '../account'
+import { accountState, accountsEnabled, onAccountChange, signOut, syncSave, type AccountState } from '../account'
+import { askSignIn } from './account'
 import { isAdmin } from '../admin'
 import { fetchMyCreator, ownCreatorLinks } from '../creator'
 import { playSfx } from '../engine/audio'
@@ -149,18 +150,24 @@ export const trainerCardScreen = (
     })
   }
 
+  /** The ways to sign in over the card, which stays in view (`askSignIn`); the card follows the account once in. */
+  const askAccount = () => {
+    if (!closed) sub = askSignIn(root, input, { why: t().account.ask.why.trainer, place: { to: 'trainer' }, back: () => ((sub = null), build(false)) })
+  }
+
   const rowsFor = (s: AccountState, tier: SupporterTier | null): Row[] => {
     const m = t().trainer
     const share: Row = { label: m.share, run: () => openSub((back) => sharePreview(root, input, trainerShare(loadSave().partner), back)) }
     const missions: Row = { label: m.missions, run: () => openSub((back) => missionsScreen(root, input, back)) }
     const look: Row = { label: t().boutique.lockerRow, icon: slotIconUrl('head'), fresh: true, run: () => close(opts.locker) }
     const discord: Row = {
-      label: s.kind === 'signedIn' && s.discord ? t().discord.row(s.discord) : s.kind === 'signedIn' ? t().discord.link : t().discord.signIn,
+      // A guest signs in from Criar conta / Entrar (Discord one of its ways): this row is the server's.
+      label: s.kind === 'signedIn' && s.discord ? t().discord.row(s.discord) : s.kind === 'signedIn' ? t().discord.link : t().discord.open,
       icon: discordIcon(),
       wide: true,
       run: () => openSub((back) => discordScreen(root, input, back)),
     }
-    if (s.kind !== 'signedIn') return [...(s.kind === 'guest' && accountsEnabled ? [{ label: m.join, run: () => void signIn() }, discord] : []), share, look, missions]
+    if (s.kind !== 'signedIn') return [...(s.kind === 'guest' && accountsEnabled ? [{ label: m.join, run: askAccount }, discord] : []), share, look, missions]
     const handle = s.handle
     return [
       { label: handle === null ? m.createProfile : m.editProfile, run: () => openSub((back) => profileEditor(root, input, back)) },

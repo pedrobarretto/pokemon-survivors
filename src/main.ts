@@ -185,7 +185,7 @@ import { denToast, dressBanner, raidBanner, shardToast, teraStrip } from './ui/t
 import { celebrateShop, createTitleScene, drawTitleScene, meetPartner, revealShopkeeper, sceneAt, stepTitleScene, visitPlaza } from './render/titleScene'
 import { festivalSprites, KECLEON_DEX, type PlazaFestival, type ShopLevel } from './render/plaza'
 import { weatherIcon } from './render/weather'
-import { formatDay, formatPokeDollars, loadLocale, locale, LOCALES, t } from './i18n'
+import { formatDay, formatPokeDollars, loadLocale, locale, LOCALES, t, type Messages } from './i18n'
 import { h, later, rich } from './ui/dom'
 import { setActivePad } from './ui/inputLabels'
 import { watchCursorMode } from './ui/cursorMode'
@@ -194,7 +194,8 @@ import { captureRef, coopBoardsFaked, fakeCoopBoards, fakeEra1Boards, flushRuns,
 import { applyGift, DISCORD_GIFT, parseGiftContent, type GiftKind, type GiftReason } from './game/gifts'
 import { ERA1_GIFTS, era1Gifts, type Era1Tier } from './game/era1'
 import { giftScreen } from './ui/gifts'
-import { arenaGate, coopGate, emailGate, installedGate, playGate, realmGate } from './ui/account'
+import { arenaGate, askSignIn, coopGate, emailGate, installedGate, playGate, realmGate } from './ui/account'
+import { takeSignInPlace, type SignInPlace } from './signInPlace'
 import { TOWN_ROOMS, isTownRoomId } from './data/realmMap'
 import { isLocalRealm, realmUrl } from './realmUrl'
 import { realmGame, realmJukebox, realmTheme } from './realmMusic'
@@ -746,7 +747,7 @@ const openBoutiqueSheet = (close: () => void, tab: BoutiqueTab) => {
   return lazyScreen(
     ui,
     () => import('./ui/boutique'),
-    (m) => m.openBoutique(ui, input, { tab, checkout, item, signIn: accountsEnabled ? () => void signIn() : null, pick: arenaStart(), keepPick: keepArenaPick, close: leave }),
+    (m) => m.openBoutique(ui, input, { tab, checkout, item, signIn: accountsEnabled ? (on) => askAccount('boutique', { to: 'boutique', tab: on }, () => showBoutique(on)) : null, pick: arenaStart(), keepPick: keepArenaPick, close: leave }),
     leave,
   )
 }
@@ -828,7 +829,23 @@ const queueLunge = () => {
   if (run?.game.phase === 'playing') lungeQueued = true
 }
 
+/** The sign-in choice open over the screen on show (`askAccount`): a new screen takes it down. */
+let asking: Screen | null = null
+
+/**
+ * Asks a guest for an account over the screen on show (`askSignIn`), which
+ * stays as it was: `why` picks the line on what the account is for there,
+ * `place` where a provider's round trip lands (`reopenAfterSignIn`; null, the
+ * lobby), and `done` what the screen does once in by email, in place.
+ */
+const askAccount = (why: keyof Messages['account']['ask']['why'], place: SignInPlace | null, done?: () => void) => {
+  asking?.dispose()
+  asking = askSignIn(ui, input, { why: t().account.ask.why[why], place, back: () => (asking = null), done: () => ((asking = null), done?.()) })
+}
+
 const setScreen = (next: Screen | null) => {
+  asking?.dispose()
+  asking = null
   screen?.dispose()
   screen = next
   coopShown = null
@@ -895,19 +912,8 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
       },
       boutique: openBoutiqueSheet,
       gems: () => showBoutique('shop'),
-      carpentry: (close) => lazyScreen(ui, realmMode, (m) => m.openCarpentry(ui, input, { close, signIn: accountsEnabled ? () => void signIn() : null }), close),
-      // Closing rebuilds the title, so a sign in's merged save shows up on the Trainer chip.
-      trainer: (focus) =>
-        trainerCardScreen(
-          ui,
-          input,
-          {
-            supporters: (back) => supportersScreen(ui, input, { play: (id) => void startRun(id), onClose: back }, null),
-            locker: () => showBoutique('locker', () => showTitle({ focus })),
-            book: realmUrl() ? (back) => lazyScreen(ui, realmMode, (m) => m.openRealmBook(ui, input, { close: back }), back) : null,
-          },
-          () => showTitle({ focus }),
-        ),
+      carpentry: (close) => lazyScreen(ui, realmMode, (m) => m.openCarpentry(ui, input, { close, signIn: accountsEnabled ? () => askAccount('carpentry', { to: 'carpentry' }) : null }), close),
+      trainer: trainerCard,
       ranking: rankingEnabled ? (focus) => rankingScreen(ui, input, () => showTitle({ focus }), { difficulty: loadSave().difficulty, mode: runMode(loadSave().partner) }) : undefined,
       ideas: rankingEnabled ? (focus) => suggestionsScreen(ui, input, () => showTitle({ focus })) : undefined,
       supporters: (focus, open) => supportersScreen(ui, input, { play: (id) => void startRun(id), onClose: () => showTitle({ focus }) }, open),
@@ -925,6 +931,37 @@ const showTitle = (opts: { intro?: boolean; focus?: LobbyFocus; shop?: ShopTrip;
   // Inside an app's browser: over the intro, the way to a real one to sign in and keep the progress (the lobby takes it down; closed once, gone for the visit).
   const app = hostApp()
   if (app && opts.intro && screen) showInAppHint(screen.el, app)
+  // Signed in from a screen over the lobby with no @handle yet: the profile editor, now the lobby shows (`askProfile`).
+  if (!opts.shop && !opts.intro) later(askProfile)
+}
+
+/** The Trainer Card over the lobby. Closing rebuilds the title on `focus`, so a sign in's merged save shows up on the Trainer chip. */
+const trainerCard = (focus: LobbyFocus) =>
+  trainerCardScreen(
+    ui,
+    input,
+    {
+      supporters: (back) => supportersScreen(ui, input, { play: (id) => void startRun(id), onClose: back }, null),
+      locker: () => showBoutique('locker', () => showTitle({ focus })),
+      book: realmUrl() ? (back) => lazyScreen(ui, realmMode, (m) => m.openRealmBook(ui, input, { close: back }), back) : null,
+    },
+    () => showTitle({ focus }),
+  )
+
+/**
+ * Back from signing in (a provider's round trip, the tab a portal's frame
+ * opened): the screen the sign in began on (`signInPlace.ts`), closing to
+ * the lobby as it does from there.
+ */
+const reopenAfterSignIn = (place: SignInPlace) => {
+  if (place.to === 'boutique') return showBoutique(place.tab)
+  if (place.to === 'arena') return showArenaHub(place.tab)
+  if (place.to === 'carpentry' || place.to === 'festival') return showTitle({ shop: place.to, instant: true })
+  if (place.to === 'trainer') return setScreen(trainerCard('trainer'))
+  if (place.to === 'friends') return showFriends(() => showTitle({ focus: 'friends' }))
+  if (place.to === 'invites') return setScreen(invitesScreen(ui, input, () => showTitle({ focus: 'invite' })))
+  if (place.to === 'ideas') return setScreen(suggestionsScreen(ui, input, () => showTitle({ focus: 'ideas' })))
+  setScreen(supportersScreen(ui, input, { play: (id) => void startRun(id), onClose: () => showTitle({ focus: 'hall' }) }))
 }
 
 /**
@@ -2466,7 +2503,7 @@ const runGems = (rank: Promise<RankOutcome> | null) => {
 const guestSaveCard = () => {
   const save = loadSave()
   if (!accountsEnabled || accountState().kind !== 'guest' || !savePromptDue(save.achievements.lifetime.runs)) return null
-  return saveCard(formatPokeDollars(save.wallet), dexCounts(save.dex).seen, hostApp(), (provider) => void signIn(provider))
+  return saveCard(formatPokeDollars(save.wallet), dexCounts(save.dex).seen, () => askAccount('save', null))
 }
 
 /** Level-ups that took the Oran Berry on their own (`takeBerryLevelUps`): the level reached, how many at once and why (`berryReason`: "all maxed" only when it's true). */
@@ -4356,7 +4393,7 @@ const showArenaHub = (tab: ArenaHubTab = 'profile') => {
     setScreen(
       a.arenaHub(ui, input, tab, {
         back: () => showArena(),
-        signIn: accountsEnabled ? () => setScreen(arenaGate(ui, input, { play: () => showArenaHub(tab), back: () => showArenaHub(tab) })) : null,
+        signIn: accountsEnabled ? (on) => askAccount('arena', { to: 'arena', tab: on }, () => showArenaHub(on)) : null,
         pick: arenaStart(),
         keepPick: keepArenaPick,
         shop: (from) => showBoutique('shop', () => showArenaHub(from)),
@@ -4912,15 +4949,21 @@ const showPatreonReturn = (linked: boolean) => {
 /**
  * Right after the first sign in on a device (no handle yet), the title gives
  * way to the profile editor, so the player picks how they show up on the ranking.
+ * Only from the lobby itself: a sign in from a screen over it (the Boutique,
+ * the Trainer Card, the sign-in choice still closing) lets the player finish
+ * there, and the editor waits for the lobby to show again (`showTitle`).
  */
-const promptProfile = () => {
-  let asked = false
-  onAccountChange((s) => {
-    if (asked || s.kind !== 'signedIn' || s.handle !== null || run || !screen?.el.classList.contains('title-home')) return
-    asked = true
-    setScreen(profileEditor(ui, input, () => showTitle()))
-  })
+let profileAsked = false
+
+const askProfile = () => {
+  const s = accountState()
+  const home = screen?.el.classList.contains('title-home') && !screen.el.classList.contains('visiting') && !screen.el.classList.contains('hidden')
+  if (profileAsked || s.kind !== 'signedIn' || s.handle !== null || run || asking || !home) return
+  profileAsked = true
+  setScreen(profileEditor(ui, input, () => showTitle()))
 }
+
+const promptProfile = () => onAccountChange(askProfile)
 
 /** Set when a newer build is live and a run held off the reload: the next trip to the lobby, or the next run, reloads. */
 let reloadForDeploy = false
@@ -5061,6 +5104,8 @@ const boot = () => {
   const checkoutRef = takeCheckoutReturn()
   const freshPage = takeFreshPage()
   const poll = accountsEnabled ? linkedPoll() : null
+  // Where a sign in that left for a provider began: read on every load, so one given up doesn't land later.
+  const signInPlace = takeSignInPlace()
   if (shared) showSharedProfile(shared)
   else if (rankingEnabled && new URLSearchParams(location.search).has(IDEAS_PARAM)) showIdeasLink()
   else if (new URLSearchParams(location.search).has(SHOP_PARAM)) showTitle({ shop: 'shop', instant: true })
@@ -5072,6 +5117,8 @@ const boot = () => {
   // Back from a gem pack's checkout (`?gems=<ref>`): the Boutique's Loja, waiting for that pack (or, given up, offering it again).
   else if (checkoutRef !== null) showBoutique('shop', undefined, checkoutRef)
   else if (poll) showPollLink(poll)
+  // Back from signing in: where it began (the Boutique, the Trainer Card…).
+  else if (signInPlace && backFromSignIn()) reopenAfterSignIn(signInPlace)
   // Back from signing in, the player already pressed start before leaving: straight to the menu (and back from a run's fresh page, `reloadFresh`).
   else showTitle({ intro: !backFromSignIn() && !freshPage })
   askAboutCrash()
@@ -5086,7 +5133,12 @@ const boot = () => {
   // Coming back to the game syncs again, but not mid-run: a run syncs when it ends.
   startAccount(() => run === null)
   // A tab a portal's frame opened to sign in: the frame's progress lands here first, then the sign in it asked for (`handoff.ts`).
-  void takeHandoff(stageSyncedSave).then((way) => (way === 'email' ? setScreen(emailGate(ui, input, { play: () => showTitle(), back: () => showTitle() })) : way && signIn(way)))
+  // Signed in by email there, the tab lands where the sign in began in the frame (the URL brought it, `signInPlace.ts`).
+  const signedInHere = () => {
+    const place = takeSignInPlace()
+    return place ? reopenAfterSignIn(place) : showTitle()
+  }
+  void takeHandoff(stageSyncedSave).then((way) => (way === 'email' ? setScreen(emailGate(ui, input, { play: signedInHere, back: () => showTitle() })) : way && signIn(way)))
   // A Google sign in held back inside an app's browser (`signIn`): the hint says why and how to leave it. One moved out of a portal's frame: where it went.
   onOnboarding((step) => {
     const app = hostApp()
@@ -5868,7 +5920,7 @@ const devBase = async (cmd: 'editor' | 'board' | 'carpentry' = 'editor', real = 
   }
   const back = () => showTitle()
   if (cmd === 'board') setScreen(openBaseBoard(ui, input, { close: back, visit: null, city: null }))
-  else if (cmd === 'carpentry') setScreen(openCarpentry(ui, input, { close: back, signIn: accountsEnabled ? () => void signIn() : null }))
+  else if (cmd === 'carpentry') setScreen(openCarpentry(ui, input, { close: back, signIn: accountsEnabled ? () => askAccount('carpentry', { to: 'carpentry' }) : null }))
   else setScreen(openBaseEditor(ui, input, { close: back }))
 }
 

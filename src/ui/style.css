@@ -3815,8 +3815,23 @@ button {
   box-shadow: inset 0 0 0 2px #8890a8;
 }
 
+/* The sign-in choice over the screen that asked (`askSignIn`): above its sheets and dialogs, which stay in view under the dim. */
+.screen.account-over {
+  z-index: 75;
+}
+
 .dialog.account {
   width: min(460px, 94 * var(--vw));
+}
+
+/* The sign-in gates' ways in (Google, Discord, email, the guest's): one under the other at the same width, where the screen is tall enough; a phone on its side keeps them in rows. */
+@media (min-height: 560px) {
+  .account-buttons {
+    flex-direction: column;
+    align-items: stretch;
+    width: min(320px, 100%);
+    margin-inline: auto;
+  }
 }
 
 .account-line {
@@ -29895,7 +29910,7 @@ span.arena-hub-face {
   cursor: pointer;
 }
 
-/* A guest's first results: what an account keeps, and the ways to sign in. */
+/* A guest's first results: what an account keeps, and the button to the ways to sign in (`askSignIn`). */
 .save-card {
   display: flex;
   flex-direction: column;
@@ -29922,8 +29937,7 @@ span.arena-hub-face {
   max-width: 440px;
 }
 
-.save-buttons,
-.save-inapp {
+.save-buttons {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -29931,11 +29945,6 @@ span.arena-hub-face {
   gap: 8px;
   font-family: var(--body);
   font-size: 18px;
-}
-
-.save-inapp {
-  flex-direction: column;
-  gap: 4px;
 }
 
 /*

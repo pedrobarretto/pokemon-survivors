@@ -1,4 +1,5 @@
-import { accountHandle, accountsEnabled, accountState, onAccountChange, signIn } from '../account'
+import { accountHandle, accountsEnabled, accountState, onAccountChange } from '../account'
+import { askSignIn } from './account'
 import { FESTIVAL, type Festival, type FestivalId } from '../data/festivals'
 import { BAG_ITEMS, EVO_ITEMS } from '../data/shop'
 import type { FrameId } from '../data/style'
@@ -466,6 +467,15 @@ export const openFestival = (root: HTMLElement, input: Input, close: () => void,
     })
   }
 
+  /** The ways to sign in over the sheet, which stays in view (`askSignIn`); the sheet follows the account once in. */
+  const askAccount = () => {
+    if (nested) return
+    playSfx('select')
+    later(() => {
+      nested = askSignIn(root, input, { why: t().account.ask.why.festival, place: { to: 'festival' }, back: () => ((nested = null), render()) })
+    })
+  }
+
   /** Picking a @handle (the profile's editor over the sheet), after the API asked for one. */
   const editHandle = () => {
     if (nested) return
@@ -512,7 +522,7 @@ export const openFestival = (root: HTMLElement, input: Input, close: () => void,
   tabs.plaque.addEventListener('click', () => !nested && switchTab('plaque'))
   chips.forEach((c, i) => c.addEventListener('click', () => !nested && !busy && pick(i)))
   donateBtn.addEventListener('click', () => donate())
-  signInBtn.addEventListener('click', () => (playSfx('select'), void signIn()))
+  signInBtn.addEventListener('click', askAccount)
   handleBtn.addEventListener('click', editHandle)
   plaqueSwitch.addEventListener('click', () => void togglePlaque())
   for (const n of [back, tabs.fountain, tabs.plaque, ...chips, field, plaqueSwitch, donateBtn, signInBtn, handleBtn]) n.addEventListener('pointerenter', (e) => !isTouch(e) && focus(n, false))

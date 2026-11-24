@@ -1571,7 +1571,7 @@ export const pt = {
   },
 
   account: {
-    pitch: 'Entre com o Google para guardar seu progresso na nuvem e continuar em qualquer aparelho. O que você já conquistou como convidado vai junto.',
+    pitch: 'Entre na sua conta para guardar seu progresso na nuvem e continuar em qualquer aparelho. O que você já conquistou como convidado vai junto.',
     google: 'Entrar com Google',
     failed: 'Não deu para entrar. Tente de novo.',
     busy: 'Conectando…',
@@ -1589,6 +1589,22 @@ export const pt = {
     installedNote: 'Use a mesma conta com que você joga no navegador.',
     installedNew: 'Sou novo aqui',
     installedNewNote: 'Nunca jogou? Comece do zero, dá para criar a conta depois.',
+    /** `askSignIn` (`ui/account.ts`): the choice every sign-in button opens, with a line on what the account is for there. */
+    ask: {
+      title: 'ENTRAR NA CONTA',
+      why: {
+        boutique: 'Entre para comprar gemas e visuais. Eles ficam na sua conta, em qualquer aparelho.',
+        carpentry: 'Entre para comprar móveis para a sua base secreta.',
+        festival: 'Entre para jogar seu ₽ na fonte do festival.',
+        trainer: 'Entre para guardar seu progresso na nuvem, criar seu @nome e aparecer no ranking.',
+        friends: 'Entre para adicionar amigos, ver quem está online e convidar para jogar junto.',
+        invites: 'Entre para ganhar o seu link de convite e os presentes de quem você trouxer.',
+        supporters: 'Entre para ligar o seu apoio à sua conta e receber as recompensas.',
+        ideas: 'Entre para sugerir ideias e votar nas dos outros.',
+        save: 'Entre para guardar seu progresso na nuvem e continuar em qualquer aparelho.',
+        arena: 'Entre para jogar a fila pública, ganhar RP e aparecer no ranking da temporada.',
+      },
+    },
     /** Signing in with a code by email (`ui/emailSignIn.ts`): no password, the same sheet signs in or makes the account. */
     email: {
       button: 'Entrar com e-mail',
@@ -1626,6 +1642,7 @@ export const pt = {
     auto: 'Os golpes saem sozinhos: desvie e suba de nível!',
     /** The results' card in a guest's first runs: what an account keeps. */
     saveTitle: 'GUARDE SEU PROGRESSO',
+    saveButton: 'Salvar meu progresso',
     saveText: (money: string, dex: number) => `Crie sua conta grátis e guarde seus *${money}*, os *${dex}* Pokémon da sua Pokédex e seu lugar no *ranking*, em qualquer aparelho.`,
     /** Inside an app's browser (Instagram, TikTok…), where Google won't sign in. */
     inAppTitle: 'Abra no navegador para salvar seu progresso',
