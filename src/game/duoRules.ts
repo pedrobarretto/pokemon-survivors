@@ -14,7 +14,7 @@ import type { OwnedMove } from './types'
  * capstone. Pure rules, tested in `duoRules.test.ts`; the moves live in `duoMoves.ts`.
  */
 
-/** `to` (of `types[0]`, whose move's slot it takes) comes from a move of `types[0]` and one of `types[1]`; `alt` instead when the second is the stronger one. */
+/** `to` (of `types[0]`, whose move's slot it takes) comes from a move of `types[0]` and one of `types[1]`; a recipe with an `alt` offers both, the player's pick (the stronger ingredient's first). */
 export type DuoRecipe = { types: readonly [PokeType, PokeType]; to: DuoMoveId; alt?: DuoMoveId }
 
 export const DUO_RECIPES = [
@@ -59,18 +59,19 @@ export type ReadyDuo = { from: readonly [MoveId, MoveId]; to: DuoMoveId }
 
 /**
  * Fusions the loadout can make right now, in recipe order: none once it holds
- * a duo move. `keep` never goes in (a legend's own legendary move, `legendSignature`);
- * recipes whose duo was forgotten (`banished`, Esquecer) are gone for the run.
+ * a duo move. A recipe with an `alt` (Fusion Flare or Fusion Bolt) lists both,
+ * the one of the stronger ingredient's type first, so the player picks. `keep` never goes in (a legend's own legendary move, `legendSignature`);
+ * a duo forgotten (`banished`, Esquecer) is gone for the run.
  */
 export const readyDuos = (moves: readonly OwnedMove[], keep: MoveId | null = null, banished: ReadonlySet<MoveId> = new Set()): ReadyDuo[] => {
   if (moves.some((m) => isDuo(m.id))) return []
   return DUO_RECIPES.flatMap((recipe: DuoRecipe): ReadyDuo[] => {
-    if (banished.has(recipe.to)) return []
     const a = ingredient(moves, recipe.types[0], keep)
     const b = ingredient(moves, recipe.types[1], keep)
     if (!a || !b) return []
-    const to = recipe.alt && movePower(b) > movePower(a) ? recipe.alt : recipe.to
-    return [{ from: [a.id, b.id], to }]
+    const from = [a.id, b.id] as const
+    const tos = !recipe.alt ? [recipe.to] : movePower(b) > movePower(a) ? [recipe.alt, recipe.to] : [recipe.to, recipe.alt]
+    return tos.filter((to) => !banished.has(to)).map((to) => ({ from, to }))
   })
 }
 

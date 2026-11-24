@@ -37,9 +37,9 @@ describe('duo recipes', () => {
     expect(duos.map((d) => d.to)).toEqual(['firePledge', 'waterPledge', 'grassPledge'])
   })
 
-  it('make Fusion Flare when the Fire move is the stronger, Fusion Bolt otherwise', () => {
-    expect(readyDuos([at('flamethrower', 5), maxed('shockWave')]).map((d) => d.to)).toEqual(['fusionFlare'])
-    expect(readyDuos([maxed('ember'), at('wildboltStorm', 5)]).map((d) => d.to)).toEqual(['fusionBolt'])
+  it("offer both Fusion Flare and Fusion Bolt, the stronger move's type first", () => {
+    expect(readyDuos([at('flamethrower', 5), maxed('shockWave')]).map((d) => d.to)).toEqual(['fusionFlare', 'fusionBolt'])
+    expect(readyDuos([maxed('ember'), at('wildboltStorm', 5)]).map((d) => d.to)).toEqual(['fusionBolt', 'fusionFlare'])
   })
 
   it('stop once the loadout holds a duo move: one per run', () => {
@@ -85,15 +85,18 @@ describe('duo offers', () => {
     expect([...g.player.banished].sort()).toEqual(['ember', 'flamethrower', 'vineWhip'])
   })
 
-  it('can be forgotten: the card is drawn again and the recipe, either outcome, never comes back', () => {
+  it('can be forgotten one by one: the card is drawn again, that duo never comes back, the other stays', () => {
     const g = createGame('charmander', { w: 400, h: 240 }, 5)
     g.player.moves = [at('flamethrower', 5), maxed('shockWave')]
     setPhase(g, 'levelup')
-    g.player.banishes = 1
+    g.player.banishes = 2
     g.player.offers = rollOffers(loadout(g), g.rng, 3)
-    expect(g.player.offers[0]).toMatchObject({ kind: 'duo', to: 'fusionFlare' })
+    expect(g.player.offers.slice(0, 2)).toMatchObject([{ kind: 'duo', to: 'fusionFlare' }, { kind: 'duo', to: 'fusionBolt' }])
     banishOffer(g, 0)
-    expect(g.player.banishes).toBe(0)
+    expect(g.player.banishes).toBe(1)
+    expect(readyDuos(g.player.moves, null, g.player.banished).map((d) => d.to)).toEqual(['fusionBolt'])
+    expect(g.player.offers.filter((o) => o.kind === 'duo')).toMatchObject([{ to: 'fusionBolt' }])
+    banishOffer(g, g.player.offers.findIndex((o) => o.kind === 'duo'))
     expect(g.player.offers.some((o) => o.kind === 'duo')).toBe(false)
     g.player.moves = [maxed('ember'), at('wildboltStorm', 5)]
     expect(readyDuos(g.player.moves, null, g.player.banished)).toEqual([])

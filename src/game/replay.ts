@@ -50,7 +50,7 @@ import { parseWild, type WildStart } from './quests'
  * and run `npm run rules:freeze` so the API keeps the previous rules' simulator
  * for the runs that straddle the deploy (`server/sims/README.md`).
  */
-export const RULES_VERSION = 52
+export const RULES_VERSION = 53
 
 /**
  * How this build stands to a replay's rules: it can judge the `same`; a
