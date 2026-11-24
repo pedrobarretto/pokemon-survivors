@@ -4,6 +4,10 @@
  * training run (or "Já sei jogar"), the first partner pick among every starter
  * and, after the first real run, the lobby tour; arm `control` keeps the fast
  * lane (`startFirstRun` in main.ts: straight into a run with the saved partner).
+ * Opened as the installed app (a home screen app keeps its own storage, so an
+ * existing player's device looks new there), Play first asks "Já joga?":
+ * signing in brings the save back and leaves the test (`signedInLeaves`),
+ * "Sou novo aqui" (`fresh`) goes on to the arm's way.
  * The rules are pure (`nextFirst`, `tourDue`); the device's state is one
  * `localStorage` entry (`ps:onboarding`), read and written in try/catch.
  */
@@ -32,9 +36,11 @@ export type FirstTime = {
   /** The first partner pick made (its run started). */
   partner: boolean
   tour: TourOutcome | null
+  /** "Sou novo aqui" answered at the installed app's ask (`installedGate`). */
+  fresh: boolean
 }
 
-export const NOT_ENROLLED: FirstTime = { arm: null, welcome: false, tutorial: null, partner: false, tour: null }
+export const NOT_ENROLLED: FirstTime = { arm: null, welcome: false, tutorial: null, partner: false, tour: null, fresh: false }
 
 /** The arm a roll in [0, 1) draws: half and half. */
 export const drawArm = (roll: number): Arm => (roll < 0.5 ? 'tour' : 'control')
@@ -47,15 +53,26 @@ export const drawArm = (roll: number): Arm => (roll < 0.5 ? 'tour' : 'control')
 export const enrol = (s: FirstTime, firstVisit: boolean, signedIn: boolean, roll: number): FirstTime =>
   s.arm !== null || !firstVisit || signedIn ? s : { ...s, arm: drawArm(roll) }
 
-/** What a first run's Play leads to: Rotom's welcome, the first partner pick, or the fast lane. */
-export type FirstNext = 'welcome' | 'partner' | 'fastLane'
+/** What a first run's Play leads to: the installed app's ask, Rotom's welcome, the first partner pick, or the fast lane. */
+export type FirstNext = 'installed' | 'welcome' | 'partner' | 'fastLane'
 
 /**
  * Where "press start" (or JOGAR) takes a device whose first run is due
  * (`firstRunDue`). Arm `tour` meets the welcome once; after it (answered,
  * the training run finished or skipped, or a reload mid-way) the partner pick.
+ * `installed` (running as the installed app, with accounts on): the ask comes
+ * first, until "Sou novo aqui" is answered.
  */
-export const nextFirst = (s: FirstTime): FirstNext => (s.arm !== 'tour' ? 'fastLane' : s.welcome ? 'partner' : 'welcome')
+export const nextFirst = (s: FirstTime, installed = false): FirstNext =>
+  installed && !s.fresh ? 'installed' : s.arm !== 'tour' ? 'fastLane' : s.welcome ? 'partner' : 'welcome'
+
+/**
+ * An account linked on a device whose first run is still due: an existing
+ * player came back (the installed app's ask, a sign in before playing), so
+ * the device leaves the A/B test, as `enrol` keeps signed-in devices out,
+ * unless it already met the onboarding (the welcome or the partner pick).
+ */
+export const signedInLeaves = (s: FirstTime): FirstTime => (s.arm === null || s.welcome || s.partner ? s : { ...s, arm: null })
 
 /** The lobby tour waits for the first lobby after a first partner pick's run, in arm `tour`, in a save's first runs (a merged account's long save doesn't need it). */
 export const TOUR_RUNS = 5
@@ -82,6 +99,7 @@ export const parseFirstTime = (raw: string | null): FirstTime => {
       tutorial: how === 'finished' || how === 'skipped' ? { how, step: String(t?.step ?? '') } : null,
       partner: o.partner === true,
       tour: o.tour === 'done' || o.tour === 'skipped' ? o.tour : null,
+      fresh: o.fresh === true,
     }
   } catch {
     return NOT_ENROLLED

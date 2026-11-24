@@ -56,7 +56,7 @@ import { openFestival } from './ui/festival'
 import type { BoutiqueTab } from './ui/boutiqueSeen'
 import { identify, lobbyPress, startAnalytics, takeOpened, track, type ErrorContext, type QueueEnd, type RunPerf } from './analytics'
 import { firstGate, firstRunClock, firstSheets, firstStep, holdRunSteps, startFirstSession } from './firstSession'
-import { enrolDevice, firstTime, forgetFirstTime, nextFirst, tourDue, updateFirstTime, type Arm, type TutorialOutcome } from './firstTime'
+import { enrol, enrolDevice, firstTime, forgetFirstTime, nextFirst, signedInLeaves, tourDue, updateFirstTime, type Arm, type TutorialOutcome } from './firstTime'
 import { welcomeScreen } from './ui/welcome'
 import { firstPartnerScreen } from './ui/firstPartner'
 import { deviceInfo, deviceNow, resetMemoryPeaks, sampleMemory } from './telemetry'
@@ -193,7 +193,7 @@ import { captureRef, coopBoardsFaked, fakeCoopBoards, fakeEra1Boards, flushRuns,
 import { applyGift, DISCORD_GIFT, parseGiftContent, type GiftKind, type GiftReason } from './game/gifts'
 import { ERA1_GIFTS, era1Gifts, type Era1Tier } from './game/era1'
 import { giftScreen } from './ui/gifts'
-import { arenaGate, coopGate, playGate, realmGate } from './ui/account'
+import { arenaGate, coopGate, installedGate, playGate, realmGate } from './ui/account'
 import { TOWN_ROOMS, isTownRoomId } from './data/realmMap'
 import { isLocalRealm, realmUrl } from './realmUrl'
 import { realmGame, realmJukebox, realmTheme } from './realmMusic'
@@ -245,7 +245,7 @@ import { takeHandoff } from './handoff'
 import { firstRunTip, hideInAppHint, saveCard, showInAppHint } from './ui/onboarding'
 import { startLobbyTour, type LobbyTourEnd } from './ui/lobbyTour'
 import { invitesScreen, resultsInvite } from './ui/invites'
-import { forgetInstallNudge, installNudgeScreen } from './ui/install'
+import { forgetInstallNudge, installNudgeScreen, runningInstalled } from './ui/install'
 import { forgetSupportAsk, supportAskScreen, takeSupportAsk } from './ui/supportAsk'
 import { SUPPORT_MILESTONES, type SupportMilestone } from './ui/supportAskRules'
 import { titleScreen, type LobbyFocus, type Meadow, type ShopTrip } from './ui/title'
@@ -930,20 +930,53 @@ const firstRuns = () => loadSave().achievements.lifetime.runs - (devFirstRuns ??
 /** No run finished on this device and no account linked to it: the next Play is the first run (`startFirstRun`). */
 const firstRun = () => firstRunDue(firstRuns(), devFirstRuns === null && accountUserId() !== null)
 
+/** Dev: `ps.onboarding('installed')` plays this page as the installed app (`runningInstalled`) until a reload. */
+let devInstalled = false
+
+/** The installed app asks "Já joga?" before a first run (`installedGate`): its storage is its own, so an existing player's device looks new there. */
+const installedAsk = () => accountsEnabled && (devInstalled || runningInstalled())
+
 /**
- * The first run's Play ("press start", or JOGAR on a device that never played). In the onboarding's arm
+ * The first run's Play ("press start", or JOGAR on a device that never played). Opened as the installed app,
+ * "Já joga?" first (`showInstalledAsk`). In the onboarding's arm
  * `tour` (`firstTime.ts`), Rotom's welcome first, then the first partner pick (where a reload after the
  * welcome lands too); otherwise the fast lane: the saved partner (Charmander on a new save) on the saved
  * difficulty (Normal), past the gate and the partner select.
  */
 const startFirstRun = () => {
   const s = firstTime()
-  const next = nextFirst(s)
+  const next = nextFirst(s, installedAsk())
+  if (next === 'installed') return showInstalledAsk()
   if (next === 'welcome') return showWelcome()
   if (next === 'partner') return showFirstPartner(s.tutorial?.how === 'finished')
   firstStep('play')
   onboardingStep('fastLane')
   void startRun(loadSave().partner)
+}
+
+/**
+ * "Já joga?" (`installedGate`): signing in leaves the A/B test (`signedInLeaves`, an existing player isn't a new
+ * device's onboarding) and lands in the lobby with the account's save; "Sou novo aqui" draws an arm if the device has
+ * none (a sign in given up) and goes on to the first run's way. Back returns to the intro.
+ */
+const showInstalledAsk = () => {
+  onboardingStep('installedAsked')
+  setScreen(
+    installedGate(ui, input, {
+      play: () => showTitle({ focus: 'play' }),
+      fresh: () => {
+        onboardingStep('installedNew')
+        updateFirstTime((s) => ({ ...enrol(s, true, false, Math.random()), fresh: true }))
+        startFirstRun()
+      },
+      back: () => showTitle({ intro: true }),
+      signingIn: () => {
+        firstGate('signIn')
+        onboardingStep('installedSignIn')
+        updateFirstTime(signedInLeaves)
+      },
+    }),
+  )
 }
 
 /** Rotom's welcome (arm `tour`): "Me mostra!" plays the training run, "Já sei jogar" goes to the partner pick. Answered, a reload goes to the pick. */
@@ -6197,10 +6230,12 @@ if (import.meta.env.DEV) {
        * The first visit's onboarding (`firstTime.ts`): prints this device's state, whether its next Play is a first run and
        * where it leads, and whether the lobby gives the tour. `ps.onboarding('tour')` or `('control')` forces the A/B arm;
        * `('reset')` forgets the onboarding (keeping the arm, `tour` if none) and plays the first visit again from the intro,
-       * the save's runs and the account counting as none until a reload.
+       * the save's runs and the account counting as none until a reload. `('installed')` does the same as the installed
+       * app (a home screen app), whose first Play asks "Já joga?" (`installedGate`; it needs account keys).
        */
-      onboarding: (cmd?: Arm | 'reset') => {
-        if (cmd === 'reset') {
+      onboarding: (cmd?: Arm | 'reset' | 'installed') => {
+        if (cmd === 'installed') devInstalled = true
+        if (cmd === 'reset' || cmd === 'installed') {
           const arm = firstTime().arm ?? 'tour'
           forgetFirstTime()
           updateFirstTime((s) => ({ ...s, arm }))
@@ -6209,7 +6244,7 @@ if (import.meta.env.DEV) {
           showTitle({ intro: true })
         } else if (cmd) updateFirstTime((s) => ({ ...s, arm: cmd }))
         const s = firstTime()
-        return { ...s, firstRun: firstRun(), next: firstRun() ? nextFirst(s) : null, tourDue: tourDue(s, firstRuns()) }
+        return { ...s, installed: installedAsk(), firstRun: firstRun(), next: firstRun() ? nextFirst(s, installedAsk()) : null, tourDue: tourDue(s, firstRuns()) }
       },
       /**
        * The lobby's install offer now, as Chromium's prompt or the iOS how-to (`'ios'`), whatever the browser

@@ -99,7 +99,9 @@ export const rememberGuest = (now = Date.now()) => {
  * the tab was blocked and the frame left for the site), and the first
  * visit's arm `tour` (`firstTime.ts`): Rotom's welcome shown or answered
  * "Já sei jogar", the training run started, finished or skipped, the first
- * partner picked, and the lobby tour done or skipped.
+ * partner picked, and the lobby tour done or skipped; and the installed
+ * app's "Já joga?" (`installedGate`) asked, answered with a sign in, or
+ * answered "Sou novo aqui".
  */
 export type OnboardingStep =
   | 'fastLane'
@@ -120,6 +122,9 @@ export type OnboardingStep =
   | 'partnerPicked'
   | 'tourDone'
   | 'tourSkipped'
+  | 'installedAsked'
+  | 'installedSignIn'
+  | 'installedNew'
 
 type Listener = (step: OnboardingStep) => void
 const listeners = new Set<Listener>()

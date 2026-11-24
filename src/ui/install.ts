@@ -39,7 +39,8 @@ window.addEventListener('appinstalled', () => {
   changed()
 })
 
-const runningInstalled = () =>
+/** Running as the installed app: `display-mode` fullscreen or standalone (the manifest asks for fullscreen), or iOS's `navigator.standalone`. */
+export const runningInstalled = () =>
   matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || ('standalone' in navigator && navigator.standalone === true)
 
 /** How Settings → Sobre offers the app right now (see `installOffer`). */
