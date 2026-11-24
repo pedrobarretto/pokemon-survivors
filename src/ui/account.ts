@@ -7,8 +7,8 @@ import { hint, menu, type Screen } from './screens'
 
 type Action = { label: string; run: () => void }
 
-/** What a gate says: its title, the pitch, a note under it, and (with a guest option) the guest's note. */
-type GateText = { title: string; pitch: string; note: string; guestNote: string | null }
+/** What a gate says: its title, the pitch, a note under it, and (with a guest option) the guest's note and button (`playAsGuest` by default). */
+type GateText = { title: string; pitch: string; note: string; guestNote: string | null; guestLabel?: string }
 
 type GateActions = {
   play: () => void
@@ -42,7 +42,7 @@ const gate = (root: HTMLElement, input: Input, text: GateText, actions: GateActi
       : [
           { label: m.google, run: () => (actions.signingIn?.(), void signIn()) },
           { label: t().discord.signIn, run: () => (actions.signingIn?.(), void signIn('discord')) },
-          ...(guest ? [{ label: m.playAsGuest, run: () => leave(guest) }] : []),
+          ...(guest ? [{ label: text.guestLabel ?? m.playAsGuest, run: () => leave(guest) }] : []),
         ]
     const buttons = all.map((a) => h('button', { class: 'btn' }, a.label))
     nav?.off()
@@ -92,6 +92,24 @@ const gate = (root: HTMLElement, input: Input, text: GateText, actions: GateActi
 export const playGate = (root: HTMLElement, input: Input, actions: { play: () => void; guest: () => void; back: () => void; signingIn?: () => void }): Screen => {
   const m = t().account
   return gate(root, input, { title: m.gateTitle, pitch: m.gatePitch, note: m.gateNewAccount, guestNote: m.gateGuestNote }, actions)
+}
+
+/**
+ * "Já joga?": the installed app's first Play on a device with no save
+ * (`nextFirst` in `firstTime.ts`). A home screen app keeps its own storage,
+ * so an existing player signs in here (in this same window, the redirect
+ * coming back into the app) to bring the save back, and goes on to `play`
+ * (the lobby) once in; "Sou novo aqui" (`fresh`) goes the first run's way,
+ * which never waits on the network. Back, Esc or Backspace call `back`.
+ */
+export const installedGate = (root: HTMLElement, input: Input, actions: { play: () => void; fresh: () => void; back: () => void; signingIn?: () => void }): Screen => {
+  const m = t().account
+  return gate(
+    root,
+    input,
+    { title: m.installedTitle, pitch: m.installedPitch, note: m.installedNote, guestNote: m.installedNewNote, guestLabel: m.installedNew },
+    { play: actions.play, guest: actions.fresh, back: actions.back, signingIn: actions.signingIn },
+  )
 }
 
 /**

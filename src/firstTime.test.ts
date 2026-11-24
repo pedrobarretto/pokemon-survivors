@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { drawArm, enrol, nextFirst, NOT_ENROLLED, parseFirstTime, tourDue, TOUR_RUNS, type FirstTime } from './firstTime'
+import { drawArm, enrol, nextFirst, NOT_ENROLLED, parseFirstTime, signedInLeaves, tourDue, TOUR_RUNS, type FirstTime } from './firstTime'
 
 const tour: FirstTime = { ...NOT_ENROLLED, arm: 'tour' }
 
@@ -28,6 +28,20 @@ describe('first visit onboarding', () => {
     expect(nextFirst({ ...tour, welcome: true, tutorial: { how: 'skipped', step: 'move' } })).toBe('partner')
   })
 
+  it("asks the installed app's first run first, until it's answered as new", () => {
+    expect(nextFirst(tour, true)).toBe('installed')
+    expect(nextFirst({ ...NOT_ENROLLED, arm: 'control' }, true)).toBe('installed')
+    expect(nextFirst({ ...tour, fresh: true }, true)).toBe('welcome')
+    expect(nextFirst({ ...NOT_ENROLLED, arm: 'control', fresh: true }, true)).toBe('fastLane')
+  })
+
+  it('takes a device that signs in before its onboarding out of the test', () => {
+    expect(signedInLeaves(tour).arm).toBe(null)
+    expect(signedInLeaves({ ...NOT_ENROLLED, arm: 'control' }).arm).toBe(null)
+    expect(signedInLeaves({ ...tour, welcome: true }).arm).toBe('tour')
+    expect(signedInLeaves({ ...tour, welcome: true, partner: true }).arm).toBe('tour')
+  })
+
   it('gives the tour once, after the first partner pick played its run', () => {
     const picked = { ...tour, welcome: true, partner: true }
     expect(tourDue(picked, 0)).toBe(false)
@@ -39,7 +53,7 @@ describe('first visit onboarding', () => {
   })
 
   it('reads a stored state back, dropping what does not fit', () => {
-    const s: FirstTime = { arm: 'tour', welcome: true, tutorial: { how: 'finished', step: 'boss' }, partner: true, tour: 'done' }
+    const s: FirstTime = { arm: 'tour', welcome: true, tutorial: { how: 'finished', step: 'boss' }, partner: true, tour: 'done', fresh: true }
     expect(parseFirstTime(JSON.stringify(s))).toEqual(s)
     expect(parseFirstTime(null)).toEqual(NOT_ENROLLED)
     expect(parseFirstTime('{oops')).toEqual(NOT_ENROLLED)

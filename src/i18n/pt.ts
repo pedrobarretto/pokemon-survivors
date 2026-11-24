@@ -1579,6 +1579,12 @@ export const pt = {
     gateNewAccount: 'Ainda não tem conta? Ela é criada no primeiro acesso.',
     playAsGuest: 'Jogar como convidado',
     gateGuestNote: 'Como convidado, o progresso fica só neste aparelho e suas partidas não entram no ranking.',
+    /** The installed app's first open on a device with no save (`installedGate`): home screen apps keep their own storage, so a player's progress waits behind a sign in. */
+    installedTitle: 'JÁ JOGA?',
+    installedPitch: 'O app instalado começa sem o progresso do navegador. Entre na sua conta para trazer tudo de volta.',
+    installedNote: 'Use a mesma conta com que você joga no navegador.',
+    installedNew: 'Sou novo aqui',
+    installedNewNote: 'Nunca jogou? Comece do zero, dá para criar a conta depois.',
   },
   /** A new visitor's first run and the sign-in asks around it (`src/onboarding.ts`, `ui/onboarding.ts`). */
   onboarding: {
@@ -1630,7 +1636,7 @@ export const pt = {
     pitch: 'Jogue em tela cheia, direto de um ícone na Tela de Início.',
     share: 'Toque em *Compartilhar*, na barra do Safari (ou no menu de três pontos).',
     addHome: 'Escolha *Adicionar à Tela de Início* e toque em *Adicionar*.',
-    iosStorage: 'O app guarda o progresso separado do Safari: entre na sua conta para levar tudo junto.',
+    iosStorage: 'O app guarda o progresso separado do navegador: ao abrir, ele pede para você entrar na sua conta uma vez e traz tudo junto.',
     ok: 'Entendi',
     /** The lobby's own offer, once (`installNudgeDue`): after a few runs or a second visit. */
     nudge: 'Gostando? Instale o jogo e volte com um toque, em tela cheia, direto da Tela de Início.',
