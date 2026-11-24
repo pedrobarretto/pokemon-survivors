@@ -11,7 +11,7 @@ import { loadSave } from './ui/save'
  * (`takeHandoff`), then signs in as asked.
  */
 
-/** Query parameter of a tab the frame opened to sign in: the provider to sign in with. */
+/** Query parameter of a tab the frame opened to sign in: the way to sign in (`SignInWay`). */
 const PARAM = 'entrar'
 
 const READY = 'ps:handoff-ready'
@@ -20,7 +20,11 @@ const SAVE = 'ps:handoff-save'
 /** How long a new tab waits for the frame's save before signing in without it. */
 const WAIT_MS = 3000
 
-export type Provider = 'google' | 'discord'
+/** How a player signs in: with Google or Discord (`Provider`, a redirect), or a code by email (`emailCode.ts`). */
+export type SignInWay = 'google' | 'discord' | 'email'
+export type Provider = Exclude<SignInWay, 'email'>
+
+const isWay = (v: string | null): v is SignInWay => v === 'google' || v === 'discord' || v === 'email'
 
 /** Whether this page is inside another page (a portal's frame). */
 export const framed = () => {
@@ -36,13 +40,13 @@ export const handedSave = (data: unknown, origin: string, ours: string): unknown
   origin === ours && typeof data === 'object' && data !== null && 'kind' in data && data.kind === SAVE && 'save' in data ? data.save : undefined
 
 /**
- * Opens the game on the site in a new tab that signs in with `provider`, and
+ * Opens the game on the site in a new tab that signs in `way` (the email sheet open there for `email`), and
  * hands it this frame's save once it asks. False when the browser blocked the
  * tab: the frame then leaves for the site itself (the save stays in the frame).
  */
-export const continueOnSite = (provider: Provider): boolean => {
+export const continueOnSite = (way: SignInWay): boolean => {
   const url = new URL(`${location.origin}${location.pathname}`)
-  url.searchParams.set(PARAM, provider)
+  url.searchParams.set(PARAM, way)
   const tab = window.open(url, '_blank')
   if (!tab) {
     window.open(url, '_top')
@@ -60,13 +64,13 @@ export const continueOnSite = (provider: Provider): boolean => {
 /**
  * In a tab `continueOnSite` opened: merges the frame's save into this one's
  * (`land` writes it and lets the screens know), cleans the URL and resolves to
- * the provider to sign in with. Null on any other load. Without an answer within
+ * the way to sign in. Null on any other load. Without an answer within
  * `WAIT_MS` it resolves anyway, so the sign in never hangs on the frame.
  */
-export const takeHandoff = (land: (save: Save) => void): Promise<Provider | null> => {
+export const takeHandoff = (land: (save: Save) => void): Promise<SignInWay | null> => {
   const params = new URLSearchParams(location.search)
   const asked = params.get(PARAM)
-  if (asked !== 'google' && asked !== 'discord') return Promise.resolve(null)
+  if (!isWay(asked)) return Promise.resolve(null)
   params.delete(PARAM)
   const rest = params.toString()
   history.replaceState(history.state, '', `${location.pathname}${rest ? `?${rest}` : ''}${location.hash}`)

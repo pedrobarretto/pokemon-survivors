@@ -3914,6 +3914,50 @@ button {
   height: 15px;
 }
 
+/* The gate's email sheet (`ui/emailSignIn.ts`): the address, then the code sent to it. */
+.email-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.email-sheet [hidden] {
+  display: none !important;
+}
+
+.email-sent-to {
+  font-size: 20px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.email-code-field {
+  align-self: center;
+  width: min(300px, 100%);
+}
+
+.field-input.email-code-input {
+  font-size: 30px;
+  letter-spacing: 0.3em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.email-message {
+  text-align: center;
+}
+
+/* A short landscape phone: the sheet keeps to what it needs. */
+@media (max-height: 460px) {
+  .email-sheet {
+    gap: 6px;
+  }
+
+  .email-sheet .account-note {
+    display: none;
+  }
+}
+
 .account-note {
   font-size: 17px;
   color: color-mix(in srgb, #6878a8 var(--dk-lift, 100%), #fff);
