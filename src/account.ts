@@ -14,10 +14,11 @@ import { donateFrom } from './game/festival'
 import { loadSave, today, writeSave } from './ui/save'
 import { timeoutSignal } from './net/timeout'
 import { hostApp, onboardingStep } from './onboarding'
-import { continueOnSite, framed, leaveTo, type Provider } from './handoff'
+import { continueOnSite, framed, leaveTo, type Provider, type SignInWay } from './handoff'
+import { problemOf, type EmailProblem } from './emailCode'
 
 /**
- * Optional player accounts (Google or Discord through Clerk). Playing as a guest stays
+ * Optional player accounts (Google, Discord or a code by email, through Clerk). Playing as a guest stays
  * the default: the save lives in `localStorage` either way, and an account
  * only mirrors it to the API (`server/`), merging saves with `applyPush`
  * (`game/sync.ts`). Clerk is loaded only when the player signs in, or on
@@ -759,6 +760,7 @@ export const signIn = async (provider: Provider = 'google') => {
     if (!c.client) throw new Error('no client')
     // Both back to `?login`, so the device always gets linked, however Clerk finishes.
     const back = `${pageUrl()}?${CALLBACK}`
+    rememberWay(provider)
     await c.client.signIn.authenticateWithRedirect({ strategy: `oauth_${provider}`, redirectUrl: back, redirectUrlComplete: back })
   } catch (err) {
     console.warn('sign in failed', err)
@@ -777,6 +779,188 @@ export const signOut = async () => {
     console.warn('sign out failed', err)
   }
   setState({ kind: 'guest' })
+}
+
+/* ---------------- Email code ---------------- */
+
+/** Where a sign in that left for a provider (or the Account Portal) began, for `sign_in` once it's back. */
+const WAY_KEY = 'ps:signInWay'
+
+const rememberWay = (way: SignInWay) => {
+  try {
+    sessionStorage.setItem(WAY_KEY, way)
+  } catch {
+    // Storage blocked: the sign in counts as Google's.
+  }
+}
+
+/** The way `rememberWay` kept (once), Google without one. */
+const takeWay = (): SignInWay => {
+  try {
+    const way = sessionStorage.getItem(WAY_KEY)
+    sessionStorage.removeItem(WAY_KEY)
+    return way === 'discord' || way === 'email' ? way : 'google'
+  } catch {
+    return 'google'
+  }
+}
+
+/** A sign in finished: how, and whether it made the account (Clerk made the user in the last 10 minutes). */
+const trackSignIn = (c: Clerk, method: SignInWay) => {
+  const born = c.user?.createdAt?.getTime() ?? 0
+  track('sign_in', { method, created: Date.now() - born < 10 * 60_000 ? 1 : 0 })
+}
+
+/**
+ * What a step of the email sheet came to: a code `sent`, the player `in`,
+ * `away` to Clerk's Account Portal (which finishes what the sheet can't: a
+ * Protect check, a step it doesn't know), or the problem to show.
+ */
+export type EmailAnswer = 'sent' | 'in' | 'away' | EmailProblem
+
+/** The codes of a Clerk API error (`errors[].code`), none for any other error. */
+const clerkCodes = (err: unknown): string[] =>
+  isRecord(err) && Array.isArray(err.errors) ? err.errors.flatMap((e: unknown) => (isRecord(e) && typeof e.code === 'string' ? [e.code] : [])) : []
+
+const emailProblem = (err: unknown): EmailProblem => {
+  console.warn('email sign in failed', err)
+  return problemOf(clerkCodes(err))
+}
+
+/** Leaves for the Account Portal's `path` (`sign-up/continue`), which finishes the attempt this client holds and comes back to `?login`. */
+const toPortal = (c: Clerk, path: string): 'away' => {
+  const url = new URL(`${new URL(c.buildSignInUrl()).origin}/${path}`)
+  url.searchParams.set('redirect_url', `${pageUrl()}?${CALLBACK}`)
+  rememberWay('email')
+  location.assign(url)
+  return 'away'
+}
+
+/** Sends the attempt's code again (the sign in's or the sign up's), set by `sendEmailCode`. */
+let sendAgain: (() => Promise<unknown>) | null = null
+/** Whether the attempt is a new account's (a sign up) or an account's that exists. */
+let emailWay: 'signIn' | 'signUp' = 'signIn'
+
+/** A password nobody types, for a sign up the instance holds until it has one (`password: required`): the account signs in by code. */
+const unusedPassword = () => btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(24))))
+
+/**
+ * The email sheet's first step: sends a code to `email`. An address an
+ * account has (one made with Google included: Clerk knows its verified email)
+ * signs in to that account; any other makes one. Already signed in to Clerk
+ * (another tab), it just links this device. Never throws.
+ */
+export const sendEmailCode = async (email: string): Promise<EmailAnswer> => {
+  if (fakeCodes) return fakeSend(email)
+  try {
+    const c = await loadClerk()
+    if (c.user) return (await link(c), 'in')
+    if (!c.client) throw new Error('no client')
+    const client = c.client
+    try {
+      const signIn = await withTimeout(client.signIn.create({ identifier: email }))
+      if (signIn.status === 'needs_protect_check') return toPortal(c, 'sign-in/protect-check')
+      const factor = signIn.supportedFirstFactors?.find((f) => f.strategy === 'email_code')
+      if (!factor || factor.strategy !== 'email_code') return toPortal(c, 'sign-in/factor-one')
+      sendAgain = () => withTimeout(client.signIn.prepareFirstFactor({ strategy: 'email_code', emailAddressId: factor.emailAddressId }))
+      emailWay = 'signIn'
+    } catch (err) {
+      if (!clerkCodes(err).includes('form_identifier_not_found')) throw err
+      const signUp = await withTimeout(client.signUp.create({ emailAddress: email }))
+      if (signUp.protectCheck || signUp.missingFields.includes('protect_check')) return toPortal(c, 'sign-up/protect-check')
+      sendAgain = () => withTimeout(client.signUp.prepareEmailAddressVerification({ strategy: 'email_code' }))
+      emailWay = 'signUp'
+    }
+    await sendAgain()
+    return 'sent'
+  } catch (err) {
+    return emailProblem(err)
+  }
+}
+
+/** Another code for the same address (the sheet holds it for `RESEND_AFTER_MS`). Never throws. */
+export const resendEmailCode = async (): Promise<EmailAnswer> => {
+  if (fakeCodes) return fakeWait('sent')
+  try {
+    if (!sendAgain) throw new Error('no code sent')
+    await sendAgain()
+    return 'sent'
+  } catch (err) {
+    return emailProblem(err)
+  }
+}
+
+/**
+ * The email sheet's second step: the code. Right, the session starts and the
+ * device links (a new account then picks its @handle, as after Google). What
+ * the sheet can't finish goes to the Account Portal. Never throws.
+ */
+export const verifyEmailCode = async (code: string): Promise<EmailAnswer> => {
+  if (fakeCodes) return fakeVerify(code)
+  try {
+    const c = await loadClerk()
+    if (!c.client) throw new Error('no client')
+    let session: string | null = null
+    if (emailWay === 'signIn') {
+      const signIn = await withTimeout(c.client.signIn.attemptFirstFactor({ strategy: 'email_code', code }))
+      if (signIn.status === 'needs_protect_check') return toPortal(c, 'sign-in/protect-check')
+      if (signIn.status === 'needs_second_factor') return toPortal(c, 'sign-in/factor-two')
+      session = signIn.status === 'complete' ? signIn.createdSessionId : null
+      if (!session) return toPortal(c, 'sign-in')
+    } else {
+      let signUp = await withTimeout(c.client.signUp.attemptEmailAddressVerification({ code }))
+      if (signUp.status === 'missing_requirements' && signUp.missingFields.length > 0 && signUp.missingFields.every((f) => f === 'password')) {
+        signUp = await withTimeout(signUp.update({ password: unusedPassword() }))
+      }
+      if (signUp.protectCheck || signUp.missingFields.includes('protect_check')) return toPortal(c, 'sign-up/protect-check')
+      session = signUp.status === 'complete' ? signUp.createdSessionId : null
+      if (!session) return toPortal(c, 'sign-up/continue')
+    }
+    await withTimeout(c.setActive({ session }))
+    sendAgain = null
+    trackSignIn(c, 'email')
+    await link(c)
+    return 'in'
+  } catch (err) {
+    return emailProblem(err)
+  }
+}
+
+/**
+ * Whether the email sheet opens on this page. Inside a portal's frame it opens
+ * on a tab of the site instead, the progress handed over (`handoff.ts`), as
+ * Google's does: the frame's cookies are the portal's to drop (Safari, every
+ * iPhone browser) and its storage is a copy apart from the site's.
+ */
+export const emailHere = () => {
+  if (!framed()) return true
+  onboardingStep(continueOnSite('email') ? 'framedSignIn' : 'framedLeft')
+  return false
+}
+
+/* Dev: `ps.emailCode('fake')` answers the sheet without Clerk: any address gets a code (`rate@…` is told to slow down), `123456` signs in as a new account with no handle, `000000` is expired, `999999` too many tries, any other code wrong. */
+let fakeCodes = false
+
+export const devEmailCodes = (on: boolean) => {
+  fakeCodes = import.meta.env.DEV && on
+}
+
+const fakeWait = <T>(answer: T) => new Promise<T>((done) => setTimeout(() => done(answer), 700))
+
+let fakeAddress = ''
+
+const fakeSend = (email: string): Promise<EmailAnswer> => {
+  fakeAddress = email
+  return fakeWait(email.startsWith('rate@') ? 'rate' : 'sent')
+}
+
+const fakeVerify = async (code: string): Promise<EmailAnswer> => {
+  const answer = await fakeWait<EmailAnswer>(code === '123456' ? 'in' : code === '000000' ? 'expired' : code === '999999' ? 'tries' : 'code')
+  if (answer !== 'in') return answer
+  const name = fakeAddress.split('@')[0] ?? ''
+  writeLink({ userId: `fake:${fakeAddress}`, name, revision: null, handle: null })
+  setState({ kind: 'signedIn', name, sync: 'offline', handle: null, discord: null })
+  return answer
 }
 
 /**
@@ -843,6 +1027,7 @@ const finishSignIn = async () => {
     }
     if (leaving) return
     if (!c.user) throw new Error('not signed in')
+    trackSignIn(c, takeWay())
     await link(c)
   } catch (err) {
     console.warn('sign in failed', err)

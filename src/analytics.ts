@@ -21,6 +21,7 @@ import type { CatalogSlot, CosmeticId, Rarity } from './data/cosmetics'
 import type { SkinBundleId } from './data/skinCatalog'
 import type { GemMarket, GemPackId } from './data/gems'
 import type { FirstStep, GateAnswer, StepTimes } from './firstSteps'
+import type { SignInWay } from './handoff'
 import type { InAppApp, OnboardingStep } from './onboarding'
 import type { Arm, TourOutcome, TutorialOutcome } from './firstTime'
 import { analyticsLive } from './liveHosts'
@@ -236,6 +237,11 @@ type AnalyticsEvents = {
   share: { kind: 'run' | 'trainer' | 'invite'; method: 'share' | 'copy' | 'download' }
   /** The game opened from a link carrying a handle this device didn't hold (`?ref=` or a profile's `?u=`); `first`: the device had no inviter yet. */
   ref_land: { ref: string; via: 'ref' | 'profile'; first: 0 | 1 }
+  /**
+   * A sign in finished on this device (`account.ts`): how (Google, Discord or a code by email) and whether it made
+   * the account (1: Clerk made the user in the last 10 minutes). Once per sign in, so the ways can be counted by country.
+   */
+  sign_in: { method: SignInWay; created: 0 | 1 }
   /** A new account signed up with an invite and the API counted it (`POST /referral`). */
   ref_signup: { ref: string }
   /**

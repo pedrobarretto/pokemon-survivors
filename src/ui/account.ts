@@ -1,8 +1,9 @@
-import { accountState, onAccountChange, signIn, type AccountState } from '../account'
+import { accountState, emailHere, onAccountChange, signIn, type AccountState } from '../account'
 import { playSfx } from '../engine/audio'
 import type { Input } from '../engine/input'
-import { t } from '../i18n'
+import { cjk, t } from '../i18n'
 import { h, later } from './dom'
+import { emailSheet, type EmailSheet } from './emailSignIn'
 import { hint, menu, type Screen } from './screens'
 
 type Action = { label: string; run: () => void }
@@ -17,57 +18,97 @@ type GateActions = {
   back: () => void
   /** Whether a signed-in account can go on (co-op waits for its @handle); until then the gate says it's busy. */
   ready?: (s: AccountState) => boolean
-  /** A Google or Discord button pressed, before leaving for the provider. */
+  /** A Google, Discord or email button pressed, before leaving for the provider (or opening the email sheet). */
   signingIn?: () => void
+  /** Opens on the email sheet (a tab a portal's frame opened for it, `handoff.ts`). */
+  email?: boolean
 }
 
 /**
- * A sign-in gate: Google or Discord (which also creates the account), and,
- * with `guest`, playing as a guest. `lead` lines go above the pitch. Signing
- * in leaves for the provider; an account already open in another tab links
- * right away and goes on to `play` once `ready`. Back, Esc or Backspace call `back`.
+ * A sign-in gate: Google, Discord or a code by email (each also creates the
+ * account; Chinese first offers email, as Google and Discord are blocked in
+ * mainland China), and, with `guest`, playing as a guest. `lead` lines go
+ * above the pitch. Google and Discord leave for the provider; email opens its
+ * sheet in the gate (`emailSheet`; inside a portal's frame, on a tab of the
+ * site, `emailHere`). An account already open in another tab links right
+ * away and goes on to `play` once `ready`. Back, Esc or Backspace call `back`
+ * (on the email sheet, they go back to the other ways).
  */
 const gate = (root: HTMLElement, input: Input, text: GateText, actions: GateActions, lead: readonly string[] = []): Screen => {
   const el = h('div', { class: 'screen dim' })
   let nav: ReturnType<typeof menu> | null = null
   const ready = actions.ready ?? ((s: AccountState) => s.kind === 'signedIn')
   const guest = actions.guest
+  /** The email sheet while it's open in place of the gate's buttons. */
+  let email: EmailSheet | null = null
+
+  const openEmail = () => {
+    actions.signingIn?.()
+    if (!emailHere()) return
+    email ??= emailSheet(closeEmail)
+    build(accountState(), false)
+    email.focus()
+  }
+
+  const closeEmail = () => {
+    email?.dispose()
+    email = null
+    build(accountState(), false)
+  }
 
   const build = (s: AccountState, opening: boolean) => {
     const m = t().account
     const busy = s.kind === 'busy' || (s.kind === 'signedIn' && !ready(s))
     const failed = s.kind === 'guest' && s.failed
+    const providers: Action[] = [
+      { label: m.google, run: () => (actions.signingIn?.(), void signIn()) },
+      { label: t().discord.signIn, run: () => (actions.signingIn?.(), void signIn('discord')) },
+    ]
+    const byEmail: Action = { label: m.email.button, run: openEmail }
     const all: Action[] = busy
       ? [{ label: m.back, run: () => leave(actions.back) }]
-      : [
-          { label: m.google, run: () => (actions.signingIn?.(), void signIn()) },
-          { label: t().discord.signIn, run: () => (actions.signingIn?.(), void signIn('discord')) },
-          ...(guest ? [{ label: text.guestLabel ?? m.playAsGuest, run: () => leave(guest) }] : []),
-        ]
+      : email
+        ? []
+        : [
+            ...(cjk() ? [byEmail, ...providers] : [...providers, byEmail]),
+            ...(guest ? [{ label: text.guestLabel ?? m.playAsGuest, run: () => leave(guest) }] : []),
+          ]
     const buttons = all.map((a) => h('button', { class: 'btn' }, a.label))
     nav?.off()
-    nav = menu(input, buttons, (i) => (playSfx('select'), later(all[i]!.run)))
+    nav = buttons.length > 0 ? menu(input, buttons, (i) => (playSfx('select'), later(all[i]!.run))) : null
     const line = (text: string, cls = '') => h('p', { class: `account-line ${cls}` }, text)
+    const body = busy
+      ? [line(m.busy, 'blink'), h('div', { class: 'buttons account-buttons' }, ...buttons)]
+      : email
+        ? [email.el]
+        : [
+            line(text.pitch),
+            ...(failed ? [line(m.failed, 'account-error')] : []),
+            line(text.note, 'account-note'),
+            h('div', { class: 'buttons account-buttons' }, ...buttons),
+            ...(text.guestNote === null ? [] : [line(text.guestNote, 'account-note')]),
+          ]
     el.replaceChildren(
       h(
         'div',
         { class: opening ? 'dialog box pop account' : 'dialog box account' },
         h('div', { class: 'dialog-title' }, text.title),
         ...lead.map((l) => line(l, 'account-lead')),
-        busy ? line(m.busy, 'blink') : line(text.pitch),
-        ...(failed ? [line(m.failed, 'account-error')] : []),
-        ...(busy ? [] : [line(text.note, 'account-note')]),
-        h('div', { class: 'buttons account-buttons' }, ...buttons),
-        ...(busy || text.guestNote === null ? [] : [line(text.guestNote, 'account-note')]),
-        hint(m.hintKeys, m.hintTouch),
+        ...body,
+        email && !busy ? null : hint(m.hintKeys, m.hintTouch),
       ),
     )
   }
 
   const offState = onAccountChange((s) => (s.kind === 'signedIn' && ready(s) ? leave(actions.play) : build(s, false)))
-  const offKeys = input.onKey((key) => (key === 'Escape' || key === 'Backspace') && (playSfx('select'), leave(actions.back)))
+  const offKeys = input.onKey((key) => {
+    if (key !== 'Escape' && key !== 'Backspace') return
+    playSfx('select')
+    if (email && accountState().kind === 'guest') closeEmail()
+    else leave(actions.back)
+  })
 
-  const dispose = () => (nav?.off(), offState(), offKeys(), el.remove())
+  const dispose = () => (nav?.off(), email?.dispose(), offState(), offKeys(), el.remove())
 
   let left = false
   /** Closes the gate and runs `next` after the current key dispatch. */
@@ -78,8 +119,10 @@ const gate = (root: HTMLElement, input: Input, text: GateText, actions: GateActi
     later(next)
   }
 
+  if (actions.email) email = emailSheet(closeEmail)
   build(accountState(), true)
   root.append(el)
+  email?.focus()
   return { el, dispose }
 }
 
@@ -140,4 +183,15 @@ export const realmGate = (root: HTMLElement, input: Input, actions: { play: () =
 export const arenaGate = (root: HTMLElement, input: Input, actions: { play: () => void; back: () => void }): Screen => {
   const m = t().versus.gate
   return gate(root, input, { title: m.title, pitch: m.pitch, note: m.note, guestNote: null }, { ...actions, guest: null, ready: (s) => s.kind === 'signedIn' && s.handle !== undefined })
+}
+
+/**
+ * "Entrar com e-mail" on its own: the tab a portal's frame opened to sign in
+ * by email (`continueOnSite('email')`, `handoff.ts`), the frame's progress
+ * already merged in. Goes on to `play` once in, or `back` (the sheet's own
+ * Voltar shows the gate's other ways).
+ */
+export const emailGate = (root: HTMLElement, input: Input, actions: { play: () => void; back: () => void }): Screen => {
+  const m = t().account
+  return gate(root, input, { title: m.gateTitle, pitch: m.gatePitch, note: m.gateNewAccount, guestNote: null }, { ...actions, guest: null, email: true })
 }

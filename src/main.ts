@@ -48,7 +48,7 @@ import { nextIsOfficial } from './game/attempt'
 import { challengeStart, type Challenge } from './game/challenge'
 import { HATCHLING_IDS, HATCHLINGS, PLAYABLE, PLAYABLE_IDS, type HatchlingId, type PlayableId } from './data/hatchlings'
 import { BEAST_BOOST, isLegend, LEGEND_IDS, type LegendId } from './data/legends'
-import { accountHandle, accountState, accountsEnabled, accountUserId, backFromSignIn, giftInbox, onAccountChange, signIn, stageGifts, stageSyncedSave, startAccount, syncSave } from './account'
+import { accountHandle, accountState, accountsEnabled, accountUserId, backFromSignIn, devEmailCodes, giftInbox, onAccountChange, signIn, stageGifts, stageSyncedSave, startAccount, syncSave } from './account'
 import { devCandyGoal, startCandyGoal } from './candyGoal'
 import { devFestival, festivalView, startFestival } from './festival'
 import type { PlazaStage } from './data/festivals'
@@ -194,7 +194,7 @@ import { captureRef, coopBoardsFaked, fakeCoopBoards, fakeEra1Boards, flushRuns,
 import { applyGift, DISCORD_GIFT, parseGiftContent, type GiftKind, type GiftReason } from './game/gifts'
 import { ERA1_GIFTS, era1Gifts, type Era1Tier } from './game/era1'
 import { giftScreen } from './ui/gifts'
-import { arenaGate, coopGate, installedGate, playGate, realmGate } from './ui/account'
+import { arenaGate, coopGate, emailGate, installedGate, playGate, realmGate } from './ui/account'
 import { TOWN_ROOMS, isTownRoomId } from './data/realmMap'
 import { isLocalRealm, realmUrl } from './realmUrl'
 import { realmGame, realmJukebox, realmTheme } from './realmMusic'
@@ -5086,7 +5086,7 @@ const boot = () => {
   // Coming back to the game syncs again, but not mid-run: a run syncs when it ends.
   startAccount(() => run === null)
   // A tab a portal's frame opened to sign in: the frame's progress lands here first, then the sign in it asked for (`handoff.ts`).
-  void takeHandoff(stageSyncedSave).then((provider) => provider && signIn(provider))
+  void takeHandoff(stageSyncedSave).then((way) => (way === 'email' ? setScreen(emailGate(ui, input, { play: () => showTitle(), back: () => showTitle() })) : way && signIn(way)))
   // A Google sign in held back inside an app's browser (`signIn`): the hint says why and how to leave it. One moved out of a portal's frame: where it went.
   onOnboarding((step) => {
     const app = hostApp()
@@ -6312,6 +6312,20 @@ if (import.meta.env.DEV) {
       /** The Caixa do PC over the title; `ps.card()` opens the Trainer Card's share preview. */
       pc: () => (endRun(), setScreen(showPcBox(() => showTitle()))),
       card: (partner: PlayableId = loadSave().partner) => (endRun(), setScreen(sharePreview(ui, input, trainerShare(partner), () => showTitle()))),
+      /**
+       * Signing in by email (`ui/emailSignIn.ts`): `ps.emailCode()` fakes Clerk's answers until a reload (`devEmailCodes`:
+       * `123456` signs in as a new account with no handle, `000000` is expired, `999999` too many tries, an address
+       * starting `rate@` is told to slow down) and opens the sheet on its own, as a portal's tab does; `('gate')` opens
+       * the play gate (Google, Discord, email), `('coop')` co-op's door, `('fake')` only fakes and `('off')` asks Clerk again.
+       */
+      emailCode: (cmd: 'open' | 'gate' | 'coop' | 'fake' | 'off' = 'open') => {
+        devEmailCodes(cmd !== 'off')
+        if (cmd === 'fake' || cmd === 'off') return
+        endRun()
+        if (cmd === 'gate') return showPlayGate()
+        if (cmd === 'coop') return setScreen(coopGate(ui, input, { room: null, invitedBy: null }, { play: () => showTitle(), back: () => showTitle() }))
+        setScreen(emailGate(ui, input, { play: () => showTitle(), back: () => showTitle() }))
+      },
       /**
        * The content creator's tag (`creator.ts`): `ps.creator('approved')` fakes the account's request in that state
        * (`none`, `pending`, `rejected`, `revoked`) and the admin desk's queue until a reload (`'off'` asks the API again);

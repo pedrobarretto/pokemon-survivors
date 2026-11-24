@@ -28,6 +28,13 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
     title: { pt: 'Correções da comunidade', en: 'Community fixes', es: 'Arreglos de la comunidad', fr: 'Corrections de la communauté', zh: '社群回報修正' },
     highlights: [
       {
+        pt: 'Agora dá para entrar com um código por e-mail, sem senha, além do Google e do Discord. Serve para criar a conta também, e uma conta do Google entra pelo mesmo e-mail.',
+        en: 'You can now sign in with a code sent by email, no password, besides Google and Discord. It creates the account too, and a Google account signs in with the same email.',
+        es: 'Ahora puedes entrar con un código por correo, sin contraseña, además de Google y Discord. También crea la cuenta, y una cuenta de Google entra con el mismo correo.',
+        fr: 'Tu peux maintenant te connecter avec un code reçu par e-mail, sans mot de passe, en plus de Google et Discord. Il crée aussi le compte, et un compte Google se connecte avec le même e-mail.',
+        zh: '現在除了 Google 和 Discord，也能用電子郵件收到的驗證碼登入，不用密碼。沒有帳號會自動建立，Google 帳號用同一個信箱也能登入。',
+      },
+      {
         pt: 'Os upgrades que deixam chão que fere (Solar Beam, Fire Spin, Will-O-Wisp, Razor Leaf e outros) voltam a marcar a área toda, e o Arco de Dream Eater e Foul Play agora salta para outros inimigos.',
         en: 'Upgrades that leave damaging ground (Solar Beam, Fire Spin, Will-O-Wisp, Razor Leaf and more) cover their whole area again, and Dream Eater’s and Foul Play’s Arc now jumps to other foes.',
         es: 'Las mejoras que dejan suelo dañino (Solar Beam, Fire Spin, Will-O-Wisp, Razor Leaf y más) vuelven a cubrir toda el área, y el Arco de Dream Eater y Foul Play ahora salta a otros enemigos.',
@@ -64,6 +71,16 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
       },
     ],
     changes: [
+      {
+        title: { pt: 'Contas', en: 'Accounts', es: 'Cuentas', fr: 'Comptes', zh: '帳號' },
+        notes: [
+          {
+            pt: 'Entrar com e-mail: digite o e-mail, depois o código de 6 dígitos que chega (dá para colar). Funciona onde o Google não abre, como dentro de apps e de portais de jogos, e libera o co-op, o Poké Realm, a Arena ranqueada e a nuvem.',
+            en: 'Sign in with email: type your email, then the 6-digit code it gets (pasting works). It works where Google won’t open, like inside apps and game portals, and opens co-op, the Poké Realm, ranked Arena and cloud saves.',
+            es: 'Entrar con correo: escribe tu correo y luego el código de 6 dígitos que llega (se puede pegar). Funciona donde Google no abre, como dentro de apps y portales de juegos, y abre el co-op, el Poké Realm, la Arena clasificatoria y la nube.',
+          },
+        ],
+      },
       {
         title: { pt: 'Golpes e upgrades', en: 'Moves and upgrades', es: 'Movimientos y mejoras', fr: 'Capacités et améliorations', zh: '招式與強化' },
         notes: [
