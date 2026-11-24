@@ -50,7 +50,8 @@ describe('planChance', () => {
       const [balls, berries, baitBerries, rock] = SAFARI_PLANS.map((plan) => planChance(rarity, plan))
       expect(baitBerries).toBeGreaterThan(berries!)
       expect(berries).toBeGreaterThan(balls!)
-      expect(rock).toBeLessThan(balls!)
+      expect(rock).toBeGreaterThan(balls!)
+      if (rarity !== 'common') expect(rock).toBeLessThan(berries!)
     }
   })
 })

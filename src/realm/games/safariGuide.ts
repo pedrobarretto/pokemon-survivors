@@ -101,8 +101,8 @@ const body = (chapter: GuideChapter, ctx: GuideCtx): (HTMLElement | false)[] => 
           [g.items.item, g.items.catch, g.items.flee, g.items.lasts],
           [
             [labelled(assetUrl('safari/berry.png'), g.items.berry), percent(SAFARI.calmCatch, true), percent(-SAFARI.calmFlee, true), g.items.berryLasts(SAFARI.maxCalm)],
-            [labelled(ICONS.rock(), g.items.rock), times(angry.catch), times(angry.flee), g.items.moodLasts(SAFARI.moodTurns)],
-            [labelled(ICONS.bait(), g.items.bait), times(eating.catch), times(eating.flee), g.items.moodLasts(SAFARI.moodTurns)],
+            [labelled(ICONS.rock(), g.items.rock), times(angry.catch), times(angry.flee), g.items.moodLasts(angry.turns.min, angry.turns.max)],
+            [labelled(ICONS.bait(), g.items.bait), times(eating.catch), times(eating.flee), g.items.moodLasts(eating.turns.min, eating.turns.max)],
           ],
         ),
         p(g.items.turn),

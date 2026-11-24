@@ -248,13 +248,16 @@ describe('a session', () => {
     expect(applyAction({ ...met(), berries: 0 }, { kind: 'berry' }, dice())).toBeNull()
   })
 
-  it('angers with a rock and feeds with bait, for a few turns, each a turn it can flee in', () => {
-    const rock = act(met(), { kind: 'rock' }, 0.99, 0.99)
-    expect(rock.turn).toEqual({ kind: 'rock', turns: SAFARI.moodTurns, fled: false })
-    expect(rock.run.encounter).toMatchObject({ mood: 'angry', moodTurns: SAFARI.moodTurns })
-    expect(act(met(), { kind: 'rock' }, 0, 0).turn).toMatchObject({ fled: true })
+  it('angers with a rock and feeds with bait, for a few turns; bait spends a turn it can flee in, a rock doesn’t', () => {
+    const { angry, eating } = SAFARI.mood
+    const rock = act(met(), { kind: 'rock' }, 0.99)
+    expect(rock.turn).toEqual({ kind: 'rock', turns: angry.turns.max, fled: false })
+    expect(rock.run.encounter).toMatchObject({ mood: 'angry', moodTurns: angry.turns.max })
+    // Startled: even the worst flee roll can't make it run on the rock's turn.
+    expect(act(met(), { kind: 'rock' }, 0, 0).turn).toMatchObject({ fled: false, turns: angry.turns.min })
+    expect(act(met(), { kind: 'bait' }, 0, 0).turn).toMatchObject({ fled: true })
     const fed = act(rock.run, { kind: 'bait' }, 0, 0.99)
-    expect(fed.run.encounter).toMatchObject({ mood: 'eating', moodTurns: 1 })
+    expect(fed.run.encounter).toMatchObject({ mood: 'eating', moodTurns: eating.turns.min })
     // A ball's turn wears it off.
     const after = act(fed.run, { kind: 'ball' }, 0.99, 0.99)
     expect(after.run.encounter).toMatchObject({ mood: null, moodTurns: 0 })

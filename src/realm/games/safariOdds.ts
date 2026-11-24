@@ -37,9 +37,9 @@ const passed = (s: Spot): Pick<Spot, 'mood' | 'turns'> => (s.turns > 1 ? { mood:
  * The chance `plan` catches a Pokémon of `rarity` before it flees or the balls
  * run out, starting with `balls` and `berries` (a fresh session's pouch by
  * default). Mirrors `applyAction`: a berry, a rock or bait spends a turn in
- * which it may flee, already feeling what was thrown; a ball that breaks may
- * be followed by a flight; a rock's or bait's mood lasts 1 to `moodTurns`
- * turns, each as likely.
+ * which it may flee, already feeling what was thrown (but for a rock, which
+ * startles it); a ball that breaks may be followed by a flight; a rock's or
+ * bait's mood lasts its `turns`, each count as likely.
  */
 export const planChance = (rarity: SafariRarity, plan: SafariPlan, balls: number = SAFARI.balls, berries: number = SAFARI.berries): number => {
   const play = PLAY[plan]
@@ -56,9 +56,10 @@ export const planChance = (rarity: SafariRarity, plan: SafariPlan, balls: number
       return (1 - fleeChanceOf(rarity, calm, s.mood)) * from({ ...s, ...passed(s), calm, berries: s.berries - 1, step: s.step + 1 })
     }
     const mood: SafariMood = act === 'rock' ? 'angry' : 'eating'
+    const { turns: { min, max }, fleesAtOnce } = SAFARI.mood[mood]
     let after = 0
-    for (let turns = 1; turns <= SAFARI.moodTurns; turns++) after += from({ ...s, mood, turns, step: s.step + 1 }) / SAFARI.moodTurns
-    return (1 - fleeChanceOf(rarity, s.calm, mood)) * after
+    for (let turns = min; turns <= max; turns++) after += from({ ...s, mood, turns, step: s.step + 1 }) / (max - min + 1)
+    return (fleesAtOnce ? 1 - fleeChanceOf(rarity, s.calm, mood) : 1) * after
   }
   return from({ calm: 0, mood: null, turns: 0, balls, berries, step: 0 })
 }
