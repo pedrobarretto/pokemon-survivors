@@ -54,3 +54,26 @@ export const fitView = (cssW: number, cssH: number, dpr: number) => {
     cssScale: scale / dpr,
   }
 }
+
+/** The shortest and tallest status bars (CSS px) a cold-started iOS home screen app comes up short by (20 on the old iPhones, 62 under a Pro's Dynamic Island). */
+const LAUNCH_GAP = { min: 20, max: 70 }
+
+/**
+ * How far (CSS px) iOS laid an installed app out short of its screen, or 0. On iOS 26 a home screen app
+ * (`navigator.standalone`, black-translucent status bar, `viewport-fit=cover`) can cold-start with its layout
+ * viewport one status bar short and the top safe area read as 0: `innerHeight`, `100dvh` and every
+ * `position: fixed; inset: 0` end that much above the bottom, until a rotation lays it out again. Only a
+ * shortfall the size of a status bar on a viewport as wide as the screen counts, so a Safari tab, an iPad
+ * window in Split View or Stage Manager, Android and desktops all get 0. `screen` is the device's (iOS keeps
+ * it in portrait whichever way the phone is held), `inner` the layout viewport (`innerWidth`, `innerHeight`).
+ */
+export const launchGap = (screen: ViewportSize, inner: ViewportSize, standalone: boolean) => {
+  if (!standalone) return 0
+  const long = Math.max(screen.width, screen.height)
+  const short = Math.min(screen.width, screen.height)
+  const portrait = inner.height >= inner.width
+  const full = portrait ? { width: short, height: long } : { width: long, height: short }
+  if (Math.abs(inner.width - full.width) > 1) return 0
+  const gap = Math.round(full.height - inner.height)
+  return gap >= LAUNCH_GAP.min && gap <= LAUNCH_GAP.max ? gap : 0
+}
