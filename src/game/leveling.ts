@@ -40,7 +40,7 @@ import type { VersusState } from './versus'
 import { BAG_ITEMS } from '../data/shop'
 import { needsSwap, restingItems, swapItems } from './itemDrop'
 import { ownAttack, setPhase } from './players'
-import type { Game, Offer, OwnedItem, OwnedMove, PrizeSource, Rarity } from './types'
+import type { Game, Offer, OwnedItem, OwnedMove, Player, PrizeSource, Rarity } from './types'
 
 export const MAX_MOVES = 6
 export const MAX_ITEMS = 6
@@ -254,8 +254,21 @@ export const draftOffers = ({ starter, moves, banished }: Loadout, rng: Rng, cou
   return picked.length > 0 ? picked : [{ kind: 'berry' }]
 }
 
-/** Whether a level-up has nothing to choose: every card is the Oran Berry (moves and items all maxed out). */
+/** Whether a level-up has nothing to choose: every card is the Oran Berry (nothing left to learn or raise). */
 export const nothingToChoose = (offers: readonly Offer[]) => offers.length > 0 && offers.every((o) => o.kind === 'berry')
+
+/**
+ * Why a level-up came with only the Oran Berry, for its toast: a move or item
+ * held short of its max whose card Esquecer forgot (it stops growing), a slot
+ * still free with nothing new to fill it (the learnset spent, a Choice Band),
+ * or every slot taken and maxed out.
+ */
+export const berryReason = ({ moves, items, banished, banishedItems }: Pick<Player, 'moves' | 'items' | 'banished' | 'banishedItems'>): 'forgotten' | 'nothingNew' | 'maxed' => {
+  const shortMoves = moves.filter((m) => m.level < maxMoveLevel(m.id))
+  const shortItems = items.filter((i) => i.level < ITEMS[i.id].levels.length)
+  if (shortMoves.some((m) => banished.has(m.id)) || shortItems.some((i) => banishedItems.has(i.id))) return 'forgotten'
+  return shortMoves.length > 0 || shortItems.length > 0 || moves.length < MAX_MOVES || items.length < MAX_ITEMS ? 'nothingNew' : 'maxed'
+}
 
 /** The two cards of a fork, standing in for the move card that reached it (its rarity carries over). */
 export const branchOffers = (offer: Extract<Offer, { kind: 'move' }>): Offer[] =>
