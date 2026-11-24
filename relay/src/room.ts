@@ -276,7 +276,7 @@ export type Effect =
   | ({ k: 'report' } & Posting)
   /**
    * A friends' run (co-op or Arena) is about to start: ask the API for the looks of the account `ids` (`u:<clerk id>`,
-   * `lookUpLooks`) and hand the answer to `looked` with this `ask` (an empty one when the API fails or isn't set).
+   * `lookUpLooks`) and hand the answer to `looked` with this `ask` (null looks when the API gave no answer, empty ones when it isn't set).
    */
   | { k: 'looks'; ask: number; ids: string[] }
 
@@ -837,23 +837,30 @@ export const withLook = (loadout: Loadout, vouched?: WireLook, legends?: readonl
 const startable = (state: State, room: Room, seat: Seat) => !!seat.loadout && !room.seats.some((s) => s !== seat && online(state, s) && (!s.ready || !s.loadout))
 
 /**
- * The API's answer to a friends' room's start (`looks` effect, `ask`): the
- * stored looks and the captured legends by identity (`{}` when it failed). The
- * run starts with them, every other seat bare and without legends, if the room
- * still may (the host is told otherwise); an answer to an ask that's gone (a
- * restart, a newer one) changes nothing.
+ * Whether a room plays the Modo Lendário (`CoopSettings.legend`, as
+ * `parseSettings` reads it: a run room's, never a Desafio co-op do dia's).
  */
-export const looked = (state: State, ask: number, looks: Readonly<Record<string, WireLook>>, now: number, legends: Readonly<Record<string, readonly string[]>> = {}): Effect[] => {
+const legendRoom = (settings: Settings) => settings.legend === true && settings.mode !== 'versus' && typeof settings.challenge !== 'string'
+
+/**
+ * The API's answer to a friends' room's start (`looks` effect, `ask`): the
+ * stored looks and the captured legends by identity, or null `looks` when it
+ * gave no answer (`Vouched.answered`). The run starts with them, every other
+ * seat bare and without legends, if the room still may (the host is told
+ * otherwise); a Legend room with no answer doesn't start (`unvouched`, the
+ * host tries again), since every legend would play its partner. An answer to
+ * an ask that's gone (a restart, a newer one) changes nothing.
+ */
+export const looked = (state: State, ask: number, looks: Readonly<Record<string, WireLook>> | null, now: number, legends: Readonly<Record<string, readonly string[]>> = {}): Effect[] => {
   const room = state.room
   const asked = state.live.starting
   if (!room || asked?.ask !== ask) return []
   state.live.starting = null
   const host = room.seats.find((s) => s.seat === room.host)
-  if (room.phase === 'playing' || room.movedTo || !host || !startable(state, room, host)) {
-    const conn = host ? connOf(state, host.seat) : null
-    return conn ? [send(conn.id, { t: 'denied', what: 'start', why: 'notReady' })] : []
-  }
-  return startRun(state, room, now, looks, legends)
+  const conn = host ? connOf(state, host.seat) : null
+  if (room.phase === 'playing' || room.movedTo || !host || !startable(state, room, host)) return conn ? [send(conn.id, { t: 'denied', what: 'start', why: 'notReady' })] : []
+  if (!looks && legendRoom(room.settings)) return [event(room, 'room.unvouched', { seats: room.seats.length }), ...(conn ? [send(conn.id, { t: 'denied', what: 'start', why: 'unvouched' })] : [])]
+  return startRun(state, room, now, looks ?? {}, legends)
 }
 
 /** A socket closed. Its seat is kept; in a run it goes `away` once silent long enough, and the clock stops when nobody in the run is left (`settle`). */

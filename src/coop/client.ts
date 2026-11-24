@@ -2,7 +2,7 @@ import { worldHeld } from '../game/coop'
 import { moveCode } from '../game/replay'
 import type { Game } from '../game/types'
 import type { Vec } from '../engine/math'
-import { CF_PROBES, CF_SITES, LIMITS, NET_REPORT_MS, PROTOCOL, REGIONS, VPS_HOMES, homeOf, isRelayHome, isSite, parseRoomCode, type BatchedMessage, type ClientMessage, type CloseReason, type CreateResponse, type Loadout, type NetReport, type Refusal, type Region, type RelayHome, type RoomView, type Rtts, type Settings, type CfSite, type Site, type VpsHome, type RunStart, type ServerMessage } from '../net/protocol'
+import { CF_PROBES, CF_SITES, LIMITS, NET_REPORT_MS, PROTOCOL, REGIONS, VPS_HOMES, homeOf, isRelayHome, isSite, parseRoomCode, type BatchedMessage, type ClientMessage, type CloseReason, type CreateResponse, type Loadout, type NetReport, type Refusal, type Region, type RelayHome, type RoomView, type Rtts, type Settings, type CfSite, type Site, type VpsHome, type RunStart, type ServerMessage, type StartDenied } from '../net/protocol'
 import { addSample, createNetStats, noteArrival, noteFrame, noteHidden, quantile, resetArrivalLine, NO_WHERE, type NetStats, type NetWhere, type ReconnectReason } from './netStats'
 import type { Store } from './bank'
 import type { Input } from './entries'
@@ -145,7 +145,7 @@ export type CoopEvent =
   /** A heal finished: the client is back in step with the team. */
   | { kind: 'healed'; tick: number; ms: number }
   | { kind: 'ended'; run: number; tick: number }
-  | { kind: 'denied'; why: 'notHost' | 'notReady' }
+  | { kind: 'denied'; why: StartDenied }
   | { kind: 'slow' }
   /** The room is being moved for the group (`moving` in the state), or not any more. */
   | { kind: 'moving'; on: boolean }

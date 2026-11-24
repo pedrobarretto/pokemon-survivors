@@ -119,6 +119,9 @@ export type Loadout = { readonly [key: string]: Json }
 /** Run options the host picks in the lobby (difficulty and so on). Opaque to the relay, like `Loadout`. */
 export type Settings = { readonly [key: string]: Json }
 
+/** Why a host's `start` was turned down (`denied`). */
+export type StartDenied = 'notHost' | 'notReady' | 'unvouched'
+
 export type Scalar = number | string | boolean
 
 /**
@@ -375,8 +378,11 @@ export type ServerMessage =
   | { t: 'role'; snapshots: boolean }
   /** The run is over, confirmed by a majority of the connected players. */
   | { t: 'ended'; run: number; tick: number; h: string }
-  /** The host's `start` was turned down: not the host, or someone online isn't ready (or has no loadout). */
-  | { t: 'denied'; what: 'start'; why: 'notHost' | 'notReady' }
+  /**
+   * The host's `start` was turned down: not the host, someone online isn't ready (or has no loadout), or a Legend
+   * room's legends couldn't be vouched for because the API didn't answer (`unvouched`: try again).
+   */
+  | { t: 'denied'; what: 'start'; why: StartDenied }
   /** Some of your inputs were dropped for coming too fast (said once per socket). */
   | { t: 'slow' }
   | { t: 'pong'; at: number; tick: number }

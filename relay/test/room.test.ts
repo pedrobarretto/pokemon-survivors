@@ -599,6 +599,19 @@ describe('arena rooms', () => {
     ])
   })
 
+  it("doesn't start a Legend room the API gave no answer for: the host is told and may ask again", () => {
+    const state = newState()
+    connect(state, 'a', 'ua', T0)
+    hello(state, 'a', helloMsg('x'.repeat(16), { auth: { kind: 'clerk', token: 'jwt' }, name: '@ash' }), { id: 'u:ash', account: true }, T0, { guests: false })
+    say(state, 'a', { t: 'settings', settings: { difficulty: 'normal', legend: true } }, T0)
+    say(state, 'a', { t: 'loadout', loadout: { starter: 'kyogre', partner: 'pikachu' } }, T0)
+    say(state, 'a', { t: 'start' }, T0)
+    expect(sent(looked(state, 1, null, T0), 'a')).toEqual([{ t: 'denied', what: 'start', why: 'unvouched' }])
+    expect(roomOf(state).phase).toBe('lobby')
+    expect(say(state, 'a', { t: 'start' }, T0).flatMap((e) => (e.k === 'looks' ? [e] : []))).toEqual([{ k: 'looks', ask: 2, ids: ['u:ash'] }])
+    expect(of(sent(looked(state, 2, {}, T0, { 'u:ash': ['kyogre'] }), 'a'), 'start')[0]?.run.players[0]?.loadout.starter).toBe('kyogre')
+  })
+
   it("keeps a guest's own legends only where the relay allows it, never in a matched room", () => {
     const state = newState()
     join(state, 'c0', guest(0))
@@ -623,7 +636,7 @@ describe('arena rooms', () => {
     say(state, 'a', { t: 'settings', settings: { difficulty: 'normal', mode: 'versus' } }, T0)
     say(state, 'a', { t: 'loadout', loadout: { starter: 'pikachu', look: { head: 'crown' } } }, T0)
     say(state, 'a', { t: 'start' }, T0)
-    expect(of(sent(looked(state, 1, {}, T0), 'a'), 'start')[0]?.run.players[0]?.loadout).toEqual({ starter: 'pikachu' })
+    expect(of(sent(looked(state, 1, null, T0), 'a'), 'start')[0]?.run.players[0]?.loadout).toEqual({ starter: 'pikachu' })
 
     const guests = newState()
     join(guests, 'c0', guest(0))
