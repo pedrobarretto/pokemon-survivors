@@ -5,8 +5,8 @@ import { effectiveness } from '../data/types'
 import { ITEMS } from '../data/items'
 import manifest from '../data/sprites.generated.json'
 import { REGIONS, STARTER_IDS, STARTERS } from '../data/starters'
-import { maxMoveLevel, moveStats } from './moves'
-import { MAX_MOVES, nothingToChoose, offerPool, rollOffers, starterStats } from './leveling'
+import { maxMoveLevel, moveStats, type MoveId } from './moves'
+import { berryReason, MAX_MOVES, nothingToChoose, offerPool, rollOffers, starterStats } from './leveling'
 import { BASE_STATS } from './stats'
 import type { OwnedMove } from './types'
 
@@ -82,6 +82,20 @@ describe('level-up offers', () => {
     expect(nothingToChoose([{ kind: 'berry' }])).toBe(true)
     expect(nothingToChoose([{ kind: 'berry' }, { kind: 'move', id: 'ember', level: 2 }])).toBe(false)
     expect(nothingToChoose([])).toBe(false)
+  })
+
+  it('says the berry came from everything maxed only when it did', () => {
+    const moves: OwnedMove[] = (['ember', 'fireSpin', 'swift', 'quickAttack', 'gust', 'iceShard'] as const).map((id) => ({ id, level: maxMoveLevel(id), cooldown: 0 }))
+    const items = (Object.keys(ITEMS) as (keyof typeof ITEMS)[]).slice(0, 6).map((id) => ({ id, level: ITEMS[id].levels.length }))
+    const none = { banished: new Set<MoveId>(), banishedItems: new Set<keyof typeof ITEMS>() }
+    expect(berryReason({ moves, items, ...none })).toBe('maxed')
+    // A slot still free (the learnset spent, a Choice Band): nothing new, not maxed.
+    expect(berryReason({ moves: moves.slice(1), items, ...none })).toBe('nothingNew')
+    // Esquecer on a held move's or item's card stops it short of its max.
+    const shortMove = [{ ...moves[0]!, level: 4 }, ...moves.slice(1)]
+    expect(berryReason({ moves: shortMove, items, ...none, banished: new Set<MoveId>(['ember']) })).toBe('forgotten')
+    const shortItem = [{ ...items[0]!, level: 1 }, ...items.slice(1)]
+    expect(berryReason({ moves, items: shortItem, ...none, banishedItems: new Set([items[0]!.id]) })).toBe('forgotten')
   })
 })
 
