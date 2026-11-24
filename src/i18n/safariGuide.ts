@@ -4,7 +4,8 @@
  * `minigames.safari.guide`. Every number comes from the rules as an argument,
  * so a retune never leaves the guide saying another one. The tips in `plan`
  * say what `safariOdds.test.ts` holds true: bait before the berries beats the
- * berries alone, which beat balls alone, which beat the rock.
+ * berries alone, which beat balls alone; the rock beats balls alone, and the
+ * berries beat it on all but the common ones.
  */
 export const SAFARI_GUIDE_WORDS = {
   pt: {
@@ -49,8 +50,8 @@ export const SAFARI_GUIDE_WORDS = {
       rock: 'Pedra',
       bait: 'Isca',
       berryLasts: (max: number) => `o encontro todo, até ${max}`,
-      moodLasts: (max: number) => `1 a ${max} turnos`,
-      turn: 'Cada uma gasta um turno: ele pode fugir logo em seguida, já sentindo o efeito.',
+      moodLasts: (min: number, max: number) => `${min} a ${max} turnos`,
+      turn: 'Cada uma gasta um turno em que ele pode fugir, já sentindo o efeito. Menos a pedra: assustado, ele não foge no turno em que ela acerta.',
       stock: (berries: number) => `Pedras e iscas não acabam; frutas são só ${berries} por sessão.`,
       panel: (angry: string, eating: string) => `No painel: as bolinhas são a calma; ${angry} e ${eating} mostram um ponto por turno que falta.`,
     },
@@ -61,7 +62,7 @@ export const SAFARI_GUIDE_WORDS = {
       best: 'Melhor',
       bait: 'Isca antes das frutas: comendo, ele quase não foge enquanto você o acalma.',
       berries: 'Frutas rendem mais nos raros e nos especiais: guarde-as para eles e, sem frutas, só jogue bolas.',
-      rock: 'A pedra deixa a bola mais forte, mas ele foge bem mais: quase nunca compensa.',
+      rock: 'A pedra rende bem mais que só bolas e nunca acaba; nos raros, ultras e especiais, as frutas ainda rendem mais.',
     },
     odds: {
       title: 'Quem aparece',
@@ -138,8 +139,8 @@ export const SAFARI_GUIDE_WORDS = {
       rock: 'Rock',
       bait: 'Bait',
       berryLasts: (max: number) => `the whole encounter, up to ${max}`,
-      moodLasts: (max: number) => `1 to ${max} turns`,
-      turn: 'Each one spends a turn: it may flee right after, already feeling the effect.',
+      moodLasts: (min: number, max: number) => `${min} to ${max} turns`,
+      turn: 'Each one spends a turn in which it may flee, already feeling the effect. Except the rock: startled, it never flees on the turn the rock lands.',
       stock: (berries: number) => `Rocks and bait never run out; you only get ${berries} berries a session.`,
       panel: (angry: string, eating: string) => `On the panel: the dots are its calm; ${angry} and ${eating} show a dot per turn left.`,
     },
@@ -150,7 +151,7 @@ export const SAFARI_GUIDE_WORDS = {
       best: 'Best',
       bait: 'Bait before the berries: while it eats, it hardly flees as you calm it down.',
       berries: 'Berries pay off most on the rare and special ones: save them for those, and with none left, just throw balls.',
-      rock: 'A rock makes the ball stronger, but it flees far more: it almost never pays off.',
+      rock: 'A rock does far better than balls alone and never runs out; on the rare, ultra and special ones, berries still do better.',
     },
     odds: {
       title: 'Who shows up',
@@ -227,8 +228,8 @@ export const SAFARI_GUIDE_WORDS = {
       rock: 'Roca',
       bait: 'Cebo',
       berryLasts: (max: number) => `todo el encuentro, hasta ${max}`,
-      moodLasts: (max: number) => `1 a ${max} turnos`,
-      turn: 'Cada una gasta un turno: puede huir justo después, ya sintiendo el efecto.',
+      moodLasts: (min: number, max: number) => `${min} a ${max} turnos`,
+      turn: 'Cada una gasta un turno en el que puede huir, ya sintiendo el efecto. Menos la roca: asustado, no huye en el turno en que le da.',
       stock: (berries: number) => `Rocas y cebos no se acaban; bayas solo hay ${berries} por sesión.`,
       panel: (angry: string, eating: string) => `En el panel: los puntitos son la calma; ${angry} y ${eating} muestran un punto por turno que falta.`,
     },
@@ -239,7 +240,7 @@ export const SAFARI_GUIDE_WORDS = {
       best: 'Mejor',
       bait: 'Cebo antes de las bayas: mientras come, casi no huye mientras lo calmas.',
       berries: 'Las bayas rinden más en los raros y los especiales: guárdalas para ellos y, sin bayas, solo lanza bolas.',
-      rock: 'La roca hace la bola más fuerte, pero huye mucho más: casi nunca vale la pena.',
+      rock: 'La roca rinde mucho más que solo bolas y nunca se acaba; con los raros, ultras y especiales, las bayas rinden más.',
     },
     odds: {
       title: 'Quién aparece',
@@ -316,8 +317,8 @@ export const SAFARI_GUIDE_WORDS = {
       rock: 'Caillou',
       bait: 'Appât',
       berryLasts: (max: number) => `toute la rencontre, jusqu’à ${max}`,
-      moodLasts: (max: number) => `1 à ${max} tours`,
-      turn: 'Chacun coûte un tour : il peut fuir juste après, en ressentant déjà l’effet.',
+      moodLasts: (min: number, max: number) => `${min} à ${max} tours`,
+      turn: 'Chacun coûte un tour où il peut fuir, en ressentant déjà l’effet. Sauf le caillou : surpris, il ne fuit jamais au tour où le caillou le touche.',
       stock: (berries: number) => `Cailloux et appâts sont illimités ; les baies, seulement ${berries} par session.`,
       panel: (angry: string, eating: string) => `Sur le panneau : les points sont son calme ; ${angry} et ${eating} montrent un point par tour restant.`,
     },
@@ -328,7 +329,7 @@ export const SAFARI_GUIDE_WORDS = {
       best: 'Meilleur',
       bait: 'L’appât avant les baies : pendant qu’il mange, il ne fuit presque pas pendant que vous le calmez.',
       berries: 'Les baies rapportent le plus sur les rares et les spéciaux : gardez-les pour eux, et sans baies, lancez juste des Balls.',
-      rock: 'Le caillou rend la Ball plus forte, mais il fuit bien plus : ça ne vaut presque jamais le coup.',
+      rock: 'Le caillou fait bien mieux que les Balls seules et ne s’épuise jamais ; sur les rares, ultra et spéciaux, les baies font encore mieux.',
     },
     odds: {
       title: 'Qui apparaît',
@@ -405,8 +406,8 @@ export const SAFARI_GUIDE_WORDS = {
       rock: '石頭',
       bait: '誘餌',
       berryLasts: (max: number) => `整場相遇，最多 ${max} 顆`,
-      moodLasts: (max: number) => `1 到 ${max} 回合`,
-      turn: '每樣都會花掉一回合：牠可能馬上逃走，而且已經受到效果影響。',
+      moodLasts: (min: number, max: number) => `${min} 到 ${max} 回合`,
+      turn: '每樣都會花掉一回合，牠可能在這回合逃走，而且已經受到效果影響。石頭例外：牠被嚇到，被石頭打中的那回合不會逃走。',
       stock: (berries: number) => `石頭和誘餌用不完；樹果每場只有 ${berries} 顆。`,
       panel: (angry: string, eating: string) => `面板上：小圓點是平靜度；「${angry}」和「${eating}」每剩一回合顯示一個點。`,
     },
@@ -417,7 +418,7 @@ export const SAFARI_GUIDE_WORDS = {
       best: '最佳',
       bait: '先丟誘餌再給樹果：牠吃東西時，你安撫牠的期間牠幾乎不會逃。',
       berries: '樹果用在稀有和特別的寶可夢身上最划算：留給牠們，沒有樹果時就直接丟球。',
-      rock: '石頭讓球更容易抓到，但牠逃得更快：幾乎從不划算。',
+      rock: '石頭比只丟球好得多，而且用不完；遇到稀有、極稀有和特別的寶可夢，樹果還是更划算。',
     },
     odds: {
       title: '誰會出現',

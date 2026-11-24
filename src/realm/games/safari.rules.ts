@@ -10,8 +10,8 @@
  * and comes after the rest. Running from one spends it. In an encounter:
  * throw a ball, give a berry (calmer for good, but the berry costs a turn in
  * which it may still flee), throw a rock (angry for a few turns: easier to
- * catch, quicker to run), throw bait (eating for a few turns: harder to
- * catch, slower to run) or run. Meeting the same species again and again
+ * catch, quicker to run, though never on the turn it's hit), throw bait
+ * (eating for a few turns: harder to catch, slower to run) or run. Meeting the same species again and again
  * builds a chain that raises the shiny odds, rolled as each one shows.
  * Every roll comes through `next`, so the API's dice and the tests'
  * sequences run the same code.
@@ -27,7 +27,7 @@ export const SAFARI = {
   price: 3000,
   dailyCap: 5,
   /** What a session starts with. */
-  balls: 6,
+  balls: 10,
   berries: 3,
   /** Encounters a session holds: about 3 to 5 minutes of walking, and room to run from a family already owned. */
   encounters: 8,
@@ -68,9 +68,16 @@ export const SAFARI = {
   calmFlee: 0.35,
   /** The calm a Pokémon sneaked up on starts with: as much as one berry. */
   stalkCalm: 1,
-  /** A rock's and bait's effect on the odds while it lasts, and how many turns it lasts (1 to `moodTurns`). */
-  mood: { angry: { catch: 1.8, flee: 2 }, eating: { catch: 0.6, flee: 0.35 } },
-  moodTurns: 3,
+  /**
+   * A rock's and bait's effect on the odds while it lasts, the turns it lasts
+   * (`min` to `max`, each as likely) and whether the wild one may flee on the
+   * very turn it's thrown: a rock startles it, so it can't run until its next
+   * turn, which is what makes a rock a gamble worth taking.
+   */
+  mood: {
+    angry: { catch: 2, flee: 1.5, turns: { min: 2, max: 3 }, fleesAtOnce: false },
+    eating: { catch: 0.6, flee: 0.35, turns: { min: 1, max: 3 }, fleesAtOnce: true },
+  },
   /** A wild Pokémon's level: its rarity's base plus up to `levelSpread - 1`. */
   levelBase: { common: 7, rare: 15, ultra: 24, special: 20 },
   levelSpread: 8,
@@ -281,6 +288,9 @@ const rollShakes = (chance: number, next: () => number) => {
 /** Ends the session once nothing is left to do: no balls, or no encounter still to come and none being faced. */
 const settle = <F extends string>(run: SafariRun<F>): SafariRun<F> => (run.balls === 0 || (run.encounter === null && encountersLeft(run) === 0) ? { ...run, encounter: null, over: true } : run)
 
+/** The turns a mood lasts, from a roll in [0, 1): `min` to `max`, each as likely. */
+export const moodTurnsOf = ({ turns: { min, max } }: (typeof SAFARI.mood)[SafariMood], roll: number) => min + Math.min(max - min, Math.floor(roll * (max - min + 1)))
+
 /** A turn has passed for the one being faced: its mood wears off a turn. */
 const passTurn = <F extends string>(e: SafariEncounter<F>): SafariEncounter<F> => (e.moodTurns > 1 ? { ...e, moodTurns: e.moodTurns - 1 } : { ...e, mood: null, moodTurns: 0 })
 
@@ -319,10 +329,11 @@ export const applyAction = <F extends string>(run: SafariRun<F>, action: SafariA
   if (action.kind === 'berry' || action.kind === 'rock' || action.kind === 'bait') {
     if (action.kind === 'berry' && run.berries === 0) return null
     const calm = action.kind === 'berry' ? Math.min(encounter.calm + 1, SAFARI.maxCalm) : encounter.calm
-    const turns = action.kind === 'berry' ? 0 : 1 + Math.min(SAFARI.moodTurns - 1, Math.floor(next() * SAFARI.moodTurns))
-    const mood: SafariMood | null = action.kind === 'rock' ? 'angry' : action.kind === 'bait' ? 'eating' : encounter.mood
-    // The flee roll already feels what was thrown: calmer, angrier or eating now, and still a turn in which it can run.
-    const fled = !encounter.sure && next() < fleeChanceOf(encounter.rarity, calm, mood)
+    const thrown: SafariMood | null = action.kind === 'rock' ? 'angry' : action.kind === 'bait' ? 'eating' : null
+    const mood = thrown ?? encounter.mood
+    const turns = thrown ? moodTurnsOf(SAFARI.mood[thrown], next()) : 0
+    // The flee roll already feels what was thrown: calmer, angrier or eating now, and still a turn in which it can run, unless a rock startled it.
+    const fled = (!thrown || SAFARI.mood[thrown].fleesAtOnce) && !encounter.sure && next() < fleeChanceOf(encounter.rarity, calm, mood)
     const after = { ...run, berries: action.kind === 'berry' ? run.berries - 1 : run.berries }
     const faced: SafariEncounter<F> = action.kind === 'berry' ? passTurn({ ...encounter, calm }) : { ...encounter, mood, moodTurns: turns }
     const turn: SafariTurn<F> = action.kind === 'berry' ? { kind: 'berry', calm, fled } : { kind: action.kind, turns, fled }

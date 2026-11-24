@@ -63,11 +63,11 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         zh: '以舊版 Chromium 為基礎的瀏覽器（360、華為）不會在連續第二場時卡住了：遊戲會在每場之間重新載入。',
       },
       {
-        pt: 'Fusion Flare ou Fusion Bolt: com um golpe de Fogo e um Elétrico no máximo, o level-up agora mostra as duas fusões e você escolhe qual quer.',
-        en: 'Fusion Flare or Fusion Bolt: with a Fire and an Electric move maxed, the level-up now shows both fusions and you pick the one you want.',
-        es: 'Fusion Flare o Fusion Bolt: con un movimiento de Fuego y uno Eléctrico al máximo, la subida de nivel ahora muestra las dos fusiones y tú eliges.',
-        fr: 'Fusion Flare ou Fusion Bolt : avec une capacité Feu et une Électrik au maximum, la montée de niveau montre maintenant les deux fusions et tu choisis.',
-        zh: 'Fusion Flare 或 Fusion Bolt：火屬性與電屬性招式都練滿時，升級畫面現在會同時列出兩種融合，由你決定要哪一個。',
+        pt: 'Zona Safári: agora são 10 Safari Balls por sessão, e a pedra virou uma boa jogada: ele não foge no turno em que ela acerta, e a bola fica 2× mais forte por 2 a 3 turnos.',
+        en: 'Safari Zone: you now get 10 Safari Balls a session, and the rock is a good play now: it never flees on the turn the rock lands, and the ball is 2× stronger for 2 to 3 turns.',
+        es: 'Zona Safari: ahora son 10 Safari Balls por sesión, y la roca se volvió una buena jugada: no huye en el turno en que le da, y la bola es 2× más fuerte por 2 a 3 turnos.',
+        fr: 'Parc Safari : tu as maintenant 10 Safari Balls par session, et le caillou devient un bon coup : il ne fuit jamais au tour où le caillou le touche, et la Ball est 2× plus forte pendant 2 à 3 tours.',
+        zh: '狩獵地帶：每次現在有 10 顆狩獵球，丟石頭也變成好選擇了：被石頭打中的那回合牠不會逃走，接下來 2 到 3 回合球的效果加倍。',
       },
     ],
     changes: [
@@ -133,6 +133,21 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
             pt: 'O alarme do Esconderijo Rocket não interrompe mais a luta contra Giovanni: dentro do covil você só sai vencendo ou desmaiando.',
             en: 'The Rocket Hideout’s alarm no longer cuts the fight with Giovanni short: in the lair you only leave by winning or fainting.',
             es: 'La alarma del Escondite Rocket ya no corta la pelea contra Giovanni: en la guarida solo sales ganando o debilitado.',
+          },
+        ],
+      },
+      {
+        title: { pt: 'Zona Safári', en: 'Safari Zone', es: 'Zona Safari', fr: 'Parc Safari', zh: '狩獵地帶' },
+        notes: [
+          {
+            pt: 'Cada sessão começa com 10 Safari Balls em vez de 6: mais de um terço das sessões acabava sem bolas com capim ainda por andar.',
+            en: 'Each session starts with 10 Safari Balls instead of 6: over a third of sessions ran out of balls with grass still left to walk.',
+            es: 'Cada sesión empieza con 10 Safari Balls en vez de 6: más de un tercio de las sesiones se quedaba sin bolas con hierba aún por recorrer.',
+          },
+          {
+            pt: 'A pedra assusta: ele não foge mais no turno em que ela acerta (antes fugia na hora até 70% das vezes). Bravo, pega 2× mais fácil (era 1,8×) e foge 1,5× mais (era 2×), por 2 a 3 turnos. Agora rende bem mais que só jogar bolas; nos raros, as frutas ainda rendem mais.',
+            en: 'The rock startles it: it no longer flees on the turn the rock lands (it used to run right away up to 70% of the time). Angry, it’s 2× easier to catch (was 1.8×) and 1.5× quicker to flee (was 2×), for 2 to 3 turns. It now does far better than balls alone; on the rare ones, berries still do better.',
+            es: 'La roca lo asusta: ya no huye en el turno en que le da (antes huía al instante hasta el 70% de las veces). Enfadado, se atrapa 2× más fácil (era 1,8×) y huye 1,5× más (era 2×), por 2 a 3 turnos. Ahora rinde mucho más que solo lanzar bolas; con los raros, las bayas rinden más.',
           },
         ],
       },
