@@ -397,6 +397,7 @@ export const drawSpecialGround = (ctx: Ctx, a: Attack) => {
     case 'roots':
       return blitEllipse(ctx, Math.round(r * 0.8), Math.max(1, Math.round(r * 0.35)), 'rgba(40,24,8,0.5)', a.x, a.y)
     case 'meteor': {
+      if (a.move !== 'special') return
       // The landing shadow grows as the piece comes down.
       const fall = a.activeFrom - a.age
       if (fall <= 0 || fall > FALL_TIME) return
@@ -418,6 +419,8 @@ export const drawSpecialGround = (ctx: Ctx, a: Attack) => {
 
 /** Effect layer (above entities). */
 export const drawSpecialAttack = (ctx: Ctx, a: Attack, t: number) => {
+  // Meteor Beam's meteors share the 'meteor' visual (`render/tmFx.ts`): theirs aren't a rain special's.
+  if (a.visual === 'meteor' && a.move !== 'special') return
   const r = radius(a)
   switch (a.visual) {
     case 'fireTrail': {

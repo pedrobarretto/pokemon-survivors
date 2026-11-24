@@ -610,8 +610,9 @@ export const drawTmAir = (ctx: Ctx, g: Game, t: number, visible: (x: number, y: 
       case 'meteorRise':
         drawMeteorRise(ctx, a)
         break
+      // The rain specials' pieces share the visual's name (`render/specialFx.ts`): only Meteor Beam's are meteors.
       case 'meteor':
-        drawMeteor(ctx, a, t)
+        if (a.move === 'meteorBeam') drawMeteor(ctx, a, t)
         break
       case 'icyWind':
         drawIcyWind(ctx, a, t)
