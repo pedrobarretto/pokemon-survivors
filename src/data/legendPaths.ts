@@ -140,6 +140,8 @@ export const REGIGIGAS = {
   at: [240, 540],
   distance: 210,
   wake: 46,
+  /** How far around its foot the temple's spot is kept clear of solids and lakes, px: half its width, so nothing stands in its base. */
+  clear: 34,
   /** Seconds the temple takes to rise out of the ground, the ground rumbling; it can't be woken before. */
   rise: 2.4,
 } as const

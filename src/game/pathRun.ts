@@ -73,12 +73,12 @@ type Spawn = (g: Game, kind: MapEventKind, x: number, y: number) => unknown
 /** A draw of its own for spots and headings (`n` tells them apart), so the run's rng never moves for a path. */
 const ownRng = (g: Game, n: number) => createRng(hash2(g.terrain.seed, n, SALT) * 0x100000000)
 
-/** A clear spot `distance` px around the player, or null when it's crowded there (it tries again the next second). */
-const spotNear = (g: Game, n: number, distance: readonly [number, number]): Vec | null => {
+/** A spot `distance` px around the player, kept `clear` px clear of solids and lakes, or null when it's crowded there (it tries again the next second). */
+const spotNear = (g: Game, n: number, distance: readonly [number, number], clear = 18): Vec | null => {
   const p = g.player
   const spot = spawnSpot(ownRng(g, n), p.x, p.y, distance, g.mapEvents.list, DIRECTOR.spacing * 0.6)
   if (!spot) return null
-  const open = clearSpot(g, spot, 18)
+  const open = clearSpot(g, spot, clear)
   return { x: dm.round(open.x), y: dm.round(open.y) }
 }
 
@@ -96,7 +96,7 @@ export const updatePathRun = (g: Game, spawn: Spawn) => {
   }
   if (s.temple !== null && g.time >= s.temple) {
     // It rises on a quiet map: never during a boss fight, a scene or another legend moment (a rift, a den, a Sword, a roamer).
-    const at = g.bossId !== null || g.legendScene !== null || momentBusy(g, 'temple') ? null : spotNear(g, Math.floor(g.time) * 4 + 2, [REGIGIGAS.distance, REGIGIGAS.distance + 40])
+    const at = g.bossId !== null || g.legendScene !== null || momentBusy(g, 'temple') ? null : spotNear(g, Math.floor(g.time) * 4 + 2, [REGIGIGAS.distance, REGIGIGAS.distance + 40], REGIGIGAS.clear)
     if (at) {
       s.temple = null
       spawn(g, 'regiTemple', at.x, at.y)
@@ -104,7 +104,7 @@ export const updatePathRun = (g: Game, spawn: Spawn) => {
   }
   if (s.ruins !== null && g.time >= s.ruins) {
     // The Ruins rise as the temple does: on a quiet map, ahead of the player.
-    const at = g.bossId !== null || g.legendScene !== null || momentBusy(g, 'ruins') ? null : spotNear(g, Math.floor(g.time) * 4 + 3, [RUINS.distance, RUINS.distance + 40])
+    const at = g.bossId !== null || g.legendScene !== null || momentBusy(g, 'ruins') ? null : spotNear(g, Math.floor(g.time) * 4 + 3, [RUINS.distance, RUINS.distance + 40], RUINS.clear)
     if (at) {
       s.ruins = null
       spawn(g, 'splitRuins', at.x, at.y)

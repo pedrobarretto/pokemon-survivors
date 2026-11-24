@@ -26,7 +26,7 @@ import { isAirborne, traitPace } from '../game/traits'
 import type { Attack, Enemy, Game, Hazard, Particle, Player } from '../game/types'
 import { FX, HAZARD_FX, hostile, PICKUPS, SPARKLE, SPIT_FX } from './art'
 import { drawEvolvedAttack, drawEvolvedGround, drawFrost, drawShard } from './evolved'
-import { drawMapEventMarkers, drawMapEvents, markerInsets } from './mapEvents'
+import { drawMapEventMarkers, drawMapEvents, drawStanding, markerInsets, standingCovers, standingInView, type Standing } from './mapEvents'
 import { drawQuestAir, drawQuestGround, drawQuestMarkers } from './quests'
 import { drawRushFloor, drawRushGround } from './rush'
 import { ALPHA_PRIZE, alphaOutline, drawAlphaAir, drawAlphaGround, drawAlphaMarkers } from './alphas'
@@ -859,7 +859,7 @@ const drawEvolution = (ctx: Ctx, g: Game, t: number, calm: boolean) => {
 /** A co-op teammate, drawn from a copy of the game as that player (`coop/view.ts`). */
 type Mate = { mate: Game }
 
-type Drawable = Enemy | 'player' | 'companion' | Solid | Mate | ValeProp
+type Drawable = Enemy | 'player' | 'companion' | Solid | Mate | ValeProp | Standing
 const drawables: Drawable[] = []
 /** `drawables` in depth order, with each one's depth worked out once: the sort compares them thousands of times a frame. */
 const inDepth: Drawable[] = []
@@ -877,6 +877,8 @@ const reachOf = (shape: Attack['shape']) => (shape.kind === 'circle' ? shape.r :
 const isSolid = (d: Drawable): d is Solid => d !== 'player' && d !== 'companion' && 'foot' in d
 /** Versus: a post, pillar or gate standing on the Vale (`render/valeProps.ts`). */
 const isValeProp = (d: Drawable): d is ValeProp => typeof d === 'object' && 'prop' in d
+/** A map event standing up off the ground (Regigigas's temple, a ruin of the Ruínas da Decisão, `render/mapEvents.ts`). */
+const isStanding = (d: Drawable): d is Standing => typeof d === 'object' && 'standing' in d
 
 /* ---------------- Biome ---------------- */
 
@@ -1041,6 +1043,7 @@ const liftsOver = (g: Game, at: number) => {
     const d = inDepth[i]!
     if (isSolid(d) && solidCovers(g, d, p.x, p.y, s.bodyW, s.bodyH)) return false
     if (isValeProp(d) && valePropCovers(g, d, p.x, p.y, s.bodyW, s.bodyH)) return false
+    if (isStanding(d) && standingCovers(d, p.x, p.y, s.bodyW, s.bodyH)) return false
   }
   return true
 }
@@ -1174,9 +1177,10 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   if (companion) drawables.push('companion')
   solidsInView(g, camX, camY, w, h, drawables)
   if (g.versus) valePropsInView(g.versus.map, visible, drawables)
+  if (!indoors) standingInView(g, drawables)
   // Mid-jump leapers sort last so they fly over the horde, and so does a flyer over a rock or a mountain.
   const depth = (d: Drawable) =>
-    d === 'player' ? localPlayer(g).y : isMate(d) ? localPlayer(d.mate).y : d === 'companion' ? (companion?.y ?? 0) : isSolid(d) || isValeProp(d) ? d.y : isAirborne(d) || (overTerrain(d) && inSolid(g, d.x, d.y, 4)) ? d.y + 4096 : d.y
+    d === 'player' ? localPlayer(g).y : isMate(d) ? localPlayer(d.mate).y : d === 'companion' ? (companion?.y ?? 0) : isSolid(d) || isValeProp(d) || isStanding(d) ? d.y : isAirborne(d) || (overTerrain(d) && inSolid(g, d.x, d.y, 4)) ? d.y + 4096 : d.y
   // Filled by index and cut to size (emptying them would drop their storage every frame).
   const n = drawables.length
   for (let i = 0; i < n; i++) {
@@ -1220,7 +1224,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
         shadow(ctx, m.x, m.y, body)
         drawWading(ctx, d.mate, body, t)
       }
-    } else if (!isSolid(d) && !isValeProp(d) && d.dying < 0 && (!lean || d.boss || d.alpha)) shadow(ctx, d.x, d.y, d.radius * 3)
+    } else if (!isSolid(d) && !isValeProp(d) && !isStanding(d) && d.dying < 0 && (!lean || d.boss || d.alpha)) shadow(ctx, d.x, d.y, d.radius * 3)
   }
   drawAfterimages(ctx, g, calm)
   for (const mate of mates) if (!hiddenMate(mate)) drawAfterimages(ctx, mate, calm)
@@ -1231,12 +1235,13 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
     else if (isMate(d)) !lifted.includes(d.mate) && (showsPlain(localPlayer(d.mate)) ? drawPlayer(ctx, d.mate, calm) : drawTeammate(ctx, d.mate, localPlayer(d.mate), t, calm))
     else if (isSolid(d)) drawSolid(ctx, g, d)
     else if (isValeProp(d)) drawValeProp(ctx, g, d, t, playerSprites(g).bodyW, playerSprites(g).bodyH)
+    else if (isStanding(d)) drawStanding(ctx, g, d, t, calm)
     else drawEnemy(ctx, d, g.now, t, calm, aloft, isClone(g, d), !g.rift.arena && !g.raid.arena, g.place.inside?.id === 'hideout')
   }
   // Badges only on bosses: on a 300-enemy horde they'd bury the sprites (tint + particles carry it there).
   // Under the feet, by the shadow: a legend's sprite reaches far above its body, so over its head the badge sat on its face.
   for (const d of inDepth) {
-    if (d !== 'player' && d !== 'companion' && !isMate(d) && !isSolid(d) && !isValeProp(d) && d.boss && d.dying < 0) drawStatusBadge(ctx, d.status, d.x, d.y + STATUS_UNDER)
+    if (d !== 'player' && d !== 'companion' && !isMate(d) && !isSolid(d) && !isValeProp(d) && !isStanding(d) && d.boss && d.dying < 0) drawStatusBadge(ctx, d.status, d.x, d.y + STATUS_UNDER)
   }
   drawEntranceAir(ctx, g, t)
   if (g.raid.den && !indoors) drawDenAir(ctx, g.raid.den, t)
