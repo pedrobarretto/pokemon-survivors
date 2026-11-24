@@ -39,7 +39,7 @@ window.addEventListener('appinstalled', () => {
   changed()
 })
 
-/** Running as the installed app: `display-mode` fullscreen or standalone (the manifest asks for fullscreen), or iOS's `navigator.standalone`. */
+/** Running as the installed app: `display-mode` fullscreen or standalone (the manifest asks Chromium for fullscreen through `display_override`; iOS reads only `display`, standalone), or iOS's `navigator.standalone`. */
 export const runningInstalled = () =>
   matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || ('standalone' in navigator && navigator.standalone === true)
 
