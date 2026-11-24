@@ -19,7 +19,7 @@ export { HIDEOUT_BOSSES, type HideoutBoss } from './rocketHideoutFoes'
 export const HIDEOUT = {
   /** Run seconds its hatch opens, in a run started with a pass (and not inside a boss fight, `placeDue`'s rules). */
   at: 200,
-  /** Seconds inside before the alarm throws the team out. Long: the lair's fight is two bosses. */
+  /** Seconds inside before the alarm throws the team out; it waits once the team is in the boss's room (`inLair`). */
   time: 320,
   /** Floors with stairs; the one after them is the boss's room. */
   floors: 2,

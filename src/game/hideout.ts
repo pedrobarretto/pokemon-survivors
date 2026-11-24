@@ -127,6 +127,9 @@ const win = (g: Game, inside: HideoutInside, boss: Enemy | undefined) => {
   startLoot(g, inside)
 }
 
+/** In the boss's room: Giovanni's fight is under way, so the alarm waits (`PlaceRule.holds`) and only a faint or the win ends the visit. */
+export const inLair = (inside: HideoutInside) => inside.state.floor >= HIDEOUT.floors
+
 /** The boss of the lair still standing, or null once it fell. */
 const lairBoss = (g: Game, s: HideoutState) => (s.bossId === null ? null : (g.enemies.find((e) => e.id === s.bossId && e.dying < 0) ?? null))
 
