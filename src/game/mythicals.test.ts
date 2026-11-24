@@ -7,7 +7,7 @@ import { legendSource, winCounts } from './capture'
 import { createGame } from './game'
 import { formAfter, legendStage } from './legend'
 import { NO_WILD, createQuests } from './quests'
-import { collectShard, dropBossShards } from './tera'
+import { collectShard, dropBossShards, dropRaidShard } from './tera'
 import { openDen } from './teraRaid'
 import type { Game } from './types'
 import { createStorm, updateStorm } from './zeraora'
@@ -70,6 +70,17 @@ describe('Ogerpon', () => {
     expect(shards).toHaveLength(2)
     expect(new Set(shards).size).toBe(2)
     for (const tera of shards) expect(maskOf(tera)).not.toBe('teal')
+  })
+
+  it("gets two masks from a raid whose shard it can't wear (Terapagos's Stellar), the shard otherwise", () => {
+    const g = run('ogerpon')
+    dropRaidShard(g, g.player.x, g.player.y, 'stellar')
+    const masks = g.pickups.flatMap((k) => (k.kind === 'teraShard' ? [k.tera] : []))
+    expect(masks).toHaveLength(2)
+    for (const tera of masks) expect(maskOf(tera)).not.toBe('teal')
+    const other = run('charmander')
+    dropRaidShard(other, other.player.x, other.player.y, 'stellar')
+    expect(other.pickups.flatMap((k) => (k.kind === 'teraShard' ? [k.tera] : []))).toEqual(['stellar'])
   })
 
   it("brings its own raid in its first den for some seeds, in the mask of the run's Tera type", () => {
