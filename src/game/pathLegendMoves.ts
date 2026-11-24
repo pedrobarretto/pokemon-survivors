@@ -1,4 +1,4 @@
-import { dirTo, fromAngle } from '../engine/math'
+import { dirTo, fromAngle, TAU } from '../engine/math'
 import { burst, shakeScreen } from './effects'
 import { aimAt, cast, crowdTargets, fan, look, stats, tookB } from './legendaryMoves'
 import { returnShot, strike } from './moveKit'
@@ -167,10 +167,13 @@ export const PATH_LEGEND_MOVES = {
       { cooldown: -0.5, damage: 6 },
     ],
     // Lunala's wings open and a beam of moonlight sweeps the field, hitting all it passes over again and again; a moon lingers at its end.
+    // The first beam sweeps the foes ahead; Eclipse's second sweeps the opposite side, turning the other way.
     fire: (g, s) => {
       const p = g.player
       const length = MOONGEIST.length * s.area
-      for (const [i, center] of fan(aimAt(g, 240), s.amount, Math.PI).entries()) {
+      const aim = aimAt(g, 240)
+      for (let i = 0; i < s.amount; i++) {
+        const center = aim + (i / s.amount) * TAU
         const from = center - MOONGEIST.arc / 2
         const arc = i % 2 === 0 ? MOONGEIST.arc : -MOONGEIST.arc
         const start = i % 2 === 0 ? from : from + MOONGEIST.arc
