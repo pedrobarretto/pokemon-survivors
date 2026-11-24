@@ -7,6 +7,7 @@ import { ENEMIES } from '../data/enemies'
 import { RUSH } from '../data/rush'
 import { ISLAND_IDS, ISLANDS, type IslandId } from '../data/rushIslands'
 import { drawScale } from '../game/alphas'
+import { offstage } from '../game/bosses'
 import { localPlayer } from '../game/players'
 import { islandOf, rushGate, type RushState } from '../game/rush'
 import type { Game } from '../game/types'
@@ -672,7 +673,7 @@ export const frameRush = (g: Game, t: number, base: number) => {
     return
   }
   const p = localPlayer(g)
-  const boss = r.stage === 'fight' ? g.enemies.find((e) => e.id === r.bossId && e.dying < 0) : undefined
+  const boss = r.stage === 'fight' ? g.enemies.find((e) => e.id === r.bossId && e.dying < 0 && !offstage(e)) : undefined
   const top = boss ? boss.y - bodyOf(ENEMIES[boss.kind].dex).bodyH * drawScale(boss) : r.stage === 'gate' ? rushGate(r).y - GATE_TALL : null
   const dt = Math.min(0.1, Math.max(0, t - nudgedAt))
   nudgedAt = t
