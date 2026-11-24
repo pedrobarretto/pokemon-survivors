@@ -42,7 +42,11 @@
   "env": {
     "production": {
       "name": "ps-coop",
+      // The live site's relay is `coop.pokemonsurvivors.com` (a Workers Custom Domain: the deploy creates its DNS record and
+      // certificate): mainland China blocks `*.workers.dev` by SNI, not a domain of ours. `workers_dev` stays on for the tabs
+      // of builds made before the switch, which still name `ps-coop.pedrobarretto.workers.dev`.
       "workers_dev": true,
+      "routes": [{ "pattern": "coop.pokemonsurvivors.com", "custom_domain": true }],
       "observability": { "enabled": true },
       "durable_objects": {
         "bindings": [

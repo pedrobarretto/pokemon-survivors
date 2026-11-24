@@ -8,7 +8,7 @@ interface ImportMetaEnv {
   readonly VITE_API_URL?: string
   /** PostHog's project key (`phc_…`, public): analytics and error reports (`src/analytics.ts`). Without it, neither. */
   readonly VITE_POSTHOG_KEY?: string
-  /** The co-op relay (`relay/`), e.g. `https://ps-coop.pedrobarretto.workers.dev`. Dev builds default to the dev relay. */
+  /** The co-op relay (`relay/`), e.g. `https://coop.pokemonsurvivors.com` (production's custom domain: mainland China blocks `*.workers.dev`). Dev builds default to the dev relay. */
   readonly VITE_COOP_URL?: string
   /**
    * The São Paulo co-op relay (`relay/node` on the VPS, `https://coop-sa.pokemonsurvivors.com`), for South American
