@@ -86,9 +86,27 @@ npm test             # vitest in the Workers runtime (pure rules, restarts of on
 npm run typecheck    # wrangler types + tsc
 npm run dev          # wrangler dev on :8791
 npm run deploy       # ps-coop-dev on workers.dev (also allows Vercel previews)
-npm run deploy:prod  # ps-coop on workers.dev (only pokemonsurvivors.com)
+npm run deploy:prod  # ps-coop on coop.pokemonsurvivors.com and workers.dev (only pokemonsurvivors.com)
 node scripts/probe.mjs --bots 3 --secs 40 --desync --rejoin   # bots against a deployed relay
 ```
+
+## Addresses
+
+| Worker | Address the game uses | Also answers on |
+|---|---|---|
+| `ps-coop` (`env.production`) | `https://coop.pokemonsurvivors.com` (the site's `VITE_COOP_URL`) | `https://ps-coop.pedrobarretto.workers.dev` |
+| `ps-coop-dev` | `https://ps-coop-dev.pedrobarretto.workers.dev` (dev builds' `DEV_RELAY`) | |
+
+Mainland China blocks `*.workers.dev` by SNI (and poisons its DNS), so the live site names the
+relay by a domain of ours: a Workers Custom Domain on the `pokemonsurvivors.com` zone (`routes`
+with `custom_domain: true`; the deploy creates its DNS record and certificate, never by hand).
+`workers_dev` stays on so tabs of builds made before the switch still connect; turn it off once
+no build in the wild names it (a tab lives days at most). The hostname changes nothing inside:
+rooms are placed by the player's continent (`hintFor`, from `request.cf`, the client's IP), so
+mainland China, Hong Kong and Taiwan (all `AS`) still get `apac` shards. What it doesn't change:
+on the zone's plan a mainland player meets Cloudflare outside the mainland (often its US west
+coast colos, by the carriers' routes; `conn.open`'s `colo` says which), so the hop to an `apac`
+shard can be long. Origins are checked by `Origin` (`ALLOWED_ORIGINS`), never by host.
 
 ## Endpoints
 
@@ -117,6 +135,8 @@ H="Authorization: Bearer $(cat ~/.config/ps-coop/dev-admin-token)"
 curl -s -H "$H" https://ps-coop-dev.pedrobarretto.workers.dev/admin/dumps
 curl -s -H "$H" https://ps-coop-dev.pedrobarretto.workers.dev/admin/dumps/<id> | gunzip > dump.json
 ```
+
+Production's are the same paths on `https://coop.pokemonsurvivors.com` with `prod-admin-token`.
 
 A dump has `meta` (room, build, region, the run's start with seed and loadouts, the
 hashes reported at the diverged tick, seats with builds and user agents), `log`
