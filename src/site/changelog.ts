@@ -69,6 +69,13 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         fr: 'Les navigateurs basés sur un ancien Chromium (360, Huawei) ne plantent plus à la deuxième partie d’affilée : le jeu se recharge entre deux parties.',
         zh: '以舊版 Chromium 為基礎的瀏覽器（360、華為）不會在連續第二場時卡住了：遊戲會在每場之間重新載入。',
       },
+      {
+        pt: 'Fusion Flare ou Fusion Bolt: com um golpe de Fogo e um Elétrico no máximo, o level-up agora mostra as duas fusões e você escolhe qual quer.',
+        en: 'Fusion Flare or Fusion Bolt: with a Fire and an Electric move maxed, the level-up now shows both fusions and you pick the one you want.',
+        es: 'Fusion Flare o Fusion Bolt: con un movimiento de Fuego y uno Eléctrico al máximo, la subida de nivel ahora muestra las dos fusiones y tú eliges.',
+        fr: 'Fusion Flare ou Fusion Bolt : avec une capacité Feu et une Électrik au maximum, la montée de niveau montre maintenant les deux fusions et tu choisis.',
+        zh: 'Fusion Flare 或 Fusion Bolt：火屬性與電屬性招式都練滿時，升級畫面現在會同時列出兩種融合，由你決定要哪一個。',
+      },
     ],
     changes: [
       {
@@ -84,6 +91,11 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
       {
         title: { pt: 'Golpes e upgrades', en: 'Moves and upgrades', es: 'Movimientos y mejoras', fr: 'Capacités et améliorations', zh: '招式與強化' },
         notes: [
+          {
+            pt: 'Fusion Flare e Fusion Bolt aparecem juntos no level-up (o do golpe mais forte primeiro), em vez de o jogo escolher pelo golpe mais forte. Esquecer um deles deixa o outro ainda disponível.',
+            en: 'Fusion Flare and Fusion Bolt show up together on the level-up (the stronger move’s first) instead of the game picking by the stronger move. Forgetting one leaves the other available.',
+            es: 'Fusion Flare y Fusion Bolt aparecen juntos en la subida de nivel (primero el del movimiento más fuerte), en vez de que el juego elija por el movimiento más fuerte. Olvidar uno deja el otro disponible.',
+          },
           {
             pt: 'O chão que fere de um mesmo golpe não some mais enquanto você ainda está lançando: uma mancha que cai em cima de outra renova a que já estava lá.',
             en: 'A move’s damaging ground no longer vanishes while you’re still casting: a patch landing on another refreshes the one already there.',
