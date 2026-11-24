@@ -48,7 +48,7 @@ import { challengeStart, type Challenge } from './game/challenge'
 import { HATCHLING_IDS, HATCHLINGS, PLAYABLE, PLAYABLE_IDS, type HatchlingId, type PlayableId } from './data/hatchlings'
 import { BEAST_BOOST, isLegend, LEGEND_IDS, type LegendId } from './data/legends'
 import { accountHandle, accountState, accountsEnabled, accountUserId, backFromSignIn, giftInbox, onAccountChange, signIn, stageGifts, stageSyncedSave, startAccount, syncSave } from './account'
-import { devCandyGoal, onCandyGoal, startCandyGoal } from './candyGoal'
+import { devCandyGoal, startCandyGoal } from './candyGoal'
 import { devFestival, festivalView, startFestival } from './festival'
 import type { PlazaStage } from './data/festivals'
 import { festivalAnnounced } from './game/festival'
@@ -5052,9 +5052,8 @@ const boot = () => {
   })
   // The Festival da Praça's pot, in the background (its gifts join the gift box).
   startFestival()
-  // The Meta da comunidade's candies, in the background: reaching the goal opens Mega Darkrai, with a banner the first time.
+  // The Meta da comunidade's candies, in the background: reaching the goal opens Mega Darkrai.
   startCandyGoal()
-  onCandyGoal((_, opened) => opened && banner(ui, rich(t().halloween.goalOpened), 5000))
   // A co-op link (`?sala=K7QF2`, maybe `&ref=` who sent it): join that room and show it (signed in first:
   // `enterCoop`); in a run, by snapshot, on the same seat after a reload. Or back from signing in to play co-op.
   const back = takeCoopReturn()

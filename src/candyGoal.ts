@@ -35,24 +35,21 @@ let lastAsk = -Infinity
 let asking: Promise<CandyGoal | null> | null = null
 /** Dev override of the candies counted. */
 let fake: number | null = null
-const listeners = new Set<(goal: CandyGoal | null, opened: boolean) => void>()
+const listeners = new Set<(goal: CandyGoal | null) => void>()
 
 /** The goal as it stands (the dev count replacing the API's), or null before any answer. */
 export const candyGoal = (): CandyGoal | null => (fake !== null ? candyGoalAt(fake) : goal)
 
-/**
- * Calls `fn` whenever the goal's state changes; `opened` is true on the
- * change that opened Mega Darkrai on this device. Returns the unsubscribe.
- */
-export const onCandyGoal = (fn: (goal: CandyGoal | null, opened: boolean) => void) => {
+/** Calls `fn` whenever the goal's state changes. Returns the unsubscribe. */
+export const onCandyGoal = (fn: (goal: CandyGoal | null) => void) => {
   listeners.add(fn)
   return () => void listeners.delete(fn)
 }
 
-const changed = (opened: boolean) => {
+const changed = () => {
   const now = candyGoal()
   setCommunityOpen(now?.reached === true)
-  listeners.forEach((fn) => fn(now, opened))
+  listeners.forEach((fn) => fn(now))
 }
 
 /** Whether there's anything to ask: an API, the night begun, and the goal not reached yet. */
@@ -69,10 +66,9 @@ export const loadCandyGoal = (force = false): Promise<CandyGoal | null> => {
       const res = await fetch(`${API_URL}/candy-goal`, { signal: timeoutSignal(TIMEOUT_MS) })
       const next = res.ok ? parseCandyGoal(await res.json()) : null
       if (next) {
-        const opened = next.reached && goal?.reached !== true
         goal = next
         localStorage.setItem(STORAGE, JSON.stringify(next))
-        changed(opened)
+        changed()
       }
     } catch (err) {
       console.warn('candy goal failed', err)
@@ -94,7 +90,7 @@ export const startCandyGoal = () => {
 
 /**
  * Dev: `ps.candyGoal()` prints the goal, `ps.candyGoal(14_990_000)` fakes the
- * candies counted (past the goal opens Mega Darkrai, with the lobby's toast),
+ * candies counted (past the goal opens Mega Darkrai),
  * `ps.candyGoal(null)` drops the fake, `('fetch')` asks the API now and
  * `('reset')` forgets the kept answer (Mega Darkrai locked again until the next one).
  */
@@ -103,11 +99,10 @@ export const devCandyGoal = (arg?: number | null | 'fetch' | 'reset') => {
   if (arg === 'reset') {
     localStorage.removeItem(STORAGE)
     goal = null
-    changed(false)
+    changed()
   } else if (arg !== undefined) {
-    const was = candyGoal()?.reached === true
     fake = arg
-    changed(!was && candyGoal()?.reached === true)
+    changed()
   }
   return candyGoal()
 }
