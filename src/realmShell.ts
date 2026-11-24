@@ -13,7 +13,7 @@ import { loadSave } from './ui/save'
 
 /**
  * The browser's side of the Poké Realm's connection: the realm lives on the
- * VPS relays (`VITE_COOP_URL_SA`, or a dev build's `ps.coop('relay', 'sa', u)`),
+ * São Paulo VPS relay (`VITE_COOP_URL_SA`, or a dev build's `ps.coop('relay', 'sa', u)`; Hong Kong's hosts no city),
  * signed in with Clerk. A dev build can swap in the in-page realm with bots
  * (`ps.realm('local')`, `realm/localRealm.ts`) and the faked API (`fakeRealm`),
  * and does on its own without a VPS relay (as co-op falls back to the dev relay).

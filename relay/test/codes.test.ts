@@ -5,7 +5,7 @@ import { parseCreate, randomCode } from '../src/codes'
 describe('room codes', () => {
   it('belong to the relay that made them, told by the first character', () => {
     for (let i = 0; i < 200; i++) {
-      for (const home of ['cf', 'sa'] as const) {
+      for (const home of ['cf', 'sa', 'hk'] as const) {
         const code = randomCode(home)
         expect(parseRoomCode(code)).toBe(code)
         expect(homeOf(code)).toBe(home)

@@ -5576,7 +5576,7 @@ const devCoop = async (cmd?: string, arg?: string | number | boolean | null, ext
       setCoopUrl(typeof arg === 'string' ? arg : null)
       return 'ps.coop: reload to use it'
     case 'relay': {
-      // A VPS relay's URL (`relay/node`), by the home its room codes name: ps.coop('relay', 'sa', 'http://localhost:8795').
+      // A VPS relay's URL (`relay/node`), by the home its room codes name: ps.coop('relay', 'sa', 'http://localhost:8795') (or 'hk').
       const home = VPS_HOMES.find((h) => h === arg)
       if (!home) return `ps.coop('relay', home, url): ${VPS_HOMES.join(', ')}`
       setCoopVpsUrl(home, typeof extra === 'string' ? extra : null)

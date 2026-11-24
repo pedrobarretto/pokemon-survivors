@@ -4,7 +4,9 @@ import { placedTurn, type FurnitureDef, type TurnMode } from '../../src/data/fur
 import { JUKEBOX, pieceKey, seatsOf, turnedSize, type FurnitureUse } from '../../src/data/furnitureUse'
 import {
   BASE_PREFIX,
+  CITY_IDS,
   REALM,
+  REALM_CITIES,
   REALM_LIMITS,
   REALM_PROTOCOL,
   baseOwner,
@@ -977,7 +979,7 @@ export const tick = (state: RealmState, now: number): RealmEffect[] => {
     }
     out.push(...tickTables(city, now))
   }
-  if (now >= state.presenceAt || state.presenceDirty) {
+  if (hostsCity(state.home) && (now >= state.presenceAt || state.presenceDirty)) {
     state.presenceAt = now + PRESENCE_EVERY_MS
     state.presenceDirty = false
     out.push({ k: 'presence', report: presence(state, now) })
@@ -1013,6 +1015,9 @@ export const deedsAnswered = (state: RealmState, ask: number, res: DeedsAnswer |
     }
   return out
 }
+
+/** Whether any city is `home`'s: a relay that hosts none (Hong Kong's) never reports presence, which the API would refuse. */
+export const hostsCity = (home: RealmHome) => CITY_IDS.some((c) => REALM_CITIES[c].home === home)
 
 /** Who walks each city now (handles) and in which room (lined up with them), for the API's city picker and friends list. */
 export const presence = (state: RealmState, now: number): PresenceReport => {

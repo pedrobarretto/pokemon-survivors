@@ -1,4 +1,4 @@
-# A VPS co-op relay (São Paulo first), as Dokploy builds it. From the repository root
+# A VPS co-op relay (São Paulo, Hong Kong: `RELAY_HOME`), as Dokploy builds it. From the repository root
 # (the relay bundles relay/src, src/net/protocol.ts and the Arena's import-free files, never game code):
 #   docker build -f relay/node/Dockerfile -t ps-relay .
 FROM node:24-alpine AS build

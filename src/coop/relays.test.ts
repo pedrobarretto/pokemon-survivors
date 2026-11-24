@@ -4,14 +4,54 @@ import { MOVE_MARGIN_MS, NEAR_RTT_MS, groupHome, measureRelay, pickHome, placeOf
 
 const CF = 'https://cf.test'
 const SA = 'https://sa.test'
+const HK = 'https://hk.test'
 
 describe('relays', () => {
   it('finds a room on the relay its code names, and on Cloudflare when this build lacks that relay', () => {
     expect(relayFor('3K7QF', CF, { sa: SA })).toBe(SA)
     expect(relayFor('K7QF2', CF, { sa: SA })).toBe(CF)
-    // A build without São Paulo sends its codes to Cloudflare, and so does a code of no home (6 to 9, US east's once).
+    // A build without São Paulo sends its codes to Cloudflare, and so does one without Hong Kong (6 to 9).
     expect(relayFor('3K7QF', CF, {})).toBe(CF)
     expect(relayFor('7K7QF', CF, { sa: SA })).toBe(CF)
+    expect(relayFor('7K7QF', CF, { sa: SA, hk: HK })).toBe(HK)
+    expect(relayFor('3K7QF', CF, { sa: SA, hk: HK })).toBe(SA)
+  })
+
+  it('puts each host on the nearer VPS relay, Hong Kong for mainland China and Taiwan', () => {
+    const home = (sa: number, hk: number) =>
+      pickHome(
+        new Map([
+          ['sa', { rtt: sa, full: false }],
+          ['hk', { rtt: hk, full: false }],
+        ] as const),
+      ).home
+    // Shenzhen (25 ms to Hong Kong), Shanghai (40), Beijing (60), Taipei (22).
+    expect(home(340, 25)).toBe('hk')
+    expect(home(350, 40)).toBe('hk')
+    expect(home(360, 60)).toBe('hk')
+    expect(home(330, 22)).toBe('hk')
+    // São Paulo's own, and Lisbon, far from both.
+    expect(home(8, 330)).toBe('sa')
+    expect(home(200, 230)).toBe('cf')
+    // Hong Kong full: a mainland host's room goes to Cloudflare, never across the world to São Paulo.
+    expect(
+      pickHome(
+        new Map([
+          ['sa', { rtt: 340, full: false }],
+          ['hk', { rtt: 25, full: true }],
+        ] as const),
+      ),
+    ).toEqual({ home: 'cf', passed: 'hk' })
+  })
+
+  it('decides as before in a build without Hong Kong', () => {
+    // No `VITE_COOP_URL_HK`: Hong Kong is never measured, so a mainland host's room is Cloudflare's, as today.
+    expect(pickHome(new Map([['sa', { rtt: 340, full: false }]] as const))).toEqual({ home: 'cf', passed: null })
+    const cn = { cf: 190, sa: 340, 'cf:wnam': 180, 'cf:apac': 200 }
+    const br = { cf: 120, sa: 8, 'cf:wnam': 170, 'cf:apac': 330 }
+    expect(groupHome('cf', ['sa', 'cf:wnam', 'cf:apac'], [cn, br])).toBeNull()
+    // Round trips to Hong Kong reported by a newer teammate change nothing either: it isn't a site of this build.
+    expect(groupHome('cf', ['sa', 'cf:wnam', 'cf:apac'], [{ ...cn, hk: 30 }, { ...cn, hk: 35 }])).toBeNull()
   })
 
   it("puts a host's room on São Paulo within the cap, else on Cloudflare", () => {
@@ -84,8 +124,24 @@ describe('relays', () => {
     expect(groupHome('sa', sites, [br, { sa: 350 }])).toBeNull()
   })
 
+  it('keeps a mainland Chinese group in Hong Kong, and a group with Brazilians where the worst round trip is lowest', () => {
+    const sites = ['sa', 'hk', 'cf:enam', 'cf:wnam', 'cf:apac'] as const
+    // A mainland player meets Cloudflare outside the mainland (often its US west coast), so its Cloudflare round trips run long.
+    const cn = { sa: 350, hk: 35, 'cf:enam': 230, 'cf:wnam': 180, 'cf:apac': 200 }
+    const tw = { sa: 330, hk: 22, 'cf:enam': 190, 'cf:wnam': 140, 'cf:apac': 40 }
+    const br = { sa: 8, hk: 330, 'cf:enam': 120, 'cf:wnam': 170, 'cf:apac': 330 }
+    // Hosted in Hong Kong: a group of mainland and Taiwanese players stays.
+    expect(groupHome('hk', sites, [cn, { ...cn, hk: 55 }, tw])).toBeNull()
+    // The same group in a Cloudflare room (pickHome went there, Hong Kong being down then) moves to Hong Kong.
+    expect(groupHome('cf', sites, [{ ...cn, cf: 200 }, { ...tw, cf: 40 }])).toBe('hk')
+    // A mainland host with a Brazilian: neither VPS relay, Cloudflare on the US west coast is the best worst (180 ms).
+    expect(groupHome('hk', sites, [cn, br])).toBe('cf:wnam')
+    expect(groupHome('sa', sites, [cn, br])).toBe('cf:wnam')
+  })
+
   it('makes a moved room on the relay and in the region its site names', () => {
     expect(placeOf('sa')).toEqual({ home: 'sa', region: 'auto' })
+    expect(placeOf('hk')).toEqual({ home: 'hk', region: 'auto' })
     expect(placeOf('cf:enam')).toEqual({ home: 'cf', region: 'enam' })
   })
 
