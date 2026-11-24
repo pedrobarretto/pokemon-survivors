@@ -1984,7 +1984,6 @@ export const fr: Messages = {
     goalBlurb: (goal, cap) =>
       `Tous les dresseurs avec un compte remplissent ce bocal ensemble. À *${goal} bonbons*, Darkrai obtient sa *Méga-Évolution* pour tout le monde : il s’éveille en Mega Darkrai au Nv 28 en Mode Légendaire et devient Méga dans la faille du Cauchemar. Chaque dresseur compte jusqu’à ${cap} bonbons.`,
     goalDone: 'La communauté a réussi ! *Mega Darkrai* est débloqué pour tout le monde : en Mode Légendaire, Darkrai s’éveille en Mega Darkrai au Nv 28.',
-    goalOpened: '*Mega Darkrai débloqué !* La communauté a réuni les bonbons : Darkrai s’éveille maintenant en Mega Darkrai en Mode Légendaire.',
   },
 
   challenge: {

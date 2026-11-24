@@ -1984,7 +1984,6 @@ export const zh: Messages = {
     goalBlurb: (goal, cap) =>
       `所有擁有帳號的訓練家一起裝滿這個糖果罐。達到 *${goal} 顆糖果* 時，Darkrai 將為所有人解鎖 *超級進化*：在傳說模式 Lv 28 覺醒為 Mega Darkrai，並在夢魘裂縫中變成超級形態。每位訓練家最多計入 ${cap} 顆糖果。`,
     goalDone: '社群成功了！*Mega Darkrai* 已為所有人解鎖：在傳說模式中，Darkrai 會在 Lv 28 覺醒為 Mega Darkrai。',
-    goalOpened: '*Mega Darkrai 解鎖了！* 社群收集到了足夠的糖果：現在 Darkrai 在傳說模式中會覺醒為 Mega Darkrai。',
   },
 
   challenge: {

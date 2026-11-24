@@ -1986,7 +1986,6 @@ export const es: Messages = {
     goalBlurb: (goal, cap) =>
       `Todos los entrenadores con cuenta llenan este frasco juntos. Con *${goal} dulces*, Darkrai obtiene su *Megaevolución* para todos: despierta como Mega Darkrai en el Nv 28 del Modo Legendario y se vuelve Mega en la grieta de la Pesadilla. Cada entrenador cuenta hasta ${cap} dulces.`,
     goalDone: '¡La comunidad lo logró! *Mega Darkrai* está desbloqueado para todos: en el Modo Legendario, Darkrai despierta como Mega Darkrai en el Nv 28.',
-    goalOpened: '*¡Mega Darkrai desbloqueado!* La comunidad juntó los dulces: ahora Darkrai despierta como Mega Darkrai en el Modo Legendario.',
   },
 
   challenge: {

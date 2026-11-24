@@ -2291,7 +2291,6 @@ export const pt = {
     goalBlurb: (goal: string, cap: string) =>
       `Todos os treinadores com conta enchem este pote juntos. Com *${goal} doces*, o Darkrai ganha a *Mega Evolução* para todo mundo: desperta como Mega Darkrai no Nv 28 do Modo Lendário e vira Mega na fenda do Pesadelo. Cada treinador conta até ${cap} doces.`,
     goalDone: 'A comunidade conseguiu! A *Mega Darkrai* está liberada para todo mundo: no Modo Lendário, o Darkrai desperta como Mega Darkrai no Nv 28.',
-    goalOpened: '*Mega Darkrai liberada!* A comunidade juntou os doces: agora o Darkrai desperta como Mega Darkrai no Modo Lendário.',
   },
 
   /** Desafio do dia: one run the same for everyone, the first finished one counting. */
