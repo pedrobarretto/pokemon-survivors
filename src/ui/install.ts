@@ -187,7 +187,7 @@ export const installNudgeScreen = (root: HTMLElement, input: Input, offer: Exclu
       'div',
       { class: 'dialog box pop account install-dialog install-nudge' },
       h('div', { class: 'dialog-title' }, m.title),
-      h('img', { class: 'install-nudge-icon', src: '/icons/icon-192.png', alt: '' }),
+      h('img', { class: 'install-nudge-icon', src: '/icons/icon-192.png?v=3', alt: '' }),
       h('p', { class: 'account-line' }, m.nudge),
       h('div', { class: 'buttons account-buttons' }, yes, no),
       hint(t().account.hintKeys, t().account.hintTouch),

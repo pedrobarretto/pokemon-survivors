@@ -12,7 +12,7 @@ const DAY_SWR = 'public, max-age=86400, stale-while-revalidate=604800'
  * Rules must not overlap on a header: Cloudflare joins the values of every rule that matches.
  * - `/assets/:file`: the chunks (Vite hashes their names; the only files at that level);
  * - `/assets/:dir/*`: `public/assets/` (sprites, cries, art), whose URLs don't change with their bytes;
- * - the share image;
+ * - the favicon and the share image;
  * - `builds.json`, read by the next deploy (`worker/site.mjs`).
  */
 export const SITE_HEADERS = `/*
@@ -29,6 +29,9 @@ export const SITE_HEADERS = `/*
   Cache-Control: ${DAY_SWR}
 
 /icons/*
+  Cache-Control: ${DAY_SWR}
+
+/favicon.ico
   Cache-Control: ${DAY_SWR}
 
 /creators/*
