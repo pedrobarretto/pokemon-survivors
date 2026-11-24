@@ -17,6 +17,7 @@ import { advancePacer, pacer, resetPacer } from './engine/pacing'
 import { canvasLosses, canvasRestored, checkCanvases, context2d, drawThrew, dropLobbyArt, heldCanvases, heldCanvasesBy, onCanvasReset, readPixels, resetCanvases, sweepArt, wipeCanvases } from './engine/pixelart'
 import { frameStats, recentFrameMs, recordFrame, resetRunFrames, runFrames } from './engine/frameStats'
 import { fitView, pickViewport } from './engine/viewport'
+import { launchGapNow, syncLaunchGap } from './ui/uiScale'
 import { createRng } from './engine/rng'
 import { BIOMES, type BiomeId, type WeatherId } from './data/biomes'
 import { bodyOf } from './data/bodies'
@@ -350,7 +351,8 @@ const fitNow = () => {
   const visual = window.visualViewport
   const size = pickViewport(visual, { width: window.innerWidth, height: window.innerHeight })
   if (visual && size !== visual) canvasLosses.badViewport++
-  return size && fitView(size.width, size.height, window.devicePixelRatio || 1)
+  // A cold-started iOS app is laid out short of its screen: the canvas reaches down to the bottom anyway.
+  return size && fitView(size.width, size.height + launchGapNow(), window.devicePixelRatio || 1)
 }
 const fitted = (fit: ReturnType<typeof fitView>) => fit.w === canvas.width && fit.h === canvas.height && fit.cssScale === cssScale
 
@@ -362,6 +364,7 @@ const fitted = (fit: ReturnType<typeof fitView>) => fit.w === canvas.width && fi
  * starting `view` exactly, and the canvas stayed at the HTML default (300x150, top left).
  */
 const resize = () => {
+  syncLaunchGap()
   stickCenter = null
   // The HUD may have moved (a new viewport or UI size): re-measure it after layout (and after module init, so `run` exists by then).
   requestAnimationFrame(() => run && syncMarkerInsets())
@@ -384,6 +387,9 @@ const scheduleResize = () => (resize(), requestAnimationFrame(resize))
 window.addEventListener('resize', scheduleResize)
 window.addEventListener('orientationchange', scheduleResize)
 window.visualViewport?.addEventListener('resize', scheduleResize)
+// Coming back to the app (iOS may lay it out again then without a resize) and once the page has loaded.
+window.addEventListener('pageshow', scheduleResize)
+window.addEventListener('load', scheduleResize)
 resize()
 // After a GPU reset every canvas comes back blank, cached art included: redraw it all, settings too
 // (the frame held behind a menu as well: a paused run draws only when `dirty`).

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { FIXED_STICK_REACH, fixedJoystick, gripDown, gripMove, gripUp, joystick, STICK_RADIUS } from './input'
-import { deviceScale, fitView, pickViewport } from './viewport'
+import { deviceScale, fitView, launchGap, pickViewport } from './viewport'
 
 describe('joystick', () => {
   it('ignores jitter inside the dead zone', () => {
@@ -98,5 +98,25 @@ describe('viewport', () => {
 
   it('stays as it is when neither viewport is a screen', () => {
     expect(pickViewport({ width: 0, height: 0 }, { width: 0, height: 0 })).toBeNull()
+  })
+})
+
+describe('launchGap', () => {
+  // An iPhone 16: 393 × 852, its Dynamic Island's status bar 59 tall.
+  const screen = { width: 393, height: 852 }
+
+  it('measures a cold-started home screen app laid out one status bar short', () => {
+    expect(launchGap(screen, { width: 393, height: 793 }, true)).toBe(59)
+  })
+
+  it('is 0 once the app fills its screen, held either way', () => {
+    expect(launchGap(screen, { width: 393, height: 852 }, true)).toBe(0)
+    expect(launchGap(screen, { width: 852, height: 393 }, true)).toBe(0)
+  })
+
+  it('leaves Safari tabs and windows narrower than the screen alone', () => {
+    expect(launchGap(screen, { width: 393, height: 793 }, false)).toBe(0)
+    expect(launchGap({ width: 1024, height: 1366 }, { width: 678, height: 1326 }, true)).toBe(0)
+    expect(launchGap(screen, { width: 393, height: 600 }, true)).toBe(0)
   })
 })

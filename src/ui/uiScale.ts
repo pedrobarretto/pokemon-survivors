@@ -1,4 +1,4 @@
-import { fitView, pickViewport } from '../engine/viewport'
+import { fitView, launchGap, pickViewport } from '../engine/viewport'
 
 /**
  * UI size (Settings → Jogo): the menus and the HUD are drawn in fixed CSS px,
@@ -49,11 +49,34 @@ export const uiZoom = () => zoom
  */
 export const uiDpr = () => (window.devicePixelRatio || 1) * zoom
 
-/** The visible viewport in `#ui`'s CSS px (the zoom leaves the UI that much less). */
+/* ---------------- iOS's short first layout ---------------- */
+
+let gap = 0
+
+/**
+ * Measures how short of its screen iOS laid the installed app out (`launchGap`) and puts it on
+ * `--launch-gap`, which style.css stretches the fixed layers down by and takes as the top safe area.
+ * `main.ts` calls it first thing on every resize, so it goes back to 0 the moment iOS lays the app
+ * out right (a rotation). Returns the gap, in CSS px.
+ */
+export const syncLaunchGap = () => {
+  const standalone = 'standalone' in navigator && navigator.standalone === true
+  const next = launchGap(screen, { width: window.innerWidth, height: window.innerHeight }, standalone)
+  if (next !== gap) {
+    gap = next
+    document.documentElement.style.setProperty('--launch-gap', `${gap}px`)
+  }
+  return gap
+}
+
+/** The gap `syncLaunchGap` last measured (0 everywhere but a short-launched iOS app). */
+export const launchGapNow = () => gap
+
+/** The visible viewport in `#ui`'s CSS px (the zoom leaves the UI that much less), the screen iOS left out included. */
 export const uiViewport = () => {
   const layout = { width: window.innerWidth, height: window.innerHeight }
   const { width, height } = pickViewport(window.visualViewport, layout) ?? layout
-  return { w: width / zoom, h: height / zoom }
+  return { w: width / zoom, h: (height + gap) / zoom }
 }
 
 /**
@@ -63,7 +86,7 @@ export const uiViewport = () => {
  */
 export const applyUiScale = (choice: UiScale) => {
   const w = window.innerWidth
-  const h = window.innerHeight
+  const h = window.innerHeight + gap
   const next = uiZoomFor(choice, w, h, fitView(w, h, window.devicePixelRatio || 1).cssScale)
   if (next === zoom) return
   zoom = next
