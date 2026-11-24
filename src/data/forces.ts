@@ -42,6 +42,8 @@ export const RUINS = {
   front: 24,
   wake: 18,
   rise: 2.4,
+  /** How far around their middle the ruins' spot is kept clear of solids and lakes, px: out to both ruins' outer walls. */
+  clear: 66,
 } as const
 
 /** Which side each ruin stands on (west, east), its Regi's colors (glow, core, spark) and type. */
