@@ -1224,7 +1224,7 @@ export const pt = {
       full: 'O servidor do co-op está cheio. Tente de novo em instantes.',
       offline: 'Sem conexão com o servidor do co-op.',
     },
-    denied: { notHost: 'Só o anfitrião pode começar.', notReady: 'Espere todos ficarem prontos.' },
+    denied: { notHost: 'Só o anfitrião pode começar.', notReady: 'Espere todos ficarem prontos.', unvouched: 'O servidor não respondeu a tempo para confirmar os lendários. Tente começar de novo.' },
     /** "Entre para jogar junto": co-op is for accounts (the team sees the @handle). */
     gate: {
       title: 'JOGAR JUNTO',
@@ -1300,7 +1300,7 @@ export const pt = {
       /** This player has no legend captured: they can't get ready in a legend room. */
       noLegend: 'Você ainda não capturou um lendário. Vença um no modo solo para jogar nesta sala.',
       noLegendSeat: 'sem lendário',
-      legendFellBack: (name: string, pokemon: string) => `O lendário de ${name} não foi confirmado pela conta: joga com ${pokemon}, e a partida fica fora do placar.`,
+      legendFellBack: (name: string, pokemon: string) => `O save na nuvem da conta de ${name} não tem esse lendário capturado: joga com ${pokemon}, e a partida fica fora do placar.`,
       legendNote: 'Escolha um dos seus lendários capturados. O servidor confere a captura na largada; sem ela, você joga com seu parceiro.',
       hintKeys: '← → escolher · ENTER confirmar · ESC sair',
       hintTouch: 'Toque para escolher',

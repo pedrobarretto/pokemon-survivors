@@ -1020,7 +1020,7 @@ export const en: Messages = {
       full: 'The co-op server is full. Try again in a moment.',
       offline: "Can't reach the co-op server.",
     },
-    denied: { notHost: 'Only the host can start.', notReady: 'Wait for everyone to be ready.' },
+    denied: { notHost: 'Only the host can start.', notReady: 'Wait for everyone to be ready.', unvouched: "The server didn't answer in time to confirm the legends. Try starting again." },
     gate: {
       title: 'PLAY TOGETHER',
       pitch: 'Sign in to play together.',
@@ -1088,7 +1088,7 @@ export const en: Messages = {
       legendPick: 'Change legend',
       noLegend: "You haven't captured a legend yet. Beat one solo to play in this room.",
       noLegendSeat: 'no legend',
-      legendFellBack: (name: string, pokemon: string) => `${name}'s legend wasn't confirmed by their account: they play ${pokemon}, and this run stays off the boards.`,
+      legendFellBack: (name: string, pokemon: string) => `${name}'s cloud save hasn't captured that legend: they play ${pokemon}, and this run stays off the boards.`,
       legendNote: "Pick one of your captured legends. The server checks the capture at the start; without it, you play your partner.",
       hintKeys: '← → choose · ENTER confirm · ESC leave',
       hintTouch: 'Tap to choose',

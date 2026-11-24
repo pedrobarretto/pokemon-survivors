@@ -1020,7 +1020,7 @@ export const fr: Messages = {
       full: 'Le serveur coop est plein. Réessaie dans un instant.',
       offline: 'Impossible de joindre le serveur coop.',
     },
-    denied: { notHost: 'Seul l’hôte peut lancer.', notReady: 'Attends que tout le monde soit prêt.' },
+    denied: { notHost: 'Seul l’hôte peut lancer.', notReady: 'Attends que tout le monde soit prêt.', unvouched: 'Le serveur n’a pas répondu à temps pour confirmer les légendaires. Réessaie de lancer.' },
     gate: {
       title: 'JOUER ENSEMBLE',
       pitch: 'Connecte-toi pour jouer ensemble.',
@@ -1088,7 +1088,7 @@ export const fr: Messages = {
       legendPick: 'Changer de légendaire',
       noLegend: 'Vous n’avez encore capturé aucun légendaire. Battez-en un en solo pour jouer dans ce salon.',
       noLegendSeat: 'sans légendaire',
-      legendFellBack: (name: string, pokemon: string) => `Le légendaire de ${name} n'a pas été confirmé par son compte : il joue ${pokemon}, et la partie reste hors classement.`,
+      legendFellBack: (name: string, pokemon: string) => `La sauvegarde en ligne du compte de ${name} n'a pas capturé ce légendaire : il joue ${pokemon}, et la partie reste hors classement.`,
       legendNote: 'Choisissez un de vos légendaires capturés. Le serveur vérifie la capture au départ ; sans elle, vous jouez votre partenaire.',
       hintKeys: '← → choisir · ENTER confirmer · ESC quitter',
       hintTouch: 'Touche pour choisir',

@@ -459,9 +459,9 @@ export class ShardObject extends DurableObject<Env> {
 
   /** A friends' room's looks and legends as its run starts, from the API (none when it fails), back to the room that asked, if it's still here. */
   private async lookUp(shell: Shell, e: Extract<Effect, { k: 'looks' }>) {
-    const { looks, legends } = await lookUpLooks(this.api, e.ids)
-    this.log({ ev: 'room.looks', code: shell.code, asked: e.ids.length, vouched: Object.keys(looks).length, legends: Object.keys(legends).length })
-    if (this.rooms.get(shell.code) === shell) this.step(shell, () => looked(shell.state, e.ask, looks, Date.now(), legends))
+    const { answered, looks, legends } = await lookUpLooks(this.api, e.ids)
+    this.log({ ev: 'room.looks', code: shell.code, asked: e.ids.length, answered, vouched: Object.keys(looks).length, legends: Object.keys(legends).length })
+    if (this.rooms.get(shell.code) === shell) this.step(shell, () => looked(shell.state, e.ask, answered ? looks : null, Date.now(), legends))
   }
 
   /** The room's frame timer while its run's clock runs; its deadline, for the shard's alarm. */

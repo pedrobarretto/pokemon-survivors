@@ -3467,7 +3467,8 @@ const startCoopRun = async (client: CoopClient, runner: Runner, startsIn: number
         : null,
   }
   const me = localPlayer(live.game)
-  // A co-op Legend room's seat whose legend the account didn't vouch for plays its partner (`parseLoadout`): say so, since the run then lists on no board.
+  // A co-op Legend room's seat whose legend the account's stored save hasn't captured plays its partner (`parseLoadout`): say so, since the run
+  // then lists on no board. (A Legend room the API gave no answer for never starts: the host is told `unvouched` and tries again.)
   if (!live.game.versus && parseSettings(live.start.settings).legend === true)
     live.start.players.forEach((p, i) => {
       const asked = p.loadout.starter

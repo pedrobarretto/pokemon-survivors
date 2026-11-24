@@ -159,9 +159,9 @@ export const createRooms = (deps: RoomsDeps) => {
 
   /** A friends' room's looks as its run starts, back to the room that asked, if it's still here. */
   const lookUp = async (shell: Shell, e: Extract<Effect, { k: 'looks' }>) => {
-    const { looks, legends } = await deps.looks(e.ids)
-    log('room.looks', { code: shell.code, asked: e.ids.length, vouched: Object.keys(looks).length, legends: Object.keys(legends).length })
-    if (rooms.get(shell.code) === shell) step(shell, () => looked(shell.state, e.ask, looks, now(), legends))
+    const { answered, looks, legends } = await deps.looks(e.ids)
+    log('room.looks', { code: shell.code, asked: e.ids.length, answered, vouched: Object.keys(looks).length, legends: Object.keys(legends).length })
+    if (rooms.get(shell.code) === shell) step(shell, () => looked(shell.state, e.ask, answered ? looks : null, now(), legends))
   }
 
   /**
