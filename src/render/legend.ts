@@ -40,8 +40,10 @@ export const LEGEND_MIN_HEIGHT = 30
  */
 export const playerSprites = (g: Game, megaForm?: FormKey): SpeciesSprites => {
   const p = g.player
-  // Ditto wears the foe it Transformed into (its sheets are loaded: that foe was on screen).
-  const copy = p.rocket?.kind === 'transform' && p.rocket.dex !== 0 && megaForm === undefined ? loadedSprites(p.rocket.dex) : undefined
+  // Ditto wears the foe it Transformed into (its sheets are loaded: that foe was on screen);
+  // a shiny Ditto wears the foe's shiny colors, asked for here and in the normal ones until they land.
+  const copyDex = p.rocket?.kind === 'transform' && megaForm === undefined ? p.rocket.dex : 0
+  const copy = copyDex !== 0 && loadedSprites(copyDex) ? (p.shiny ? sprites(copyDex, true) : loadedSprites(copyDex)) : undefined
   if (copy) return copy
   const stance = p.special.stance
   const form = sheetForm(megaForm ?? legendLook(g) ?? (stance ? STANCE_FORMS[stance] : undefined) ?? seasonKitForm(p.kit, p.stage, weatherHere(g)) ?? hookForm(g, p) ?? shadowForm(g))
