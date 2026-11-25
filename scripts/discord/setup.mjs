@@ -27,6 +27,15 @@ const GATE = true
 
 const SITE = 'https://www.pokemonsurvivors.com'
 
+/**
+ * The Feature Organizer bot (an agent hosted on OpenBot): it reads the players'
+ * suggestions once a day and reports the best ones to Pedro. A channel's
+ * `organizer` says what it may do there: `read` only, or `review`, which also
+ * lets it react ✅ in #idea-review (the API takes any reaction but its own bot's).
+ * It never talks anywhere.
+ */
+const ORGANIZER = '1575249104550895727'
+
 // The networks whose followers get a rare egg, each in its own #<network>-reward
 // channel (the profiles are SOCIALS in src/site/routes.ts).
 const SOCIAL_REWARDS = [
@@ -46,6 +55,7 @@ const P = {
   stream: 1n << 9n,
   viewChannel: 1n << 10n,
   sendMessages: 1n << 11n,
+  readHistory: 1n << 16n,
   manageEmojis: 1n << 30n,
   manageMessages: 1n << 13n,
   mentionEveryone: 1n << 17n,
@@ -136,7 +146,7 @@ const LAYOUT = [
   {
     category: '💬 Community',
     channels: [
-      { name: 'general', aliases: ['geral'], topic: 'Talk about anything Pokémon Survivors. English, please — other languages have their own rooms.' },
+      { name: 'general', aliases: ['geral'], organizer: 'read', topic: 'Talk about anything Pokémon Survivors. English, please — other languages have their own rooms.' },
       { name: 'screenshots-and-clips', topic: 'Crazy runs, huge hordes, funny deaths.' },
       { name: 'memes' },
       { name: 'off-topic', topic: 'Anything that is not the game.' },
@@ -173,6 +183,7 @@ const LAYOUT = [
       {
         name: 'suggestions',
         type: 'forum',
+        organizer: 'read',
         topic: 'One idea per post. Vote with reactions. Ideas also live in the game, on the Ideas board.',
         tags: ['Gameplay', 'Pokémon', 'Moves', 'Bosses', 'UI', 'Planned', 'Shipped', 'Declined'],
       },
@@ -212,6 +223,7 @@ const LAYOUT = [
       { name: 'mod-log', topic: 'Discord’s own community updates and safety alerts.' },
       {
         name: 'idea-review',
+        organizer: 'review',
         topic: 'Ideas posted in the game land here first. React ✅ (or 👍) to put one on the board’s Backlog, ❌ (or 👎) to hide it.',
       },
     ],
@@ -421,7 +433,17 @@ const allow = (id, bits) => ({ id, type: 0, allow: bits.toString(), deny: '0' })
 const deny = (id, bits) => ({ id, type: 0, allow: '0', deny: bits.toString() })
 
 /** Permission overwrites for a channel, from its category's access and its own flags. */
-const overwritesFor = (access, channel) => {
+/** What the Feature Organizer may do in a channel: see and read it, react only where it reviews, never talk. */
+const organizerFor = (channel) => {
+  const reads = P.viewChannel | P.readHistory
+  if (channel?.organizer === 'review') return [{ id: ORGANIZER, type: 1, allow: (reads | P.addReactions).toString(), deny: TALK.toString() }]
+  if (channel?.organizer === 'read') return [{ id: ORGANIZER, type: 1, allow: reads.toString(), deny: (TALK | P.addReactions).toString() }]
+  return []
+}
+
+const overwritesFor = (access, channel) => [...accessOverwrites(access, channel), ...organizerFor(channel)]
+
+const accessOverwrites = (access, channel) => {
   const botMember = { id: me.id, type: 1, allow: (P.viewChannel | TALK).toString(), deny: '0' }
   if (access === 'staff') return [deny(GUILD, P.viewChannel), ...staff.map((id) => allow(id, P.viewChannel)), botMember]
   if (access === 'supporters')
