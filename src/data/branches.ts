@@ -34,7 +34,7 @@ export type BranchDef = {
   bonus: StatDelta
   /** Moves the branch adds to the family's learnset once it evolves into it (on top of the line's lists). */
   moves: readonly MoveId[]
-  /** The weather or biome that makes it the likelier draw among the free branches (`evolutionOffers`). */
+  /** The weather or biome that makes it the likelier draw among the free branches (`evolutionOffers`), and tags its card where the player picks. */
   favors?: { weather?: readonly WeatherId[]; biome?: readonly BiomeId[] }
   /** Its special, when it isn't the one of its first type (`resolveSpecial`). */
   special?: SpecialId
@@ -42,6 +42,8 @@ export type BranchDef = {
   rejoins?: true
   /** Free even though an item names it (Eevee's Water, Thunder and Fire Stones): the item only adds it to the choice. */
   free?: true
+  /** A free branch the player picks instead of the draw: every free branch so marked is offered (Galarian Slowpoke's Slowbro and Slowking), never drawn. */
+  pick?: true
 }
 
 export const BRANCHES = {
@@ -247,15 +249,15 @@ export const BRANCHES = {
     moves: ['ironDefense', 'flashCannon'],
     special: 'heavySlam',
   },
-  /* Galarian Slowpoke at Lv 20: Slowbro (the shell bites its arm in the forest) or Slowking (a crown of Galarica in the fog), drawn. */
+  /* Galarian Slowpoke at Lv 20: Slowbro (the shell bites its arm, at home in the forest and the rain) or Slowking (a crown of Galarica, at home in the fog), the player's pick. */
   slowbroGalar: {
-    line: 'slowpokeGalar', stage: 1, name: 'Galarian Slowbro', dex: 10165, types: ['poison', 'psychic'],
+    line: 'slowpokeGalar', stage: 1, pick: true, name: 'Galarian Slowbro', dex: 10165, types: ['poison', 'psychic'],
     bonus: { maxHp: 60, armor: 1, might: 0.2 },
     moves: [],
     favors: { weather: ['rain'], biome: ['forest', 'beach'] },
   },
   slowkingGalar: {
-    line: 'slowpokeGalar', stage: 1, name: 'Galarian Slowking', dex: 10172, types: ['poison', 'psychic'],
+    line: 'slowpokeGalar', stage: 1, pick: true, name: 'Galarian Slowking', dex: 10172, types: ['poison', 'psychic'],
     bonus: { maxHp: 50, might: 0.24, area: 0.1, statusDamage: 0.12 },
     moves: ['willOWisp', 'spiritShackle'],
     favors: { weather: ['fog'], biome: ['tower', 'cave'] },
