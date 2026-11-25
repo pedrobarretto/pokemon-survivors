@@ -8,21 +8,21 @@
     "splash": null,
     "discovery_splash": null,
     "features": [
+      "STAGE_CHANNEL_VIEWERS_50",
       "GUILD_ONBOARDING_HAS_PROMPTS",
-      "GUILD_SERVER_GUIDE",
+      "COMMUNITY",
       "WELCOME_SCREEN_ENABLED",
       "GUILD_ONBOARDING",
-      "INVITE_SPLASH",
-      "VIDEO_BITRATE_ENHANCED",
-      "COMMUNITY",
-      "VIDEO_QUALITY_720_60FPS",
-      "AGE_VERIFICATION_LARGE_GUILD",
       "AUTO_MODERATION",
-      "STAGE_CHANNEL_VIEWERS_50",
+      "INVITE_SPLASH",
+      "AGE_VERIFICATION_LARGE_GUILD",
+      "VIDEO_QUALITY_720_60FPS",
+      "ANIMATED_ICON",
+      "VIDEO_BITRATE_ENHANCED",
+      "TIERLESS_BOOSTING",
+      "GUILD_SERVER_GUIDE",
       "NEWS",
       "AUDIO_BITRATE_128_KBPS",
-      "TIERLESS_BOOSTING",
-      "ANIMATED_ICON",
       "GUILD_ONBOARDING_EVER_ENABLED"
     ],
     "banner": null,
@@ -440,7 +440,7 @@
       "position": 0,
       "permission_overwrites": [
         {
-          "id": "1561829008507928587",
+          "id": "1562199946545991730",
           "type": 0,
           "allow": "377957124096",
           "deny": "0"
@@ -458,7 +458,7 @@
           "deny": "0"
         },
         {
-          "id": "1562199946545991730",
+          "id": "1561829008507928587",
           "type": 0,
           "allow": "377957124096",
           "deny": "0"
@@ -536,7 +536,7 @@
       "position": 3,
       "permission_overwrites": [
         {
-          "id": "1562199946545991730",
+          "id": "1561829008507928587",
           "type": 0,
           "allow": "377957124096",
           "deny": "0"
@@ -554,7 +554,7 @@
           "deny": "0"
         },
         {
-          "id": "1561829008507928587",
+          "id": "1562199946545991730",
           "type": 0,
           "allow": "377957124096",
           "deny": "0"
@@ -610,7 +610,7 @@
       "position": 1,
       "permission_overwrites": [
         {
-          "id": "1561829006846730414",
+          "id": "1562199946545991730",
           "type": 0,
           "allow": "1024",
           "deny": "0"
@@ -622,7 +622,7 @@
           "deny": "1024"
         },
         {
-          "id": "1562199946545991730",
+          "id": "1561829006846730414",
           "type": 0,
           "allow": "1024",
           "deny": "0"
@@ -785,7 +785,7 @@
       "position": 8,
       "permission_overwrites": [
         {
-          "id": "1561829006846730414",
+          "id": "1562199946545991730",
           "type": 0,
           "allow": "1024",
           "deny": "0"
@@ -809,7 +809,7 @@
           "deny": "0"
         },
         {
-          "id": "1562199946545991730",
+          "id": "1561829006846730414",
           "type": 0,
           "allow": "1024",
           "deny": "0"
@@ -829,18 +829,6 @@
       "position": 9,
       "permission_overwrites": [
         {
-          "id": "1562199946545991730",
-          "type": 0,
-          "allow": "1024",
-          "deny": "0"
-        },
-        {
-          "id": "1575249104550895727",
-          "type": 1,
-          "allow": "66624",
-          "deny": "377957124096"
-        },
-        {
           "id": "1561829006846730414",
           "type": 0,
           "allow": "1024",
@@ -851,6 +839,18 @@
           "type": 0,
           "allow": "0",
           "deny": "1024"
+        },
+        {
+          "id": "1575249104550895727",
+          "type": 1,
+          "allow": "66624",
+          "deny": "377957124096"
+        },
+        {
+          "id": "1562199946545991730",
+          "type": 0,
+          "allow": "1024",
+          "deny": "0"
         },
         {
           "id": "1561827561837826199",
@@ -889,13 +889,13 @@
           "deny": "0"
         },
         {
-          "id": "1564342411793277029",
+          "id": "1561829008507928587",
           "type": 0,
           "allow": "4776006782464",
           "deny": "0"
         },
         {
-          "id": "1561829008507928587",
+          "id": "1561829010953207861",
           "type": 0,
           "allow": "4776006782464",
           "deny": "0"
@@ -913,7 +913,7 @@
           "deny": "0"
         },
         {
-          "id": "1561829010953207861",
+          "id": "1564342411793277029",
           "type": 0,
           "allow": "4776006782464",
           "deny": "0"
@@ -958,7 +958,7 @@
           "deny": "0"
         },
         {
-          "id": "1564342411793277029",
+          "id": "1561829010953207861",
           "type": 0,
           "allow": "4776006782464",
           "deny": "0"
@@ -976,7 +976,7 @@
           "deny": "0"
         },
         {
-          "id": "1561829010953207861",
+          "id": "1564342411793277029",
           "type": 0,
           "allow": "4776006782464",
           "deny": "0"
@@ -1021,7 +1021,7 @@
           "deny": "0"
         },
         {
-          "id": "1561829010953207861",
+          "id": "1564342411793277029",
           "type": 0,
           "allow": "4776006782464",
           "deny": "0"
@@ -1039,7 +1039,7 @@
           "deny": "0"
         },
         {
-          "id": "1564342411793277029",
+          "id": "1561829010953207861",
           "type": 0,
           "allow": "4776006782464",
           "deny": "0"
@@ -1193,7 +1193,7 @@
       "position": 16,
       "permission_overwrites": [
         {
-          "id": "1562199946545991730",
+          "id": "1561829008507928587",
           "type": 0,
           "allow": "377957173248",
           "deny": "0"
@@ -1205,7 +1205,7 @@
           "deny": "377957173248"
         },
         {
-          "id": "1561829006846730414",
+          "id": "1562199946545991730",
           "type": 0,
           "allow": "377957173248",
           "deny": "0"
@@ -1217,7 +1217,7 @@
           "deny": "0"
         },
         {
-          "id": "1561829008507928587",
+          "id": "1561829006846730414",
           "type": 0,
           "allow": "377957173248",
           "deny": "0"

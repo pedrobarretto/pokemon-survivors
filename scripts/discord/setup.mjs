@@ -73,6 +73,7 @@ const P = {
   sendMessagesInThreads: 1n << 38n,
   moderateMembers: 1n << 40n,
   useSoundboard: 1n << 42n,
+  createExpressions: 1n << 43n,
 }
 const MODERATE =
   P.kick | P.ban | P.manageMessages | P.mentionEveryone | P.muteMembers | P.moveMembers | P.manageNicknames | P.manageThreads | P.moderateMembers
@@ -110,7 +111,8 @@ const TEAMS = ['grass', 'fire', 'water'].map((type) => {
 // bottom), so an OG shows among the OGs unless they're Diamond.
 const ROLES = [
   { name: 'Dev', color: 0xf8d030, hoist: true, staff: true },
-  { name: 'Moderator', color: 0x6890f0, hoist: true, staff: true },
+  // Moderators also add emojis and stickers (staff gave them that by hand).
+  { name: 'Moderator', color: 0x6890f0, hoist: true, staff: true, extra: P.createExpressions },
   { name: 'Diamond Supporter', color: 0x58c8f8, hoist: true, supporter: true },
   { name: 'OG Supporter', color: 0xa070f0, hoist: true, supporter: true },
   { name: 'Gold Supporter', color: 0xf0b000, hoist: true, supporter: true },
@@ -138,7 +140,6 @@ const LAYOUT = [
         slowmode: 30,
         topic: 'Say hi! Your name or nick, where you’re from, your favorite Pokémon and how you found the game.',
       },
-      { name: 'arrivals', readOnly: true, topic: 'Who just landed. Join messages live here so the chat stays clean.' },
       { name: 'announcements', type: 'news', readOnly: true, topic: 'Big news, events and giveaways.' },
       { name: 'patch-notes', type: 'news', readOnly: true, topic: `Every update, posted automatically. Full history: ${SITE}/en/changelog/` },
     ],
@@ -149,14 +150,14 @@ const LAYOUT = [
       { name: 'general', aliases: ['geral'], organizer: 'read', topic: 'Talk about anything Pokémon Survivors. English, please — other languages have their own rooms.' },
       { name: 'screenshots-and-clips', topic: 'Crazy runs, huge hordes, funny deaths.' },
       { name: 'memes' },
-      { name: 'off-topic', topic: 'Anything that is not the game.' },
+      { name: 'multimedia-fanarts', aliases: ['off-topic'], topic: 'Share all your artwork or anything like videos' },
     ],
   },
   {
     category: '🎮 Game',
     channels: [
-      { name: 'daily-challenge', topic: 'Same seed for everyone, one official try a day. Post your time and build. Yesterday’s podium lands here.' },
-      { name: 'daily-outbreak', topic: 'Today’s outbreak: which Pokémon is everywhere and how to farm it.' },
+      { name: 'daily-challenge', staffPerms: true, topic: 'Same seed for everyone, one official try a day. Post your time and build. Yesterday’s podium lands here.' },
+      { name: 'daily-outbreak', staffPerms: true, topic: 'Today’s outbreak: which Pokémon is everywhere and how to farm it.' },
       { name: 'shiny-showcase', topic: 'Show off your shinies ✨' },
       ...SOCIAL_REWARDS.map((r) => ({
         name: r.channel,
@@ -185,7 +186,7 @@ const LAYOUT = [
         type: 'forum',
         organizer: 'read',
         topic: 'One idea per post. Vote with reactions. Ideas also live in the game, on the Ideas board.',
-        tags: ['Gameplay', 'Pokémon', 'Moves', 'Bosses', 'UI', 'Planned', 'Shipped', 'Declined'],
+        tags: ['Gameplay', 'Pokémon', 'Moves', 'Bosses', 'UI', 'Multiplayer'],
       },
     ],
   },
@@ -405,7 +406,7 @@ for (const role of ROLES) {
   if (!running('roles')) continue
   const owned = {
     // Staff talk without needing the Trainer role on top.
-    permissions: (role.staff ? MODERATE | MANAGE | TALK | VOICE : role.trainer && GATE ? TALK | VOICE : 0n).toString(),
+    permissions: ((role.staff ? MODERATE | MANAGE | TALK | VOICE : role.trainer && GATE ? TALK | VOICE : 0n) | (role.extra ?? 0n)).toString(),
     mentionable: role.name.endsWith('Ping'),
   }
   if (found) await patch(`role ${found.name}`, `/guilds/${GUILD}/roles/${found.id}`, found, owned)
@@ -428,6 +429,8 @@ if (running('roles')) {
 }
 
 const staff = ROLES.filter((r) => r.staff).map((r) => roleId[r.name])
+// The Owner role is staff's own (made by hand, never edited here); it sees the staff channels too.
+const OWNER_ROLE = '1561829006846730414'
 const supporters = ROLES.filter((r) => r.supporter).map((r) => roleId[r.name])
 const allow = (id, bits) => ({ id, type: 0, allow: bits.toString(), deny: '0' })
 const deny = (id, bits) => ({ id, type: 0, allow: '0', deny: bits.toString() })
@@ -445,7 +448,7 @@ const overwritesFor = (access, channel) => [...accessOverwrites(access, channel)
 
 const accessOverwrites = (access, channel) => {
   const botMember = { id: me.id, type: 1, allow: (P.viewChannel | TALK).toString(), deny: '0' }
-  if (access === 'staff') return [deny(GUILD, P.viewChannel), ...staff.map((id) => allow(id, P.viewChannel)), botMember]
+  if (access === 'staff') return [deny(GUILD, P.viewChannel), ...[...staff, OWNER_ROLE].map((id) => allow(id, P.viewChannel)), botMember]
   if (access === 'supporters')
     return [deny(GUILD, P.viewChannel), ...[...staff, ...supporters].map((id) => allow(id, P.viewChannel | TALK | VOICE)), botMember]
   if (channel?.readOnly) return [deny(GUILD, TALK), ...staff.map((id) => allow(id, TALK)), botMember]
@@ -499,8 +502,9 @@ for (const { group, category: cat, channels } of placed) {
   }
   for (const { channel, type, found } of channels) {
     if (running('channels')) {
+      // `staffPerms`: staff set this channel's permissions by hand (who posts in the daily channels), so they stay theirs.
       const owned = {
-        permission_overwrites: overwritesFor(group.access, channel),
+        ...(channel.staffPerms ? {} : { permission_overwrites: overwritesFor(group.access, channel) }),
         ...(channel.slowmode ? { rate_limit_per_user: channel.slowmode } : {}),
         ...(type === TYPE.news && community ? { type } : {}),
       }
@@ -532,8 +536,8 @@ if (running('community')) {
     explicit_content_filter: 2,
     default_message_notifications: 1,
     rules_channel_id: need(channelId['rules'], '#rules', 'channels'),
-    // Join, boost and setup-tip messages go to #arrivals instead of the chat.
-    system_channel_id: need(channelId['arrivals'], '#arrivals', 'channels'),
+    // No join, boost or setup-tip messages: staff turned them off and removed #arrivals.
+    system_channel_id: null,
     public_updates_channel_id: need(channelId['mod-log'], '#mod-log', 'channels'),
     preferred_locale: 'en-US',
     description: 'A free browser survivors-like with Pokémon. Play at pokemonsurvivors.com',
