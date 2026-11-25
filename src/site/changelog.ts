@@ -151,6 +151,18 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
           },
         ],
       },
+      {
+        title: { pt: 'Ditto shiny', en: 'Shiny Ditto', es: 'Ditto shiny', fr: 'Ditto chromatique', zh: '異色 Ditto' },
+        notes: [
+          {
+            pt: 'Ditto shiny agora se transforma na versão shiny do Pokémon que copia, no solo e no co-op. Só a aparência muda: os bônus da cópia são os mesmos.',
+            en: 'Shiny Ditto now Transforms into the shiny version of the Pokémon it copies, solo and in co-op. Only the look changes: the copy’s bonuses are the same.',
+            es: 'Ditto shiny ahora se transforma en la versión shiny del Pokémon que copia, en solo y en co-op. Solo cambia la apariencia: los bonos de la copia son los mismos.',
+            fr: 'Ditto chromatique se transforme maintenant en la version chromatique du Pokémon qu’il copie, en solo comme en coop. Seule l’apparence change : les bonus de la copie restent les mêmes.',
+            zh: '異色 Ditto 現在會變身成所複製寶可夢的異色版本，單人與合作模式皆適用。只有外觀改變，複製帶來的加成不變。',
+          },
+        ],
+      },
     ],
   },
   {
