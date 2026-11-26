@@ -47,6 +47,8 @@ export type PathWords = {
       coreSighted: string
       cellFound: (pieces: string) => string
       coreFound: (cores: string) => string
+      /** A Core found with every Core already in the Cube: the Cells it turned into, and the Cube's pieces after. */
+      coreConverted: (cells: string, pieces: string) => string
       cellGone: string
       coreGone: string
       templeRisen: string
@@ -235,6 +237,7 @@ const pt: PathWords = {
       coreSighted: 'Um *Zygarde Core*! Ele foge devagar: alcance!',
       cellFound: (pieces: string) => `*Zygarde Cell* guardada no Cube! _${pieces}_`,
       coreFound: (cores: string) => `*Zygarde Core* guardado no Cube! _${cores}_`,
+      coreConverted: (cells: string, pieces: string) => `*Core* extra convertido em *${cells} Cells*! _${pieces}_`,
       cellGone: 'A Zygarde Cell se enterrou e sumiu…',
       coreGone: 'O Zygarde Core escapou para dentro da terra…',
       templeRisen: 'Um *templo antigo* surgiu da terra! Siga a seta.',
@@ -420,6 +423,7 @@ const en: PathWords = {
       coreSighted: 'A *Zygarde Core*! It creeps away: catch up!',
       cellFound: (pieces: string) => `*Cell* stored in the Cube! _${pieces}_`,
       coreFound: (cores: string) => `*Core* stored in the Cube! _${cores}_`,
+      coreConverted: (cells: string, pieces: string) => `Extra *Core* turned into *${cells} Cells*! _${pieces}_`,
       cellGone: 'The Cell burrowed and vanished…',
       coreGone: 'The Core slipped back into the ground…',
       templeRisen: 'An *ancient temple* rose from the ground! Follow the arrow.',
@@ -605,6 +609,7 @@ const es: PathWords = {
       coreSighted: '¡Un *Zygarde Core*! Huye despacio: ¡alcánzalo!',
       cellFound: (pieces: string) => `¡*Zygarde Cell* guardada en el Cube! _${pieces}_`,
       coreFound: (cores: string) => `¡*Zygarde Core* guardado en el Cube! _${cores}_`,
+      coreConverted: (cells: string, pieces: string) => `¡*Core* extra convertido en *${cells} Cells*! _${pieces}_`,
       cellGone: 'La Zygarde Cell se enterró y desapareció…',
       coreGone: 'El Zygarde Core se escapó bajo tierra…',
       templeRisen: '¡Un *templo antiguo* surgió del suelo! Sigue la flecha.',
@@ -790,6 +795,7 @@ const fr: PathWords = {
       coreSighted: 'Un *Zygarde Core* ! Il s’enfuit lentement : rattrapez-le !',
       cellFound: (pieces: string) => `*Zygarde Cell* rangée dans le Cube ! _${pieces}_`,
       coreFound: (cores: string) => `*Zygarde Core* rangé dans le Cube ! _${cores}_`,
+      coreConverted: (cells: string, pieces: string) => `*Core* en trop converti en *${cells} Cells* ! _${pieces}_`,
       cellGone: 'La Zygarde Cell s’est enfouie et a disparu…',
       coreGone: 'Le Zygarde Core s’est échappé sous terre…',
       templeRisen: 'Un *temple ancien* est sorti du sol ! Suivez la flèche.',
@@ -975,6 +981,7 @@ const zh: PathWords = {
       coreSighted: '一個 *Zygarde Core*！它會慢慢逃走：快追上！',
       cellFound: (pieces: string) => `*Zygarde Cell* 收進 Cube了！_${pieces}_`,
       coreFound: (cores: string) => `*Zygarde Core* 收進 Cube了！_${cores}_`,
+      coreConverted: (cells: string, pieces: string) => `多出的 *Core* 化為 *${cells} 個 Cell*！_${pieces}_`,
       cellGone: 'Zygarde Cell 鑽進土裡不見了……',
       coreGone: 'Zygarde Core 溜回地底了……',
       templeRisen: '一座 *古老神殿* 從地面升起！跟著箭頭走。',

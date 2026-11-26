@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { COSMOG, MELTAN, ZYGARDE } from '../data/legendPaths'
 import { formAfter } from './legend'
 import {
-  clearTrial, cosmogLean, cosmogStage, cubePieces, kubfuJoined, mergePaths, NO_COSMOG, NO_PATHS, openForms, parsePaths, pathGifts, recordCosmog, runPieces, styleOf, templeRun, trialOpen,
+  clearTrial, cosmogLean, cosmogStage, cubePieces, kubfuJoined, mergePaths, NO_COSMOG, NO_PATHS, openForms, parsePaths, pathGifts, recordCosmog, runPieces, styleOf, takePiece, templeRun, trialOpen,
   type CosmogSave,
 } from './legendPaths'
 import { createPathRun } from './pathRun'
@@ -16,6 +16,19 @@ const researched: CosmogSave = { ...NO_COSMOG, research: [...COSMOG.research] }
 describe('the Zygarde Cube', () => {
   it('counts Cells up to 95 and Cores up to 5, so 100% needs every Core', () => {
     expect([cubePieces({ cells: 40, cores: 2 }), cubePieces({ cells: 300, cores: 0 }), cubePieces({ cells: 95, cores: 9 })]).toEqual([42, 95, 100])
+  })
+
+  it('takes a Core as a Core under 5, and as Cells once every Core is in', () => {
+    expect(takePiece({ cells: 3, cores: 0 }, false)).toEqual({ paths: { cells: 4, cores: 0 }, converted: 0 })
+    expect(takePiece({ cells: 3, cores: 4 }, true)).toEqual({ paths: { cells: 3, cores: 5 }, converted: 0 })
+    expect(takePiece({ cells: 3, cores: 5 }, true)).toEqual({ paths: { cells: 3 + ZYGARDE.extraCore, cores: 5 }, converted: ZYGARDE.extraCore })
+  })
+
+  it('keeps an extra Core\'s Cells through a save round trip and a merge', () => {
+    const { paths } = takePiece({ ...NO_PATHS, cells: 20, cores: 5 }, true)
+    const back = parsePaths(JSON.parse(JSON.stringify(paths)))
+    expect([back.cells, back.cores]).toEqual([20 + ZYGARDE.extraCore, 5])
+    expect(mergePaths({ ...NO_PATHS, cells: 20, cores: 5 }, back).cells).toBe(20 + ZYGARDE.extraCore)
   })
 
   it('opens each Forme at its pieces, the 10% one with Zygarde itself', () => {

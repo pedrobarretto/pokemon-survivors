@@ -85,6 +85,17 @@ export const mergePaths = (a: PathsSave, b: PathsSave): PathsSave => {
 /** The Cube's pieces: Cells up to `ZYGARDE.cells`, Cores up to `ZYGARDE.cores` (so 100% needs every Core). */
 export const cubePieces = (p: Pick<PathsSave, 'cells' | 'cores'>) => Math.min(p.cells, ZYGARDE.cells) + Math.min(p.cores, ZYGARDE.cores)
 
+/**
+ * The Cube after taking a piece: a Cell adds a Cell; a Core adds a Core while
+ * the Cube lacks some, and once it holds all `ZYGARDE.cores`, turns into
+ * `ZYGARDE.extraCore` Cells instead (`converted`, 0 otherwise).
+ */
+export const takePiece = <P extends Pick<PathsSave, 'cells' | 'cores'>>(p: P, core: boolean): { paths: P; converted: number } => {
+  if (!core) return { paths: { ...p, cells: p.cells + 1 }, converted: 0 }
+  if (p.cores < ZYGARDE.cores) return { paths: { ...p, cores: p.cores + 1 }, converted: 0 }
+  return { paths: { ...p, cells: p.cells + ZYGARDE.extraCore }, converted: ZYGARDE.extraCore }
+}
+
 /** How many Cells a run of `seed` brings (`ZYGARDE.perRun`), and whether a Core comes with them: drawn apart from the run's rng. */
 export const runPieces = (seed: number) => {
   const roll = hash2(seed, 1, 7187)

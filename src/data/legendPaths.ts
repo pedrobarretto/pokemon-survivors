@@ -34,6 +34,12 @@ export const ZYGARDE = {
   /** Cores among the 100: the Cube counts at most `cells` Cells, so Complete needs every Core. */
   cores: 5,
   cells: 95,
+  /**
+   * Cells a Core found with all 5 already in the Cube turns into: the Cells a
+   * Core is worth by how rare it is (one run in 7 brings a Core, and 7 runs
+   * bring about 10 Cells, `perRun`).
+   */
+  extraCore: 10,
   /** A run's Cells, by the seed: the chance of each count (0, 1, 2, 3); about 1.5 a run. */
   perRun: [0.15, 0.35, 0.3, 0.2],
   /** Chance a run brings a Core too. */
