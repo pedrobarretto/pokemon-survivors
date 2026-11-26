@@ -72,12 +72,13 @@ export const REALM = {
 } as const
 
 /**
- * The relays the realm runs on (the game's `RelayHome`s that are VPS relays;
- * repeated here because this file imports nothing). Cloudflare doesn't host
- * the realm: a city full of walkers never sleeps, which would keep a Durable
- * Object billed all day, and presence tolerates the VPS's distance.
+ * The relays the realm can run on (the game's `VpsHome`s, repeated here because
+ * this file imports nothing; `relay/node` fails to typecheck if they drift).
+ * Cloudflare doesn't host the realm: a city full of walkers never sleeps, which
+ * would keep a Durable Object billed all day, and presence tolerates the VPS's
+ * distance. A relay that is no city's home (`hk` today) runs no realm.
  */
-export type RealmHome = 'sa'
+export type RealmHome = 'sa' | 'hk'
 
 /**
  * The cities: each is one instance of the whole town (its rooms) with up to

@@ -27,6 +27,7 @@ jobs:
       VITE_POSTHOG_KEY: ${{ vars.VITE_POSTHOG_KEY }}
       VITE_COOP_URL: ${{ vars.VITE_COOP_URL }}
       VITE_COOP_URL_SA: ${{ vars.VITE_COOP_URL_SA }}
+      VITE_COOP_URL_HK: ${{ vars.VITE_COOP_URL_HK }}
       # The source maps' upload (scripts/sourcemaps.mjs); without the key it only deletes them.
       POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
       POSTHOG_CLI_PROJECT_ID: ${{ vars.POSTHOG_CLI_PROJECT_ID }}

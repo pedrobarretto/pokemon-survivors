@@ -2,7 +2,7 @@
   "name": "pokemon-survivors-relay-vps",
   "private": true,
   "type": "module",
-  "description": "The co-op relay's VPS shell (São Paulo first): the same pure room (../src/room.ts) on Node 24, one SQLite file per room, as a Docker image Dokploy runs.",
+  "description": "The co-op relay's VPS shell (São Paulo, Hong Kong): the same pure room (../src/room.ts) on Node 24, one SQLite file per room, as a Docker image Dokploy runs.",
   "scripts": {
     "build": "node build.mjs",
     "dev": "node build.mjs && PORT=8795 DATA_DIR=.data ALLOW_GUESTS=on node --enable-source-maps --disable-warning=ExperimentalWarning dist/relay.mjs",

@@ -15,6 +15,11 @@ interface ImportMetaEnv {
    * hosts' rooms (`coop/relays.ts`). Unset: every room is Cloudflare's, as before.
    */
   readonly VITE_COOP_URL_SA?: string
+  /**
+   * The Hong Kong co-op relay (`relay/node` on its own VPS, `https://coop-hk.pokemonsurvivors.com`), for hosts in
+   * mainland China, Taiwan and the rest of East Asia (`coop/relays.ts`). Unset: their rooms are Cloudflare's, as before.
+   */
+  readonly VITE_COOP_URL_HK?: string
 }
 
 /** The build that's playing (the commit, or `dev`): ranked runs report it. Set in `vite.config.ts`. */

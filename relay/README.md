@@ -241,23 +241,34 @@ Every line from a shard carries its name (`shard`, e.g. `enam:0`).
 
 **Kept runs.** A run that lasted a minute or more is offered to the vault when it is summed up (above): its input log, as a dump (`kind: 'run'`, `meta.why`, `meta.net` per seat, `score`; one id per run, so an offer made when everyone left is replaced if the run goes on), so a laggy run can be replayed in the lab. At most 20 a UTC day, the laggiest win (`score`: the worst seat's round trip p95, plus 20 per underrun and 50 per reconnect), kept 14 days. `/admin/dumps` lists them with the rest (`kind`, `score`).
 
-## VPS relay: São Paulo (`node/`)
+## VPS relays: São Paulo and Hong Kong (`node/`)
 
 Cloudflare has no Durable Objects in South America, so a Brazilian room runs in the US
-(116–140 ms away). `node/` runs the same room (`src/room.ts`, `src/store.ts`, `src/auth.ts`,
-`src/codes.ts`) on Node 24 as a Docker image, on Pedro's VPS through Dokploy:
+(116–140 ms away). Mainland China meets Cloudflare outside the mainland (often on the US west
+coast, by the carriers' routes), so a Chinese room's round trip runs long wherever its shard is.
+`node/` runs the same room (`src/room.ts`, `src/store.ts`, `src/auth.ts`, `src/codes.ts`) on
+Node 24 as a Docker image, on VPSes through Dokploy, one image for every relay (`RELAY_HOME`
+picks which):
 
 | Relay | Home (`RELAY_HOME`) | Codes start with | Where | Address | Game env |
 |---|---|---|---|---|---|
-| São Paulo | `sa` | 2–5 | the main VPS (72.60.58.225, next to the API, ~9 ms from a Brazilian player) | `coop-sa.pokemonsurvivors.com` | `VITE_COOP_URL_SA` |
+| São Paulo | `sa` | 2–5 | Oracle E5, 1 OCPU (~9 ms from a Brazilian player) | `coop-sa.pokemonsurvivors.com` | `VITE_COOP_URL_SA` |
+| Hong Kong | `hk` | 6–9 | a Hong Kong VPS with premium routes to the mainland carriers (20–60 ms to South and East China, ~20 to Taiwan) | `coop-hk.pokemonsurvivors.com` | `VITE_COOP_URL_HK` |
+
+Hong Kong needs no ICP filing (the mainland does: a Chinese company or resident's ID, and Chinese
+clouds block unfiled domains on 80 and 443). It hosts no Realm city (`REALM_CITIES` are all
+`sa`): its `/realm/<city>/ws` answers 404 and it never posts presence (`hostsCity`).
 
 - **Routing:** a room's code says its relay (`RELAY_HOMES` in the protocol). Cloudflare makes
   codes starting with a letter, each VPS relay with its own digits. The game (`src/coop/relays.ts`)
   measures every VPS relay it has a URL for and creates on the one with the lowest round trip
   within 70 ms that isn't full, else on Cloudflare (also the fallback when that relay can't take it). A build
-  without a relay's `VITE_COOP_URL_*` sends its codes to Cloudflare. Another relay is one entry in
-  `RELAY_HOMES` (6–9 are free: US east's until it was retired, 2026-10-25), one in `RELAY_URLS`
-  (`src/coopShell.ts`), its env var and this image with its `RELAY_HOME`.
+  without a relay's `VITE_COOP_URL_*` never measures it and sends its codes to Cloudflare (which refuses
+  them, `unavailable`). Another relay is one entry in `RELAY_HOMES` (every first character has a home
+  now: a new relay splits one's, `hk` took the retired US east relay's 6–9), one in `RELAY_URLS`
+  (`src/coopShell.ts`), its env var and this image with its `RELAY_HOME`. Round trips to a home reach
+  the room's relay in the lobby's `rtt` (`parseRtts` keeps only the homes that relay's protocol knows),
+  so a group move to `hk` needs the Cloudflare and São Paulo relays deployed with it.
 - **Moving for the group:** the host picks the relay at create, but the group can be elsewhere
   (the first 4-player room ran in São Paulo with players in Spain at 230 ms). In the lobby every
   client reports its round trips (`rtt`: each VPS relay's `/health` median, and a Cloudflare
@@ -327,11 +338,12 @@ docker build -f relay/node/Dockerfile -t ps-relay .   # from the repository root
 
 ### One-time setup (Pedro)
 
-The same steps for each relay, with its row of the table above (`<home>`: `sa`).
+The same steps for each relay, with its row of the table above (`<home>`: `sa`, `hk`).
 
-1. **DNS** (GoDaddy, `ns23`/`ns24.domaincontrol.com`): an `A` record per relay, TTL 600:
-   `coop-sa` → `72.60.58.225` (the main VPS, like `api`).
-   Check: `dig +short coop-<home>.pokemonsurvivors.com`.
+1. **DNS** (Cloudflare, the `pokemonsurvivors.com` zone since 2026-11-17): an `A` record per relay,
+   **DNS only** (grey cloud: Traefik on the VPS terminates TLS, and a proxied record would put
+   Cloudflare's edge in the path again), TTL Auto: `coop-<home>` → the VPS's public IP.
+   Check: `dig +short coop-<home>.pokemonsurvivors.com` answers the VPS's IP, not Cloudflare's.
 2. **Dokploy** (a relay on another machine: first add it as a **remote server** in Dokploy,
    Settings → Remote Servers, and set it up so it runs Traefik; its app then deploys there), project
    **Pokémon Survivors**, a new application `coop-<home>`:
@@ -364,7 +376,8 @@ The same steps for each relay, with its row of the table above (`<home>`: `sa`).
    a minute (Traefik's timeouts) and end with every check green.
 4. Ship the Cloudflare relay's code change (`npm run deploy:prod` here: its codes now always start
    with a letter) and wait 6 h, a room's longest life, so no live Cloudflare room has a digit code.
-5. The Site workflow's repo variable `VITE_COOP_URL_SA=https://coop-sa.pokemonsurvivors.com`, then redeploy the site.
+5. The Site workflow's repo variable `VITE_COOP_URL_<HOME>=https://coop-<home>.pokemonsurvivors.com`
+   (`VITE_COOP_URL_SA`, `VITE_COOP_URL_HK`), then redeploy the site.
 
 No Clerk change is needed: the issuer is the same, and a token's `azp` is checked against `ALLOWED_ORIGINS`.
 
@@ -377,7 +390,7 @@ No Clerk change is needed: the issuer is the same, and a token's `azp` is checke
 - **Logs:** the app's Logs tab in Dokploy (JSON lines: `run.*`, `seat.*`, `room.*`, `relay.stats`).
 - **Dumps:** `curl -s -H "Authorization: Bearer $(cat ~/.config/ps-coop/<home>-admin-token)" https://coop-<home>.pokemonsurvivors.com/admin/dumps`
   (then `/admin/dumps/<id> | gunzip > dump.json`).
-- **Costs:** São Paulo shares the main VPS (nothing extra). A 4-player room takes ~1–1.5% of a core and
+- **Costs:** each relay is its own VM (São Paulo: Oracle; Hong Kong: its own plan). A 4-player room takes ~1–1.5% of a core and
   ~1 MB of memory past the process's ~80 MB.
 
 ### US east (retired)

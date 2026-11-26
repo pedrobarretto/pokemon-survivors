@@ -376,6 +376,12 @@ describe('time', () => {
     disconnect(state, 'a', T0)
     expect(tick(state, T0 + PRESENCE_EVERY_MS + 1).find((e) => e.k === 'presence')).toMatchObject({ report: { cities: {} } })
   })
+
+  it('never reports presence from a relay that hosts no city', () => {
+    const state = createRealm('hk', T0)
+    expect(tick(state, T0 + PRESENCE_EVERY_MS).filter((e) => e.k === 'presence')).toEqual([])
+    expect(tick(state, T0 + 10 * PRESENCE_EVERY_MS).filter((e) => e.k === 'presence')).toEqual([])
+  })
 })
 
 describe('furniture', () => {

@@ -81,6 +81,20 @@ describe('São Paulo relay', () => {
     await relay.close()
   })
 
+  it('as Hong Kong (RELAY_HOME=hk), makes 6 to 9 codes in apac and hosts no Realm city', async () => {
+    const hkDir = mkdtempSync(join(tmpdir(), 'ps-relay-hk-'))
+    const relay = await startRelay({ ...configFrom({ RELAY_HOME: 'hk' }), host: '127.0.0.1', port: 0, dataDir: hkDir, allowGuests: true }, () => undefined)
+    const health: unknown = await (await fetch(`http://127.0.0.1:${relay.port}/health`)).json()
+    expect(health).toMatchObject({ ok: true, home: 'hk' })
+    const res = await fetch(`http://127.0.0.1:${relay.port}/rooms`, { method: 'POST', body: JSON.stringify({ v: PROTOCOL, build: 'b1' }) })
+    const made: unknown = await res.json()
+    expect(made).toMatchObject({ region: 'apac', code: expect.stringMatching(/^[6-9]/) })
+    const realm = new WebSocket(`ws://127.0.0.1:${relay.port}/realm/pallet/ws`)
+    expect(await new Promise((resolve) => realm.addEventListener('error', () => resolve('refused')))).toBe('refused')
+    await relay.close()
+    rmSync(hkDir, { recursive: true, force: true })
+  })
+
   it('waits for the relay holding the data dir to stop before loading its rooms', async () => {
     const first = await start()
     let up = false

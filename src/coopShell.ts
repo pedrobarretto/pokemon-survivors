@@ -88,7 +88,7 @@ export const setCoopUrl = (url: string | null) => (url ? local.set(URL_KEY, url)
  * name (`RELAY_HOMES`): one entry and one `VITE_COOP_URL_*` per relay. An
  * unset one is off, and its rooms' codes go to Cloudflare.
  */
-const RELAY_URLS = { sa: import.meta.env.VITE_COOP_URL_SA } as const satisfies Record<VpsHome, string | undefined>
+const RELAY_URLS = { sa: import.meta.env.VITE_COOP_URL_SA, hk: import.meta.env.VITE_COOP_URL_HK } as const satisfies Record<VpsHome, string | undefined>
 
 /** The VPS relays' URLs, with a dev build's overrides (`ps.coop('relay', home, url)`). */
 export const coopVpsUrls = (): VpsUrls =>

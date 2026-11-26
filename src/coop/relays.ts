@@ -3,9 +3,11 @@ import { CF_PROBES, homeOf, isRelayHome, type Region, type RelayHome, type Rtts,
 /**
  * Which relay a room lives on. Cloudflare's everywhere (the default and the
  * fallback), plus the VPS relays this build has a URL for (`RELAY_URLS` in
- * `coopShell.ts`; today São Paulo's, for rooms whose host is in South America:
+ * `coopShell.ts`: São Paulo's, for rooms whose host is in South America:
  * Cloudflare has no Durable Objects there, so a Brazilian room runs in the US,
- * 116–140 ms away). A room's code says its relay (`homeOf`),
+ * 116–140 ms away; Hong Kong's, for mainland China, which meets Cloudflare
+ * outside the mainland, often on the US west coast, and for Taiwan and the rest
+ * of East Asia). A room's code says its relay (`homeOf`),
  * so links and typed codes find it without asking anyone. The host's measure
  * picks where a room is made (`pickHome`); the group's, reported in its lobby,
  * where it moves before its first run (`groupHome`): a VPS relay, or
@@ -16,7 +18,7 @@ import { CF_PROBES, homeOf, isRelayHome, type Region, type RelayHome, type Rtts,
 /** Each VPS relay's base URL in this build (absent: that relay is off). */
 export type VpsUrls = Partial<Record<VpsHome, string>>
 
-/** A VPS relay round trip up to this (ms) can make the host's room that relay's (São Paulo: Brazil, Argentina, Uruguay, Paraguay, Chile). Past it, Cloudflare is about as near. */
+/** A VPS relay round trip up to this (ms) can make the host's room that relay's (São Paulo: Brazil, Argentina, Uruguay, Paraguay, Chile; Hong Kong: mainland China, Taiwan, Southeast Asia). Past it, Cloudflare is about as near. */
 export const NEAR_RTT_MS = 70
 
 const isVps = (home: RelayHome): home is VpsHome => home !== 'cf'
