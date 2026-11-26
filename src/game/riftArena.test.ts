@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { RIFT } from '../data/rifts'
 import { hurtPlayer } from './combat'
-import { createGame, step } from './game'
-import { enterArena } from './riftArena'
+import { chooseOffer, createGame, step } from './game'
+import { enterArena, riftWin } from './riftArena'
+import { collectTm } from './tms'
+import type { Game, Pickup } from './types'
 
 const DT = 1 / 60
 const still = { move: { x: 0, y: 0 }, special: false }
@@ -30,5 +32,39 @@ describe('falling in a rift arena', () => {
     expect(g.player.revives).toBe(1)
     expect(g.rift.cleared).toEqual([])
     expect(g.events.some((e) => e.kind === 'riftExit' && e.outcome === 'fallen')).toBe(true)
+  })
+})
+
+const tmDiscs = (g: Game) => g.pickups.filter((k): k is Extract<Pickup, { kind: 'tm' }> => k.kind === 'tm')
+
+describe('a rift won', () => {
+  it('leaves Latios’s Luster Purge beside Latias’s Mist Ball when he fought beside her', () => {
+    const g = createGame('charmander', { w: 480, h: 270 }, 1)
+    enterArena(g, 'latias', g.player.x, g.player.y)
+    riftWin(g, g.rift.arena!, g.player.x, g.player.y, 'latios')
+    expect(tmDiscs(g).map((k) => [k.move, k.source])).toEqual([['mistBall', 'legendary'], ['lusterPurge', 'legendary']])
+  })
+
+  it('leaves only the legendary’s own TM when it fought alone', () => {
+    const g = createGame('charmander', { w: 480, h: 270 }, 1)
+    enterArena(g, 'latias', g.player.x, g.player.y)
+    riftWin(g, g.rift.arena!, g.player.x, g.player.y)
+    expect(tmDiscs(g).map((k) => k.move)).toEqual(['mistBall'])
+  })
+
+  it('teaches one of the pair’s TMs: the other disc turns into ₽ once one is learned', () => {
+    const g = createGame('charmander', { w: 480, h: 270 }, 1)
+    enterArena(g, 'latias', g.player.x, g.player.y)
+    riftWin(g, g.rift.arena!, g.player.x, g.player.y, 'latios')
+    const [mist, luster] = tmDiscs(g)
+    collectTm(g, luster!)
+    chooseOffer(g, g.player.offers.find((o) => o.kind === 'tm' && o.id === 'lusterPurge')!)
+    expect(g.player.moves.some((m) => m.id === 'lusterPurge')).toBe(true)
+    const coins = g.coins
+    collectTm(g, mist!)
+    expect(g.phase).toBe('playing')
+    expect(g.coins).toBeGreaterThan(coins)
+    expect(g.player.moves.some((m) => m.id === 'mistBall')).toBe(false)
+    expect(g.events.some((e) => e.kind === 'tmMastered' && e.move === 'mistBall' && e.why === 'legendary')).toBe(true)
   })
 })

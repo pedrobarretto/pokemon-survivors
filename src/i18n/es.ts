@@ -2600,6 +2600,7 @@ export const es: Messages = {
     learnedInstead: (old: string, move: string) => `¡Olvidó _${old}_ y aprendió *${move}*!`,
     raised: (move: string, level: number) => `¡*${move}* subió al Nv ${level}!`,
     mastered: (move: string, coins: string) => `${move} ya está al máximo: la MT se volvió *${coins}*.`,
+    legendarySpent: (move: string, coins: string) => `Solo una MT legendaria por partida: la MT de ${move} se volvió *${coins}*.`,
     hintKeys: '↑ ↓ elegir · ENTER confirmar',
     hintTouch: 'Toca para elegir',
   },

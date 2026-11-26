@@ -2948,6 +2948,7 @@ export const pt = {
     learnedInstead: (old: string, move: string) => `Esqueceu _${old}_ e aprendeu *${move}*!`,
     raised: (move: string, level: number) => `*${move}* subiu para o Nv ${level}!`,
     mastered: (move: string, coins: string) => `${move} já está no máximo: o TM virou *${coins}*.`,
+    legendarySpent: (move: string, coins: string) => `Só um TM lendário por partida: o TM de ${move} virou *${coins}*.`,
     hintKeys: '↑ ↓ escolher · ENTER confirmar',
     hintTouch: 'Toque para escolher',
   },

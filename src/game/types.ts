@@ -902,7 +902,7 @@ export type GameEvent =
   /** A TM's move was learned (`level` 1) or raised, maybe in place of the move `forgot`. */
   | { kind: 'tmLearned'; move: MoveId; level: number; forgot: MoveId | null; source: TmSource }
   /** A TM disc's move was already mastered: it turned into ₽. */
-  | { kind: 'tmMastered'; move: MoveId; coins: number }
+  | { kind: 'tmMastered'; move: MoveId; coins: number; why: 'mastered' | 'legendary' }
   /** An Alpha (`alphas.ts`) came, aimed or started a charge, landed its shockwave, enraged or fell. */
   | { kind: 'alpha'; enemy: EnemyId; moment: 'spawn' | 'aim' | 'charge' | 'shock' | 'enrage' | 'down' }
   /** The Alpha's prize was picked up: a level-up of rare cards opens. */

@@ -2596,6 +2596,7 @@ export const zh: Messages = {
     learnedInstead: (old: string, move: string) => `忘記了_${old}_並學會了*${move}*！`,
     raised: (move: string, level: number) => `*${move}*升到了 Lv ${level}！`,
     mastered: (move: string, coins: string) => `${move} 已經滿級：TM變成了*${coins}*。`,
+    legendarySpent: (move: string, coins: string) => `每局只能學會一個傳說TM：${move} 的 TM變成了*${coins}*。`,
     hintKeys: '↑ ↓ 選擇 · ENTER 確認',
     hintTouch: '點擊選擇',
   },

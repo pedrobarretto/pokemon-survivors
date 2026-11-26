@@ -307,7 +307,7 @@ export const updateDomainScene = (g: Game, dt: number) => {
   if (d.scene < CAPTURE.length) return true
   d.act = 'after'
   d.age = 0
-  riftWin(g, arena, c.x, c.y)
+  riftWin(g, arena, c.x, c.y, c.partner?.kind ?? null)
   return true
 }
 
