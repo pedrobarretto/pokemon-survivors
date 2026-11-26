@@ -82,6 +82,16 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         ],
       },
       {
+        title: { pt: 'Evoluções', en: 'Evolutions', es: 'Evoluciones', fr: 'Évolutions', zh: '進化' },
+        notes: [
+          {
+            pt: 'No Nv 20, Galarian Slowpoke abre a tela de escolha com Galarian Slowbro e Galarian Slowking. O clima e o bioma não sorteiam mais: só marcam no card qual combina com onde você está.',
+            en: 'At Lv 20, Galarian Slowpoke opens the pick screen with Galarian Slowbro and Galarian Slowking. The weather and biome no longer draw one: they only tag the card that suits where you are.',
+            es: 'En el Nv 20, Galarian Slowpoke abre la pantalla de elección con Galarian Slowbro y Galarian Slowking. El clima y el bioma ya no sortean: solo marcan en la carta cuál combina con donde estás.',
+          },
+        ],
+      },
+      {
         title: { pt: 'Golpes e upgrades', en: 'Moves and upgrades', es: 'Movimientos y mejoras', fr: 'Capacités et améliorations', zh: '招式與強化' },
         notes: [
           {

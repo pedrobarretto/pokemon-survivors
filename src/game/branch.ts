@@ -68,16 +68,25 @@ const unlockedBy = (id: BranchId, items: readonly EvoItemId[]) => {
  * Where an evolution into `options` may go with the evolution items the run
  * holds (`items`: the save's and the ones found, `runEvoItems`). Every branch
  * whose item is held is offered, marked `item`; of the free branches left
- * (`branchNeeds` null), one joins them, drawn, the ones the weather or biome
- * favors `BRANCH_FAVOR_WEIGHT` times likelier. In data order. Empty: no free
- * branch and no item, so the evolution waits (`holdEvolution`); one: it goes
- * there without asking. It draws from `rng` only between two or more free
- * branches (Eevee's), so the others never move the run's rng.
+ * (`branchNeeds` null), the ones marked `pick` all join them (the player
+ * picks, Galarian Slowpoke's), and of the others one joins them, drawn, the
+ * ones the weather or biome favors `BRANCH_FAVOR_WEIGHT` times likelier. In
+ * data order. Empty: no free branch and no item, so the evolution waits
+ * (`holdEvolution`); one: it goes there without asking. It draws from `rng`
+ * only between two or more unmarked free branches (Eevee's), so the others
+ * never move the run's rng.
  */
 export const evolutionOffers = (rng: Rng, options: readonly BranchId[], ctx: BranchContext, items: readonly EvoItemId[]): BranchOffer[] => {
   const free = options.filter((id) => branchNeeds(id) === null && !unlockedBy(id, items))
-  const drawn = free.length > 1 ? weightedPick(rng, free.map((id) => [id, favorOf(id, ctx) ? BRANCH_FAVOR_WEIGHT : 1] as const)) : free[0]
-  return options.filter((id) => id === drawn || unlockedBy(id, items)).map((id) => ({ id, favor: unlockedBy(id, items) ? 'item' : favorOf(id, ctx) }))
+  const picked = (id: BranchId) => {
+    const def: BranchDef = BRANCHES[id]
+    return def.pick === true
+  }
+  const draw = free.filter((id) => !picked(id))
+  const drawn = draw.length > 1 ? weightedPick(rng, draw.map((id) => [id, favorOf(id, ctx) ? BRANCH_FAVOR_WEIGHT : 1] as const)) : draw[0]
+  return options
+    .filter((id) => id === drawn || unlockedBy(id, items) || (picked(id) && free.includes(id)))
+    .map((id) => ({ id, favor: unlockedBy(id, items) ? 'item' : favorOf(id, ctx) }))
 }
 
 /** Whether an evolution into `options` can go anywhere with `items`: false while it waits for an item. */

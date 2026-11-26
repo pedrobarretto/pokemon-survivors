@@ -80,6 +80,16 @@ describe('evolutionOffers', () => {
     evolutionOffers(rng, branchesOf('scyther'), ctx, [])
     expect(rng()).toBe(createRng(9)())
   })
+
+  it("offers every free branch marked `pick` (Galarian Slowpoke's) without drawing, and leaves Eevee's draw as it was", () => {
+    const rng = createRng(9)
+    expect(evolutionOffers(rng, branchesOf('slowpokeGalar'), { weather: 'fog', biome: 'meadow' }, [])).toEqual([
+      { id: 'slowbroGalar', favor: null },
+      { id: 'slowkingGalar', favor: 'weather' },
+    ])
+    expect(rng()).toBe(createRng(9)())
+    for (let seed = 1; seed < 30; seed++) expect(evolutionOffers(createRng(seed), EEVEE, ctx, [])).toHaveLength(1)
+  })
 })
 
 describe('replays', () => {
