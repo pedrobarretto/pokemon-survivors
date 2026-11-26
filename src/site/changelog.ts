@@ -163,6 +163,18 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
           },
         ],
       },
+      {
+        title: { pt: 'Boutique', en: 'Boutique', es: 'Boutique', fr: 'Boutique', zh: '精品服飾店' },
+        notes: [
+          {
+            pt: 'A skin Phantump Outono foi redesenhada: as folhas vermelhas do Trevenant eram quase iguais às do Trevenant shiny. Agora a copa é dourada, com cogumelos de outono no tronco, e o Phantump ganhou brotos dourados para combinar. Quem já tem a skin recebe o visual novo.',
+            en: 'The Autumn Phantump skin was redrawn: Trevenant’s red leaves looked almost the same as shiny Trevenant’s. Its canopy is golden now, with autumn mushrooms on the trunk, and Phantump got golden sprouts to match. If you own it, you get the new look.',
+            es: 'La skin Phantump de Otoño se rediseñó: las hojas rojas de Trevenant eran casi iguales a las de Trevenant shiny. Ahora la copa es dorada, con hongos de otoño en el tronco, y Phantump tiene brotes dorados a juego. Si ya la tienes, recibes el nuevo aspecto.',
+            fr: 'Le skin Phantump d’Automne a été redessiné : les feuilles rouges de Trevenant ressemblaient trop à celles de Trevenant chromatique. Son feuillage est maintenant doré, avec des champignons d’automne sur le tronc, et Phantump a des pousses dorées assorties. Si tu l’as déjà, tu as le nouveau look.',
+            zh: '秋季 Phantump 造型重新繪製：Trevenant 的紅葉和異色 Trevenant 幾乎一樣。現在樹冠改為金黃色，樹幹長出秋天的菇類，Phantump 也換上相配的金色嫩芽。已擁有的玩家會直接獲得新外觀。',
+          },
+        ],
+      },
     ],
   },
   {
