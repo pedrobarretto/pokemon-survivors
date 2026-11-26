@@ -7856,19 +7856,17 @@ button {
   .boss {
     top: 54px;
   }
-  /* No room above the Pokémon: the column moves to the right, under the ₽ and above the special button. */
+  /* No room above the Pokémon: the column moves to the right, under the ₽ and above the special button (compact toasts, below). */
   .toasts {
     top: calc(80px + var(--safe-t));
     right: max(8px, env(safe-area-inset-right));
     left: auto;
     transform: none;
     align-items: flex-end;
-    max-width: min(40 * var(--vw), 320px);
+    max-width: min(36 * var(--vw), 280px);
     max-height: calc(100% - 80px - var(--safe-t) - 110px);
   }
   .toast {
-    padding: 6px 10px;
-    font-size: 16px;
     text-align: right;
   }
 }
@@ -7955,17 +7953,17 @@ button {
 }
 
 /*
- * Phones held upright: compact toasts, two at a time (`toasts.ts`), in a
- * short column under the HUD, so the news never covers the middle of the
+ * Phones, upright or on their side: compact toasts, two at a time
+ * (`toasts.ts`, same query), sliding in from the right edge, where the
+ * column stands in a run (below), so the news never covers the middle of the
  * screen where the fight is.
  */
-@media (max-width: 720px) and (min-height: 501px) {
+@media (max-width: 720px) and (min-height: 501px), (max-height: 500px) {
   .toasts {
     gap: 4px;
-    max-width: calc(80 * var(--vw));
-    max-height: calc(34% - 132px - var(--safe-t));
   }
   .toast {
+    animation-name: toast-in-side;
     padding: 4px 10px;
     font-size: 15px;
     line-height: 1.1;
@@ -7989,6 +7987,54 @@ button {
   }
   .toast .item-toast small {
     margin-top: 0;
+  }
+}
+
+@keyframes toast-in-side {
+  from {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+}
+
+/*
+ * Phones held upright: a short column under the HUD outside a run (the lobby's
+ * news). In a run (a HUD on screen) it goes to the top-right corner, under the
+ * mini map, in the right half of the screen and ending above the Pokémon in
+ * the middle: clear of the HP box, the XP bar and the touch controls at the
+ * bottom. A fight that needs its boss in view (`.focus`) and the training
+ * run (`tutorialCoach.css`) keep their places at the bottom.
+ */
+@media (max-width: 720px) and (min-height: 501px) {
+  .toasts {
+    max-width: calc(80 * var(--vw));
+    max-height: calc(34% - 132px - var(--safe-t));
+  }
+  #ui:not(.tutorial-run):has(> .hud) > .toasts:not(.focus) {
+    left: auto;
+    right: max(8px, var(--safe-r));
+    transform: none;
+    align-items: flex-end;
+    max-width: calc(50 * var(--vw) - 16px);
+    max-height: calc(50% - 132px - var(--safe-t) - 16 * var(--px));
+  }
+  :root[data-minimap='on'] #ui:not(.tutorial-run):has(> .hud) > .toasts:not(.focus) {
+    top: calc(var(--minimap-bottom, 160px) + 8px + var(--safe-t));
+    max-height: calc(50% - var(--minimap-bottom, 160px) - 8px - var(--safe-t) - 16 * var(--px));
+  }
+  #ui:not(.tutorial-run):has(> .hud) > .toasts:not(.focus) .toast {
+    text-align: right;
+  }
+  /* An Arena match keeps its quick chat's buttons (`.vs-social`) on the right edge under the map: the column stands left of them. */
+  :root[data-versus] #ui:not(.tutorial-run):has(> .hud) > .toasts:not(.focus) {
+    right: calc(58px + var(--safe-r));
+  }
+}
+
+/* A phone on its side in an Arena match: the column ends above the kit's buttons (`.arena-kit`, 140 px tall), which stand higher than a run's special button. */
+@media (max-height: 500px) {
+  :root[data-versus] .toasts:not(.focus) {
+    max-height: calc(100% - var(--minimap-bottom, 160px) - 8px - var(--safe-t) - 162px);
   }
 }
 

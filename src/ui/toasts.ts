@@ -2,7 +2,8 @@ import { h } from './dom'
 import { pushToast, runToastShows, stepToasts, type QueuedToast, type RunToasts } from './toastQueue'
 
 /**
- * The run's news: toasts in one column under the HUD and big banners for
+ * The run's news: toasts in one column under the HUD (on a phone, in the
+ * top-right corner under the mini map, style.css) and big banners for
  * entrances, both fed here and driven by `tickToasts` from the game loop
  * (rules in `toastQueue.ts`). One banner shows at a time and the toasts wait
  * while it's up, since it sits where the column grows.
@@ -12,8 +13,8 @@ import { pushToast, runToastShows, stepToasts, type QueuedToast, type RunToasts 
 type Stack = { host: HTMLElement; toasts: QueuedToast<HTMLElement>[]; banners: QueuedToast<HTMLElement>[]; wait: number; focus: boolean }
 
 const MAX_TOASTS = 3
-/** Phones held upright get the compact toasts (style.css, same query) and two at a time, so the news never covers the middle of the screen. */
-const COMPACT = typeof matchMedia === 'function' ? matchMedia('(max-width: 720px) and (min-height: 501px)') : null
+/** Phones, upright or on their side, get the compact toasts in a corner (style.css, same query) and two at a time, so the news never covers the middle of the screen. */
+const COMPACT = typeof matchMedia === 'function' ? matchMedia('(max-width: 720px) and (min-height: 501px), (max-height: 500px)') : null
 const COMPACT_MAX_TOASTS = 2
 /** Seconds a full column waits before it's measured again: each measure forces a layout, too much for a weak phone every frame. */
 const RECHECK = 0.25
