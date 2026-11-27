@@ -290,10 +290,11 @@ const lookKey = (look: Look, skin: string | undefined) => `${look.head ?? ''},${
 
 const rowKey = (w: Wearer, look: string, anim: RigAnim, dir: Dir8, scale: number) => `${w.key}|${look}|${anim}|${dir}|${scale}`
 
-/** A sheet's URL, for the worker to fetch: the loaded image's own (a canvas, a recolor, has none and draws bare). */
+/** A sheet's URL, for the worker to fetch: the one it was downloaded from (a canvas, a recolor, has none and draws bare). */
 const urlOf = (s: SpeciesSprites, anim: RigAnim) => {
-  const img = s.anims[anim].img
-  return typeof HTMLImageElement !== 'undefined' && img instanceof HTMLImageElement && img.src ? img.src : null
+  const sheet = s.anims[anim]
+  if (!sheet.src || (typeof HTMLCanvasElement !== 'undefined' && sheet.img instanceof HTMLCanvasElement)) return null
+  return typeof location === 'undefined' ? sheet.src : new URL(sheet.src, location.href).href
 }
 
 /** Asks for one row (urgent: drawn now) unless it's kept or on its way. */

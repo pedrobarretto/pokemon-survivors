@@ -1,4 +1,4 @@
-import { assetUrl, loadAssetImage } from '../assets'
+import { assetUrl, canDecodeBitmaps, loadAssetBitmap, loadAssetImage } from '../assets'
 import { bodyOf, type Body } from '../data/bodies'
 import type { MegaForm } from '../data/megas'
 import type { LegendForm } from '../data/legends'
@@ -16,8 +16,16 @@ import { detail, type SafeLevel } from './quality'
 export type AnimName = 'Walk' | 'Idle' | 'Hurt' | 'Fly'
 export type Dex = number
 
+/**
+ * A sheet's pixels: a downloaded sheet's own decoded bitmap (`loadImage`), or the image itself where the
+ * browser can't make one, or a canvas (a sheet shrunk to fit, recolored).
+ */
+export type SheetImage = HTMLImageElement | HTMLCanvasElement | ImageBitmap
+
 export type Sheet = {
-  img: HTMLImageElement | HTMLCanvasElement
+  img: SheetImage
+  /** The URL it was downloaded from (the wearables' worker fetches it again); none for a canvas. */
+  src?: string
   fw: number
   fh: number
   durations: readonly number[]
@@ -124,28 +132,33 @@ const pump = () => {
 }
 
 /**
- * Loads an image and decodes it off the main thread, so its first draw (mid-run)
- * doesn't stall a frame, once its turn comes (`DECODES`).
+ * Downloads a sheet and decodes it off the main thread, so its first draw (mid-run)
+ * doesn't stall a frame, once its turn comes (`DECODES`). Into a bitmap of the game's
+ * own (`loadAssetBitmap`) where the browser makes one: drawn from an `<img>`, a sheet's
+ * decoded pixels stay in the browser's image cache after the sweeps let the sheet go
+ * (in Chrome, 33 MB after half a minute of a run and 80 MB six minutes in, most of it
+ * sheets of species long gone), while a bitmap's go the moment it's closed (`freeImage`).
+ * A bitmap that fails falls back to the `<img>` (a browser that refuses to decode one).
  */
 const loadImage = (src: string, key: Key, rank: number) =>
-  new Promise<HTMLImageElement>((resolve, reject) => {
+  new Promise<HTMLImageElement | ImageBitmap>((resolve, reject) => {
     const start = () => {
       // Loaded first (`loadAssetImage`: a rejection rather than a wait forever),
       // then decoded. A browser that can't decode ahead (a rejected `decode` on an image that did load) still gets the image,
       // but never a broken or empty one, which would throw on every frame that draws it (`drawable`).
       const fail = () => Promise.reject(new Error(`Failed to load ${src}`))
-      loadAssetImage(src)
-        .then((img) =>
+      const asImage = () =>
+        loadAssetImage(src).then((img) =>
           img.decode().then(
             () => (img.naturalWidth > 0 && img.naturalHeight > 0 ? img : fail()),
             () => (drawable(img) ? img : fail()),
           ),
         )
-        .then(resolve, reject)
-        .finally(() => {
-          decoding--
-          pump()
-        })
+      const load: Promise<HTMLImageElement | ImageBitmap> = canDecodeBitmaps() ? loadAssetBitmap(src).catch(asImage) : asImage()
+      load.then(resolve, reject).finally(() => {
+        decoding--
+        pump()
+      })
     }
     waiting.push({ key, rank, start, drop: () => reject(new Error(`Dropped ${src}`)) })
     pump()
@@ -508,8 +521,9 @@ const GONE = -1
 /** Counts sweeps (`sweepSprites`); a sheet drawn or asked for takes the current one as its `seen`. */
 let epoch = 0
 
-const sheetOf = (img: HTMLImageElement | HTMLCanvasElement, fw: number, fh: number, durations: readonly number[]): Sheet => ({
+const sheetOf = (img: SheetImage, fw: number, fh: number, durations: readonly number[], src?: string): Sheet => ({
   img,
+  ...(src !== undefined && { src }),
   fw,
   fh,
   durations,
@@ -581,9 +595,12 @@ const ask = (dex: Dex, shiny: boolean, form?: FormKey) => {
 }
 
 /** Frees a dropped image's decoded pixels right away, without waiting for the garbage collector. */
-const freeImage = (img: HTMLImageElement | HTMLCanvasElement) => {
+const freeImage = (img: SheetImage) => {
   if (img instanceof HTMLImageElement) img.removeAttribute('src')
+  else if (isBitmap(img)) img.close()
 }
+
+const isBitmap = (img: SheetImage): img is ImageBitmap => typeof ImageBitmap !== 'undefined' && img instanceof ImageBitmap
 
 const fetchSpecies = async (dex: Dex, shiny: boolean, form: FormKey | undefined, key: Key, rank: number): Promise<SpeciesSprites> => {
   const variant = manifestVariant(dex, shiny, form)
@@ -591,8 +608,10 @@ const fetchSpecies = async (dex: Dex, shiny: boolean, form: FormKey | undefined,
   const walkMeta = anims?.Walk
   if (!anims || !walkMeta) throw new Error(`Missing ${shiny ? 'shiny ' : ''}${form ?? ''} sprites for #${dex}. Run npm run assets.`)
   const dir = variantBase(dex, shiny, form)
-  const loadSheet = async (name: AnimName, meta: { frameWidth: number; frameHeight: number; durations: number[] }) =>
-    sheetOf(await loadImage(assetUrl(`${dir}/${name}.png`), key, rank), meta.frameWidth, meta.frameHeight, meta.durations)
+  const loadSheet = async (name: AnimName, meta: { frameWidth: number; frameHeight: number; durations: number[] }) => {
+    const src = assetUrl(`${dir}/${name}.png`)
+    return sheetOf(await loadImage(src, key, rank), meta.frameWidth, meta.frameHeight, meta.durations, src)
+  }
   // A missing animation plays the walk: the same sheet, not a second copy of its image.
   const walk = loadSheet('Walk', walkMeta)
   const [Walk, Idle, Hurt, Fly] = await Promise.allSettled([
@@ -633,8 +652,10 @@ const fetchSkin = async (skin: string, dex: Dex, shiny: boolean, key: Key, rank:
   const walkMeta = anims?.Walk
   if (!anims || !walkMeta) throw new Error(`Missing sprites for #${dex}`)
   const dir = `skins/${skin}/${dex}${shiny ? '/shiny' : ''}`
-  const load = async (path: string, meta: { frameWidth: number; frameHeight: number; durations: number[] }) =>
-    sheetOf(await loadImage(assetUrl(path), key, rank), meta.frameWidth, meta.frameHeight, meta.durations)
+  const load = async (path: string, meta: { frameWidth: number; frameHeight: number; durations: number[] }) => {
+    const src = assetUrl(path)
+    return sheetOf(await loadImage(src, key, rank), meta.frameWidth, meta.frameHeight, meta.durations, src)
+  }
   // The sky's Fly is the species' own: the shiny's when SpriteCollab has it, else the normal colors'.
   const shinyFly = shiny ? manifestVariant(dex, true)?.anims.Fly : undefined
   const fly = shinyFly ?? anims.Fly
@@ -688,7 +709,7 @@ export type Variant = { dex: Dex; shiny: boolean; form?: string }
  * caller keeps it and lets it go with `freeSheet`; sweeps never see it.
  */
 export const loadSheet = async (src: string, meta: { frameWidth: number; frameHeight: number; durations: readonly number[] }) =>
-  sheetOf(await loadImage(src, src, RANK.shown), meta.frameWidth, meta.frameHeight, meta.durations)
+  sheetOf(await loadImage(src, src, RANK.shown), meta.frameWidth, meta.frameHeight, meta.durations, src)
 
 /** Frees a sheet from `loadSheet`: it draws nothing from then on. */
 export const freeSheet = (sheet: Sheet) => {
@@ -815,13 +836,13 @@ const sheetImages = (s: SpeciesSprites | undefined) => (s ? Object.values(s.anim
  * and their decoded pixels in bytes (w×h×4), for the crash watch and `run_end`.
  */
 export const sheetStats = () => {
-  const seen = new Set<HTMLImageElement>()
+  const seen = new Set<HTMLImageElement | ImageBitmap>()
   let bytes = 0
   for (const s of cache.values()) {
     for (const img of sheetImages(s)) {
-      if (!(img instanceof HTMLImageElement) || seen.has(img)) continue
+      if (!img || img instanceof HTMLCanvasElement || seen.has(img)) continue
       seen.add(img)
-      bytes += img.naturalWidth * img.naturalHeight * 4
+      bytes += img.width * img.height * 4
     }
   }
   return { sheets: seen.size, bytes }

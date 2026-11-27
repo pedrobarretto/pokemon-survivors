@@ -39,11 +39,12 @@ describe('isOwnError', () => {
 })
 
 describe('isExpectedFailure', () => {
-  it('expects stale chunks, Clerk UI loads and dropped requests', () => {
+  it("expects stale chunks, Clerk UI loads, dropped requests and a WebView app's bridge gone", () => {
     expect(isExpectedFailure(new TypeError('Failed to fetch dynamically imported module: https://x/assets/changelog-a.js'))).toBe(true)
     expect(isExpectedFailure(Object.assign(new Error('Clerk: Failed to load Clerk UI'), { code: 'failed_to_load_clerk_ui' }))).toBe(true)
     expect(isExpectedFailure(new TypeError('Load failed'))).toBe(true)
     expect(isExpectedFailure(new DOMException('signal timed out', 'TimeoutError'))).toBe(true)
+    expect(isExpectedFailure(new Error('Error invoking postMessage: Java object is gone'))).toBe(true)
   })
 
   it('reports the rest', () => {

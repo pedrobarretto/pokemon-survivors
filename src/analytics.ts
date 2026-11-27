@@ -508,8 +508,15 @@ const isNetworkFailure = (error: unknown) =>
   (error instanceof TypeError && /^(Load failed|Failed to fetch|NetworkError when attempting to fetch resource\.?)$/.test(error.message)) ||
   (error instanceof DOMException && (error.name === 'TimeoutError' || error.name === 'AbortError'))
 
+/**
+ * An Android app wrapping the game in a WebView calling into its own Java bridge after the app
+ * let go of it (it's closing the page): the app's script, thrown with nothing that names it,
+ * and a page on its way out rather than a game that froze.
+ */
+const isAppBridgeGone = (error: unknown) => error instanceof Error && /Java object is gone/.test(error.message)
+
 /** Failures the game expects and recovers from on its own, which never go out as error reports. */
-export const isExpectedFailure = (error: unknown) => isStaleChunk(error) || isClerkLoadFailure(error) || isNetworkFailure(error)
+export const isExpectedFailure = (error: unknown) => isStaleChunk(error) || isClerkLoadFailure(error) || isNetworkFailure(error) || isAppBridgeGone(error)
 
 /** Reports an error once per message and place, up to `MAX_ERRORS` per page load; never an expected failure. */
 const reportError = (error: unknown, context: () => ErrorContext) => {
