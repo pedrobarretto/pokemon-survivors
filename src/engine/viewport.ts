@@ -62,7 +62,8 @@ const LAUNCH_GAP = { min: 20, max: 70 }
  * How far (CSS px) iOS laid an installed app out short of its screen, or 0. On iOS 26 a home screen app
  * (`navigator.standalone`, black-translucent status bar, `viewport-fit=cover`) can cold-start with its layout
  * viewport one status bar short and the top safe area read as 0: `innerHeight`, `100dvh` and every
- * `position: fixed; inset: 0` end that much above the bottom, until a rotation lays it out again. Only a
+ * `position: fixed; inset: 0` end that much above the bottom, until a rotation lays it out again (WebKit 301108; the
+ * page grows by it, style.css's `html`, which makes iOS hand the app its whole screen). Only a
  * shortfall the size of a status bar on a viewport as wide as the screen counts, so a Safari tab, an iPad
  * window in Split View or Stage Manager, Android and desktops all get 0. `screen` is the device's (iOS keeps
  * it in portrait whichever way the phone is held), `inner` the layout viewport (`innerWidth`, `innerHeight`).

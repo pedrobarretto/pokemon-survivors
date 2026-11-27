@@ -17,7 +17,7 @@ import { advancePacer, pacer, resetPacer } from './engine/pacing'
 import { canvasLosses, canvasRestored, checkCanvases, context2d, drawThrew, dropLobbyArt, heldCanvases, heldCanvasesBy, onCanvasReset, readPixels, resetCanvases, sweepArt, wipeCanvases } from './engine/pixelart'
 import { frameStats, recentFrameMs, recordFrame, resetRunFrames, runFrames } from './engine/frameStats'
 import { fitView, pickViewport } from './engine/viewport'
-import { launchGapNow, syncLaunchGap } from './ui/uiScale'
+import { syncLaunchGap } from './ui/uiScale'
 import { createRng } from './engine/rng'
 import { BIOMES, type BiomeId, type WeatherId } from './data/biomes'
 import { bodyOf } from './data/bodies'
@@ -352,8 +352,7 @@ const fitNow = () => {
   const visual = window.visualViewport
   const size = pickViewport(visual, { width: window.innerWidth, height: window.innerHeight })
   if (visual && size !== visual) canvasLosses.badViewport++
-  // A cold-started iOS app is laid out short of its screen: the canvas reaches down to the bottom anyway.
-  return size && fitView(size.width, size.height + launchGapNow(), window.devicePixelRatio || 1)
+  return size && fitView(size.width, size.height, window.devicePixelRatio || 1)
 }
 const fitted = (fit: ReturnType<typeof fitView>) => fit.w === canvas.width && fit.h === canvas.height && fit.cssScale === cssScale
 

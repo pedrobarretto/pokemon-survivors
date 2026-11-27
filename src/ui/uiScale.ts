@@ -55,9 +55,10 @@ let gap = 0
 
 /**
  * Measures how short of its screen iOS laid the installed app out (`launchGap`) and puts it on
- * `--launch-gap`, which style.css stretches the fixed layers down by and takes as the top safe area.
- * `main.ts` calls it first thing on every resize, so it goes back to 0 the moment iOS lays the app
- * out right (a rotation). Returns the gap, in CSS px.
+ * `--launch-gap`, which style.css grows the document by: WebKit lays the app out on the whole screen
+ * once the document is taller than its short viewport (it never paints fixed layers below that edge,
+ * so they aren't stretched). `main.ts` calls it first thing on every resize, so it goes back to 0 the
+ * moment iOS lays the app out right. Returns the gap, in CSS px.
  */
 export const syncLaunchGap = () => {
   const standalone = 'standalone' in navigator && navigator.standalone === true
@@ -69,14 +70,11 @@ export const syncLaunchGap = () => {
   return gap
 }
 
-/** The gap `syncLaunchGap` last measured (0 everywhere but a short-launched iOS app). */
-export const launchGapNow = () => gap
-
-/** The visible viewport in `#ui`'s CSS px (the zoom leaves the UI that much less), the screen iOS left out included. */
+/** The visible viewport in `#ui`'s CSS px (the zoom leaves the UI that much less). */
 export const uiViewport = () => {
   const layout = { width: window.innerWidth, height: window.innerHeight }
   const { width, height } = pickViewport(window.visualViewport, layout) ?? layout
-  return { w: width / zoom, h: (height + gap) / zoom }
+  return { w: width / zoom, h: height / zoom }
 }
 
 /**
@@ -86,7 +84,7 @@ export const uiViewport = () => {
  */
 export const applyUiScale = (choice: UiScale) => {
   const w = window.innerWidth
-  const h = window.innerHeight + gap
+  const h = window.innerHeight
   const next = uiZoomFor(choice, w, h, fitView(w, h, window.devicePixelRatio || 1).cssScale)
   if (next === zoom) return
   zoom = next
