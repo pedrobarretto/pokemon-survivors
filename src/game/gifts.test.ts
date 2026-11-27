@@ -13,6 +13,16 @@ const applied = (save: Save, g: Gift) => {
 }
 
 describe('applyGift', () => {
+  it('unlocks a legend’s shiny from a shiny legend gift (the Escavação’s Meltan and Diancie), the Normal one kept', () => {
+    const fresh = applied(EMPTY_SAVE, gift({ kind: 'legend', legend: 'meltan', shiny: true })).save
+    expect([fresh.legends.meltan, fresh.shinyStarters.meltan]).toEqual([1, true])
+    // An account that had Diancie for a while (and played it Normal) digs out a shiny one: it gains the shiny, keeps Diancie.
+    const had: Save = { ...EMPTY_SAVE, legends: { diancie: 1 } }
+    const after = applied(had, gift({ kind: 'legend', legend: 'diancie', shiny: true }, 'g2')).save
+    expect([after.legends.diancie, after.shinyStarters.diancie]).toEqual([1, true])
+    expect(parseGift({ id: 'g3', content: { kind: 'legend', legend: 'diancie', shiny: true }, reason: null })?.content).toEqual({ kind: 'legend', legend: 'diancie', shiny: true })
+  })
+
   it('lands once: the same gift again is only claimed', () => {
     const once = applied(EMPTY_SAVE, gift({ kind: 'coins', amount: 500 })).save
     expect(once.wallet).toBe(500)

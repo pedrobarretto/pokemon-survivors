@@ -13,6 +13,8 @@ import { PENCIL, PENCIL_PALETTE } from '../../render/pencilArt'
 import { POKE_TYPES, TYPE_COLORS, type PokeType } from '../../data/types'
 import { RUN_LENGTH } from '../../data/waves'
 import { AWAKEN_AT, EVENT_LEGENDS, isLegend, LEGENDS, REGULAR_LEGENDS, type LegendId, type LegendUnlock } from '../../data/legends'
+import { isOwnWayShiny, OWN_WAY_SHINIES } from '../../data/ownWayShinies'
+import { legendSource } from '../../game/capture'
 import { SHINY_BUFF, SHINY_ODDS } from '../../game/shiny'
 import { innateText } from '../../ui/innateText'
 import { BRANCHES, branchesAt, branchStage, familyDex } from '../../data/branches'
@@ -380,6 +382,18 @@ export const pathNote = (legend: LegendId | null, locale: Locale) => {
   return plainText(legend ? [where[legend], how[legend]].filter(Boolean).join(' ') : words.cosmog.how)
 }
 
+/** A legend only ever given (Poipole, Manaphy from its egg, Diancie out of the Escavação): how it comes, in the game's own words (`legend.where`). */
+export const giftNote = (id: LegendId, locale: Locale) => plainText(MESSAGES[locale].legend.where[legendSource(id)])
+
+/** How a legend never fought shiny gets its shiny (`OWN_WAY_SHINIES`: Zygarde's Cores, Meltan's box, Diancie's diamond), in the game's own words; null for the rest. */
+export const ownShinyNote = (id: LegendId | null, locale: Locale) => (id !== null && isOwnWayShiny(id) ? plainText(MESSAGES[locale].paths.shiny[id](OWN_WAY_SHINIES[id])) : null)
+
+/** The card's note on a legend not met in the wild: how it comes and, for Zygarde, Meltan (Melmetal) and Diancie, how its shiny does. */
+const legendNote = (legend: LegendId | null, how: string, locale: Locale) => {
+  const shiny = ownShinyNote(legend, locale)
+  return html`<p class="note">${how}</p>${shiny && html`<p class="note">★ ${shiny}</p>`}`
+}
+
 /** The game's light markup (`*bold*`, `_em_`) as plain text. */
 const plainText = (text: string) => text.replace(/[*_]/g, '')
 
@@ -401,7 +415,7 @@ export const card = (entry: DexEntry, locale: Locale, css: SpriteCss, page?: str
   </div>
   <h2>${page ? html`<a href="${page}" title="${m.dexPage.page(name)}">${name}</a>` : name}</h2>
   <div class="types">${types.map((t) => typeBadge(t, m))}</div>
-  ${entry.source.kind === 'starter' ? starterBody({ ...entry, source: entry.source }, locale) : entry.source.kind === 'wild' ? wildBody({ ...entry, source: entry.source }, m, locale) : html`<p class="note">${entry.source.kind === 'companion' ? m.pokedex.companionNote : entry.source.kind === 'cameo' ? m.pokedex.cameoNote : entry.source.kind === 'lobby' ? m.pokedex.lobbyNote : entry.source.kind === 'cards' ? m.pokedex.cardsNote : entry.source.kind === 'summon' ? m.pokedex.summonNote : entry.source.kind === 'path' ? pathNote(entry.source.legend, locale) : m.pokedex.eventNote}</p>`}
+  ${entry.source.kind === 'starter' ? starterBody({ ...entry, source: entry.source }, locale) : entry.source.kind === 'wild' ? wildBody({ ...entry, source: entry.source }, m, locale) : entry.source.kind === 'path' ? legendNote(entry.source.legend, pathNote(entry.source.legend, locale), locale) : entry.source.kind === 'gift' ? legendNote(entry.source.id, giftNote(entry.source.id, locale), locale) : html`<p class="note">${entry.source.kind === 'companion' ? m.pokedex.companionNote : entry.source.kind === 'cameo' ? m.pokedex.cameoNote : entry.source.kind === 'lobby' ? m.pokedex.lobbyNote : entry.source.kind === 'cards' ? m.pokedex.cardsNote : entry.source.kind === 'summon' ? m.pokedex.summonNote : m.pokedex.eventNote}</p>`}
 </article>`
 }
 

@@ -25,16 +25,17 @@ export type CosmogLegend = Extract<LegendId, 'solgaleo' | 'lunala'>
 export type CosmogSave = { research: readonly CosmogStep[]; runs: number; sun: number; moon: number; raised: readonly CosmogLegend[] }
 
 /**
- * Every path's progress: the Zygarde Cube's Cells and Cores, Cosmog's,
- * the Torre's trials cleared (the towers among them once climbed), the tower
- * whose style Urshifu wears (`style`, null: the only one climbed, or none
- * yet) and Meltan's Hex Nuts. Counters only grow.
+ * Every path's progress: the Zygarde Cube's Cells and Cores (and whether a
+ * shiny Core was ever taken, `shinyCore`), Cosmog's, the Torre's trials
+ * cleared (the towers among them once climbed), the tower whose style Urshifu
+ * wears (`style`, null: the only one climbed, or none yet) and Meltan's Hex
+ * Nuts. Counters only grow.
  */
-export type PathsSave = { cells: number; cores: number; cosmog: CosmogSave; trials: readonly TrialId[]; style: Tower | null; nuts: number }
+export type PathsSave = { cells: number; cores: number; shinyCore: boolean; cosmog: CosmogSave; trials: readonly TrialId[]; style: Tower | null; nuts: number }
 
 export const NO_COSMOG: CosmogSave = { research: [], runs: 0, sun: 0, moon: 0, raised: [] }
 
-export const NO_PATHS: PathsSave = { cells: 0, cores: 0, cosmog: NO_COSMOG, trials: [], style: null, nuts: 0 }
+export const NO_PATHS: PathsSave = { cells: 0, cores: 0, shinyCore: false, cosmog: NO_COSMOG, trials: [], style: null, nuts: 0 }
 
 const COSMOG_LEGENDS = ['solgaleo', 'lunala'] as const satisfies readonly CosmogLegend[]
 const TRIAL_IDS = Object.keys(TRIALS) as TrialId[]
@@ -52,11 +53,11 @@ const parseCosmog = (raw: unknown): CosmogSave => {
 
 export const parsePaths = (raw: unknown): PathsSave => {
   if (!isRecord(raw)) return NO_PATHS
-  return { cells: wholeNumber(raw.cells), cores: wholeNumber(raw.cores), cosmog: parseCosmog(raw.cosmog), trials: oneOf(TRIAL_IDS, raw.trials), style: parseStyle(raw.style), nuts: wholeNumber(raw.nuts) }
+  return { cells: wholeNumber(raw.cells), cores: wholeNumber(raw.cores), shinyCore: raw.shinyCore === true, cosmog: parseCosmog(raw.cosmog), trials: oneOf(TRIAL_IDS, raw.trials), style: parseStyle(raw.style), nuts: wholeNumber(raw.nuts) }
 }
 
 /**
- * Both saves' paths in one, every counter at the larger side; Cosmog's
+ * Both saves' paths in one, every counter at the larger side (a shiny Core taken on either side counts); Cosmog's
  * research and the legends raised are unions, and its run counts come with the
  * side further along (more raised, then more runs), so the two devices' Cosmogs
  * don't add up into one that was never raised. The trials are a union; the style
@@ -67,6 +68,7 @@ export const mergePaths = (a: PathsSave, b: PathsSave): PathsSave => {
   return {
     cells: Math.max(a.cells, b.cells),
     cores: Math.max(a.cores, b.cores),
+    shinyCore: a.shinyCore || b.shinyCore,
     cosmog: {
       research: COSMOG.research.filter((s) => a.cosmog.research.includes(s) || b.cosmog.research.includes(s)),
       runs: ahead.runs,
@@ -96,12 +98,24 @@ export const takePiece = <P extends Pick<PathsSave, 'cells' | 'cores'>>(p: P, co
   return { paths: { ...p, cells: p.cells + ZYGARDE.extraCore }, converted: ZYGARDE.extraCore }
 }
 
-/** How many Cells a run of `seed` brings (`ZYGARDE.perRun`), and whether a Core comes with them: drawn apart from the run's rng. */
+/**
+ * How many Cells a run of `seed` brings (`ZYGARDE.perRun`), whether a Core
+ * comes with them and whether that Core is shiny (`ZYGARDE.shinyCore`): drawn
+ * apart from the run's rng. The shiny is the shell's to show and bank, never
+ * the simulation's, so no run plays any differently for it.
+ */
 export const runPieces = (seed: number) => {
   const roll = hash2(seed, 1, 7187)
   let acc = 0
   const cells = ZYGARDE.perRun.findIndex((p) => (acc += p) > roll)
-  return { cells: cells < 0 ? ZYGARDE.perRun.length - 1 : cells, core: hash2(seed, 2, 7187) < ZYGARDE.core }
+  const core = hash2(seed, 2, 7187) < ZYGARDE.core
+  return { cells: cells < 0 ? ZYGARDE.perRun.length - 1 : cells, core, shiny: core && hash2(seed, 3, 7187) < ZYGARDE.shinyCore }
+}
+
+/** The Cube after taking a Core that shone: it counts as any Core (`takePiece`), and Zygarde's shiny is due (`pathGiftList`). */
+export const takeShinyCore = <P extends Pick<PathsSave, 'cells' | 'cores' | 'shinyCore'>>(p: P): { paths: P; converted: number } => {
+  const took = takePiece(p, true)
+  return { paths: { ...took.paths, shinyCore: true }, converted: took.converted }
 }
 
 /* ---------------- Cosmog ---------------- */
@@ -224,9 +238,13 @@ export const isPathGift = (id: string) => id.startsWith(PREFIX)
 
 const legendGift = (legend: LegendId, path: PathId): Gift => ({ id: `${PREFIX}${legend}`, content: { kind: 'legend', legend }, reason: { kind: 'path', path } })
 
-/** Every legend the paths brought on this save, applied or not: Zygarde at 10%, Kubfu when it joins, the legends Cosmog grew into. */
+/** Zygarde's shiny, for a shiny Core taken (`takeShinyCore`): it comes beside Zygarde's own gift, never before it, and leaves the Normal one as it was. */
+export const ZYGARDE_SHINY_GIFT_ID = `${PREFIX}zygardeShiny`
+
+/** Every legend the paths brought on this save, applied or not: Zygarde at 10% (and its shiny with a shiny Core taken), Kubfu when it joins, the legends Cosmog grew into. */
 export const pathGiftList = (save: { paths: PathsSave }): Gift[] => [
   ...(cubePieces(save.paths) >= ZYGARDE.formes.ten ? [legendGift('zygarde', 'zygarde')] : []),
+  ...(cubePieces(save.paths) >= ZYGARDE.formes.ten && save.paths.shinyCore ? [{ id: ZYGARDE_SHINY_GIFT_ID, content: { kind: 'legend', legend: 'zygarde', shiny: true }, reason: { kind: 'path', path: 'zygarde' } } satisfies Gift] : []),
   ...(kubfuJoined(save.paths.trials) ? [legendGift('kubfu', 'kubfu')] : []),
   ...COSMOG_LEGENDS.filter((l) => save.paths.cosmog.raised.includes(l)).map((l) => legendGift(l, 'cosmog')),
 ]

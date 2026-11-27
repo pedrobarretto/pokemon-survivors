@@ -2,7 +2,7 @@ import { playCry, playSfx } from '../engine/audio'
 import { PATH_FORMS, ZYGARDE, type PathFormId } from '../data/legendPaths'
 import { LEGENDS } from '../data/legends'
 import { ENEMIES } from '../data/enemies'
-import { cubePieces, openForms, takePiece } from '../game/legendPaths'
+import { cubePieces, openForms, takePiece, takeShinyCore } from '../game/legendPaths'
 import type { PathNotice } from '../game/pathRun'
 import type { RuinsNotice } from '../game/splitRuins'
 import type { Game } from '../game/types'
@@ -25,6 +25,7 @@ import type { Save } from '../game/meta'
 
 export const cellIcon = () => toIconUrl('path:cell', () => PATH_ART.cell()[0]!)
 export const coreIcon = () => toIconUrl('path:core', () => PATH_ART.core()[0]!)
+export const shinyCoreIcon = () => toIconUrl('path:shinyCore', () => PATH_ART.shinyCore()[0]!)
 export const nutIcon = () => toIconUrl('path:nut', () => PATH_ART.nut())
 
 const say = (root: HTMLElement, icon: string, text: string, ms: number, key: string | null = null) =>
@@ -55,7 +56,11 @@ const ruinsFeedback = (root: HTMLElement, notice: RuinsNotice) => {
   return say(root, portraitUrl(ENEMIES[only ?? 'regigigas'].dex), only ? m.one(ENEMIES[only].name) : m.risen, 3600, 'ruins')
 }
 
-export const pathFeedback = (root: HTMLElement, notice: PathNotice) => {
+/** Dev (`ps.cell('shiny')`): every Core shines until a reload, whatever the run's seed says. */
+export const DEV_SHINY_CORE = { on: false }
+
+/** A path's moment in a run. `shinyCore`: this run's Core shines (`shinyCoreOf` in `main.ts`), so taking it brings Zygarde's shiny. */
+export const pathFeedback = (root: HTMLElement, notice: PathNotice, shinyCore = false) => {
   const m = t().paths.run
   if (notice.kind === 'temple') {
     if (notice.moment === 'silent') return say(root, portraitUrl(ENEMIES.regigigas.dex), m.templeSilent, 2600, 'temple')
@@ -67,25 +72,28 @@ export const pathFeedback = (root: HTMLElement, notice: PathNotice) => {
     return say(root, portraitUrl(ENEMIES.regigigas.dex), m.templeRisen, 4200, 'temple')
   }
   if (notice.kind === 'ruins') return ruinsFeedback(root, notice)
-  const icon = notice.core ? coreIcon() : cellIcon()
+  const shiny = notice.core && shinyCore
+  const icon = shiny ? shinyCoreIcon() : notice.core ? coreIcon() : cellIcon()
   if (notice.moment === 'sighted') {
-    playSfx('ping')
-    return say(root, icon, notice.core ? m.coreSighted : m.cellSighted, 3200, 'piece')
+    playSfx(shiny ? 'shiny' : 'ping')
+    return say(root, icon, shiny ? m.shinyCoreSighted : notice.core ? m.coreSighted : m.cellSighted, 3200, 'piece')
   }
-  if (notice.moment === 'gone') return say(root, icon, notice.core ? m.coreGone : m.cellGone, 2200, 'piece')
+  if (notice.moment === 'gone') return say(root, icon, shiny ? m.shinyCoreGone : notice.core ? m.coreGone : m.cellGone, 2200, 'piece')
   const before = loadSave()
   let converted = 0
   updateSave((s) => {
-    const took = takePiece(s.paths, notice.core)
+    const took = shiny ? takeShinyCore(s.paths) : takePiece(s.paths, notice.core)
     converted = took.converted
     return { ...s, paths: took.paths }
   })
   const after = loadSave()
-  playSfx('unlock')
+  playSfx(shiny ? 'shiny' : 'unlock')
   playCry(cryUrl(718, 'ten'), 0.5)
   const pieces = `${formatNumber(Math.min(100, cubePieces(after.paths)))}/${ZYGARDE.formes.complete}`
   const text = converted > 0 ? m.coreConverted(formatNumber(converted), pieces) : notice.core ? m.coreFound(`${Math.min(after.paths.cores, ZYGARDE.cores)}/${ZYGARDE.cores}`) : m.cellFound(pieces)
   say(root, icon, text, 3600, 'piece')
+  // Zygarde's shiny waits in the lobby's box (`pathGiftList`), once Zygarde itself is due.
+  if (shiny) say(root, icon, cubePieces(after.paths) >= ZYGARDE.formes.ten ? m.shinyCoreFound : m.shinyCoreWaits(formatNumber(ZYGARDE.formes.ten)), 5200, 'shinyCore')
   announceForms(root, before, after, 'zygarde')
 }
 

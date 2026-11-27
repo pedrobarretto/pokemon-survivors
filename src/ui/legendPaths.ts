@@ -4,6 +4,7 @@ import type { Input } from '../engine/input'
 import { context2d, createCanvas } from '../engine/pixelart'
 import { COSMOG, COSMOG_DEX, FLOORS, MELTAN, REGIGIGAS, TOWERS, TRIALS, ZYGARDE, type PathId, type Tower, type TrialDef, type TrialId } from '../data/legendPaths'
 import { LEGENDS } from '../data/legends'
+import { OWN_WAY_SHINIES } from '../data/ownWayShinies'
 import { MOVES } from '../game/moves'
 import { isCaptured } from '../game/capture'
 import { cosmogHere, cosmogLean, cosmogStage, cubePieces, kubfuJoined, styleOf, sunHour, trialOpen } from '../game/legendPaths'
@@ -13,7 +14,7 @@ import { closeIcon } from '../render/art'
 import { portraitUrl } from '../render/sprites'
 import { emotionUrl } from './dialogue'
 import { h, later, rich } from './dom'
-import { cellIcon, coreIcon, nutIcon } from './pathRun'
+import { cellIcon, coreIcon, nutIcon, shinyCoreIcon } from './pathRun'
 import { loadSave, updateSave } from './save'
 import type { Screen } from './screens'
 import './legendPaths.css'
@@ -118,8 +119,20 @@ const zygardeBody = (save: Save) => {
     forme(m.forms.ten, ZYGARDE.formes.ten, false),
     forme(m.forms.fifty, ZYGARDE.formes.fifty, false),
     forme(m.forms.complete, ZYGARDE.formes.complete, true),
+    shinyRow(save, 'zygarde', shinyCoreIcon()),
     h('p', { class: 'path-note' }, rich(m.hint)),
   ]
+}
+
+/**
+ * The row of a legend whose shiny comes its own way (`OWN_WAY_SHINIES`): ✓
+ * once it's owned (or, for Zygarde, a shiny Core taken), and how it comes
+ * until then.
+ */
+const shinyRow = (save: Save, id: 'zygarde' | 'meltan', icon: string) => {
+  const m = t().paths.shiny
+  const owned = id in save.shinyStarters || (id === 'zygarde' && save.paths.shinyCore)
+  return h('div', {}, row(icon, m.row(LEGENDS[id].name), owned ? '✓' : '', owned), owned ? null : h('p', { class: 'path-note' }, rich(m[id](OWN_WAY_SHINIES[id]))))
 }
 
 const cosmogBody = (save: Save) => {
@@ -194,6 +207,7 @@ const meltanBody = (save: Save) => {
   return [
     row(nutIcon(), m.box, owned ? '✓' : '', owned),
     owned ? null : h('p', { class: 'path-note' }, m.boxHint),
+    shinyRow(save, 'meltan', nutIcon()),
     row(nutIcon(), m.nuts(formatNumber(Math.min(nuts, MELTAN.nuts)), formatNumber(MELTAN.nuts)), '', nuts >= MELTAN.nuts),
     bar(nuts / MELTAN.nuts, 'steel'),
     nuts >= MELTAN.nuts ? h('p', { class: 'path-lean' }, rich(m.ready)) : null,

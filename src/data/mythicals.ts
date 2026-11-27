@@ -33,6 +33,12 @@ export const DIANCIE = {
   /** The chance a new Escavação wall holds Diancie's diamond while the account lacks Diancie, and the walls after which one surely does. */
   jewel: 0.015,
   guarantee: 45,
+  /**
+   * The chance a diamond dug out brings Diancie shiny. Twice the rifts' 1 in 8,
+   * since the diamond turns up about a fourth as often as Meltan's box: it
+   * keeps being buried for an account that has Diancie but not its shiny.
+   */
+  jewelShiny: 1 / 4,
 } as const
 
 /* ---------------- Zeraora ---------------- */

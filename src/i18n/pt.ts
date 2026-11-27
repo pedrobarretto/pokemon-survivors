@@ -2503,6 +2503,8 @@ export const pt = {
     shinyHatch: (name: string) => `Um *${name}* _shiny_ veio para você!`,
     companion: (name: string) => `*${name}* agora te acompanha nas partidas!`,
     legend: (name: string) => `*${name}* chegou para você! Jogável no _Modo Lendário_.`,
+    /** A legend's shiny, for one that already came (Zygarde's shiny Core, a shiny out of the Escavação). */
+    legendShiny: (name: string) => `*${name}* _shiny_ chegou para você! Escolha Shiny na seleção do _Modo Lendário_.`,
     ribbon: (name: string) => `*${name}*! Já está no seu perfil.`,
     ribbonWhy: (date: string, rank: number, total: number) => `Desafio de ${date}: #${rank} de ${total}`,
     button: 'Presente!',

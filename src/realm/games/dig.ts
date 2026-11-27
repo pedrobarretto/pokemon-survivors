@@ -671,6 +671,10 @@ const start = (ctx: SoloCtx): GameRun => {
     announce()
   }
 
+  /** What the banner says under a legend's treasure: it came out (shiny, `r.shiny`). */
+  const legendNote = (legend: DigLegend, shiny: boolean) =>
+    legend === 'meltan' ? (shiny ? t().paths.meltan.foundShiny : t().paths.meltan.found) : shiny ? t().mythicals.dig.foundShiny : t().mythicals.dig.found
+
   /** What the banner says under a prize's name. */
   const rewardNote = (r: DigReward) => {
     if (r.repeat) return m().repeat(formatPokeDollars(r.coins))
@@ -681,7 +685,7 @@ const start = (ctx: SoloCtx): GameRun => {
       if (pair) return m().halfRestored(treasureName(DIG_HALVES[pair.top === prize.half ? pair.bottom : pair.top]))
       return m().halfStored(halfNeeds(prize.half))
     }
-    return prize.kind === 'furniture' ? m().furnitureNote : prize.kind === 'bag' ? m().bagNote : prize.kind === 'stone' ? m().stoneNote : prize.kind === 'legend' ? (prize.legend === 'meltan' ? t().paths.meltan.found : t().mythicals.dig.found) : m().fossilNote
+    return prize.kind === 'furniture' ? m().furnitureNote : prize.kind === 'bag' ? m().bagNote : prize.kind === 'stone' ? m().stoneNote : prize.kind === 'legend' ? legendNote(prize.legend, r.shiny === true) : m().fossilNote
   }
 
   const announce = () => {
@@ -699,14 +703,15 @@ const start = (ctx: SoloCtx): GameRun => {
     playSfx(r.prize.kind === 'coins' ? 'coin' : r.prize.kind === 'fossil' || r.restored !== undefined ? 'shiny' : r.prize.kind === 'legend' && !r.repeat ? 'legendary' : def.group === 'stone' ? 'evolve' : def.group === 'furniture' ? 'unlock' : 'item')
     if (r.prize.kind === 'legend' && !r.repeat) {
       playCry(cryUrl(LEGEND_DEX[r.prize.legend]), 0.6)
-      void loadSpecies(LEGEND_DEX[r.prize.legend]).catch(() => {})
+      if (r.shiny) playSfx('shiny')
+      void loadSpecies(LEGEND_DEX[r.prize.legend], r.shiny === true).catch(() => {})
     }
   }
 
-  /** The legend climbing out of the prize on show (Meltan's Mystery Box, Diancie's pink diamond) the first time it's dug up, so the reveal holds longer; else null. */
-  const legendOut = (): DigLegend | null => {
+  /** The legend climbing out of the prize on show (Meltan's Mystery Box, Diancie's pink diamond) when it brought it (shiny, `r.shiny`), so the reveal holds longer; else null. */
+  const legendOut = (): { legend: DigLegend; shiny: boolean } | null => {
     const r = end?.kept[revealAt]
-    return r !== undefined && r.prize.kind === 'legend' && !r.repeat ? r.prize.legend : null
+    return r !== undefined && r.prize.kind === 'legend' && !r.repeat ? { legend: r.prize.legend, shiny: r.shiny === true } : null
   }
 
   const nextReveal = () => {
@@ -1066,7 +1071,7 @@ const start = (ctx: SoloCtx): GameRun => {
       g.imageSmoothingEnabled = false
       // Meltan climbs out from behind the box's lid (Diancie rises out of its diamond), in whole-pixel steps, and stays perched on it.
       const out = legendOut()
-      const meltan = out ? sprites(LEGEND_DEX[out]) : null
+      const meltan = out ? sprites(LEGEND_DEX[out.legend], out.shiny) : null
       if (meltan && meltan.variant !== undefined && phaseT > MELTAN_PEEK) {
         const up = Math.min(1, (phaseT - MELTAN_PEEK) / 0.3)
         const fit = fitSprites(meltan, 40)
@@ -1076,7 +1081,7 @@ const start = (ctx: SoloCtx): GameRun => {
         g.scale(2, 2)
         drawPokemon(g, fit, 'Idle', 0, clock, 0, Math.round(fit.bodyH * (1 - up)))
         g.restore()
-        if (phaseT - MELTAN_PEEK < 0.05) burst(parts, cx, lid, ['#f8d050', '#ffffff', '#b0b0c0'], 18, 70, -30)
+        if (phaseT - MELTAN_PEEK < 0.05) burst(parts, cx, lid, out?.shiny ? ['#f8f080', '#ffffff', '#f898c8', '#88d8f8'] : ['#f8d050', '#ffffff', '#b0b0c0'], out?.shiny ? 32 : 18, 70, -30)
       }
       g.drawImage(img, Math.round(cx - w / 2), Math.round(cy - hh / 2), w, hh)
     }

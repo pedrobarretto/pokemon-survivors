@@ -949,6 +949,8 @@ export type RenderOptions = {
   shakeOffset?: { x: number; y: number }
   /** The Arena's lock-on and a touch button's aim (`render/arenaAim.ts`), this screen's. */
   arena?: ArenaOverlay | null
+  /** This run's Zygarde Core shines (`runPieces`' `shiny`): the shell's to say, as it banks it, never the simulation's. */
+  shinyCore?: boolean
 }
 
 /** The Arena's viewer (this screen's player, `render` sets it; null outside Versus): who the grass hides from and shows see-through. */
@@ -1144,7 +1146,7 @@ const paintFrame = (ctx: Ctx, g: Game, t: number, opts: RenderOptions) => {
   // Breakables, dressed by the biome each stands in.
   drawProps(ctx, g, t)
   // Map events wait outside with the rest of the world while the player is in a room.
-  if (!indoors) drawMapEvents(ctx, g, t, calm)
+  if (!indoors) drawMapEvents(ctx, g, t, calm, opts.shinyCore === true)
   if (g.rift.portal && !indoors) (isUltraBeast(g.rift.portal.legend) ? drawWormhole : riftDomain(g, g.rift.portal.legend) ? drawTear : drawRiftPortal)(ctx, g.rift.portal, t)
   drawEntranceGround(ctx, g, t)
   if (g.raid.den && !indoors) drawDenGround(ctx, g.raid.den, t)

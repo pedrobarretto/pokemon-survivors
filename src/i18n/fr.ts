@@ -2174,6 +2174,7 @@ export const fr: Messages = {
     shinyHatch: (name) => `Un *${name}* _chromatique_ est arrivé pour toi !`,
     companion: (name) => `*${name}* marche maintenant avec toi pendant tes parties !`,
     legend: (name) => `*${name}* est arrivée pour toi ! Jouable en _Mode Légendaire_.`,
+    legendShiny: (name) => `*${name}* _chromatique_ est arrivé pour toi ! Choisis Chromatique dans la sélection du _Mode Légendaire_.`,
     ribbon: (name) => `*${name}* ! Il est déjà sur ton profil.`,
     ribbonWhy: (date, rank, total) => `Défi du ${date} : #${rank} sur ${total}`,
     button: 'Cadeau !',

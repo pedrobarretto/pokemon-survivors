@@ -37,6 +37,8 @@ import { VIVILLON_DEX, VIVILLON_PATTERNS } from '../data/vivillon'
 import { devicePattern } from '../vivillonRegion'
 import { pathOfLegend, pathSheet } from './legendPaths'
 import type { PathId } from '../data/legendPaths'
+import { isOwnWayShiny, OWN_WAY_SHINIES } from '../data/ownWayShinies'
+import type { ShinyStarters } from '../game/shinyStarters'
 import { equip, shownOn, skinsOf, takeOff, wearing } from '../arena/gemShop'
 import { cosmeticPrice, skinFor } from '../data/cosmetics'
 import { SKIN_LINES, SKINS, type SkinId, type SkinLine } from '../data/skinCatalog'
@@ -61,6 +63,10 @@ import { stepGrid, stepSections, type Step } from './gridNav'
  * in style.css: arrows read it to know which way is a row.
  */
 const PHONE = '(orientation: portrait) and (max-width: 700px)'
+
+/** How the shiny of a legend never fought shiny comes (`OWN_WAY_SHINIES`: Zygarde's Cores, Meltan's box, Diancie's diamond), until it's owned. */
+const ownWayShiny = (id: PlayableId, owned: ShinyStarters) =>
+  isOwnWayShiny(id) && !(id in owned) && h('p', { class: 'partner-blurb locked-blurb' }, rich(t().paths.shiny[id](OWN_WAY_SHINIES[id])))
 
 /** The 27 starters, region by region (Grass, Fire, Water each): the roster's DOM order. */
 const STARTER_IDS: readonly StarterId[] = REGIONS.flatMap((r) => r.starters)
@@ -569,6 +575,7 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
             giftLegend(id) && h('p', { class: 'partner-legend-wins' }, m.ultra.shiny.progress(Math.min(ultraShinies(save), ULTRA_SHINY.need), ULTRA_SHINY.need)),
             id === weekBeast && h('p', { class: 'partner-legend-event' }, h('img', { class: 'ultra-ball-icon', src: beastBallIcon(), alt: '' }), h('b', {}, m.ultra.week.title)),
             eventLine(id, true),
+            ownWayShiny(id, save.shinyStarters),
           ),
         ),
         ...(over || gift || quest || (path && path !== 'regigigas') ? [] : [h('p', { class: 'partner-blurb partner-intro' }, m.legend.rule(need), ' ', m.legend.shinyRule)]),
@@ -627,6 +634,8 @@ export const starterSelect = (root: HTMLElement, input: Input, actions: SelectAc
           isLegend(id) && eventLine(id, false),
           // Poipole's shiny comes from the beasts' shinies (`game/ultraGifts.ts`): the count until it's owned.
           isLegend(id) && giftLegend(id) && !(id in save.shinyStarters) && h('p', { class: 'partner-legend-wins' }, m.ultra.shiny.progress(Math.min(ultraShinies(save), ULTRA_SHINY.need), ULTRA_SHINY.need)),
+          // Zygarde's, Meltan's and Diancie's shinies come their own way (`OWN_WAY_SHINIES`): how, until it's owned.
+          ownWayShiny(id, save.shinyStarters),
           h('p', { class: 'partner-blurb' }, m.blurbs[id]),
           // Scatterbug's line names the pattern its Vivillon wears here (the device's region).
           id === 'scatterbug' && h('p', { class: 'partner-blurb' }, h('b', {}, m.gaHook.vivillon.pattern(VIVILLON_PATTERNS[devicePattern()].name)), ' · ', m.gaHook.vivillon.why),

@@ -47,14 +47,14 @@ const pt = {
   },
   /** Where each mythical is caught (`LegendSource`). */
   where: {
-    dig: 'O tesouro mais raro da _Escavação_ do Poké Realm: um *Pink Diamond* com Diancie dentro, enterrado só enquanto você não a tem. Precisa de conta.',
+    dig: 'O tesouro mais raro da _Escavação_ do Poké Realm: um *Pink Diamond* com Diancie dentro, enterrado enquanto você não a tem, nem a shiny. Precisa de conta.',
     storm: 'Às vezes, quando _chove na Usina_, uma tempestade se forma e Zeraora salta de um raio: vença-o no mapa.',
     mask: 'Às vezes a _Reide Tera_ da partida é a toca de Ogerpon, na máscara do seu tipo Tera: vença-o lá dentro.',
   },
   epithet: 'Trovão Errante',
   phases: ['*Zeraora* usa Volt Switch: ele surge em cima de você!', 'A tempestade desaba! Plasma Fists: corra para um _abrigo_.'] as readonly [string, string],
   ui: {
-    dig: { found: 'Diancie saiu do diamante! Ela está no Presente do lobby.' },
+    dig: { found: 'Diancie saiu do diamante! Ela está no Presente do lobby.', foundShiny: 'Uma Diancie shiny saiu do diamante! Ela está no Presente do lobby.' },
     storm: {
       gathering: 'O céu escurece sobre a _Usina_… raios caem por perto!',
       fled: '*Zeraora* sumiu na tempestade…',
@@ -102,14 +102,14 @@ const en: typeof pt = {
     ogerpon: 'The four masks. Terastal changes the mask and the cudgel.',
   },
   where: {
-    dig: 'The Poké Realm _Mine Dig_’s rarest treasure: a *Pink Diamond* with Diancie inside, buried only while you don’t have it. Needs an account.',
+    dig: 'The Poké Realm _Mine Dig_’s rarest treasure: a *Pink Diamond* with Diancie inside, buried while you don’t have it, or its shiny. Needs an account.',
     storm: 'Sometimes, when it _rains on the Power Plant_, a storm gathers and Zeraora leaps out of a bolt: beat it on the map.',
     mask: 'Sometimes the run’s _Tera Raid_ is Ogerpon’s den, in the mask of your Tera type: beat it inside.',
   },
   epithet: 'Wandering Thunder',
   phases: ['*Zeraora* uses Volt Switch: it lands right on you!', 'The storm breaks! Plasma Fists: run for a _shelter_.'] as readonly [string, string],
   ui: {
-    dig: { found: 'Diancie came out of the diamond! It’s waiting in the lobby’s Gift.' },
+    dig: { found: 'Diancie came out of the diamond! It’s waiting in the lobby’s Gift.', foundShiny: 'A shiny Diancie came out of the diamond! It’s waiting in the lobby’s Gift.' },
     storm: {
       gathering: 'The sky darkens over the _Power Plant_… lightning strikes nearby!',
       fled: '*Zeraora* vanished into the storm…',
@@ -157,14 +157,14 @@ const es: typeof pt = {
     ogerpon: 'Las cuatro máscaras. El Teracristal cambia la máscara y el garrote.',
   },
   where: {
-    dig: 'El tesoro más raro de la _Excavación_ del Poké Realm: un *Pink Diamond* con Diancie dentro, enterrado solo mientras no la tengas. Necesita cuenta.',
+    dig: 'El tesoro más raro de la _Excavación_ del Poké Realm: un *Pink Diamond* con Diancie dentro, enterrado mientras no la tengas, ni a la shiny. Necesita cuenta.',
     storm: 'A veces, cuando _llueve en la Central_, se forma una tormenta y Zeraora salta de un rayo: véncelo en el mapa.',
     mask: 'A veces la _Incursión Tera_ de la partida es la guarida de Ogerpon, con la máscara de tu tipo Tera: véncelo adentro.',
   },
   epithet: 'Trueno Errante',
   phases: ['*Zeraora* usa Volt Switch: ¡aparece encima de ti!', '¡Estalla la tormenta! Plasma Fists: corre a un _refugio_.'] as readonly [string, string],
   ui: {
-    dig: { found: '¡Diancie salió del diamante! Te espera en el Regalo del lobby.' },
+    dig: { found: '¡Diancie salió del diamante! Te espera en el Regalo del lobby.', foundShiny: '¡Una Diancie shiny salió del diamante! Te espera en el Regalo del lobby.' },
     storm: {
       gathering: 'El cielo se oscurece sobre la _Central_… ¡caen rayos cerca!',
       fled: '*Zeraora* desapareció en la tormenta…',
@@ -212,14 +212,14 @@ const fr: typeof pt = {
     ogerpon: 'Les quatre masques. La Téracristallisation change le masque et le gourdin.',
   },
   where: {
-    dig: 'Le trésor le plus rare de l’_Excavation_ du Poké Realm : un *Pink Diamond* avec Diancie dedans, enfoui seulement tant que vous ne l’avez pas. Compte requis.',
+    dig: 'Le trésor le plus rare de l’_Excavation_ du Poké Realm : un *Pink Diamond* avec Diancie dedans, enfoui tant que vous ne l’avez pas, ni sa version chromatique. Compte requis.',
     storm: 'Parfois, quand _il pleut sur la Centrale_, un orage se forme et Zeraora bondit d’un éclair : battez-le sur la carte.',
     mask: 'Parfois, le _Raid Téracristal_ de la partie est l’antre d’Ogerpon, avec le masque de votre type Téra : battez-le à l’intérieur.',
   },
   epithet: 'Tonnerre Errant',
   phases: ['*Zeraora* utilise Volt Switch : il surgit sur vous !', 'L’orage éclate ! Plasma Fists : courez vers un _abri_.'] as readonly [string, string],
   ui: {
-    dig: { found: 'Diancie est sortie du diamant ! Elle vous attend dans le Cadeau du lobby.' },
+    dig: { found: 'Diancie est sortie du diamant ! Elle vous attend dans le Cadeau du lobby.', foundShiny: 'Une Diancie chromatique est sortie du diamant ! Elle vous attend dans le Cadeau du lobby.' },
     storm: {
       gathering: 'Le ciel s’assombrit sur la _Centrale_… la foudre tombe tout près !',
       fled: '*Zeraora* a disparu dans l’orage…',
@@ -267,14 +267,14 @@ const zh: typeof pt = {
     ogerpon: '四張面具。太晶化會改變面具與棍棒。',
   },
   where: {
-    dig: 'Poké Realm _礦坑挖掘_ 最稀有的寶物：裡面藏著Diancie的 *Pink Diamond*，只在你還沒有它時才會埋著。需要帳號。',
+    dig: 'Poké Realm _礦坑挖掘_ 最稀有的寶物：裡面藏著Diancie的 *Pink Diamond*，在你還沒有它或它的異色時才會埋著。需要帳號。',
     storm: '有時 _發電廠下雨_ 時會形成雷暴，Zeraora從閃電中躍出：在地圖上打倒它。',
     mask: '有時這局的 _太晶團體戰_ 是Ogerpon的巢穴，戴著你的太晶屬性的面具：在裡面打倒它。',
   },
   epithet: '流浪的雷霆',
   phases: ['*Zeraora* 使出Volt Switch：它直接出現在你身上！', '雷暴降臨！Plasma Fists：快跑到 _避難處_。'] as readonly [string, string],
   ui: {
-    dig: { found: 'Diancie從鑽石裡出來了！它在大廳的禮物裡等你。' },
+    dig: { found: 'Diancie從鑽石裡出來了！它在大廳的禮物裡等你。', foundShiny: '異色 Diancie 從鑽石裡出來了！它在大廳的禮物裡等你。' },
     storm: {
       gathering: '_發電廠_ 上空暗了下來……閃電就落在附近！',
       fled: '*Zeraora* 消失在雷暴之中……',

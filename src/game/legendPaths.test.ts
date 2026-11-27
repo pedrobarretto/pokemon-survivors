@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { COSMOG, MELTAN, ZYGARDE } from '../data/legendPaths'
 import { formAfter } from './legend'
 import {
-  clearTrial, cosmogLean, cosmogStage, cubePieces, kubfuJoined, mergePaths, NO_COSMOG, NO_PATHS, openForms, parsePaths, pathGifts, recordCosmog, runPieces, styleOf, takePiece, templeRun, trialOpen,
+  clearTrial, cosmogLean, cosmogStage, cubePieces, kubfuJoined, mergePaths, NO_COSMOG, NO_PATHS, openForms, parsePaths, pathGifts, recordCosmog, runPieces, styleOf, takePiece, takeShinyCore, templeRun, trialOpen, ZYGARDE_SHINY_GIFT_ID,
   type CosmogSave,
 } from './legendPaths'
 import { createPathRun } from './pathRun'
-import { keepGiven } from './gifts'
+import { applyGift, keepGiven } from './gifts'
 import { EMPTY_SAVE } from './meta'
 import { gameGiftsApplied } from './gameGifts'
 import { winCounts } from './capture'
@@ -46,6 +46,36 @@ describe('the Zygarde Cube', () => {
     expect(mean).toBeGreaterThan(1.4)
     expect(mean).toBeLessThan(1.7)
     expect(Math.abs(cores - ZYGARDE.core)).toBeLessThan(0.02)
+  })
+
+  it('makes about one Core in 8 shiny, never a run without a Core', () => {
+    const runs = Array.from({ length: 20000 }, (_, seed) => runPieces(seed + 1))
+    const cores = runs.filter((r) => r.core)
+    expect(runs.every((r) => !r.shiny || r.core)).toBe(true)
+    expect(Math.abs(cores.filter((r) => r.shiny).length / cores.length - ZYGARDE.shinyCore)).toBeLessThan(0.03)
+  })
+
+  it('takes a shiny Core as any Core and keeps it through a save round trip and a merge', () => {
+    expect(takeShinyCore({ cells: 3, cores: 2, shinyCore: false })).toEqual({ paths: { cells: 3, cores: 3, shinyCore: true }, converted: 0 })
+    expect(takeShinyCore({ cells: 3, cores: 5, shinyCore: false })).toEqual({ paths: { cells: 3 + ZYGARDE.extraCore, cores: 5, shinyCore: true }, converted: ZYGARDE.extraCore })
+    const { paths } = takeShinyCore({ ...NO_PATHS, cells: 12 })
+    expect(parsePaths(JSON.parse(JSON.stringify(paths))).shinyCore).toBe(true)
+    expect([mergePaths(NO_PATHS, paths).shinyCore, mergePaths(paths, NO_PATHS).shinyCore, parsePaths({ shinyCore: 'yes' }).shinyCore]).toEqual([true, true, false])
+  })
+
+  it('brings Zygarde shiny once a shiny Core is in, beside Zygarde and never before it, keeping the Normal one', () => {
+    const shinyAt = (cells: number) => pathGifts({ ...EMPTY_SAVE, paths: { ...NO_PATHS, cells, cores: 1, shinyCore: true } }).map((g) => g.id)
+    expect([shinyAt(8), shinyAt(9)]).toEqual([[], ['path:zygarde', ZYGARDE_SHINY_GIFT_ID]])
+    expect(pathGifts({ ...EMPTY_SAVE, paths: { ...NO_PATHS, cells: 40 } }).map((g) => g.id)).toEqual(['path:zygarde'])
+    // A player who caught Zygarde long ago, playing it Normal, takes a shiny Core: the shiny comes, and the Normal stays.
+    const owned = { ...EMPTY_SAVE, legends: { zygarde: 1 }, gifts: ['path:zygarde'], paths: { ...NO_PATHS, cells: 60, cores: 2, shinyCore: true } }
+    const [shiny] = pathGifts(owned)
+    expect(shiny?.content).toEqual({ kind: 'legend', legend: 'zygarde', shiny: true })
+    const out = applyGift(owned, shiny!)
+    if (out.status !== 'applied') throw new Error(out.status)
+    expect([out.save.legends.zygarde, out.save.shinyStarters.zygarde]).toEqual([1, true])
+    // The API vouches for it, and the save's legend stays.
+    expect(keepGiven(out.save, gameGiftsApplied(out.save)).legends).toEqual({ zygarde: 1 })
   })
 
   it('schedules a run’s pieces inside its window, in order and far enough apart', () => {
@@ -121,7 +151,7 @@ describe('the save', () => {
     const a = { ...NO_PATHS, cells: 30, cores: 1, nuts: 50, trials: ['fist', 'crowd', 'chase', 'dark'] as const, cosmog: { ...researched, runs: 4, sun: 4 } }
     const b = { ...NO_PATHS, cells: 12, cores: 3, nuts: 400, trials: ['fist', 'water'] as const, style: 'water' as const, cosmog: { ...NO_COSMOG, research: ['day'] as const, raised: ['lunala'] as const } }
     const m = mergePaths(a, b)
-    expect(m).toEqual({ cells: 30, cores: 3, nuts: 400, trials: ['fist', 'crowd', 'chase', 'dark', 'water'], style: 'water', cosmog: { research: [...COSMOG.research], runs: 0, sun: 0, moon: 0, raised: ['lunala'] } })
+    expect(m).toEqual({ cells: 30, cores: 3, shinyCore: false, nuts: 400, trials: ['fist', 'crowd', 'chase', 'dark', 'water'], style: 'water', cosmog: { research: [...COSMOG.research], runs: 0, sun: 0, moon: 0, raised: ['lunala'] } })
     expect(mergePaths(m, a)).toEqual(m)
     expect(parsePaths(JSON.parse(JSON.stringify(m)))).toEqual(m)
   })

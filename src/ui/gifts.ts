@@ -1,6 +1,6 @@
 import { isSafariHabitat } from '../data/safari'
 import { HATCHLINGS, PLAYABLE } from '../data/hatchlings'
-import { eggLegend, LEGENDS, type LegendId } from '../data/legends'
+import { eggLegend, giftLegend, LEGENDS, type LegendId } from '../data/legends'
 import { ULTRA_SHINY } from '../game/ultraGifts'
 import type { CosmogLegend } from '../game/legendPaths'
 import { BAG_ITEMS, EVO_ITEMS } from '../data/shop'
@@ -67,8 +67,9 @@ export const contentLine = (gift: Pick<Gift, 'content'>): { src: string; text: s
     case 'legend':
       // Manaphy comes as its egg, and hatches when opened (`ui/manaphyEgg.ts`).
       if (eggLegend(c.legend)) return { src: manaphyEggIcon(), text: t().scWave.egg.gift }
-      // Poipole's shiny, the shiny Ultra Beasts' gift (`game/ultraGifts.ts`).
-      return c.shiny ? { src: portraitUrl(LEGENDS[c.legend].line[0].dex, true), text: t().ultra.shiny.gift } : { src: portraitUrl(LEGENDS[c.legend].line[0].dex), text: m.legend(LEGENDS[c.legend].name) }
+      // A legend's shiny: Poipole's, the shiny Ultra Beasts' gift (`game/ultraGifts.ts`), or Zygarde's, Meltan's and Diancie's (`OWN_WAY_SHINIES`).
+      if (c.shiny) return { src: portraitUrl(LEGENDS[c.legend].line[0].dex, true), text: giftLegend(c.legend) ? t().ultra.shiny.gift : m.legendShiny(LEGENDS[c.legend].name) }
+      return { src: portraitUrl(LEGENDS[c.legend].line[0].dex), text: m.legend(LEGENDS[c.legend].name) }
     case 'evoItem':
       return { src: itemArt(c.item), text: EVO_ITEMS[c.item].name }
     case 'shadow':

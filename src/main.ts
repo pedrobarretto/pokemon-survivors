@@ -85,7 +85,7 @@ import { MEOWTH_DEX } from './game/mapEventRules'
 import { CASTFORM_FIND } from './data/seasonOneUnlocks'
 import { seasonFindDevTools, seasonFindFeedback } from './ui/seasonFinds'
 import { travelDevTools } from './ui/travelDev'
-import { bankNuts, nutFeedback, pathFeedback } from './ui/pathRun'
+import { bankNuts, DEV_SHINY_CORE, nutFeedback, pathFeedback } from './ui/pathRun'
 import { pathDevTools } from './ui/pathDev'
 import { pathSheet } from './ui/legendPaths'
 import { trialHud } from './ui/towerTrial'
@@ -94,7 +94,7 @@ import { jumpTutorial, startTutorial as beginTutorial, TUTORIAL_DEXES, type Tuto
 import { tutorialCoach, type TutorialCoach } from './ui/tutorialCoach'
 import { NO_RANKS } from './game/meta'
 import { COSMOG_DEX, PATH_FORMS, PATH_IDS, TOWERS, TRIALS, type TrialId } from './data/legendPaths'
-import { clearTrial, cosmogStage, giantAwake, kubfuJoined, openForms, ruinsRun, templeRun } from './game/legendPaths'
+import { clearTrial, cosmogStage, giantAwake, kubfuJoined, openForms, ruinsRun, runPieces, templeRun } from './game/legendPaths'
 import { FIELD, FIELD_MISSION_KINDS, TOGEPI_DEX, type FieldMissionKind } from './game/fieldMissionRules'
 import { advancePhase, banishOffer, chooseOffer, createGame, offerAbilities, playerDex, rerollOffers, skipLevelUp, step, takeBerryLevelUps } from './game/game'
 import { applyBuild, setDummies, setLens, startTraining } from './game/training'
@@ -1488,6 +1488,13 @@ const runPerf = (): RunPerf => {
 }
 
 /** The `challenge` field of a run's report: a Desafio do dia run says whether it started as the official attempt. */
+/**
+ * Whether the run's Zygarde Core shines (`runPieces`): the shell's say, from
+ * the run's seed, never in a Desafio do dia, whose seed is everyone's and
+ * replays as practice.
+ */
+const shinyCoreOf = (r: Pick<Run, 'challenge' | 'recorder'>) => DEV_SHINY_CORE.on || (r.challenge === null && runPieces(r.recorder.replay.start.seed).shiny)
+
 const challengeKind = (c: { official: boolean } | null) => (c ? { challenge: c.official ? ('official' as const) : ('practice' as const) } : {})
 
 /** What an error report says about where the player was: in a run, its replay so far, which plays the run again up to the error (`resimulate`). */
@@ -2941,7 +2948,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
     case 'seasonFind':
       return seasonFindFeedback(ui, e.find, e.moment, r.game.terrain.seed)
     case 'path':
-      return pathFeedback(ui, e.notice)
+      return pathFeedback(ui, e.notice, shinyCoreOf(r))
     case 'hexNut':
       return nutFeedback(ui, g)
     case 'revive':
@@ -4822,7 +4829,7 @@ const frame = (now: number) => {
         runDrawnAt = now
         if (g.raid.arena) frameRaid(g, t, localPlayer(g).screen.y)
         if (g.rush) frameRush(g, t, localPlayer(g).screen.y)
-        render(ctx, g, t, { ...settings(), companion: r.companion })
+        render(ctx, g, t, { ...settings(), companion: r.companion, shinyCore: shinyCoreOf(r) })
         firstFrameDrawn()
         if (!r.tutorial) firstRunClock(g.time)
         const stick = input.readStick()
@@ -5333,12 +5340,12 @@ const devGifts = {
    * Puts a Mystery Gift in the lobby's gift box as if a sync listed it: `ps.gift('egg', 'friend')`, `ps.gift('coins', '500')`,
    * `ps.gift('title')`, `ps.gift('style', 'ambassador')` (a frame), `ps.gift('shinyHatch', 'munchlax')`,
    * `ps.gift('ribbon', 'gold')` (yesterday's challenge, #12 of 340), `ps.gift('shinyPick')` (a shiny of one's choice),
-   * `ps.gift('companion', 'pumpkaboo')` (a gift-only companion), `ps.gift('bag', 'lure')` (3 of a Bag item), `ps.gift('legend', 'cresselia')` (a festival legend),
+   * `ps.gift('companion', 'pumpkaboo')` (a gift-only companion), `ps.gift('bag', 'lure')` (3 of a Bag item), `ps.gift('legend', 'cresselia')` (a festival legend; `'zygarde*'` a legend's shiny),
    * `ps.gift('reshadow', 'mewtwo')` (the Game Corner's Shadow Serum: a Purified Pokémon back to Shadow).
    * `why`: an inviter's handle (welcome), a count of friends brought, or a legend path (`ps.gift('legend', 'solgaleo', 'cosmog')`: Cosmog's evolution scene as it opens).
    */
   gift: (kind: GiftKind = 'egg', arg?: string, why?: string | number) => {
-    const raw = { egg: { tier: arg ?? 'friend' }, coins: { amount: Number(arg ?? 500) }, title: { title: arg ?? 'ambassador' }, style: { style: { slot: 'frame', id: arg ?? 'ambassador' } }, shinyHatch: { family: arg ?? 'munchlax' }, family: { family: arg ?? 'mimikyu' }, shadow: { family: arg ?? 'ditto' }, reshadow: { id: arg ?? 'mewtwo' }, ribbon: { ribbon: { day: previousDay(brasiliaDay(today())), tier: arg ?? 'gold', rank: 12, total: 340 } }, shinyPick: {}, companion: { id: arg ?? 'pumpkaboo' }, bag: { item: arg ?? 'lure', count: 3 }, legend: { legend: arg ?? 'cresselia' }, evoItem: { item: arg ?? 'fireStone' } }[kind]
+    const raw = { egg: { tier: arg ?? 'friend' }, coins: { amount: Number(arg ?? 500) }, title: { title: arg ?? 'ambassador' }, style: { style: { slot: 'frame', id: arg ?? 'ambassador' } }, shinyHatch: { family: arg ?? 'munchlax' }, family: { family: arg ?? 'mimikyu' }, shadow: { family: arg ?? 'ditto' }, reshadow: { id: arg ?? 'mewtwo' }, ribbon: { ribbon: { day: previousDay(brasiliaDay(today())), tier: arg ?? 'gold', rank: 12, total: 340 } }, shinyPick: {}, companion: { id: arg ?? 'pumpkaboo' }, bag: { item: arg ?? 'lure', count: 3 }, legend: { legend: arg?.replace(/\*$/, '') ?? 'cresselia', ...(arg?.endsWith('*') && { shiny: true }) }, evoItem: { item: arg ?? 'fireStone' } }[kind]
     const content = parseGiftContent({ kind, ...raw })
     if (!content) return 'Kinds: egg (tier), coins (amount), title, style (frame id), shinyHatch (family), ribbon (tier), shinyPick, companion (id), bag (item, 3 of it), legend (id)'
     const path = PATH_IDS.find((id) => id === why)
@@ -6058,15 +6065,15 @@ if (import.meta.env.DEV) {
       },
       /**
        * The Escavação on fakes (`realm/digApi.ts`): `ps.dig()` opens it with the faked API. `ps.dig('golden')` forces the next wall golden,
-       * `ps.dig('fossil', 'cranidos')` a fossil of that family (a Galar one's half the lab lacks: `ps.dig('fossil', 'dracozolt')`), `ps.dig('box')` Meltan's Mystery Box in it, `ps.dig('diamond')` Diancie's pink diamond, `ps.dig('dry', 10)` sets the guarantee's streak, `ps.dig('used', 3)` the walls used
+       * `ps.dig('fossil', 'cranidos')` a fossil of that family (a Galar one's half the lab lacks: `ps.dig('fossil', 'dracozolt')`), `ps.dig('box')` Meltan's Mystery Box in it, `ps.dig('diamond')` Diancie's pink diamond (`ps.dig('box', 'shiny')` makes the next one dug out shiny, `'plain'` never; otherwise it rolls its chance, `realm/games/digLegends.ts`, from this save's legends), `ps.dig('dry', 10)` sets the guarantee's streak, `ps.dig('used', 3)` the walls used
        * today, `ps.dig('lacking', [])` the fossils lacked (all of them by default), `ps.dig('held', ['bird'])` the Galar halves waiting in the lab (none by default), `ps.dig('crack')` the open wall one hit short of collapse, `ps.dig('peek')` where the open wall hides things and the layers left, `ps.dig('partner', 'ralts')` a partner's powers for the next wall, `ps.dig('soft')` a next wall one layer deep with far more crack, to stage a whole dig.
        */
       dig: async (what?: 'golden' | 'fossil' | 'box' | 'diamond' | 'dry' | 'used' | 'lacking' | 'held' | 'crack' | 'peek' | 'partner' | 'soft', arg?: unknown) => {
         const { stageDig, crackFakeWall, peekFakeWall } = await import('./realm/digApi')
         const { DIG_FOSSIL_FAMILIES, GALAR_HALVES } = await import('./data/digTreasures')
         if (what === 'golden') return stageDig({ golden: true })
-        if (what === 'box') return stageDig({ box: true })
-        if (what === 'diamond') return stageDig({ diamond: true })
+        if (what === 'box') return stageDig({ box: true, ...(arg === 'shiny' || arg === 'plain' ? { shiny: arg === 'shiny' } : {}) })
+        if (what === 'diamond') return stageDig({ diamond: true, ...(arg === 'shiny' || arg === 'plain' ? { shiny: arg === 'shiny' } : {}) })
         if (what === 'fossil') return stageDig({ fossil: arg === null ? null : DIG_FOSSIL_FAMILIES.find((f) => f === arg) ?? DIG_FOSSIL_FAMILIES[0] })
         if (what === 'dry') return stageDig({ dry: Number(arg ?? 10) })
         if (what === 'used') return stageDig({ used: Number(arg ?? 0) })
