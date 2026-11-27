@@ -98,7 +98,7 @@ export const strikeAvatar = (g: Game, e: Enemy, attack: Attack) => {
     e.kx += away.x * px
     e.ky += away.y * px
   }
-  if (attack.drain > 0) drainHeal(g, dmg, attack.drain)
+  if (attack.drain > 0) drainHeal(g, dmg, attack.drain, attack.move)
   damageText(g, e, dmg, eff > 1 ? '#ffd830' : eff < 1 ? '#a8a8b8' : '#ffffff', eff > 1)
   burst(g, e.x, e.y - e.radius, { colors: [TYPE_COLORS[attack.type], '#ffffff'], count: eff > 1 ? 6 : 3, speed: 70, ttl: 0.25 })
   g.events.push({ kind: 'hit', effective: eff })

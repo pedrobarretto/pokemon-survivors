@@ -62,7 +62,7 @@ export const updateStatuses = (g: Game, dt: number) => {
     if (seed > 0 && e.dying < 0) {
       g.player = ownerOf(g, seedBy)
       dotDamage(g, e, seed, seedMove, 'seed')
-      drainHeal(g, seed, SEED_HEAL)
+      drainHeal(g, seed, SEED_HEAL, seedMove ?? 'ability')
     }
     g.player = actor
   }

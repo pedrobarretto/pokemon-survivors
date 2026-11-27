@@ -75,20 +75,28 @@ export const executes = (execute: number, hp: number, maxHp: number, boss: boole
 /* ---------------- Drain ---------------- */
 
 /**
- * Drain heals from a budget that refills at `DRAIN_RATE` of max HP per second
- * and holds at most one second of it, so a fast multi-hit move can't outheal a
- * horde. The difficulty's healing multiplier applies after (`healPlayer`).
+ * Drain heals `fraction` of the damage a hit deals, in full, from a budget of
+ * its source's own (each move, the special, an ability: `Player.drain`). A
+ * budget refills at `DRAIN.rate` of max HP per second and holds `DRAIN.hold` s
+ * of it, so one move hitting a whole horde tops out at that rate while a move
+ * on one foe or two heals what it deals; two drain moves heal side by side, each
+ * within its own. The difficulty's healing multiplier applies after
+ * (`healPlayer`: Nightmare halves). `show` is how often the healed HP pops as a "+N".
  */
-export const DRAIN_RATE = 0.04
+export const DRAIN = { rate: 0.1, hold: 1, show: 0.5 } as const
+
+/** The most a drain budget holds for a player with `maxHp`: where a fresh one starts. */
+export const drainCap = (maxHp: number) => maxHp * DRAIN.rate * DRAIN.hold
 
 /** The budget `elapsed` seconds after it was at `left`, for a player with `maxHp`. */
-export const drainRefill = (left: number, elapsed: number, maxHp: number) => {
-  const cap = maxHp * DRAIN_RATE
-  return Math.min(cap, left + elapsed * cap)
-}
+export const drainRefill = (left: number, elapsed: number, maxHp: number) =>
+  Math.min(drainCap(maxHp), left + elapsed * maxHp * DRAIN.rate)
 
 /** HP a hit of `damage` drains at `fraction`, within the budget `left`. */
 export const drainAmount = (damage: number, fraction: number, left: number) => Math.max(0, Math.min(damage * fraction, left))
+
+/** The "+N" for `healed` HP not shown yet, or null while it rounds to less than 1 (it keeps adding up). */
+export const drainLabel = (healed: number) => (healed >= 0.5 ? `+${dm.round(healed)}` : null)
 
 /* ---------------- Per-move stacks ---------------- */
 

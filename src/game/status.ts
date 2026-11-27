@@ -15,7 +15,7 @@ import type { DamageSource } from './types'
  * - freeze: stops; the next hit deals ×`FREEZE_SHATTER` and breaks it.
  * - mark: takes +`power` damage per stack from hits, up to 3 stacks.
  * - confuse: wanders at random and its body hurts the foes it bumps into.
- * - seed: DoT that heals the player (`SEED_HEAL`, through the drain budget);
+ * - seed: DoT that heals the player (`SEED_HEAL`, through its move's drain budget);
  *   when the foe faints it jumps to `SEED_JUMPS` neighbors (`kitRules.ts`).
  * - weaken: deals `power` less contact damage (0.25 = −25%), like burn's cut (Mud Shot).
  */

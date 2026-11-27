@@ -65,7 +65,7 @@ const pop = (g: Game, a: Attack) => {
     damage: a.damage, knockback: a.knockback, ttl: 0.3, activeUntil: 0.06, ...inheritMods(a, ['trail']),
   })
   if (dm.sq(a.x - p.x) + dm.sq(a.y - (p.y - 10)) < dm.sq(ARIA_HEAL_REACH)) {
-    const healed = drainHeal(g, p.stats.maxHp * ARIA_HEAL, 1)
+    const healed = drainHeal(g, p.stats.maxHp * ARIA_HEAL, 1, a.move)
     if (healed >= 1) burst(g, p.x, p.y - 12, { colors: ['#a8e8ff', '#ffffff', '#78f8b8'], count: 5, speed: 30, ttl: 0.5, gravity: -60 })
   }
   a.ttl = a.age

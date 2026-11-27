@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
+import { ARENA_RANKED } from '../data/arenaRanked'
 import { VERSUS, VERSUS_FORMATS } from '../data/versus'
 import { GLADE, VALE } from '../data/versusMaps'
 import { parseTickEntry, stepTick, type TickEntry } from './lockstep'
 import { moveCode } from './replay'
-import { actAs } from './players'
+import { actAs, inPlay } from './players'
 import { restore, snapshot, stateHash } from './snapshot'
 import { TICK } from './tick'
 import { createVersusGame, seatMatch } from './versus'
@@ -144,10 +145,16 @@ describe('a match', () => {
     expect(v.still).toBeLessThan(5.1)
     expect(v.afk).toBeGreaterThanOrEqual(20)
     stepTick(g, [{ slot: 0, kind: 'move', code: 0 }, { slot: 0, kind: 'away' }])
-    // 100 s away count 40.
-    run(g, 100)
-    expect(v.afk).toBeGreaterThan(39)
-    expect(v.afk).toBeLessThan(41)
+    // 100 s away count 40, but for the seconds the bot playing the seat spent knocked out or scoring, which hold.
+    const p = g.players[0]!
+    let held = 0
+    for (let i = 0; i < Math.round(100 / TICK); i++) {
+      if (!inPlay(p) || v.channel > 0) held += TICK
+      stepTick(g, [])
+    }
+    const counted = (100 - held) * ARENA_RANKED.fairPlay.awayWeight
+    expect(counted).toBeGreaterThan(30)
+    expect(Math.abs(v.afk - counted)).toBeLessThan(0.5)
     expect(g.players.filter((p) => p.versus!.bot).every((p) => p.versus!.afk === 0)).toBe(true)
   })
 

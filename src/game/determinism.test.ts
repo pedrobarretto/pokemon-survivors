@@ -135,6 +135,6 @@ describe('golden runs', () => {
   it('Bulbasaur with Bag items, armed shop TMs and Bottle Caps', () => {
     const { live, replayed, branch } = golden('bulbasaur', 45, 240, { bag: ['rareCandy', 'luckyEgg', 'xAttack', 'maxRevive'], tms: ['payDay', 'thief'], caps: 2 })
     expect(replayed).toBe(live)
-    expect([live, branch]).toEqual(['playing@240s L17 S1 638k 8cf5810c', null])
+    expect([live, branch]).toEqual(['playing@240s L18 S1 643k eda9a5ba', null])
   }, SLOW)
 })

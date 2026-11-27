@@ -170,8 +170,8 @@ export type Player = {
   hidden: MoveWindow | null
   /** The last immunity window (guard or burrow) and when it last stood: another move's window waits `WARD_GAP` after it (`wardOpens`). */
   ward: Ward | null
-  /** Drain heal budget (`drainRefill`) and the game time it was last spent. */
-  drain: { left: number; at: number }
+  /** Drain: each source's heal budget (`drainRefill`), the HP healed not shown yet and when the last "+N" popped (`drainHeal`). */
+  drain: DrainState
   /** Seconds the player can't walk (Giga Impact's recharge); moves still carry them. */
   rooted: number
   /**
@@ -481,6 +481,11 @@ export type Visual =
 
 /** What dealt the damage, for the results screen: a move, the special or the ability (Rough Skin, Magic Bounce). */
 export type DamageSource = MoveId | 'special' | 'ability'
+
+/** A drain source's heal budget: HP `left` at game time `at` (`drainRefill`). */
+export type DrainBudget = { left: number; at: number }
+/** A player's drain (`drainHeal`): a budget per source, the HP healed since the last "+N" and when that popped. */
+export type DrainState = { by: Map<DamageSource, DrainBudget>; unshown: number; shownAt: number }
 
 /** Visuals of evolved moves, drawn by `render/evolved.ts` (casts in `game/evolvedMoves.ts`). */
 export type EvolvedVisual =

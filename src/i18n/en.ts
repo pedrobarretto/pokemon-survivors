@@ -3336,7 +3336,7 @@ export const en: Messages = {
     ...MYTHICAL_WORDS.en.moves,
     ...REGIS_FORCES_WORDS.en.moves,
     leechSeed: {
-      description: 'Lobs seeds at the nearest foes. A seed drains HP over time and heals you; when the foe faints, it jumps to two neighbors.',
+      description: 'Lobs seeds at the nearest foes. A seed drains HP over time and heals you half of it (up to 10% of max HP per second); when the foe faints, it jumps to two neighbors.',
       upgrades: [
         '+1 seed',
         '+3 damage',
@@ -3352,7 +3352,7 @@ export const en: Messages = {
       upgrades: [
         '+3 damage',
         'Spins +0.3s',
-        { fork: [{ name: 'Static Spin', desc: 'Arcs to 2 more foes; +10% area' }, { name: 'Vital Spin', desc: 'Its hits heal you; +10% area' }] },
+        { fork: [{ name: 'Static Spin', desc: 'Arcs to 2 more foes; +10% area' }, { name: 'Vital Spin', desc: 'Its hits heal 20% of the damage (max 10% HP/s); +10% area' }] },
         'Recharges 0.5s faster',
         '+4 damage',
         { fork: [{ name: 'Shell Blast', desc: 'Foes it faints explode; +0.3s duration' }, { name: 'Final Spin', desc: 'Finishes foes ≤12% HP; +15% area, +16 damage' }] },
@@ -3388,7 +3388,7 @@ export const en: Messages = {
       upgrades: [
         '+3 damage',
         '+1 bite per second',
-        { fork: [{ name: 'Chain Frenzy', desc: 'Arcs to 2 more foes; +10% area' }, { name: 'Vital Frenzy', desc: 'Its hits heal you; +20% area' }] },
+        { fork: [{ name: 'Chain Frenzy', desc: 'Arcs to 2 more foes; +10% area' }, { name: 'Vital Frenzy', desc: 'Its hits heal 20% of the damage (max 10% HP/s); +20% area' }] },
         'Rampage +0.5s',
         '+4 damage',
         { fork: [{ name: 'Rampage', desc: 'Foes it faints explode; +1 bite' }, { name: 'Titan Rage', desc: '×1.5 vs elites & bosses; +1 bite' }] },
@@ -3463,7 +3463,7 @@ export const en: Messages = {
         { fork: [{ name: 'Fire Trail', desc: 'Leaves hurting ground; -0.3s cooldown' }, { name: 'Sparks', desc: 'Arcs to 2 more foes; -0.4s cooldown' }] },
         '+6 damage',
         '+20% area',
-        { fork: [{ name: 'Meteor', desc: 'Foes it faints explode; -0.4s cooldown' }, { name: 'Vital Ember', desc: 'Its hits heal you; -0.3s cooldown' }] },
+        { fork: [{ name: 'Meteor', desc: 'Foes it faints explode; -0.4s cooldown' }, { name: 'Vital Ember', desc: 'Its hits heal 20% of the damage (max 10% HP/s); -0.3s cooldown' }] },
         '+8 damage and +15% area',
       ],
     },
@@ -3472,7 +3472,7 @@ export const en: Messages = {
       upgrades: [
         '+3 damage',
         '+2 needles',
-        { fork: [{ name: 'Static Thorns', desc: 'Arcs to 2 more foes; +0.3s duration' }, { name: 'Vampire Thorns', desc: 'Its hits heal you; +16 damage' }] },
+        { fork: [{ name: 'Static Thorns', desc: 'Arcs to 2 more foes; +0.3s duration' }, { name: 'Vampire Thorns', desc: 'Its hits heal 20% of the damage (max 10% HP/s); +16 damage' }] },
         'Recharges 0.5s faster',
         '+4 damage',
         { fork: [{ name: 'Cactus Bomb', desc: 'Foes it faints explode; +1 hit, -4 damage' }, { name: 'Double Bristle', desc: 'Recasts at once (50%); +1 hit, +8 damage' }] },
@@ -3496,7 +3496,7 @@ export const en: Messages = {
       upgrades: [
         '+3 damage',
         '+20% reach',
-        { fork: [{ name: 'Lasso', desc: 'Pulls foes into it; +0.3s duration' }, { name: 'Dark Embrace', desc: 'Its hits heal you; +0.4s duration' }] },
+        { fork: [{ name: 'Lasso', desc: 'Pulls foes into it; +0.3s duration' }, { name: 'Dark Embrace', desc: 'Its hits heal 20% of the damage (max 10% HP/s); +0.4s duration' }] },
         'Recharges 0.4s faster',
         '+4 damage',
         { fork: [{ name: 'Four Arms', desc: 'A 2nd, wider pair spins back; -2 damage' }, { name: 'Knockout', desc: 'Finishes foes ≤12% HP; +1 arm, +9 damage' }] },
@@ -3544,7 +3544,7 @@ export const en: Messages = {
       upgrades: [
         '+4 damage',
         '+20% reach',
-        { fork: [{ name: 'Puddles', desc: 'Leaves hurting ground; -0.2s cooldown' }, { name: 'Vital Step', desc: 'Its hits heal you; -0.25s cooldown' }] },
+        { fork: [{ name: 'Puddles', desc: 'Leaves hurting ground; -0.2s cooldown' }, { name: 'Vital Step', desc: 'Its hits heal 20% of the damage (max 10% HP/s); -0.25s cooldown' }] },
         '+5 damage',
         '+20% reach',
         { fork: [{ name: 'Chain Splash', desc: 'Arcs to 2 more foes; -0.25s cooldown, +8 damage' }, { name: 'Final Wave', desc: 'Foes it faints explode; -0.25s cooldown' }] },
@@ -3592,7 +3592,7 @@ export const en: Messages = {
       upgrades: [
         '+20% area',
         '+2 damage',
-        { fork: [{ name: 'Cruel Current', desc: '×1.35 vs afflicted foes; -0.04s cooldown' }, { name: 'Spring', desc: 'Its hits heal you; -0.08s cooldown' }] },
+        { fork: [{ name: 'Cruel Current', desc: '×1.35 vs afflicted foes; -0.04s cooldown' }, { name: 'Spring', desc: 'Its hits heal 20% of the damage (max 10% HP/s); -0.08s cooldown' }] },
         '+20% area',
         '+3 damage',
         { fork: [{ name: 'Riptide', desc: 'Arcs to 2 more foes; -0.08s cooldown' }, { name: 'Undertow', desc: 'Finishes foes ≤12% HP; -0.08s cooldown' }] },
@@ -3619,7 +3619,7 @@ export const en: Messages = {
         { fork: [{ name: 'Roots', desc: 'Leaves hurting ground; +10% area' }, { name: 'Chain Whip', desc: 'Arcs to 2 more foes; +20% area' }] },
         '0.15s faster cooldown',
         '+6 damage',
-        { fork: [{ name: 'Thorn Burst', desc: 'Foes it faints explode; +20% area' }, { name: 'Vampire Whip', desc: 'Its hits heal you; +10% area' }] },
+        { fork: [{ name: 'Thorn Burst', desc: 'Foes it faints explode; +20% area' }, { name: 'Vampire Whip', desc: 'Its hits heal 20% of the damage (max 10% HP/s); +10% area' }] },
         '+8 damage',
       ],
     },
@@ -3660,11 +3660,11 @@ export const en: Messages = {
       ],
     },
     dreamEater: {
-      description: 'A Hypnosis wave puts the foes around you to sleep, and ghostly maws bite the sleepers first: ×3 damage on a sleeping foe (which wakes up), and the bite drains HP back.',
+      description: 'A Hypnosis wave puts the foes around you to sleep, and ghostly maws bite the sleepers first: ×3 damage on a sleeping foe (which wakes up), and the bite heals 30% of its damage (up to 10% of max HP per second).',
       upgrades: [
         '+1 bite',
         '+4 damage',
-        { fork: [{ name: 'Nightmare', desc: 'Arcs to 2 more foes; +10% area' }, { name: 'Feast', desc: 'Its hits heal you; +20% area' }] },
+        { fork: [{ name: 'Nightmare', desc: 'Arcs to 2 more foes; +10% area' }, { name: 'Feast', desc: 'Its hits heal 20% of the damage (max 10% HP/s); +20% area' }] },
         '+15% sleep chance',
         '0.3s faster cooldown',
         { fork: [{ name: 'Dream Burst', desc: 'Foes it faints explode' }, { name: 'Devourer', desc: '×1.5 vs elites & bosses; +11 damage' }] },
@@ -3712,7 +3712,7 @@ export const en: Messages = {
       upgrades: [
         '+2 damage',
         '20% bigger vortex',
-        { fork: [{ name: 'Vital Sands', desc: 'Its hits heal you; +0.5s duration' }, { name: 'Cruel Tomb', desc: '×1.35 vs afflicted foes; +1s duration' }] },
+        { fork: [{ name: 'Vital Sands', desc: 'Its hits heal 20% of the damage (max 10% HP/s); +0.5s duration' }, { name: 'Cruel Tomb', desc: '×1.35 vs afflicted foes; +1s duration' }] },
         '0.8s faster cooldown',
         '+3 damage',
         { fork: [{ name: 'Bury', desc: 'Foes it faints explode; +20% area' }, { name: 'Hourglass', desc: 'Finishes foes ≤12% HP; +10% area, +4 damage' }] },
@@ -3736,7 +3736,7 @@ export const en: Messages = {
       upgrades: [
         '+5 damage',
         '+20% area',
-        { fork: [{ name: 'Mind Wave', desc: 'Arcs to 2 more foes; -0.15s cooldown' }, { name: 'Meditation', desc: 'Its hits heal you; -0.2s cooldown' }] },
+        { fork: [{ name: 'Mind Wave', desc: 'Arcs to 2 more foes; -0.15s cooldown' }, { name: 'Meditation', desc: 'Its hits heal 20% of the damage (max 10% HP/s); -0.2s cooldown' }] },
         '+6 damage',
         'More knockback and +15% area',
         { fork: [{ name: 'Seismic Head', desc: 'Foes it faints explode; -0.2s cooldown' }, { name: 'Enlightenment', desc: 'Finishes foes ≤12% HP; -0.15s cooldown, +13 damage' }] },
@@ -3784,7 +3784,7 @@ export const en: Messages = {
       upgrades: [
         '+2 damage',
         'Rolls +0.5s',
-        { fork: [{ name: 'Charged Rock', desc: 'Arcs to 2 more foes; -0.5s cooldown' }, { name: 'Vital Roll', desc: 'Its hits heal you; -0.6s cooldown, +3 damage' }] },
+        { fork: [{ name: 'Charged Rock', desc: 'Arcs to 2 more foes; -0.5s cooldown' }, { name: 'Vital Roll', desc: 'Its hits heal 20% of the damage (max 10% HP/s); -0.6s cooldown, +3 damage' }] },
         '+2 damage',
         '+20% area',
         { fork: [{ name: 'Avalanche', desc: 'Foes it faints explode; +0.5s duration' }, { name: 'Steamroller', desc: '×1.5 vs elites & bosses; +0.3s duration, +16 damage' }] },
@@ -3808,7 +3808,7 @@ export const en: Messages = {
       upgrades: [
         '+2 damage',
         '+20% area',
-        { fork: [{ name: 'Chain Cut', desc: 'Arcs to 2 more foes; -0.05s cooldown' }, { name: 'Vampire Scythe', desc: 'Its hits heal you; -0.1s cooldown' }] },
+        { fork: [{ name: 'Chain Cut', desc: 'Arcs to 2 more foes; -0.05s cooldown' }, { name: 'Vampire Scythe', desc: 'Its hits heal 20% of the damage (max 10% HP/s); -0.1s cooldown' }] },
         '+3 damage',
         '+20% area',
         { fork: [{ name: 'Reap', desc: 'Finishes foes ≤12% HP; -0.1s cooldown' }, { name: 'Blast Cut', desc: 'Foes it faints explode; -0.1s cooldown' }] },
@@ -3844,7 +3844,7 @@ export const en: Messages = {
       upgrades: [
         '+3 damage',
         '20% bigger waves',
-        { fork: [{ name: 'Chain Snarl', desc: 'Arcs to 2 more foes; -0.15s cooldown' }, { name: 'Hunger', desc: 'Its hits heal you; -0.25s cooldown' }] },
+        { fork: [{ name: 'Chain Snarl', desc: 'Arcs to 2 more foes; -0.15s cooldown' }, { name: 'Hunger', desc: 'Its hits heal 20% of the damage (max 10% HP/s); -0.25s cooldown' }] },
         '+4 damage',
         '+1 wave',
         { fork: [{ name: 'Pack Burst', desc: 'Foes it faints explode; +20% area' }, { name: 'Predator', desc: 'Finishes foes ≤12% HP; +10% area' }] },
@@ -3868,7 +3868,7 @@ export const en: Messages = {
       upgrades: [
         '+3 damage',
         '+1 slap',
-        { fork: [{ name: 'Second Wind', desc: 'Its hits heal you; +10% area' }, { name: 'Lash Arc', desc: 'Arcs to 2 more foes; +20% area' }] },
+        { fork: [{ name: 'Second Wind', desc: 'Its hits heal 20% of the damage (max 10% HP/s); +10% area' }, { name: 'Lash Arc', desc: 'Arcs to 2 more foes; +20% area' }] },
         '0.15s faster cooldown',
         '+4 damage',
         { fork: [{ name: 'Desperation', desc: 'Foes it faints explode; +1 slap' }, { name: 'Last Stand', desc: 'Finishes foes ≤12% HP; +1 slap, +4 damage' }] },
@@ -3940,7 +3940,7 @@ export const en: Messages = {
       upgrades: [
         '+3 damage',
         '+20% area',
-        { fork: [{ name: 'Vital Breeze', desc: 'Its hits heal you; -0.3s cooldown' }, { name: 'Double Gust', desc: 'Recasts at once (50%); -0.1s cooldown' }] },
+        { fork: [{ name: 'Vital Breeze', desc: 'Its hits heal 20% of the damage (max 10% HP/s); -0.3s cooldown' }, { name: 'Double Gust', desc: 'Recasts at once (50%); -0.1s cooldown' }] },
         '+1 gust',
         '+4 damage',
         { fork: [{ name: 'Gale', desc: 'Foes it faints explode; +30% area' }, { name: 'Static Wind', desc: 'Arcs to 2 more foes; +20% area' }] },
@@ -3952,7 +3952,7 @@ export const en: Messages = {
       upgrades: [
         '+1 punch',
         '+3 damage',
-        { fork: [{ name: 'Chain Jab', desc: 'Arcs to 2 more foes; +10% area' }, { name: 'Vital Jab', desc: 'Its hits heal you; +20% area' }] },
+        { fork: [{ name: 'Chain Jab', desc: 'Arcs to 2 more foes; +10% area' }, { name: 'Vital Jab', desc: 'Its hits heal 20% of the damage (max 10% HP/s); +20% area' }] },
         '+1 punch',
         '0.2s faster cooldown',
         { fork: [{ name: 'Knockout', desc: 'Finishes foes ≤12% HP; +6 damage' }, { name: 'Sonic Boom', desc: 'Foes it faints explode; +5 damage' }] },
@@ -4048,7 +4048,7 @@ export const en: Messages = {
       upgrades: [
         '+4 damage',
         '+20% area',
-        { fork: [{ name: 'Cruel Beat', desc: '×1.35 vs afflicted foes; +1 beat' }, { name: 'Vital Beat', desc: 'Its hits heal you; +1 beat' }] },
+        { fork: [{ name: 'Cruel Beat', desc: '×1.35 vs afflicted foes; +1 beat' }, { name: 'Vital Beat', desc: 'Its hits heal 20% of the damage (max 10% HP/s); +1 beat' }] },
         '0.25s faster cooldown',
         '+5 damage',
         { fork: [{ name: 'Jungle Echo', desc: 'Arcs to 2 more foes; +1 beat' }, { name: 'War Drum', desc: 'Foes it faints explode; +1 beat' }] },
@@ -4063,7 +4063,7 @@ export const en: Messages = {
         { fork: [{ name: 'Bouncing Hearts', desc: 'Bounces to 2 more foes; +9 damage' }, { name: 'Serenade', desc: 'Circles around you; -4 damage' }] },
         '0.2s faster cooldown',
         '+2 hearts',
-        { fork: [{ name: 'Broken Heart', desc: 'Splits in 2 on hit; +2 damage' }, { name: 'Sweet Voice', desc: 'Its hits heal you; +4 damage' }] },
+        { fork: [{ name: 'Broken Heart', desc: 'Splits in 2 on hit; +2 damage' }, { name: 'Sweet Voice', desc: 'Its hits heal 20% of the damage (max 10% HP/s); +4 damage' }] },
         '+4 hearts',
       ],
     },
@@ -4087,7 +4087,7 @@ export const en: Messages = {
         { fork: [{ name: 'Twin Blades', desc: 'A 2nd, wider swing spins back' }, { name: 'Clean Cut', desc: 'Finishes foes ≤12% HP; +1 blade' }] },
         '0.2s faster cooldown',
         '+6 damage',
-        { fork: [{ name: 'Blast Cut', desc: 'Foes it faints explode; +20% area' }, { name: 'Sap', desc: 'Its hits heal you; +10% area' }] },
+        { fork: [{ name: 'Blast Cut', desc: 'Foes it faints explode; +20% area' }, { name: 'Sap', desc: 'Its hits heal 20% of the damage (max 10% HP/s); +10% area' }] },
         '+1 blade',
       ],
     },
@@ -4096,7 +4096,7 @@ export const en: Messages = {
       upgrades: [
         'Also strikes behind',
         '+5 damage',
-        { fork: [{ name: 'Chain Cut', desc: 'Arcs to 2 more foes; +10% area' }, { name: 'Pearl', desc: 'Its hits heal you; +20% area' }] },
+        { fork: [{ name: 'Chain Cut', desc: 'Arcs to 2 more foes; +10% area' }, { name: 'Pearl', desc: 'Its hits heal 20% of the damage (max 10% HP/s); +20% area' }] },
         '0.15s faster cooldown',
         '+6 damage',
         { fork: [{ name: 'Shell Bomb', desc: 'Foes it faints explode; +20% area' }, { name: 'Cruel Shell', desc: '×1.35 vs afflicted foes; +10% area' }] },
@@ -4132,7 +4132,7 @@ export const en: Messages = {
       upgrades: [
         '+1 jump',
         '+4 damage',
-        { fork: [{ name: 'Hex Burst', desc: 'Foes it faints explode; -0.1s cooldown, -6 damage' }, { name: 'Soul Drain', desc: 'Its hits heal you; -0.2s cooldown, +8 damage' }] },
+        { fork: [{ name: 'Hex Burst', desc: 'Foes it faints explode; -0.1s cooldown, -6 damage' }, { name: 'Soul Drain', desc: 'Its hits heal 20% of the damage (max 10% HP/s); -0.2s cooldown, +8 damage' }] },
         '+1 jump',
         '+5 damage',
         { fork: [{ name: 'Ghostfire', desc: 'Leaves hurting ground; +25% area, -6 damage' }, { name: 'Cursed Echo', desc: 'Recasts at once (50%); +10% area, +11 damage' }] },
@@ -4216,7 +4216,7 @@ export const en: Messages = {
       upgrades: [
         '+3 damage',
         'Flames last +0.6s',
-        { fork: [{ name: 'Vital Wheel', desc: 'Its hits heal you; +10% area' }, { name: 'Spark Wheel', desc: 'Arcs to 2 more foes; +20% area' }] },
+        { fork: [{ name: 'Vital Wheel', desc: 'Its hits heal 20% of the damage (max 10% HP/s); +10% area' }, { name: 'Spark Wheel', desc: 'Arcs to 2 more foes; +20% area' }] },
         '+3 damage and +10% burn chance',
         'Flames last +0.6s',
         { fork: [{ name: 'Blast Wheel', desc: 'Foes it faints explode; +4 damage' }, { name: 'Cruel Wheel', desc: '×1.35 vs afflicted foes; +2 damage' }] },
@@ -4312,7 +4312,7 @@ export const en: Messages = {
       upgrades: [
         '+1 gear',
         '+3 damage',
-        { fork: [{ name: 'Vital Gear', desc: 'Its hits heal you; +10% area' }, { name: 'Grinder', desc: 'Pulls foes into it; +20% area' }] },
+        { fork: [{ name: 'Vital Gear', desc: 'Its hits heal 20% of the damage (max 10% HP/s); +10% area' }, { name: 'Grinder', desc: 'Pulls foes into it; +20% area' }] },
         'Spin 25% faster',
         '+1 gear',
         { fork: [{ name: 'Gear Bomb', desc: 'Foes it faints explode; +4 damage' }, { name: 'Shredder', desc: 'Finishes foes ≤12% HP; +9 damage' }] },
@@ -4324,7 +4324,7 @@ export const en: Messages = {
       upgrades: [
         '+4 damage',
         '+1 target per jab',
-        { fork: [{ name: 'Vital Counter', desc: 'Its hits heal you; -0.05s cooldown' }, { name: 'Chain Jab', desc: 'Arcs to 2 more foes; -0.08s cooldown' }] },
+        { fork: [{ name: 'Vital Counter', desc: 'Its hits heal 20% of the damage (max 10% HP/s); -0.05s cooldown' }, { name: 'Chain Jab', desc: 'Arcs to 2 more foes; -0.08s cooldown' }] },
         '+20% reach',
         '+6 damage',
         { fork: [{ name: 'Dirty Trick', desc: 'Finishes foes ≤12% HP; +1 target, +11 damage' }, { name: 'Booby Trap', desc: 'Foes it faints explode; +1 target' }] },
@@ -4372,7 +4372,7 @@ export const en: Messages = {
       upgrades: [
         '+6 damage',
         '+20% area',
-        { fork: [{ name: 'Slipstream', desc: 'Leaves hurting ground; -0.2s cooldown' }, { name: 'Vital Return', desc: 'Its hits heal you; -0.3s cooldown' }] },
+        { fork: [{ name: 'Slipstream', desc: 'Leaves hurting ground; -0.2s cooldown' }, { name: 'Vital Return', desc: 'Its hits heal 20% of the damage (max 10% HP/s); -0.3s cooldown' }] },
         '+8 damage',
         'Goes farther',
         { fork: [{ name: 'Blast Return', desc: 'Foes it faints explode; -0.3s cooldown' }, { name: 'Zigzag', desc: 'Arcs to 2 more foes; -0.3s cooldown, +25 damage' }] },
@@ -4384,7 +4384,7 @@ export const en: Messages = {
       upgrades: [
         '+6 damage',
         '+20% area',
-        { fork: [{ name: 'Vital Tail', desc: 'Its hits heal you; -0.15s cooldown' }, { name: 'Titan Tail', desc: '×1.5 vs elites & bosses; -0.2s cooldown' }] },
+        { fork: [{ name: 'Vital Tail', desc: 'Its hits heal 20% of the damage (max 10% HP/s); -0.15s cooldown' }, { name: 'Titan Tail', desc: '×1.5 vs elites & bosses; -0.2s cooldown' }] },
         '+7 damage',
         '+20% area',
         { fork: [{ name: 'Blast Throw', desc: 'Foes it faints explode; -0.2s cooldown' }, { name: 'Final Tail', desc: 'Finishes foes ≤12% HP; -0.2s cooldown, +12 damage' }] },
@@ -4647,7 +4647,7 @@ export const en: Messages = {
       ],
     },
     gigaDrain: {
-      description: 'Vines latch onto the nearest foes and drain their energy, healing you. If the target faints, the vine jumps to the next one.',
+      description: 'Vines latch onto the nearest foes and drain their energy, healing you 35% of the damage (up to 10% of max HP per second). If the target faints, the vine jumps to the next one.',
       upgrades: [
         '+1 vine',
         '+4 damage',
@@ -4728,7 +4728,7 @@ export const en: Messages = {
       ],
     },
     bitterBlade: {
-      description: 'A slash of spectral fire in front of you that heals you for half the damage it deals. May burn.',
+      description: 'A slash of spectral fire in front of you that heals you for half the damage it deals (up to 10% of max HP per second). May burn.',
       upgrades: [
         '+4 damage',
         '+20% area',
@@ -4740,7 +4740,7 @@ export const en: Messages = {
       ],
     },
     leechLife: {
-      description: 'Quick little bites on the foe right next to you that drain half the damage as HP. It only reaches foes up close.',
+      description: 'Quick little bites on the foe right next to you that drain half the damage as HP (up to 10% of max HP per second). It only reaches foes up close.',
       upgrades: [
         '+2 damage',
         'Bites +1 foe',
@@ -5088,7 +5088,7 @@ export const en: Messages = {
       ],
     },
     drainPunch: {
-      description: 'A glowing punch at the nearest foe that heals 35% of the damage dealt (up to 4% of your HP per second).',
+      description: 'A glowing punch at the nearest foe that heals 35% of the damage dealt (up to 10% of max HP per second).',
       upgrades: [
         '+4 damage',
         'Cooldown 0.1s faster',
@@ -5178,7 +5178,7 @@ export const en: Messages = {
       ],
     },
     oblivionWing: {
-      description: 'Crimson wings unfold behind you and fire beams at the nearest foes, draining half the damage as HP. Stand still for a moment for twice the beams.',
+      description: 'Crimson wings unfold behind you and fire beams at the nearest foes, draining half the damage as HP (up to 10% of max HP per second). Stand still for a moment for twice the beams.',
       upgrades: [
         '+9 damage',
         '+1 beam',
@@ -5311,7 +5311,7 @@ export const en: Messages = {
         { fork: [{ name: 'Guided', desc: 'The orb homes in on the nearest foe; +2 damage' }, { name: 'Electric Field', desc: 'Leaves electrified ground along the way; +15% area' }] },
         '0.4s faster cooldown',
         '+4 damage',
-        { fork: [{ name: 'Voltaic Arc', desc: 'Sparks jump to nearby foes; +2 damage' }, { name: 'Twin Cannon', desc: '+1 orb and hits heal you; -3 damage' }] },
+        { fork: [{ name: 'Voltaic Arc', desc: 'Sparks jump to nearby foes; +2 damage' }, { name: 'Twin Cannon', desc: '+1 orb and hits heal 20% of the damage (max 10% HP/s); -3 damage' }] },
         '+5 damage and +20% area',
       ],
     },
@@ -5590,7 +5590,7 @@ export const en: Messages = {
       ],
     },
     wish: {
-      description: 'Jirachi\'s wish: a shower of stars falls on the foes across the screen, and part of their damage heals you.',
+      description: 'Jirachi\'s wish: a shower of stars falls on the foes across the screen, and 25% of their damage heals you (up to 10% of max HP per second).',
       upgrades: [
         '+2 stars',
         '+10 damage',
@@ -5683,7 +5683,7 @@ export const en: Messages = {
       ],
     },
     aquaRing: {
-      description: 'Suicune spirals out from you on the north wind, sweeping foes away. The pure water it runs on becomes a ring that shoves them back and heals you a little.',
+      description: 'Suicune spirals out from you on the north wind, sweeping foes away. The pure water it runs on becomes a ring that shoves them back and heals you 12% of its damage (up to 10% of max HP per second).',
       upgrades: [
         '+8 damage',
         '+15% area and the ring lasts +0.6s',

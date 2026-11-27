@@ -20,7 +20,7 @@ import { createAlphaClock, updateAlphas } from './alphas'
 import { updateAttacks } from './attacks'
 import { updateBiomes } from './biomes'
 import { START_BIOME } from '../data/biomes'
-import { healPlayer } from './combat'
+import { healPlayer, showDrain } from './combat'
 import { createDexLog } from './dex'
 import { createSeasonKit } from './seasonOneKitRules'
 import { updateSeasonKit } from './seasonOneKitSystem'
@@ -243,7 +243,7 @@ export const createPlayer = (slot: number, setup: PlayerSetup, lucky: boolean, x
     guard: null,
     hidden: null,
     ward: null,
-    drain: { left: 0, at: 0 },
+    drain: { by: new Map(), unshown: 0, shownAt: 0 },
     rooted: 0,
     asleep: 0,
     moveBuffs: [],
@@ -537,6 +537,7 @@ const updatePlayer = (g: Game, input: Vec, dt: number) => {
   p.iframes = Math.max(0, p.iframes - dt)
   p.hurt = Math.max(0, p.hurt - dt)
   healPlayer(g, p.stats.regen * dt)
+  showDrain(g)
 }
 
 /** Fires a move with its fork mods stamped on what it spawns (`mods.ts`); an Echo schedules its re-cast. */

@@ -3726,7 +3726,7 @@ export const pt = {
     ...MYTHICAL_WORDS.pt.moves,
     ...REGIS_FORCES_WORDS.pt.moves,
     leechSeed: {
-      description: 'Arremessa sementes nos inimigos mais próximos. A semente suga HP com o tempo e cura você; quando o inimigo cai, ela pula para dois vizinhos.',
+      description: 'Arremessa sementes nos inimigos mais próximos. A semente suga HP com o tempo e cura você em metade disso (até 10% do HP máximo por segundo); quando o inimigo cai, ela pula para dois vizinhos.',
       upgrades: [
         '+1 semente',
         '+3 de dano',
@@ -3742,7 +3742,7 @@ export const pt = {
       upgrades: [
         '+3 de dano',
         'Gira +0.3s',
-        { fork: [{ name: 'Giro elétrico', desc: 'Salta para mais 2; +10% de área' }, { name: 'Giro vital', desc: 'Acertos curam você; +10% de área' }] },
+        { fork: [{ name: 'Giro elétrico', desc: 'Salta para mais 2; +10% de área' }, { name: 'Giro vital', desc: 'Acertos curam 20% do dano (máx. 10% do HP/s); +10% de área' }] },
         'Recarga 0.5s mais rápida',
         '+4 de dano',
         { fork: [{ name: 'Casco-bomba', desc: 'Quem cai explode; dura +0.3s' }, { name: 'Pião final', desc: 'Finaliza com ≤12% HP; +15% de área, +16 de dano' }] },
@@ -3778,7 +3778,7 @@ export const pt = {
       upgrades: [
         '+3 de dano',
         '+1 mordida por segundo',
-        { fork: [{ name: 'Fúria em cadeia', desc: 'Salta para mais 2; +10% de área' }, { name: 'Fúria vital', desc: 'Acertos curam você; +20% de área' }] },
+        { fork: [{ name: 'Fúria em cadeia', desc: 'Salta para mais 2; +10% de área' }, { name: 'Fúria vital', desc: 'Acertos curam 20% do dano (máx. 10% do HP/s); +20% de área' }] },
         'Fúria +0.5s',
         '+4 de dano',
         { fork: [{ name: 'Massacre', desc: 'Quem cai explode; +1 mordida' }, { name: 'Fúria titânica', desc: '×1.5 em elites e chefes; +1 mordida' }] },
@@ -3853,7 +3853,7 @@ export const pt = {
         { fork: [{ name: 'Rastro de fogo', desc: 'Deixa chão que fere; recarga -0.3s' }, { name: 'Faíscas', desc: 'Salta para mais 2; recarga -0.4s' }] },
         '+6 de dano',
         '+20% de área',
-        { fork: [{ name: 'Meteoro', desc: 'Quem cai explode; recarga -0.4s' }, { name: 'Brasa vital', desc: 'Acertos curam você; recarga -0.3s' }] },
+        { fork: [{ name: 'Meteoro', desc: 'Quem cai explode; recarga -0.4s' }, { name: 'Brasa vital', desc: 'Acertos curam 20% do dano (máx. 10% do HP/s); recarga -0.3s' }] },
         '+8 de dano e +15% de área',
       ],
     },
@@ -3862,7 +3862,7 @@ export const pt = {
       upgrades: [
         '+3 de dano',
         '+2 agulhas',
-        { fork: [{ name: 'Espinhos elétricos', desc: 'Salta para mais 2; dura +0.3s' }, { name: 'Espinho vampiro', desc: 'Acertos curam você; +16 de dano' }] },
+        { fork: [{ name: 'Espinhos elétricos', desc: 'Salta para mais 2; dura +0.3s' }, { name: 'Espinho vampiro', desc: 'Acertos curam 20% do dano (máx. 10% do HP/s); +16 de dano' }] },
         'Recarga 0.5s mais rápida',
         '+4 de dano',
         { fork: [{ name: 'Cacto-bomba', desc: 'Quem cai explode; +1 golpe, -4 de dano' }, { name: 'Espinhos em dobro', desc: 'Repete logo após (50%); +1 golpe, +8 de dano' }] },
@@ -3886,7 +3886,7 @@ export const pt = {
       upgrades: [
         '+3 de dano',
         '+20% de alcance',
-        { fork: [{ name: 'Laço', desc: 'Puxa os inimigos; dura +0.3s' }, { name: 'Abraço sombrio', desc: 'Acertos curam você; dura +0.4s' }] },
+        { fork: [{ name: 'Laço', desc: 'Puxa os inimigos; dura +0.3s' }, { name: 'Abraço sombrio', desc: 'Acertos curam 20% do dano (máx. 10% do HP/s); dura +0.4s' }] },
         'Recarga 0.4s mais rápida',
         '+4 de dano',
         { fork: [{ name: 'Quatro braços', desc: '2º par de braços, ao contrário; -2 de dano' }, { name: 'Nocaute', desc: 'Finaliza com ≤12% HP; +1 braço, +9 de dano' }] },
@@ -3934,7 +3934,7 @@ export const pt = {
       upgrades: [
         '+4 de dano',
         '+20% de alcance',
-        { fork: [{ name: 'Poças', desc: 'Deixa chão que fere; recarga -0.2s' }, { name: 'Passo vital', desc: 'Acertos curam você; recarga -0.25s' }] },
+        { fork: [{ name: 'Poças', desc: 'Deixa chão que fere; recarga -0.2s' }, { name: 'Passo vital', desc: 'Acertos curam 20% do dano (máx. 10% do HP/s); recarga -0.25s' }] },
         '+5 de dano',
         '+20% de alcance',
         { fork: [{ name: 'Respingo em cadeia', desc: 'Salta para mais 2; recarga -0.25s, +8 de dano' }, { name: 'Onda final', desc: 'Quem cai explode; recarga -0.25s' }] },
@@ -3982,7 +3982,7 @@ export const pt = {
       upgrades: [
         '+20% de área',
         '+2 de dano',
-        { fork: [{ name: 'Redemoinho cruel', desc: '×1.35 em alvos com status; recarga -0.04s' }, { name: 'Fonte', desc: 'Acertos curam você; recarga -0.08s' }] },
+        { fork: [{ name: 'Redemoinho cruel', desc: '×1.35 em alvos com status; recarga -0.04s' }, { name: 'Fonte', desc: 'Acertos curam 20% do dano (máx. 10% do HP/s); recarga -0.08s' }] },
         '+20% de área',
         '+3 de dano',
         { fork: [{ name: 'Correnteza', desc: 'Salta para mais 2; recarga -0.08s' }, { name: 'Afogar', desc: 'Finaliza com ≤12% HP; recarga -0.08s' }] },
@@ -4009,7 +4009,7 @@ export const pt = {
         { fork: [{ name: 'Raízes', desc: 'Deixa chão que fere; +10% de área' }, { name: 'Chicote em cadeia', desc: 'Salta para mais 2; +20% de área' }] },
         'Recarga 0.15s mais rápida',
         '+6 de dano',
-        { fork: [{ name: 'Espinhos', desc: 'Quem cai explode; +20% de área' }, { name: 'Chicote vampiro', desc: 'Acertos curam você; +10% de área' }] },
+        { fork: [{ name: 'Espinhos', desc: 'Quem cai explode; +20% de área' }, { name: 'Chicote vampiro', desc: 'Acertos curam 20% do dano (máx. 10% do HP/s); +10% de área' }] },
         '+8 de dano',
       ],
     },
@@ -4050,11 +4050,11 @@ export const pt = {
       ],
     },
     dreamEater: {
-      description: 'Uma onda de Hipnose faz os inimigos ao redor dormirem, e bocas fantasmas mordem os adormecidos primeiro: ×3 de dano em quem dorme (que acorda) e a mordida recupera seu HP.',
+      description: 'Uma onda de Hipnose faz os inimigos ao redor dormirem, e bocas fantasmas mordem os adormecidos primeiro: ×3 de dano em quem dorme (que acorda) e a mordida cura 30% do dano dela (até 10% do HP máximo por segundo).',
       upgrades: [
         '+1 mordida',
         '+4 de dano',
-        { fork: [{ name: 'Pesadelo', desc: 'Salta para mais 2; +10% de área' }, { name: 'Banquete', desc: 'Acertos curam você; +20% de área' }] },
+        { fork: [{ name: 'Pesadelo', desc: 'Salta para mais 2; +10% de área' }, { name: 'Banquete', desc: 'Acertos curam 20% do dano (máx. 10% do HP/s); +20% de área' }] },
         '+15% de chance de sono',
         'Recarga 0.3s mais rápida',
         { fork: [{ name: 'Sonho explosivo', desc: 'Quem cai explode' }, { name: 'Devorador', desc: '×1.5 em elites e chefes; +11 de dano' }] },
@@ -4102,7 +4102,7 @@ export const pt = {
       upgrades: [
         '+2 de dano',
         'Redemoinho 20% maior',
-        { fork: [{ name: 'Areia vital', desc: 'Acertos curam você; dura +0.5s' }, { name: 'Tumba cruel', desc: '×1.35 em alvos com status; dura +1s' }] },
+        { fork: [{ name: 'Areia vital', desc: 'Acertos curam 20% do dano (máx. 10% do HP/s); dura +0.5s' }, { name: 'Tumba cruel', desc: '×1.35 em alvos com status; dura +1s' }] },
         'Recarga 0.8s mais rápida',
         '+3 de dano',
         { fork: [{ name: 'Sepultar', desc: 'Quem cai explode; +20% de área' }, { name: 'Ampulheta', desc: 'Finaliza com ≤12% HP; +10% de área, +4 de dano' }] },
@@ -4126,7 +4126,7 @@ export const pt = {
       upgrades: [
         '+5 de dano',
         '+20% de área',
-        { fork: [{ name: 'Onda mental', desc: 'Salta para mais 2; recarga -0.15s' }, { name: 'Meditação', desc: 'Acertos curam você; recarga -0.2s' }] },
+        { fork: [{ name: 'Onda mental', desc: 'Salta para mais 2; recarga -0.15s' }, { name: 'Meditação', desc: 'Acertos curam 20% do dano (máx. 10% do HP/s); recarga -0.2s' }] },
         '+6 de dano',
         'Mais empurrão e +15% de área',
         { fork: [{ name: 'Cabeçada sísmica', desc: 'Quem cai explode; recarga -0.2s' }, { name: 'Iluminação', desc: 'Finaliza com ≤12% HP; recarga -0.15s, +13 de dano' }] },
@@ -4174,7 +4174,7 @@ export const pt = {
       upgrades: [
         '+2 de dano',
         'Rola +0.5s',
-        { fork: [{ name: 'Rocha elétrica', desc: 'Salta para mais 2; recarga -0.5s' }, { name: 'Rolar vital', desc: 'Acertos curam você; recarga -0.6s, +3 de dano' }] },
+        { fork: [{ name: 'Rocha elétrica', desc: 'Salta para mais 2; recarga -0.5s' }, { name: 'Rolar vital', desc: 'Acertos curam 20% do dano (máx. 10% do HP/s); recarga -0.6s, +3 de dano' }] },
         '+2 de dano',
         '+20% de área',
         { fork: [{ name: 'Avalanche', desc: 'Quem cai explode; dura +0.5s' }, { name: 'Rolo compressor', desc: '×1.5 em elites e chefes; dura +0.3s, +16 de dano' }] },
@@ -4198,7 +4198,7 @@ export const pt = {
       upgrades: [
         '+2 de dano',
         '+20% de área',
-        { fork: [{ name: 'Corte em cadeia', desc: 'Salta para mais 2; recarga -0.05s' }, { name: 'Foice vampira', desc: 'Acertos curam você; recarga -0.1s' }] },
+        { fork: [{ name: 'Corte em cadeia', desc: 'Salta para mais 2; recarga -0.05s' }, { name: 'Foice vampira', desc: 'Acertos curam 20% do dano (máx. 10% do HP/s); recarga -0.1s' }] },
         '+3 de dano',
         '+20% de área',
         { fork: [{ name: 'Ceifa', desc: 'Finaliza com ≤12% HP; recarga -0.1s' }, { name: 'Corte explosivo', desc: 'Quem cai explode; recarga -0.1s' }] },
@@ -4234,7 +4234,7 @@ export const pt = {
       upgrades: [
         '+3 de dano',
         'Ondas 20% maiores',
-        { fork: [{ name: 'Rosnado elétrico', desc: 'Salta para mais 2; recarga -0.15s' }, { name: 'Fome', desc: 'Acertos curam você; recarga -0.25s' }] },
+        { fork: [{ name: 'Rosnado elétrico', desc: 'Salta para mais 2; recarga -0.15s' }, { name: 'Fome', desc: 'Acertos curam 20% do dano (máx. 10% do HP/s); recarga -0.25s' }] },
         '+4 de dano',
         '+1 onda',
         { fork: [{ name: 'Matilha', desc: 'Quem cai explode; +20% de área' }, { name: 'Predador', desc: 'Finaliza com ≤12% HP; +10% de área' }] },
@@ -4258,7 +4258,7 @@ export const pt = {
       upgrades: [
         '+3 de dano',
         '+1 rabada',
-        { fork: [{ name: 'Fôlego', desc: 'Acertos curam você; +10% de área' }, { name: 'Chicotada', desc: 'Salta para mais 2; +20% de área' }] },
+        { fork: [{ name: 'Fôlego', desc: 'Acertos curam 20% do dano (máx. 10% do HP/s); +10% de área' }, { name: 'Chicotada', desc: 'Salta para mais 2; +20% de área' }] },
         'Recarga 0.15s mais rápida',
         '+4 de dano',
         { fork: [{ name: 'Desespero', desc: 'Quem cai explode; +1 rabada' }, { name: 'Última cartada', desc: 'Finaliza com ≤12% HP; +1 rabada, +4 de dano' }] },
@@ -4330,7 +4330,7 @@ export const pt = {
       upgrades: [
         '+3 de dano',
         '+20% de área',
-        { fork: [{ name: 'Brisa vital', desc: 'Acertos curam você; recarga -0.3s' }, { name: 'Rajada dupla', desc: 'Repete logo após (50%); recarga -0.1s' }] },
+        { fork: [{ name: 'Brisa vital', desc: 'Acertos curam 20% do dano (máx. 10% do HP/s); recarga -0.3s' }, { name: 'Rajada dupla', desc: 'Repete logo após (50%); recarga -0.1s' }] },
         '+1 rajada',
         '+4 de dano',
         { fork: [{ name: 'Vendaval', desc: 'Quem cai explode; +30% de área' }, { name: 'Vento elétrico', desc: 'Salta para mais 2; +20% de área' }] },
@@ -4342,7 +4342,7 @@ export const pt = {
       upgrades: [
         '+1 soco',
         '+3 de dano',
-        { fork: [{ name: 'Soco em cadeia', desc: 'Salta para mais 2; +10% de área' }, { name: 'Soco vital', desc: 'Acertos curam você; +20% de área' }] },
+        { fork: [{ name: 'Soco em cadeia', desc: 'Salta para mais 2; +10% de área' }, { name: 'Soco vital', desc: 'Acertos curam 20% do dano (máx. 10% do HP/s); +20% de área' }] },
         '+1 soco',
         'Recarga 0.2s mais rápida',
         { fork: [{ name: 'Nocaute', desc: 'Finaliza com ≤12% HP; +6 de dano' }, { name: 'Barreira do som', desc: 'Quem cai explode; +5 de dano' }] },
@@ -4438,7 +4438,7 @@ export const pt = {
       upgrades: [
         '+4 de dano',
         '+20% de área',
-        { fork: [{ name: 'Ritmo cruel', desc: '×1.35 em alvos com status; +1 batida' }, { name: 'Batida vital', desc: 'Acertos curam você; +1 batida' }] },
+        { fork: [{ name: 'Ritmo cruel', desc: '×1.35 em alvos com status; +1 batida' }, { name: 'Batida vital', desc: 'Acertos curam 20% do dano (máx. 10% do HP/s); +1 batida' }] },
         'Recarga 0.25s mais rápida',
         '+5 de dano',
         { fork: [{ name: 'Eco da selva', desc: 'Salta para mais 2; +1 batida' }, { name: 'Tambor de guerra', desc: 'Quem cai explode; +1 batida' }] },
@@ -4453,7 +4453,7 @@ export const pt = {
         { fork: [{ name: 'Corações saltitantes', desc: 'Ricocheteia em mais 2; +9 de dano' }, { name: 'Serenata', desc: 'Gira ao seu redor; -4 de dano' }] },
         'Recarga 0.2s mais rápida',
         '+2 corações',
-        { fork: [{ name: 'Coração partido', desc: 'Racha em 2 ao acertar; +2 de dano' }, { name: 'Voz doce', desc: 'Acertos curam você; +4 de dano' }] },
+        { fork: [{ name: 'Coração partido', desc: 'Racha em 2 ao acertar; +2 de dano' }, { name: 'Voz doce', desc: 'Acertos curam 20% do dano (máx. 10% do HP/s); +4 de dano' }] },
         '+4 corações',
       ],
     },
@@ -4477,7 +4477,7 @@ export const pt = {
         { fork: [{ name: 'Lâminas gêmeas', desc: '2º giro maior, ao contrário' }, { name: 'Corte certeiro', desc: 'Finaliza com ≤12% HP; +1 lâmina' }] },
         'Recarga 0.2s mais rápida',
         '+6 de dano',
-        { fork: [{ name: 'Corte explosivo', desc: 'Quem cai explode; +20% de área' }, { name: 'Seiva', desc: 'Acertos curam você; +10% de área' }] },
+        { fork: [{ name: 'Corte explosivo', desc: 'Quem cai explode; +20% de área' }, { name: 'Seiva', desc: 'Acertos curam 20% do dano (máx. 10% do HP/s); +10% de área' }] },
         '+1 lâmina',
       ],
     },
@@ -4486,7 +4486,7 @@ export const pt = {
       upgrades: [
         'Também ataca atrás',
         '+5 de dano',
-        { fork: [{ name: 'Corte em cadeia', desc: 'Salta para mais 2; +10% de área' }, { name: 'Pérola', desc: 'Acertos curam você; +20% de área' }] },
+        { fork: [{ name: 'Corte em cadeia', desc: 'Salta para mais 2; +10% de área' }, { name: 'Pérola', desc: 'Acertos curam 20% do dano (máx. 10% do HP/s); +20% de área' }] },
         'Recarga 0.15s mais rápida',
         '+6 de dano',
         { fork: [{ name: 'Concha-bomba', desc: 'Quem cai explode; +20% de área' }, { name: 'Concha cruel', desc: '×1.35 em alvos com status; +10% de área' }] },
@@ -4522,7 +4522,7 @@ export const pt = {
       upgrades: [
         '+1 salto',
         '+4 de dano',
-        { fork: [{ name: 'Feitiço explosivo', desc: 'Quem cai explode; recarga -0.1s, -6 de dano' }, { name: 'Sugar almas', desc: 'Acertos curam você; recarga -0.2s, +8 de dano' }] },
+        { fork: [{ name: 'Feitiço explosivo', desc: 'Quem cai explode; recarga -0.1s, -6 de dano' }, { name: 'Sugar almas', desc: 'Acertos curam 20% do dano (máx. 10% do HP/s); recarga -0.2s, +8 de dano' }] },
         '+1 salto',
         '+5 de dano',
         { fork: [{ name: 'Fogo-fantasma', desc: 'Deixa chão que fere; +25% de área, -6 de dano' }, { name: 'Eco maldito', desc: 'Repete logo após (50%); +10% de área, +11 de dano' }] },
@@ -4606,7 +4606,7 @@ export const pt = {
       upgrades: [
         '+3 de dano',
         'Chamas duram +0.6s',
-        { fork: [{ name: 'Roda vital', desc: 'Acertos curam você; +10% de área' }, { name: 'Roda elétrica', desc: 'Salta para mais 2; +20% de área' }] },
+        { fork: [{ name: 'Roda vital', desc: 'Acertos curam 20% do dano (máx. 10% do HP/s); +10% de área' }, { name: 'Roda elétrica', desc: 'Salta para mais 2; +20% de área' }] },
         '+3 de dano e +10% de chance de queimar',
         'Chamas duram +0.6s',
         { fork: [{ name: 'Roda explosiva', desc: 'Quem cai explode; +4 de dano' }, { name: 'Roda cruel', desc: '×1.35 em alvos com status; +2 de dano' }] },
@@ -4702,7 +4702,7 @@ export const pt = {
       upgrades: [
         '+1 engrenagem',
         '+3 de dano',
-        { fork: [{ name: 'Engrenagem vital', desc: 'Acertos curam você; +10% de área' }, { name: 'Moedor', desc: 'Puxa os inimigos; +20% de área' }] },
+        { fork: [{ name: 'Engrenagem vital', desc: 'Acertos curam 20% do dano (máx. 10% do HP/s); +10% de área' }, { name: 'Moedor', desc: 'Puxa os inimigos; +20% de área' }] },
         'Giram 25% mais rápido',
         '+1 engrenagem',
         { fork: [{ name: 'Engrenagem-bomba', desc: 'Quem cai explode; +4 de dano' }, { name: 'Triturador', desc: 'Finaliza com ≤12% HP; +9 de dano' }] },
@@ -4714,7 +4714,7 @@ export const pt = {
       upgrades: [
         '+4 de dano',
         '+1 alvo por golpe',
-        { fork: [{ name: 'Contragolpe vital', desc: 'Acertos curam você; recarga -0.05s' }, { name: 'Golpe em cadeia', desc: 'Salta para mais 2; recarga -0.08s' }] },
+        { fork: [{ name: 'Contragolpe vital', desc: 'Acertos curam 20% do dano (máx. 10% do HP/s); recarga -0.05s' }, { name: 'Golpe em cadeia', desc: 'Salta para mais 2; recarga -0.08s' }] },
         '+20% de alcance',
         '+6 de dano',
         { fork: [{ name: 'Golpe sujo', desc: 'Finaliza com ≤12% HP; +1 alvo, +11 de dano' }, { name: 'Armadilha', desc: 'Quem cai explode; +1 alvo' }] },
@@ -4762,7 +4762,7 @@ export const pt = {
       upgrades: [
         '+6 de dano',
         '+20% de área',
-        { fork: [{ name: 'Rastro', desc: 'Deixa chão que fere; recarga -0.2s' }, { name: 'Volta vital', desc: 'Acertos curam você; recarga -0.3s' }] },
+        { fork: [{ name: 'Rastro', desc: 'Deixa chão que fere; recarga -0.2s' }, { name: 'Volta vital', desc: 'Acertos curam 20% do dano (máx. 10% do HP/s); recarga -0.3s' }] },
         '+8 de dano',
         'Vai mais longe',
         { fork: [{ name: 'Retorno explosivo', desc: 'Quem cai explode; recarga -0.3s' }, { name: 'Zigue-zague', desc: 'Salta para mais 2; recarga -0.3s, +25 de dano' }] },
@@ -4774,7 +4774,7 @@ export const pt = {
       upgrades: [
         '+6 de dano',
         '+20% de área',
-        { fork: [{ name: 'Cauda vital', desc: 'Acertos curam você; recarga -0.15s' }, { name: 'Cauda titânica', desc: '×1.5 em elites e chefes; recarga -0.2s' }] },
+        { fork: [{ name: 'Cauda vital', desc: 'Acertos curam 20% do dano (máx. 10% do HP/s); recarga -0.15s' }, { name: 'Cauda titânica', desc: '×1.5 em elites e chefes; recarga -0.2s' }] },
         '+7 de dano',
         '+20% de área',
         { fork: [{ name: 'Arremesso explosivo', desc: 'Quem cai explode; recarga -0.2s' }, { name: 'Cauda final', desc: 'Finaliza com ≤12% HP; recarga -0.2s, +12 de dano' }] },
@@ -5037,7 +5037,7 @@ export const pt = {
       ],
     },
     gigaDrain: {
-      description: 'Cipós se prendem aos inimigos mais próximos e sugam sua energia, curando você. Se o alvo cai, o cipó pula para o próximo.',
+      description: 'Cipós se prendem aos inimigos mais próximos e sugam sua energia, curando você em 35% do dano (até 10% do HP máximo por segundo). Se o alvo cai, o cipó pula para o próximo.',
       upgrades: [
         '+1 cipó',
         '+4 de dano',
@@ -5118,7 +5118,7 @@ export const pt = {
       ],
     },
     bitterBlade: {
-      description: 'Um corte de fogo espectral à sua frente que cura você em metade do dano causado. Pode queimar.',
+      description: 'Um corte de fogo espectral à sua frente que cura você em metade do dano causado (até 10% do HP máximo por segundo). Pode queimar.',
       upgrades: [
         '+4 de dano',
         '+20% de área',
@@ -5130,7 +5130,7 @@ export const pt = {
       ],
     },
     leechLife: {
-      description: 'Mordidas rápidas e curtinhas no inimigo colado em você, que drenam metade do dano em HP. Só alcança quem está bem perto.',
+      description: 'Mordidas rápidas e curtinhas no inimigo colado em você, que drenam metade do dano em HP (até 10% do HP máximo por segundo). Só alcança quem está bem perto.',
       upgrades: [
         '+2 de dano',
         'Morde +1 inimigo',
@@ -5478,7 +5478,7 @@ export const pt = {
       ],
     },
     drainPunch: {
-      description: 'Um soco brilhante no inimigo mais próximo que cura 35% do dano causado (até 4% do seu HP por segundo).',
+      description: 'Um soco brilhante no inimigo mais próximo que cura 35% do dano causado (até 10% do HP máximo por segundo).',
       upgrades: [
         '+4 de dano',
         'Recarga 0.1s mais rápida',
@@ -5568,7 +5568,7 @@ export const pt = {
       ],
     },
     oblivionWing: {
-      description: 'Asas carmesim se abrem atrás de você e disparam raios nos inimigos mais próximos, drenando metade do dano em HP. Parado por um instante, o dobro de raios.',
+      description: 'Asas carmesim se abrem atrás de você e disparam raios nos inimigos mais próximos, drenando metade do dano em HP (até 10% do HP máximo por segundo). Parado por um instante, o dobro de raios.',
       upgrades: [
         '+9 de dano',
         '+1 raio',
@@ -5701,7 +5701,7 @@ export const pt = {
         { fork: [{ name: 'Teleguiado', desc: 'A esfera persegue o inimigo mais próximo; +2 de dano' }, { name: 'Campo elétrico', desc: 'Deixa o chão eletrificado pelo caminho; +15% de área' }] },
         'Recarga 0.4s mais rápida',
         '+4 de dano',
-        { fork: [{ name: 'Arco voltaico', desc: 'Faíscas saltam para inimigos próximos; +2 de dano' }, { name: 'Canhão duplo', desc: '+1 esfera e acertos curam você; -3 de dano' }] },
+        { fork: [{ name: 'Arco voltaico', desc: 'Faíscas saltam para inimigos próximos; +2 de dano' }, { name: 'Canhão duplo', desc: '+1 esfera e acertos curam 20% do dano (máx. 10% do HP/s); -3 de dano' }] },
         '+5 de dano e +20% de área',
       ],
     },
@@ -5980,7 +5980,7 @@ export const pt = {
       ],
     },
     wish: {
-      description: 'O desejo de Jirachi: uma chuva de estrelas cai sobre os inimigos por toda a tela, e parte do dano delas cura você.',
+      description: 'O desejo de Jirachi: uma chuva de estrelas cai sobre os inimigos por toda a tela, e 25% do dano delas cura você (até 10% do HP máximo por segundo).',
       upgrades: [
         '+2 estrelas',
         '+10 de dano',
@@ -6073,7 +6073,7 @@ export const pt = {
       ],
     },
     aquaRing: {
-      description: 'Suicune corre em espiral para fora de você no vento norte, varrendo os inimigos. A água pura em que pisa vira um anel que os empurra para longe e cura você um pouco.',
+      description: 'Suicune corre em espiral para fora de você no vento norte, varrendo os inimigos. A água pura em que pisa vira um anel que os empurra para longe e cura você em 12% do dano (até 10% do HP máximo por segundo).',
       upgrades: [
         '+8 de dano',
         '+15% de área e o anel dura +0.6s',

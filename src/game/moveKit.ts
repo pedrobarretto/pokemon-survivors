@@ -18,8 +18,8 @@ import { isAlly } from './versusRules'
  *   paralyzed, asleep, frozen, marked, chilled, lowHp, flying, elite, boss). Hex uses it.
  * - `execute: 0.15` makes regular foes left at or under 15% HP faint outright,
  *   shattering (a `shatter` event). Bosses never.
- * - `drain: 0.3` heals 30% of the damage dealt, from a budget of 4% max HP per
- *   second (`DRAIN_RATE`); the difficulty's healing applies (Nightmare halves).
+ * - `drain: 0.3` heals 30% of the damage dealt, from the move's own budget of
+ *   10% max HP per second (`DRAIN`); the difficulty's healing applies (Nightmare halves).
  * - `pull: 120` drags the foes it touches toward its center at 120 px/s ÷ mass
  *   (bosses ×0.25 more), never past it. Pair it with `hitInterval` for a vortex.
  * - `status: { kind, chance, duration, power }` with the new kinds in
