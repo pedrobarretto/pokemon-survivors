@@ -2,7 +2,7 @@ import { playCry, playSfx } from '../engine/audio'
 import { PATH_FORMS, ZYGARDE, type PathFormId } from '../data/legendPaths'
 import { LEGENDS } from '../data/legends'
 import { ENEMIES } from '../data/enemies'
-import { cubePieces, openForms } from '../game/legendPaths'
+import { cubePieces, openForms, takePiece } from '../game/legendPaths'
 import type { PathNotice } from '../game/pathRun'
 import type { RuinsNotice } from '../game/splitRuins'
 import type { Game } from '../game/types'
@@ -74,12 +74,18 @@ export const pathFeedback = (root: HTMLElement, notice: PathNotice) => {
   }
   if (notice.moment === 'gone') return say(root, icon, notice.core ? m.coreGone : m.cellGone, 2200, 'piece')
   const before = loadSave()
-  updateSave((s) => ({ ...s, paths: { ...s.paths, cells: s.paths.cells + (notice.core ? 0 : 1), cores: s.paths.cores + (notice.core ? 1 : 0) } }))
+  let converted = 0
+  updateSave((s) => {
+    const took = takePiece(s.paths, notice.core)
+    converted = took.converted
+    return { ...s, paths: took.paths }
+  })
   const after = loadSave()
   playSfx('unlock')
   playCry(cryUrl(718, 'ten'), 0.5)
   const pieces = `${formatNumber(Math.min(100, cubePieces(after.paths)))}/${ZYGARDE.formes.complete}`
-  say(root, icon, notice.core ? m.coreFound(`${Math.min(after.paths.cores, ZYGARDE.cores)}/${ZYGARDE.cores}`) : m.cellFound(pieces), 3600, 'piece')
+  const text = converted > 0 ? m.coreConverted(formatNumber(converted), pieces) : notice.core ? m.coreFound(`${Math.min(after.paths.cores, ZYGARDE.cores)}/${ZYGARDE.cores}`) : m.cellFound(pieces)
+  say(root, icon, text, 3600, 'piece')
   announceForms(root, before, after, 'zygarde')
 }
 
