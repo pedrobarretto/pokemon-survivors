@@ -185,7 +185,8 @@ import { denToast, dressBanner, raidBanner, shardToast, teraStrip } from './ui/t
 import { celebrateShop, createTitleScene, drawTitleScene, meetPartner, revealShopkeeper, sceneAt, stepTitleScene, visitPlaza } from './render/titleScene'
 import { festivalSprites, KECLEON_DEX, type PlazaFestival, type ShopLevel } from './render/plaza'
 import { weatherIcon } from './render/weather'
-import { formatDay, formatPokeDollars, loadLocale, locale, LOCALES, t, type Messages } from './i18n'
+import { formatDay, formatPokeDollars, loadShownLocale, locale, LOCALES, t, type Messages } from './i18n'
+import { BOOT_SLOW_MS, clearBootNotice, showBootNotice } from './ui/bootNotice'
 import { h, later, rich } from './ui/dom'
 import { setActivePad } from './ui/inputLabels'
 import { watchCursorMode } from './ui/cursorMode'
@@ -5165,8 +5166,27 @@ const boot = () => {
 }
 
 detectKeyLayout()
-// Nothing reads `t()` until the shown language has landed (see `src/i18n`).
-void loadLocale(locale()).then(boot)
+// Nothing reads `t()` until the shown language has landed (see `src/i18n`). Its chunk failing once left the page dark for good
+// (Simplified Chinese's OpenCC chunk on a phone's network): the language falls back, a slow boot says so, and one that can't
+// boot says that, each with a Reload button.
+const bootSlow = setTimeout(() => showBootNotice(ui, 'slow'), BOOT_SLOW_MS)
+void loadShownLocale().then(
+  () => {
+    clearTimeout(bootSlow)
+    clearBootNotice(ui)
+    try {
+      boot()
+    } catch (e) {
+      showBootNotice(ui, 'failed')
+      throw e
+    }
+  },
+  (e: unknown) => {
+    clearTimeout(bootSlow)
+    showBootNotice(ui, 'failed')
+    throw e
+  },
+)
 
 /** Dev: places a map event `dx`, `dy` px from the player, e.g. `ps.event('chest')`. */
 const devEvent = (kind: MapEventKind, dx = 70, dy = 0) => {

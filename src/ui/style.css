@@ -122,6 +122,27 @@ canvas {
   zoom: var(--ui-zoom);
 }
 
+/* The game can't boot yet (`ui/bootNotice.ts`): words and a Reload button instead of the bare background. */
+.boot-notice {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: max(16px, var(--safe-t, 0px)) 16px max(16px, var(--safe-b, 0px));
+  text-align: center;
+  color: #e8eef4;
+  font-size: 22px;
+  pointer-events: auto;
+}
+
+.boot-notice p {
+  margin: 0;
+  max-width: 28em;
+}
+
 /* The page's text description (index.html): there for screen readers and crawlers, never drawn over the game. */
 .sr-only {
   position: absolute;

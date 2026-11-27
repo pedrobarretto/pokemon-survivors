@@ -36,7 +36,7 @@ const CATALOGS: Record<Locale, () => Promise<Messages>> = {
 
 const loaded: Partial<Record<Locale, Messages>> = {}
 
-/** Loads a language's messages once (a failed load, a stale chunk after a deploy, can be retried). */
+/** Loads a language's messages once (a failed load, a stale chunk after a deploy, can be retried: nothing is kept until it lands). */
 export const loadLocale = async (l: Locale): Promise<Messages> => (loaded[l] ??= await CATALOGS[l]())
 
 export const LOCALE_IDS = Object.keys(LOCALES) as Locale[]
@@ -84,10 +84,41 @@ export const locale = () => current
 
 /**
  * Messages of the current language. Call it at render time, so a language switch shows up on the next render.
- * Empty until `loadLocale(locale())` lands: `main.ts` waits for it before booting. Never wait for it with a
+ * Empty until `loadShownLocale()` lands: `main.ts` waits for it before booting. Never wait for it with a
  * top-level `await` here: Safari 26 ran the importers while this module was still suspended, with its exports undefined.
  */
 export const t = (): Messages => loaded[current]!
+
+/**
+ * The languages the boot tries, in order, when `l`'s chunk won't load (a flaky phone network, a chunk a deploy dropped):
+ * Simplified Chinese reads the Traditional next (its OpenCC converter is a chunk of its own), then English, then Portuguese.
+ */
+export const fallbacksOf = (l: Locale): Locale[] => [...new Set<Locale>([l, ...(l === 'zhHans' ? (['zh'] as const) : []), 'en', 'pt'])]
+
+const wait = (ms: number) => new Promise<void>((done) => setTimeout(done, ms))
+
+/** The first of `order` that `load` lands, each tried `tries` times `pause` ms apart; throws the last error once none does. */
+export const firstLoaded = async <L>(order: readonly L[], load: (l: L) => Promise<unknown>, tries = 2, pause = (ms: number) => wait(ms)): Promise<L> => {
+  let last: unknown = new Error('nothing to load')
+  for (const l of order) {
+    for (let attempt = 0; attempt < tries; attempt++) {
+      if (attempt > 0) await pause(400 * attempt)
+      try {
+        await load(l)
+        return l
+      } catch (e) {
+        last = e
+      }
+    }
+  }
+  throw last
+}
+
+/**
+ * Loads the language on show before the boot. Its chunk failing once left the page dark for good (the boot never ran): now it
+ * falls back (`fallbacksOf`) and shows the first that lands, for this page only (the saved choice stays, the next load tries it again).
+ */
+export const loadShownLocale = async (): Promise<Locale> => (current = await firstLoaded(fallbacksOf(current), loadLocale))
 
 /** Loads a language, then switches to it and remembers it. Screens re-render themselves (see `main.ts`). */
 export const setLocale = async (next: Locale) => {
