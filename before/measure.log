@@ -1,0 +1,326 @@
+clock 0.00 run 0.00min levelup rift=null place=null biome=meadow enem=0 | canv 268 8.9MB | sheets 8v 4.4MB sil 0MB | heap 75.4 | renderer 300 gpu 33 total 481 | nodes 1821 lst 669 | ALIVE canv 287 9.1MB img 167 7.7MB
+    6.4MB 27x img pokemon/<dex>/*
+    4.0MB 16x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < packKept (src/engine/pixelart.ts:542:28)
+    2.5MB 10x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < drawGround (src/render/world.ts:949:51)
+    1.1MB 6x canvas createCanvas (src/engine/pixelart.ts:7:21) < toSprite (src/render/sculpt.ts:279:17) < piece (src/render/terrain.ts:16:10)
+    1.0MB 19x img shop/*
+    0.8MB 6x canvas createCanvas (src/engine/pixelart.ts:7:21) < mountain (src/render/terrain.ts:1689:17) < build (src/render/terrain.ts:1718:24)
+    0.3MB 1x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < turnPage (src/engine/pixelart.ts:432:41)
+    0.3MB 1x canvas createCanvas (src/engine/pixelart.ts:7:21) < src/engine/pixelart.ts:282:59 < paint (src/engine/pixelart.ts:242:11)
+    0.1MB 14x img scenery/*
+    0.1MB 1x canvas createCanvas (src/engine/pixelart.ts:7:21) < over (src/render/placePieces.ts:60:17) < ridge (src/render/landmarkPieces.ts:949:11)
+    0.1MB 3x img dojo/*
+    0.1MB 1x img stadium/*
+clock 0.25 run 0.25min playing rift=null place=null biome=beach enem=9 | canv 366 28.7MB | sheets 15v 10.7MB sil 1MB | heap 93.1 | renderer 336 gpu 33 total 518 | nodes 1752 lst 796 | ALIVE canv 392 29MB img 202 12.3MB
+clock 0.51 run 0.51min playing rift=null place=null biome=forest enem=17 | canv 388 30.5MB | sheets 15v 10.7MB sil 1MB | heap 80 | renderer 337 gpu 33 total 519 | nodes 1775 lst 821 | ALIVE canv 425 30.7MB img 203 12.3MB
+clock 0.76 run 0.76min playing rift=null place=null biome=meadow enem=23 | canv 391 30.8MB | sheets 15v 10.7MB sil 1MB | heap 80.3 | renderer 339 gpu 32 total 520 | nodes 1778 lst 824 | ALIVE canv 428 31.1MB img 203 12.3MB
+clock 1.02 run 1.02min playing rift=null place=null biome=meadow enem=21 | canv 397 31.6MB | sheets 15v 10.7MB sil 1MB | heap 81.8 | renderer 360 gpu 33 total 542 | nodes 1789 lst 830 | ALIVE canv 434 31.9MB img 208 12.3MB
+    16.8MB 67x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < packKept (src/engine/pixelart.ts:542:28)
+    10.7MB 45x img pokemon/<dex>/*
+    4.3MB 27x canvas createCanvas (src/engine/pixelart.ts:7:21) < toSprite (src/render/sculpt.ts:279:17) < piece (src/render/terrain.ts:16:10)
+    3.1MB 24x canvas createCanvas (src/engine/pixelart.ts:7:21) < mountain (src/render/terrain.ts:1689:17) < build (src/render/terrain.ts:1718:24)
+    2.5MB 10x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < drawGround (src/render/world.ts:949:51)
+    1.5MB 6x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < warmGround (src/render/world.ts:963:4)
+    1.0MB 1x canvas createCanvas (src/engine/pixelart.ts:7:21) < spot (src/render/sprites.ts:171:18) < claim (src/render/sprites.ts:204:15)
+    1.0MB 19x img shop/*
+    0.5MB 4x canvas createCanvas (src/engine/pixelart.ts:7:21) < over (src/render/placePieces.ts:60:17) < ridge (src/render/landmarkPieces.ts:949:11)
+    0.4MB 1x canvas createCanvas (src/engine/pixelart.ts:7:21) < frameOf (src/render/baseMoveFx.ts:24:17) < cometFrame (src/render/baseMoveFx.ts:60:9)
+    0.4MB 37x img scenery/*
+    0.4MB 1x canvas createCanvas (src/engine/pixelart.ts:7:21) < veil (src/render/weather.ts:191:18) < warmFog (src/render/weather.ts:245:2)
+clock 1.28 run 1.28min playing rift=null place=null biome=meadow enem=53 | canv 369 25.7MB | sheets 21v 16MB sil 1MB | heap 81.2 | renderer 358 gpu 33 total 539 | nodes 1778 lst 838 | ALIVE canv 406 25.9MB img 225 17.5MB
+clock 1.53 run 1.53min playing rift=null place=null biome=meadow enem=32 | canv 370 25.7MB | sheets 21v 16MB sil 1MB | heap 81.3 | renderer 355 gpu 33 total 538 | nodes 1782 lst 839 | ALIVE canv 407 25.9MB img 225 17.5MB
+clock 1.78 run 1.78min playing rift=null place=null biome=meadow enem=26 | canv 398 26.8MB | sheets 25v 19.4MB sil 1MB | heap 80.8 | renderer 367 gpu 33 total 550 | nodes 1846 lst 897 | ALIVE canv 435 27MB img 240 20.9MB
+clock 2.04 run 2.04min playing rift=null place=null biome=meadow enem=30 | canv 402 27.2MB | sheets 31v 23.5MB sil 1MB | heap 82 | renderer 372 gpu 33 total 554 | nodes 1869 lst 938 | ALIVE canv 440 27.5MB img 258 25MB
+    23.5MB 93x img pokemon/<dex>/*
+    13.0MB 52x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < packKept (src/engine/pixelart.ts:542:28)
+    3.3MB 21x canvas createCanvas (src/engine/pixelart.ts:7:21) < toSprite (src/render/sculpt.ts:279:17) < piece (src/render/terrain.ts:16:10)
+    2.5MB 10x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < drawGround (src/render/world.ts:949:51)
+    2.4MB 18x canvas createCanvas (src/engine/pixelart.ts:7:21) < mountain (src/render/terrain.ts:1689:17) < build (src/render/terrain.ts:1718:24)
+    1.5MB 6x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < warmGround (src/render/world.ts:963:4)
+    1.3MB 5x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < turnPage (src/engine/pixelart.ts:432:41)
+    1.0MB 1x canvas createCanvas (src/engine/pixelart.ts:7:21) < spot (src/render/sprites.ts:171:18) < claim (src/render/sprites.ts:204:15)
+    1.0MB 19x img shop/*
+    0.4MB 1x canvas createCanvas (src/engine/pixelart.ts:7:21) < frameOf (src/render/baseMoveFx.ts:24:17) < cometFrame (src/render/baseMoveFx.ts:60:9)
+    0.4MB 3x canvas createCanvas (src/engine/pixelart.ts:7:21) < over (src/render/placePieces.ts:60:17) < ridge (src/render/landmarkPieces.ts:949:11)
+    0.4MB 1x canvas createCanvas (src/engine/pixelart.ts:7:21) < veil (src/render/weather.ts:191:18) < warmFog (src/render/weather.ts:245:2)
+clock 2.29 run 2.29min playing rift=null place=null biome=meadow enem=59 | canv 402 27.2MB | sheets 32v 23.9MB sil 1MB | heap 81.5 | renderer 374 gpu 31 total 555 | nodes 1874 lst 944 | ALIVE canv 440 27.5MB img 261 25.4MB
+clock 2.55 run 2.55min playing rift=null place=null biome=meadow enem=83 | canv 440 33.4MB | sheets 27v 19.8MB sil 1MB | heap 82.2 | renderer 387 gpu 34 total 570 | nodes 2003 lst 982 | ALIVE canv 478 33.7MB img 263 21.4MB
+clock 2.80 run 2.80min playing rift=null place=null biome=meadow enem=117 | canv 415 28.5MB | sheets 26v 19.5MB sil 2MB | heap 82.2 | renderer 377 gpu 31 total 556 | nodes 1986 lst 958 | ALIVE canv 454 28.8MB img 261 21MB
+clock 3.05 run 3.05min playing rift=null place=null biome=meadow enem=102 | canv 415 29MB | sheets 27v 19.9MB sil 2MB | heap 82.9 | renderer 378 gpu 31 total 557 | nodes 1969 lst 963 | ALIVE canv 453 29.3MB img 251 21.3MB
+    19.9MB 81x img pokemon/<dex>/*
+    13.0MB 52x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < packKept (src/engine/pixelart.ts:542:28)
+    3.3MB 21x canvas createCanvas (src/engine/pixelart.ts:7:21) < toSprite (src/render/sculpt.ts:279:17) < piece (src/render/terrain.ts:16:10)
+    2.5MB 10x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < drawGround (src/render/world.ts:949:51)
+    2.4MB 18x canvas createCanvas (src/engine/pixelart.ts:7:21) < mountain (src/render/terrain.ts:1689:17) < build (src/render/terrain.ts:1718:24)
+    2.0MB 2x canvas createCanvas (src/engine/pixelart.ts:7:21) < spot (src/render/sprites.ts:171:18) < claim (src/render/sprites.ts:204:15)
+    1.8MB 7x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < turnPage (src/engine/pixelart.ts:432:41)
+    1.5MB 6x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < warmGround (src/render/world.ts:963:4)
+    1.0MB 19x img shop/*
+    0.5MB 18x canvas createCanvas (src/engine/pixelart.ts:7:21) < bigShape (src/engine/pixelart.ts:725:12) < blitRing (src/engine/pixelart.ts:749:2)
+    0.4MB 1x canvas createCanvas (src/engine/pixelart.ts:7:21) < frameOf (src/render/baseMoveFx.ts:24:17) < cometFrame (src/render/baseMoveFx.ts:60:9)
+    0.4MB 3x canvas createCanvas (src/engine/pixelart.ts:7:21) < over (src/render/placePieces.ts:60:17) < ridge (src/render/landmarkPieces.ts:949:11)
+clock 3.30 run 3.30min playing rift=null place=null biome=meadow enem=132 | canv 399 25MB | sheets 29v 21.8MB sil 2MB | heap 82.9 | renderer 378 gpu 31 total 556 | nodes 2029 lst 973 | ALIVE canv 438 25.3MB img 272 23.3MB
+clock 3.55 run 3.55min playing rift=null place=null biome=meadow enem=132 | canv 427 31.3MB | sheets 29v 21.8MB sil 3MB | heap 83.3 | renderer 385 gpu 32 total 564 | nodes 2042 lst 1001 | ALIVE canv 467 31.6MB img 276 23.3MB
+clock 3.81 run 3.81min playing rift=null place=null biome=meadow enem=114 | canv 434 32.3MB | sheets 29v 21.8MB sil 4MB | heap 83.3 | renderer 387 gpu 33 total 567 | nodes 2049 lst 1008 | ALIVE canv 474 32.6MB img 276 23.3MB
+trip cave 230.2333333334087
+clock 4.06 run 4.06min playing rift=null place=null biome=forest enem=149 | canv 463 38.1MB | sheets 29v 21.8MB sil 4MB | heap 85.2 | renderer 395 gpu 31 total 573 | nodes 2100 lst 1052 | ALIVE canv 517 38.4MB img 271 23.4MB
+    21.8MB 87x img pokemon/<dex>/*
+    16.8MB 67x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < packKept (src/engine/pixelart.ts:542:28)
+    4.3MB 27x canvas createCanvas (src/engine/pixelart.ts:7:21) < toSprite (src/render/sculpt.ts:279:17) < piece (src/render/terrain.ts:16:10)
+    4.0MB 4x canvas createCanvas (src/engine/pixelart.ts:7:21) < spot (src/render/sprites.ts:171:18) < claim (src/render/sprites.ts:204:15)
+    3.1MB 24x canvas createCanvas (src/engine/pixelart.ts:7:21) < mountain (src/render/terrain.ts:1689:17) < build (src/render/terrain.ts:1718:24)
+    3.0MB 12x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < turnPage (src/engine/pixelart.ts:432:41)
+    2.5MB 10x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < drawGround (src/render/world.ts:949:51)
+    1.5MB 6x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < warmGround (src/render/world.ts:963:4)
+    1.0MB 19x img shop/*
+    0.5MB 19x canvas createCanvas (src/engine/pixelart.ts:7:21) < bigShape (src/engine/pixelart.ts:725:12) < blitRing (src/engine/pixelart.ts:749:2)
+    0.5MB 4x canvas createCanvas (src/engine/pixelart.ts:7:21) < over (src/render/placePieces.ts:60:17) < ridge (src/render/landmarkPieces.ts:949:11)
+    0.4MB 1x canvas createCanvas (src/engine/pixelart.ts:7:21) < frameOf (src/render/baseMoveFx.ts:24:17) < cometFrame (src/render/baseMoveFx.ts:60:9)
+clock 4.31 run 4.31min playing rift=null place=null biome=cave enem=133 | canv 498 44.8MB | sheets 29v 21.8MB sil 4MB | heap 85.3 | renderer 406 gpu 33 total 586 | nodes 2130 lst 1086 | ALIVE canv 551 45.1MB img 273 23.5MB
+clock 4.57 run 4.57min playing rift=null place=null biome=cave enem=141 | canv 481 39.5MB | sheets 30v 23.3MB sil 4MB | heap 85.5 | renderer 403 gpu 31 total 582 | nodes 2131 lst 1074 | ALIVE canv 534 39.8MB img 275 24.9MB
+clock 4.83 run 4.83min playing rift=null place=null biome=meadow enem=132 | canv 472 36.7MB | sheets 30v 24.1MB sil 4MB | heap 84.9 | renderer 402 gpu 33 total 582 | nodes 2129 lst 1071 | ALIVE canv 525 37MB img 278 25.7MB
+clock 5.08 run 5.08min playing rift=null place=null biome=beach enem=105 | canv 491 40.9MB | sheets 30v 24.1MB sil 5MB | heap 91.4 | renderer 407 gpu 31 total 585 | nodes 2156 lst 1090 | ALIVE canv 544 41.2MB img 290 25.8MB
+    24.1MB 90x img pokemon/<dex>/*
+    16.8MB 67x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < packKept (src/engine/pixelart.ts:542:28)
+    5.0MB 5x canvas createCanvas (src/engine/pixelart.ts:7:21) < spot (src/render/sprites.ts:171:18) < claim (src/render/sprites.ts:204:15)
+    4.3MB 27x canvas createCanvas (src/engine/pixelart.ts:7:21) < toSprite (src/render/sculpt.ts:279:17) < piece (src/render/terrain.ts:16:10)
+    3.1MB 24x canvas createCanvas (src/engine/pixelart.ts:7:21) < mountain (src/render/terrain.ts:1689:17) < build (src/render/terrain.ts:1718:24)
+    3.0MB 12x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < turnPage (src/engine/pixelart.ts:432:41)
+    2.5MB 10x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < drawGround (src/render/world.ts:949:51)
+    1.5MB 6x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < warmGround (src/render/world.ts:963:4)
+    1.1MB 2x canvas createCanvas (src/engine/pixelart.ts:7:21) < frameOf (src/render/baseMoveFx.ts:24:17) < cometFrame (src/render/baseMoveFx.ts:60:9)
+    1.0MB 19x img shop/*
+    0.9MB 14x canvas createCanvas (src/engine/pixelart.ts:7:21) < bakeChunk (src/render/domain.ts:140:17) < chunkOf (src/render/domain.ts:188:12)
+    0.6MB 21x canvas createCanvas (src/engine/pixelart.ts:7:21) < bigShape (src/engine/pixelart.ts:725:12) < blitRing (src/engine/pixelart.ts:749:2)
+clock 5.34 run 5.34min playing rift=null place=null biome=forest enem=122 | canv 505 41.6MB | sheets 34v 27.3MB sil 5MB | heap 87.9 | renderer 413 gpu 31 total 591 | nodes 2176 lst 1129 | ALIVE canv 558 41.9MB img 303 28.9MB
+clock 5.59 run 5.59min playing rift=null place=null biome=cave enem=125 | canv 527 46.4MB | sheets 32v 22.9MB sil 5MB | heap 84.5 | renderer 420 gpu 31 total 599 | nodes 2235 lst 1152 | ALIVE canv 582 46.7MB img 303 24.6MB
+clock 5.84 run 5.84min playing rift=null place=null biome=cave enem=31 | canv 457 52.2MB | sheets 31v 22.4MB sil 5MB | heap 85.6 | renderer 433 gpu 34 total 614 | nodes 2243 lst 1099 | ALIVE canv 512 52.5MB img 305 24.1MB
+rift kyogre 360.1500000000011
+clock 6.09 run 6.00min playing rift=kyogre place=null biome=forest enem=4 | canv 330 23.2MB | sheets 34v 24.7MB sil 5MB | heap 92.2 | renderer 403 gpu 30 total 581 | nodes 2080 lst 990 | ALIVE canv 386 23.5MB img 282 26MB
+    24.7MB 102x img pokemon/<dex>/*
+    5.0MB 5x canvas createCanvas (src/engine/pixelart.ts:7:21) < spot (src/render/sprites.ts:171:18) < claim (src/render/sprites.ts:204:15)
+    4.5MB 18x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < packKept (src/engine/pixelart.ts:542:28)
+    3.0MB 12x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < turnPage (src/engine/pixelart.ts:432:41)
+    2.5MB 10x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < drawGround (src/render/world.ts:949:51)
+    1.5MB 6x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < warmGround (src/render/world.ts:963:4)
+    1.2MB 9x canvas createCanvas (src/engine/pixelart.ts:7:21) < toSprite (src/render/sculpt.ts:279:17) < piece (src/render/terrain.ts:16:10)
+    1.1MB 2x canvas createCanvas (src/engine/pixelart.ts:7:21) < frameOf (src/render/baseMoveFx.ts:24:17) < cometFrame (src/render/baseMoveFx.ts:60:9)
+    1.0MB 16x canvas createCanvas (src/engine/pixelart.ts:7:21) < bakeChunk (src/render/domain.ts:140:17) < chunkOf (src/render/domain.ts:188:12)
+    1.0MB 19x img shop/*
+    0.8MB 31x canvas createCanvas (src/engine/pixelart.ts:7:21) < bigShape (src/engine/pixelart.ts:725:12) < blitRing (src/engine/pixelart.ts:749:2)
+    0.8MB 6x canvas createCanvas (src/engine/pixelart.ts:7:21) < mountain (src/render/terrain.ts:1689:17) < build (src/render/terrain.ts:1718:24)
+clock 6.35 run 6.00min playing rift=kyogre place=null biome=forest enem=8 | canv 343 24.1MB | sheets 29v 24.6MB sil 5MB | heap 87.3 | renderer 406 gpu 33 total 586 | nodes 2144 lst 1009 | ALIVE canv 399 24.4MB img 285 25.9MB
+clock 6.61 run 6.00min playing rift=kyogre place=null biome=forest enem=1 | canv 370 27.4MB | sheets 29v 27MB sil 6MB | heap 84.7 | renderer 416 gpu 30 total 594 | nodes 2192 lst 1043 | ALIVE canv 427 27.7MB img 288 28.3MB
+clock 6.86 run 6.00min playing rift=kyogre place=null biome=forest enem=0 | canv 390 27.7MB | sheets 28v 26.2MB sil 6MB | heap 86.7 | renderer 449 gpu 33 total 630 | nodes 2290 lst 1082 | ALIVE canv 448 27.9MB img 288 27.5MB
+clock 7.11 run 6.23min playing rift=null place=null biome=forest enem=18 | canv 416 38.8MB | sheets 26v 22.3MB sil 6MB | heap 88.4 | renderer 463 gpu 30 total 641 | nodes 2360 lst 1113 | ALIVE canv 475 39.1MB img 307 23.8MB
+    22.3MB 78x img pokemon/<dex>/*
+    13.8MB 55x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < packKept (src/engine/pixelart.ts:542:28)
+    6.0MB 6x canvas createCanvas (src/engine/pixelart.ts:7:21) < spot (src/render/sprites.ts:171:18) < claim (src/render/sprites.ts:204:15)
+    3.3MB 21x canvas createCanvas (src/engine/pixelart.ts:7:21) < toSprite (src/render/sculpt.ts:279:17) < piece (src/render/terrain.ts:16:10)
+    3.1MB 24x canvas createCanvas (src/engine/pixelart.ts:7:21) < mountain (src/render/terrain.ts:1689:17) < build (src/render/terrain.ts:1718:24)
+    3.0MB 12x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < turnPage (src/engine/pixelart.ts:432:41)
+    2.5MB 10x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < drawGround (src/render/world.ts:949:51)
+    1.5MB 6x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < warmGround (src/render/world.ts:963:4)
+    1.2MB 2x canvas createCanvas (src/engine/pixelart.ts:7:21) < bakeTransform (src/render/domain.ts:210:17) < transformOf (src/render/domain.ts:277:40)
+    1.1MB 2x canvas createCanvas (src/engine/pixelart.ts:7:21) < frameOf (src/render/baseMoveFx.ts:24:17) < cometFrame (src/render/baseMoveFx.ts:60:9)
+    1.1MB 40x canvas createCanvas (src/engine/pixelart.ts:7:21) < bigShape (src/engine/pixelart.ts:725:12) < blitRing (src/engine/pixelart.ts:749:2)
+    1.0MB 19x img shop/*
+clock 7.37 run 6.48min playing rift=null place=null biome=cave enem=41 | canv 464 47.9MB | sheets 29v 20.5MB sil 5MB | heap 86.1 | renderer 479 gpu 30 total 656 | nodes 2424 lst 1186 | ALIVE canv 523 48.2MB img 321 22.2MB
+clock 7.62 run 6.74min playing rift=null place=null biome=plant enem=20 | canv 437 42.2MB | sheets 28v 19.8MB sil 5MB | heap 86.3 | renderer 474 gpu 31 total 653 | nodes 2392 lst 1159 | ALIVE canv 496 42.5MB img 317 21.4MB
+trip snow 470.1833333332344
+clock 7.87 run 6.99min playing rift=null place=null biome=snow enem=26 | canv 354 25.3MB | sheets 24v 18.4MB sil 5MB | heap 86.2 | renderer 459 gpu 31 total 638 | nodes 2390 lst 1085 | ALIVE canv 422 25.6MB img 313 19.8MB
+clock 8.13 run 7.24min playing rift=null place=null biome=volcano enem=25 | canv 402 31.5MB | sheets 27v 21.9MB sil 5MB | heap 86.4 | renderer 445 gpu 23 total 588 | nodes 2824 lst 1500 | ALIVE canv 814 32MB img 330 23.4MB
+    21.9MB 81x img pokemon/<dex>/*
+    9.8MB 43x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < packKept (src/engine/pixelart.ts:542:28)
+    5.0MB 5x canvas createCanvas (src/engine/pixelart.ts:7:21) < spot (src/render/sprites.ts:171:18) < claim (src/render/sprites.ts:204:15)
+    3.0MB 12x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < turnPage (src/engine/pixelart.ts:432:41)
+    2.5MB 10x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < drawGround (src/render/world.ts:949:51)
+    2.3MB 26x canvas createCanvas (src/engine/pixelart.ts:7:21) < toSprite (src/render/sculpt.ts:279:17) < piece (src/render/terrain.ts:16:10)
+    1.6MB 19x canvas createCanvas (src/engine/pixelart.ts:7:21) < mountain (src/render/terrain.ts:1689:17) < build (src/render/terrain.ts:1718:24)
+    1.5MB 57x canvas createCanvas (src/engine/pixelart.ts:7:21) < bigShape (src/engine/pixelart.ts:725:12) < blitRing (src/engine/pixelart.ts:749:2)
+    1.5MB 6x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < warmGround (src/render/world.ts:963:4)
+    1.2MB 2x canvas createCanvas (src/engine/pixelart.ts:7:21) < bakeTransform (src/render/domain.ts:210:17) < transformOf (src/render/domain.ts:277:40)
+    1.1MB 2x canvas createCanvas (src/engine/pixelart.ts:7:21) < frameOf (src/render/baseMoveFx.ts:24:17) < cometFrame (src/render/baseMoveFx.ts:60:9)
+    1.0MB 19x img shop/*
+clock 8.38 run 7.49min playing rift=null place=null biome=volcano enem=24 | canv 437 36.5MB | sheets 24v 19.8MB sil 5MB | heap 86.5 | renderer 449 gpu 24 total 592 | nodes 2573 lst 1195 | ALIVE canv 506 36.7MB img 330 21.3MB
+clock 8.63 run 7.75min playing rift=null place=null biome=cave enem=56 | canv 471 43.4MB | sheets 23v 19.1MB sil 6MB | heap 86.7 | renderer 458 gpu 22 total 599 | nodes 2615 lst 1231 | ALIVE canv 540 43.7MB img 344 20.8MB
+clock 8.88 run 8.00min playing rift=null place=null biome=cave enem=77 | canv 515 50.4MB | sheets 24v 20.4MB sil 6MB | heap 91.5 | renderer 470 gpu 23 total 612 | nodes 2655 lst 1276 | ALIVE canv 584 50.7MB img 354 22.2MB
+clock 9.13 run 8.25min playing rift=null place=null biome=cave enem=35 | canv 514 50.1MB | sheets 24v 20.4MB sil 6MB | heap 91.2 | renderer 468 gpu 23 total 610 | nodes 2644 lst 1275 | ALIVE canv 583 50.4MB img 342 22.1MB
+    20.5MB 82x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < packKept (src/engine/pixelart.ts:542:28)
+    20.4MB 72x img pokemon/<dex>/*
+    6.0MB 6x canvas createCanvas (src/engine/pixelart.ts:7:21) < spot (src/render/sprites.ts:171:18) < claim (src/render/sprites.ts:204:15)
+    5.4MB 33x canvas createCanvas (src/engine/pixelart.ts:7:21) < toSprite (src/render/sculpt.ts:279:17) < piece (src/render/terrain.ts:16:10)
+    3.7MB 30x canvas createCanvas (src/engine/pixelart.ts:7:21) < mountain (src/render/terrain.ts:1689:17) < build (src/render/terrain.ts:1718:24)
+    3.0MB 12x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < turnPage (src/engine/pixelart.ts:432:41)
+    2.5MB 10x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < drawGround (src/render/world.ts:949:51)
+    1.6MB 60x canvas createCanvas (src/engine/pixelart.ts:7:21) < bigShape (src/engine/pixelart.ts:725:12) < blitRing (src/engine/pixelart.ts:749:2)
+    1.5MB 6x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < warmGround (src/render/world.ts:963:4)
+    1.2MB 2x canvas createCanvas (src/engine/pixelart.ts:7:21) < bakeTransform (src/render/domain.ts:210:17) < transformOf (src/render/domain.ts:277:40)
+    1.1MB 2x canvas createCanvas (src/engine/pixelart.ts:7:21) < frameOf (src/render/baseMoveFx.ts:24:17) < cometFrame (src/render/baseMoveFx.ts:60:9)
+    1.0MB 19x img shop/*
+clock 9.39 run 8.50min playing rift=null place=null biome=volcano enem=42 | canv 460 38.3MB | sheets 24v 20.4MB sil 6MB | heap 90.7 | renderer 454 gpu 22 total 595 | nodes 2580 lst 1226 | ALIVE canv 531 38.6MB img 339 22MB
+clock 9.64 run 8.75min playing rift=null place=null biome=volcano enem=27 | canv 455 37.8MB | sheets 25v 21.6MB sil 6MB | heap 87.1 | renderer 458 gpu 23 total 599 | nodes 2595 lst 1224 | ALIVE canv 525 38.1MB img 336 23.1MB
+clock 9.90 run 9.01min playing rift=null place=null biome=snow enem=65 | canv 437 34.5MB | sheets 25v 20.9MB sil 6MB | heap 89.6 | renderer 459 gpu 24 total 601 | nodes 2606 lst 1211 | ALIVE canv 507 34.8MB img 339 22.4MB
+rift lugia 600.283333333116
+clock 10.15 run 9.12min playing rift=lugia place=null biome=volcano enem=0 | canv 405 26.1MB | sheets 28v 27MB sil 6MB | heap 91.9 | renderer 455 gpu 23 total 596 | nodes 2547 lst 1203 | ALIVE canv 475 26.4MB img 323 28.2MB
+    27.0MB 84x img pokemon/<dex>/*
+    6.0MB 6x canvas createCanvas (src/engine/pixelart.ts:7:21) < spot (src/render/sprites.ts:171:18) < claim (src/render/sprites.ts:204:15)
+    4.3MB 17x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < packKept (src/engine/pixelart.ts:542:28)
+    3.0MB 12x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < turnPage (src/engine/pixelart.ts:432:41)
+    2.5MB 10x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < drawGround (src/render/world.ts:949:51)
+    1.5MB 6x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < warmGround (src/render/world.ts:963:4)
+    1.5MB 57x canvas createCanvas (src/engine/pixelart.ts:7:21) < bigShape (src/engine/pixelart.ts:725:12) < blitRing (src/engine/pixelart.ts:749:2)
+    1.2MB 2x canvas createCanvas (src/engine/pixelart.ts:7:21) < bakeTransform (src/render/domain.ts:210:17) < transformOf (src/render/domain.ts:277:40)
+    1.2MB 9x canvas createCanvas (src/engine/pixelart.ts:7:21) < toSprite (src/render/sculpt.ts:279:17) < piece (src/render/terrain.ts:16:10)
+    1.1MB 2x canvas createCanvas (src/engine/pixelart.ts:7:21) < frameOf (src/render/baseMoveFx.ts:24:17) < cometFrame (src/render/baseMoveFx.ts:60:9)
+    1.0MB 16x canvas createCanvas (src/engine/pixelart.ts:7:21) < bakeChunk (src/render/domain.ts:140:17) < chunkOf (src/render/domain.ts:188:12)
+    1.0MB 19x img shop/*
+clock 10.40 run 9.12min playing rift=lugia place=null biome=volcano enem=1 | canv 425 27.3MB | sheets 29v 27.5MB sil 6MB | heap 87.8 | renderer 458 gpu 24 total 601 | nodes 2558 lst 1229 | ALIVE canv 495 27.6MB img 326 28.8MB
+clock 10.65 run 9.12min playing rift=lugia place=null biome=volcano enem=1 | canv 433 29MB | sheets 29v 25.2MB sil 6MB | heap 87 | renderer 460 gpu 22 total 600 | nodes 2584 lst 1243 | ALIVE canv 503 29.3MB img 329 26.5MB
+clock 10.91 run 9.13min playing rift=null place=null biome=volcano enem=38 | canv 407 29.5MB | sheets 26v 22.8MB sil 6MB | heap 88.4 | renderer 466 gpu 24 total 608 | nodes 2664 lst 1217 | ALIVE canv 477 29.8MB img 339 24.1MB
+clock 11.16 run 9.39min playing rift=null place=null biome=volcano enem=15 | canv 456 39.9MB | sheets 25v 21.3MB sil 6MB | heap 91.6 | renderer 476 gpu 22 total 617 | nodes 2698 lst 1268 | ALIVE canv 526 40.2MB img 357 22.8MB
+    21.3MB 75x img pokemon/<dex>/*
+    12.3MB 49x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < packKept (src/engine/pixelart.ts:542:28)
+    6.0MB 6x canvas createCanvas (src/engine/pixelart.ts:7:21) < spot (src/render/sprites.ts:171:18) < claim (src/render/sprites.ts:204:15)
+    3.3MB 21x canvas createCanvas (src/engine/pixelart.ts:7:21) < toSprite (src/render/sculpt.ts:279:17) < piece (src/render/terrain.ts:16:10)
+    3.0MB 12x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < turnPage (src/engine/pixelart.ts:432:41)
+    2.5MB 10x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < drawGround (src/render/world.ts:949:51)
+    2.4MB 4x canvas createCanvas (src/engine/pixelart.ts:7:21) < bakeTransform (src/render/domain.ts:210:17) < transformOf (src/render/domain.ts:277:40)
+    2.3MB 18x canvas createCanvas (src/engine/pixelart.ts:7:21) < mountain (src/render/terrain.ts:1689:17) < build (src/render/terrain.ts:1718:24)
+    1.9MB 1x canvas createCanvas (src/engine/pixelart.ts:7:21) < stamp (src/engine/pixelart.ts:687:18) < bigShape (src/engine/pixelart.ts:723:11)
+    1.6MB 61x canvas createCanvas (src/engine/pixelart.ts:7:21) < bigShape (src/engine/pixelart.ts:725:12) < blitRing (src/engine/pixelart.ts:749:2)
+    1.5MB 6x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < warmGround (src/render/world.ts:963:4)
+    1.1MB 2x canvas createCanvas (src/engine/pixelart.ts:7:21) < frameOf (src/render/baseMoveFx.ts:24:17) < cometFrame (src/render/baseMoveFx.ts:60:9)
+clock 11.41 run 9.64min playing rift=null place=null biome=volcano enem=5 | canv 484 44.7MB | sheets 22v 17.7MB sil 6MB | heap 87.7 | renderer 485 gpu 22 total 626 | nodes 2804 lst 1302 | ALIVE canv 561 44.9MB img 377 19.3MB
+trip tower 700.2166666663585
+clock 11.67 run 9.89min playing rift=null place=null biome=tower enem=11 | canv 495 46.2MB | sheets 23v 18.5MB sil 6MB | heap 88.6 | renderer 488 gpu 23 total 629 | nodes 2815 lst 1319 | ALIVE canv 571 46.5MB img 380 20.1MB
+clock 11.92 run 10.15min playing rift=null place=null biome=tower enem=15 | canv 472 41.3MB | sheets 26v 21.9MB sil 6MB | heap 88.2 | renderer 489 gpu 23 total 630 | nodes 2817 lst 1315 | ALIVE canv 548 41.6MB img 385 23.5MB
+clock 12.18 run 10.40min playing rift=null place=null biome=tower enem=45 | canv 497 46.3MB | sheets 24v 21MB sil 6MB | heap 88.6 | renderer 500 gpu 23 total 641 | nodes 2896 lst 1335 | ALIVE canv 573 46.6MB img 392 22.7MB
+    21.0MB 72x img pokemon/<dex>/*
+    16.5MB 66x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < packKept (src/engine/pixelart.ts:542:28)
+    6.0MB 6x canvas createCanvas (src/engine/pixelart.ts:7:21) < spot (src/render/sprites.ts:171:18) < claim (src/render/sprites.ts:204:15)
+    4.3MB 27x canvas createCanvas (src/engine/pixelart.ts:7:21) < toSprite (src/render/sculpt.ts:279:17) < piece (src/render/terrain.ts:16:10)
+    3.0MB 12x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < turnPage (src/engine/pixelart.ts:432:41)
+    3.0MB 24x canvas createCanvas (src/engine/pixelart.ts:7:21) < mountain (src/render/terrain.ts:1689:17) < build (src/render/terrain.ts:1718:24)
+    2.5MB 10x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < drawGround (src/render/world.ts:949:51)
+    2.4MB 4x canvas createCanvas (src/engine/pixelart.ts:7:21) < bakeTransform (src/render/domain.ts:210:17) < transformOf (src/render/domain.ts:277:40)
+    1.9MB 1x canvas createCanvas (src/engine/pixelart.ts:7:21) < stamp (src/engine/pixelart.ts:687:18) < bigShape (src/engine/pixelart.ts:723:11)
+    1.5MB 58x canvas createCanvas (src/engine/pixelart.ts:7:21) < bigShape (src/engine/pixelart.ts:725:12) < blitRing (src/engine/pixelart.ts:749:2)
+    1.5MB 6x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < warmGround (src/render/world.ts:963:4)
+    1.1MB 2x canvas createCanvas (src/engine/pixelart.ts:7:21) < frameOf (src/render/baseMoveFx.ts:24:17) < cometFrame (src/render/baseMoveFx.ts:60:9)
+clock 12.43 run 10.66min playing rift=null place=null biome=cave enem=96 | canv 468 44.1MB | sheets 24v 21MB sil 7MB | heap 88.6 | renderer 495 gpu 24 total 638 | nodes 2848 lst 1307 | ALIVE canv 544 44.4MB img 373 22.6MB
+clock 12.69 run 10.91min playing rift=null place=null biome=volcano enem=115 | canv 471 42MB | sheets 24v 21MB sil 7MB | heap 88.9 | renderer 493 gpu 22 total 634 | nodes 2854 lst 1311 | ALIVE canv 547 42.2MB img 374 22.5MB
+clock 12.95 run 11.17min playing rift=null place=null biome=snow enem=142 | canv 471 42MB | sheets 33v 39MB sil 7MB | heap 89.1 | renderer 514 gpu 23 total 656 | nodes 2857 lst 1377 | ALIVE canv 547 42.2MB img 408 40.5MB
+rift palkia 780.3666666662856
+clock 13.20 run 11.23min playing rift=palkia place=null biome=snow enem=0 | canv 398 31.2MB | sheets 32v 40.2MB sil 7MB | heap 91.1 | renderer 506 gpu 23 total 648 | nodes 2796 lst 1308 | ALIVE canv 472 31.5MB img 396 41.5MB
+    40.2MB 103x img pokemon/<dex>/*
+    7.0MB 7x canvas createCanvas (src/engine/pixelart.ts:7:21) < spot (src/render/sprites.ts:171:18) < claim (src/render/sprites.ts:204:15)
+    4.8MB 19x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < packKept (src/engine/pixelart.ts:542:28)
+    3.0MB 12x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < turnPage (src/engine/pixelart.ts:432:41)
+    2.5MB 10x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < drawGround (src/render/world.ts:949:51)
+    2.4MB 4x canvas createCanvas (src/engine/pixelart.ts:7:21) < bakeTransform (src/render/domain.ts:210:17) < transformOf (src/render/domain.ts:277:40)
+    2.0MB 37x canvas createCanvas (src/engine/pixelart.ts:7:21) < bigShape (src/engine/pixelart.ts:725:12) < blitRing (src/engine/pixelart.ts:749:2)
+    1.9MB 1x canvas createCanvas (src/engine/pixelart.ts:7:21) < stamp (src/engine/pixelart.ts:687:18) < bigShape (src/engine/pixelart.ts:723:11)
+    1.7MB 27x canvas createCanvas (src/engine/pixelart.ts:7:21) < bakeChunk (src/render/domain.ts:140:17) < chunkOf (src/render/domain.ts:188:12)
+    1.5MB 6x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < warmGround (src/render/world.ts:963:4)
+    1.2MB 9x canvas createCanvas (src/engine/pixelart.ts:7:21) < toSprite (src/render/sculpt.ts:279:17) < piece (src/render/terrain.ts:16:10)
+    1.1MB 2x canvas createCanvas (src/engine/pixelart.ts:7:21) < frameOf (src/render/baseMoveFx.ts:24:17) < cometFrame (src/render/baseMoveFx.ts:60:9)
+clock 13.45 run 11.23min playing rift=palkia place=null biome=snow enem=1 | canv 404 32.5MB | sheets 38v 50.7MB sil 7MB | heap 88.6 | renderer 519 gpu 22 total 660 | nodes 2824 lst 1350 | ALIVE canv 478 32.8MB img 414 52MB
+clock 13.70 run 11.23min playing rift=palkia place=null biome=snow enem=1 | canv 408 32.7MB | sheets 38v 50.7MB sil 7MB | heap 91.6 | renderer 517 gpu 22 total 660 | nodes 2827 lst 1355 | ALIVE canv 483 33MB img 414 52MB
+clock 13.96 run 11.30min playing rift=null place=null biome=snow enem=62 | canv 372 30.5MB | sheets 33v 43MB sil 7MB | heap 89.6 | renderer 518 gpu 24 total 662 | nodes 2908 lst 1331 | ALIVE canv 447 30.8MB img 424 44.4MB
+clock 14.21 run 11.55min playing rift=null place=null biome=tower enem=72 | canv 399 36.6MB | sheets 31v 36MB sil 7MB | heap 89.2 | renderer 557 gpu 30 total 737 | nodes 2966 lst 1357 | ALIVE canv 474 36.9MB img 435 37.5MB
+    36.0MB 100x img pokemon/<dex>/*
+    9.5MB 38x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < packKept (src/engine/pixelart.ts:542:28)
+    7.0MB 7x canvas createCanvas (src/engine/pixelart.ts:7:21) < spot (src/render/sprites.ts:171:18) < claim (src/render/sprites.ts:204:15)
+    3.0MB 12x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < turnPage (src/engine/pixelart.ts:432:41)
+    2.5MB 5x canvas createCanvas (src/engine/pixelart.ts:7:21) < bakeTransform (src/render/domain.ts:210:17) < transformOf (src/render/domain.ts:277:40)
+    2.5MB 10x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < drawGround (src/render/world.ts:949:51)
+    2.2MB 15x canvas createCanvas (src/engine/pixelart.ts:7:21) < toSprite (src/render/sculpt.ts:279:17) < piece (src/render/terrain.ts:16:10)
+    1.9MB 1x canvas createCanvas (src/engine/pixelart.ts:7:21) < stamp (src/engine/pixelart.ts:687:18) < bigShape (src/engine/pixelart.ts:723:11)
+    1.8MB 29x canvas createCanvas (src/engine/pixelart.ts:7:21) < bigShape (src/engine/pixelart.ts:725:12) < blitRing (src/engine/pixelart.ts:749:2)
+    1.6MB 13x canvas createCanvas (src/engine/pixelart.ts:7:21) < mountain (src/render/terrain.ts:1689:17) < build (src/render/terrain.ts:1718:24)
+    1.5MB 6x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < warmGround (src/render/world.ts:963:4)
+    1.1MB 2x canvas createCanvas (src/engine/pixelart.ts:7:21) < frameOf (src/render/baseMoveFx.ts:24:17) < cometFrame (src/render/baseMoveFx.ts:60:9)
+clock 14.47 run 11.80min playing rift=null place=null biome=volcano enem=93 | canv 396 37MB | sheets 23v 19.8MB sil 7MB | heap 88.8 | renderer 559 gpu 31 total 740 | nodes 3124 lst 1359 | ALIVE canv 473 37.3MB img 438 21.3MB
+trip desert 880.4833333328612
+clock 14.72 run 12.06min playing rift=null place=null biome=desert enem=105 | canv 370 28.9MB | sheets 23v 19.8MB sil 7MB | heap 94.1 | renderer 555 gpu 31 total 736 | nodes 3069 lst 1336 | ALIVE canv 446 29.2MB img 407 21MB
+clock 14.98 run 12.32min playing rift=null place=null biome=desert enem=90 | canv 351 25.4MB | sheets 22v 19.1MB sil 7MB | heap 88.3 | renderer 548 gpu 30 total 728 | nodes 3061 lst 1314 | ALIVE canv 426 25.7MB img 409 20.3MB
+clock 15.23 run 12.57min playing rift=null place=null biome=plant enem=82 | canv 422 39.9MB | sheets 22v 19.1MB sil 7MB | heap 98.8 | renderer 566 gpu 30 total 746 | nodes 3147 lst 1385 | ALIVE canv 497 40.2MB img 410 20.5MB
+    19.1MB 66x img pokemon/<dex>/*
+    11.0MB 44x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < packKept (src/engine/pixelart.ts:542:28)
+    7.0MB 7x canvas createCanvas (src/engine/pixelart.ts:7:21) < spot (src/render/sprites.ts:171:18) < claim (src/render/sprites.ts:204:15)
+    3.3MB 21x canvas createCanvas (src/engine/pixelart.ts:7:21) < toSprite (src/render/sculpt.ts:279:17) < piece (src/render/terrain.ts:16:10)
+    3.0MB 12x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < turnPage (src/engine/pixelart.ts:432:41)
+    2.5MB 5x canvas createCanvas (src/engine/pixelart.ts:7:21) < bakeTransform (src/render/domain.ts:210:17) < transformOf (src/render/domain.ts:277:40)
+    2.5MB 10x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < drawGround (src/render/world.ts:949:51)
+    2.2MB 18x canvas createCanvas (src/engine/pixelart.ts:7:21) < mountain (src/render/terrain.ts:1689:17) < build (src/render/terrain.ts:1718:24)
+    1.9MB 43x canvas createCanvas (src/engine/pixelart.ts:7:21) < bigShape (src/engine/pixelart.ts:725:12) < blitRing (src/engine/pixelart.ts:749:2)
+    1.9MB 1x canvas createCanvas (src/engine/pixelart.ts:7:21) < stamp (src/engine/pixelart.ts:687:18) < bigShape (src/engine/pixelart.ts:723:11)
+    1.5MB 6x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < warmGround (src/render/world.ts:963:4)
+    1.1MB 2x canvas createCanvas (src/engine/pixelart.ts:7:21) < frameOf (src/render/baseMoveFx.ts:24:17) < cometFrame (src/render/baseMoveFx.ts:60:9)
+clock 15.49 run 12.83min playing rift=null place=null biome=volcano enem=91 | canv 488 53.2MB | sheets 22v 19.1MB sil 7MB | heap 102.1 | renderer 582 gpu 32 total 764 | nodes 3233 lst 1451 | ALIVE canv 563 53.5MB img 435 20.8MB
+clock 15.74 run 13.08min playing rift=null place=null biome=desert enem=78 | canv 441 41.2MB | sheets 22v 19.1MB sil 7MB | heap 89.3 | renderer 571 gpu 30 total 751 | nodes 3177 lst 1411 | ALIVE canv 520 41.5MB img 407 20.5MB
+clock 15.99 run 13.33min playing rift=null place=null biome=volcano enem=92 | canv 447 42.5MB | sheets 23v 20.4MB sil 8MB | heap 89.3 | renderer 576 gpu 30 total 757 | nodes 3175 lst 1419 | ALIVE canv 523 42.8MB img 410 21.8MB
+    20.4MB 69x img pokemon/<dex>/*
+    12.5MB 50x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < packKept (src/engine/pixelart.ts:542:28)
+    8.0MB 8x canvas createCanvas (src/engine/pixelart.ts:7:21) < spot (src/render/sprites.ts:171:18) < claim (src/render/sprites.ts:204:15)
+    3.3MB 21x canvas createCanvas (src/engine/pixelart.ts:7:21) < toSprite (src/render/sculpt.ts:279:17) < piece (src/render/terrain.ts:16:10)
+    3.0MB 12x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < turnPage (src/engine/pixelart.ts:432:41)
+    2.5MB 5x canvas createCanvas (src/engine/pixelart.ts:7:21) < bakeTransform (src/render/domain.ts:210:17) < transformOf (src/render/domain.ts:277:40)
+    2.5MB 10x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < drawGround (src/render/world.ts:949:51)
+    2.2MB 18x canvas createCanvas (src/engine/pixelart.ts:7:21) < mountain (src/render/terrain.ts:1689:17) < build (src/render/terrain.ts:1718:24)
+    1.9MB 1x canvas createCanvas (src/engine/pixelart.ts:7:21) < stamp (src/engine/pixelart.ts:687:18) < bigShape (src/engine/pixelart.ts:723:11)
+    1.5MB 6x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < warmGround (src/render/world.ts:963:4)
+    1.3MB 41x canvas createCanvas (src/engine/pixelart.ts:7:21) < bigShape (src/engine/pixelart.ts:725:12) < blitRing (src/engine/pixelart.ts:749:2)
+    1.1MB 2x canvas createCanvas (src/engine/pixelart.ts:7:21) < frameOf (src/render/baseMoveFx.ts:24:17) < cometFrame (src/render/baseMoveFx.ts:60:9)
+clock 16.25 run 13.59min playing rift=null place=null biome=volcano enem=121 | canv 422 37.3MB | sheets 19v 16.9MB sil 8MB | heap 89.4 | renderer 547 gpu 31 total 728 | nodes 3201 lst 1392 | ALIVE canv 498 37.6MB img 418 18.3MB
+clock 16.50 run 13.84min playing rift=null place=null biome=volcano enem=83 | canv 454 42.5MB | sheets 20v 18.1MB sil 8MB | heap 89.2 | renderer 556 gpu 32 total 738 | nodes 3264 lst 1430 | ALIVE canv 530 42.8MB img 425 19.5MB
+clock 16.75 run 14.09min playing rift=null place=null biome=volcano enem=116 | canv 511 53.8MB | sheets 18v 16.1MB sil 8MB | heap 96.7 | renderer 571 gpu 32 total 753 | nodes 3640 lst 1764 | ALIVE canv 861 55.7MB img 441 17.8MB
+clock 17.00 run 14.34min playing rift=null place=null biome=plant enem=126 | canv 516 54.3MB | sheets 18v 16.1MB sil 8MB | heap 88.7 | renderer 569 gpu 31 total 749 | nodes 3355 lst 1496 | ALIVE canv 594 54.6MB img 441 17.8MB
+    20.5MB 82x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < packKept (src/engine/pixelart.ts:542:28)
+    16.1MB 54x img pokemon/<dex>/*
+    8.0MB 8x canvas createCanvas (src/engine/pixelart.ts:7:21) < spot (src/render/sprites.ts:171:18) < claim (src/render/sprites.ts:204:15)
+    5.4MB 33x canvas createCanvas (src/engine/pixelart.ts:7:21) < toSprite (src/render/sculpt.ts:279:17) < piece (src/render/terrain.ts:16:10)
+    3.7MB 30x canvas createCanvas (src/engine/pixelart.ts:7:21) < mountain (src/render/terrain.ts:1689:17) < build (src/render/terrain.ts:1718:24)
+    3.0MB 12x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < turnPage (src/engine/pixelart.ts:432:41)
+    2.5MB 5x canvas createCanvas (src/engine/pixelart.ts:7:21) < bakeTransform (src/render/domain.ts:210:17) < transformOf (src/render/domain.ts:277:40)
+    2.5MB 10x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < drawGround (src/render/world.ts:949:51)
+    1.9MB 1x canvas createCanvas (src/engine/pixelart.ts:7:21) < stamp (src/engine/pixelart.ts:687:18) < bigShape (src/engine/pixelart.ts:723:11)
+    1.5MB 6x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < warmGround (src/render/world.ts:963:4)
+    1.3MB 44x canvas createCanvas (src/engine/pixelart.ts:7:21) < bigShape (src/engine/pixelart.ts:725:12) < blitRing (src/engine/pixelart.ts:749:2)
+    1.1MB 2x canvas createCanvas (src/engine/pixelart.ts:7:21) < frameOf (src/render/baseMoveFx.ts:24:17) < cometFrame (src/render/baseMoveFx.ts:60:9)
+clock 17.25 run 14.59min playing rift=null place=null biome=plant enem=82 | canv 513 54.3MB | sheets 19v 16.9MB sil 8MB | heap 89.2 | renderer 568 gpu 32 total 750 | nodes 3369 lst 1497 | ALIVE canv 589 54.6MB img 444 18.5MB
+clock 17.51 run 14.85min playing rift=null place=null biome=volcano enem=118 | canv 485 48.4MB | sheets 18v 15.8MB sil 8MB | heap 91.5 | renderer 549 gpu 31 total 729 | nodes 3343 lst 1467 | ALIVE canv 562 48.7MB img 442 17.3MB
+clock 17.76 run 15.10min playing rift=null place=null biome=volcano enem=40 | canv 473 42.5MB | sheets 18v 15.8MB sil 8MB | heap 89.1 | renderer 556 gpu 31 total 737 | nodes 3320 lst 1465 | ALIVE canv 550 42.8MB img 428 17.2MB
+clock 18.02 run 15.35min playing rift=null place=null biome=volcano enem=20 | canv 429 36.5MB | sheets 18v 16.4MB sil 8MB | heap 88.9 | renderer 550 gpu 31 total 731 | nodes 3297 lst 1426 | ALIVE canv 506 36.8MB img 430 17.8MB
+    16.4MB 54x img pokemon/<dex>/*
+    8.5MB 34x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < packKept (src/engine/pixelart.ts:542:28)
+    8.0MB 8x canvas createCanvas (src/engine/pixelart.ts:7:21) < spot (src/render/sprites.ts:171:18) < claim (src/render/sprites.ts:204:15)
+    3.0MB 12x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < turnPage (src/engine/pixelart.ts:432:41)
+    2.5MB 5x canvas createCanvas (src/engine/pixelart.ts:7:21) < bakeTransform (src/render/domain.ts:210:17) < transformOf (src/render/domain.ts:277:40)
+    2.5MB 10x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < drawGround (src/render/world.ts:949:51)
+    2.2MB 15x canvas createCanvas (src/engine/pixelart.ts:7:21) < toSprite (src/render/sculpt.ts:279:17) < piece (src/render/terrain.ts:16:10)
+    1.9MB 1x canvas createCanvas (src/engine/pixelart.ts:7:21) < stamp (src/engine/pixelart.ts:687:18) < bigShape (src/engine/pixelart.ts:723:11)
+    1.5MB 6x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < warmGround (src/render/world.ts:963:4)
+    1.5MB 12x canvas createCanvas (src/engine/pixelart.ts:7:21) < mountain (src/render/terrain.ts:1689:17) < build (src/render/terrain.ts:1718:24)
+    1.2MB 40x canvas createCanvas (src/engine/pixelart.ts:7:21) < bigShape (src/engine/pixelart.ts:725:12) < blitRing (src/engine/pixelart.ts:749:2)
+    1.1MB 2x canvas createCanvas (src/engine/pixelart.ts:7:21) < frameOf (src/render/baseMoveFx.ts:24:17) < cometFrame (src/render/baseMoveFx.ts:60:9)
+clock 18.27 run 15.61min playing rift=null place=null biome=snow enem=18 | canv 428 36.6MB | sheets 17v 15.7MB sil 8MB | heap 91.8 | renderer 552 gpu 33 total 735 | nodes 3311 lst 1428 | ALIVE canv 508 36.9MB img 430 17.1MB
+clock 18.52 run 15.86min playing rift=null place=null biome=volcano enem=20 | canv 431 37.1MB | sheets 16v 14.4MB sil 8MB | heap 90.9 | renderer 548 gpu 31 total 729 | nodes 3314 lst 1420 | ALIVE canv 509 37.4MB img 430 15.8MB
+clock 18.77 run 16.11min playing rift=null place=null biome=volcano enem=18 | canv 405 30.6MB | sheets 16v 14.4MB sil 8MB | heap 90 | renderer 542 gpu 31 total 722 | nodes 3299 lst 1396 | ALIVE canv 482 30.9MB img 416 15.7MB
+clock 19.03 run 16.37min playing rift=null place=null biome=volcano enem=19 | canv 415 33.1MB | sheets 17v 15.7MB sil 8MB | heap 88.4 | renderer 546 gpu 31 total 726 | nodes 3291 lst 1411 | ALIVE canv 492 33.4MB img 422 17.1MB
+    15.7MB 51x img pokemon/<dex>/*
+    8.0MB 8x canvas createCanvas (src/engine/pixelart.ts:7:21) < spot (src/render/sprites.ts:171:18) < claim (src/render/sprites.ts:204:15)
+    5.8MB 23x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < packKept (src/engine/pixelart.ts:542:28)
+    3.0MB 12x canvas createCanvas (src/engine/pixelart.ts:7:21) < newPage (src/engine/pixelart.ts:400:17) < turnPage (src/engine/pixelart.ts:432:41)
+    2.5MB 5x canvas createCanvas (src/engine/pixelart.ts:7:21) < bakeTransform (src/render/domain.ts:210:17) < transformOf (src/render/domain.ts:277:40)
+    2.5MB 10x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < drawGround (src/render/world.ts:949:51)
+    1.9MB 1x canvas createCanvas (src/engine/pixelart.ts:7:21) < stamp (src/engine/pixelart.ts:687:18) < bigShape (src/engine/pixelart.ts:723:11)
+    1.6MB 13x canvas createCanvas (src/engine/pixelart.ts:7:21) < mountain (src/render/terrain.ts:1689:17) < build (src/render/terrain.ts:1718:24)
+    1.5MB 6x canvas createCanvas (src/engine/pixelart.ts:7:21) < chunkAt (src/render/world.ts:928:44) < warmGround (src/render/world.ts:963:4)
+    1.4MB 48x canvas createCanvas (src/engine/pixelart.ts:7:21) < bigShape (src/engine/pixelart.ts:725:12) < blitRing (src/engine/pixelart.ts:749:2)
+    1.2MB 9x canvas createCanvas (src/engine/pixelart.ts:7:21) < toSprite (src/render/sculpt.ts:279:17) < piece (src/render/terrain.ts:16:10)
+    1.1MB 2x canvas createCanvas (src/engine/pixelart.ts:7:21) < frameOf (src/render/baseMoveFx.ts:24:17) < cometFrame (src/render/baseMoveFx.ts:60:9)
+clock 19.28 run 16.62min playing rift=null place=null biome=volcano enem=15 | canv 421 34.6MB | sheets 16v 14.3MB sil 8MB | heap 88.3 | renderer 548 gpu 31 total 728 | nodes 3321 lst 1423 | ALIVE canv 498 34.9MB img 425 15.7MB
+ended victory
+done 77 samples 0 errors
