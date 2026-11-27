@@ -239,11 +239,12 @@ const put = (ctx: CanvasRenderingContext2D, art: Art, x: number, y: number, from
 
 /* ---------------- The purple brother ---------------- */
 
-/** PMD's purple Kecleon: green-dominant pixels move to a purple ramp; the red stripe and the dark outline stay. Null when the browser won't read the pixels back (`readPixels`). */
+/** PMD's purple Kecleon: green-dominant pixels move to a purple ramp; the red stripe and the dark outline stay. Null when the browser won't draw or read the pixels back (`readPixels`). */
 export const purpleize = (src: CanvasImageSource & { width: number; height: number }) => {
   const canvas = createCanvas(src.width, src.height)
   const ctx = context2d(canvas)
-  ctx.drawImage(src, 0, 0)
+  // A sheet a sweep let go of (a closed bitmap) throws instead of drawing: nothing to recolor.
+  if (!drawLoaded(() => ctx.drawImage(src, 0, 0))) return null
   const image = readPixels(ctx, 0, 0, canvas.width, canvas.height)
   if (!image) return null
   const a = image.data
@@ -1514,7 +1515,8 @@ const GOLD = ['#3a2408', '#6e4a10', '#a87418', '#d8a428', '#f4d050', '#fff2a8'].
 const goldize = (src: CanvasImageSource & { width: number; height: number }) => {
   const canvas = createCanvas(src.width, src.height)
   const ctx = context2d(canvas)
-  ctx.drawImage(src, 0, 0)
+  // A sheet a sweep let go of (a closed bitmap) throws instead of drawing: nothing to recolor.
+  if (!drawLoaded(() => ctx.drawImage(src, 0, 0))) return null
   const image = readPixels(ctx, 0, 0, canvas.width, canvas.height)
   if (!image) return null
   const a = image.data

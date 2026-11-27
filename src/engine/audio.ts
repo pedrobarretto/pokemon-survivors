@@ -920,19 +920,37 @@ export const playSfx = (name: Sfx, minGapMs = 40) => {
   SFX[name]()
 }
 
+/**
+ * Decoded cries kept at most: each is about 0.2 MB of PCM (a second of 32-bit samples at the
+ * context's rate), held outside the JS heap, and a session plays hundreds of species' cries
+ * (the Pokédex, the partner select, every boss, every evolution). The least recently played go.
+ */
+export const CRIES_KEPT = 24
+
 const cries = new Map<string, Promise<AudioBuffer | null>>()
 
-/** Decodes a cry once. `null` means this browser can't decode it in WebAudio (old Safari + .ogg) or has no WebAudio. */
+/** Decodes a cry once while it's among the `CRIES_KEPT` last played. `null` means this browser can't decode it in WebAudio (old Safari + .ogg) or has no WebAudio. */
 const loadCry = (url: string) => {
   let buffer = cries.get(url)
-  if (!buffer) {
+  if (buffer) cries.delete(url)
+  else {
     buffer = fetch(url)
       .then((r) => r.arrayBuffer())
       .then((data) => audio()?.ctx.decodeAudioData(data) ?? null)
       .catch(() => null)
-    cries.set(url, buffer)
   }
+  // Last in the map's order: the most recently played.
+  cries.set(url, buffer)
+  keepNewest(cries, CRIES_KEPT)
   return buffer
+}
+
+/** Drops a map's oldest entries (insertion order) past `max`. */
+export const keepNewest = <K, V>(map: Map<K, V>, max: number) => {
+  for (const key of map.keys()) {
+    if (map.size <= max) return
+    map.delete(key)
+  }
 }
 
 /**

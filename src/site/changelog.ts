@@ -24,6 +24,45 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-27',
+    title: { pt: 'Menos fechamentos no celular', en: 'Fewer closes on phones', es: 'Menos cierres en el celular', fr: 'Moins de fermetures sur mobile', zh: '手機上更少閃退' },
+    highlights: [
+      {
+        pt: 'O jogo usa bem menos memória numa partida longa: os sprites dos Pokémon que já saíram da tela são liberados de verdade, em vez de ficarem guardados pelo navegador. Era o que mais fazia o celular fechar o jogo no meio da partida.',
+        en: 'The game uses far less memory over a long run: the sprites of Pokémon gone from the screen are really let go, instead of the browser keeping them. That was what most often made phones close the game mid-run.',
+        es: 'El juego usa mucha menos memoria en una partida larga: los sprites de los Pokémon que ya salieron de la pantalla se liberan de verdad, en vez de quedar guardados por el navegador. Era lo que más hacía que el celular cerrara el juego en medio de la partida.',
+        fr: 'Le jeu utilise beaucoup moins de mémoire sur une longue partie : les sprites des Pokémon partis de l’écran sont vraiment libérés, au lieu d’être gardés par le navigateur. C’était la cause principale des fermetures du jeu en pleine partie sur mobile.',
+        zh: '長時間遊玩時記憶體用量大幅降低：已離開畫面的寶可夢圖像會真正釋放，不再被瀏覽器留著。這正是手機在對戰中途關掉遊戲最常見的原因。',
+      },
+      {
+        pt: 'Sair de uma fenda agora libera o chão e as transformações da arena dela (inundação, lava, buracos), que antes ficavam na memória até o fim da partida.',
+        en: 'Leaving a rift now frees its arena’s floor and transformations (floods, lava, crumbled holes), which used to stay in memory until the run ended.',
+        es: 'Salir de una grieta ahora libera el suelo y las transformaciones de su arena (inundación, lava, agujeros), que antes se quedaban en memoria hasta el final de la partida.',
+        fr: 'Quitter une faille libère maintenant le sol et les transformations de son arène (inondation, lave, trous), qui restaient en mémoire jusqu’à la fin de la partie.',
+        zh: '離開裂縫後，現在會釋放其競技場的地面與變化（淹水、熔岩、崩塌的洞），以前這些會一直留在記憶體裡直到對戰結束。',
+      },
+      {
+        pt: 'Os gritos dos Pokémon ficam guardados só os últimos 24 tocados, em vez de todos os que tocaram na sessão (Pokédex, escolha de parceiro, chefes).',
+        en: 'Pokémon cries keep only the last 24 played, instead of every one the session played (the Pokédex, the partner select, bosses).',
+        es: 'De los gritos de los Pokémon se guardan solo los últimos 24 que sonaron, en vez de todos los de la sesión (Pokédex, elección de compañero, jefes).',
+        fr: 'Seuls les 24 derniers cris de Pokémon joués restent en mémoire, au lieu de tous ceux de la session (Pokédex, choix du partenaire, boss).',
+        zh: '寶可夢叫聲只保留最近播放的 24 個，不再保留整段遊玩期間播過的全部（圖鑑、夥伴選擇、頭目）。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Desempenho', en: 'Performance', es: 'Rendimiento', fr: 'Performances', zh: '效能' },
+        notes: [
+          {
+            pt: 'Os sprites agora são decodificados uma vez, fora da tela principal, e soltos na hora em que a espécie sai da partida. Numa partida de 6 minutos no Chrome, a memória de imagens do navegador caiu de 83 MB para 6 MB.',
+            en: 'Sprites are now decoded once, off the main thread, and let go the moment their species leaves the run. In a 6-minute run on Chrome, the browser’s image memory dropped from 83 MB to 6 MB.',
+            es: 'Los sprites ahora se decodifican una vez, fuera del hilo principal, y se sueltan en cuanto su especie sale de la partida. En una partida de 6 minutos en Chrome, la memoria de imágenes del navegador bajó de 83 MB a 6 MB.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-11-24',
     title: { pt: 'Correções da comunidade', en: 'Community fixes', es: 'Arreglos de la comunidad', fr: 'Corrections de la communauté', zh: '社群回報修正' },
     highlights: [

@@ -202,13 +202,32 @@ const FRAME_BUDGET = 2
 
 /** A baked transform; a crumble over the open sky also keeps `sky`, a mask of where the floor is gone (the sky shows through it). */
 type Baked = { canvas: HTMLCanvasElement; x: number; y: number; sky?: HTMLCanvasElement }
-/** Baked transforms; dropped with every other canvas on a GPU reset. */
-let transforms = new WeakMap<ArenaTransform, Baked>()
+/**
+ * Baked transforms, keyed by the domains' own data: dropped with every other canvas on a GPU reset,
+ * and freed as the domain is left (`warmDomain`). Kept for the session, each rift fought in left
+ * its arena-sized floods, lava and crumbles behind for the rest of the run.
+ */
+const transforms = new Map<ArenaTransform, Baked>()
 onCanvasReset(
-  () => (transforms = new WeakMap()),
-  // Keyed by the domains' own data, so a domain's baked transforms stay once it's been fought in.
-  () => [...painters.values()].flatMap((p) => p.domain.phases.flatMap((phase) => (phase.arena ?? []).map((t) => transforms.get(t)))),
+  () => transforms.clear(),
+  () => transforms,
 )
+
+/** Frees canvases right away (sized to 0×0), without waiting for the garbage collector. */
+const freeCanvas = (c: HTMLCanvasElement | null | undefined) => {
+  if (c) c.width = c.height = 0
+}
+
+/** Frees the domain's baked floor and transforms: nothing draws them once it's left, and coming back bakes them again. */
+const dropDomainArt = () => {
+  for (const c of chunks.values()) freeCanvas(c)
+  chunks.clear()
+  for (const b of transforms.values()) {
+    freeCanvas(b.canvas)
+    freeCanvas(b.sky)
+  }
+  transforms.clear()
+}
 
 /** Bakes what a transform turns the arena into: flood water around its islands, lava around its cool spots, or the holes it crumbles. */
 const bakeTransform = (p: Painter, t: ArenaTransform): Baked => {
@@ -680,7 +699,7 @@ export const drawDomainFloor = (ctx: Ctx, arena: RiftArena, d: DomainState, camX
 /**
  * Bakes one missing piece of the domain in idle time, most needed first: the
  * chunks in view and a screen ahead (north), then the arena's, then its
- * transforms. With no domain on, drops the chunks. True if it baked one.
+ * transforms. With no domain on, frees the chunks and the transforms (`dropDomainArt`). True if it baked one.
  */
 export const warmDomain = (g: Game) => {
   const arena = g.rift.arena
@@ -688,7 +707,7 @@ export const warmDomain = (g: Game) => {
   const legend = arena?.domain?.legend ?? (outside && riftDomain(g, outside) ? outside : undefined)
   const p = legend ? painterOf(legend) : null
   if (!p) {
-    if (chunks.size > 0) chunks.clear()
+    if (chunks.size > 0 || transforms.size > 0) dropDomainArt()
     return false
   }
   const { w, h } = g.view
