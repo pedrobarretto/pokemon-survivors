@@ -2895,7 +2895,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
     }
     case 'tmMastered':
       playSfx('coin')
-      return aside(h('span', { class: 'item-toast' }, h('img', { src: moveIcon(e.move), alt: '' }), rich(t().tm.mastered(MOVES[e.move].name, formatPokeDollars(e.coins)))), 3000)
+      return aside(h('span', { class: 'item-toast' }, h('img', { src: moveIcon(e.move), alt: '' }), rich(t().tm[e.why === 'legendary' ? 'legendarySpent' : 'mastered'](MOVES[e.move].name, formatPokeDollars(e.coins)))), 3000)
     case 'banish':
       // The level-up screen plays the toss itself.
       return

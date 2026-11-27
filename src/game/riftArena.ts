@@ -17,7 +17,7 @@ import { footOf, groundAt, lootSpot, playerTypes } from './terrain'
 import { updateDomain } from './domain'
 import { centerScreen, eachPlayer, placeTeam } from './players'
 import { dropForEach } from './coop'
-import type { Game } from './types'
+import type { Enemy, Game } from './types'
 import * as dm from '../engine/dmath'
 
 /**
@@ -117,8 +117,13 @@ export const updateArenaFall = (g: Game, dt: number) => {
   return true
 }
 
-/** The legendary fell: drop the rift's loot near (x, y), on floor the team can walk to (`lootSpot`), heal the team and start the short loot window. */
-export const riftWin = (g: Game, arena: RiftArena, fellX: number, fellY: number) => {
+/**
+ * The legendary fell: drop the rift's loot near (x, y), on floor the team can
+ * walk to (`lootSpot`), heal the team and start the short loot window. `mate`
+ * is the partner that fought beside it (Latios in Latias's domain), whose
+ * legendary TM drops too; the old arena's fight has none.
+ */
+export const riftWin = (g: Game, arena: RiftArena, fellX: number, fellY: number, mate: Enemy['kind'] | null = null) => {
   // A legendary swims or flies over its domain's holes (Lugia's whirlpool, Groudon's lava lake): its Mega Stones must not.
   const { x, y } = lootSpot(g, fellX, fellY)
   const loot = riftLoot(g.time, arena.shiny)
@@ -139,8 +144,12 @@ export const riftWin = (g: Game, arena: RiftArena, fellX: number, fellY: number)
     if (owner !== undefined) for (let i = from; i < g.pickups.length; i++) g.pickups[i]!.owner = owner
   }
   g.player = before
-  // So does its legendary TM, until everyone has learned one.
-  dropForEach(g, () => dropLegendaryTm(g, arena.legend, x + 14, y - 6))
+  // So does its legendary TM, until everyone has learned one; a pair (Latias and Latios) leaves each one's, to choose from.
+  dropForEach(g, () => {
+    dropLegendaryTm(g, arena.legend, x + 14, y - 6)
+    if (mate) dropLegendaryTm(g, mate, x + 26, y - 6)
+  })
+  const pair = partnerOf(arena.legend)
   for (const p of g.players) {
     g.player = p
     const heal = dm.round(healPlayer(g, p.stats.maxHp * loot.heal))
@@ -150,9 +159,8 @@ export const riftWin = (g: Game, arena: RiftArena, fellX: number, fellY: number)
   g.hazards.length = 0
   arena.loot = RIFT.lootTime
   // A pair (Latias and Latios) is one rift: one toast, both beaten.
-  const partner = partnerOf(arena.legend)
   g.rift.cleared.push(arena.legend)
-  if (partner && isRiftLegend(partner)) g.rift.cleared.push(partner)
+  if (pair && isRiftLegend(pair)) g.rift.cleared.push(pair)
   g.events.push({ kind: 'riftCleared', enemy: arena.legend, shiny: arena.shiny })
 }
 

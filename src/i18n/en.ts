@@ -2598,6 +2598,7 @@ export const en: Messages = {
     learnedInstead: (old: string, move: string) => `Forgot _${old}_ and learned *${move}*!`,
     raised: (move: string, level: number) => `*${move}* rose to Lv ${level}!`,
     mastered: (move: string, coins: string) => `${move} is already maxed: the TM became *${coins}*.`,
+    legendarySpent: (move: string, coins: string) => `Only one legendary TM per run: the ${move} TM became *${coins}*.`,
     hintKeys: '↑ ↓ choose · ENTER confirm',
     hintTouch: 'Tap to choose',
   },

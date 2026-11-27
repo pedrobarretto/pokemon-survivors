@@ -2596,6 +2596,7 @@ export const fr: Messages = {
     learnedInstead: (old: string, move: string) => `_${old}_ oublié, *${move}* appris !`,
     raised: (move: string, level: number) => `*${move}* passe au Nv ${level} !`,
     mastered: (move: string, coins: string) => `${move} est déjà au max : la CT est devenue *${coins}*.`,
+    legendarySpent: (move: string, coins: string) => `Une seule CT légendaire par partie : la CT ${move} est devenue *${coins}*.`,
     hintKeys: '↑ ↓ choisir · ENTRÉE valider',
     hintTouch: 'Touche pour choisir',
   },

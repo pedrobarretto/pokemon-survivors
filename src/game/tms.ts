@@ -84,14 +84,19 @@ export const openTm = (g: Game, ids: readonly MoveId[], source: TmSource, price 
   return true
 }
 
-/** A TM disc touched: its choice opens, or a mastered move's disc turns into ₽. */
+/**
+ * A TM disc touched: its choice opens, or a mastered move's disc turns into ₽.
+ * So does a legendary disc once a legendary TM was learned (a pair's second
+ * disc, Latias's or Latios's): one legendary TM a run.
+ */
 export const collectTm = (g: Game, pickup: Extract<Pickup, { kind: 'tm' }>) => {
-  if (openTm(g, [pickup.move], pickup.source)) return
   const p = g.player
+  const spent = pickup.source === 'legendary' && p.tm.legendary
+  if (!spent && openTm(g, [pickup.move], pickup.source)) return
   const coins = dm.round(TM_REFUND * p.stats.greed)
   g.coins += coins
   floatText(g, p.x, p.y - 30, `₽${coins}`, '#f8d030')
-  g.events.push({ kind: 'tmMastered', move: pickup.move, coins })
+  g.events.push({ kind: 'tmMastered', move: pickup.move, coins, why: spent ? 'legendary' : 'mastered' })
 }
 
 /**
