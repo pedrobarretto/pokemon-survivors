@@ -11,6 +11,8 @@ import { movesOnItsOwn } from './enemies'
 import { inDoorway } from './rift'
 import { atCaveChest } from './cave'
 import { inStandRing } from './mapEvents'
+import { atTreasure } from './landmarks'
+import { atRaidDen } from './teraRaid'
 import { dropPatch, spawnAttack } from './spawn'
 import { typeEvolvedTrail } from './typeEvolutions'
 import { ownerOf } from './players'
@@ -23,10 +25,12 @@ const cells: Bucket[] = []
 /**
  * Whether a move carrying the player (a lunge, Rollout) holds them where they
  * stand: in a portal or a place's door filling (`inDoorway`), at a shut chest
- * or in the Move Tutor's tent, so it never hops them off a spot that fills by
- * standing. Co-op's prediction ghost asks it too (`coop/predict.ts`).
+ * (a map event's, the cave's, a landmark's: a cottage, a camp), in the Move
+ * Tutor's tent or in a Tera Raid den's mouth, so it never hops them off a spot
+ * that fills by standing. Co-op's prediction ghost asks it too (`coop/predict.ts`).
  */
-export const holdsCarry = (g: Game, p: Pick<Player, 'x' | 'y' | 'radius'>) => inDoorway(g, p) || inStandRing(g, p) || atCaveChest(g, p)
+export const holdsCarry = (g: Game, p: Pick<Player, 'x' | 'y' | 'radius'>) =>
+  inDoorway(g, p) || inStandRing(g, p) || atCaveChest(g, p) || atTreasure(g, p) || atRaidDen(g, p)
 
 const move = (g: Game, a: Attack, m: Motion, dt: number) => {
   const p = g.player

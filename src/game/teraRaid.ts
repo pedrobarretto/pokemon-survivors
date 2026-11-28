@@ -20,7 +20,7 @@ import { spawnHazard } from './bosses'
 import { harmBy } from './harm'
 import type { HazardVisual } from '../data/bosses'
 import { dropForEach } from './coop'
-import type { Enemy, Game } from './types'
+import type { Enemy, Game, Player } from './types'
 import * as dm from '../engine/dmath'
 import { maskOf, OGERPON, OGERPON_MASKS } from '../data/mythicals'
 import { playsLegend } from './legend'
@@ -219,6 +219,16 @@ export const openDen = (g: Game, raid?: RaidPick, at?: { x: number; y: number })
   s.nextAt = g.endless ? g.time + RAID.every : slotAt(s.slot, s.seed)
   g.events.push({ kind: 'raidOpen', raid: held, day })
   return s.den
+}
+
+/**
+ * Whether `p` stands in an open den's mouth, where standing steps the team in:
+ * a lunge stops there (`holdsCarry` in `attacks.ts`), like at a doorway, so a
+ * move that keeps carrying the player can't hop them out every time.
+ */
+export const atRaidDen = (g: Pick<Game, 'raid'>, p: Pick<Player, 'x' | 'y'>) => {
+  const den = g.raid.den
+  return den !== null && dm.sq(p.x - den.x) + dm.sq(p.y - den.y) < dm.sq(RAID.door)
 }
 
 /** Opens dens on schedule, ticks the open one and steps the team in once a player stands in its mouth long enough. */

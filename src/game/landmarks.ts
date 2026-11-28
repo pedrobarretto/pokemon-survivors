@@ -79,6 +79,23 @@ export const treasureOpen = (g: Game, cell: number) => coopLocked(g, 'landmarks'
 
 const isTreasure = (lm: Landmark): lm is Landmark & { id: TreasureLandmark } => lm.id in LANDMARK_LOOT
 
+/**
+ * Whether `p` stands where a landmark's treasure (a cottage's chest, a camp's
+ * crate, the maze's or the ruins') fills, still shut: a lunge stops there
+ * (`holdsCarry` in `attacks.ts`), like at a doorway, so a move that keeps
+ * carrying the player (Aqua Step's dance) can't hop them off it every time.
+ */
+export const atTreasure = (g: Game, p: Pick<Player, 'x' | 'y' | 'radius'>) => {
+  if (coopLocked(g, 'landmarks') || roomOf(g)) return false
+  const near = LANDMARK.treasureRadius + p.radius * 0.5
+  for (const f of featuresNear(g, p.x, p.y, LANDMARK.spotRadius)) {
+    const lm = f.landmark
+    const chest = lm?.treasure
+    if (lm && chest && isTreasure(lm) && !g.landmarks.looted.has(lm.cell) && dm.sq(chest.x - p.x) + dm.sq(chest.y - p.y) < near * near) return true
+  }
+  return false
+}
+
 /** Names the landmarks the acting player comes close to, opens the treasure they stand at and steps them into a tunnel's mouth. Scenery only in co-op (`COOP_LOCKS`). */
 export const updateLandmarks = (g: Game, dt: number) => {
   if (coopLocked(g, 'landmarks')) return
