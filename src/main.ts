@@ -1719,6 +1719,9 @@ const loadRunSheets = async (families: readonly Variant[], opening: readonly Dex
   launchStep('sheets')
   // The lobby's own art (the plaza, the Estádio, the Dojo, the logo) goes too: back there, it's drawn again.
   dropLobbyArt()
+  // And the code-drawn art the menus asked for (move icons, the partner grid's): the run draws its own,
+  // instead of holding the menus' for the first two minutes (`ART_IDLE`) on top of it.
+  sweepArt(0)
   try {
     const sheets = [...families, ...opening.map((dex) => ({ dex, shiny: false }))]
     await releaseSprites({ species: new Set(sheets.map((v) => v.dex)), variants: new Set(families.flatMap((v) => (v.shiny ? [v.dex] : []))) })

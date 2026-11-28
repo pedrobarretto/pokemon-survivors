@@ -92,6 +92,9 @@ const pieces = canvasCache<string, ArtPiece>()
 /** Rows at the bottom of the art that make its foot, the part that meets the ground. */
 const FOOT_ROWS = 6
 
+/** The painted pieces' pages, 256 px: a biome has only a few pictures, which would leave most of a terrain-sized page (`keepPacked`'s) empty. */
+const SCENERY_PAGE = 256
+
 /**
  * Finds a picture's foot, on its canvas copy: the span its lowest rows cover.
  * The anchor is the foot's middle on the bottom row, so a lopsided tree stands
@@ -113,7 +116,7 @@ const toPiece = (sprite: HTMLCanvasElement, group: string): ArtPiece => {
     }
   }
   if (x1 < 0) [x0, x1] = [0, w - 1]
-  return { packed: keepPacked(group, sprite), ax: Math.round((x0 + x1) / 2), ay: h - 2, foot: Math.max(3, Math.round((x1 - x0) / 2)) }
+  return { packed: keepPacked(group, sprite, SCENERY_PAGE), ax: Math.round((x0 + x1) / 2), ay: h - 2, foot: Math.max(3, Math.round((x1 - x0) / 2)) }
 }
 
 const BIOME_IDS = Object.keys(BIOMES) as BiomeId[]

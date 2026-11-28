@@ -24,6 +24,45 @@ export type ChangelogUpdate = {
  */
 export const CHANGELOG: readonly ChangelogUpdate[] = [
   {
+    date: '2026-11-28',
+    title: { pt: 'Lutas contra chefes mais leves no celular', en: 'Lighter boss fights on phones', es: 'Peleas contra jefes más livianas en el celular', fr: 'Combats de boss plus légers sur mobile', zh: '手機上的頭目戰更輕快' },
+    highlights: [
+      {
+        pt: 'O jogo guarda bem menos camadas de desenho nas ondas de chefe, nas raids e nas fendas: os avisos e ondas de choque dos ataques têm um limite e são soltos quando a luta acaba. Era o que ainda fazia o celular fechar o jogo depois de 12 a 29 minutos de partida.',
+        en: 'The game keeps far fewer drawing layers during boss waves, raids and rifts: attack warnings and shockwaves have a limit and are let go when the fight ends. That was what still made phones close the game 12 to 29 minutes into a run.',
+        es: 'El juego guarda muchas menos capas de dibujo en las oleadas de jefe, las incursiones y las grietas: los avisos y ondas de choque de los ataques tienen un límite y se sueltan cuando termina la pelea. Era lo que todavía hacía que el celular cerrara el juego tras 12 a 29 minutos de partida.',
+        fr: 'Le jeu garde beaucoup moins de calques de dessin pendant les vagues de boss, les raids et les failles : les avertissements et ondes de choc des attaques ont une limite et sont libérés à la fin du combat. C’était ce qui faisait encore fermer le jeu sur mobile après 12 à 29 minutes de partie.',
+        zh: '頭目波、團體戰與裂縫中保留的繪圖圖層大幅減少：攻擊的預警與衝擊波有上限，戰鬥結束時就會釋放。這正是手機在遊玩 12 到 29 分鐘後仍會關掉遊戲的原因。',
+      },
+      {
+        pt: 'Quando um chefe cai, uma raid termina ou você sai de uma fenda, o jogo solta o que só aquela luta desenhava, como o chão da raid e o arco-íris do Ho-Oh, em vez de guardar tudo até o fim da partida.',
+        en: 'When a boss falls, a raid ends or you leave a rift, the game lets go of what only that fight drew, such as the raid’s floor and Ho-Oh’s rainbow, instead of keeping it all until the run ends.',
+        es: 'Cuando cae un jefe, termina una incursión o sales de una grieta, el juego suelta lo que solo esa pelea dibujaba, como el suelo de la incursión y el arcoíris de Ho-Oh, en vez de guardarlo todo hasta el final de la partida.',
+        fr: 'Quand un boss tombe, qu’un raid se termine ou que vous quittez une faille, le jeu libère ce que seul ce combat dessinait, comme le sol du raid et l’arc-en-ciel de Ho-Oh, au lieu de tout garder jusqu’à la fin de la partie.',
+        zh: '頭目倒下、團體戰結束或離開裂縫時，遊戲會釋放只有那場戰鬥才畫的東西，例如團體戰的地面與鳳王的彩虹，不再全部留到對戰結束。',
+      },
+      {
+        pt: 'O terreno, o minimapa e a grama alta agora ficam em poucas folhas de desenho em vez de centenas de pedacinhos. Numa partida de 25 minutos no iPhone, as camadas guardadas caíram de cerca de 380 para cerca de 150.',
+        en: 'The terrain, the minimap and the tall grass now sit on a few drawing sheets instead of hundreds of little pieces. In a 25-minute run on an iPhone, the layers kept dropped from about 380 to about 150.',
+        es: 'El terreno, el minimapa y la hierba alta ahora están en pocas hojas de dibujo en vez de cientos de pedacitos. En una partida de 25 minutos en un iPhone, las capas guardadas bajaron de unas 380 a unas 150.',
+        fr: 'Le terrain, la mini-carte et les hautes herbes tiennent maintenant sur quelques feuilles de dessin au lieu de centaines de petits morceaux. Sur une partie de 25 minutes sur iPhone, les calques gardés sont passés d’environ 380 à environ 150.',
+        zh: '地形、小地圖與高草現在只放在少數幾張繪圖頁上，不再是數百個小碎片。在 iPhone 上玩 25 分鐘，保留的圖層從約 380 個降到約 150 個。',
+      },
+    ],
+    changes: [
+      {
+        title: { pt: 'Desempenho', en: 'Performance', es: 'Rendimiento', fr: 'Performances', zh: '效能' },
+        notes: [
+          {
+            pt: 'Os raios, as ondas de Surf, as trilhas no chão, as coroas e os cristais Tera guardam só os tamanhos e tipos usados por último, em vez de um de cada que a partida já desenhou.',
+            en: 'Beams, Surf waves, trails on the ground, Tera crowns and shards keep only the sizes and types drawn last, instead of one of each the run ever drew.',
+            es: 'Los rayos, las olas de Surf, los rastros en el suelo, las coronas y los cristales Tera guardan solo los tamaños y tipos usados por último, en vez de uno de cada que la partida ya dibujó.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     date: '2026-11-27',
     title: { pt: 'Menos fechamentos no celular', en: 'Fewer closes on phones', es: 'Menos cierres en el celular', fr: 'Moins de fermetures sur mobile', zh: '手機上更少閃退' },
     highlights: [

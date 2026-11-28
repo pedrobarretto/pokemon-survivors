@@ -1,5 +1,5 @@
 import { TERA_TYPES, type TeraType } from '../data/tera'
-import { canvasCache, context2d, createCanvas, fromStrings, readPixels, type PixelSprite } from '../engine/pixelart'
+import { canvasCache, context2d, createCanvas, fromStrings, readPixels, remember, type PixelSprite } from '../engine/pixelart'
 import { outlined, toIconUrl } from './art'
 import { CROWNS, SMALL_CROWNS, type CrownSize } from './teraCrowns'
 import { placeFrame, type AnimName, type FramePlace, type Sheet, type SpeciesSprites } from './sprites'
@@ -50,6 +50,8 @@ export const STELLAR = ['#f85858', '#f8a838', '#f8e858', '#58e898', '#58a8f8', '
 export type CrownArt = { sprite: PixelSprite; shine: HTMLCanvasElement; tipX: number; tipY: number }
 
 const crowns = canvasCache<`${TeraType}:${CrownSize}`, CrownArt>()
+/** Crowns kept (`remember`), two canvases each: enough for the player's, a raid giant's and a boss's shards, of the 19 types. */
+const CROWNS_KEPT = 4
 
 /** The crown's tones (`teraCrowns.ts`): the ramp, a white glint, a deep crevice, the accent and Stellar's seven crystals. */
 const crownColors = (type: TeraType) => {
@@ -61,10 +63,8 @@ const crownColors = (type: TeraType) => {
 }
 
 /** A type's crown (its full size, or the small one for a small head) and its white stamp. */
-export const crownArt = (type: TeraType, size: CrownSize = 'full'): CrownArt => {
-  const key = `${type}:${size}` as const
-  let art = crowns.get(key)
-  if (!art) {
+export const crownArt = (type: TeraType, size: CrownSize = 'full'): CrownArt =>
+  remember(crowns, `${type}:${size}`, CROWNS_KEPT, () => {
     const rows = (size === 'small' ? SMALL_CROWNS : CROWNS)[type]
     const sprite = outlined(fromStrings(rows, crownColors(type)), TERA_RAMPS[type].o)
     const shine = createCanvas(sprite.width, sprite.height)
@@ -76,10 +76,8 @@ export const crownArt = (type: TeraType, size: CrownSize = 'full'): CrownArt => 
     // Its tallest point, where a twinkle catches (the outline shifts it a pixel).
     const top = rows.findIndex((r) => /[^.]/.test(r))
     const cols = [...rows[top]!].flatMap((c, i) => (c === '.' ? [] : [i]))
-    crowns.set(key, (art = { sprite, shine, tipX: cols[cols.length >> 1]! + 1, tipY: top + 1 }))
-  }
-  return art
-}
+    return { sprite, shine, tipX: cols[cols.length >> 1]! + 1, tipY: top + 1 }
+  })
 
 /** A type's crown as a sprite. */
 export const crownSprite = (type: TeraType, size: CrownSize = 'full'): PixelSprite => crownArt(type, size).sprite

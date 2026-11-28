@@ -1,4 +1,4 @@
-import { blitCentered, blitPacked, blitEllipse, blitRotated, canvasCache, fromStrings, lazy, textSprite, type PixelSprite } from '../engine/pixelart'
+import { blitCentered, blitPacked, blitEllipse, blitRotated, canvasCache, fromStrings, lazy, remember, textSprite, type PixelSprite } from '../engine/pixelart'
 import { hash2 } from '../engine/rng'
 import { ENEMIES } from '../data/enemies'
 import { ALPHA } from '../game/alphas'
@@ -23,15 +23,13 @@ const blink = (time: number, k: number) => Math.floor(time * (6 + k * 18)) % 2 =
 
 /** A charge lane's cross-section, `w` px wide: solid edges, a see-through fill. Stretched along the line. */
 const lane = canvasCache<string, PixelSprite>()
-const laneOf = (w: number, edge: string) => {
-  const key = `${w}|${edge}`
-  const hit = lane.get(key)
-  if (hit) return hit
-  const rows = Array.from({ length: w }, (_, i) => (i === 0 || i === w - 1 ? '1' : '2'))
-  const sprite = fromStrings(rows, { 1: edge, 2: 'rgba(248,56,56,0.22)' })
-  lane.set(key, sprite)
-  return sprite
-}
+/** Lanes kept (`remember`): one per width and blink color a charge lane is drawn at. */
+const LANES_KEPT = 4
+const laneOf = (w: number, edge: string) =>
+  remember(lane, `${w}|${edge}`, LANES_KEPT, () => {
+    const rows = Array.from({ length: w }, (_, i) => (i === 0 || i === w - 1 ? '1' : '2'))
+    return fromStrings(rows, { 1: edge, 2: 'rgba(248,56,56,0.22)' })
+  })
 
 const stripe = (ctx: Ctx, sprite: PixelSprite, x: number, y: number, angle: number, length: number) => {
   ctx.save()

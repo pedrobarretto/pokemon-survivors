@@ -1,4 +1,4 @@
-import { beginRects, blitCentered, blitEllipse, blitRotated, canvasCache, context2d, createCanvas, fromStrings, lazy, type PixelSprite } from '../engine/pixelart'
+import { beginRects, blitCentered, blitEllipse, blitRotated, canvasCache, context2d, createCanvas, fromStrings, lazy, remember, type PixelSprite } from '../engine/pixelart'
 import { TAU } from '../engine/math'
 import { TYPE_COLORS, type PokeType } from '../data/types'
 import { gameSpecial, SPECIALS, specialOfType, specialReach, type SpecialId } from '../game/special'
@@ -36,12 +36,11 @@ const pixelRing = (ctx: Ctx, x: number, y: number, r: number, thickness: number,
 }
 
 const slabCache = canvasCache<string, PixelSprite>()
+/** Water beam slices kept (`remember`): the beam swells and thins through every width. */
+const SLABS_KEPT = 32
 
 /** One slice of the water beam: blue edges, white core, with flowing streaks (2 frames). */
-const beamSlab = (width: number, frame: number) => {
-  const key = `${width}|${frame}`
-  const cached = slabCache.get(key)
-  if (cached) return cached
+const beamSlab = (width: number, frame: number) => remember(slabCache, `${width}|${frame}`, SLABS_KEPT, () => {
   const len = 11
   const canvas = createCanvas(len, width)
   const ctx = context2d(canvas)
@@ -54,9 +53,8 @@ const beamSlab = (width: number, frame: number) => {
       ctx.fillRect(x, y, 1, 1)
     }
   }
-  slabCache.set(key, canvas)
   return canvas
-}
+})
 
 const radius = (a: Attack) => (a.shape.kind === 'circle' ? a.shape.r : 0)
 

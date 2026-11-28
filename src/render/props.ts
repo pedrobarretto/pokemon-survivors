@@ -1,4 +1,4 @@
-import { blitCentered, blitEllipse, blitRing, canvasCache, fromStrings, type Palette, type PixelSprite } from '../engine/pixelart'
+import { blitCentered, blitEllipse, blitRing, canvasCache, drawPacked, fromStrings, lazySheet, remember, type Palette, type PixelSprite, type Sheeted } from '../engine/pixelart'
 import type { BiomeId } from '../data/biomes'
 import { biomeOf } from '../game/biomeMap'
 import { REPEL_RADIUS } from '../data/consumables'
@@ -52,11 +52,10 @@ const CONSUMABLE_ART: Record<ConsumableId, readonly [readonly string[], Palette]
 
 const consumableSprites = canvasCache<ConsumableId, PixelSprite>()
 
-export const consumableSprite = (id: ConsumableId) => {
-  let sprite = consumableSprites.get(id)
-  if (!sprite) consumableSprites.set(id, (sprite = art(...CONSUMABLE_ART[id], '#181818')))
-  return sprite
-}
+/** Consumables kept (`remember`): the few kinds lying about at once, not every one a run dropped. */
+const CONSUMABLES_KEPT = 4
+
+export const consumableSprite = (id: ConsumableId) => remember(consumableSprites, id, CONSUMABLES_KEPT, () => art(...CONSUMABLE_ART[id], '#181818'))
 
 export const consumableIcon = (id: ConsumableId) => itemArt(id)
 
@@ -97,8 +96,8 @@ const grass = (pal: Palette, outline: string) => [art(GRASS_REST, pal, outline),
 const tree = (leaves: string, mid: string, light: string, outline: string, trunk = '#604020', bark = '#a06838') =>
   art(BERRY_TREE, { 1: leaves, 2: mid, 3: light, 4: '#3870d8', 5: trunk, 6: bark }, outline)
 
-/** Berry trees and tall grass dressed for each biome (item balls look the same everywhere). */
-const PROP_SKINS = lazy((): Record<BiomeId, PropSkin> => ({
+/** Berry trees and tall grass dressed for each biome (item balls look the same everywhere), on a sheet of their own (`lazySheet`). */
+const PROP_SKINS = lazySheet((): Record<BiomeId, PropSkin> => ({
   meadow: { berryTree: tree('#205828', '#48a038', '#88d058', '#142c14'), grass: grass({ 1: '#2a6e34', 2: '#4f9e48', 3: '#78c060' }, '#1a4420') },
   forest: { berryTree: tree('#163c1c', '#2f7a30', '#58a040', '#0c200e'), grass: grass({ 1: '#1c4c24', 2: '#3a7a38', 3: '#5aa048' }, '#0e2a12') },
   cave: {
@@ -137,7 +136,7 @@ const ITEM_BALL_ART = lazy(() =>
 
 const SPARKLE = lazy(() => fromStrings(['.1.', '121', '.1.'], { 1: '#fff8c0', 2: '#ffffff' }))
 
-const drawProp = (ctx: Ctx, prop: Prop, t: number, skin: PropSkin) => {
+const drawProp = (ctx: Ctx, prop: Prop, t: number, skin: Sheeted<PropSkin>) => {
   const wobble = prop.shake > 0 ? (Math.floor(prop.shake * 40) % 2 ? 1 : -1) : 0
   const x = prop.x + wobble
   switch (prop.kind) {
@@ -150,13 +149,13 @@ const drawProp = (ctx: Ctx, prop: Prop, t: number, skin: PropSkin) => {
     case 'berryTree': {
       blitEllipse(ctx, 7, 2, 'rgba(16,40,16,0.3)', prop.x, prop.y)
       const s = skin.berryTree
-      return ctx.drawImage(s, Math.round(x - s.width / 2), Math.round(prop.y - s.height + 1))
+      return drawPacked(ctx, s, Math.round(x - s.w / 2), Math.round(prop.y - s.h + 1))
     }
     case 'tallGrass': {
       // Rustles in short bursts, like grass hiding a wild Pokémon.
       const rustling = prop.shake > 0 || (t + prop.id * 0.37) % 2.2 < 0.5
       const s = skin.grass[rustling && Math.floor(t * 10) % 2 ? 1 : 0]
-      return ctx.drawImage(s, Math.round(x - s.width / 2), Math.round(prop.y - s.height + 1))
+      return drawPacked(ctx, s, Math.round(x - s.w / 2), Math.round(prop.y - s.h + 1))
     }
     case 'pumpkin':
       return drawJack(ctx, x, prop.y, prop.id, t)

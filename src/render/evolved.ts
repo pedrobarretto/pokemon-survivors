@@ -1,5 +1,5 @@
 import { TAU } from '../engine/math'
-import { blitCentered, blitEllipse, blitPacked, blitRing, blitRotated, canvasCache, context2d, createCanvas, ellipse, type PixelSprite } from '../engine/pixelart'
+import { blitCentered, blitEllipse, blitPacked, blitRing, blitRotated, canvasCache, context2d, createCanvas, ellipse, remember, type PixelSprite } from '../engine/pixelart'
 import { hash2 } from '../engine/rng'
 import { flying } from '../game/attacks'
 import { BEAM_STEP, ICICLE_FALL, LASH_TIME, LOB, lobPoint, WAVE_BOW, WAVE_WIDTH } from '../game/evolvedMoves'
@@ -88,12 +88,11 @@ const BEAMS = {
 type BeamVisual = keyof typeof BEAMS
 
 const slabCache = canvasCache<string, PixelSprite>()
+/** Beam slices kept (`remember`): a beam swells, wobbles and thins through every width, and area boosts widen it further. */
+const SLABS_KEPT = 48
 
 /** One slice of a beam, `BEAM_STEP` + 3 px long: dark edges, a white core and streaks that flow (2 frames). */
-const beamSlab = (visual: BeamVisual, width: number, frame: number) => {
-  const key = `${visual}|${width}|${frame}`
-  const cached = slabCache.get(key)
-  if (cached) return cached
+const beamSlab = (visual: BeamVisual, width: number, frame: number) => remember(slabCache, `${visual}|${width}|${frame}`, SLABS_KEPT, () => {
   const [edge, mid, light, core] = BEAMS[visual]
   const len = BEAM_STEP + 3
   const canvas = createCanvas(len, width)
@@ -107,9 +106,8 @@ const beamSlab = (visual: BeamVisual, width: number, frame: number) => {
       ctx.fillRect(x, y, 1, 1)
     }
   }
-  slabCache.set(key, canvas)
   return canvas
-}
+})
 
 /** A lit beam segment (it swells in, wobbles, and thins out), or the beam's far-end flash. */
 const drawBeam = (ctx: Ctx, a: Attack, t: number, visual: BeamVisual) => {
@@ -167,6 +165,8 @@ const drawPrism = (ctx: Ctx, a: Attack, t: number) => {
 /* ---------------- Waves ---------------- */
 
 const waveCache = canvasCache<string, PixelSprite>()
+/** Surf waves kept (`remember`): one per width the area boosts give it, two frames each. */
+const WAVES_KEPT = 8
 
 /** Rows of a wave behind its crest, front to back (`null` lets the ground through). */
 const WAVE_BODY = ['#a8d8f8', '#a8d8f8', '#68a0f0', '#4878e8', '#4878e8', '#4878e8', '#4878e8', '#2848b0', '#2848b0', '#2848b0', '#2848b0', 'rgba(40,72,176,0.6)', null, 'rgba(40,72,176,0.45)', null, 'rgba(40,72,176,0.3)'] as const
@@ -177,10 +177,7 @@ const WAVE_BODY = ['#a8d8f8', '#a8d8f8', '#68a0f0', '#4878e8', '#4878e8', '#4878
  * the blue body trails behind it and thins into the ground. The ends break
  * lower, in more foam.
  */
-const waveSprite = (width: number, bow: number, frame: number) => {
-  const key = `${width}|${bow}|${frame}`
-  const cached = waveCache.get(key)
-  if (cached) return cached
+const waveSprite = (width: number, bow: number, frame: number) => remember(waveCache, `${width}|${bow}|${frame}`, WAVES_KEPT, () => {
   const depth = WAVE_BODY.length + 5 + bow
   const canvas = createCanvas(depth, width)
   const ctx = context2d(canvas)
@@ -204,9 +201,8 @@ const waveSprite = (width: number, bow: number, frame: number) => {
       ctx.fillRect(Math.min(depth - 1, front + 1), y, 1, 1)
     }
   }
-  waveCache.set(key, canvas)
   return canvas
-}
+})
 
 /** Surf: the middle segment paints the whole wave, its crest's middle where the segment is. */
 const drawSurf = (ctx: Ctx, a: Attack, t: number) => {

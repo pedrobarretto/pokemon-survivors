@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { artImages, canvasCache, canvasLosses, canvasRestored, canvasWatch, drawThrew, fillPlotted, heldCanvases, lazy, onCanvasReset, plot, resetCanvases, sweepArt, weighCanvases, type Probe, type RectSink } from './pixelart'
+import { artImages, canvasCache, canvasLosses, canvasRestored, canvasWatch, drawThrew, dropFightArt, fillPlotted, heldCanvases, lazy, lazySheet, onCanvasReset, plot, remember, resetCanvases, sweepArt, trimCanvases, weighCanvases, type Probe, type RectSink } from './pixelart'
 
 describe('resetCanvases', () => {
   it('drops cached art so it is drawn again after a GPU reset', () => {
@@ -113,6 +113,82 @@ describe('weighCanvases', () => {
     loop.self = loop
     const image = { width: 64, height: 64, naturalWidth: 64 }
     expect(weighCanvases([loop, canvas(0, 0), image, null, 3])).toEqual({ canvases: 1, bytes: 16 })
+  })
+})
+
+describe('remember', () => {
+  it('keeps at most `max` values, the least recently asked for going first, freed', () => {
+    const cache = new Map<number, ReturnType<typeof canvas>>()
+    let made = 0
+    const get = (w: number) => remember(cache, w, 3, () => (made++, canvas(w, 2)))
+    const first = get(1)
+    get(2)
+    get(3)
+    // A hit makes no canvas and counts as asked for now.
+    expect(get(1)).toBe(first)
+    expect(made).toBe(3)
+    const second = cache.get(2)!
+    get(4)
+    expect([...cache.keys()]).toEqual([3, 1, 4])
+    expect(second).toMatchObject({ width: 0, height: 0 })
+    expect(first.width).toBe(1)
+  })
+
+  it('caches a null as a value (nothing to draw there)', () => {
+    const cache = new Map<string, null>()
+    let made = 0
+    remember(cache, 'empty', 2, () => (made++, null))
+    remember(cache, 'empty', 2, () => (made++, null))
+    expect(made).toBe(1)
+  })
+})
+
+describe('trimCanvases', () => {
+  it('lets go of the oldest canvases past a count or a pixel budget, freeing them', () => {
+    const cache = new Map([
+      ['a', canvas(4, 4)],
+      ['b', canvas(4, 4)],
+      ['c', canvas(2, 2)],
+    ])
+    const a = cache.get('a')!
+    // 36 px held: within 64 px but past 2 canvases.
+    expect(trimCanvases(cache, 36, 64, 2)).toBe(20)
+    expect([...cache.keys()]).toEqual(['b', 'c'])
+    expect(a.width).toBe(0)
+    // Past the pixels: the oldest goes until it fits.
+    expect(trimCanvases(cache, 20, 8, 10)).toBe(4)
+    expect([...cache.keys()]).toEqual(['c'])
+  })
+})
+
+describe('dropFightArt', () => {
+  it("drops the fights' caches and keeps the others", () => {
+    const fight = canvasCache<string, number>('fight')
+    const shared = canvasCache<string, number>()
+    let builds = 0
+    const art = lazy(() => ++builds, 'fight')
+    fight.set('floor', 1)
+    shared.set('chunk', 1)
+    art()
+
+    dropFightArt()
+
+    expect(fight.size).toBe(0)
+    expect(shared.size).toBe(1)
+    expect(art()).toBe(2)
+  })
+})
+
+describe('lazySheet', () => {
+  it('builds once, keeps the shape of what it built, and lets go of it as lazy art does', () => {
+    let builds = 0
+    const sheet = lazySheet(() => ({ n: ++builds, rows: [1, 2] }))
+    expect(sheet()).toEqual({ n: 1, rows: [1, 2] })
+    expect(sheet()).toBe(sheet())
+    for (let i = 0; i < 3; i++) sweepArt(2)
+    expect(sheet().n).toBe(2)
+    resetCanvases()
+    expect(sheet().n).toBe(3)
   })
 })
 

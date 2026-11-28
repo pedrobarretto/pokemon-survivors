@@ -26,4 +26,12 @@ describe('place', () => {
     clearShelves(page)
     expect(place(page, 1, 1)).toEqual({ x: 0, y: 0 })
   })
+
+  it('opens shelves down to its own height on a page taller than wide', () => {
+    const page = shelves(8, 16)
+    expect(place(page, 8, 12)).toEqual({ x: 0, y: 0 })
+    expect(place(page, 9, 1)).toBeNull()
+    expect(place(page, 8, 3)).toEqual({ x: 0, y: 13 })
+    expect(place(page, 1, 1)).toBeNull()
+  })
 })

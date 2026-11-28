@@ -1,5 +1,5 @@
 import { hash2 } from '../engine/rng'
-import { blitEllipse, blitRing, canvasCache, context2d, createCanvas, ring, drawPacked } from '../engine/pixelart'
+import { blitEllipse, blitRing, canvasCache, context2d, createCanvas, ring, drawPacked, remember } from '../engine/pixelart'
 import { domainOf, type LegendSky } from '../data/domains'
 import { RIFT } from '../data/rifts'
 import { REVEAL_AT } from '../game/domainRules'
@@ -204,14 +204,12 @@ const storm: Painter = (ctx, w, h, camX, camY, t) => {
   }
 }
 
-const rainbows = canvasCache<string, HTMLCanvasElement>()
+/** Ho-Oh's rainbows: a fight's, kept for the view size it's drawn at now (a phone turned, or a bad viewport, changes it). */
+const rainbows = canvasCache<string, HTMLCanvasElement>('fight')
 const RAINBOW = ['#f84848', '#f89838', '#f8e048', '#68d858', '#48a8f8', '#6868e8', '#b058e0'] as const
 
 /** A rainbow arc spanning the screen, baked once per view size: seven hard-edged bands. */
-const rainbowOf = (w: number, h: number) => {
-  const key = `${w}x${h}`
-  const known = rainbows.get(key)
-  if (known) return known
+const rainbowOf = (w: number, h: number) => remember(rainbows, `${w}x${h}`, 1, () => {
   const canvas = createCanvas(w, h)
   const c = context2d(canvas)
   const cx = w / 2
@@ -226,9 +224,8 @@ const rainbowOf = (w: number, h: number) => {
       c.fillRect(x, Math.round(cy - Math.sqrt(r * r - dx * dx)), 1, 3)
     }
   })
-  rainbows.set(key, canvas)
   return canvas
-}
+})
 
 /** Ho-Oh's sky: a warm glow, a rainbow across it, and embers drifting down, swaying and flickering. */
 const embers: Painter = (ctx, w, h, camX, camY, t) => {
