@@ -1,0 +1,117 @@
+{
+  "ios-standalone-cold-start": {
+    "innerHeight": 793,
+    "screenHeight": 852,
+    "standalone": true,
+    "displayModeStandalone": false,
+    "launchGap": "59px",
+    "htmlHeight": 852,
+    "htmlScrollHeight": 852,
+    "canvas": {
+      "top": 0,
+      "bottom": 796
+    },
+    "ui": {
+      "top": 0,
+      "bottom": 793
+    },
+    "tabs": {
+      "top": 700,
+      "bottom": 793
+    },
+    "tabsPaddingBottom": "34px",
+    "safeT": "59px"
+  },
+  "ios-short-no-standalone-flag": {
+    "innerHeight": 793,
+    "screenHeight": 852,
+    "standalone": false,
+    "displayModeStandalone": false,
+    "launchGap": "0px",
+    "htmlHeight": 793,
+    "htmlScrollHeight": 793,
+    "canvas": {
+      "top": 0,
+      "bottom": 796
+    },
+    "ui": {
+      "top": 0,
+      "bottom": 793
+    },
+    "tabs": {
+      "top": 700,
+      "bottom": 793
+    },
+    "tabsPaddingBottom": "34px",
+    "safeT": "59px"
+  },
+  "ios-standalone-full": {
+    "innerHeight": 852,
+    "screenHeight": 852,
+    "standalone": true,
+    "displayModeStandalone": false,
+    "launchGap": "0px",
+    "htmlHeight": 852,
+    "htmlScrollHeight": 852,
+    "canvas": {
+      "top": 0,
+      "bottom": 852
+    },
+    "ui": {
+      "top": 0,
+      "bottom": 852
+    },
+    "tabs": {
+      "top": 759,
+      "bottom": 852
+    },
+    "tabsPaddingBottom": "34px",
+    "safeT": "59px"
+  },
+  "safari-tab": {
+    "innerHeight": 659,
+    "screenHeight": 852,
+    "standalone": false,
+    "displayModeStandalone": false,
+    "launchGap": "0px",
+    "htmlHeight": 659,
+    "htmlScrollHeight": 659,
+    "canvas": {
+      "top": 0,
+      "bottom": 660
+    },
+    "ui": {
+      "top": 0,
+      "bottom": 659
+    },
+    "tabs": {
+      "top": 570,
+      "bottom": 659
+    },
+    "tabsPaddingBottom": "34px",
+    "safeT": "59px"
+  },
+  "android-standalone": {
+    "innerHeight": 915,
+    "screenHeight": 915,
+    "standalone": true,
+    "displayModeStandalone": false,
+    "launchGap": "0px",
+    "htmlHeight": 915,
+    "htmlScrollHeight": 915,
+    "canvas": {
+      "top": 0,
+      "bottom": 916
+    },
+    "ui": {
+      "top": 0,
+      "bottom": 915
+    },
+    "tabs": {
+      "top": 853,
+      "bottom": 915
+    },
+    "tabsPaddingBottom": "3px",
+    "safeT": "24px"
+  }
+}
