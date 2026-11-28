@@ -334,6 +334,7 @@ export const coopNetPayload = (client: CoopClient, runner: Runner, net: NetStats
     final: outcome === 'hidden' ? (0 as const) : (1 as const),
     minute: Math.floor(g.time / 60),
     difficulty: g.difficulty,
+    arena: g.versus ? (1 as const) : (0 as const),
     ...netSummary(net, performance.now(), { underruns: runner.stats.underruns, heals: runner.stats.heals.length, syncs: runner.stats.syncs.length }, where),
     ...device(),
     ...perf,
