@@ -28,12 +28,11 @@
   --body: 'Jersey 15', 'VT323', 'Cubic 11', monospace;
   /*
    * How far iOS laid a cold-started home screen app out short of its screen (ui/uiScale.ts, `syncLaunchGap`), 0
-   * everywhere else: the fixed layers stretch down by it, and it stands in for the top safe area iOS read as 0.
-   * Only phones get one, and they never zoom #ui, so it needs no zoomed twin.
+   * everywhere else: the document grows by it (see `html` below), never the fixed layers.
    */
   --launch-gap: 0px;
   /* Notch / home-indicator insets (needs viewport-fit=cover). */
-  --safe-t: max(env(safe-area-inset-top, 0px), var(--launch-gap));
+  --safe-t: env(safe-area-inset-top, 0px);
   --safe-r: env(safe-area-inset-right, 0px);
   --safe-b: env(safe-area-inset-bottom, 0px);
   --safe-l: env(safe-area-inset-left, 0px);
@@ -100,7 +99,25 @@ body {
 body {
   position: fixed;
   inset: 0;
-  height: calc(100dvh + var(--launch-gap));
+}
+
+/*
+ * iOS 26 (WebKit 301108) can cold-start a home screen app (black-translucent status bar, viewport-fit=cover) with its
+ * viewport one status bar short of the screen: innerHeight, 100dvh and every fixed layer end ~59 px above the bottom,
+ * the page's background shows there as a black bar under the lobby's tabs, until a rotation lays the app out again.
+ * WebKit paints nothing fixed below that short edge, so stretching the layers can't reach it; it hands the app the
+ * whole screen once the document is taller than the short viewport. So the installed app's document is at least the
+ * large viewport tall (which iOS reads as the whole screen even then), plus the shortfall `syncLaunchGap` measures,
+ * in case it doesn't. Laid out right, both come to the viewport itself, and everywhere else the gap is 0.
+ */
+html {
+  min-height: calc(100% + var(--launch-gap));
+}
+
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  html {
+    min-height: max(100lvh, calc(100% + var(--launch-gap)));
+  }
 }
 
 img,
@@ -117,7 +134,6 @@ canvas {
 #ui {
   position: fixed;
   inset: 0;
-  bottom: calc(-1 * var(--launch-gap));
   pointer-events: none;
   zoom: var(--ui-zoom);
 }
@@ -3507,7 +3523,7 @@ button {
 .stick-anchor {
   position: fixed;
   left: var(--stick-left);
-  bottom: calc(var(--stick-bottom) - var(--launch-gap));
+  bottom: var(--stick-bottom);
   width: var(--stick-size);
   height: var(--stick-size);
   visibility: hidden;
@@ -29282,7 +29298,6 @@ span.arena-hub-face {
 .screen.minigame-screen {
   position: fixed;
   inset: 0;
-  bottom: calc(-1 * var(--launch-gap));
   z-index: 60;
   display: flex;
   flex-direction: column;
@@ -29446,7 +29461,6 @@ span.arena-hub-face {
 .screen.minigame-choose {
   position: fixed;
   inset: 0;
-  bottom: calc(-1 * var(--launch-gap));
   z-index: 60;
   display: flex;
   align-items: center;
@@ -29617,7 +29631,6 @@ span.arena-hub-face {
 .screen.mgb-screen {
   position: fixed;
   inset: 0;
-  bottom: calc(-1 * var(--launch-gap));
   z-index: 70;
   display: flex;
   align-items: center;
