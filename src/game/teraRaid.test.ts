@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { RAID, RAID_STARS } from '../data/tera'
 import { addDays } from './day'
 import { createGame } from './game'
+import { holdsCarry } from './attacks'
 import { killEnemy } from './combat'
 import { LIGHT_CAPTURE, updateLegendScene } from './legendScene'
 import { enterRaid, openDen, raidFits, raidOfDay, shieldTakes, updateRaid, updateRaidDen } from './teraRaid'
@@ -101,3 +102,17 @@ describe('Tera Raids', () => {
     expect(g.raid.cleared).toEqual([{ boss: 'terapagos', tera: 'stellar', stars: 7, day: false }])
   })
 })
+
+describe('a den on the map', () => {
+  it('holds a lunge in its mouth while it stands open, not once it closed (holdsCarry)', () => {
+    const g = createGame('quaxly', { w: 480, h: 270 }, 11)
+    const at = (x: number, y: number) => ({ x, y, radius: g.player.radius })
+    expect(holdsCarry(g, at(400, 0))).toBe(false)
+    openDen(g, { boss: 'raidGarchomp', tera: 'ice', stars: 5 }, { x: 400, y: 0 })
+    expect(holdsCarry(g, at(400 + RAID.door - 2, 0))).toBe(true)
+    expect(holdsCarry(g, at(400 + RAID.door + 2, 0))).toBe(false)
+    g.raid.den = null
+    expect(holdsCarry(g, at(400, 0))).toBe(false)
+  })
+})
+

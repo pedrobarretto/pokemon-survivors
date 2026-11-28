@@ -4,7 +4,9 @@ import { TERRAIN } from '../data/terrain'
 import { spawnEnemy, updateEnemies } from './enemies'
 import { createGame, step } from './game'
 import { carveMaze, MAZE_PATTERNS } from './landmarkLayout'
+import { holdsCarry, updateAttacks } from './attacks'
 import { updateLandmarks, updateTunnel } from './landmarks'
+import { spawnAttack } from './spawn'
 import { createTerrain, featureAt, type Landmark } from './terrain'
 import type { Game } from './types'
 
@@ -97,6 +99,36 @@ describe('landmarks at play', () => {
     for (let t = 0; t < 2; t += TICK) updateLandmarks(g, TICK)
     expect(coins()).toBe(0)
     expect(g.landmarks.opened).toBe(1)
+  })
+
+  it('holds a lunge at a cottage\'s and a camp\'s shut treasure, not once it was taken (holdsCarry)', () => {
+    const g = createGame('quaxly', { w: 480, h: 270 }, 1234)
+    for (const id of ['cottage', 'camp'] as const) {
+      const lm = first(g, id)
+      const chest = lm.treasure!
+      const at = (dx: number) => ({ x: chest.x + dx, y: chest.y, radius: g.player.radius })
+      const near = LANDMARK.treasureRadius + g.player.radius * 0.5
+      expect(holdsCarry(g, at(near - 2))).toBe(true)
+      expect(holdsCarry(g, at(near + 2))).toBe(false)
+      g.landmarks.looted.add(lm.cell)
+      expect(holdsCarry(g, at(0))).toBe(false)
+    }
+  })
+
+  it('ends a lunge (Aqua Step, Flame Charge) as it reaches a camp\'s treasure instead of carrying the player past it', () => {
+    const g = createGame('quaxly', { w: 480, h: 270 }, 1234)
+    const chest = first(g, 'camp').treasure!
+    const p = g.player
+    const near = LANDMARK.treasureRadius + p.radius * 0.5
+    Object.assign(p, { x: chest.x - near - 6, y: chest.y })
+    spawnAttack(g, {
+      move: 'aquaStep', type: 'water', visual: 'aquaStep', x: p.x, y: p.y - 8,
+      shape: { kind: 'circle', r: 14 }, motion: { kind: 'lunge', vx: 400, vy: 0, left: 0.3 },
+      damage: 0, ttl: 0.4, activeUntil: 0.3,
+    })
+    for (let t = 0; t < 0.4; t += TICK) updateAttacks(g, TICK)
+    // Without the hold it would carry the player 120 px, well past the chest.
+    expect(Math.abs(p.x - chest.x)).toBeLessThan(near)
   })
 
   it('takes the player through a tunnel to the far mouth, out of the horde’s sight, and not straight back', () => {
