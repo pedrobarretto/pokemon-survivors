@@ -2,7 +2,7 @@ import { mergeAchievements, mergeGiftTitles } from './achievements'
 import { mergeRoamers, mergeRushBest } from './questSave'
 import { mergeAttempts } from './attempt'
 import { mergeClaimedGifts } from './gifts'
-import { mergeClears } from './clears'
+import { CLEARABLE, mergeClears, type Clears } from './clears'
 import { mergeHalloween } from './halloween'
 import { mergeCaptures } from './capture'
 import { LEGEND_IDS } from '../data/legends'
@@ -13,7 +13,8 @@ import { mergeTms } from './tmShelf'
 import { mergeCaps, mergeEvoItems } from './evoItems'
 import { mergeCaravan } from './caravan'
 import { mergeStyle } from './style'
-import { mergeDex } from './dex'
+import { STYLE_SLOTS } from '../data/style'
+import { mergeDex, type Pokedex } from './dex'
 import { incubatorSlots, mergeEggPity, mergeHatched, mergeIncubated } from './eggs'
 import { mergeIncubator, slotsInvested } from './incubator'
 import { SAVE_VERSION, totalSpent, UPGRADE_IDS, type Ranks, type Save, type UpgradeId } from './meta'
@@ -168,14 +169,56 @@ export const pushBuild = (raw: unknown, now: number): number | null =>
 
 const missing = <T>(have: readonly T[], need: readonly T[]) => need.some((x) => !have.includes(x))
 
+/** Whether `need` has a key `have` lacks (a hatched family, a shiny starter). */
+const missingKey = (have: object, need: object) => missing(Object.keys(have), Object.keys(need))
+
+/** Whether `have`'s Pokédex lacks a species, a defeat or a flag (caught, shiny) of `need`'s. */
+const dexBehind = (have: Pokedex, need: Pokedex) =>
+  Object.entries(need).some(([n, [defeated, flags]]) => {
+    const mark = have[Number(n)]
+    return !mark || mark[0] < defeated || (flags & ~mark[1]) !== 0
+  })
+
+/** Whether `have` lacks a clear of `need`'s, or holds one at an easier difficulty. */
+const clearsBehind = (have: Clears, need: Clears) => {
+  const merged = mergeClears(have, need)
+  return CLEARABLE.some((id) => merged[id] !== have[id])
+}
+
+/**
+ * The collection a save only ever adds to: families hatched, the Pokédex,
+ * medals, shiny starters, clears, the Mystery Gifts applied and what they
+ * brought (titles, ribbons, companions), styles, TMs and evolution items
+ * owned, Temporada 1's finds. Whether `save` lacks any of `stored`'s.
+ */
+const collectionBehind = (save: Save, stored: Save) =>
+  missingKey(save.hatched, stored.hatched) ||
+  dexBehind(save.dex, stored.dex) ||
+  missing(save.achievements.unlocked, stored.achievements.unlocked) ||
+  missingKey(save.shinyStarters, stored.shinyStarters) ||
+  clearsBehind(save.clears, stored.clears) ||
+  missing(save.gifts, stored.gifts) ||
+  missing(save.titles, stored.titles) ||
+  missing(save.ribbons.map((r) => r.day), stored.ribbons.map((r) => r.day)) ||
+  missing(save.companions, stored.companions) ||
+  STYLE_SLOTS.some((slot) => missing<string>(save.style.owned[slot], stored.style.owned[slot])) ||
+  missing(save.tms.owned, stored.tms.owned) ||
+  missing(save.evo, stored.evo) ||
+  missing(save.finds, stored.finds) ||
+  missing(save.shinyFinds, stored.shinyFinds)
+
 /**
  * A save behind `stored` on what only ever goes up: its lifetime runs, a
  * legend's captures, a legend path's progress (Cells, Cores, Hex Nuts, the
  * Torre's trials, Cosmog's research, the legends it grew into and, while it's
- * the same Cosmog, its runs). A device pushing it on top of the latest
- * revision lost its save (storage cleared or unreadable) but kept its account
- * link, or runs a build too old to read all of it (its parse dropped legends
- * and paths it doesn't know), so it hasn't seen what's stored.
+ * the same Cosmog, its runs) and its collection (`collectionBehind`: a family
+ * hatched, a species caught, a gift applied). A device pushing it on top of
+ * the latest revision hasn't seen what's stored: it lost its save (storage
+ * cleared or unreadable) but kept its account link, runs a build too old to
+ * read all of it (its parse dropped the families, legends and paths it
+ * doesn't know), or wrote an older copy over the one the account sent it (a
+ * screen that held the save while a sync came in, a write the full storage
+ * refused).
  */
 export const behind = (save: Save, stored: Save) => {
   const [p, q] = [save.paths, stored.paths]
@@ -188,7 +231,8 @@ export const behind = (save: Save, stored: Save) => {
     missing(p.trials, q.trials) ||
     missing(p.cosmog.research, q.cosmog.research) ||
     missing(p.cosmog.raised, q.cosmog.raised) ||
-    (p.cosmog.raised.length === q.cosmog.raised.length && p.cosmog.runs < q.cosmog.runs)
+    (p.cosmog.raised.length === q.cosmog.raised.length && p.cosmog.runs < q.cosmog.runs) ||
+    collectionBehind(save, stored)
   )
 }
 
@@ -242,3 +286,13 @@ export const applyPush = (stored: Stored | null, push: Push, resetAt: number | n
   return { save, revision: stored.revision + 1, build, merged }
 }
 
+
+/**
+ * Whether a device takes the revision a push answered with (`push` in
+ * `account.ts`): only with a save it holds. The answer's, once storage took it
+ * (`written`), when its save didn't change while the push was out
+ * (`unchanged`); else its own, which builds on what it sent only when the
+ * account took that as is (not `merged`). Any other way the next push merges,
+ * so a device left with an older save than the account's never replaces it.
+ */
+export const takesRevision = (unchanged: boolean, written: boolean, merged: boolean) => (unchanged ? written : !merged)

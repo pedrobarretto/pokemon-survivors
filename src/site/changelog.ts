@@ -48,8 +48,30 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
         fr: 'Seuls les 24 derniers cris de Pokémon joués restent en mémoire, au lieu de tous ceux de la session (Pokédex, choix du partenaire, boss).',
         zh: '寶可夢叫聲只保留最近播放的 24 個，不再保留整段遊玩期間播過的全部（圖鑑、夥伴選擇、頭目）。',
       },
+      {
+        pt: 'Quem joga com conta em mais de um aparelho não perde mais progresso: Pokémon chocados, Pokédex, medalhas e presentes de um aparelho não somem mais quando o outro sincroniza, e o que muda no lobby sobe para a conta quando você fecha ou troca de aba.',
+        en: 'Playing on an account across devices no longer loses progress: Pokémon hatched, the Pokédex, medals and gifts from one device no longer vanish when the other syncs, and what changes in the lobby goes up to the account when you close or switch tabs.',
+        es: 'Quien juega con cuenta en más de un dispositivo ya no pierde progreso: los Pokémon eclosionados, la Pokédex, las medallas y los regalos de un dispositivo ya no desaparecen cuando el otro sincroniza, y lo que cambia en el lobby sube a la cuenta cuando cierras o cambias de pestaña.',
+        fr: 'Jouer avec un compte sur plusieurs appareils ne fait plus perdre de progression : les Pokémon éclos, le Pokédex, les médailles et les cadeaux d’un appareil ne disparaissent plus quand l’autre se synchronise, et ce qui change dans le lobby part sur le compte quand vous fermez ou changez d’onglet.',
+        zh: '用帳號在多台裝置上遊玩不會再遺失進度：一台裝置孵出的寶可夢、圖鑑、獎章與禮物，不會在另一台同步時消失；大廳裡的變動也會在你關閉或切換分頁時上傳到帳號。',
+      },
     ],
     changes: [
+      {
+        title: { pt: 'Conta e sincronização', en: 'Account and sync', es: 'Cuenta y sincronización' },
+        notes: [
+          {
+            pt: 'Um aparelho com uma cópia antiga do save (uma tela aberta antes da sincronização, um navegador sem espaço para gravar, uma aba de uma versão antiga do jogo) não substitui mais o save da conta: a conta junta os dois, mantendo as famílias chocadas, a Pokédex, as medalhas, os shinies, as vitórias, os presentes e os itens do outro aparelho.',
+            en: 'A device holding an older copy of the save (a screen opened before the sync, a browser out of room to write it, a tab of an older version of the game) no longer replaces the account’s save: the account merges both, keeping the other device’s hatched families, Pokédex, medals, shinies, clears, gifts and items.',
+            es: 'Un dispositivo con una copia vieja del save (una pantalla abierta antes de la sincronización, un navegador sin espacio para guardarlo, una pestaña de una versión vieja del juego) ya no reemplaza el save de la cuenta: la cuenta junta los dos y mantiene las familias eclosionadas, la Pokédex, las medallas, los shinies, las victorias, los regalos y los objetos del otro dispositivo.',
+          },
+          {
+            pt: 'Quando o serviço de login demora a responder, o jogo fica offline e tenta de novo, em vez de tirar você da conta (o que deixava as partidas sem ranking, o Livro de Estampas vazio e a Escavação sem responder até entrar de novo).',
+            en: 'When the sign-in service is slow to answer, the game stays offline and tries again, instead of signing you out (which left runs unranked, the Stamp Book empty and the Escavação unresponsive until you signed in again).',
+            es: 'Cuando el servicio de inicio de sesión tarda en responder, el juego queda sin conexión y lo intenta de nuevo, en vez de sacarte de la cuenta (lo que dejaba las partidas sin ranking, el Libro de Estampas vacío y la Excavación sin responder hasta volver a entrar).',
+          },
+        ],
+      },
       {
         title: { pt: 'Desempenho', en: 'Performance', es: 'Rendimiento', fr: 'Performances', zh: '效能' },
         notes: [
