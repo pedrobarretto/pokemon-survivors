@@ -60,6 +60,16 @@ export const CHANGELOG: readonly ChangelogUpdate[] = [
           },
         ],
       },
+      {
+        title: { pt: 'Correções', en: 'Fixes', es: 'Correcciones', fr: 'Corrections', zh: '修正' },
+        notes: [
+          {
+            pt: 'Derrotar um Spiritomb shiny no Cemitério agora libera o Spiritomb shiny, como presente na caixa (na primeira vitória ou em qualquer outra, até você ter o shiny).',
+            en: 'Beating a shiny Spiritomb in the Graveyard now unlocks shiny Spiritomb, as a gift in your box (on your first win or any later one, until you have the shiny).',
+            es: 'Vencer a un Spiritomb shiny en el Cementerio ahora desbloquea el Spiritomb shiny, como regalo en la caja (en la primera victoria o en cualquier otra, hasta que tengas el shiny).',
+          },
+        ],
+      },
     ],
   },
   {

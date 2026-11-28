@@ -3,7 +3,7 @@ import { HATCHLINGS, PLAYABLE_IDS } from '../data/hatchlings'
 import type { LandmarkId } from '../data/landmarks'
 import { CASTFORM_FIND, RESEARCH, type FindId, type ResearchId } from '../data/seasonOneUnlocks'
 import { spawnMapEvent } from '../game/mapEvents'
-import { countsAsPartner, mergeFinds, repeatShinyHit, repeatShinyOpen, tvShinyRoll } from '../game/seasonOneUnlocks'
+import { countsAsPartner, graveFind, mergeFinds, repeatShinyHit, repeatShinyOpen, tvShinyRoll } from '../game/seasonOneUnlocks'
 import type { FindMoment } from '../game/seasonOneFinds'
 import { setWeather } from '../game/weather'
 import type { Landmark } from '../game/terrain'
@@ -32,10 +32,11 @@ const tvShiny = (seed: number) => {
  * The shell's side of Temporada 1's map encounters (`game/seasonOneFinds.ts`):
  * a found one is banked on the spot (its family then waits as a game-made
  * gift, `seasonGifts`), and each moment gets its toast. Found again by an
- * owner, Rotom may bring its shiny (`REPEAT_SHINY`), banked in `shinyFinds`;
+ * owner, Rotom may bring its shiny (`REPEAT_SHINY`), banked in `shinyFinds`,
+ * as is a shiny graveyard Spiritomb's (`shiny`, `graveFind`);
  * `seed` is the run's terrain seed.
  */
-export const seasonFindFeedback = (root: HTMLElement, find: FindId, moment: FindMoment, seed: number) => {
+export const seasonFindFeedback = (root: HTMLElement, find: FindId, moment: FindMoment, seed: number, shiny = false) => {
   const m = t().seasonUnlocks.find
   const dex = HATCHLINGS[find].line[0].dex
   const say = (text: string, ms: number) => runToast(root, 'important', h('span', { class: 'item-toast' }, h('img', { src: portraitUrl(dex), alt: '' }), rich(text)), ms)
@@ -44,8 +45,15 @@ export const seasonFindFeedback = (root: HTMLElement, find: FindId, moment: Find
     return say(m.castformSighted, 3000)
   }
   if (moment === 'gone') return say(m.castformGone, 2200)
-  // Every graveyard win reports Spiritomb: only the first brings the family (the place's own toast tells the rest).
-  if (find === 'spiritomb' && loadSave().finds.includes('spiritomb')) return
+  // Every graveyard win reports Spiritomb: the first brings the family, a shiny one its shiny (the place's own toast tells the rest).
+  if (find === 'spiritomb') {
+    const got = graveFind(loadSave(), shiny)
+    if (!got.family && !got.shiny) return
+    updateSave((save) => ({ ...save, finds: mergeFinds(save.finds, ['spiritomb']), shinyFinds: got.shiny ? mergeFinds(save.shinyFinds, ['spiritomb']) : save.shinyFinds }))
+    playSfx('unlock')
+    playCry(cryUrl(dex))
+    return say(got.shiny ? m.spiritombShiny : m.spiritomb, got.shiny ? 4800 : 4200)
+  }
   if (find === 'rotom' && loadSave().finds.includes('rotom')) {
     if (!tvShiny(seed)) return say(m.rotomAgain, 3000)
     dev.shiny = false
@@ -57,7 +65,7 @@ export const seasonFindFeedback = (root: HTMLElement, find: FindId, moment: Find
   updateSave((save) => ({ ...save, finds: mergeFinds(save.finds, [find]) }))
   playSfx('unlock')
   playCry(cryUrl(dex))
-  return say(find === 'rotom' ? m.rotom : find === 'spiritomb' ? m.spiritomb : m.castformFound, 4200)
+  return say(find === 'rotom' ? m.rotom : m.castformFound, 4200)
 }
 
 /** How many of a chain's steps a dev helper can set. */

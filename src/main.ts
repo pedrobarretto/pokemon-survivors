@@ -2940,7 +2940,7 @@ const handleEvent = (r: Run, e: GameEvent) => {
     case 'landmark':
       return landmarkFeedback(ui, e.landmark, e.moment)
     case 'seasonFind':
-      return seasonFindFeedback(ui, e.find, e.moment, r.game.terrain.seed)
+      return seasonFindFeedback(ui, e.find, e.moment, r.game.terrain.seed, e.shiny === true)
     case 'path':
       return pathFeedback(ui, e.notice)
     case 'hexNut':

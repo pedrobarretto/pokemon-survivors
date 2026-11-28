@@ -880,7 +880,8 @@ export type GameEvent =
   /** A landmark was named, its treasure opened, or the player went into or out of a tunnel (`landmarks.ts`). */
   | { kind: 'landmark'; landmark: LandmarkId; moment: LandmarkMoment }
   /** A Temporada 1 map encounter (`seasonOneFinds.ts`): the shell banks a `found` one. */
-  | { kind: 'seasonFind'; find: FindId; moment: FindMoment }
+  /** `shiny`: the one found was shiny (a graveyard Spiritomb's, which brings its shiny: `graveFind`). */
+  | { kind: 'seasonFind'; find: FindId; moment: FindMoment; shiny?: boolean }
   /** A legend path's moment in a run (`pathRun.ts`): a Zygarde piece, Regigigas's temple. */
   | { kind: 'path'; notice: PathNotice }
   /** A Hex Nut picked up in Meltan's run (`pathRun.ts`). */
