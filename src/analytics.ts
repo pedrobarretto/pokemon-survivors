@@ -73,7 +73,7 @@ type AnalyticsEvents = {
    * How a run ended, with what it was built from: the build and the cause of a faint are what tuning needs.
    * The run's only event (no `run_start`): `mode` is a regular run or the Legend mode's (`runMode`), and
    * `left` is a page closed or reloaded mid-run. Runs left or quit in their first minute send nothing; the
-   * next run that reports counts the quits (`rerolls`). Co-op runs report through `coop` and `coop_net`.
+   * next run that reports counts the quits (`rerolls`). Co-op runs report through `coop_net` (their end, one per player).
    */
   run_end: {
     starter: PlayableId
@@ -339,6 +339,8 @@ type AnalyticsEvents = {
    * errors, shake, the network type and platform, and the device's run perf (as `run_end` has it; co-op
    * sends no `run_end`). Sent at the run's end (`final` 1), or once with what it has when the page hides
    * mid-run (`hidden`, `final` 0: the run may go on, and a final one follows) or unloads (`unload`).
+   * `arena`: an online Arena match (its result is `versus_end`'s). The final one is also how a co-op run
+   * ended for this player: before 2026-11-28 that was a `coop` `end` step too.
    */
   coop_net: NetSummary &
     RunPerf & {
@@ -353,11 +355,11 @@ type AnalyticsEvents = {
       effectiveType: string | null
       platform: string | null
       mobile: 0 | 1
+      arena: 0 | 1
     }
   /**
    * Co-op's beta, one event per step: a room created (on which relay: Cloudflare's `cf` or São Paulo's `sa`), a
-   * room joined (by a typed code, a link or a friend's invite), a run started (by the host, once per run), a run
-   * ended for this player (how, how long, how many), a failure to create, join or stay (`why`: the client's
+   * room joined (by a typed code, a link or a friend's invite), a run started (by the host, once per run), a failure to create, join or stay (`why`: the client's
    * `CloseWhy` or the create refusal), and a guest
    * stopped at the door to sign in (`gate`: from the lobby's tile or a room's link).
    */
@@ -367,7 +369,6 @@ type AnalyticsEvents = {
     | { step: 'create'; relay: RelayHome; overflow?: VpsHome }
     | { step: 'join'; via: 'code' | 'link' | 'invite' }
     | { step: 'start'; players: number; difficulty: Difficulty }
-    | { step: 'end'; players: number; minute: number; outcome: 'victory' | 'wipe' | 'endless' | 'left'; difficulty: Difficulty }
     | { step: 'fail'; at: 'create' | 'join' | 'room' | 'run'; why: string }
 }
 
@@ -534,6 +535,22 @@ const reportError = (error: unknown, context: () => ErrorContext) => {
 
 const live = () => analyticsLive(POSTHOG_KEY)
 
+const PAGEVIEW_KEY = 'ps:pageviewDay'
+
+/**
+ * Sends `$pageview` once per device per local day, so the web analytics keep each day's visitors,
+ * their referrers and UTMs without a view per reload. Storage blocked: every load sends one, as before.
+ */
+const dailyPageview = (ph: PostHog) => {
+  const now = new Date()
+  const day = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`
+  try {
+    if (localStorage.getItem(PAGEVIEW_KEY) === day) return
+    localStorage.setItem(PAGEVIEW_KEY, day)
+  } catch {}
+  ph.capture('$pageview')
+}
+
 /**
  * Starts reporting: catches uncaught errors and rejections right away (with
  * `context`, read when one happens) and loads PostHog once the browser is idle.
@@ -556,6 +573,8 @@ export const startAnalytics = (context: () => ErrorContext) => {
           persistence_name: 'ps',
           // The game is a canvas: clicks, scrolls and replays of the DOM say little and cost events (replays: a sample of new devices only).
           autocapture: false,
+          // A page view a device a day (`dailyPageview`): reloads and returning tabs were a third of the budget.
+          capture_pageview: false,
           capture_pageleave: false,
           capture_dead_clicks: false,
           capture_performance: false,
@@ -571,6 +590,7 @@ export const startAnalytics = (context: () => ErrorContext) => {
           capture_exceptions: false,
         })
         ph.register({ version: __GAME_VERSION__ })
+        dailyPageview(ph)
         posthog = ph
         pending?.forEach((p) => p.fn(ph))
         pending = null

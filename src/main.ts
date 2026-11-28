@@ -3372,8 +3372,7 @@ const endCoopRun = (r: Run, c: CoopRun) => {
   reportVersus(c, 'quit')
   bankCoop(r, c, wonRun(g) || coopOver(g))
   const outcome = wonRun(g) ? (g.endless ? 'endless' : 'victory') : coopOver(g) ? 'wipe' : 'left'
-  // An Arena match reports its own end (`versus_end`, `reportVersus`).
-  if (!g.versus) track('coop', { step: 'end', players: g.players.length, minute: Math.floor(g.time / 60), outcome, difficulty: g.difficulty })
+  // The run's end for this player goes out with its link's numbers (an Arena match's result is `versus_end`).
   reportNet(c, outcome)
   r.overlay?.dispose()
   r.closeText?.()
