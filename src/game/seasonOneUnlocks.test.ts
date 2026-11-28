@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { FIND_ODDS, REPEAT_SHINY } from '../data/seasonOneUnlocks'
 import { applyGift } from './gifts'
 import { isGameGift } from './gameGifts'
-import { EMPTY_SAVE } from './meta'
-import { countsAsPartner, featFamilies, mergeFinds, mergeResearch, newFeatFamily, NO_RESEARCH, parseFinds, parseResearch, recordResearch, repeatFeatFamily, repeatShinyHit, repeatShinyOpen, researchStatus, rollFind, seasonGifts, tvShinyRoll, type ResearchRun } from './seasonOneUnlocks'
+import { EMPTY_SAVE, type Save } from './meta'
+import { countsAsPartner, featFamilies, graveFind, mergeFinds, mergeResearch, newFeatFamily, NO_RESEARCH, parseFinds, parseResearch, recordResearch, repeatFeatFamily, repeatShinyHit, repeatShinyOpen, researchStatus, rollFind, seasonGifts, tvShinyRoll, type ResearchRun } from './seasonOneUnlocks'
 import { mergeSaves } from './sync'
 
 const win = (over: Partial<ResearchRun> = {}): ResearchRun => ({ starter: 'charmander', victory: true, hits: 0, wet: false, ...over })
@@ -128,5 +128,40 @@ describe('shinies on repeat finds', () => {
     if (out.status !== 'applied') throw new Error(out.status)
     expect(out.save.hatched.rotom).toEqual({ shiny: true })
     expect(seasonGifts(out.save)).toEqual([])
+  })
+})
+
+describe('a graveyard Spiritomb', () => {
+  const none = { finds: [], shinyFinds: [], hatched: {} }
+
+  it('brings the family on the first win, and its shiny when the one beaten was shiny', () => {
+    expect(graveFind(none, false)).toEqual({ family: true, shiny: false })
+    expect(graveFind(none, true)).toEqual({ family: true, shiny: true })
+  })
+
+  it('brings the shiny on a repeat win too, to an owner without it', () => {
+    const owner = { finds: ['spiritomb' as const], shinyFinds: [], hatched: { spiritomb: { shiny: false } } }
+    expect(graveFind(owner, false)).toEqual({ family: false, shiny: false })
+    expect(graveFind(owner, true)).toEqual({ family: false, shiny: true })
+  })
+
+  it('never banks the shiny twice: owned, or already waiting in the gift box', () => {
+    expect(graveFind({ finds: ['spiritomb' as const], shinyFinds: [], hatched: { spiritomb: { shiny: true } } }, true).shiny).toBe(false)
+    expect(graveFind({ finds: ['spiritomb' as const], shinyFinds: ['spiritomb' as const], hatched: {} }, true).shiny).toBe(false)
+  })
+
+  it('opens as both gifts on a first shiny win: the family, then its shiny', () => {
+    let save: Save = { ...EMPTY_SAVE, finds: ['spiritomb'], shinyFinds: ['spiritomb'] }
+    expect(seasonGifts(save).map((g) => g.content)).toEqual([
+      { kind: 'family', family: 'spiritomb' },
+      { kind: 'shinyHatch', family: 'spiritomb' },
+    ])
+    for (const gift of seasonGifts(save)) {
+      const out = applyGift(save, gift)
+      if (out.status !== 'applied') throw new Error(out.status)
+      save = out.save
+    }
+    expect(save.hatched.spiritomb).toEqual({ shiny: true })
+    expect(seasonGifts(save)).toEqual([])
   })
 })

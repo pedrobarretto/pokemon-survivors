@@ -47,6 +47,16 @@ export const repeatFeatFamily = (game: MinigameId, was: readonly string[], feats
   return featFamilies(game, feats).filter((family) => had.includes(family)).find(isRepeatShinyId) ?? null
 }
 
+/**
+ * What a graveyard win banks: Spiritomb's family on the first one, and its
+ * shiny when the Spiritomb beaten was shiny (`GRAVEYARD.shinyOdds`), unless the
+ * save has that shiny already or it's waiting in the gift box (`shinyFinds`).
+ */
+export const graveFind = (save: { finds: readonly FindId[]; shinyFinds: readonly FindId[]; hatched: Hatched }, shiny: boolean) => ({
+  family: !save.finds.includes('spiritomb'),
+  shiny: shiny && !save.shinyFinds.includes('spiritomb') && save.hatched.spiritomb?.shiny !== true,
+})
+
 /* ---------------- Research ---------------- */
 
 /** Steps done of the chains that count them, and the partners that won for Tatsugiri's (its steps are their number). */
