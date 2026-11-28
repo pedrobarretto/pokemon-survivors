@@ -1,0 +1,70 @@
+// Temporary measurement for WAV-142 (not committed): HP healed per hit and per second by drain moves.
+import { it } from 'vitest'
+import { writeFileSync } from 'node:fs'
+import { spawnEnemy } from './enemies'
+import { chooseOffer, step } from './game'
+import { NO_RANKS } from './meta'
+import { recomputeStats } from './leveling'
+import { startGame, TICK, type ReplayStart } from './replay'
+import type { EnemyId } from '../data/enemies'
+import type { Game, OwnedMove } from './types'
+
+const OUT = process.env.WAV142_OUT ?? 'wav142.json'
+
+const start = (difficulty: ReplayStart['difficulty']): ReplayStart => ({ seed: 5, starter: 'squirtle', difficulty, ranks: NO_RANKS, shiny: false, luckyEgg: false, outbreak: null, halloween: false, bag: [], view: { w: 480, h: 270 } })
+
+type Case = { name: string; moves: { id: OwnedMove['id']; level: number; path: number }[]; foes: number; boss?: boolean; might?: number; maxHp?: number; difficulty?: ReplayStart['difficulty'] }
+
+const measure = (c: Case) => {
+  const g: Game = startGame(start(c.difficulty ?? 'normal'))
+  chooseOffer(g, g.player.offers[0]!)
+  g.player.moves = c.moves.map((m) => ({ ...m, cooldown: 0 }))
+  recomputeStats(g)
+  if (c.might) g.player.stats.might *= c.might
+  if (c.maxHp) g.player.stats.maxHp = c.maxHp
+  g.player.stats.regen = 0
+  const p = g.player
+  const kind: EnemyId = c.boss ? 'snorlax' : 'rattata'
+  for (let i = 0; i < c.foes; i++) {
+    const a = (i / c.foes) * Math.PI * 2
+    const e = spawnEnemy(g, kind, p.x + Math.cos(a) * 18, p.y + Math.sin(a) * 14)
+    e.hp = e.maxHp = 1e9
+    e.damage = 0
+    if (c.boss) e.boss = true
+  }
+  g.nextEvent = 1e9
+  const seconds = 6
+  const heals: number[] = []
+  let dealt = 0
+  for (let i = 0; i < Math.round(seconds / TICK); i++) {
+    p.hp = p.stats.maxHp / 2
+    const foes = g.enemies.map((e) => e.hp)
+    step(g, { move: { x: 0, y: 0 }, special: false }, TICK)
+    g.enemies.forEach((e, j) => { if (j < foes.length) dealt += Math.max(0, foes[j]! - e.hp) })
+    const healed = p.hp - p.stats.maxHp / 2
+    if (healed > 1e-9) heals.push(healed)
+    // Keep the extra spawns out.
+    g.enemies = g.enemies.slice(0, c.foes)
+  }
+  const total = heals.reduce((s, h) => s + h, 0)
+  return { name: c.name, maxHp: p.stats.maxHp, healTicks: heals.length, healPerSecond: +(total / seconds).toFixed(2), dealtPerSecond: +(dealt / seconds).toFixed(1), meanHealTick: +(total / Math.max(1, heals.length)).toFixed(2), firstHeals: heals.slice(0, 6).map((h) => +h.toFixed(2)), texts: g.texts.filter((t) => t.text.startsWith('+')).map((t) => t.text).slice(0, 8) }
+}
+
+const CASES: Case[] = [
+  { name: 'Drain Punch Lv1, 1 foe (início)', moves: [{ id: 'drainPunch', level: 1, path: 0 }], foes: 1, boss: true },
+  { name: 'Drain Punch Lv8 + Might ×2, 1 foe (upado)', moves: [{ id: 'drainPunch', level: 8, path: 0 }], foes: 1, boss: true, might: 2 },
+  { name: 'Drain Punch Lv1, horda de 10', moves: [{ id: 'drainPunch', level: 1, path: 0 }], foes: 10 },
+  { name: 'Drain Punch Lv8 + Might ×2, horda de 10', moves: [{ id: 'drainPunch', level: 8, path: 0 }], foes: 10, might: 2 },
+  { name: 'Drain Punch Lv8 + Might ×2, 1 foe, maxHp 250', moves: [{ id: 'drainPunch', level: 8, path: 0 }], foes: 1, boss: true, might: 2, maxHp: 250 },
+  { name: 'Giga Drain Lv1, horda de 10', moves: [{ id: 'gigaDrain', level: 1, path: 0 }], foes: 10 },
+  { name: 'Bitter Blade Lv1, 1 foe', moves: [{ id: 'bitterBlade', level: 1, path: 0 }], foes: 1, boss: true },
+  { name: 'Drain Punch + Giga Drain Lv1, horda de 10', moves: [{ id: 'drainPunch', level: 1, path: 0 }, { id: 'gigaDrain', level: 1, path: 0 }], foes: 10 },
+  { name: 'Drain Punch Lv1, 1 foe, Pesadelo', moves: [{ id: 'drainPunch', level: 1, path: 0 }], foes: 1, boss: true, difficulty: 'nightmare' },
+  { name: 'Drain Punch Lv8 + Might ×2, 1 foe, Pesadelo', moves: [{ id: 'drainPunch', level: 8, path: 0 }], foes: 1, boss: true, might: 2, difficulty: 'nightmare' },
+]
+
+it('measures', () => {
+  const rows = CASES.map(measure)
+  writeFileSync(OUT, JSON.stringify(rows, null, 2))
+  console.table(rows.map(({ firstHeals, texts, ...r }) => ({ ...r, firstHeals: firstHeals.join(' '), texts: texts.join(' ') })))
+}, 120_000)

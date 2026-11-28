@@ -1,0 +1,189 @@
+[
+  {
+    "name": "Drain Punch Lv1, 1 foe (início)",
+    "maxHp": 120,
+    "healTicks": 7,
+    "healPerSecond": 12.37,
+    "dealtPerSecond": 35.3,
+    "meanHealTick": 10.6,
+    "firstHeals": [
+      11.2,
+      10.15,
+      10.85,
+      11.55,
+      10.85,
+      9.45
+    ],
+    "texts": [
+      "+10"
+    ]
+  },
+  {
+    "name": "Drain Punch Lv8 + Might ×2, 1 foe (upado)",
+    "maxHp": 120,
+    "healTicks": 36,
+    "healPerSecond": 13.77,
+    "dealtPerSecond": 274.8,
+    "meanHealTick": 2.29,
+    "firstHeals": [
+      12,
+      0.8,
+      3,
+      0.8,
+      3.6,
+      0.8
+    ],
+    "texts": [
+      "+8"
+    ]
+  },
+  {
+    "name": "Drain Punch Lv1, horda de 10",
+    "maxHp": 120,
+    "healTicks": 9,
+    "healPerSecond": 12.77,
+    "dealtPerSecond": 183.8,
+    "meanHealTick": 8.51,
+    "firstHeals": [
+      12,
+      0.4,
+      10.2,
+      0.8,
+      10,
+      10.8
+    ],
+    "texts": [
+      "+10",
+      "+1"
+    ]
+  },
+  {
+    "name": "Drain Punch Lv8 + Might ×2, horda de 10",
+    "maxHp": 120,
+    "healTicks": 37,
+    "healPerSecond": 13.8,
+    "dealtPerSecond": 1274.2,
+    "meanHealTick": 2.24,
+    "firstHeals": [
+      12,
+      0.4,
+      0.4,
+      3,
+      0.8,
+      3.6
+    ],
+    "texts": [
+      "+8"
+    ]
+  },
+  {
+    "name": "Drain Punch Lv8 + Might ×2, 1 foe, maxHp 250",
+    "maxHp": 120,
+    "healTicks": 36,
+    "healPerSecond": 21.77,
+    "dealtPerSecond": 277.8,
+    "meanHealTick": 3.63,
+    "firstHeals": [
+      60,
+      0.8,
+      3,
+      0.8,
+      3.6,
+      0.8
+    ],
+    "texts": [
+      "+8"
+    ]
+  },
+  {
+    "name": "Giga Drain Lv1, horda de 10",
+    "maxHp": 120,
+    "healTicks": 147,
+    "healPerSecond": 13.67,
+    "dealtPerSecond": 723.2,
+    "meanHealTick": 0.56,
+    "firstHeals": [
+      12,
+      0.6,
+      0.4,
+      0.2,
+      0.4,
+      0.6
+    ],
+    "texts": [
+      "+6"
+    ]
+  },
+  {
+    "name": "Bitter Blade Lv1, 1 foe",
+    "maxHp": 120,
+    "healTicks": 4,
+    "healPerSecond": 5,
+    "dealtPerSecond": 10,
+    "meanHealTick": 7.5,
+    "firstHeals": [
+      8,
+      7,
+      7.5,
+      7.5
+    ],
+    "texts": []
+  },
+  {
+    "name": "Drain Punch + Giga Drain Lv1, horda de 10",
+    "maxHp": 120,
+    "healTicks": 128,
+    "healPerSecond": 26.4,
+    "dealtPerSecond": 828.5,
+    "meanHealTick": 1.24,
+    "firstHeals": [
+      24,
+      0.4,
+      0.6,
+      0.6,
+      0.6,
+      0.6
+    ],
+    "texts": [
+      "+17"
+    ]
+  },
+  {
+    "name": "Drain Punch Lv1, 1 foe, Pesadelo",
+    "maxHp": 120,
+    "healTicks": 7,
+    "healPerSecond": 6.14,
+    "dealtPerSecond": 35.2,
+    "meanHealTick": 5.26,
+    "firstHeals": [
+      5.6,
+      5.6,
+      5.5,
+      4.9,
+      5.08,
+      4.9
+    ],
+    "texts": [
+      "+5"
+    ]
+  },
+  {
+    "name": "Drain Punch Lv8 + Might ×2, 1 foe, Pesadelo",
+    "maxHp": 120,
+    "healTicks": 36,
+    "healPerSecond": 6.97,
+    "dealtPerSecond": 278.7,
+    "meanHealTick": 1.16,
+    "firstHeals": [
+      6,
+      0.4,
+      1.5,
+      0.4,
+      1.8,
+      0.4
+    ],
+    "texts": [
+      "+4"
+    ]
+  }
+]
