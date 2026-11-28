@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  bonusMult, COOLDOWN_SOFT, softCooldown, BURROW_SHARE, burrowTime, DRAIN_RATE, drainAmount, drainRefill, executes, GUARD_UPTIME, guardSpan, learnable, LOW_HP, nearestFoes, nextStacks, scaleBy, WARD_GAP, wardOpens, type StackRule,
+  bonusMult, COOLDOWN_SOFT, softCooldown, BURROW_SHARE, burrowTime, DRAIN, drainAmount, drainCap, drainLabel, drainRefill, executes, GUARD_UPTIME, guardSpan, learnable, LOW_HP, nearestFoes, nextStacks, scaleBy, WARD_GAP, wardOpens, type StackRule,
 } from './kitRules'
 import { HEX_BONUS } from './moveRules'
 import { MOVES, moveStats, type MoveId } from './moves'
@@ -63,17 +63,27 @@ describe('execute', () => {
 
 describe('drain', () => {
   const maxHp = 200
-  const cap = maxHp * DRAIN_RATE
+  const cap = maxHp * DRAIN.rate * DRAIN.hold
 
-  it('refills at DRAIN_RATE of max HP per second, holding one second of it', () => {
-    expect(drainRefill(0, 0.5, maxHp)).toBeCloseTo(cap / 2)
+  it('refills at DRAIN.rate of max HP per second, holding DRAIN.hold seconds of it', () => {
+    expect(drainCap(maxHp)).toBeCloseTo(cap)
+    expect(drainRefill(0, 0.5, maxHp)).toBeCloseTo(maxHp * DRAIN.rate * 0.5)
     expect(drainRefill(0, 60, maxHp)).toBe(cap)
+    // Far above the old shared 4% of max HP per second.
+    expect(DRAIN.rate).toBeGreaterThan(0.04)
   })
 
   it('heals its share of the damage, within the budget', () => {
     expect(drainAmount(10, 0.3, cap)).toBeCloseTo(3)
+    expect(drainAmount(40, 0.3, cap)).toBeCloseTo(12)
     expect(drainAmount(1000, 0.3, cap)).toBe(cap)
     expect(drainAmount(10, 0.3, 0)).toBe(0)
+  })
+
+  it('labels what it healed, holding back less than half an HP until it adds up', () => {
+    expect(drainLabel(0.3)).toBeNull()
+    expect(drainLabel(0.5)).toBe('+1')
+    expect(drainLabel(6.6)).toBe('+7')
   })
 })
 

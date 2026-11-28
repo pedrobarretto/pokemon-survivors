@@ -23,7 +23,7 @@ import { trialHit } from './towerTrial'
 import { applyStatus, breakOnHit, hitTakenMult, STATUS_RULES, type StatusKind } from './status'
 import { venomJump, VENOM, VENOM_MOVE } from './seasonOneEggRules'
 import { toxicSpreads } from './regionalRules'
-import { bonusMult, drainAmount, drainRefill, executes, nearestFoes, SEED_DECAY, SEED_JUMPS, SEED_MIN_TIME, SEED_REACH } from './kitRules'
+import { bonusMult, DRAIN, drainAmount, drainCap, drainLabel, drainRefill, executes, nearestFoes, SEED_DECAY, SEED_JUMPS, SEED_MIN_TIME, SEED_REACH } from './kitRules'
 import { guardHit, moveEvent, moveHit } from './moveHooks'
 import { fallInArena } from './riftArena'
 import { domainHarm } from './rift'
@@ -54,7 +54,7 @@ import { rocketKitKill } from './rocketKitSystem'
 import * as dm from '../engine/dmath'
 import { tutorialHp } from './tutorial'
 
-const TEXT_COLORS = { super: '#ffd830', normal: '#ffffff', weak: '#a8a8b8', warded: '#88b8f8' } as const
+const TEXT_COLORS = { super: '#ffd830', normal: '#ffffff', weak: '#a8a8b8', warded: '#88b8f8', heal: '#78f878' } as const
 
 export const damageEnemy = (g: Game, e: Enemy, attack: Attack) => {
   // Versus: a rival's body passes the hit on to its player; a camp's wild Pokémon turns on whoever hit it.
@@ -99,7 +99,7 @@ export const damageEnemy = (g: Game, e: Enemy, attack: Attack) => {
   damageText(g, e, dmg, color, eff > 1)
   burst(g, e.x, e.y - e.radius, { colors: [TYPE_COLORS[attack.type], '#ffffff'], count: eff > 1 ? 6 : 3, speed: 70, ttl: 0.25 })
   g.events.push({ kind: 'hit', effective: eff })
-  if (attack.drain > 0) drainHeal(g, dmg, attack.drain)
+  if (attack.drain > 0) drainHeal(g, dmg, attack.drain, attack.move)
   if (attack.move !== 'special' && attack.move !== 'ability') {
     moveEvent(g, attack.move, 'hit')
     moveHit(g, attack, e, unhurt)
@@ -123,18 +123,41 @@ const shatter = (g: Game, e: Enemy, cause: 'execute' | 'freeze') => {
   g.events.push({ kind: 'shatter', cause })
 }
 
-/** Heals `fraction` of `damage` through the drain budget (`kitRules.ts`). Returns the HP restored. */
-export const drainHeal = (g: Game, damage: number, fraction: number) => {
+/**
+ * Heals `fraction` of `damage` through `source`'s drain budget (`DRAIN` in
+ * `kitRules.ts`; a fresh one starts full). Returns the HP restored. What it
+ * heals adds up into a green "+N" over the player (`showDrain`).
+ */
+export const drainHeal = (g: Game, damage: number, fraction: number, source: DamageSource) => {
   const p = g.player
-  const d = p.drain
-  d.left = drainRefill(d.left, g.now - d.at, p.stats.maxHp)
+  const maxHp = p.stats.maxHp
+  let d = p.drain.by.get(source)
+  if (d === undefined) {
+    d = { left: drainCap(maxHp), at: g.now }
+    p.drain.by.set(source, d)
+  }
+  d.left = drainRefill(d.left, g.now - d.at, maxHp)
   d.at = g.now
   const amount = drainAmount(damage, fraction, d.left)
   if (amount <= 0) return 0
   d.left -= amount
   const healed = healPlayer(g, amount)
+  p.drain.unshown += healed
+  showDrain(g)
   if (healed >= 1 && chance(g.rng, 0.35)) burst(g, p.x, p.y - 12, { colors: ['#78f878', '#d8f8c8'], count: 2, speed: 25, ttl: 0.45, gravity: -50 })
   return healed
+}
+
+/** Pops the acting player's drained HP as one green "+N" at most every `DRAIN.show` s (`drainLabel`: under 1 it waits to add up). */
+export const showDrain = (g: Game) => {
+  const p = g.player
+  const d = p.drain
+  if (d.unshown <= 0 || g.now - d.shownAt < DRAIN.show) return
+  const label = drainLabel(d.unshown)
+  if (label === null) return
+  floatText(g, p.x, p.y - 30, label, TEXT_COLORS.heal)
+  d.unshown = 0
+  d.shownAt = g.now
 }
 
 /**

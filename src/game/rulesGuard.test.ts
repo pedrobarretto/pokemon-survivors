@@ -333,17 +333,17 @@ type ScenarioId = keyof typeof SCENARIOS
  * failing test prints.
  */
 const PINNED: Partial<Record<number, Partial<Record<ScenarioId, string>>>> = {
-  54: {
+  55: {
     levelUps: '2998·48·12·ad64acab',
     mega: '1892·32·2·4007bb5c',
     riftFall: '765·0·1·9fa6c9be',
     alphaHazards: '1002·6·20·ea33b4b0',
-    nightBoss: '2093·24·17·148a20f9',
+    nightBoss: '2093·28·17·ac426a04',
     bag: '1017·7·3·cc8da20c',
     shop: '1521·88·19·880c065c',
     shopTms2: '1787·48·17·b2353376',
     evoGate: '1487·53·24·4a84d98b',
-    porygonGate: '2074·72·37·25bd273a',
+    porygonGate: '2074·69·37·20b15cfb',
     sketch: '1210·20·4·d4ffa023',
     legend: '1487·97·14·f773046a',
     waveLegend: '1998·16·17·c7c9f3dd',
@@ -351,7 +351,7 @@ const PINNED: Partial<Record<number, Partial<Record<ScenarioId, string>>>> = {
     hideout: '2633·73·16·cbca0c6f',
     grotto: '2782·22·19·227835b1',
     underground: '3084·28·30·12e02551',
-    magicGuard: '1188·41·19·541abae2',
+    magicGuard: '1188·41·19·62748ffd',
     endlessCeiling: '837·0·26·6bc0a593',
     endlessSwarm: '880·9·26·7a7f6eee',
   },

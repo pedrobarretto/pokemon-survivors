@@ -3333,7 +3333,7 @@ export const fr: Messages = {
     ...MYTHICAL_WORDS.fr.moves,
     ...REGIS_FORCES_WORDS.fr.moves,
     leechSeed: {
-      description: 'Lance des graines sur les ennemis les plus proches. Une graine draine les PV avec le temps et te soigne ; quand l’ennemi est vaincu, elle saute sur deux voisins.',
+      description: 'Lance des graines sur les ennemis les plus proches. Une graine draine les PV avec le temps et te soigne de la moitié (jusqu’à 10% des PV max par seconde) ; quand l’ennemi est vaincu, elle saute sur deux voisins.',
       upgrades: [
         '+1 graine',
         '+3 dégâts',
@@ -3349,7 +3349,7 @@ export const fr: Messages = {
       upgrades: [
         '+3 dégâts',
         'Tourne +0.3s',
-        { fork: [{ name: 'Toupie statique', desc: 'Rebondit sur 2 ennemis de plus ; +10% de zone' }, { name: 'Toupie vitale', desc: 'Ses coups te soignent ; +10% de zone' }] },
+        { fork: [{ name: 'Toupie statique', desc: 'Rebondit sur 2 ennemis de plus ; +10% de zone' }, { name: 'Toupie vitale', desc: 'Ses coups soignent 20% des dégâts (max 10% PV/s) ; +10% de zone' }] },
         'Recharge 0.5s plus rapide',
         '+4 dégâts',
         { fork: [{ name: 'Carapace explosive', desc: 'Les ennemis vaincus explosent ; +0.3s de durée' }, { name: 'Toupie finale', desc: 'Achève les ennemis à ≤12% PV ; +15% de zone, +16 dégâts' }] },
@@ -3385,7 +3385,7 @@ export const fr: Messages = {
       upgrades: [
         '+3 dégâts',
         '+1 morsure par seconde',
-        { fork: [{ name: 'Frénésie en chaîne', desc: 'Rebondit sur 2 ennemis de plus ; +10% de zone' }, { name: 'Frénésie vitale', desc: 'Ses coups te soignent ; +20% de zone' }] },
+        { fork: [{ name: 'Frénésie en chaîne', desc: 'Rebondit sur 2 ennemis de plus ; +10% de zone' }, { name: 'Frénésie vitale', desc: 'Ses coups soignent 20% des dégâts (max 10% PV/s) ; +20% de zone' }] },
         'Déchaînement +0.5s',
         '+4 dégâts',
         { fork: [{ name: 'Carnage', desc: 'Les ennemis vaincus explosent ; +1 morsure' }, { name: 'Rage du titan', desc: '×1.5 contre élites et boss ; +1 morsure' }] },
@@ -3460,7 +3460,7 @@ export const fr: Messages = {
         { fork: [{ name: 'Traînée de feu', desc: 'Laisse un sol blessant ; −0.3s de recharge' }, { name: 'Étincelles', desc: 'Rebondit sur 2 ennemis de plus ; −0.4s de recharge' }] },
         '+6 dégâts',
         '+20% de zone',
-        { fork: [{ name: 'Météore', desc: 'Les ennemis vaincus explosent ; −0.4s de recharge' }, { name: 'Braise vitale', desc: 'Ses coups te soignent ; −0.3s de recharge' }] },
+        { fork: [{ name: 'Météore', desc: 'Les ennemis vaincus explosent ; −0.4s de recharge' }, { name: 'Braise vitale', desc: 'Ses coups soignent 20% des dégâts (max 10% PV/s) ; −0.3s de recharge' }] },
         '+8 dégâts et +15% de zone',
       ],
     },
@@ -3469,7 +3469,7 @@ export const fr: Messages = {
       upgrades: [
         '+3 dégâts',
         '+2 aiguilles',
-        { fork: [{ name: 'Épines statiques', desc: 'Rebondit sur 2 ennemis de plus ; +0.3s de durée' }, { name: 'Épines vampires', desc: 'Ses coups te soignent ; +16 dégâts' }] },
+        { fork: [{ name: 'Épines statiques', desc: 'Rebondit sur 2 ennemis de plus ; +0.3s de durée' }, { name: 'Épines vampires', desc: 'Ses coups soignent 20% des dégâts (max 10% PV/s) ; +16 dégâts' }] },
         'Recharge 0.5s plus rapide',
         '+4 dégâts',
         { fork: [{ name: 'Bombe cactus', desc: 'Les ennemis vaincus explosent ; +1 coup, -4 dégâts' }, { name: 'Double hérisson', desc: 'Se relance aussitôt (50%) ; +1 coup, +8 dégâts' }] },
@@ -3493,7 +3493,7 @@ export const fr: Messages = {
       upgrades: [
         '+3 dégâts',
         '+20% de portée',
-        { fork: [{ name: 'Lasso', desc: 'Attire les ennemis ; +0.3s de durée' }, { name: 'Étreinte sombre', desc: 'Ses coups te soignent ; +0.4s de durée' }] },
+        { fork: [{ name: 'Lasso', desc: 'Attire les ennemis ; +0.3s de durée' }, { name: 'Étreinte sombre', desc: 'Ses coups soignent 20% des dégâts (max 10% PV/s) ; +0.4s de durée' }] },
         'Recharge 0.4s plus rapide',
         '+4 dégâts',
         { fork: [{ name: 'Quatre bras', desc: 'Une 2e paire, plus large, tourne en sens inverse ; -2 dégâts' }, { name: 'K.-O.', desc: 'Achève les ennemis à ≤12% PV ; +1 bras, +9 dégâts' }] },
@@ -3541,7 +3541,7 @@ export const fr: Messages = {
       upgrades: [
         '+4 dégâts',
         '+20% de portée',
-        { fork: [{ name: 'Flaques', desc: 'Laisse un sol blessant ; −0.2s de recharge' }, { name: 'Pas vital', desc: 'Ses coups te soignent ; −0.25s de recharge' }] },
+        { fork: [{ name: 'Flaques', desc: 'Laisse un sol blessant ; −0.2s de recharge' }, { name: 'Pas vital', desc: 'Ses coups soignent 20% des dégâts (max 10% PV/s) ; −0.25s de recharge' }] },
         '+5 dégâts',
         '+20% de portée',
         { fork: [{ name: 'Gerbe en chaîne', desc: 'Rebondit sur 2 ennemis de plus ; −0.25s de recharge, +8 dégâts' }, { name: 'Vague finale', desc: 'Les ennemis vaincus explosent ; −0.25s de recharge' }] },
@@ -3589,7 +3589,7 @@ export const fr: Messages = {
       upgrades: [
         '+20% de zone',
         '+2 dégâts',
-        { fork: [{ name: 'Courant cruel', desc: '×1.35 contre les ennemis affectés ; −0.04s de recharge' }, { name: 'Source', desc: 'Ses coups te soignent ; −0.08s de recharge' }] },
+        { fork: [{ name: 'Courant cruel', desc: '×1.35 contre les ennemis affectés ; −0.04s de recharge' }, { name: 'Source', desc: 'Ses coups soignent 20% des dégâts (max 10% PV/s) ; −0.08s de recharge' }] },
         '+20% de zone',
         '+3 dégâts',
         { fork: [{ name: 'Contre-courant', desc: 'Rebondit sur 2 ennemis de plus ; −0.08s de recharge' }, { name: 'Ressac', desc: 'Achève les ennemis à ≤12% PV ; −0.08s de recharge' }] },
@@ -3616,7 +3616,7 @@ export const fr: Messages = {
         { fork: [{ name: 'Racines', desc: 'Laisse un sol blessant ; +10% de zone' }, { name: 'Fouet en chaîne', desc: 'Rebondit sur 2 ennemis de plus ; +20% de zone' }] },
         'Recharge 0.15s plus rapide',
         '+6 dégâts',
-        { fork: [{ name: 'Épines explosives', desc: 'Les ennemis vaincus explosent ; +20% de zone' }, { name: 'Fouet vampire', desc: 'Ses coups te soignent ; +10% de zone' }] },
+        { fork: [{ name: 'Épines explosives', desc: 'Les ennemis vaincus explosent ; +20% de zone' }, { name: 'Fouet vampire', desc: 'Ses coups soignent 20% des dégâts (max 10% PV/s) ; +10% de zone' }] },
         '+8 dégâts',
       ],
     },
@@ -3657,11 +3657,11 @@ export const fr: Messages = {
       ],
     },
     dreamEater: {
-      description: 'Une onde d’Hypnose endort les ennemis autour de toi, et des gueules spectrales mordent d’abord les dormeurs : ×3 dégâts sur un ennemi endormi (qui se réveille), et la morsure draine des PV.',
+      description: 'Une onde d’Hypnose endort les ennemis autour de toi, et des gueules spectrales mordent d’abord les dormeurs : ×3 dégâts sur un ennemi endormi (qui se réveille), et la morsure soigne 30% de ses dégâts (jusqu’à 10% des PV max par seconde).',
       upgrades: [
         '+1 morsure',
         '+4 dégâts',
-        { fork: [{ name: 'Cauchemar', desc: 'Rebondit sur 2 ennemis de plus ; +10% de zone' }, { name: 'Festin', desc: 'Ses coups te soignent ; +20% de zone' }] },
+        { fork: [{ name: 'Cauchemar', desc: 'Rebondit sur 2 ennemis de plus ; +10% de zone' }, { name: 'Festin', desc: 'Ses coups soignent 20% des dégâts (max 10% PV/s) ; +20% de zone' }] },
         '+15% de chances de sommeil',
         'Recharge 0.3s plus rapide',
         { fork: [{ name: 'Rêve explosif', desc: 'Les ennemis vaincus explosent' }, { name: 'Dévoreur', desc: '×1.5 contre élites et boss ; +11 dégâts' }] },
@@ -3709,7 +3709,7 @@ export const fr: Messages = {
       upgrades: [
         '+2 dégâts',
         'Vortex 20% plus grand',
-        { fork: [{ name: 'Sables vitaux', desc: 'Ses coups te soignent ; +0.5s de durée' }, { name: 'Tombe cruelle', desc: '×1.35 contre les ennemis affectés ; +1s de durée' }] },
+        { fork: [{ name: 'Sables vitaux', desc: 'Ses coups soignent 20% des dégâts (max 10% PV/s) ; +0.5s de durée' }, { name: 'Tombe cruelle', desc: '×1.35 contre les ennemis affectés ; +1s de durée' }] },
         'Recharge 0.8s plus rapide',
         '+3 dégâts',
         { fork: [{ name: 'Ensevelir', desc: 'Les ennemis vaincus explosent ; +20% de zone' }, { name: 'Sablier', desc: 'Achève les ennemis à ≤12% PV ; +10% de zone, +4 dégâts' }] },
@@ -3733,7 +3733,7 @@ export const fr: Messages = {
       upgrades: [
         '+5 dégâts',
         '+20% de zone',
-        { fork: [{ name: 'Onde mentale', desc: 'Rebondit sur 2 ennemis de plus ; −0.15s de recharge' }, { name: 'Méditation', desc: 'Ses coups te soignent ; −0.2s de recharge' }] },
+        { fork: [{ name: 'Onde mentale', desc: 'Rebondit sur 2 ennemis de plus ; −0.15s de recharge' }, { name: 'Méditation', desc: 'Ses coups soignent 20% des dégâts (max 10% PV/s) ; −0.2s de recharge' }] },
         '+6 dégâts',
         'Plus de recul et +15% de zone',
         { fork: [{ name: 'Tête sismique', desc: 'Les ennemis vaincus explosent ; −0.2s de recharge' }, { name: 'Illumination', desc: 'Achève les ennemis à ≤12% PV ; −0.15s de recharge, +13 dégâts' }] },
@@ -3781,7 +3781,7 @@ export const fr: Messages = {
       upgrades: [
         '+2 dégâts',
         'Roule +0.5s',
-        { fork: [{ name: 'Roche chargée', desc: 'Rebondit sur 2 ennemis de plus ; −0.5s de recharge' }, { name: 'Roulade vitale', desc: 'Ses coups te soignent ; −0.6s de recharge, +3 dégâts' }] },
+        { fork: [{ name: 'Roche chargée', desc: 'Rebondit sur 2 ennemis de plus ; −0.5s de recharge' }, { name: 'Roulade vitale', desc: 'Ses coups soignent 20% des dégâts (max 10% PV/s) ; −0.6s de recharge, +3 dégâts' }] },
         '+2 dégâts',
         '+20% de zone',
         { fork: [{ name: 'Avalanche', desc: 'Les ennemis vaincus explosent ; +0.5s de durée' }, { name: 'Rouleau compresseur', desc: '×1.5 contre élites et boss ; +0.3s de durée, +16 dégâts' }] },
@@ -3805,7 +3805,7 @@ export const fr: Messages = {
       upgrades: [
         '+2 dégâts',
         '+20% de zone',
-        { fork: [{ name: 'Taille en chaîne', desc: 'Rebondit sur 2 ennemis de plus ; −0.05s de recharge' }, { name: 'Faux vampire', desc: 'Ses coups te soignent ; −0.1s de recharge' }] },
+        { fork: [{ name: 'Taille en chaîne', desc: 'Rebondit sur 2 ennemis de plus ; −0.05s de recharge' }, { name: 'Faux vampire', desc: 'Ses coups soignent 20% des dégâts (max 10% PV/s) ; −0.1s de recharge' }] },
         '+3 dégâts',
         '+20% de zone',
         { fork: [{ name: 'Moisson', desc: 'Achève les ennemis à ≤12% PV ; −0.1s de recharge' }, { name: 'Taille explosive', desc: 'Les ennemis vaincus explosent ; −0.1s de recharge' }] },
@@ -3841,7 +3841,7 @@ export const fr: Messages = {
       upgrades: [
         '+3 dégâts',
         'Ondes 20% plus grandes',
-        { fork: [{ name: 'Grondement en chaîne', desc: 'Rebondit sur 2 ennemis de plus ; −0.15s de recharge' }, { name: 'Faim', desc: 'Ses coups te soignent ; −0.25s de recharge' }] },
+        { fork: [{ name: 'Grondement en chaîne', desc: 'Rebondit sur 2 ennemis de plus ; −0.15s de recharge' }, { name: 'Faim', desc: 'Ses coups soignent 20% des dégâts (max 10% PV/s) ; −0.25s de recharge' }] },
         '+4 dégâts',
         '+1 onde',
         { fork: [{ name: 'Meute explosive', desc: 'Les ennemis vaincus explosent ; +20% de zone' }, { name: 'Prédateur', desc: 'Achève les ennemis à ≤12% PV ; +10% de zone' }] },
@@ -3865,7 +3865,7 @@ export const fr: Messages = {
       upgrades: [
         '+3 dégâts',
         '+1 coup de queue',
-        { fork: [{ name: 'Second souffle', desc: 'Ses coups te soignent ; +10% de zone' }, { name: 'Arc fouetté', desc: 'Rebondit sur 2 ennemis de plus ; +20% de zone' }] },
+        { fork: [{ name: 'Second souffle', desc: 'Ses coups soignent 20% des dégâts (max 10% PV/s) ; +10% de zone' }, { name: 'Arc fouetté', desc: 'Rebondit sur 2 ennemis de plus ; +20% de zone' }] },
         'Recharge 0.15s plus rapide',
         '+4 dégâts',
         { fork: [{ name: 'Désespoir', desc: 'Les ennemis vaincus explosent ; +1 coup de queue' }, { name: 'Baroud d’honneur', desc: 'Achève les ennemis à ≤12% PV ; +1 coup de queue, +4 dégâts' }] },
@@ -3937,7 +3937,7 @@ export const fr: Messages = {
       upgrades: [
         '+3 dégâts',
         '+20% de zone',
-        { fork: [{ name: 'Brise vitale', desc: 'Ses coups te soignent ; −0.3s de recharge' }, { name: 'Double rafale', desc: 'Se relance aussitôt (50%) ; −0.1s de recharge' }] },
+        { fork: [{ name: 'Brise vitale', desc: 'Ses coups soignent 20% des dégâts (max 10% PV/s) ; −0.3s de recharge' }, { name: 'Double rafale', desc: 'Se relance aussitôt (50%) ; −0.1s de recharge' }] },
         '+1 rafale',
         '+4 dégâts',
         { fork: [{ name: 'Coup de vent', desc: 'Les ennemis vaincus explosent ; +30% de zone' }, { name: 'Vent statique', desc: 'Rebondit sur 2 ennemis de plus ; +20% de zone' }] },
@@ -3949,7 +3949,7 @@ export const fr: Messages = {
       upgrades: [
         '+1 coup de poing',
         '+3 dégâts',
-        { fork: [{ name: 'Jab en chaîne', desc: 'Rebondit sur 2 ennemis de plus ; +10% de zone' }, { name: 'Jab vital', desc: 'Ses coups te soignent ; +20% de zone' }] },
+        { fork: [{ name: 'Jab en chaîne', desc: 'Rebondit sur 2 ennemis de plus ; +10% de zone' }, { name: 'Jab vital', desc: 'Ses coups soignent 20% des dégâts (max 10% PV/s) ; +20% de zone' }] },
         '+1 coup de poing',
         'Recharge 0.2s plus rapide',
         { fork: [{ name: 'K.-O.', desc: 'Achève les ennemis à ≤12% PV ; +6 dégâts' }, { name: 'Bang supersonique', desc: 'Les ennemis vaincus explosent ; +5 dégâts' }] },
@@ -4045,7 +4045,7 @@ export const fr: Messages = {
       upgrades: [
         '+4 dégâts',
         '+20% de zone',
-        { fork: [{ name: 'Rythme cruel', desc: '×1.35 contre les ennemis affectés ; +1 coup' }, { name: 'Rythme vital', desc: 'Ses coups te soignent ; +1 coup' }] },
+        { fork: [{ name: 'Rythme cruel', desc: '×1.35 contre les ennemis affectés ; +1 coup' }, { name: 'Rythme vital', desc: 'Ses coups soignent 20% des dégâts (max 10% PV/s) ; +1 coup' }] },
         'Recharge 0.25s plus rapide',
         '+5 dégâts',
         { fork: [{ name: 'Écho de la jungle', desc: 'Rebondit sur 2 ennemis de plus ; +1 coup' }, { name: 'Tambour de guerre', desc: 'Les ennemis vaincus explosent ; +1 coup' }] },
@@ -4060,7 +4060,7 @@ export const fr: Messages = {
         { fork: [{ name: 'Cœurs rebondissants', desc: 'Rebondit sur 2 ennemis de plus ; +9 dégâts' }, { name: 'Sérénade', desc: 'Tourne autour de toi ; -4 dégâts' }] },
         'Recharge 0.2s plus rapide',
         '+2 cœurs',
-        { fork: [{ name: 'Cœur brisé', desc: 'Se divise en 2 à l’impact ; +2 dégâts' }, { name: 'Douce voix', desc: 'Ses coups te soignent ; +4 dégâts' }] },
+        { fork: [{ name: 'Cœur brisé', desc: 'Se divise en 2 à l’impact ; +2 dégâts' }, { name: 'Douce voix', desc: 'Ses coups soignent 20% des dégâts (max 10% PV/s) ; +4 dégâts' }] },
         '+4 cœurs',
       ],
     },
@@ -4084,7 +4084,7 @@ export const fr: Messages = {
         { fork: [{ name: 'Lames jumelles', desc: 'Un 2e coup, plus large, tourne en sens inverse' }, { name: 'Coupe nette', desc: 'Achève les ennemis à ≤12% PV ; +1 lame' }] },
         'Recharge 0.2s plus rapide',
         '+6 dégâts',
-        { fork: [{ name: 'Taille explosive', desc: 'Les ennemis vaincus explosent ; +20% de zone' }, { name: 'Sève', desc: 'Ses coups te soignent ; +10% de zone' }] },
+        { fork: [{ name: 'Taille explosive', desc: 'Les ennemis vaincus explosent ; +20% de zone' }, { name: 'Sève', desc: 'Ses coups soignent 20% des dégâts (max 10% PV/s) ; +10% de zone' }] },
         '+1 lame',
       ],
     },
@@ -4093,7 +4093,7 @@ export const fr: Messages = {
       upgrades: [
         'Frappe aussi derrière',
         '+5 dégâts',
-        { fork: [{ name: 'Taille en chaîne', desc: 'Rebondit sur 2 ennemis de plus ; +10% de zone' }, { name: 'Perle', desc: 'Ses coups te soignent ; +20% de zone' }] },
+        { fork: [{ name: 'Taille en chaîne', desc: 'Rebondit sur 2 ennemis de plus ; +10% de zone' }, { name: 'Perle', desc: 'Ses coups soignent 20% des dégâts (max 10% PV/s) ; +20% de zone' }] },
         'Recharge 0.15s plus rapide',
         '+6 dégâts',
         { fork: [{ name: 'Coquille bombe', desc: 'Les ennemis vaincus explosent ; +20% de zone' }, { name: 'Coquille cruelle', desc: '×1.35 contre les ennemis affectés ; +10% de zone' }] },
@@ -4129,7 +4129,7 @@ export const fr: Messages = {
       upgrades: [
         '+1 saut',
         '+4 dégâts',
-        { fork: [{ name: 'Maléfice explosif', desc: 'Les ennemis vaincus explosent ; −0.1s de recharge, -6 dégâts' }, { name: 'Drain d’âme', desc: 'Ses coups te soignent ; −0.2s de recharge, +8 dégâts' }] },
+        { fork: [{ name: 'Maléfice explosif', desc: 'Les ennemis vaincus explosent ; −0.1s de recharge, -6 dégâts' }, { name: 'Drain d’âme', desc: 'Ses coups soignent 20% des dégâts (max 10% PV/s) ; −0.2s de recharge, +8 dégâts' }] },
         '+1 saut',
         '+5 dégâts',
         { fork: [{ name: 'Feu follet', desc: 'Laisse un sol blessant ; +25% de zone, -6 dégâts' }, { name: 'Écho maudit', desc: 'Se relance aussitôt (50%) ; +10% de zone, +11 dégâts' }] },
@@ -4213,7 +4213,7 @@ export const fr: Messages = {
       upgrades: [
         '+3 dégâts',
         'Flammes +0.6s',
-        { fork: [{ name: 'Roue vitale', desc: 'Ses coups te soignent ; +10% de zone' }, { name: 'Roue étincelante', desc: 'Rebondit sur 2 ennemis de plus ; +20% de zone' }] },
+        { fork: [{ name: 'Roue vitale', desc: 'Ses coups soignent 20% des dégâts (max 10% PV/s) ; +10% de zone' }, { name: 'Roue étincelante', desc: 'Rebondit sur 2 ennemis de plus ; +20% de zone' }] },
         '+3 dégâts et +10% de chances de brûlure',
         'Flammes +0.6s',
         { fork: [{ name: 'Roue explosive', desc: 'Les ennemis vaincus explosent ; +4 dégâts' }, { name: 'Roue cruelle', desc: '×1.35 contre les ennemis affectés ; +2 dégâts' }] },
@@ -4309,7 +4309,7 @@ export const fr: Messages = {
       upgrades: [
         '+1 engrenage',
         '+3 dégâts',
-        { fork: [{ name: 'Engrenage vital', desc: 'Ses coups te soignent ; +10% de zone' }, { name: 'Broyeur', desc: 'Attire les ennemis ; +20% de zone' }] },
+        { fork: [{ name: 'Engrenage vital', desc: 'Ses coups soignent 20% des dégâts (max 10% PV/s) ; +10% de zone' }, { name: 'Broyeur', desc: 'Attire les ennemis ; +20% de zone' }] },
         'Rotation 25% plus rapide',
         '+1 engrenage',
         { fork: [{ name: 'Engrenage bombe', desc: 'Les ennemis vaincus explosent ; +4 dégâts' }, { name: 'Déchiqueteuse', desc: 'Achève les ennemis à ≤12% PV ; +9 dégâts' }] },
@@ -4321,7 +4321,7 @@ export const fr: Messages = {
       upgrades: [
         '+4 dégâts',
         '+1 cible par coup',
-        { fork: [{ name: 'Riposte vitale', desc: 'Ses coups te soignent ; −0.05s de recharge' }, { name: 'Jab en chaîne', desc: 'Rebondit sur 2 ennemis de plus ; −0.08s de recharge' }] },
+        { fork: [{ name: 'Riposte vitale', desc: 'Ses coups soignent 20% des dégâts (max 10% PV/s) ; −0.05s de recharge' }, { name: 'Jab en chaîne', desc: 'Rebondit sur 2 ennemis de plus ; −0.08s de recharge' }] },
         '+20% de portée',
         '+6 dégâts',
         { fork: [{ name: 'Coup tordu', desc: 'Achève les ennemis à ≤12% PV ; +1 cible, +11 dégâts' }, { name: 'Piège explosif', desc: 'Les ennemis vaincus explosent ; +1 cible' }] },
@@ -4369,7 +4369,7 @@ export const fr: Messages = {
       upgrades: [
         '+6 dégâts',
         '+20% de zone',
-        { fork: [{ name: 'Sillage', desc: 'Laisse un sol blessant ; −0.2s de recharge' }, { name: 'Retour vital', desc: 'Ses coups te soignent ; −0.3s de recharge' }] },
+        { fork: [{ name: 'Sillage', desc: 'Laisse un sol blessant ; −0.2s de recharge' }, { name: 'Retour vital', desc: 'Ses coups soignent 20% des dégâts (max 10% PV/s) ; −0.3s de recharge' }] },
         '+8 dégâts',
         'Va plus loin',
         { fork: [{ name: 'Retour explosif', desc: 'Les ennemis vaincus explosent ; −0.3s de recharge' }, { name: 'Zigzag', desc: 'Rebondit sur 2 ennemis de plus ; −0.3s de recharge, +25 dégâts' }] },
@@ -4381,7 +4381,7 @@ export const fr: Messages = {
       upgrades: [
         '+6 dégâts',
         '+20% de zone',
-        { fork: [{ name: 'Queue vitale', desc: 'Ses coups te soignent ; −0.15s de recharge' }, { name: 'Queue de titan', desc: '×1.5 contre élites et boss ; −0.2s de recharge' }] },
+        { fork: [{ name: 'Queue vitale', desc: 'Ses coups soignent 20% des dégâts (max 10% PV/s) ; −0.15s de recharge' }, { name: 'Queue de titan', desc: '×1.5 contre élites et boss ; −0.2s de recharge' }] },
         '+7 dégâts',
         '+20% de zone',
         { fork: [{ name: 'Projection explosive', desc: 'Les ennemis vaincus explosent ; −0.2s de recharge' }, { name: 'Queue finale', desc: 'Achève les ennemis à ≤12% PV ; −0.2s de recharge, +12 dégâts' }] },
@@ -4644,7 +4644,7 @@ export const fr: Messages = {
       ],
     },
     gigaDrain: {
-      description: 'Des lianes s’accrochent aux ennemis les plus proches et drainent leur énergie pour te soigner. Si la cible est vaincue, la liane passe à la suivante.',
+      description: 'Des lianes s’accrochent aux ennemis les plus proches et drainent leur énergie pour te soigner de 35% des dégâts (jusqu’à 10% des PV max par seconde). Si la cible est vaincue, la liane passe à la suivante.',
       upgrades: [
         '+1 liane',
         '+4 dégâts',
@@ -4725,7 +4725,7 @@ export const fr: Messages = {
       ],
     },
     bitterBlade: {
-      description: 'Une entaille de feu spectral devant toi qui te soigne de la moitié des dégâts infligés. Peut brûler.',
+      description: 'Une entaille de feu spectral devant toi qui te soigne de la moitié des dégâts infligés (jusqu’à 10% des PV max par seconde). Peut brûler.',
       upgrades: [
         '+4 dégâts',
         '+20% de zone',
@@ -4737,7 +4737,7 @@ export const fr: Messages = {
       ],
     },
     leechLife: {
-      description: 'De petites morsures rapides sur l’ennemi collé à toi, qui drainent la moitié des dégâts en PV. N’atteint que les ennemis tout proches.',
+      description: 'De petites morsures rapides sur l’ennemi collé à toi, qui drainent la moitié des dégâts en PV (jusqu’à 10% des PV max par seconde). N’atteint que les ennemis tout proches.',
       upgrades: [
         '+2 dégâts',
         'Mord +1 ennemi',
@@ -5085,7 +5085,7 @@ export const fr: Messages = {
       ],
     },
     drainPunch: {
-      description: 'Un coup de poing lumineux sur l’ennemi le plus proche qui soigne 35% des dégâts infligés (jusqu’à 4% de tes PV par seconde).',
+      description: 'Un coup de poing lumineux sur l’ennemi le plus proche qui soigne 35% des dégâts infligés (jusqu’à 10% des PV max par seconde).',
       upgrades: [
         '+4 dégâts',
         'Recharge −0.1s',
@@ -5175,7 +5175,7 @@ export const fr: Messages = {
       ],
     },
     oblivionWing: {
-      description: 'Des ailes écarlates se déploient derrière toi et tirent des rayons sur les ennemis les plus proches, drainant la moitié des dégâts en PV. Reste immobile un instant pour deux fois plus de rayons.',
+      description: 'Des ailes écarlates se déploient derrière toi et tirent des rayons sur les ennemis les plus proches, drainant la moitié des dégâts en PV (jusqu’à 10% des PV max par seconde). Reste immobile un instant pour deux fois plus de rayons.',
       upgrades: [
         '+9 dégâts',
         '+1 rayon',
@@ -5308,7 +5308,7 @@ export const fr: Messages = {
         { fork: [{ name: 'Guidé', desc: 'L’orbe poursuit l’ennemi le plus proche ; +2 dégâts' }, { name: 'Champ électrique', desc: 'Laisse un sol électrifié sur le passage ; +15% de zone' }] },
         'Recharge −0.4s',
         '+4 dégâts',
-        { fork: [{ name: 'Arc voltaïque', desc: 'Les étincelles sautent sur les ennemis proches ; +2 dégâts' }, { name: 'Canon jumeau', desc: '+1 orbe et ses coups te soignent ; -3 dégâts' }] },
+        { fork: [{ name: 'Arc voltaïque', desc: 'Les étincelles sautent sur les ennemis proches ; +2 dégâts' }, { name: 'Canon jumeau', desc: '+1 orbe et ses coups soignent 20% des dégâts (max 10% PV/s) ; -3 dégâts' }] },
         '+5 dégâts et +20% de zone',
       ],
     },
@@ -5587,7 +5587,7 @@ export const fr: Messages = {
       ],
     },
     wish: {
-      description: 'Le vœu de Jirachi : une pluie d’étoiles tombe sur les ennemis de tout l’écran, et une partie de leurs dégâts te soigne.',
+      description: 'Le vœu de Jirachi : une pluie d’étoiles tombe sur les ennemis de tout l’écran, et 25% de leurs dégâts te soignent (jusqu’à 10% des PV max par seconde).',
       upgrades: [
         '+2 étoiles',
         '+10 dégâts',
@@ -5680,7 +5680,7 @@ export const fr: Messages = {
       ],
     },
     aquaRing: {
-      description: 'Suicune part de toi en spirale porté par le vent du nord, balayant les ennemis. L’eau pure sur laquelle il court devient un anneau qui les repousse et te soigne un peu.',
+      description: 'Suicune part de toi en spirale porté par le vent du nord, balayant les ennemis. L’eau pure sur laquelle il court devient un anneau qui les repousse et te soigne de 12% de ses dégâts (jusqu’à 10% des PV max par seconde).',
       upgrades: [
         '+8 dégâts',
         '+15% de zone et l’anneau dure +0.6s',

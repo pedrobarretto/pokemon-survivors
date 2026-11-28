@@ -3338,7 +3338,7 @@ export const es: Messages = {
     ...MYTHICAL_WORDS.es.moves,
     ...REGIS_FORCES_WORDS.es.moves,
     leechSeed: {
-      description: 'Lanza semillas a los enemigos más cercanos. La semilla absorbe PS con el tiempo y te cura; cuando el enemigo es derrotado, salta a otros dos.',
+      description: 'Lanza semillas a los enemigos más cercanos. La semilla absorbe PS con el tiempo y te cura la mitad (hasta el 10% de los PS máximos por segundo); cuando el enemigo es derrotado, salta a otros dos.',
       upgrades: [
         '+1 semilla',
         '+3 de daño',
@@ -3354,7 +3354,7 @@ export const es: Messages = {
       upgrades: [
         '+3 de daño',
         'Gira +0.3s',
-        { fork: [{ name: 'Giro eléctrico', desc: 'Golpea a 2 más; +10% de área' }, { name: 'Giro vital', desc: 'Los golpes te curan; +10% de área' }] },
+        { fork: [{ name: 'Giro eléctrico', desc: 'Golpea a 2 más; +10% de área' }, { name: 'Giro vital', desc: 'Los golpes curan el 20% del daño (máx. 10% de PS/s); +10% de área' }] },
         'Recarga 0.5s más rápida',
         '+4 de daño',
         { fork: [{ name: 'Caparazón bomba', desc: 'Quien es derrotado explota; dura +0.3s' }, { name: 'Giro final', desc: 'Remata a quien tenga ≤12% HP; +15% de área, +16 de daño' }] },
@@ -3390,7 +3390,7 @@ export const es: Messages = {
       upgrades: [
         '+3 de daño',
         '+1 mordida por segundo',
-        { fork: [{ name: 'Furia en cadena', desc: 'Golpea a 2 más; +10% de área' }, { name: 'Furia vital', desc: 'Los golpes te curan; +20% de área' }] },
+        { fork: [{ name: 'Furia en cadena', desc: 'Golpea a 2 más; +10% de área' }, { name: 'Furia vital', desc: 'Los golpes curan el 20% del daño (máx. 10% de PS/s); +20% de área' }] },
         'Furia +0.5s',
         '+4 de daño',
         { fork: [{ name: 'Masacre', desc: 'Quien es derrotado explota; +1 mordida' }, { name: 'Furia titánica', desc: '×1.5 a élites y jefes; +1 mordida' }] },
@@ -3465,7 +3465,7 @@ export const es: Messages = {
         { fork: [{ name: 'Rastro de fuego', desc: 'Deja daño en el suelo; recarga -0.3s' }, { name: 'Chispas', desc: 'Golpea a 2 más; recarga -0.4s' }] },
         '+6 de daño',
         '+20% de área',
-        { fork: [{ name: 'Meteoro', desc: 'Quien es derrotado explota; recarga -0.4s' }, { name: 'Brasa vital', desc: 'Los golpes te curan; recarga -0.3s' }] },
+        { fork: [{ name: 'Meteoro', desc: 'Quien es derrotado explota; recarga -0.4s' }, { name: 'Brasa vital', desc: 'Los golpes curan el 20% del daño (máx. 10% de PS/s); recarga -0.3s' }] },
         '+8 de daño y +15% de área',
       ],
     },
@@ -3474,7 +3474,7 @@ export const es: Messages = {
       upgrades: [
         '+3 de daño',
         '+2 agujas',
-        { fork: [{ name: 'Espinas en cadena', desc: 'Golpea a 2 más; dura +0.3s' }, { name: 'Espina vampira', desc: 'Los golpes te curan; +16 de daño' }] },
+        { fork: [{ name: 'Espinas en cadena', desc: 'Golpea a 2 más; dura +0.3s' }, { name: 'Espina vampira', desc: 'Los golpes curan el 20% del daño (máx. 10% de PS/s); +16 de daño' }] },
         'Recarga 0.5s más rápida',
         '+4 de daño',
         { fork: [{ name: 'Cactus bomba', desc: 'Quien es derrotado explota; +1 golpe, -4 de daño' }, { name: 'Púas dobles', desc: 'Se vuelve a activar tras usar (50%); +1 golpe, +8 de daño' }] },
@@ -3498,7 +3498,7 @@ export const es: Messages = {
       upgrades: [
         '+3 de daño',
         '+20% de alcance',
-        { fork: [{ name: 'Lazo', desc: 'Atrae a los enemigos; dura +0.3s' }, { name: 'Abrazo oscuro', desc: 'Los golpes te curan; dura +0.4s' }] },
+        { fork: [{ name: 'Lazo', desc: 'Atrae a los enemigos; dura +0.3s' }, { name: 'Abrazo oscuro', desc: 'Los golpes curan el 20% del daño (máx. 10% de PS/s); dura +0.4s' }] },
         'Recarga 0.4s más rápida',
         '+4 de daño',
         { fork: [{ name: 'Cuatro brazos', desc: '2º par de brazos más grande y gira al revés; -2 de daño' }, { name: 'Knockout', desc: 'Remata a quien tenga ≤12% HP; +1 brazo, +9 de daño' }] },
@@ -3546,7 +3546,7 @@ export const es: Messages = {
       upgrades: [
         '+4 de daño',
         '+20% de alcance',
-        { fork: [{ name: 'Charcos', desc: 'Deja daño en el suelo; recarga -0.2s' }, { name: 'Paso vital', desc: 'Los golpes te curan; recarga -0.25s' }] },
+        { fork: [{ name: 'Charcos', desc: 'Deja daño en el suelo; recarga -0.2s' }, { name: 'Paso vital', desc: 'Los golpes curan el 20% del daño (máx. 10% de PS/s); recarga -0.25s' }] },
         '+5 de daño',
         '+20% de alcance',
         { fork: [{ name: 'Salpicón en cadena', desc: 'Golpea a 2 más; recarga -0.25s, +8 de daño' }, { name: 'Ola final', desc: 'Quien es derrotado explota; recarga -0.25s' }] },
@@ -3594,7 +3594,7 @@ export const es: Messages = {
       upgrades: [
         '+20% de área',
         '+2 de daño',
-        { fork: [{ name: 'Remolino cruel', desc: '×1.35 si tiene estado; recarga -0.04s' }, { name: 'Manantial', desc: 'Los golpes te curan; recarga -0.08s' }] },
+        { fork: [{ name: 'Remolino cruel', desc: '×1.35 si tiene estado; recarga -0.04s' }, { name: 'Manantial', desc: 'Los golpes curan el 20% del daño (máx. 10% de PS/s); recarga -0.08s' }] },
         '+20% de área',
         '+3 de daño',
         { fork: [{ name: 'Corriente', desc: 'Golpea a 2 más; recarga -0.08s' }, { name: 'Ahogar', desc: 'Remata a quien tenga ≤12% HP; recarga -0.08s' }] },
@@ -3621,7 +3621,7 @@ export const es: Messages = {
         { fork: [{ name: 'Raíces', desc: 'Deja daño en el suelo; +10% de área' }, { name: 'Látigo en cadena', desc: 'Golpea a 2 más; +20% de área' }] },
         'Recarga 0.15s más rápida',
         '+6 de daño',
-        { fork: [{ name: 'Espinas', desc: 'Quien es derrotado explota; +20% de área' }, { name: 'Látigo vampiro', desc: 'Los golpes te curan; +10% de área' }] },
+        { fork: [{ name: 'Espinas', desc: 'Quien es derrotado explota; +20% de área' }, { name: 'Látigo vampiro', desc: 'Los golpes curan el 20% del daño (máx. 10% de PS/s); +10% de área' }] },
         '+8 de daño',
       ],
     },
@@ -3662,11 +3662,11 @@ export const es: Messages = {
       ],
     },
     dreamEater: {
-      description: 'Una onda de Hipnosis duerme a los enemigos a tu alrededor, y fauces fantasmales muerden primero a los dormidos: ×3 de daño a quien duerme (que despierta) y el mordisco te devuelve HP.',
+      description: 'Una onda de Hipnosis duerme a los enemigos a tu alrededor, y fauces fantasmales muerden primero a los dormidos: ×3 de daño a quien duerme (que despierta) y el mordisco te cura el 30% de su daño (hasta el 10% de los PS máximos por segundo).',
       upgrades: [
         '+1 mordisco',
         '+4 de daño',
-        { fork: [{ name: 'Pesadilla', desc: 'Golpea a 2 más; +10% de área' }, { name: 'Festín', desc: 'Los golpes te curan; +20% de área' }] },
+        { fork: [{ name: 'Pesadilla', desc: 'Golpea a 2 más; +10% de área' }, { name: 'Festín', desc: 'Los golpes curan el 20% del daño (máx. 10% de PS/s); +20% de área' }] },
         '+15% de probabilidad de sueño',
         'Recarga 0.3s más rápida',
         { fork: [{ name: 'Sueño explosivo', desc: 'Quien es derrotado explota' }, { name: 'Devorador', desc: '×1.5 a élites y jefes; +11 de daño' }] },
@@ -3714,7 +3714,7 @@ export const es: Messages = {
       upgrades: [
         '+2 de daño',
         'Remolino 20% más grande',
-        { fork: [{ name: 'Arena vital', desc: 'Los golpes te curan; dura +0.5s' }, { name: 'Tumba cruel', desc: '×1.35 si tiene estado; dura +1s' }] },
+        { fork: [{ name: 'Arena vital', desc: 'Los golpes curan el 20% del daño (máx. 10% de PS/s); dura +0.5s' }, { name: 'Tumba cruel', desc: '×1.35 si tiene estado; dura +1s' }] },
         'Recarga 0.8s más rápida',
         '+3 de daño',
         { fork: [{ name: 'Sepultar', desc: 'Quien es derrotado explota; +20% de área' }, { name: 'Reloj de arena', desc: 'Remata a quien tenga ≤12% HP; +10% de área, +4 de daño' }] },
@@ -3738,7 +3738,7 @@ export const es: Messages = {
       upgrades: [
         '+5 de daño',
         '+20% de área',
-        { fork: [{ name: 'Onda mental', desc: 'Golpea a 2 más; recarga -0.15s' }, { name: 'Meditación', desc: 'Los golpes te curan; recarga -0.2s' }] },
+        { fork: [{ name: 'Onda mental', desc: 'Golpea a 2 más; recarga -0.15s' }, { name: 'Meditación', desc: 'Los golpes curan el 20% del daño (máx. 10% de PS/s); recarga -0.2s' }] },
         '+6 de daño',
         'Más empuje y +15% de área',
         { fork: [{ name: 'Cabezazo sísmico', desc: 'Quien es derrotado explota; recarga -0.2s' }, { name: 'Iluminación', desc: 'Remata a quien tenga ≤12% HP; recarga -0.15s, +13 de daño' }] },
@@ -3786,7 +3786,7 @@ export const es: Messages = {
       upgrades: [
         '+2 de daño',
         'Rueda +0.5s',
-        { fork: [{ name: 'Roca en cadena', desc: 'Golpea a 2 más; recarga -0.5s' }, { name: 'Rodar vital', desc: 'Los golpes te curan; recarga -0.6s, +3 de daño' }] },
+        { fork: [{ name: 'Roca en cadena', desc: 'Golpea a 2 más; recarga -0.5s' }, { name: 'Rodar vital', desc: 'Los golpes curan el 20% del daño (máx. 10% de PS/s); recarga -0.6s, +3 de daño' }] },
         '+2 de daño',
         '+20% de área',
         { fork: [{ name: 'Avalancha', desc: 'Quien es derrotado explota; dura +0.5s' }, { name: 'Apisonadora', desc: '×1.5 a élites y jefes; dura +0.3s, +16 de daño' }] },
@@ -3810,7 +3810,7 @@ export const es: Messages = {
       upgrades: [
         '+2 de daño',
         '+20% de área',
-        { fork: [{ name: 'Corte en cadena', desc: 'Golpea a 2 más; recarga -0.05s' }, { name: 'Hoz vampira', desc: 'Los golpes te curan; recarga -0.1s' }] },
+        { fork: [{ name: 'Corte en cadena', desc: 'Golpea a 2 más; recarga -0.05s' }, { name: 'Hoz vampira', desc: 'Los golpes curan el 20% del daño (máx. 10% de PS/s); recarga -0.1s' }] },
         '+3 de daño',
         '+20% de área',
         { fork: [{ name: 'Siega', desc: 'Remata a quien tenga ≤12% HP; recarga -0.1s' }, { name: 'Corte explosivo', desc: 'Quien es derrotado explota; recarga -0.1s' }] },
@@ -3846,7 +3846,7 @@ export const es: Messages = {
       upgrades: [
         '+3 de daño',
         'Ondas 20% más grandes',
-        { fork: [{ name: 'Gruñido en cadena', desc: 'Golpea a 2 más; recarga -0.15s' }, { name: 'Hambre', desc: 'Los golpes te curan; recarga -0.25s' }] },
+        { fork: [{ name: 'Gruñido en cadena', desc: 'Golpea a 2 más; recarga -0.15s' }, { name: 'Hambre', desc: 'Los golpes curan el 20% del daño (máx. 10% de PS/s); recarga -0.25s' }] },
         '+4 de daño',
         '+1 onda',
         { fork: [{ name: 'Jauría', desc: 'Quien es derrotado explota; +20% de área' }, { name: 'Depredador', desc: 'Remata a quien tenga ≤12% HP; +10% de área' }] },
@@ -3870,7 +3870,7 @@ export const es: Messages = {
       upgrades: [
         '+3 de daño',
         '+1 coletazo',
-        { fork: [{ name: 'Segundo aire', desc: 'Los golpes te curan; +10% de área' }, { name: 'Latigazo', desc: 'Golpea a 2 más; +20% de área' }] },
+        { fork: [{ name: 'Segundo aire', desc: 'Los golpes curan el 20% del daño (máx. 10% de PS/s); +10% de área' }, { name: 'Latigazo', desc: 'Golpea a 2 más; +20% de área' }] },
         'Recarga 0.15s más rápida',
         '+4 de daño',
         { fork: [{ name: 'Desesperación', desc: 'Quien es derrotado explota; +1 coletazo' }, { name: 'Última baza', desc: 'Remata a quien tenga ≤12% HP; +1 coletazo, +4 de daño' }] },
@@ -3942,7 +3942,7 @@ export const es: Messages = {
       upgrades: [
         '+3 de daño',
         '+20% de área',
-        { fork: [{ name: 'Brisa vital', desc: 'Los golpes te curan; recarga -0.3s' }, { name: 'Ráfaga doble', desc: 'Se vuelve a activar tras usar (50%); recarga -0.1s' }] },
+        { fork: [{ name: 'Brisa vital', desc: 'Los golpes curan el 20% del daño (máx. 10% de PS/s); recarga -0.3s' }, { name: 'Ráfaga doble', desc: 'Se vuelve a activar tras usar (50%); recarga -0.1s' }] },
         '+1 ráfaga',
         '+4 de daño',
         { fork: [{ name: 'Vendaval', desc: 'Quien es derrotado explota; +30% de área' }, { name: 'Viento estático', desc: 'Golpea a 2 más; +20% de área' }] },
@@ -3954,7 +3954,7 @@ export const es: Messages = {
       upgrades: [
         '+1 puñetazo',
         '+3 de daño',
-        { fork: [{ name: 'Puño en cadena', desc: 'Golpea a 2 más; +10% de área' }, { name: 'Puño vital', desc: 'Los golpes te curan; +20% de área' }] },
+        { fork: [{ name: 'Puño en cadena', desc: 'Golpea a 2 más; +10% de área' }, { name: 'Puño vital', desc: 'Los golpes curan el 20% del daño (máx. 10% de PS/s); +20% de área' }] },
         '+1 puñetazo',
         'Recarga 0.2s más rápida',
         { fork: [{ name: 'Knockout', desc: 'Remata a quien tenga ≤12% HP; +6 de daño' }, { name: 'Barrera del sonido', desc: 'Quien es derrotado explota; +5 de daño' }] },
@@ -4050,7 +4050,7 @@ export const es: Messages = {
       upgrades: [
         '+4 de daño',
         '+20% de área',
-        { fork: [{ name: 'Ritmo cruel', desc: '×1.35 si tiene estado; +1 golpe' }, { name: 'Ritmo vital', desc: 'Los golpes te curan; +1 golpe' }] },
+        { fork: [{ name: 'Ritmo cruel', desc: '×1.35 si tiene estado; +1 golpe' }, { name: 'Ritmo vital', desc: 'Los golpes curan el 20% del daño (máx. 10% de PS/s); +1 golpe' }] },
         'Recarga 0.25s más rápida',
         '+5 de daño',
         { fork: [{ name: 'Eco de la selva', desc: 'Golpea a 2 más; +1 golpe' }, { name: 'Tambor de guerra', desc: 'Quien es derrotado explota; +1 golpe' }] },
@@ -4065,7 +4065,7 @@ export const es: Messages = {
         { fork: [{ name: 'Corazones saltarines', desc: 'Rebota en 2 enemigos más; +9 de daño' }, { name: 'Serenata', desc: 'Gira a tu alrededor; -4 de daño' }] },
         'Recarga 0.2s más rápida',
         '+2 corazones',
-        { fork: [{ name: 'Corazón roto', desc: 'Se parte en 2 al golpear; +2 de daño' }, { name: 'Voz dulce', desc: 'Los golpes te curan; +4 de daño' }] },
+        { fork: [{ name: 'Corazón roto', desc: 'Se parte en 2 al golpear; +2 de daño' }, { name: 'Voz dulce', desc: 'Los golpes curan el 20% del daño (máx. 10% de PS/s); +4 de daño' }] },
         '+4 corazones',
       ],
     },
@@ -4089,7 +4089,7 @@ export const es: Messages = {
         { fork: [{ name: 'Hojas gemelas', desc: '2º giro mayor y gira al revés' }, { name: 'Corte certero', desc: 'Remata a quien tenga ≤12% HP; +1 hoja' }] },
         'Recarga 0.2s más rápida',
         '+6 de daño',
-        { fork: [{ name: 'Corte explosivo', desc: 'Quien es derrotado explota; +20% de área' }, { name: 'Savia', desc: 'Los golpes te curan; +10% de área' }] },
+        { fork: [{ name: 'Corte explosivo', desc: 'Quien es derrotado explota; +20% de área' }, { name: 'Savia', desc: 'Los golpes curan el 20% del daño (máx. 10% de PS/s); +10% de área' }] },
         '+1 hoja',
       ],
     },
@@ -4098,7 +4098,7 @@ export const es: Messages = {
       upgrades: [
         'También ataca atrás',
         '+5 de daño',
-        { fork: [{ name: 'Corte en cadena', desc: 'Golpea a 2 más; +10% de área' }, { name: 'Perla', desc: 'Los golpes te curan; +20% de área' }] },
+        { fork: [{ name: 'Corte en cadena', desc: 'Golpea a 2 más; +10% de área' }, { name: 'Perla', desc: 'Los golpes curan el 20% del daño (máx. 10% de PS/s); +20% de área' }] },
         'Recarga 0.15s más rápida',
         '+6 de daño',
         { fork: [{ name: 'Concha bomba', desc: 'Quien es derrotado explota; +20% de área' }, { name: 'Concha cruel', desc: '×1.35 si tiene estado; +10% de área' }] },
@@ -4134,7 +4134,7 @@ export const es: Messages = {
       upgrades: [
         '+1 salto',
         '+4 de daño',
-        { fork: [{ name: 'Hechizo explosivo', desc: 'Quien es derrotado explota; recarga -0.1s, -6 de daño' }, { name: 'Robar almas', desc: 'Los golpes te curan; recarga -0.2s, +8 de daño' }] },
+        { fork: [{ name: 'Hechizo explosivo', desc: 'Quien es derrotado explota; recarga -0.1s, -6 de daño' }, { name: 'Robar almas', desc: 'Los golpes curan el 20% del daño (máx. 10% de PS/s); recarga -0.2s, +8 de daño' }] },
         '+1 salto',
         '+5 de daño',
         { fork: [{ name: 'Fuego fantasma', desc: 'Deja daño en el suelo; +25% de área, -6 de daño' }, { name: 'Eco maldito', desc: 'Se vuelve a activar tras usar (50%); +10% de área, +11 de daño' }] },
@@ -4218,7 +4218,7 @@ export const es: Messages = {
       upgrades: [
         '+3 de daño',
         'Las llamas duran +0.6s',
-        { fork: [{ name: 'Rueda vital', desc: 'Los golpes te curan; +10% de área' }, { name: 'Rueda chispeante', desc: 'Golpea a 2 más; +20% de área' }] },
+        { fork: [{ name: 'Rueda vital', desc: 'Los golpes curan el 20% del daño (máx. 10% de PS/s); +10% de área' }, { name: 'Rueda chispeante', desc: 'Golpea a 2 más; +20% de área' }] },
         '+3 de daño y +10% de prob. de quemar',
         'Las llamas duran +0.6s',
         { fork: [{ name: 'Rueda explosiva', desc: 'Quien es derrotado explota; +4 de daño' }, { name: 'Rueda cruel', desc: '×1.35 si tiene estado; +2 de daño' }] },
@@ -4314,7 +4314,7 @@ export const es: Messages = {
       upgrades: [
         '+1 engranaje',
         '+3 de daño',
-        { fork: [{ name: 'Engranaje vital', desc: 'Los golpes te curan; +10% de área' }, { name: 'Molinillo', desc: 'Atrae a los enemigos; +20% de área' }] },
+        { fork: [{ name: 'Engranaje vital', desc: 'Los golpes curan el 20% del daño (máx. 10% de PS/s); +10% de área' }, { name: 'Molinillo', desc: 'Atrae a los enemigos; +20% de área' }] },
         'Giran un 25% más rápido',
         '+1 engranaje',
         { fork: [{ name: 'Engranaje bomba', desc: 'Quien es derrotado explota; +4 de daño' }, { name: 'Trituradora', desc: 'Remata a quien tenga ≤12% HP; +9 de daño' }] },
@@ -4326,7 +4326,7 @@ export const es: Messages = {
       upgrades: [
         '+4 de daño',
         '+1 objetivo por golpe',
-        { fork: [{ name: 'Contra vital', desc: 'Los golpes te curan; recarga -0.05s' }, { name: 'Golpe en cadena', desc: 'Golpea a 2 más; recarga -0.08s' }] },
+        { fork: [{ name: 'Contra vital', desc: 'Los golpes curan el 20% del daño (máx. 10% de PS/s); recarga -0.05s' }, { name: 'Golpe en cadena', desc: 'Golpea a 2 más; recarga -0.08s' }] },
         '+20% de alcance',
         '+6 de daño',
         { fork: [{ name: 'Golpe sucio', desc: 'Remata a quien tenga ≤12% HP; +1 objetivo, +11 de daño' }, { name: 'Trampa', desc: 'Quien es derrotado explota; +1 objetivo' }] },
@@ -4374,7 +4374,7 @@ export const es: Messages = {
       upgrades: [
         '+6 de daño',
         '+20% de área',
-        { fork: [{ name: 'Estela', desc: 'Deja daño en el suelo; recarga -0.2s' }, { name: 'Vuelta vital', desc: 'Los golpes te curan; recarga -0.3s' }] },
+        { fork: [{ name: 'Estela', desc: 'Deja daño en el suelo; recarga -0.2s' }, { name: 'Vuelta vital', desc: 'Los golpes curan el 20% del daño (máx. 10% de PS/s); recarga -0.3s' }] },
         '+8 de daño',
         'Llega más lejos',
         { fork: [{ name: 'Vuelta explosiva', desc: 'Quien es derrotado explota; recarga -0.3s' }, { name: 'Zigzag', desc: 'Golpea a 2 más; recarga -0.3s, +25 de daño' }] },
@@ -4386,7 +4386,7 @@ export const es: Messages = {
       upgrades: [
         '+6 de daño',
         '+20% de área',
-        { fork: [{ name: 'Cola vital', desc: 'Los golpes te curan; recarga -0.15s' }, { name: 'Cola titánica', desc: '×1.5 a élites y jefes; recarga -0.2s' }] },
+        { fork: [{ name: 'Cola vital', desc: 'Los golpes curan el 20% del daño (máx. 10% de PS/s); recarga -0.15s' }, { name: 'Cola titánica', desc: '×1.5 a élites y jefes; recarga -0.2s' }] },
         '+7 de daño',
         '+20% de área',
         { fork: [{ name: 'Lanzamiento explosivo', desc: 'Quien es derrotado explota; recarga -0.2s' }, { name: 'Cola final', desc: 'Remata a quien tenga ≤12% HP; recarga -0.2s, +12 de daño' }] },
@@ -4649,7 +4649,7 @@ export const es: Messages = {
       ],
     },
     gigaDrain: {
-      description: 'Lianas se aferran a los enemigos más cercanos y absorben su energía, curándote. Si el objetivo cae, la liana salta al siguiente.',
+      description: 'Lianas se aferran a los enemigos más cercanos y absorben su energía, curándote el 35% del daño (hasta el 10% de los PS máximos por segundo). Si el objetivo cae, la liana salta al siguiente.',
       upgrades: [
         '+1 liana',
         '+4 de daño',
@@ -4730,7 +4730,7 @@ export const es: Messages = {
       ],
     },
     bitterBlade: {
-      description: 'Un corte de fuego espectral frente a ti que te cura la mitad del daño causado. Puede quemar.',
+      description: 'Un corte de fuego espectral frente a ti que te cura la mitad del daño causado (hasta el 10% de los PS máximos por segundo). Puede quemar.',
       upgrades: [
         '+4 de daño',
         '+20% de área',
@@ -4742,7 +4742,7 @@ export const es: Messages = {
       ],
     },
     leechLife: {
-      description: 'Mordiscos rápidos y cortitos al enemigo pegado a ti, que drenan la mitad del daño como PS. Solo alcanza a quien está muy cerca.',
+      description: 'Mordiscos rápidos y cortitos al enemigo pegado a ti, que drenan la mitad del daño como PS (hasta el 10% de los PS máximos por segundo). Solo alcanza a quien está muy cerca.',
       upgrades: [
         '+2 de daño',
         'Muerde a +1 enemigo',
@@ -5090,7 +5090,7 @@ export const es: Messages = {
       ],
     },
     drainPunch: {
-      description: 'Un puñetazo brillante al enemigo más cercano que cura el 35% del daño causado (hasta el 4% de tus PS por segundo).',
+      description: 'Un puñetazo brillante al enemigo más cercano que cura el 35% del daño causado (hasta el 10% de los PS máximos por segundo).',
       upgrades: [
         '+4 de daño',
         'Recarga 0.1s más rápida',
@@ -5180,7 +5180,7 @@ export const es: Messages = {
       ],
     },
     oblivionWing: {
-      description: 'Alas carmesí se abren detrás de ti y disparan rayos a los enemigos más cercanos, drenando la mitad del daño en PS. Quieto por un instante, el doble de rayos.',
+      description: 'Alas carmesí se abren detrás de ti y disparan rayos a los enemigos más cercanos, drenando la mitad del daño en PS (hasta el 10% de los PS máximos por segundo). Quieto por un instante, el doble de rayos.',
       upgrades: [
         '+9 de daño',
         '+1 rayo',
@@ -5313,7 +5313,7 @@ export const es: Messages = {
         { fork: [{ name: 'Teledirigido', desc: 'La esfera persigue al enemigo más cercano; +2 de daño' }, { name: 'Campo eléctrico', desc: 'Deja el suelo electrificado por el camino; +15% de área' }] },
         'Recarga 0.4s más rápida',
         '+4 de daño',
-        { fork: [{ name: 'Arco voltaico', desc: 'Chispas saltan a enemigos cercanos; +2 de daño' }, { name: 'Cañón doble', desc: '+1 esfera y los golpes te curan; -3 de daño' }] },
+        { fork: [{ name: 'Arco voltaico', desc: 'Chispas saltan a enemigos cercanos; +2 de daño' }, { name: 'Cañón doble', desc: '+1 esfera y los golpes curan el 20% del daño (máx. 10% de PS/s); -3 de daño' }] },
         '+5 de daño y +20% de área',
       ],
     },
@@ -5592,7 +5592,7 @@ export const es: Messages = {
       ],
     },
     wish: {
-      description: 'El deseo de Jirachi: una lluvia de estrellas cae sobre los enemigos por toda la pantalla, y parte de su daño te cura.',
+      description: 'El deseo de Jirachi: una lluvia de estrellas cae sobre los enemigos por toda la pantalla, y el 25% de su daño te cura (hasta el 10% de los PS máximos por segundo).',
       upgrades: [
         '+2 estrellas',
         '+10 de daño',
@@ -5685,7 +5685,7 @@ export const es: Messages = {
       ],
     },
     aquaRing: {
-      description: 'Suicune corre en espiral hacia afuera desde ti con el viento del norte, barriendo a los enemigos. El agua pura que pisa se vuelve un anillo que los empuja lejos y te cura un poco.',
+      description: 'Suicune corre en espiral hacia afuera desde ti con el viento del norte, barriendo a los enemigos. El agua pura que pisa se vuelve un anillo que los empuja lejos y te cura el 12% del daño (hasta el 10% de los PS máximos por segundo).',
       upgrades: [
         '+8 de daño',
         '+15% de área y el anillo dura +0.6s',
