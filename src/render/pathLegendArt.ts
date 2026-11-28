@@ -62,10 +62,15 @@ const CORE = [
 /** The Cell's greens (and its hex, darker), the Core's red eye. */
 const CELL_PAL = { 2: '#2f8a48', 3: '#4cc068', 4: '#b8f8c8', 5: '#1c5a30', 6: '#3f9a58', 7: '#e84830', 8: '#ffd0a0' } as const
 
+/** A shiny Core's teals and its gold eye. */
+const SHINY_CORE_PAL = { 2: '#2a7088', 3: '#48b0c8', 4: '#d0f6ff', 5: '#1a4858', 6: '#80d8f0', 7: '#f0b828', 8: '#fff4c0' } as const
+
 export const PATH_ART = {
   /** The Cell: its body and a frame lit brighter (its glow's beat). */
   cell: lazy(() => [sprite(CELL, CELL_PAL, '#0c2814'), sprite(CELL, { ...CELL_PAL, 3: '#68d888', 2: '#3aa058', 6: '#58c070' }, '#0c2814')]),
   core: lazy(() => [sprite(CORE, { ...CELL_PAL, 6: '#78e098' }, '#0c2814'), sprite(CORE, { ...CELL_PAL, 6: '#78e098', 3: '#68d888', 7: '#f86848' }, '#0c2814')]),
+  /** A Core that shines (`runPieces`' `shiny`): teal where the Core is green, its eye gold. */
+  shinyCore: lazy(() => [sprite(CORE, SHINY_CORE_PAL, '#0c2028'), sprite(CORE, { ...SHINY_CORE_PAL, 3: '#70d0e0', 7: '#ffe070' }, '#0c2028')]),
   /** Meltan's Hex Nut: a flat-topped steel hexagon with its hole, lit on top, shaded below. */
   nut: lazy(() =>
     sprite(

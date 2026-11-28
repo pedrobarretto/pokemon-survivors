@@ -580,6 +580,7 @@ export const siteZh: SiteMessages = {
       where: { rift: '傳說裂縫', trio: '傳說三神', mythical: '15:00 時 Mewtwo 身旁（每 10 場決戰 1 場會出現三隻之一，每隻約 1/30；每場沒有幻之寶可夢的決戰後提高）', finale: '最終首領', endless: '無盡模式，最後一隻', event: '女巫之夜 2026（活動）', festival: '2026 燈籠祭（獎勵）', roam: '在地圖上遊蕩（HP保留到下一局）', duel: '在相稱的生態區決鬥', swords: '三把正義之劍的禮物', rush: '通關 Hoopa 的圓環', ultra: '究極之洞（單人遊戲每局一個）', ultraGift: '收服10隻究極異獸的禮物', path: '專屬路線（Zygarde Cell、Cosmog、道館之塔、Mystery Box）', temple: '捕捉 Regi 三柱後，對戰中出現的神殿', egg: '瑪納霏之蛋（狩獵地帶冰封海灣圖鑑）', dig: 'Poké Realm 挖掘場最稀有的寶物（Pink Diamond）', storm: '發電廠下雨時的雷暴', mask: 'Ogerpon 的太晶團體戰', ruins: '抉擇遺跡，捕獲 Regigigas 後（每局一座）', force: '帶著天氣在地圖上遊蕩（HP 跨局保留）' },
       /** The event legends (`EVENT_LEGENDS`), after the table. */
       eventNote: '在2026年的女巫之夜（10月24日至11月2日），Darkrai 以活動傳說的身分登場：它只出現在夢魘裂縫中，而夢魘裂縫可能在鬧鬼對局中取代一道裂縫，贏得2次即可收服。它使用能讓敵群沉睡的 Dark Void，以及能傷害在它附近睡著的敵人的固有特性 Bad Dreams。活動結束後它會回到黑暗之中，但已收服的玩家仍可繼續使用它。它不計入 Arceus 的條件。',
+      ownShiny: 'Zygarde、Meltan 和 Diancie 從不會被挑戰，所以牠們的異色來自各自的專屬路線，原本的也不會失去：',
     },
     megas: {
       paragraphs: (m) => [

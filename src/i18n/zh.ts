@@ -2174,6 +2174,7 @@ export const zh: Messages = {
     shinyHatch: (name) => `一隻_異色_*${name}*來找你了！`,
     companion: (name) => `*${name}* 現在會在對局中陪你同行！`,
     legend: (name) => `*${name}* 來找你了！可在_傳說模式_中使用。`,
+    legendShiny: (name) => `*異色 ${name}* 來找你了！在_傳說模式_的選擇畫面中選擇異色。`,
     ribbon: (name) => `*${name}*！已經放到你的個人檔案上了。`,
     ribbonWhy: (date, rank, total) => `${date} 的挑戰：第 ${rank} 名／共 ${total} 人`,
     button: '禮物！',

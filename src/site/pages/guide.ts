@@ -25,6 +25,7 @@ import { BASE_MAX_ITEMS } from '../../data/secretBases'
 import { REALM, REALM_CITIES } from '../../net/realm'
 import { AWAKEN_AT, LEGEND_IDS, legendFestival, LEGENDS, type LegendId } from '../../data/legends'
 import { legendSource } from '../../game/capture'
+import { isOwnWayShiny, OWN_WAY_SHINIES } from '../../data/ownWayShinies'
 import { legendMods } from '../../game/legend'
 import { CAVE, GRAVEYARD, HIDDEN, PLACE, PLACES, REGULAR_PLACE_IDS, SKY, WING_IDS, WINGS } from '../../data/places'
 import { TIER_FLOORS, TIERS } from '../../data/roster'
@@ -59,7 +60,7 @@ import { html, type Child, type Html } from '../html'
 import { layout } from '../layout'
 import { clock, gameDex, pokedex, slugOf } from '../pokedex'
 import { ROUTES } from '../routes'
-import { bossAttacks, dexHref, patternText, traitText, typeBadge } from './pokedex'
+import { bossAttacks, dexHref, ownShinyNote, patternText, traitText, typeBadge } from './pokedex'
 
 type Section = keyof SiteMessages['guide']['sections']
 
@@ -378,6 +379,9 @@ const rifts = (locale: Locale, m: SiteMessages) => {
     )}`
 }
 
+/** The legends whose shiny comes their own way, in the guide's order. */
+const OWN_WAY = Object.keys(OWN_WAY_SHINIES).filter(isOwnWayShiny)
+
 /** The Legend mode: how each legend is captured (`game/capture.ts`) and what it plays with. */
 const legends = (locale: Locale, m: SiteMessages) => {
   const g = m.guide.legends
@@ -403,6 +407,8 @@ const legends = (locale: Locale, m: SiteMessages) => {
   return html`${paragraphs(g.paragraphs({ count: shown.length, awaken: AWAKEN_AT }))}
     ${table([g.legendHead, g.whereHead, g.winsHead, g.innateHead, g.opensHead], rows)}
     <p>${g.eventNote}</p>
+    <p>${g.ownShiny}</p>
+    <ul class="list">${OWN_WAY.map((id) => html`<li>${ownShinyNote(id, locale)}</li>`)}</ul>
     <h3>${g.pressureTitle}</h3>
     <p>${g.pressure}</p>
     ${table(m.guide.run.difficultyHead, pressure)}`

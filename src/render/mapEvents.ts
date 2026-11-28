@@ -255,10 +255,10 @@ const drawTutor = (ctx: Ctx, ev: MapEventOf<'tutor'>, t: number) => {
   if (ev.gone < 0 && (t + ev.id * 0.3) % 1.6 < 0.2) blitCentered(ctx, SPARKLE()[1]!, ev.x + 7, ev.y - tent.height - 10)
 }
 
-/** A Zygarde Cell or Core: bobbing over its shadow, its glow beating, green motes rising; a Core's eye glints. It blinks out in its last seconds, burrowing. */
-const drawPiece = (ctx: Ctx, ev: MapEventOf<'zygardeCell' | 'zygardeCore'>, t: number, calm: boolean) => {
+/** A Zygarde Cell or Core: bobbing over its shadow, its glow beating, green motes rising; a Core's eye glints. It blinks out in its last seconds, burrowing. A shiny Core (`shiny`, the shell's say) is teal and sparkles all over. */
+const drawPiece = (ctx: Ctx, ev: MapEventOf<'zygardeCell' | 'zygardeCore'>, t: number, calm: boolean, shiny = false) => {
   const core = ev.kind === 'zygardeCore'
-  const frames = core ? PATH_ART.core() : PATH_ART.cell()
+  const frames = core ? (shiny ? PATH_ART.shinyCore() : PATH_ART.core()) : PATH_ART.cell()
   const beat = Math.floor(t * 3 + ev.id) % 2
   const leaving = ev.gone < 0 && ev.ttl - ev.age < 4 && (calm || Math.floor(t * 10) % 2 === 0)
   const bob = Math.round(Math.sin(t * 3 + ev.id) * 1.5)
@@ -292,6 +292,13 @@ const drawPiece = (ctx: Ctx, ev: MapEventOf<'zygardeCell' | 'zygardeCore'>, t: n
     ctx.fillRect(Math.round(ev.x - 5 + i * 5 + Math.sin(t * 2 + i) * 1.5), Math.round(ev.y - 6 - k * 18), 1, k > 0.6 ? 1 : 2)
   }
   if (core && (t + ev.id * 0.37) % 1.4 < 0.14) blitCentered(ctx, SPARKLE()[1]!, ev.x + 5, ev.y - sprite.height - 2)
+  // A shiny Core: sparkles turning round it, as a shiny's do.
+  if (core && shiny)
+    for (let i = 0; i < 3; i++) {
+      const a = t * 2.4 + (i / 3) * TAU
+      if (Math.floor(t * 8 + i * 3) % 4 === 0) continue
+      blitCentered(ctx, SPARKLE()[i % 2]!, Math.round(ev.x + Math.cos(a) * 10), Math.round(ev.y - sprite.height / 2 - 3 + Math.sin(a) * 7))
+    }
 }
 
 /** A fixed scatter of `n` values in 0..1 for the temple's dust and stones, so they need no rng. */
@@ -479,7 +486,7 @@ const RUINS_ICONS = lazy(() => ({
 const near = (g: Game, x: number, y: number, m = 60) =>
   x > g.camera.x - m && x < g.camera.x + g.view.w + m && y > g.camera.y - m && y < g.camera.y + g.view.h + m
 
-const drawEvent = (ctx: Ctx, g: Game, ev: MapEvent, t: number, calm: boolean) => {
+const drawEvent = (ctx: Ctx, g: Game, ev: MapEvent, t: number, calm: boolean, shinyCore: boolean) => {
   if (isMission(ev)) return drawFieldMission(ctx, g, ev, t, calm)
   switch (ev.kind) {
     case 'altar': return drawAltar(ctx, ev, t)
@@ -490,7 +497,7 @@ const drawEvent = (ctx: Ctx, g: Game, ev: MapEvent, t: number, calm: boolean) =>
     case 'meowth': return drawMeowth(ctx, ev, t, calm)
     case 'castform': return drawCastform(ctx, ev, t, calm)
     case 'zygardeCell':
-    case 'zygardeCore': return drawPiece(ctx, ev, t, calm)
+    case 'zygardeCore': return drawPiece(ctx, ev, t, calm, shinyCore)
     case 'regiTemple': return drawTempleGround(ctx, ev)
     case 'splitRuins': return drawRuinsGround(ctx, ev, t)
     case 'tutor': return drawTutor(ctx, ev, t)
@@ -498,14 +505,15 @@ const drawEvent = (ctx: Ctx, g: Game, ev: MapEvent, t: number, calm: boolean) =>
 }
 
 /** Ground layer: every map event near the screen, fading out once spent. `calm`: Flashes reduced (`render/flashes.ts`). */
-export const drawMapEvents = (ctx: Ctx, g: Game, t: number, calm: boolean) => {
+/** The map's events. `shinyCore`: this run's Zygarde Core shines (the shell's say, `runPieces`). */
+export const drawMapEvents = (ctx: Ctx, g: Game, t: number, calm: boolean, shinyCore = false) => {
   for (const ev of g.mapEvents.list) {
     // A collect mission's balls spread far from its center.
     if (!near(g, ev.x, ev.y, ev.kind === 'collect' || ev.kind === 'escort' ? 400 : 60)) continue
     // A popped bomb leaves nothing behind; the rest fade out.
     if (ev.gone >= 0 && ev.kind === 'bomb') continue
     ctx.globalAlpha = ev.gone >= 0 ? Math.max(0, 1 - ev.gone / FADE) : 1
-    drawEvent(ctx, g, ev, t, calm)
+    drawEvent(ctx, g, ev, t, calm, shinyCore)
   }
   ctx.globalAlpha = 1
 }

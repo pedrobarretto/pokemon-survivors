@@ -51,6 +51,11 @@ export type PathWords = {
       coreConverted: (cells: string, pieces: string) => string
       cellGone: string
       coreGone: string
+      /** A shiny Core (`ZYGARDE.shinyCore`): sighted, gone, and taken (Zygarde's shiny in the gift box, or waiting for Zygarde's own `n` pieces). */
+      shinyCoreSighted: string
+      shinyCoreGone: string
+      shinyCoreFound: string
+      shinyCoreWaits: (n: string) => string
       templeRisen: string
       templeSilent: string
       templeWoken: string
@@ -123,8 +128,9 @@ export type PathWords = {
     meltan: {
       box: string
       boxHint: string
-      /** The Escavação's reveal of the box. */
+      /** The Escavação's reveal of the box, and of one with a shiny inside. */
       found: string
+      foundShiny: string
       nuts: (n: string, need: string) => string
       ready: string
       note: string
@@ -134,6 +140,11 @@ export type PathWords = {
       awake: string
       note: string
     }
+    /**
+     * The legends whose shiny comes their own way (`OWN_WAY_SHINIES`): how,
+     * with one in `n` of their pieces shining, and the row that marks it owned.
+     */
+    shiny: { zygarde: (n: number) => string; meltan: (n: number) => string; diancie: (n: number) => string; row: (name: string) => string }
   }
 }
 
@@ -240,6 +251,10 @@ const pt: PathWords = {
       coreConverted: (cells: string, pieces: string) => `*Core* extra convertido em *${cells} Cells*! _${pieces}_`,
       cellGone: 'A Zygarde Cell se enterrou e sumiu…',
       coreGone: 'O Zygarde Core escapou para dentro da terra…',
+      shinyCoreSighted: 'Um *Zygarde Core shiny*! Ele brilha e foge devagar: alcance!',
+      shinyCoreGone: 'O Core shiny escapou para dentro da terra…',
+      shinyCoreFound: '*Zygarde shiny* liberado! Ele está no Presente do lobby.',
+      shinyCoreWaits: (n: string) => `O *Zygarde shiny* chega com o Zygarde, quando o Cube tiver _${n}_ peças.`,
       templeRisen: 'Um *templo antigo* surgiu da terra! Siga a seta.',
       templeSilent: 'O templo está quieto: termine a luta com o chefe primeiro.',
       templeWoken: 'O templo treme…',
@@ -255,7 +270,7 @@ const pt: PathWords = {
       open: 'Liberada',
       need: (n: string) => `Faltam ${n}`,
       needCores: (n: string) => `Faltam ${n} Cores`,
-      hint: 'Zygarde Cells e Cores surgem nas partidas solo, no mapa aberto: até 3 Cells por partida, um Core de vez em quando. A Forma 50% vem no 1º despertar, a Completa no 2º.',
+      hint: 'Zygarde Cells e Cores surgem nas partidas solo, no mapa aberto: até 3 Cells por partida, um Core de vez em quando. A Forma 50% vem no 1º despertar, a Completa no 2º. Às vezes um Core brilha: pegue-o e o Zygarde shiny é seu.',
     },
     cosmog: {
       researchHead: 'Cosmog',
@@ -312,8 +327,9 @@ const pt: PathWords = {
     },
     meltan: {
       box: 'Mystery Box',
-      boxHint: 'Enquanto você não tem o Meltan, cada parede da Escavação pode trazê-la, e ela sai em no máximo 12 paredes. A primeira parede do dia é grátis.',
+      boxHint: 'Enquanto você não tem o Meltan, ou o Meltan shiny, cada parede da Escavação pode trazê-la, e ela sai em no máximo 12 paredes. A primeira parede do dia é grátis.',
       found: 'Tem um Meltan dentro! Ele está no Presente do lobby.',
+      foundShiny: 'Tem um Meltan shiny dentro! Ele está no Presente do lobby.',
       nuts: (n: string, need: string) => `Porcas: ${n}/${need}`,
       ready: 'O Meltan vira *Melmetal* no 2º despertar.',
       note: 'Jogando com o Meltan, os inimigos derrubam Porcas Sextavadas (os de Aço mais). Com 400, o 2º despertar o transforma em Melmetal.',
@@ -322,6 +338,12 @@ const pt: PathWords = {
       wakers: (n: number) => `Trio capturado: ${n}/3`,
       awake: 'O gigante acordou: o templo pode surgir nas suas partidas solo.',
       note: 'Depois de capturado, o templo ainda aparece de vez em quando, para quem quer revê-lo.',
+    },
+    shiny: {
+      zygarde: (n: number) => `*Shiny:* 1 em ${n} *Zygarde Cores* brilha. Pegue um e o Zygarde shiny vem para o Modo Lendário, sem perder o normal.`,
+      meltan: (n: number) => `*Shiny:* 1 em ${n} *Mystery Boxes* traz o Meltan shiny (e o Melmetal shiny com ele). Depois de ganhar o Meltan, a caixa segue aparecendo na Escavação até o shiny sair.`,
+      diancie: (n: number) => `*Shiny:* 1 em ${n} *Pink Diamonds* traz a Diancie shiny. Depois de ganhar a Diancie, o diamante segue aparecendo na Escavação até a shiny sair.`,
+      row: (name: string) => `${name} shiny`,
     },
   },
 }
@@ -426,6 +448,10 @@ const en: PathWords = {
       coreConverted: (cells: string, pieces: string) => `Extra *Core* turned into *${cells} Cells*! _${pieces}_`,
       cellGone: 'The Cell burrowed and vanished…',
       coreGone: 'The Core slipped back into the ground…',
+      shinyCoreSighted: 'A *shiny Zygarde Core*! It sparkles and creeps away: catch up!',
+      shinyCoreGone: 'The shiny Core slipped back into the ground…',
+      shinyCoreFound: '*Shiny Zygarde* unlocked! It’s waiting in the lobby’s Gift.',
+      shinyCoreWaits: (n: string) => `*Shiny Zygarde* comes with Zygarde, once the Cube holds _${n}_ pieces.`,
       templeRisen: 'An *ancient temple* rose from the ground! Follow the arrow.',
       templeSilent: 'The temple is quiet: finish the boss fight first.',
       templeWoken: 'The temple shakes…',
@@ -441,7 +467,7 @@ const en: PathWords = {
       open: 'Unlocked',
       need: (n: string) => `${n} to go`,
       needCores: (n: string) => `${n} Cores to go`,
-      hint: 'Zygarde Cells and Cores turn up in solo runs on the open map: up to 3 Cells a run, a Core now and then. The 50% Forme comes at the 1st awakening, Complete at the 2nd.',
+      hint: 'Zygarde Cells and Cores turn up in solo runs on the open map: up to 3 Cells a run, a Core now and then. The 50% Forme comes at the 1st awakening, Complete at the 2nd. Now and then a Core shines: take it and shiny Zygarde is yours.',
     },
     cosmog: {
       researchHead: 'Cosmog',
@@ -498,8 +524,9 @@ const en: PathWords = {
     },
     meltan: {
       box: 'Mystery Box',
-      boxHint: 'While you don’t have Meltan, any Mine Dig wall can hold it, and it turns up within 12 walls. Your first wall each day is free.',
+      boxHint: 'While you don’t have Meltan, or shiny Meltan, any Mine Dig wall can hold it, and it turns up within 12 walls. Your first wall each day is free.',
       found: 'There’s a Meltan inside! It’s waiting in the lobby’s Gift.',
+      foundShiny: 'There’s a shiny Meltan inside! It’s waiting in the lobby’s Gift.',
       nuts: (n: string, need: string) => `Nuts: ${n}/${need}`,
       ready: 'Meltan becomes *Melmetal* at its 2nd awakening.',
       note: 'Playing Meltan, foes drop Hex Nuts (Steel types more). With 400, its 2nd awakening turns it into Melmetal.',
@@ -508,6 +535,12 @@ const en: PathWords = {
       wakers: (n: number) => `Trio captured: ${n}/3`,
       awake: 'The giant is awake: the temple can rise in your solo runs.',
       note: 'Once captured, the temple still shows up now and then, for a rematch.',
+    },
+    shiny: {
+      zygarde: (n: number) => `*Shiny:* 1 in ${n} *Zygarde Cores* shines. Take one and shiny Zygarde joins Legend Mode, and you keep the normal one.`,
+      meltan: (n: number) => `*Shiny:* 1 in ${n} *Mystery Boxes* holds shiny Meltan (and shiny Melmetal with it). Once you have Meltan, the box keeps turning up at the Mine Dig until the shiny comes.`,
+      diancie: (n: number) => `*Shiny:* 1 in ${n} *Pink Diamonds* brings shiny Diancie. Once you have Diancie, the diamond keeps turning up at the Mine Dig until the shiny comes.`,
+      row: (name: string) => `Shiny ${name}`,
     },
   },
 }
@@ -612,6 +645,10 @@ const es: PathWords = {
       coreConverted: (cells: string, pieces: string) => `¡*Core* extra convertido en *${cells} Cells*! _${pieces}_`,
       cellGone: 'La Zygarde Cell se enterró y desapareció…',
       coreGone: 'El Zygarde Core se escapó bajo tierra…',
+      shinyCoreSighted: '¡Un *Zygarde Core shiny*! Brilla y huye despacio: ¡alcánzalo!',
+      shinyCoreGone: 'El Core shiny se escapó bajo tierra…',
+      shinyCoreFound: '¡*Zygarde shiny* desbloqueado! Te espera en el Regalo del lobby.',
+      shinyCoreWaits: (n: string) => `El *Zygarde shiny* llega con Zygarde, cuando el Cube tenga _${n}_ piezas.`,
       templeRisen: '¡Un *templo antiguo* surgió del suelo! Sigue la flecha.',
       templeSilent: 'El templo está en calma: termina primero la pelea con el jefe.',
       templeWoken: 'El templo tiembla…',
@@ -627,7 +664,7 @@ const es: PathWords = {
       open: 'Desbloqueada',
       need: (n: string) => `Faltan ${n}`,
       needCores: (n: string) => `Faltan ${n} Cores`,
-      hint: 'Zygarde Cells y Cores aparecen en partidas solo, en el mapa abierto: hasta 3 Cells por partida, un Core de vez en cuando. La Forma 50% llega en el 1.er despertar, la Completa en el 2.º.',
+      hint: 'Zygarde Cells y Cores aparecen en partidas solo, en el mapa abierto: hasta 3 Cells por partida, un Core de vez en cuando. La Forma 50% llega en el 1.er despertar, la Completa en el 2.º. A veces un Core brilla: atrápalo y el Zygarde shiny es tuyo.',
     },
     cosmog: {
       researchHead: 'Cosmog',
@@ -684,8 +721,9 @@ const es: PathWords = {
     },
     meltan: {
       box: 'Mystery Box',
-      boxHint: 'Mientras no tengas a Meltan, cualquier pared de la Excavación puede traerla, y sale en 12 paredes como máximo. La primera pared del día es gratis.',
+      boxHint: 'Mientras no tengas a Meltan, o a Meltan shiny, cualquier pared de la Excavación puede traerla, y sale en 12 paredes como máximo. La primera pared del día es gratis.',
       found: '¡Hay un Meltan dentro! Te espera en el Regalo del lobby.',
+      foundShiny: '¡Hay un Meltan shiny dentro! Te espera en el Regalo del lobby.',
       nuts: (n: string, need: string) => `Tuercas: ${n}/${need}`,
       ready: 'Meltan se vuelve *Melmetal* en su 2.º despertar.',
       note: 'Jugando con Meltan, los enemigos sueltan Tuercas Hexagonales (los de Acero, más). Con 400, su 2.º despertar lo vuelve Melmetal.',
@@ -694,6 +732,12 @@ const es: PathWords = {
       wakers: (n: number) => `Trío capturado: ${n}/3`,
       awake: 'El gigante despertó: el templo puede surgir en tus partidas solo.',
       note: 'Ya capturado, el templo aún aparece de vez en cuando, para la revancha.',
+    },
+    shiny: {
+      zygarde: (n: number) => `*Shiny:* 1 de cada ${n} *Zygarde Cores* brilla. Atrapa uno y el Zygarde shiny llega al Modo Legendario, sin perder el normal.`,
+      meltan: (n: number) => `*Shiny:* 1 de cada ${n} *Mystery Boxes* trae a Meltan shiny (y a Melmetal shiny con él). Después de conseguir a Meltan, la caja sigue apareciendo en la Excavación hasta que salga el shiny.`,
+      diancie: (n: number) => `*Shiny:* 1 de cada ${n} *Pink Diamonds* trae a Diancie shiny. Después de conseguir a Diancie, el diamante sigue apareciendo en la Excavación hasta que salga la shiny.`,
+      row: (name: string) => `${name} shiny`,
     },
   },
 }
@@ -798,6 +842,10 @@ const fr: PathWords = {
       coreConverted: (cells: string, pieces: string) => `*Core* en trop converti en *${cells} Cells* ! _${pieces}_`,
       cellGone: 'La Zygarde Cell s’est enfouie et a disparu…',
       coreGone: 'Le Zygarde Core s’est échappé sous terre…',
+      shinyCoreSighted: 'Un *Zygarde Core chromatique* ! Il scintille et s’enfuit lentement : rattrapez-le !',
+      shinyCoreGone: 'Le Core chromatique s’est échappé sous terre…',
+      shinyCoreFound: '*Zygarde chromatique* débloqué ! Il vous attend dans le Cadeau du lobby.',
+      shinyCoreWaits: (n: string) => `Le *Zygarde chromatique* arrive avec Zygarde, quand le Cube aura _${n}_ pièces.`,
       templeRisen: 'Un *temple ancien* est sorti du sol ! Suivez la flèche.',
       templeSilent: 'Le temple est silencieux : finissez d’abord le combat contre le boss.',
       templeWoken: 'Le temple tremble…',
@@ -813,7 +861,7 @@ const fr: PathWords = {
       open: 'Débloquée',
       need: (n: string) => `Encore ${n}`,
       needCores: (n: string) => `Encore ${n} Cores`,
-      hint: 'Zygarde Cells et Cores apparaissent en partie solo, sur la carte ouverte : jusqu’à 3 Cells par partie, un Core de temps en temps. La Forme 50 % vient au 1er éveil, la Parfaite au 2e.',
+      hint: 'Zygarde Cells et Cores apparaissent en partie solo, sur la carte ouverte : jusqu’à 3 Cells par partie, un Core de temps en temps. La Forme 50 % vient au 1er éveil, la Parfaite au 2e. Parfois un Core brille : attrapez-le et le Zygarde chromatique est à vous.',
     },
     cosmog: {
       researchHead: 'Cosmog',
@@ -870,8 +918,9 @@ const fr: PathWords = {
     },
     meltan: {
       box: 'Mystery Box',
-      boxHint: 'Tant que vous n’avez pas Meltan, chaque mur de l’Excavation peut la cacher, et elle sort en 12 murs au plus. Le premier mur du jour est gratuit.',
+      boxHint: 'Tant que vous n’avez pas Meltan, ou Meltan chromatique, chaque mur de l’Excavation peut la cacher, et elle sort en 12 murs au plus. Le premier mur du jour est gratuit.',
       found: 'Il y a un Meltan dedans ! Il vous attend dans le Cadeau du lobby.',
+      foundShiny: 'Il y a un Meltan chromatique dedans ! Il vous attend dans le Cadeau du lobby.',
       nuts: (n: string, need: string) => `Écrous : ${n}/${need}`,
       ready: 'Meltan devient *Melmetal* à son 2e éveil.',
       note: 'En jouant Meltan, les ennemis lâchent des Écrous Hexagonaux (les types Acier, plus souvent). Avec 400, son 2e éveil le transforme en Melmetal.',
@@ -880,6 +929,12 @@ const fr: PathWords = {
       wakers: (n: number) => `Trio capturé : ${n}/3`,
       awake: 'Le géant est réveillé : le temple peut surgir dans vos parties solo.',
       note: 'Une fois capturé, le temple revient de temps en temps, pour une revanche.',
+    },
+    shiny: {
+      zygarde: (n: number) => `*Chromatique :* 1 *Zygarde Core* sur ${n} brille. Attrapez-en un et le Zygarde chromatique rejoint le Mode Légende, sans perdre le normal.`,
+      meltan: (n: number) => `*Chromatique :* 1 *Mystery Box* sur ${n} contient Meltan chromatique (et Melmetal chromatique avec lui). Une fois Meltan obtenu, la boîte continue d’apparaître à l’Excavation jusqu’à ce que le chromatique sorte.`,
+      diancie: (n: number) => `*Chromatique :* 1 *Pink Diamond* sur ${n} apporte Diancie chromatique. Une fois Diancie obtenue, le diamant continue d’apparaître à l’Excavation jusqu’à ce que la chromatique sorte.`,
+      row: (name: string) => `${name} chromatique`,
     },
   },
 }
@@ -984,6 +1039,10 @@ const zh: PathWords = {
       coreConverted: (cells: string, pieces: string) => `多出的 *Core* 化為 *${cells} 個 Cell*！_${pieces}_`,
       cellGone: 'Zygarde Cell 鑽進土裡不見了……',
       coreGone: 'Zygarde Core 溜回地底了……',
+      shinyCoreSighted: '一個 *異色 Zygarde Core*！它閃閃發光、慢慢逃走：快追上！',
+      shinyCoreGone: '異色 Core 溜回地底了……',
+      shinyCoreFound: '*異色 Zygarde* 解鎖了！它在大廳的禮物裡等你。',
+      shinyCoreWaits: (n: string) => `*異色 Zygarde* 會和 Zygarde 一起來，等 Cube 裡有 _${n}_ 個碎片時。`,
       templeRisen: '一座 *古老神殿* 從地面升起！跟著箭頭走。',
       templeSilent: '神殿很安靜：先打完首領吧。',
       templeWoken: '神殿在震動……',
@@ -999,7 +1058,7 @@ const zh: PathWords = {
       open: '已解鎖',
       need: (n: string) => `還差 ${n}`,
       needCores: (n: string) => `還差 ${n} 個 Core`,
-      hint: 'Zygarde Cell 和 Core 出現在單人對戰的開放地圖上：每場最多 3 個 Cell，偶爾一個 Core。50% 形態在第 1 次覺醒時到來，完全體在第 2 次。',
+      hint: 'Zygarde Cell 和 Core 出現在單人對戰的開放地圖上：每場最多 3 個 Cell，偶爾一個 Core。50% 形態在第 1 次覺醒時到來，完全體在第 2 次。偶爾會有 Core 閃閃發光：抓到它，異色 Zygarde 就是你的。',
     },
     cosmog: {
       researchHead: 'Cosmog',
@@ -1056,8 +1115,9 @@ const zh: PathWords = {
     },
     meltan: {
       box: 'Mystery Box',
-      boxHint: '你還沒有 Meltan 時，礦坑挖掘的每面岩壁都可能藏著它，最多 12 面內一定會出現。每天第一面岩壁免費。',
+      boxHint: '你還沒有 Meltan 或異色 Meltan 時，礦坑挖掘的每面岩壁都可能藏著它，最多 12 面內一定會出現。每天第一面岩壁免費。',
       found: '裡面有一隻 Meltan！它在大廳的禮物裡等你。',
+      foundShiny: '裡面有一隻 異色 Meltan！它在大廳的禮物裡等你。',
       nuts: (n: string, need: string) => `螺帽：${n}/${need}`,
       ready: 'Meltan會在第 2 次覺醒時變成 *Melmetal*。',
       note: '用Meltan對戰時，敵人會掉落六角螺帽（鋼屬性的更常掉）。有 400 個時，第 2 次覺醒會把它變成Melmetal。',
@@ -1066,6 +1126,12 @@ const zh: PathWords = {
       wakers: (n: number) => `已捕捉 Regi 三柱：${n}/3`,
       awake: '巨人醒了：神殿會出現在你的單人對戰中。',
       note: '捕捉之後，神殿仍會偶爾出現，可以再戰。',
+    },
+    shiny: {
+      zygarde: (n: number) => `*異色：*每 ${n} 個 *Zygarde Core* 就有 1 個會發光。抓到一個，異色 Zygarde 就會加入傳說模式，原本的也不會失去。`,
+      meltan: (n: number) => `*異色：*每 ${n} 個 *Mystery Box* 就有 1 個裝著異色 Meltan（異色 Melmetal 也一起）。得到 Meltan 之後，礦坑挖掘裡還會繼續出現盒子，直到異色出現為止。`,
+      diancie: (n: number) => `*異色：*每 ${n} 顆 *Pink Diamond* 就有 1 顆帶來異色 Diancie。得到 Diancie 之後，礦坑挖掘裡還會繼續出現鑽石，直到異色出現為止。`,
+      row: (name: string) => `異色 ${name}`,
     },
   },
 }

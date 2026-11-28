@@ -8,6 +8,9 @@ import { isRecord } from '../game/parse'
 import type { DigEnd, DigGift, DigHitAnswer, DigReward, DigStarted, DigState, DigWallView } from '../net/realmApi'
 import { addFakePiece, fakeGameDeeds, realmFaked, type Failure } from './api'
 import { digDeeds } from './gameDeeds'
+import { isCaptured } from '../game/capture'
+import { loadSave } from '../ui/save'
+import { legendPrize, legendWant } from './games/digLegends'
 import { buildWall, DIG, digPowers, fossilStreak, hitWall, labHalf, NO_POWERS, sortOut, startProgress, tileAt, treasureFree, wallPrice, type DigPowers, type DigProgress, type DigTool, type DigWall } from './games/dig.rules'
 
 /**
@@ -28,6 +31,8 @@ const fake = {
   plays: 0,
   /** What the next wall is forced to be (`ps.dig`). */
   force: {} as { golden?: boolean; fossil?: FossilFamily; box?: boolean; diamond?: boolean },
+  /** Dev: the next legend treasure dug out comes shiny (`ps.dig('box', 'shiny')`), or never (`'plain'`); null rolls its chance. */
+  shiny: null as boolean | null,
   /** Dev: the next wall is one layer deep and holds far more crack, to stage a whole dig (`ps.dig('soft')`). */
   soft: false,
   /** Dev: whose powers the next wall gets, whatever the partner is (`ps.dig('partner', id)`). */
@@ -37,10 +42,11 @@ const fake = {
 const thisWeek = () => weekStart(brasiliaDay(new Date()))
 
 /** Dev (`ps.dig`): forces the next faked wall, the walls used today, the dry streak, the fossils lacked and the halves in the lab. */
-export const stageDig = (patch: { golden?: boolean; fossil?: FossilFamily | null; box?: boolean; diamond?: boolean; used?: number; dry?: number; lacking?: readonly FossilFamily[]; held?: readonly GalarHalf[]; partner?: string | null; soft?: boolean }) => {
+export const stageDig = (patch: { golden?: boolean; fossil?: FossilFamily | null; box?: boolean; diamond?: boolean; shiny?: boolean | null; used?: number; dry?: number; lacking?: readonly FossilFamily[]; held?: readonly GalarHalf[]; partner?: string | null; soft?: boolean }) => {
   if (patch.golden !== undefined) fake.force.golden = patch.golden
   if (patch.box !== undefined) fake.force.box = patch.box
   if (patch.diamond !== undefined) fake.force.diamond = patch.diamond
+  if (patch.shiny !== undefined) fake.shiny = patch.shiny
   if (patch.fossil !== undefined) {
     if (patch.fossil === null) delete fake.force.fossil
     else fake.force.fossil = patch.fossil
@@ -51,7 +57,7 @@ export const stageDig = (patch: { golden?: boolean; fossil?: FossilFamily | null
   if (patch.held !== undefined) fake.held = [...patch.held]
   if (patch.partner !== undefined) fake.partner = patch.partner
   if (patch.soft !== undefined) fake.soft = patch.soft
-  return { used: fake.used, dry: fake.dry, lacking: fake.lacking, held: fake.held, force: fake.force, open: fake.open !== null }
+  return { used: fake.used, dry: fake.dry, lacking: fake.lacking, held: fake.held, force: fake.force, shiny: fake.shiny, open: fake.open !== null }
 }
 
 /** Dev: where the open faked wall hides things and how many layers are left, for staging screenshots. */
@@ -174,8 +180,13 @@ const fakeFinish = (w: FakeWall, outcome: DigEnd['outcome']): DigEnd => {
       return { id: t.id, prize, repeat: false, coins: 0 }
     }
     if (prize.kind === 'legend') {
-      content({ kind: 'legend', legend: prize.legend })
-      return { id: t.id, prize, repeat: false, coins: 0 }
+      // As the API pays it (`legendPrize`), from what this device's save has of the legend.
+      const save = loadSave()
+      const want = legendWant({ legend: isCaptured(save.legends, prize.legend), shiny: prize.legend in save.shinyStarters })
+      const got = legendPrize(prize.legend, want, fake.shiny === null ? Math.random() : fake.shiny ? 0 : 1)
+      fake.shiny = null
+      content(got.gift)
+      return { id: t.id, prize, repeat: got.gift.kind !== 'legend', coins: got.coins, ...(got.shiny ? { shiny: true as const } : {}) }
     }
     if (prize.kind === 'fossil') {
       const fresh = still.delete(prize.family)

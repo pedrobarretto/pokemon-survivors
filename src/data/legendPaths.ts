@@ -11,7 +11,8 @@ import type { PokeType } from './types'
  *
  * - Zygarde: Cells (and the rarer Cores) turn up in runs; the Zygarde Cube
  *   holds them. 10 pieces bring Zygarde 10%, 50 open its 50% Forme, 100 (all 5
- *   Cores among them) its Complete Forme, each worn from an awakening on.
+ *   Cores among them) its Complete Forme, each worn from an awakening on. Now
+ *   and then a Core shines: taking it brings Zygarde's shiny.
  * - Cosmog: a research chain brings it; it walks beside the partner in the
  *   lobby and grows with the runs played, into Solgaleo or Lunala by the hours
  *   they were played at (the device's own clock).
@@ -19,6 +20,8 @@ import type { PokeType } from './types'
  *   Tower of Darkness or the Tower of Waters decides Urshifu's style.
  * - Meltan: a Mystery Box dug up at the Escavação (the API's), then Hex Nuts
  *   its own runs gather: 400 evolve it into Melmetal at its second awakening.
+ *   A box may hold it shiny (and Melmetal with it), and keeps being buried
+ *   until its shiny comes.
  * - Regigigas: wakes for whoever captured Regirock, Regice and Registeel, in a
  *   temple that turns up in their runs.
  */
@@ -44,6 +47,8 @@ export const ZYGARDE = {
   perRun: [0.15, 0.35, 0.3, 0.2],
   /** Chance a run brings a Core too. */
   core: 1 / 7,
+  /** Chance a run's Core is shiny, as a rift's legend comes shiny: taking one brings Zygarde's shiny (a shiny Core in about 56 runs). */
+  shinyCore: 1 / 8,
   /** When the pieces may turn up (run seconds), and at least this far apart. */
   from: 75,
   until: 810,
@@ -132,6 +137,8 @@ export const MELTAN = {
   /** The Mystery Box at the Escavação: the chance a wall holds it while the account has no Meltan, and the walls after which one surely does. */
   box: 0.06,
   boxGuarantee: 12,
+  /** The chance a box dug out holds a shiny Meltan, as a rift's legend comes shiny: it keeps being buried for an account that has Meltan but not its shiny. */
+  boxShiny: 1 / 8,
 } as const
 
 /* ---------------- Regigigas ---------------- */

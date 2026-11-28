@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { brasiliaDay, weekStart } from '../../src/game/day'
+import { DIG_LEGENDS } from '../../src/realm/games/digLegends'
 import { DIG, shapeCells, type DigWall } from '../../src/realm/games/dig.rules'
 import { digStore } from './dig'
 import type { Sql } from './db'
@@ -121,6 +122,53 @@ describe.skipIf(!url)('escavação (Postgres)', () => {
     const repeat = await dig.stop('u_ash', wall.id)
     expect(repeat).toEqual({ ok: true, end: JSON.parse(JSON.stringify(last.answer.end)) })
     expect((await dig.hit('u_ash', wall.id, 2, 'pick', 1))).toEqual({ ok: false, error: 'over' })
+  })
+
+  it('rolls a dug-up legend shiny, and keeps burying it for an account with the legend but not its shiny (dice forced)', async () => {
+    const store = (roll: number) => digStore(sql, { closed: async () => false, earn: async () => {}, now, roll: () => roll })
+    const soft = new Array<number>(DIG.cols * DIG.rows).fill(1)
+    const powers = { bigHammer: false, hold: 0, reveal: false, deepPick: false }
+    /** A fresh day's free wall from `by`: the legend treasure it holds (or `force`d in), dug out alone, and the wall stopped with `by`'s dice. */
+    const dugUp = async (by: ReturnType<typeof store>, force?: 'mysteryBox' | 'pinkDiamond') => {
+      await sql`delete from dig_walls`
+      const got = await by.start('u_ash', null, null)
+      if (!got.ok) throw new Error(got.error)
+      const wall = await hidden(got.wall.id)
+      const held = wall.treasures.find((t) => t.id === 'mysteryBox' || t.id === 'pinkDiamond')
+      const id = force ?? held?.id
+      if (id === undefined) return { held: null, end: null }
+      await sql`update dig_walls set built = ${sql.json({ wall: { ...wall, treasures: [{ id, x: 0, y: 0 }], depths: soft, cap: 500 }, powers, lacking: [] })}, left_layers = ${sql.json(soft)} where id = ${got.wall.id}::uuid`
+      await digOut(got.wall.id, 0, 0)
+      const end = await by.stop('u_ash', got.wall.id)
+      if (!end.ok) throw new Error(end.error)
+      return { held: held?.id ?? null, end: end.end }
+    }
+    const lucky = store(0)
+    // Neither legend yet: Diancie's diamond takes the wall, and it comes shiny.
+    const first = await dugUp(lucky)
+    expect(first.held).toBe('pinkDiamond')
+    expect(first.end?.kept).toEqual([{ id: 'pinkDiamond', prize: { kind: 'legend', legend: 'diancie' }, repeat: false, coins: 0, shiny: true }])
+    expect(first.end?.gifts.map((g) => g.content)).toEqual([{ kind: 'legend', legend: 'diancie', shiny: true }])
+    // A shiny Diancie on its way: the next wall goes to Meltan's box, shiny too (Melmetal is its form).
+    const second = await dugUp(lucky)
+    expect(second.held).toBe('mysteryBox')
+    expect(second.end?.gifts.map((g) => g.content)).toEqual([{ kind: 'legend', legend: 'meltan', shiny: true }])
+    // Both shinies on their way: nothing left to bury.
+    expect((await dugUp(lucky)).held).toBeNull()
+
+    // An account that caught Meltan and Diancie long ago, with Diancie's shiny only: the box comes back for the shiny.
+    await sql`delete from gifts`
+    await sql`update saves set data = ${sql.json({ version: 1, partner: 'squirtle', wallet: 3000, spent: 0, legends: { meltan: 1, diancie: 1 }, shinyStarters: { diancie: true } })} where user_id = 'u_ash'`
+    const hunt = await dugUp(lucky)
+    expect(hunt.held).toBe('mysteryBox')
+    expect(hunt.end?.kept).toEqual([{ id: 'mysteryBox', prize: { kind: 'legend', legend: 'meltan' }, repeat: false, coins: 0, shiny: true }])
+    expect(hunt.end?.gifts.map((g) => [g.content, g.reason])).toEqual([[{ kind: 'legend', legend: 'meltan', shiny: true }, { kind: 'path', path: 'meltan' }]])
+    // A miss on the hunt pays the box's ₽, and the hunt goes on.
+    await sql`delete from gifts`
+    const miss = await dugUp(store(1), 'mysteryBox')
+    expect(miss.end?.kept).toEqual([{ id: 'mysteryBox', prize: { kind: 'legend', legend: 'meltan' }, repeat: true, coins: DIG_LEGENDS.meltan.coins }])
+    expect(miss.end?.gifts.map((g) => g.content)).toEqual([{ kind: 'coins', amount: DIG_LEGENDS.meltan.coins }])
+    expect((await dugUp(lucky)).held).toBe('mysteryBox')
   })
 
   it('sends a treasure dug out as a keyed gift, and a lacked fossil as its family', async () => {

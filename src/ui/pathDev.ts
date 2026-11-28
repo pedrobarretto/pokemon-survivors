@@ -6,6 +6,7 @@ import { spawnMapEvent } from '../game/mapEvents'
 import { NO_COSMOG } from '../game/legendPaths'
 import type { Game } from '../game/types'
 import { loadSpecies } from '../render/sprites'
+import { DEV_SHINY_CORE } from './pathRun'
 import { loadSave, writeSave } from './save'
 
 /**
@@ -24,8 +25,12 @@ export const pathDevTools = (game: () => Game | undefined, open: { menu: (id: Pl
     return loadSave().paths
   }
   return {
-    /** `ps.cell()` puts a Zygarde Cell 60 px to the right of the player (`ps.cell('core')` a Core). */
-    cell: (kind: 'cell' | 'core' = 'cell') => playing((g) => spawnMapEvent(g, kind === 'core' ? 'zygardeCore' : 'zygardeCell', g.player.x + 60, g.player.y)),
+    /** `ps.cell()` puts a Zygarde Cell 60 px to the right of the player (`ps.cell('core')` a Core, `ps.cell('shiny')` a Core that shines, as the rest of the run's Cores do until a reload). */
+    cell: (kind: 'cell' | 'core' | 'shiny' = 'cell') =>
+      playing((g) => {
+        if (kind === 'shiny') DEV_SHINY_CORE.on = true
+        return spawnMapEvent(g, kind === 'cell' ? 'zygardeCell' : 'zygardeCore', g.player.x + 60, g.player.y)
+      }),
     /** `ps.temple()` raises Regigigas's temple 90 px to the right of the player; walk up to it to wake it. */
     temple: () =>
       playing((g) => {

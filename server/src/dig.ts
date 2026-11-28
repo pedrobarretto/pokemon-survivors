@@ -1,8 +1,6 @@
 import { randomInt } from 'node:crypto'
 import type { TransactionSql } from 'postgres'
-import { DIG_BOX_REPEAT, DIG_DIAMOND_REPEAT, DIG_FOSSIL_FAMILIES, DIG_FOSSIL_REPEAT, DIG_HALF_REPEAT, DIG_TREASURES, isGalarHalf, type DigLegend, type DigPiece, type FossilFamily, type GalarHalf } from '../../src/data/digTreasures'
-import { MELTAN } from '../../src/data/legendPaths'
-import { DIANCIE } from '../../src/data/mythicals'
+import { DIG_FOSSIL_FAMILIES, DIG_FOSSIL_REPEAT, DIG_HALF_REPEAT, DIG_TREASURES, isGalarHalf, type DigLegend, type DigPiece, type FossilFamily, type GalarHalf } from '../../src/data/digTreasures'
 import { PLAYABLE } from '../../src/data/hatchlings'
 import type { Deed } from '../../src/data/realmStamps'
 import { canPlay, isCaptured } from '../../src/game/capture'
@@ -14,6 +12,7 @@ import { isRecord } from '../../src/game/parse'
 import { isPlayable } from '../../src/game/ranking'
 import type { DigEnd, DigGift, DigHitAnswer, DigReward, DigState, DigWallView } from '../../src/net/realmApi'
 import { digDeeds } from '../../src/realm/gameDeeds'
+import { legendDue, legendPrize, legendWant, wallLegends, type LegendWant } from '../../src/realm/games/digLegends'
 import { buildWall, DIG, digPowers, fossilStreak, hitWall, labHalf, NO_POWERS, sortOut, startProgress, tileAt, treasureFree, wallPrice, type DigPowers, type DigTool, type DigWall } from '../../src/realm/games/dig.rules'
 import type { Sql } from './db'
 import { sendGift } from './gifts'
@@ -104,26 +103,27 @@ const lackingOf = async (q: Q, userId: string, save: Save | null) => {
   return DIG_FOSSIL_FAMILIES.filter((family) => save?.hatched[family] === undefined && !sent.some((g) => g.family === family))
 }
 
-/** Whether the account still lacks a dug-up legend (Meltan, Diancie): not captured in the stored save, and no gift bringing it sent (one on its way counts). */
-const lacksLegend = async (q: Q, userId: string, save: Save | null, legend: DigLegend) => {
-  if (save && isCaptured(save.legends, legend)) return false
-  const sent = await q<{ n: number }[]>`select count(*)::int as n from gifts where user_id = ${userId} and kind = 'legend' and payload->>'legend' = ${legend}`
-  return (sent[0]?.n ?? 0) === 0
+/**
+ * What a dug-up legend's treasure (Meltan, Diancie) is still for on the
+ * account (`legendWant`): the legend while the stored save hasn't caught it
+ * and no gift bringing it was sent, then its shiny while the save doesn't own
+ * it and no shiny gift was sent (one on its way counts either way).
+ */
+const wantOf = async (q: Q, userId: string, save: Save | null, legend: DigLegend): Promise<LegendWant> => {
+  const sent = await q<{ shiny: boolean }[]>`select coalesce((payload->>'shiny')::boolean, false) as shiny from gifts where user_id = ${userId} and kind = 'legend' and payload->>'legend' = ${legend}`
+  return legendWant({ legend: (save !== null && isCaptured(save.legends, legend)) || sent.length > 0, shiny: (save !== null && legend in save.shinyStarters) || sent.some((g) => g.shiny) })
 }
 
-/** The chance and guarantee of each dug-up legend's treasure: Meltan's Mystery Box (`MELTAN`), Diancie's pink diamond (`DIANCIE`, rarer). */
-const LEGEND_ODDS = { meltan: { chance: MELTAN.box, every: MELTAN.boxGuarantee }, diancie: { chance: DIANCIE.jewel, every: DIANCIE.guarantee } } as const satisfies Record<DigLegend, { chance: number; every: number }>
-
-/** What a dug-up legend's treasure pays once the account has the legend, and why its gift comes (Meltan's is its path's; Diancie's the Escavação's). */
-const LEGEND_REPEAT = { meltan: DIG_BOX_REPEAT, diancie: DIG_DIAMOND_REPEAT } as const satisfies Record<DigLegend, number>
+/** Why a dug-up legend's gift comes (Meltan's is its path's; Diancie's the Escavação's). */
 const legendReason = (legend: DigLegend): GiftReason => (legend === 'meltan' ? { kind: 'path', path: 'meltan' } : { kind: 'season', way: 'dig' })
 
-/** Whether a new wall holds a legend's treasure: only while the account lacks it, by chance, and surely every so many walls (`LEGEND_ODDS`). */
-const legendDue = async (q: Q, userId: string, save: Save | null, legend: DigLegend) => {
-  if (!(await lacksLegend(q, userId, save, legend))) return false
-  const odds = LEGEND_ODDS[legend]
-  const walls = (await q<{ n: number }[]>`select count(*)::int as n from dig_walls where user_id = ${userId}`)[0]?.n ?? 0
-  return (walls + 1) % odds.every === 0 || randomInt(0, 1_000_000) < odds.chance * 1_000_000
+/** A roll from 0 to 1, from the server's own dice. */
+const dice = () => randomInt(0, 1_000_000) / 1_000_000
+
+/** What a new wall's legend treasure is for when it holds one (`legendDue`), else null. */
+const dueFor = async (q: Q, userId: string, save: Save | null, legend: DigLegend, walls: number, roll: () => number): Promise<LegendWant> => {
+  const want = await wantOf(q, userId, save, legend)
+  return legendDue(legend, want, walls, roll()) ? want : null
 }
 
 /** The partner's powers: the one the player walks with, if the stored save may play it, else the save's own. */
@@ -144,8 +144,10 @@ export type DigStopped = { ok: true; end: DigEnd } | { ok: false; error: 'profil
 /** The deeds of a wall that just ended (`digDeeds`). */
 const deedsOf = (row: WallRow, end: DigEnd) => digDeeds(row.built.wall.golden, end.kept.map((r) => r.id))
 
-export const digStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => Promise<boolean>; earn: EarnDeeds; now?: () => Date }) => {
+/** `roll`: the legends' dice (a wall's treasure, its shiny), the server's own unless a test forces them. */
+export const digStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => Promise<boolean>; earn: EarnDeeds; now?: () => Date; roll?: () => number }) => {
   const now = deps.now ?? (() => new Date())
+  const roll = deps.roll ?? dice
   const limit = rateLimiter(LIMIT.n, LIMIT.ms)
   const today = () => brasiliaDay(now())
 
@@ -160,7 +162,7 @@ export const digStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => Pro
    * Ends a wall: every treasure dug out completely goes to its owner, in this
    * one transaction. Gifts carry a key per wall and treasure, so a retry can't
    * pay twice; a lacked fossil is a family (the rest pay ₽), Meltan's
-   * Mystery Box is Meltan and Diancie's pink diamond Diancie while the account lacks it, furniture goes straight
+   * Mystery Box is Meltan and Diancie's pink diamond Diancie while the account lacks it, and then perhaps its shiny (`legendPrize`), furniture goes straight
    * in, a Galar half meets the lab (`labHalf`: a family with the half waiting
    * there, a place in the lab, or ₽), and the dry streak moves (`fossilStreak`).
    */
@@ -188,13 +190,12 @@ export const digStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => Pro
         continue
       }
       if (prize.kind === 'legend') {
-        // Meltan's Mystery Box, Diancie's pink diamond: the legend for an account still without it, ₽ for one that has it by now.
-        const fresh = await lacksLegend(tx, userId, stored ? parseSaveData(stored.data) : null, prize.legend)
-        const repeat = LEGEND_REPEAT[prize.legend]
+        // Meltan's Mystery Box, Diancie's pink diamond: the legend (shiny by the treasure's chance) for an account still without it, its shiny by the same chance for one that has it, ₽ otherwise.
+        const got = legendPrize(prize.legend, await wantOf(tx, userId, stored ? parseSaveData(stored.data) : null, prize.legend), roll())
         const key = `dig:${row.id}:${i}`
         keys.push(key)
-        await sendGift(tx, userId, fresh ? { kind: 'legend', legend: prize.legend } : { kind: 'coins', amount: repeat }, fresh ? legendReason(prize.legend) : { kind: 'season', way: 'dig' }, key)
-        kept.push({ id: t.id, prize, repeat: !fresh, coins: fresh ? 0 : repeat })
+        await sendGift(tx, userId, got.gift, got.gift.kind === 'legend' ? legendReason(prize.legend) : { kind: 'season', way: 'dig' }, key)
+        kept.push({ id: t.id, prize, repeat: got.gift.kind !== 'legend', coins: got.coins, ...(got.shiny ? { shiny: true as const } : {}) })
         continue
       }
       if (prize.kind === 'fossil') {
@@ -279,9 +280,9 @@ export const digStore = (sql: Sql, deps: { closed: (q: Q, userId: string) => Pro
         const lacking = await lackingOf(tx, userId, saved)
         const dry = await dryOf(tx, userId)
         const powers = powersFor(saved, partner)
-        // Both legends' treasures don't always fit one wall: Diancie's, the rarer, takes it (the box's chance comes back with the next wall).
-        const diamond = await legendDue(tx, userId, saved, 'diancie')
-        const box = !diamond && (await legendDue(tx, userId, saved, 'meltan'))
+        // Both legends' treasures don't always fit one wall (`wallLegends`): the box's chance comes back with the next wall.
+        const walls = (await tx<{ n: number }[]>`select count(*)::int as n from dig_walls where user_id = ${userId}`)[0]?.n ?? 0
+        const { box, diamond } = wallLegends({ meltan: await dueFor(tx, userId, saved, 'meltan', walls, roll), diancie: await dueFor(tx, userId, saved, 'diancie', walls, roll) })
         const held = await heldOf(tx, userId)
         const wall = buildWall(seed, { week, powers, lacking, held, due: dry >= DIG.fossilGuarantee, box, diamond })
         const built: Built = { wall, powers, lacking, held }

@@ -2176,6 +2176,7 @@ export const en: Messages = {
     shinyHatch: (name) => `A _shiny_ *${name}* came for you!`,
     companion: (name) => `*${name}* walks with you in your runs now!`,
     legend: (name) => `*${name}* came for you! Playable in _Legend Mode_.`,
+    legendShiny: (name) => `Shiny *${name}* came for you! Pick Shiny in the _Legend Mode_ select.`,
     ribbon: (name) => `*${name}*! It's on your profile already.`,
     ribbonWhy: (date, rank, total) => `Challenge of ${date}: #${rank} of ${total}`,
     button: 'Gift!',

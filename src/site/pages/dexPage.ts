@@ -17,7 +17,7 @@ import { dexPaths, ROUTES } from '../routes'
 import { createSpriteCss } from '../spriteCss'
 import { TIER_SNAPSHOT } from '../../data/tierRuns'
 import { currentTierList, winPercent, type FamilyId } from '../tierList'
-import { appearance, captureText, card, pathNote } from './pokedex'
+import { appearance, captureText, card, giftNote, ownShinyNote, pathNote } from './pokedex'
 
 /** A question and its answer, shown on the page and repeated in its `FAQPage` JSON-LD. */
 type Qa = { q: string; a: string }
@@ -84,11 +84,12 @@ const familyFaq = (id: FamilyId, base: DexEntry, m: SiteMessages, locale: Locale
 const legendFaq = (id: LegendId, entry: DexEntry, m: SiteMessages, locale: Locale): Qa[] => {
   const def = LEGENDS[id]
   const rule: LegendUnlock = def.unlock
-  const unlock = rule.path || rule.after ? pathNote(id, locale) : captureText(rule, m)
+  // A legend never fought says how it comes (a path, a gift), and its shiny its own way (Zygarde, Meltan, Diancie).
+  const unlock = rule.path || rule.after ? pathNote(id, locale) : entry.source.kind === 'gift' ? giftNote(id, locale) : captureText(rule, m)
   const form = 'form' in def ? m.dexPage.awakens(def.form.name) : ''
   const where = entry.source.kind === 'wild' ? appearances(entry.source.id).map((a) => appearance(a, m)) : []
   return [
-    { q: m.dexPage.catchQ(entry.name), a: [unlock, form, m.pokedex.captureShiny].filter(Boolean).join(' ') },
+    { q: m.dexPage.catchQ(entry.name), a: [unlock, form, ownShinyNote(id, locale) ?? m.pokedex.captureShiny].filter(Boolean).join(' ') },
     ...(where.length > 0 ? [{ q: m.dexPage.whereQ(entry.name), a: `${where.join('; ')}.` }] : []),
   ]
 }
