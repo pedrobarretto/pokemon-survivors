@@ -34,11 +34,13 @@ export const loadSave = (): Save => {
   }
 }
 
-export const writeSave = (save: Save) => {
+/** Writes the save; whether storage took it (full or blocked: progress just won't persist this session). */
+export const writeSave = (save: Save): boolean => {
   try {
     localStorage.setItem(KEY, JSON.stringify(save))
+    return true
   } catch {
-    // Storage full or blocked: progress just won't persist this session.
+    return false
   }
 }
 

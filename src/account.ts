@@ -16,6 +16,7 @@ import { timeoutSignal } from './net/timeout'
 import { hostApp, onboardingStep } from './onboarding'
 import { continueOnSite, framed, leaveTo, type Provider, type SignInWay } from './handoff'
 import { problemOf, type EmailProblem } from './emailCode'
+import { takesRevision } from './game/sync'
 
 /**
  * Optional player accounts (Google, Discord or a code by email, through Clerk). Playing as a guest stays
@@ -274,29 +275,42 @@ const parsePushed = (body: unknown) =>
     ? { save: parseSaveData(body.save), revision: body.revision, merged: body.merged === true }
     : null
 
+/** The largest body a push sends `keepalive` (browsers allow 64 KB in flight for a page going away). */
+const KEEPALIVE_MAX = 60_000
+
+/** The local save as the last push that went through left it (JSON), so a page going away pushes only what changed since. */
+let lastPushed: string | null = null
+
 /**
  * Sends the local save on top of the revision this device last got, with this
  * build's place in line (`__GAME_BUILT__`, so an older build's push merges),
  * and keeps what the account stored. If the save changed locally while the request was
  * out (a purchase, a hatch), the local one stays: it already builds on what
  * was sent when the account took it as is, and otherwise the next push merges.
+ * The revision moves only with a save this device holds: the account's once
+ * storage took it (a full one refuses it, and then the old revision makes the
+ * next push merge instead of replacing the account's save with the older one
+ * left here), or its own when the account took it as is. A page hidden (a tab
+ * closed, an app switched) sends it `keepalive`, so it outlives the page.
  */
-const push = async (c: Clerk, link: Link) => {
-  const token = await apiToken(c)
-  if (!token) throw new Error('no session')
+const push = async (token: string, link: Link) => {
   const sent = JSON.stringify(loadSave())
+  const body = JSON.stringify({ save: JSON.parse(sent), base: link.revision, build: __GAME_BUILT__ })
   const res = await fetch(`${API_URL}/save`, {
     method: 'PUT',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ save: JSON.parse(sent), base: link.revision, build: __GAME_BUILT__ }),
+    body,
+    keepalive: document.visibilityState === 'hidden' && new TextEncoder().encode(body).length <= KEEPALIVE_MAX,
     signal: timeoutSignal(TIMEOUT_MS),
   })
   const pushed = res.ok ? parsePushed(await res.json()) : null
   if (!pushed) throw new Error(`push failed: ${res.status}`)
   const unchanged = JSON.stringify(loadSave()) === sent
-  if (unchanged) writeSave(pushed.save)
-  if (unchanged || !pushed.merged) writeLink({ ...link, revision: pushed.revision })
-  if (unchanged && JSON.stringify(pushed.save) !== sent) savedListeners.forEach((fn) => fn())
+  const kept = takesRevision(unchanged, unchanged && writeSave(pushed.save), pushed.merged)
+  if (unchanged && !kept) console.warn('account sync: storage refused the synced save; the next push merges')
+  if (kept) writeLink({ ...link, revision: pushed.revision })
+  lastPushed = kept && unchanged ? JSON.stringify(pushed.save) : sent
+  if (kept && unchanged && lastPushed !== sent) savedListeners.forEach((fn) => fn())
 }
 
 /** Makes this device the signed-in user's, keeping its revision and profile if it was theirs already. */
@@ -642,24 +656,28 @@ export const syncSave = async () => {
     if (!accountsEnabled || !saved) break
     setSync('syncing')
     try {
-      const c = await loadClerk()
-      // Clerk's session rules: signed out elsewhere goes back to guest, another user takes the device.
-      if (!c.user) {
+      // Dev builds against a local API: the stand-in token needs no Clerk.
+      const dev = devToken()
+      const c = dev ? null : await loadClerk()
+      if (c && !c.user) {
+        // Clerk that couldn't reach its servers loads `degraded`, with no user when its session cookie ran out: offline, never signed out.
+        if (c.status !== 'ready') throw new Error(`clerk ${c.status}`)
+        // Clerk's session rules: signed out elsewhere goes back to guest.
         writeLink(null)
         setInbox([])
         setState({ kind: 'guest' })
         break
       }
-      if (c.user.id !== saved.userId) relink(c, c.user)
-      const token = await apiToken(c)
-      if (token) await sendReferral(token)
-      await push(c, readLink() ?? saved)
+      // Another user takes the device.
+      if (c?.user && c.user.id !== saved.userId) relink(c, c.user)
+      const token = dev ?? (c ? await apiToken(c) : null)
+      if (!token) throw new Error('no session')
+      await sendReferral(token)
+      await push(token, readLink() ?? saved)
       setSync('synced')
-      if (token) {
-        await loadProfile(token)
-        await syncDiscord(c, token)
-        await fetchGifts(token)
-      }
+      await loadProfile(token)
+      if (c) await syncDiscord(c, token)
+      await fetchGifts(token)
     } catch (err) {
       console.warn('account sync failed', err)
       setSync('offline')
@@ -707,8 +725,8 @@ const spendOnce = async (path: string, payload: Record<string, unknown>, amount:
   const done = parsePushed(body)
   if (!done || !isRecord(body)) return { ok: false, error: 'offline' }
   // The stored save was this device's as of `base`: kept as is, unless the save changed meanwhile, which then spends the same ₽.
-  writeSave(JSON.stringify(loadSave()) === before ? done.save : donateFrom(loadSave(), amount))
-  writeLink({ ...(readLink() ?? link), revision: done.revision })
+  // A write the storage refused keeps the old revision, so the next push merges the spending in (`push`).
+  if (writeSave(JSON.stringify(loadSave()) === before ? done.save : donateFrom(loadSave(), amount))) writeLink({ ...(readLink() ?? link), revision: done.revision })
   savedListeners.forEach((fn) => fn())
   return { ok: true, body }
 }
@@ -1040,9 +1058,12 @@ const finishSignIn = async () => {
 /**
  * Syncs when the game comes back to the foreground (another tab, an app
  * switch, a PWA reopened from the background), so progress made on another
- * device shows up without a reload. Signed in only, at most once per
- * `RESUME_GAP_MS`, and only while `allowed` (the shell holds it off during a run,
- * which syncs when it ends).
+ * device shows up without a reload, and when it leaves it (a tab closed or
+ * hidden, an app switched away) with whatever changed since the last push (a
+ * purchase, a hatch, the lobby's gifts), which would otherwise wait on this
+ * device for its next sync while another one plays without it. Signed in
+ * only, coming back at most once per `RESUME_GAP_MS`, and only while
+ * `allowed` (the shell holds it off during a run, which syncs when it ends).
  */
 const syncOnResume = (allowed: () => boolean) => {
   // The page just loaded: boot's own sync (or the sign in) goes first.
@@ -1051,7 +1072,12 @@ const syncOnResume = (allowed: () => boolean) => {
     if (document.visibilityState !== 'visible' || !readLink() || !allowed() || performance.now() - lastSync < RESUME_GAP_MS) return
     void syncSave()
   }
-  document.addEventListener('visibilitychange', resume)
+  const leave = () => {
+    if (document.visibilityState !== 'hidden' || syncing || !readLink() || !allowed() || JSON.stringify(loadSave()) === lastPushed) return
+    void syncSave()
+  }
+  document.addEventListener('visibilitychange', () => (document.visibilityState === 'hidden' ? leave() : resume()))
+  window.addEventListener('pagehide', leave)
   window.addEventListener('pageshow', (e) => e.persisted && resume())
   window.addEventListener('focus', resume)
 }

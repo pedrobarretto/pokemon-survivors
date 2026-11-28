@@ -5,7 +5,7 @@ import { keepGiven } from './gifts'
 import { bagCount } from './bag'
 import { buyFromVitrine, buyKecleonEgg, buyStyle, claimGift, investInShop, vitrineCards, vitrineOf } from './shop'
 import { NO_PATHS } from './legendPaths'
-import { applyPush, behind, mergeSaves, pushBuild } from './sync'
+import { applyPush, behind, mergeSaves, pushBuild, takesRevision, type Stored } from './sync'
 import { buyQuick, buySlot, useQuick } from './incubator'
 import { hatchEgg } from './eggs'
 import { createRng } from '../engine/rng'
@@ -268,6 +268,136 @@ describe('applyPush', () => {
     expect(behind(save({ paths: { ...NO_PATHS, cosmog: { ...NO_PATHS.cosmog, runs: 5 } } }), raising)).toBe(true)
     expect(behind(grown, raising)).toBe(false)
     expect(behind(raising, grown)).toBe(true)
+  })
+})
+
+/**
+ * Two devices of one account, each with its own save and the revision it last
+ * took, syncing through `applyPush` as `push` in `account.ts` does
+ * (`takesRevision`); `refuse` stands for a full storage refusing the write.
+ */
+describe('two devices with different saves', () => {
+  type Device = { save: Save; revision: number | null; refuse?: boolean }
+  const sync = (stored: Stored | null, device: Device): Stored & { merged: boolean } => {
+    const out = applyPush(stored, { save: device.save, base: device.revision, build: null })
+    const written = !device.refuse
+    if (written) device.save = out.save
+    if (takesRevision(true, written, out.merged)) device.revision = out.revision
+    return out
+  }
+  const played = (s: Save, patch: Partial<Save>, runs: number): Save => ({
+    ...s,
+    ...patch,
+    achievements: { ...s.achievements, lifetime: { ...s.achievements.lifetime, runs: s.achievements.lifetime.runs + runs } },
+  })
+
+  it('brings the afternoon on one device into the evening on the other, and both end the same', () => {
+    const pc1: Device = { save: guest, revision: null }
+    const pc2: Device = { save: account, revision: null }
+    let stored = sync(null, pc2)
+    stored = sync(stored, pc1)
+    // Afternoon on PC 1: a run, a family hatched, a species caught.
+    pc1.save = played(pc1.save, { hatched: { ...pc1.save.hatched, axew: { shiny: false } }, dex: { ...pc1.save.dex, 610: [3, 1] } }, 1)
+    stored = sync(stored, pc1)
+    // Evening on PC 2, which played offline meanwhile and never saw PC 1's afternoon.
+    pc2.save = played(pc2.save, { hatched: { ...pc2.save.hatched, dratini: { shiny: true } } }, 2)
+    stored = sync(stored, pc2)
+    expect(pc2.save.hatched).toMatchObject({ axew: { shiny: false }, dratini: { shiny: true }, eevee: { shiny: true }, gible: { shiny: false } })
+    expect(pc2.save.dex[610]).toEqual([3, 1])
+    // Lifetime records keep the larger side: PC 2's own runs, counted from the account's.
+    expect(pc2.save.achievements.lifetime.runs).toBe(account.achievements.lifetime.runs + 2)
+    stored = sync(stored, pc1)
+    expect(pc1.save).toEqual(pc2.save)
+    expect(stored.save).toEqual(pc2.save)
+  })
+
+  it('keeps the account’s families when a device writes an older copy over the save a sync brought, and keeps its purchase', () => {
+    const pc1: Device = { save: account, revision: null }
+    let stored = sync(null, pc1)
+    const pc2: Device = { save: stored.save, revision: stored.revision }
+    // PC 1 hatches a family from a gift (no run), and PC 2 syncs it in.
+    pc1.save = { ...pc1.save, hatched: { ...pc1.save.hatched, axew: { shiny: true } }, gifts: [...pc1.save.gifts, 'gift-c'] }
+    stored = sync(stored, pc1)
+    const held = pc2.save
+    stored = sync(stored, pc2)
+    expect(pc2.save.hatched.axew).toEqual({ shiny: true })
+    // A screen still holding the save from before writes it back with a Vitrine buy, on top of the latest revision.
+    pc2.save = buyStyle(held, 'background', 'meadow') ?? held
+    stored = sync(stored, pc2)
+    expect(stored.save.hatched.axew).toEqual({ shiny: true })
+    expect(stored.save.gifts).toContain('gift-c')
+    expect(stored.save.style.owned.background).toContain('meadow')
+    expect(stored.save.spent).toBe(pc2.save.spent)
+  })
+
+  it('never lets a device whose storage refused the synced save replace the account’s with the one it kept', () => {
+    const pc1: Device = { save: account, revision: null }
+    let stored = sync(null, pc1)
+    const pc2: Device = { save: guest, revision: null, refuse: true }
+    stored = sync(stored, pc2)
+    // The merge never landed on PC 2, so it keeps no revision to push on top of.
+    expect(pc2.save).toEqual(guest)
+    expect(pc2.revision).toBeNull()
+    pc2.refuse = false
+    pc2.save = played(pc2.save, {}, 1)
+    stored = sync(stored, pc2)
+    expect(Object.keys(stored.save.hatched)).toEqual(expect.arrayContaining(Object.keys(account.hatched)))
+    expect(stored.save.titles).toEqual(account.titles)
+    expect(pc2.save).toEqual(stored.save)
+  })
+
+  it('keeps a family a build too old to know it dropped, once a current build pushes on top', () => {
+    const pc1: Device = { save: { ...account, hatched: { ...account.hatched, axew: { shiny: false } } }, revision: null }
+    let stored = sync(null, pc1)
+    // An open tab of an older build reads the account's save without the family it doesn't know, and takes it.
+    const { axew: _, ...known } = stored.save.hatched
+    pc1.save = { ...stored.save, hatched: known }
+    pc1.revision = stored.revision
+    // The reloaded tab, on the current build, pushes that save on top of the latest revision.
+    stored = sync(stored, pc1)
+    expect(stored.merged).toBe(true)
+    expect(stored.save.hatched.axew).toEqual({ shiny: false })
+  })
+})
+
+describe('behind', () => {
+  const stored = save({
+    hatched: { eevee: { shiny: false } },
+    dex: { 25: [4, 1] },
+    achievements: { unlocked: ['firstRun'], lifetime: NO_ACHIEVEMENTS.lifetime },
+    shinyStarters: { pichu: false },
+    clears: { charmander: 'hard' },
+    gifts: ['gift-a'],
+    titles: ['ambassador'],
+    evo: ['iceStone'],
+  })
+
+  it('takes a save with all of the account’s collection and more, spending and all', () => {
+    const more = { ...stored, wallet: 0, spent: 900, hatched: { ...stored.hatched, gible: { shiny: true } }, dex: { 25: [9, 3], 1: [1, 0] } } satisfies Save
+    expect(behind(more, stored)).toBe(false)
+    expect(applyPush({ save: stored, revision: 4, build: null }, { save: more, base: 4, build: null })).toMatchObject({ save: more, merged: false })
+  })
+
+  it('finds the collection a save lacks: a family, a species or a catch, a medal, a shiny, a clear, a gift, an item', () => {
+    expect(behind({ ...stored, hatched: {} }, stored)).toBe(true)
+    expect(behind({ ...stored, dex: {} }, stored)).toBe(true)
+    expect(behind({ ...stored, dex: { 25: [4, 0] } }, stored)).toBe(true)
+    expect(behind({ ...stored, dex: { 25: [3, 1] } }, stored)).toBe(true)
+    expect(behind({ ...stored, achievements: NO_ACHIEVEMENTS }, stored)).toBe(true)
+    expect(behind({ ...stored, shinyStarters: {} }, stored)).toBe(true)
+    expect(behind({ ...stored, clears: { charmander: 'normal' } }, stored)).toBe(true)
+    expect(behind({ ...stored, gifts: [] }, stored)).toBe(true)
+    expect(behind({ ...stored, titles: [] }, stored)).toBe(true)
+    expect(behind({ ...stored, evo: [] }, stored)).toBe(true)
+  })
+})
+
+describe('takesRevision', () => {
+  it('moves the revision only with a save the device holds', () => {
+    expect(takesRevision(true, true, true)).toBe(true)
+    expect(takesRevision(true, false, false)).toBe(false)
+    expect(takesRevision(false, false, false)).toBe(true)
+    expect(takesRevision(false, false, true)).toBe(false)
   })
 })
 
