@@ -1,0 +1,6 @@
+push wav18-before-1795828084074 base=null -> rev 1 merged=false runs=5 hatched=larvitar wallet=3000
+push wav18-before-1795828084074 base=null -> rev 2 merged=true runs=8 hatched=dratini,larvitar wallet=3000
+push wav18-before-1795828084074 base=2 -> rev 3 merged=false runs=8 hatched=dratini wallet=1500
+push wav18-before-1795828084074 base=2 -> rev 4 merged=true runs=8 hatched=dratini wallet=1500
+push wav18-before-1795828084074 base=1 -> rev 5 merged=true runs=8 hatched=riolu,dratini,larvitar wallet=1500
+push wav18-before-1795828084074 base=4 -> rev 6 merged=true runs=8 hatched=riolu,dratini,larvitar wallet=1500

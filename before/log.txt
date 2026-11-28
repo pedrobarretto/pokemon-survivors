@@ -1,0 +1,7 @@
+1. PC1 synced: account rev 1, families on the account: larvitar
+2. PC2 synced: its families now: dratini, larvitar (rev 2)
+3. PC2 stale write (purchase on a held copy): local families dratini, link rev still 2
+4. PC2 reloaded and pushed: account rev 4, families on the account: dratini, background owned: meadow
+   PC2 local families: dratini
+5. PC1 hatched Riolu and went hidden: families on the account: dratini, larvitar, riolu
+6. PC2 reopened: local families dratini, larvitar, riolu
