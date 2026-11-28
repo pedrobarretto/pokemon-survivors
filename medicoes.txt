@@ -1,0 +1,5 @@
+Quaxly com Aqua Step (automático) + Quick Attack (Shift), parado sobre cada ponto, 2 Rattata a ~90 px:
+- acampamento:     Aqua Step e Quick Attack lançados; maior distância do baú enquanto fechado = 8 px (anel = 23 px); baú abriu
+- baú da casa:     Aqua Step e Quick Attack lançados; maior distância do baú enquanto fechado = 9 px (anel = 23 px)
+- toca Tera Raid:  Aqua Step e Quick Attack lançados; maior distância da toca = 4 px (porta = 20 px); a toca encheu e o time entrou na raid
+Sem a correção, cada passo do Aqua Step leva o Pokémon 44 px e o Quick Attack o lança até o inimigo (~90 px).
