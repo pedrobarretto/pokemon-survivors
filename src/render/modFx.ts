@@ -1,4 +1,4 @@
-import { beginRects, blitCentered, blitEllipse, blitRing, canvasCache, context2d, createCanvas } from '../engine/pixelart'
+import { beginRects, blitCentered, blitEllipse, blitRing, canvasCache, context2d, createCanvas, remember } from '../engine/pixelart'
 import { TAU } from '../engine/math'
 import { hash2 } from '../engine/rng'
 import type { PokeType } from '../data/types'
@@ -61,11 +61,10 @@ export const flightAngle = (m: Motion): number | null => {
 
 /** Patches of Trail ground, per type, variant and radius: a ragged, dithered blob with a darker rim. */
 const patches = canvasCache<string, HTMLCanvasElement>()
+/** Trail patches kept (`remember`): a trail or two on the ground at once, four variants each, not every radius a run's area boosts went through. */
+const PATCHES_KEPT = 12
 
-const patch = (type: PokeType, variant: number, r: number) => {
-  const key = `${type}|${variant}|${r}`
-  const cached = patches.get(key)
-  if (cached) return cached
+const patch = (type: PokeType, variant: number, r: number) => remember(patches, `${type}|${variant}|${r}`, PATCHES_KEPT, () => {
   const [dark, body, light] = palette(type)
   const ry = Math.max(2, Math.round(r * 0.55))
   const canvas = createCanvas(r * 2 + 1, ry * 2 + 1)
@@ -81,9 +80,8 @@ const patch = (type: PokeType, variant: number, r: number) => {
       ctx.fillRect(x + r, y + ry, 1, 1)
     }
   }
-  patches.set(key, canvas)
   return canvas
-}
+})
 
 /** Ground a Trail left: a ragged patch in the move's colors with motes flickering up off it, fading in and out. */
 const drawTrail = (ctx: Ctx, a: Attack, t: number) => {

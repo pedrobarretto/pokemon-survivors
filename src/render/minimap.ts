@@ -1,4 +1,4 @@
-import { context2d, createCanvas, fromStrings, lazy, blitPacked, textSprite, type Palette, type PixelSprite } from '../engine/pixelart'
+import { context2d, createCanvas, drawPacked, fromStrings, lazy, lazySheet, blitPacked, packed3, textSprite, type Packed, type Palette, type PixelSprite } from '../engine/pixelart'
 import type { RoamerId } from '../data/legends'
 import { roamerShown } from '../game/roamers'
 import { hash2 } from '../engine/rng'
@@ -114,7 +114,7 @@ const STAR = ['..y..', '.yyy.', 'yywyy', '.yyy.', '.y.y.']
 const ORB = ['.kkk.', 'kwcck', 'kccdk', 'kcddk', '.kkk.']
 const BLADE = ['....w', '...w.', 'w.w..', '.y...', 'y.y..']
 
-const GLYPHS = lazy(() => ({
+const GLYPHS = lazySheet(() => ({
   boss: [glyph(SKULL, { w: '#f8f0e0', k: DARK }), glyph(SKULL, { w: '#f86858', k: DARK })],
   alpha: [glyph(DIAMOND, { c: '#e02838', w: '#f8e0b0' }), glyph(DIAMOND, { c: '#f8a020', w: '#f8f0d0' })],
   shiny: [glyph(STAR, { y: '#f8d030', w: '#ffffff' }), glyph(STAR, { y: '#fff4a8', w: '#f8d030' })],
@@ -178,7 +178,7 @@ const GLYPHS = lazy(() => ({
  * The local player's arrow for each of 8 headings (0 = east, clockwise), rasterized
  * from a notched arrowhead so the diagonals stay as crisp as the straight ones.
  */
-const ARROWS = lazy(() =>
+const ARROWS = lazySheet(() =>
   Array.from({ length: 8 }, (_, i) => {
     const a = (i * Math.PI) / 4
     const pts = [[3.6, 0], [-3, 2.8], [-1.4, 0], [-3, -2.8]].map(([x, y]) => [x! * Math.cos(a) - y! * Math.sin(a), x! * Math.sin(a) + y! * Math.cos(a)] as const)
@@ -482,7 +482,7 @@ const drawFog = (ctx: Ctx, v: View, seen: Set<number>) => {
  * Draws `sprite` at world (x, y) when it's on the map; out of range, `pin`
  * puts it on the rim in its direction instead.
  */
-const marker = (ctx: Ctx, v: View, shape: MinimapShape, sprite: PixelSprite, x: number, y: number, pin: boolean) => {
+const marker = (ctx: Ctx, v: View, shape: MinimapShape, sprite: Packed, x: number, y: number, pin: boolean) => {
   let mx = x / v.scale - v.ox
   let my = y / v.scale - v.oy
   const dx = mx - C
@@ -495,7 +495,7 @@ const marker = (ctx: Ctx, v: View, shape: MinimapShape, sprite: PixelSprite, x: 
     mx = C + dx * k
     my = C + dy * k
   }
-  ctx.drawImage(sprite, Math.round(mx - sprite.width / 2), Math.round(my - sprite.height / 2))
+  drawPacked(ctx, sprite, Math.round(mx - sprite.w / 2), Math.round(my - sprite.h / 2))
 }
 
 const pickupGlyph = (p: Pickup) => {
@@ -622,8 +622,7 @@ export const drawMinimap = (ctx: Ctx, g: Game, shape: MinimapShape, t: number) =
     if (p === me || p.gone) continue
     marker(ctx, v, shape, teammate(p.hp > 0 ? slotColor(p.slot) : '#808080'), p.x, p.y, true)
   }
-  const arrow = ARROWS()[heading(me.facing.x, me.facing.y)]!
-  ctx.drawImage(arrow, C - 4, C - 4)
+  drawPacked(ctx, ARROWS()[heading(me.facing.x, me.facing.y)]!, C - 4, C - 4)
   frame(ctx, shape)
 }
 
@@ -645,7 +644,7 @@ const VALE_LOOKS = {
   coast: { wall: '#1d5f82', edge: '#d8f0ec', ground: '#d8c08c', jungle: '#a89470', path: '#8a5e3a', tall: '#3e6a48', base: ['#3e5c88', '#884048'] },
 } as const satisfies Record<MapTheme, { wall: string; edge: string; ground: string; jungle: string; path: string; tall: string; base: readonly [string, string] }>
 
-const VALE_GLYPHS = lazy(() => ({
+const VALE_GLYPHS = lazySheet(() => ({
   goal: [0, 1].map((team) => glyph(['.c.', 'cwc', '.c.'], { c: TEAM_COLORS[team as 0 | 1], w: '#ffffff' })),
   locked: [0, 1].map((team) => glyph(['.c.', 'ckc', '.c.'], { c: TEAM_COLORS[team as 0 | 1], k: DARK })),
   broken: glyph(['.c.', 'c.c', '.c.'], { c: '#707078' }),
@@ -704,7 +703,7 @@ const drawValeMap = (ctx: Ctx, g: Game, shape: MinimapShape, t: number) => {
     if (p === me || p.gone || p.hp <= 0 || !p.versus || concealed(me, p)) continue
     marker(ctx, v, shape, teammate(TEAM_COLORS[p.versus.team]), p.x, p.y, true)
   }
-  if (me.hp > 0) ctx.drawImage(ARROWS()[heading(me.facing.x, me.facing.y)]!, mapX(v, me.x) - 4, mapY(v, me.y) - 4)
+  if (me.hp > 0) drawPacked(ctx, ARROWS()[heading(me.facing.x, me.facing.y)]!, mapX(v, me.x) - 4, mapY(v, me.y) - 4)
   // The team's pings over everything, blinking as they land.
   for (const ping of s.pings) {
     if (!seesPing(g, ping) || (g.now - ping.at < 1.5 && Math.floor(t * 6) % 2 === 1)) continue
@@ -712,7 +711,7 @@ const drawValeMap = (ctx: Ctx, g: Game, shape: MinimapShape, t: number) => {
   }
 }
 
-const PING_GLYPHS = lazy(() => Object.fromEntries(PING_KINDS.map((kind) => [kind, glyph(['.c.', 'cwc', 'cwc', '.c.'], { c: PING_COLORS[kind], w: '#ffffff' })])) as Record<PingKind, PixelSprite>)
+const PING_GLYPHS = lazySheet(() => Object.fromEntries(PING_KINDS.map((kind) => [kind, glyph(['.c.', 'cwc', 'cwc', '.c.'], { c: PING_COLORS[kind], w: '#ffffff' })])) as Record<PingKind, PixelSprite>)
 const pingGlyph = (kind: PingKind) => PING_GLYPHS()[kind]
 
 /**
@@ -725,9 +724,5 @@ export const arenaMapAt = (s: VersusState, mx: number, my: number) => {
   return { x: (Math.floor(mx) - C) * scale + scale / 2, y: (Math.floor(my) - C) * scale + scale / 2 }
 }
 
-const teammates = new Map<string, PixelSprite>()
-const teammate = (color: string) => {
-  let s = teammates.get(color)
-  if (!s) teammates.set(color, (s = glyph(DOT, { c: color, w: '#ffffff' })))
-  return s
-}
+const teammateGlyph = packed3((color: string, _b: 0, _c: 0) => glyph(DOT, { c: color, w: '#ffffff' }))
+const teammate = (color: string) => teammateGlyph(color, 0, 0)

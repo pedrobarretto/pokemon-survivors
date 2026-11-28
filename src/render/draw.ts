@@ -5,6 +5,7 @@ import { capturePlaying, drawCapture, underCapture } from './capture'
 import { drawNightmareAir, drawNightmareDark, drawNightmareGround, shadeAlpha, SLEEP_TINT } from './darkrai'
 import { isAsleep } from '../game/playerSleep'
 import { drawDomainFloor, drawTear, drawWormhole, warmDomain } from './domain'
+import { inFight, watchFights } from './fightArt'
 import { isUltraBeast } from '../data/ultraBeasts'
 import { bossForm, drawBeamAir, drawBeamGround, drawBlasts, drawBossGround, drawBossMarker, drawEntrance, drawLegendScene, drawPairDown, drawPhantoms } from './legendFx'
 import { sceneHides } from '../game/legendScene'
@@ -894,13 +895,17 @@ const TERRAIN_SOON = 320
  * Builds at most one piece of scenery not built yet, most needed first: the
  * ground about to scroll in (borders and all, from the run's biome map), the
  * terrain sprites of the biomes on and near the screen, the fog veil (in the
- * `fog` setting's mode) where fog can roll in. True if it built one. The
- * shell calls it in idle time: a mountain or the veil takes longer than a
- * frame lasts, so building one the first time it shows would stall that frame.
+ * `fog` setting's mode) where fog can roll in. It also lets go of what's no
+ * longer drawn: the biomes left behind, a rift's arena, a place's floor and,
+ * as a boss wave, a raid or a rift ends, the fights' art (`watchFights`).
+ * True if it built one. The shell calls it in idle time: a mountain or the
+ * veil takes longer than a frame lasts, so building one the first time it
+ * shows would stall that frame.
  */
 export const warmScenery = (g: Game | null, calm: boolean, fog: FogMode) => {
   const keep = terrainBiomes(g)
   keepTerrain(keep)
+  watchFights(inFight(g))
   if (!g?.rift.arena || g.rift.arena.domain) dropArenas()
   if (!g?.place.inside) dropPlaceFloor()
   if (!g?.versus) dropVale()

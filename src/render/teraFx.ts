@@ -1,5 +1,5 @@
 import { RAID, TERA, type RaidStars, type TeraType } from '../data/tera'
-import { blitCentered, blitRotated, canvasCache, context2d, createCanvas, fromStrings, type PixelSprite } from '../engine/pixelart'
+import { blitCentered, blitRotated, canvasCache, context2d, createCanvas, fromStrings, remember, type PixelSprite } from '../engine/pixelart'
 import { hash2 } from '../engine/rng'
 import { TAU, type Dir8 } from '../engine/math'
 import { outlined, toIconUrl } from './art'
@@ -48,16 +48,14 @@ export const crystalType = (p: Player): TeraType | null => (p.tera.intro <= 0 &&
 const SHARD = ['...4...', '..434..', '.43332.', '.43332.', '4333322', '3333221', '.33221.', '.33221.', '..321..', '...1...']
 
 const shards = canvasCache<TeraType, PixelSprite>()
+/** Shards kept (`remember`): a boss leaves two types, a raid its own; the game knows 19. */
+const SHARDS_KEPT = 4
 
-export const shardSprite = (type: TeraType) => {
-  let s = shards.get(type)
-  if (!s) {
+export const shardSprite = (type: TeraType) =>
+  remember(shards, type, SHARDS_KEPT, () => {
     const r = TERA_RAMPS[type]
-    s = outlined(fromStrings(SHARD, { 1: r[1], 2: r[2], 3: r[3], 4: r[4] }), r.o)
-    shards.set(type, s)
-  }
-  return s
-}
+    return outlined(fromStrings(SHARD, { 1: r[1], 2: r[2], 3: r[3], 4: r[4] }), r.o)
+  })
 
 /** A shard as an icon (toasts). */
 export const shardIcon = (type: TeraType) => toIconUrl(`shard:${type}`, () => shardSprite(type))
@@ -506,7 +504,8 @@ export const drawDenAir = (ctx: Ctx, den: RaidDen, t: number) => {
 
 /* ---------------- The hollow ---------------- */
 
-const floors = canvasCache<TeraType, HTMLCanvasElement>()
+/** The hollows' floors (0.5 MB each): a raid's, let go of as it ends (`dropFightArt`). */
+const floors = canvasCache<TeraType, HTMLCanvasElement>('fight')
 const FLOOR_R = 150
 const FLOOR_PAD = 26
 

@@ -194,6 +194,8 @@ export const recolor = (rows: readonly string[], palette: Palette) => fromString
 const resets: Array<() => void> = []
 /** The resets of the caches only the lobby draws from (`ArtScope`), for `dropLobbyArt`. */
 const lobbyResets: Array<() => void> = []
+/** The resets of the caches only a fight draws from (`ArtScope`), for `dropFightArt`. */
+const fightResets: Array<() => void> = []
 const holders: Array<() => unknown> = []
 /** Where each holder was registered (dev builds only), for `heldCanvasesBy`. */
 const holderSites: string[] = []
@@ -205,19 +207,21 @@ const holderSites: string[] = []
  * `holds` returns what the cache keeps right now (a canvas, or Maps, arrays and plain objects
  * of them), so `heldCanvases` can weigh it. A `lobby` cache is also dropped as a run starts (`dropLobbyArt`).
  */
-export const onCanvasReset = (reset: () => void, holds?: () => unknown, scope: ArtScope = 'shared') => {
+export const onCanvasReset = (reset: () => void, holds?: () => unknown, scope: ArtScope = 'shared', site?: string) => {
   resets.push(reset)
   if (scope === 'lobby') lobbyResets.push(reset)
+  if (scope === 'fight') fightResets.push(reset)
   if (!holds) return
   holders.push(holds)
-  if (import.meta.env.DEV) holderSites.push(new Error().stack?.split('\n').find((l, i) => i > 1 && !l.includes('pixelart.ts'))?.trim() ?? '?')
+  if (import.meta.env.DEV) holderSites.push(site ?? new Error().stack?.split('\n').find((l, i) => i > 1 && !l.includes('pixelart.ts'))?.trim() ?? '?')
 }
 
 /**
- * Who draws from a cache: `shared` (a run, or both), or only the `lobby` (the plaza, the Estádio,
- * the Dojo, the title's logo), whose art a run never shows and lets go of as it starts.
+ * Who draws from a cache: `shared` (a run, or both), only the `lobby` (the plaza, the Estádio,
+ * the Dojo, the title's logo), whose art a run never shows and lets go of as it starts, or only
+ * a `fight` (a boss with its HP bar, a Tera Raid, a rift), let go of as the fight ends.
  */
-export type ArtScope = 'shared' | 'lobby'
+export type ArtScope = 'shared' | 'lobby' | 'fight'
 
 /**
  * Drops the lobby's caches (`ArtScope`) as a run starts loading, so a phone doesn't hold them
@@ -226,6 +230,44 @@ export type ArtScope = 'shared' | 'lobby'
  */
 export const dropLobbyArt = () => {
   for (const reset of lobbyResets) reset()
+}
+
+/**
+ * Drops the fights' caches (`ArtScope`) and the big shapes (`bigShape`) once a boss wave, a raid
+ * or a rift is over: each fight filled them with its own telegraphs, shockwaves and arenas, which
+ * the next one (another boss, other sizes) wouldn't draw again. Phones' tabs died at the boss
+ * waves with hundreds of canvases held; the next fight draws its own again on first use.
+ */
+export const dropFightArt = () => {
+  for (const reset of fightResets) reset()
+}
+
+/** Frees a canvas now (sized to 0×0) rather than whenever the collector comes by. Anything else is left as it is. */
+const freeIfCanvas = (v: unknown) => {
+  if (typeof v === 'object' && v !== null && isCanvas(v)) v.width = v.height = 0
+}
+
+/**
+ * `cache`'s value for `key`, made by `make` the first time, in a cache that keeps at most `max`
+ * values: the one asked for least recently goes (a canvas freed now). For caches keyed by sizes
+ * that change from cast to cast (a beam's width, a patch's radius): without a cap a late run
+ * kept a canvas for every width it ever drew. Only for values drawn at once and never kept.
+ */
+export const remember = <K, V>(cache: Map<K, V>, key: K, max: number, make: () => V): V => {
+  if (cache.has(key)) {
+    const hit = cache.get(key) as V
+    cache.delete(key)
+    cache.set(key, hit)
+    return hit
+  }
+  const made = make()
+  cache.set(key, made)
+  for (const [old, value] of cache) {
+    if (cache.size <= max) break
+    cache.delete(old)
+    freeIfCanvas(value)
+  }
+  return made
 }
 
 /** Drops every registered cache so it redraws. Called when a canvas gets its context back (`canvasRestored`). */
@@ -370,7 +412,7 @@ export const heldCanvasesBy = () =>
     .filter((h) => h.canvases > 0)
     .sort((a, b) => b.bytes - a.bytes)
 
-/** A Map holding drawn canvases, emptied on a GPU reset (and, the lobby's, as a run starts). */
+/** A Map holding drawn canvases, emptied on a GPU reset (and, the lobby's, as a run starts; a fight's, as it ends). */
 export const canvasCache = <K, V>(scope: ArtScope = 'shared') => {
   const cache = new Map<K, V>()
   onCanvasReset(
@@ -385,7 +427,7 @@ export const canvasCache = <K, V>(scope: ArtScope = 'shared') => {
 let artSweeps = 0
 const idleArt: Array<(before: number) => void> = []
 
-/** Builds a value holding canvases on first use, and again after a GPU reset, once `sweepArt` let it go or (the lobby's) as a run starts. */
+/** Builds a value holding canvases on first use, and again after a GPU reset, once `sweepArt` let it go or (the lobby's) as a run starts (a fight's, as it ends). */
 export const lazy = <T>(build: () => T, scope: ArtScope = 'shared') => {
   let value: T | undefined
   let used = 0
@@ -414,6 +456,47 @@ export const sweepArt = (idle: number) => {
   for (const drop of idleArt) drop(before)
 }
 
+/** `T` with each canvas in it turned into where it's packed (`lazySheet`). */
+export type Sheeted<T> = T extends HTMLCanvasElement ? Packed : T extends readonly unknown[] ? { [K in keyof T]: Sheeted<T[K]> } : T extends object ? { [K in keyof T]: Sheeted<T[K]> } : T
+
+/** The pages of a `lazySheet`: 128 px wide (up to 128 KB), a set of small sprites taking one. */
+const SHEET_PAGE = 128
+
+/** Sheets made so far, for each one's own group name. */
+let sheets = 0
+
+/**
+ * `lazy` for a set of small sprites made at once (the minimap's glyphs, the props' skins): every
+ * canvas in what `build` returns (in arrays and plain objects) is packed on the set's own pages
+ * and comes back as where it's packed, drawn with `drawPacked`. The set holds a page or two instead
+ * of a canvas per sprite, and is let go of, pages and all, as `lazy` art is.
+ */
+export const lazySheet = <T>(build: () => T, scope: ArtScope = 'shared') => {
+  const group = `sheet:${sheets++}`
+  let value: Sheeted<T> | undefined
+  let used = 0
+  const drop = () => {
+    value = undefined
+    dropKept(group)
+  }
+  onCanvasReset(drop, () => value, scope)
+  idleArt.push((before) => {
+    if (used < before && value !== undefined) drop()
+  })
+  const pack = (v: unknown): unknown => {
+    if (typeof v !== 'object' || v === null) return v
+    if (typeof HTMLCanvasElement !== 'undefined' && v instanceof HTMLCanvasElement) return keepPacked(group, v, SHEET_PAGE)
+    if (Array.isArray(v)) return v.map(pack)
+    if (Object.getPrototypeOf(v) !== Object.prototype) return v
+    return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, pack(x)]))
+  }
+  return (): Sheeted<T> => {
+    used = artSweeps
+    // `pack` keeps the shape of what it walks, canvases turned into where they're packed: `Sheeted<T>`.
+    return (value ??= pack(build()) as Sheeted<T>)
+  }
+}
+
 /* ---------- The shape atlas ---------- */
 
 /**
@@ -427,13 +510,14 @@ type AtlasEntry = { packed: Packed; loose: HTMLCanvasElement | null; forget: () 
 type AtlasPage = { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D; shelves: Shelves; entries: AtlasEntry[]; loose: number }
 
 /**
- * The atlas' pages: 256 px squares (256 KB each), made as shapes need them, `ATLAS_PAGES` at most.
- * Once the last fills, the oldest is wiped and filled again: what's still drawn is made again on
- * its next use, the rest goes. The pages stand for the thousand-odd small canvases (every
+ * The atlas' pages: 256×512 px (512 KB each), made as shapes need them, `ATLAS_PAGES` at most
+ * (3 MB). Once the last fills, the oldest is wiped and filled again: what's still drawn is made
+ * again on its next use, the rest goes. The pages stand for the thousand-odd small canvases (every
  * shadow, ring and damage number of a crowded fight) that killed phones' tabs mid-run.
  */
 const ATLAS_PAGE = 256
-const ATLAS_PAGES = 12
+const ATLAS_TALL = 512
+const ATLAS_PAGES = 6
 /** Shapes too big for a page keep a canvas of their own, a few per page, and go with it. */
 const LOOSE_PER_PAGE = 8
 
@@ -450,6 +534,8 @@ onCanvasReset(
     for (const forget of atlasForgets) forget()
   },
   () => [atlasPages.map((p) => p.canvas), atlasPages.map((p) => p.entries.map((e) => e.loose)), unpacked.map((e) => e.loose)],
+  'shared',
+  'pixelart: shape atlas',
 )
 
 /** Drops a packed shape: its cache forgets it, it draws nothing, and a canvas of its own is freed now. */
@@ -460,9 +546,29 @@ const evictPacked = (e: AtlasEntry) => {
   e.loose = null
 }
 
-const newPage = (): AtlasPage => {
-  const canvas = createCanvas(ATLAS_PAGE, ATLAS_PAGE)
-  return { canvas, ctx: context2d(canvas), shelves: shelves(ATLAS_PAGE), entries: [], loose: 0 }
+/** A page `width`×`tall` px, its canvas `height` px tall to begin with (a kept group's grows as its shelves fill, `growPage`). */
+const newPage = (width: number, tall: number, height = tall): AtlasPage => {
+  const canvas = createCanvas(width, height)
+  return { canvas, ctx: context2d(canvas), shelves: shelves(width, tall), entries: [], loose: 0 }
+}
+
+/** Rows a kept group's page grows by as its shelves fill. */
+const KEPT_GROW = 64
+
+/**
+ * Makes `page`'s canvas at least `h` px tall (in `KEPT_GROW` steps, up to the page's height), copying
+ * what it holds onto the taller one: the sprites packed on it follow. A group's last page is then
+ * only as tall as what's on it, not a mostly empty one (2 MB at `KEPT_PAGE`).
+ */
+const growPage = (page: AtlasPage, h: number) => {
+  if (page.canvas.height >= h) return
+  const canvas = createCanvas(page.canvas.width, Math.min(page.shelves.height, Math.ceil(h / KEPT_GROW) * KEPT_GROW))
+  const ctx = context2d(canvas)
+  ctx.drawImage(page.canvas, 0, 0)
+  page.canvas.width = page.canvas.height = 0
+  page.canvas = canvas
+  page.ctx = ctx
+  for (const e of page.entries) e.packed.canvas = canvas
 }
 
 /** Copies an entry's own canvas to `spot` on `page` and frees it: from now on it draws from the page. */
@@ -490,12 +596,12 @@ const schedulePack = () => {
 const turnPage = (): AtlasPage => {
   if (atlasPages.length > 0) atlasAt = (atlasAt + 1) % ATLAS_PAGES
   const old = atlasPages[atlasAt]
-  if (!old) return (atlasPages[atlasAt] = newPage())
+  if (!old) return (atlasPages[atlasAt] = newPage(ATLAS_PAGE, ATLAS_TALL))
   for (const e of old.entries) evictPacked(e)
   old.entries.length = 0
   old.loose = 0
   clearShelves(old.shelves)
-  old.ctx.clearRect(0, 0, ATLAS_PAGE, ATLAS_PAGE)
+  old.ctx.clearRect(0, 0, ATLAS_PAGE, ATLAS_TALL)
   return old
 }
 
@@ -510,7 +616,7 @@ const packShapes = () => {
     if (!loose || e.packed.w === 0) continue
     let page = atlasPages[atlasAt] ?? turnPage()
     let spot = place(page.shelves, loose.width, loose.height)
-    if (!spot && loose.width <= ATLAS_PAGE && loose.height <= ATLAS_PAGE) {
+    if (!spot && loose.width <= ATLAS_PAGE && loose.height <= ATLAS_TALL) {
       page = turnPage()
       spot = place(page.shelves, loose.width, loose.height)
     }
@@ -531,7 +637,7 @@ const packShapes = () => {
  * biome's hundred sculpted pieces take a few canvases, and freed together (`dropKept`) when the
  * run leaves the biome.
  */
-type KeptGroup = { pages: AtlasPage[]; loose: AtlasEntry[]; dropped: boolean }
+type KeptGroup = { pages: AtlasPage[]; loose: AtlasEntry[]; dropped: boolean; size: number; tall: number }
 const keptGroups = new Map<string, KeptGroup>()
 let unkept: { group: KeptGroup; e: AtlasEntry }[] = []
 onCanvasReset(
@@ -540,24 +646,35 @@ onCanvasReset(
     unkept = []
   },
   () => [[...keptGroups.values()].map((g) => [g.pages.map((p) => p.canvas), g.loose.map((e) => e.loose)]), unkept.map((u) => u.e.loose)],
+  'shared',
+  'pixelart: kept groups',
 )
 
 const noop = () => {}
 
 /**
- * Pixels from which a kept sprite stays a canvas of its own: the few big ones (a ridge, a lake,
- * a cottage) would leave pages half empty, and the count that hurts is the small ones'.
+ * The kept groups' pages: 512 px wide and up to twice as tall (2 MB at most, a group's last one
+ * only as tall as what's on it, `growPage`). A biome's terrain is a few MB of sprites either way,
+ * and on 256 px squares, with every sprite past 128×128 px a canvas of its own, the two or three
+ * biomes kept around the screen held about a hundred canvases between them.
  */
-const KEPT_OWN = 128 * 128
+const KEPT_PAGE = 512
+
+/**
+ * Pixels from which a kept sprite stays a canvas of its own: the few really big ones (a mountain,
+ * a lake) would leave pages half empty.
+ */
+const KEPT_OWN = 256 * 256
 
 /**
  * Hands `sprite` (a canvas no one else draws to or keeps) over to `group`: it's drawn from the
  * returned `Packed`, which keeps pointing at it until the task after the frame copies it onto
- * the group's pages and frees it. A big one (`KEPT_OWN`) stays as it is, freed with the group.
+ * the group's pages (`page` px wide and up to twice as tall, set by the group's first sprite) and
+ * frees it. A big one (`KEPT_OWN`, or past a page) stays as it is, freed with the group.
  */
-export const keepPacked = (group: string, sprite: HTMLCanvasElement): Packed => {
+export const keepPacked = (group: string, sprite: HTMLCanvasElement, page = KEPT_PAGE): Packed => {
   let g = keptGroups.get(group)
-  if (!g) keptGroups.set(group, (g = { pages: [], loose: [], dropped: false }))
+  if (!g) keptGroups.set(group, (g = { pages: [], loose: [], dropped: false, size: page, tall: page * 2 }))
   const e: AtlasEntry = { packed: { canvas: sprite, x: 0, y: 0, w: sprite.width, h: sprite.height }, loose: sprite, forget: noop }
   unkept.push({ group: g, e })
   schedulePack()
@@ -587,7 +704,7 @@ const packKept = () => {
       evictPacked(e)
       continue
     }
-    if (loose.width * loose.height >= KEPT_OWN || loose.width > ATLAS_PAGE || loose.height > ATLAS_PAGE) {
+    if (loose.width * loose.height >= KEPT_OWN || loose.width > group.size || loose.height > group.tall) {
       group.loose.push(e)
       continue
     }
@@ -601,9 +718,10 @@ const packKept = () => {
       }
     }
     if (!page || !spot) {
-      group.pages.push((page = newPage()))
+      group.pages.push((page = newPage(group.size, group.tall, KEPT_GROW)))
       spot = place(page.shelves, loose.width, loose.height)!
     }
+    growPage(page, spot.y + loose.height)
     page.entries.push(e)
     settle(e, loose, page, spot)
   }
@@ -744,6 +862,8 @@ let stage: { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D } | null =
 onCanvasReset(
   () => (stage = null),
   () => stage,
+  'shared',
+  'pixelart: stage',
 )
 
 /**
@@ -765,19 +885,39 @@ const stamp = (ctx: CanvasRenderingContext2D, w: number, h: number, x: number, y
 
 /** Pixels the big shapes kept (`bigShape`) may hold in all (about 2 MB); the least recently drawn go first. */
 const KEEP_BIG = 512 * 1024
+/**
+ * How many big shapes may be kept at once, whatever their size: a boss wave's telegraphs and
+ * shockwaves come in every size, and the pixel cap alone let a fight keep a hundred-odd canvases.
+ */
+const KEEP_BIG_COUNT = 12
 
 /** Big shapes drawn more than once (a comet's scorch mark, a field holding its size), by key, least recently drawn first. */
 const keptBig = new Map<string, HTMLCanvasElement>()
 let keptBigPx = 0
 /** Keys of big shapes drawn once so far: only a second draw keeps one, so a shockwave growing every frame keeps none. */
 const seenBig = new Set<string>()
-onCanvasReset(
-  () => {
-    keptBig.clear()
-    keptBigPx = 0
-  },
-  () => keptBig,
-)
+/**
+ * Lets go of `cache`'s least recently drawn canvases (Map order: the first) while it holds more
+ * than `count` of them or more than `px` pixels, freeing each now: they're drawn only from the
+ * cache, within the frame. `held` is its pixels; returns what's left of them.
+ */
+export const trimCanvases = <K>(cache: Map<K, { width: number; height: number }>, held: number, px: number, count: number) => {
+  for (const [old, kept] of cache) {
+    if (held <= px && cache.size <= count) break
+    cache.delete(old)
+    held -= kept.width * kept.height
+    kept.width = kept.height = 0
+  }
+  return held
+}
+
+const dropBig = () => {
+  for (const c of keptBig.values()) freeIfCanvas(c)
+  keptBig.clear()
+  keptBigPx = 0
+}
+onCanvasReset(dropBig, () => keptBig, 'shared', 'pixelart: big shapes')
+fightResets.push(dropBig)
 
 /**
  * Draws a big shape (`key` names its kind, size and color) centered at (x, y) as `stamp`
@@ -799,12 +939,7 @@ const bigShape = (ctx: CanvasRenderingContext2D, key: string, w: number, h: numb
     canvas = createCanvas(w, h)
     paint(context2d(canvas))
     keptBig.set(key, canvas)
-    keptBigPx += w * h
-    for (const [old, kept] of keptBig) {
-      if (keptBigPx <= KEEP_BIG) break
-      keptBig.delete(old)
-      keptBigPx -= kept.width * kept.height
-    }
+    keptBigPx = trimCanvases(keptBig, keptBigPx + w * h, KEEP_BIG, KEEP_BIG_COUNT)
   }
   ctx.drawImage(canvas, Math.round(x - w / 2), Math.round(y - h / 2))
 }
